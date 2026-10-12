@@ -1,213 +1,52 @@
-# `fr.css.prime_activite` — activity bonus (prime d'activité)
+# fr.css.prime_activite
 
-Executable formalization of the PA core: the L. 842-1/2/5 right (18+,
-residence, professional income, stay/title, student/posted/leave
-exclusions, spouse conditions, opening from the filing date L. 843-2),
-the L. 842-3 formula (composition forfait per D. 843-1 scales incl. the
-128.412 %/42.804 % isolated track, professional-income fraction 61 %
-then 59.85 % per D. 843-3, per-worker linear bonification 59x→138x
-(120x before 2026-04-01) capped at 37.7 % (29.101 % before) per
-D. 843-2, resources floored at the forfait), the R. 843-1 trimestre
-(M-4…M-2 average; M-3…M-1 before 2025-02-28), the L. 842-3 payment
-floor, recovery with the 10 % fraud indemnity and suspensive appeals
-(L. 845-3), L. 553-1 limitation via L. 845-4 (retained fact),
-unassignability (L. 845-5), no-payment radiation (L. 843-5), the fund
-service duty (D1), the director control power (P1) and the recourse
-information duty (D2).
+Activity bonus
 
-Scope: 68 CSS articles (29 previous + FINISH pa 38 + R844-3 of session 3: D846-1/2/3,
-D847-1/2/3, D848-1..5, R842-1..5, R843-2, R844-1/2/4/5, R845-1/2/3,
-R846-1..9, R847-1/1-1/2/3, R848-1) + 16 superseded wordings pinned
-(previous 5 + R842-2/R843-2/R845-1/R845-2-PRE2025, D848-4-PRE2024,
-R844-1-W2020/W2023, R844-3-PRE2024, R844-5-W2020/W2021/W2022); 12 day-precision
-editions back to back from 2021-01-01 (previous 6 + 2021-03-25
-R844-5/R847-1-1, 2021-06-01 D847-3, 2022-03-21 R844-5, 2023-12-31
-R844-1/R844-5, 2024-07-01 D848-4, 2026-06-27 R844-1). FINISH pa is
-authored, NOT generated (GENERATED_OUTPUT_PENDING; see
-docs/foundations/fr-cnaf/lines/finish-pa.md): the paragraphs above
-and the Measure below describe the pre-FINISH generated state; no
-PASS or measure is claimed on the new modules. Repair rounds
-2026-10-08 (independent reviews REPAIR_REQUIRED, PA-M1..M9 then
-PA-R2-01/02 then PA-R3-01/02 then PA-R4-01..10 then PA-R5-01/02
-then PA-R6-01 then PA-FE-01/PA-COV-02 then PA-FE09-03/04/05/06
-then PA-FE10-01/02 then PA-FE11-01, journal receipts
-AUTHOR_READY_FOR_REVIEW):
-81 FINISH suites (29 + 52 new transition/negative/unknown-premise),
-4 amended in R6 (3 migrated to the exact qualifying union + 1
-extended with a generic-co-residence control), 15 migrated + 1
-baseline + 3 new method/director controls in FE09, 0 new suites in
-FE10 (the 5 flagged cases already carry the source-backed
-FALSE_ONLY expectations; the repair adds the 9 missing explicit
-negative producers), 1 amended + 4 new dated/undated/late
-decision controls in FE11; R. 842-4 carries all three partner
-alternatives (spouse, concubin, PACS) with both consequences each,
-D. 846-1 RSA-opening review covered with a no-trigger boundary;
-R. 847-1-1 carries the date-certain-means gate on notice
-completeness and every receipt-anchored 20-day clock, the
-director-held D7 duty, the director-decided D7bis trigger, and the
-express oral-request rejection refuting same-request examination;
-the II 1°/2° and IV 2° heads carry explicit refutations from
-affirmative contraries (dated decision within the month,
-out-of-window request, pre-maturity observation, same-request
-rejection/timely production; undated or post-month decisions prove
-nothing);
-wave-0 droit/recouvrement/devoirs families +3 new suites, 5 amended;
-D7bis duty-head is author-written lowercase (display sanitizer
-redacts it as uppercase in reads; prior non-ASCII attribution
-corrected in the line journal, no root manual fix); timely request
-means receipt <= request <= receipt+20 days in P2/D7bis/II, II
-heads gated on the timely I.2.a request; every statutory
-negative/exception carries an affirmative positive premise, unknown
-stays NEITHER (Belnap join: TRUE if any producer TRUE, FALSE iff
-every producer FALSE); R. 846-7/8 carry the no-family household
-gate, period-active coverage, split suspension/family branches and
-next-review resumption; the R. 846-8 family branch is keyed on the
-exact statutory spouse/PACS/concubin/dependent union while generic
-family co-residence alone leaves both branches undetermined;
-nothing executed.
-The single-person
-euro forfait and the L. 161-25 coefficient are pinned since session 3
-(08.10.2026; see "Forfait chain" below); the SMIC rates (a retained monthly
-fact from the pinned series of fr.travail.smic, B-PPA-SMIC-MOIS), the BMAF
-euros, the CGI rates/ceilings, the L. 241-3 ceiling and the DSN resource totals
-are NOT pinned: they arrive as retained facts (B-PPA-RESSOURCES-CALCUL). R842-1..5 condition timing is derived
-from monthly retained facts (06-ouverture; monthly convergence
-B-PPA-CONDITIONS-MENSUELLES); detailed recovery rates go to wave-5
-versement; D. 553 mechanics are PENDING_WAVE with SEC-PF-GEN.
+> Independent demonstration model. It is not an implementation by or
+> for an authority and does not establish legal accuracy or completeness.
+> For a real case, rely on the official texts and competent bodies.
 
-## Forfait chain (L. 842-3, DECISION-0452) and housing forfait (R. 844-3)
+## Package snapshot
 
-The single-person forfait is **pinned and built by MONTH** (`11-forfait-chaine.law`,
-generated by `tools/build_forfait_chaine.py` from `sources/montant/`,
-`tools/pin_forfait.py`). R. 843-1 averages three months, so the amount is keyed by
-the month of the calculation (windows are conditions on the month date, not
-`effective` windows of the legal time of the case):
+| Item | Value |
+|---|---|
+| Version | `0.1.0` |
+| Namespace | `urn:fr:corpus:clir:ppa` |
+| Semantics | `law.core/0.2.11` |
+| Dependencies | None declared |
 
-| From (month) | Act | Amount | Built / checked |
-|---|---|---|---|
-| 2020-04 | decree 2020-491 art. 1 | 553.16 | root of the chain |
-| 2021-04 | decree 2021-528 | 553.71 | 553.16 x 1.001 (DSS/2B/2021/65), equal |
-| 2022-04 | decree 2022-701 | 563.68 | 553.71 x 1.018 (DSS/2B/2022/82), equal |
-| 2022-07 | act 2022-1158 art. 9 | 586.23 | built only (no decree): 563.68 x 1.04, reading D-82 |
-| 2023-04 | decree 2023-343 | 595.25 | 586.23 x 1.056 / 1.04 (art. 9 quotient, DSS/2B/2023/41), equal |
-| 2024-04 | decree 2024-403 | 622.63 | 595.25 x 1.046 (DSS/2B/2024/43), equal |
-| 2025-04 | decree 2025-294 | 633.21 | 622.63 x 1.017 (DSS/2B/2025/38), equal |
-| 2026-04 | decree 2026-222 art. 2 | 638.28 | 633.21 x 1.008 (DSS/2B/2026/46), equal |
+## Run an example
 
-The decree number is the norm of its window (`forfait_base_du_mois`) and is declared
-published (`forfait_base_publie`); the chain is built independently
-(`forfait_base_construit`) and compared (`forfait_base_conforme_publie`); the generator
-refuses a number that differs from the decree. A case-supplied `forfait_base_retenu`
-still prevails (`forfait_base_saisi`). Reading `ForfaitRevalorisationArrondiCentime`
-(SPEC 152, D-82): each product is rounded to the centime, half up (fund practice; no
-text states a rounding); unselected, the decree amounts still apply and the
-2022-07 - 2023-03 window has no amount. The 2018-836 figure (551.51) is not a step: the
-2020-04 amount is the decree number, not 551.51 x 1.003, because the 2019 step did not
-revalue the forfait.
+Install the CLI as described in the [repository README](../../README.md).
+From the repository root:
 
-**Housing forfait (`12-forfait-logement.law`).** R. 844-3 values the benefit in kind of
-owner-occupied (without personal aid) or free housing at 12 % of the one-person forfait,
-16 % of the forfait calculated for two persons (x 1.5), 16.5 % of the forfait calculated
-for three persons (x 1.8); R. 844-4 I includes personal housing aid in the resources up to
-that same forfait. Inputs of the month: `situation_logement_retenue` (AIDE / NATURE /
-SANS), `aide_logement_retenue`, `ressources_hors_logement_retenues`; the resources of the
-month for the L. 842-3 2 floor are `ressources_foyer_mois` (the already-retained total
-`revenus_mensuels_retenus` remains accepted and prevails). Reading shared with
-OpenFisca-France: "calculated for two (three) persons" is D. 843-1 al. 1 by the number of
-persons, whatever the isolation. Not modelled: persons excluded from the housing-aid
-household (R. 844-4 I al. 2, B-PPA-FL-MENAGE-AL). The retained `forfait_logement_r844_3` of
-`07-ressources.law` (itemized resources, convergence pending) is left as is.
+```sh
+cd packages/fr.css.prime_activite
+law test . --file tests/prime-seul-lineaire-2026.lawtest --json
+```
 
-**Readings for the divisions (SPEC 152, D-82/D-83, `03-montant.law`).** Two named readings,
-outside any group, resolve the divisions that no text rounds; unselected, behaviour is
-unchanged (exact division, a non-terminating quotient is `INEXACT_DIVISION`, SPEC 50/18).
-Both are fund (CNAF) practice, not text, and round half up to the centime ALWAYS when
-selected, also an exact quotient longer than two places.
+Success checks the declared expectations of the model; it does not certify
+that the model covers the whole benefit or every possible case.
 
-- `PrimeMoyenneArrondieCentime` (R. 843-1 I): the quarterly average of the three monthly
-  primes, `div_round(p1 + p2 + p3, 3.0, 2, "HALF_UP")`, in both wordings (M-4..M-2 and
-  the three previous months); the L. 842-3 payment floor compares the rounded average.
-- `BonificationLineaireArrondieCentime` (D. 843-2): the linear bonification of ONE worker
-  (euro amount base x rate x ratio, new wording 37.7 % between 59 and 138 hourly SMIC, old
-  29.101 % between 59 and 120) rounded in ONE division,
-  `div_round(base x rate x (income - 59 SMIC), span x SMIC, 2, "HALF_UP")`; the ratio itself
-  is a fraction and is not rounded. The maximal bonification (base x rate, no division)
-  and the zero band are not touched. In a couple each worker is rounded, then summed.
+## Scope and inputs
 
-Scenarios `tests/prime-division-*.lawtest` (family `fr.css.prime_activite#montant-division`):
-replica on fractions, HALF_UP, from the pinned figures; each reading is also shown alone and
-absent. Not covered (not named by D-83): the twelfths and thirds of non-salaried income of
-`07-ressources.law` (R. 845-1/2, `/ 12.0`, `/ 3.0`).
+The executable scope is defined by the rules and declared scenarios in this
+snapshot. Each rule has its own dates, prerequisites and source anchors.
+Use the supplied facts and any explicitly selected readings of the scenario;
+do not infer wider coverage from the subject named above.
 
-## Measure
+| Inspect | What it contains |
+|---|---|
+| [law.toml](law.toml) | Package identity, dependencies and declared scenario groups |
+| [law.lock](law.lock) | Exact dependency, semantics and resource pins |
+| [tests/](tests/) | Declared scenarios and their fixtures |
+| [sources/](sources/) | Captured source material; individual reproduction terms apply |
+| [i18n/](i18n/) | Labels and translations |
+| [01-sources.law](01-sources.law) | Model declarations and source references |
 
-`audit.py fr-prime-activite --fast` (static profile): 6 checked,
-0 measure failures. 52 rules; orphan premises 8 (all FormeFoyer enum
-variants, DECISION-0047); one-way premises 2 of 52 (Infraction,
-Radiation — endpoint rules covered by scenarios); dead symbols 0.
-Form catalog: 16 detectors, 2 findings (`indu_constate`,
-`indu_frauduleux`, evaluative-fact-without-producer), baselined
-`false_positive` — empirical retained case facts (class cmg).
-Frozen figures: none (no transitional comparison rows; each reform is
-a clean wording split with its own edition).
+## Reproduction and rights
 
-## Their case to our answer
-
-Foreign benchmarks are expectations, never sources. OpenFisca formula cases
-(`analysis/openfisca-176/REPORT.md`, session 3 and D-83): 3 transferred cases of 69 (2022-10..12,
-2024-06..08, 2024-10..12), the forfait is built from the pinned chain and not supplied;
-3 equal (case #46, window of article 9, was "equal to the centime" before the reading
-`PrimeMoyenneArrondieCentime`: ours 139,3827, now 139,38 against their 139,38394), 0
-divergent; case #47 (their experimentation flag, M-2...M-4) is not transferred (owner
-decision, B-RSA-EXPERIMENTATION-2024); 65 cases are class (c) by date. Resource bases are
-retained facts. Full table of the manual port:
-
-[`tests/foreign/REPORT.md`](tests/foreign/REPORT.md) (IT-2026-080 scale
-edges 709.18/1442.40/1658.76 = 59x/120x/138x the 12.02 SMIC, class (a);
-no OpenFisca import — runs out of scope, yaml unpinned).
-
-## Boundaries
-
-- B-PPA-MONTANT-EURO: RESOLVED 08.10.2026 - the single-person forfait is pinned
-  (decrees 2020-491 ... 2026-222) and built by the L. 161-25 chain (see "Forfait chain").
-  IT-2026-080 corroborates it (184,27/0,29101 = 633,21 before April, 240,63/0,377 =
-  638,28 from April: ratio 1,00800 = +0,8 % legal revalorisation).
-- B-PPA-REVALO-PENDING: RESOLVED for the forfait (coefficients pinned from the DSS
-  instructions and act 2022-1158 art. 9); the max bonification percentages stay pinned
-  through D. 843-2 and IT-2026-080 (37,70 %, 138x from 01.04.2026).
-- B-PPA-SMIC-MOIS: the hourly SMIC (multiples in D. 843-2/4) is a retained monthly fact
-  (`smic_horaire_retenu`); the OpenFisca adapter reads it from the pinned series of
-  fr.travail.smic (2021-01 ... 2026-06). A rule cannot evaluate another package at a
-  reference month other than the legal time of the case.
-- B-PPA-FL-MENAGE-AL: persons excluded from the housing-aid household (R. 844-4 I al. 2)
-  are not modelled; the composition is that of `forme_foyer_retenue`.
-- Division readings: RESOLVED 08.10.2026 (D-83) for the quarterly average (R. 843-1) and the
-  linear bonification (D. 843-2) - `PrimeMoyenneArrondieCentime`,
-  `BonificationLineaireArrondieCentime` (see above). Still exact division: the twelfths and
-  thirds of non-salaried income in `07-ressources.law` (R. 845-1/2).
-- B-PPA-RESSOURCES-CALCUL: L. 842-4 resource categories and R. 843-1 III
-  twelfths — retained monthly facts (GOAL: no DSN extraction).
-- B-PPA-CONDITION-TIMING: RESOLVED in structure — R842-1..5 timing is
-  derived from monthly retained facts (06-ouverture). New:
-  B-PPA-CONDITIONS-MENSUELLES (monthly-fact convergence with 02-droit),
-  B-PPA-R8422-135-TIMING-OLD (1°/3°/5° timing source-silent before
-  2025-02-28).
-- B-PPA-MINIMUM: payment-floor euros (arrete) — retained fact. The D. 846-2
-  15-euro floor is now built (08-service); convergence deferred.
-- IT-2026-080: text pinned 2026-10-06 (source CNAF_IT_2026_080, official
-  PDF bytes + layout text; fragments MONTANTS/BORNES/SORTIE). Thresholds
-  anchored; quarter-mapping table (TD débutant avril→août) still unmodelled.
-  Exit point 1,5 SMIC (2151 € with the non-payment floor) recorded, not
-  modelled.
-- L843-3 hospital reduction, L843-5 radiation duration, L846 statistics:
-  now derived from retained stay/date facts via R846-7/8, D846-3, D848/R848
-  (revision-rank facts retained; 24-month convergence deferred). L845-6
-  criminal scale stays unmodelled.
-- B-PPA-RESSOURCES-ITEMS: R844/R845 item classifications derived from
-  itemized retained facts (07-ressources); convergence with the retained
-  totals deferred.
-- B-PPA-MAJOREE-FIN-REDUITE: isolated-major end date under a reduced
-  duration needs variable month arithmetic (duration derived, end deferred).
-- FINISH pa bridges (journal): R844-3 forfait (same line, pending),
-  BMAF/revalorisation, CGI rates/ceilings, L241-3 ceiling, R142-1/6 and
-  R421-1 deadlines, D553 mechanics (SEC-PF-GEN owner).
+See the [repository instructions](../../README.md) for rebuilding
+a source package and restoring any withheld sources. The [repository licence](../../LICENSE)
+covers the model code; captured publisher texts keep their own terms in
+[NOTICE](../../NOTICE) and [package-info.json](package-info.json).

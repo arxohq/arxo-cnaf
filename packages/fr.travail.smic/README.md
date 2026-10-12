@@ -1,95 +1,52 @@
-# fr.travail.smic — SMIC: часовой ряд 2021–2026 (фазы 0 и 4)
+# fr.travail.smic
 
-Пакет канона CNAF (CNAF-SMIC): часовой SMIC и minimum garanti по актам о
-relèvement — с 01.01.2021 по 01.06.2026 подряд, без пропусков. Потребитель
-(prime-activite и др.) берёт ставку на любой месяц из закреплённых байтов.
-Месячный ряд (151,67 × часовой) не моделируется — см. границы.
+Minimum wage (SMIC)
 
-## Мера готовности (§1.2 плана)
+> Independent demonstration model. It is not an implementation by or
+> for an authority and does not establish legal accuracy or completeness.
+> For a real case, rely on the official texts and competent bodies.
 
-- Инвентарь: 11 актов о relèvement (5 декретов и 4 arrêtés 2020–2024 из
-  глобального дампа LEGI DILA, декрет № 2025-1228 и arrêté 22.05.2026 из
-  суточных архивов JORF), 42 статьи — все закреплены
-  (`sources/fr-smic/articles.json`, 42 версии).
-- Источники: `sources/source-manifest.json`; байты DILA — глобальный дамп
-  LEGI `Freemium_legi_global_20250713-140000.tar.gz` (1 171 027 316 байт,
-  sha256 `f862b4a2…3d4eca`, забран 05.10.2026) для 2020–2024 и суточные
-  `JORF_20251218-215251`, `JORF_20260524-210930` для 2026. XML статей (LEGIARTI)
-  и версий текстов (LEGITEXT) — `sources/fr-smic/legi/<акт>/`.
-- Правила: `02-montants.law` (2026, 6 правил), `03-serie-2021-2025.law`
-  (9 окон × 3 правила + 8 правил проверочных значений + 1 правило проверки).
-  Каждое правило — с `@source` на дословный фрагмент статьи и окном действия.
-- Сценарии: `tests/` — 6 (2026) + 60 (каждый месяц 2021-01…2025-12) + 9
-  (накануне каждой смены ставки) + 5 (построение arrêté = публикация и отрицательный).
-  `law.toml`: семьи `smic-2026` и `smic-serie-2021-2025`.
+## Package snapshot
 
-## Построение и проверка (DECISION-0452)
+| Item | Value |
+|---|---|
+| Version | `0.1.0` |
+| Namespace | `urn:fr:corpus:clir:smic` |
+| Semantics | `law.core/0.2.11` |
+| Dependencies | None declared |
 
-Декрет называет абсолютную ставку (ст. 1, 1° и 2°) — правило несёт её, это
-сама норма. Arrêtés 27.09.2021, 19.04.2022, 29.07.2022, 26.04.2023 в ст. 1
-называют не сумму, а процент («le taux du salaire minimum de croissance, tel
-qu'il résulte du décret/de l'arrêté …, est majoré de X %»), а ст. 2
-пересказывает результат в евро. Поэтому ставка окна arrêté СТРОИТСЯ:
-предыдущая закреплённая ставка × (1 + X %), округление до сантима HALF_UP;
-опубликованная сумма ст. 2 попадает в `smic_horaire_publie` и проверяет
-построенное правилом `SmicConstruitConformePublie` (`smic_conforme_publie`).
-Все 8 построений (4 arrêtés × метрополия+/Майотта) совпали с публикацией до
-сантима. Сумма, не равная построенной ставке, не устанавливается
-(`tests/smic-construit-conforme-arretes.lawtest`, сценарий `ecart-2021-10`).
+## Run an example
 
-## Значения (из закреплённых байтов)
+Install the CLI as described in the [repository README](../../README.md).
+From the repository root:
 
-Метрополия, Гваделупа, Гвиана, Мартиника, Реюньон, Сен-Бартелеми, Сен-Мартен,
-Сен-Пьер-и-Микелон (1°); Майотта (2°); minimum garanti (L. 3231-12).
+```sh
+cd packages/fr.travail.smic
+law test . --file tests/smic-window1-metropole.lawtest --json
+```
 
-| С | Акт (NOR; JORF) | LEGITEXT / статья ставки | Метр.+ €/ч | Майотта €/ч | MG € | Как |
-|---|---|---|---|---|---|---|
-| 01.01.2021 | Décret n° 2020-1598 du 16.12.2020 (MTRX2028779D; JORF 0304 от 17.12.2020; JORFTEXT000042677359) | LEGITEXT000042682075; art. 1 = LEGIARTI000042682083 | 10,25 | 7,74 | 3,65 | норма |
-| 01.10.2021 | Arrêté du 27.09.2021 (MTRT2127992A; JORF 0228 от 30.09.2021; JORFTEXT000044126026) | LEGITEXT000044131662; art. 1 = LEGIARTI000044131668, art. 2 = LEGIARTI000044131672 | 10,48 | 7,91 | 3,73 | +2,20 % построено, art. 2 сверено |
-| 01.01.2022 | Décret n° 2021-1741 du 22.12.2021 (MTRX2134478D; JORF 0298 от 23.12.2021; JORFTEXT000044546647) | LEGITEXT000044607959; art. 1 = LEGIARTI000044607970 | 10,57 | 7,98 | 3,76 | норма |
-| 01.05.2022 | Arrêté du 19.04.2022 (MTRT2211753A; JORF 0092 от 20.04.2022; JORFTEXT000045602317) | LEGITEXT000045602818; art. 1 = LEGIARTI000045602827, art. 2 = LEGIARTI000045602831 | 10,85 | 8,19 | 3,86 | +2,65 % построено, сверено |
-| 01.08.2022 | Arrêté du 29.07.2022 (MTRT2220967A; JORF от 30.07.2022; JORFTEXT000046113517) | LEGITEXT000046123924; art. 1 = LEGIARTI000046123938, art. 2 = LEGIARTI000046123941 | 11,07 | 8,35 | 3,94 | +2,01 % построено, сверено |
-| 01.01.2023 | Décret n° 2022-1608 du 22.12.2022 (MTRX2232160D; JORF 0297 от 23.12.2022; JORFTEXT000046780043) | LEGITEXT000046783043; art. 1 = LEGIARTI000046783051 | 11,27 | 8,51 | 4,01 | норма |
-| 01.05.2023 | Arrêté du 26.04.2023 (MTRT2310513A; JORF 0099 от 27.04.2023; JORFTEXT000047495817) | LEGITEXT000047496663; art. 1 = LEGIARTI000047496670, art. 2 = LEGIARTI000047496674 | 11,52 | 8,70 | 4,10 | +2,22 % построено, сверено |
-| 01.01.2024 | Décret n° 2023-1216 du 20.12.2023 (MTRX2333655D; JORF 0295 от 21.12.2023; JORFTEXT000048604676) | LEGITEXT000048632872; art. 1 = LEGIARTI000048632880 | 11,65 | 8,80 | 4,15 | норма |
-| 01.11.2024 | Décret n° 2024-951 du 23.10.2024 (TEMX2427845D; JORF 0253 от 24.10.2024; JORFTEXT000050392683) | LEGITEXT000050393520; art. 1 = LEGIARTI000050393533 | 11,88 | 8,98 | 4,22 | норма; действует и весь 2025 год |
-| 01.01.2026 | Décret n° 2025-1228 du 17.12.2025 (TRSX2532954D; JORFTEXT000053042520) | JORFARTI000053042543 | 12,02 | 9,33 | 4,25 | норма |
-| 01.06.2026 | Arrêté du 22.05.2026 (TRST2612929A; JORFTEXT000054126589) | JORFARTI000054126607 | 12,31 | 9,56 | 4,35 | норма |
+Success checks the declared expectations of the model; it does not certify
+that the model covers the whole benefit or every possible case.
 
-Окна полуоткрытые `[с, до)`; ряд 2021-01-01 … ∞ непрерывен. Метрополия+ и
-Майотта различаются территорией дела (`territoire_smic`), даты — `legal_time`.
+## Scope and inputs
 
-## Границы
+The executable scope is defined by the rules and declared scenarios in this
+snapshot. Each rule has its own dates, prerequisites and source anchors.
+Use the supplied facts and any explicitly selected readings of the scenario;
+do not infer wider coverage from the subject named above.
 
-- **B-SMIC-MENSUEL (месячный SMIC не моделируется).** Ни один акт ряда не
-  называет месячную сумму. Число 151,67 закреплено в корпусе лишь параметром
-  чужих норм (CSS D. 241-7: «garantie minimale mensuelle … 151,67 fois le montant
-  horaire du salaire minimum de croissance»; R. 242-2), а не определением
-  месячного SMIC, и его произведение на часовую ставку расходится с
-  официальной суммой на сантимы (официально — 35 ч × 52 / 12 с округлением
-  итога). Месячное правило будет добавлено, когда для него закрепится
-  собственная опора; числа не из байтов не вводятся.
-- **2025 год.** Отдельного акта о relèvement 2025 года в закреплённых байтах
-  нет: ставка декрета 2024-951 (11,88 €) действует до 01.01.2026, окно закрыто
-  закреплённым декретом 2025-1228. Дамп LEGI кончается 13.07.2025; отсутствие
-  промежуточного акта между 13.07.2025 и 18.12.2025 закреплёнными байтами не
-  доказано (суточные архивы JORF за этот период не забраны).
-- **Основание majoration.** Индекс цен (ст. L. 3231-5 C. trav.), на который
-  ссылается ст. 1 arrêtés (105,60 за август 2021; 109,37 за март 2022; 111,57 за
-  июнь 2022; 116,07 за март 2023), пакетом не пересчитывается: процент берётся
-  из текста arrêté как данное. Независимая сверка процента по ряду INSEE —
-  область `fr.css.revalorisation`.
-- Тексты LEGI хранятся с `<br/>`, снятыми при извлечении (`1° …;2° …` слитно, как
-  и у закреплённых текстов 2026 года); фрагменты — дословные подстроки
-  закреплённых документов.
-- Слепое прочтение: BLIND_PENDING (второй модели в среде нет).
+| Inspect | What it contains |
+|---|---|
+| [law.toml](law.toml) | Package identity, dependencies and declared scenario groups |
+| [law.lock](law.lock) | Exact dependency, semantics and resource pins |
+| [tests/](tests/) | Declared scenarios and their fixtures |
+| [sources/](sources/) | Captured source material; individual reproduction terms apply |
+| [i18n/](i18n/) | Labels and translations |
+| [01-sources.law](01-sources.law) | Model declarations and source references |
 
-## Проверки
+## Reproduction and rights
 
-- `tools/fetch_smic_texts.py --check` — документы и учёт из XML.
-- `tools/sync_smic_fragments.py --check` — блок фрагментов из учёта.
-- `tools/gen_serie_tests.py --check` — сценарии ряда (месяцы и накануне
-  смен) из закреплённых текстов; ожидания не набираются руками.
-- `law engine check corpus/laws/fr/smic` — зелёный (только предупреждения
-  LDC-E1372 по `@id`, как в APL).
-- `law test corpus/laws/fr/smic` — 80 сценариев (6 + 60 + 9 + 5).
+See the [repository instructions](../../README.md) for rebuilding
+a source package and restoring any withheld sources. The [repository licence](../../LICENSE)
+covers the model code; captured publisher texts keep their own terms in
+[NOTICE](../../NOTICE) and [package-info.json](package-info.json).
