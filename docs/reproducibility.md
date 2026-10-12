@@ -97,6 +97,39 @@ python3 registry/check_registry.py
 This checks registry schemas, addresses and hashes. It is separate from
 running source scenarios or rebuilding a source package.
 
+## Reproduce the rule trees
+
+The README diagrams are generated from the published APL world rather than
+from a hand-written outline. From the repository root, use the released
+`law` 0.2.2 CLI installed in the Quick start:
+
+```sh
+python3 tools/render_readme_trees.py --law law --check
+```
+
+The script checks the world's SHA-256 against its registry descriptor,
+requests the two native `unfold` trees, and compares the JSON, native text,
+manifest and SVG bytes without writing. Omit `--check` to regenerate them.
+It requires no third-party Python libraries and evaluates no cases.
+
+The underlying request for the first tree is:
+
+```sh
+law engine unfold registry/p/fr.apl/0.1.0/world.lawir.json aide_formule \
+    --depth 2 --lang en --quote 0 --json
+```
+
+Use `droit_ouvert` for the second tree. The
+[manifest](unfold/manifest.json) records the world hash, CLI fingerprint,
+requests and response hashes. [JSON](unfold/aide-formule.json) retains all
+versioned anchors; [native text](unfold/aide-formule.txt) retains the engine's
+labels, including language fallbacks. The SVG displays names and grouped
+article locators without inventing English labels.
+
+These requests do not select a case, date or reading. The trees show all
+returned producers at depth 2, including exception rules; they do not
+establish which rule applied or whether a benefit is due.
+
 ## Troubleshooting
 
 | Symptom | What to do |
