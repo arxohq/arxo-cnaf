@@ -1,38 +1,54 @@
-# `fr.css.ajpa` — daily carer allowance (allocation journalière du proche aidant)
+# fr.css.ajpa
 
-Executable formalization of the AJPA core: the right opened by carer
-leave plus stable residence in France (L. 168-8), the monthly maximum
-(2025+), the 66-day career cap (2021–2025, bareme) and the renewable
-duration ceiling (2025+) (L. 168-9), monthly totals at the retained daily
-rate with the single-carer majoration to 2023-07 and split/part-time
-modulation (L. 168-9), the ten non-cumulation items in two generations
-with the part-time sick exception plus the employed-by-the-aided-person
-exclusion (L. 168-10), the fund payment duty (L. 168-8, L. 168-11, D1),
-the undue-payment recovery duty (L. 168-13, D2), the two statutory
-recovery-by-withholding powers (L. 168-13, P1 on the four listed
-benefit targets / P2) and the recourse information duty (L. 168-14,
-D3).
+Caregiver allowance (AJPA)
 
-Scope: exactly 9 articles (L168-8..16). Pre-2021 texts (the 2019 L168-8
-extended channel, the 2019 L168-11 service text) and the stillborn L168-9
-version are unpinned boundaries (B-PFAJPA-AVANT2021). Decree mechanics
-(daily SMIC euro figure, monthly max days, duration ceiling, recovery
-instalments) arrive as case inputs with provenance (B-PFAJPA-D168).
+> Independent demonstration model. It is not an implementation by or
+> for an authority and does not establish legal accuracy or completeness.
+> For a real case, rely on the official texts and competent bodies.
 
-## Measure
+## Package snapshot
 
-`law audit .` (formalization measure, static profile): 15 rules, dangling
-premises 0, one-way premises 2 of 15. Form catalog: 16 detectors,
-1 finding: `evaluative-fact-without-producer` → `indu_ajpa` — disposition
-accepted: the undue-payment character is established by the paying body's
-finding (L. 168-13 «paiement indu ... constaté»); all tests assert it with
-origin `adjudicated` (§73 channel, DECISION-0194). Measure not taken on 7
-publications without presented text (pre-coverage editions).
+| Item | Value |
+|---|---|
+| Version | `0.1.0` |
+| Namespace | `urn:fr:corpus:clir:css-ajpa` |
+| Semantics | `law.core/0.2.11` |
+| Dependencies | `fr.pf.core` |
 
-## Their case to our answer
+## Run an example
 
-No OpenFisca AJPA model or parameters exist upstream: the DSS/CNAF texts
-and blind reading are the basis, never regressions. Full table:
+Install the CLI as described in the [repository README](../../README.md).
+From the repository root:
 
-[`tests/foreign/REPORT.md`](tests/foreign/REPORT.md) (text-direct
-readings with pinned fragments; classes (a)/ГРАНИЦА per reading).
+```sh
+cd packages/fr.css.ajpa
+law test . --file tests/ajpa-droit-ouvert.lawtest --json
+```
+
+Success checks the declared expectations of the model; it does not certify
+that the model covers the whole benefit or every possible case.
+
+## Scope and inputs
+
+The executable scope is defined by the rules and declared scenarios in this
+snapshot. Each rule has its own dates, prerequisites and source anchors.
+Use the supplied facts and any explicitly selected readings of the scenario;
+do not infer wider coverage from the subject named above.
+
+| Inspect | What it contains |
+|---|---|
+| [law.toml](law.toml) | Package identity, dependencies and declared scenario groups |
+| [law.lock](law.lock) | Exact dependency, semantics and resource pins |
+| [tests/](tests/) | Declared scenarios and their fixtures |
+| [sources/](sources/) | Captured source material; individual reproduction terms apply |
+| [bareme/](bareme/) | Dated model parameters |
+| [deps/](deps/) | Pinned dependency bytes |
+| [i18n/](i18n/) | Labels and translations |
+| [01-sources.law](01-sources.law) | Model declarations and source references |
+
+## Reproduction and rights
+
+See the [repository instructions](../../README.md) for rebuilding
+a source package and restoring any withheld sources. The [repository licence](../../LICENSE)
+covers the model code; captured publisher texts keep their own terms in
+[NOTICE](../../NOTICE) and [package-info.json](package-info.json).
