@@ -1,0 +1,22 @@
+// DOM attribution (L. 755-33): the AJPP right is open
+// (certificate, control agreement, leave), the claimant is in
+// charge and resides in an L. 751-1 collectivity — the AJPP is
+// attributed there.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-attribution-dom" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-adom-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-adom")) { origin adjudicated; }
+        assert "ajpp-adom-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-adom")) { origin adjudicated; }
+        assert "ajpp-adom-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-adom"), entity_ref("urn:fr:pf-ajpp:case:enfant-adom")) { origin case_input; }
+        assert "ajpp-adom-04": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ajpp:case:parent-adom"), entity_ref("urn:fr:pf-ajpp:case:enfant-adom")) { origin case_input; }
+        assert "ajpp-adom-05": residence_collectivite_l751(entity_ref("urn:fr:pf-ajpp:case:parent-adom")) { origin case_input; }
+    }
+    evaluate truth(ajpp_attribution_l751(entity_ref("urn:fr:pf-ajpp:case:parent-adom"), entity_ref("urn:fr:pf-ajpp:case:enfant-adom")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

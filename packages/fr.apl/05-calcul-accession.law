@@ -1,0 +1,646 @@
+// Сектор приобретения жилья (accession à la propriété), APL:
+// D. 832-10…D. 832-18 и глава IV арретэ от 27 сентября 2019 года.
+//
+// ФОРМУЛА (D. 832-10): Af = K × (L + C − L0), где L — мензуальность,
+// ограниченная плафоном, C — форфейт расходов, L0 — минимальная мензуальность.
+//
+// КОЭФФИЦИЕНТА K ЗДЕСЬ НЕТ, и по той же причине, что в модуле 04: его формулу
+// предписывает D. 832-11, а в открытых данных LEGI эта статья отдаёт её
+// картинкой, отсылая к аутентичному извлечению JO. Множитель cm (22 111,33 €,
+// ст. 22 арретэ), таблица долей N (4° D. 832-11), потолок 0,95 и округление
+// «arrondi à deux décimales par défaut» в тексте ЕСТЬ — нет ровно
+// алгебраической формы. Перечень проверенных каналов — в шапке модуля 04.
+//
+// ДВЕ ОСИ, КОТОРЫЕ ЛЕГКО СПУТАТЬ, И ОНИ НЕЗАВИСИМЫ.
+//   * Колонка плафона (ст. 18): a) новое жильё, b) расширенное либо
+//     приобретённое и улучшенное, c) улучшенное собственником-жильцом.
+//   * Ветвь расчёта L0 (D. 832-15): 1° операции С приобретением либо
+//     строительством, 2° СУЩЕСТВУЮЩЕЕ жильё, улучшенное собственником.
+// Дело может брать плафон по b) и L0 по ветви 2° одновременно — так устроено
+// дело Catala «Exemple4», и именно поэтому характер работ и назначение
+// операции приходят РАЗНЫМИ фактами, а не одним перечислением.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    ARR_ART18_ED2019_10,
+    ARR_ART18_ED2020_01,
+    ARR_ART18_ED2020_10,
+    ARR_ART18_ED2021_01,
+    ARR_ART18_ED2021_10,
+    ARR_ART18_ED2022_01,
+    ARR_ART18_ED2022_07,
+    ARR_ART18_ED2023_01,
+    ARR_ART18_ED2023_10,
+    ARR_ART18_ED2024_01,
+    ARR_ART18_ED2024_10,
+    ARR_ART18_ED2025_01,
+    ARR_ART18_ED2025_10,
+    ARR_ART19_ED2019_10,
+    ARR_ART19_ED2020_01,
+    ARR_ART19_ED2020_10,
+    ARR_ART19_ED2021_01,
+    ARR_ART19_ED2021_10,
+    ARR_ART19_ED2022_01,
+    ARR_ART19_ED2022_07,
+    ARR_ART19_ED2023_01,
+    ARR_ART19_ED2023_10,
+    ARR_ART19_ED2024_01,
+    ARR_ART19_ED2024_10,
+    ARR_ART19_ED2025_01,
+    ARR_ART19_ED2025_10,
+    ARR_ART19_ED2026_10,
+    ARR_ART23_ED2019_10,
+    ARR_ART23_ED2020_01,
+    ARR_ART23_ED2020_10,
+    ARR_ART23_ED2021_01,
+    ARR_ART23_ED2021_10,
+    ARR_ART23_ED2022_01,
+    ARR_ART23_ED2022_07,
+    ARR_ART23_ED2023_01,
+    ARR_ART23_ED2023_10,
+    ARR_ART23_ED2024_01,
+    ARR_ART23_ED2024_10,
+    ARR_ART23_ED2025_01,
+    ARR_ART23_ED2025_10,
+    ARR_ART24_ED2019_10,
+    ARR_ART24_ED2020_01,
+    ARR_ART24_ED2020_10,
+    ARR_ART24_ED2021_01,
+    ARR_ART24_ED2021_10,
+    ARR_ART24_ED2022_01,
+    ARR_ART24_ED2022_07,
+    ARR_ART24_ED2023_01,
+    ARR_ART24_ED2023_10,
+    ARR_ART24_ED2024_01,
+    ARR_ART24_ED2024_10,
+    ARR_ART24_ED2025_01,
+    ARR_ART24_ED2025_10,
+    ARR_ART24_ED2026_10,
+    ARR_ART25_ED2019_10,
+    ARR_ART25_ED2020_01,
+    ARR_ART25_ED2020_10,
+    ARR_ART25_ED2021_01,
+    ARR_ART25_ED2021_10,
+    ARR_ART25_ED2022_01,
+    ARR_ART25_ED2022_07,
+    ARR_ART25_ED2023_01,
+    ARR_ART25_ED2023_10,
+    ARR_ART25_ED2024_01,
+    ARR_ART25_ED2024_10,
+    ARR_ART25_ED2025_01,
+    ARR_ART25_ED2025_10,
+    ARR_ART26_ED2019_10,
+    ARR_ART26_ED2020_01,
+    ARR_ART26_ED2020_10,
+    ARR_ART26_ED2021_01,
+    ARR_ART26_ED2021_10,
+    ARR_ART26_ED2022_01,
+    ARR_ART26_ED2022_07,
+    ARR_ART26_ED2023_01,
+    ARR_ART26_ED2023_10,
+    ARR_ART26_ED2024_01,
+    ARR_ART26_ED2024_10,
+    ARR_ART26_ED2025_01,
+    ARR_ART26_ED2025_10,
+    ARR_ART31_ED2019_10,
+    ARR_ART31_ED2020_01,
+    ARR_ART31_ED2020_10,
+    ARR_ART31_ED2021_01,
+    ARR_ART31_ED2021_10,
+    ARR_ART31_ED2022_01,
+    ARR_ART31_ED2022_07,
+    ARR_ART31_ED2023_01,
+    ARR_ART31_ED2023_10,
+    ARR_ART31_ED2024_01,
+    ARR_ART31_ED2024_10,
+    ARR_ART31_ED2025_01,
+    ARR_ART31_ED2025_10,
+    CCH_D832_10,
+    CCH_D832_10_ED2019_12,
+    CCH_D832_10_ED2020_01,
+    CCH_D832_10_ED2021_01,
+    CCH_D832_10_ED2023_04,
+    CCH_D832_10_ED2023_09,
+    CCH_D832_10_ED2023_12,
+    CCH_D832_10_ED2026_07,
+    CCH_D832_11,
+    CCH_D832_11_ED2019_12,
+    CCH_D832_11_ED2020_01,
+    CCH_D832_11_ED2021_01,
+    CCH_D832_11_ED2023_04,
+    CCH_D832_11_ED2023_09,
+    CCH_D832_11_ED2023_12,
+    CCH_D832_11_ED2026_07,
+    CCH_D832_12,
+    CCH_D832_12_ED2019_12,
+    CCH_D832_12_ED2020_01,
+    CCH_D832_12_ED2021_01,
+    CCH_D832_12_ED2023_04,
+    CCH_D832_12_ED2023_09,
+    CCH_D832_12_ED2023_12,
+    CCH_D832_12_ED2026_07,
+    CCH_D832_15,
+    CCH_D832_15_ED2019_12,
+    CCH_D832_15_ED2020_01,
+    CCH_D832_15_ED2021_01,
+    CCH_D832_15_ED2023_04,
+    CCH_D832_15_ED2023_09,
+    CCH_D832_15_ED2023_12,
+    CCH_D832_15_ED2026_07,
+    CCH_D832_17,
+    CCH_D832_17_ED2019_12,
+    CCH_D832_17_ED2020_01,
+    CCH_D832_17_ED2021_01,
+    CCH_D832_17_ED2023_04,
+    CCH_D832_17_ED2023_09,
+    CCH_D832_17_ED2023_12,
+    CCH_D832_17_ED2026_07,
+    CCH_D832_18,
+    CCH_D832_18_ED2019_12,
+    CCH_D832_18_ED2020_01,
+    CCH_D832_18_ED2021_01,
+    CCH_D832_18_ED2023_04,
+    CCH_D832_18_ED2023_09,
+    CCH_D832_18_ED2023_12,
+    CCH_D832_18_ED2026_07,
+    CCH_D832_26,
+    CCH_D832_26_ED2019_12,
+    CCH_D832_26_ED2020_01,
+    CCH_D832_26_ED2021_01,
+    CCH_D832_26_ED2023_04,
+    CCH_D832_26_ED2023_09,
+    CCH_D832_26_ED2023_12,
+    CCH_D832_26_ED2026_07,
+    FinaliteOperation,
+    Menage,
+    ModePropriete,
+    SituationFamiliale,
+    SousCasMensualitePlafond,
+    TypeTravaux,
+    VintagePretDepenseNette,
+    Zone,
+    finalite_operation,
+    mensualite_declaree,
+    mode_propriete,
+    parts_general,
+    personnes_a_charge,
+    ressources_retenues,
+    secteur_accession,
+    situation_familiale,
+    situation_r822_11_13_17,
+    somme_tranches_e0,
+    sous_cas_mensualite,
+    type_travaux,
+    vintage_pret_depense_nette,
+    zone_du_logement,
+};
+
+// --- ст. 18 арретэ: плафоны мензуальности --------------------------------
+//
+// Таблица каждого подслучая имеет четыре строки: изолированный получатель, пара
+// без иждивенцев, один иждивенец и надбавка за каждого следующего. Свыше одного
+// иждивенца плафон есть строка «одного» плюс надбавка за остальных — так
+// устроена сама таблица.
+
+function plafond_mensualite_neuf_colonnes(sous_cas: SousCasMensualitePlafond,
+                                          zone: Zone,
+                                          situation: SituationFamiliale,
+                                          pac: Integer) -> Money {
+    let isole: Money = match sous_cas {
+        PRET_APRES_30_09_2017 => match zone {
+            ZONE_I => PlafondMensualiteAp2017NeufZone1Isole;
+            ZONE_II => PlafondMensualiteAp2017NeufZone2Isole;
+            ZONE_III => PlafondMensualiteAp2017NeufZone3Isole;
+        };
+        PRET_APRES_30_09_2019 => match zone {
+            ZONE_I => PlafondMensualiteAp2019NeufZone1Isole;
+            ZONE_II => PlafondMensualiteAp2019NeufZone2Isole;
+            ZONE_III => PlafondMensualiteAp2019NeufZone3Isole;
+        };
+    };
+    let couple: Money = match sous_cas {
+        PRET_APRES_30_09_2017 => match zone {
+            ZONE_I => PlafondMensualiteAp2017NeufZone1Couple;
+            ZONE_II => PlafondMensualiteAp2017NeufZone2Couple;
+            ZONE_III => PlafondMensualiteAp2017NeufZone3Couple;
+        };
+        PRET_APRES_30_09_2019 => match zone {
+            ZONE_I => PlafondMensualiteAp2019NeufZone1Couple;
+            ZONE_II => PlafondMensualiteAp2019NeufZone2Couple;
+            ZONE_III => PlafondMensualiteAp2019NeufZone3Couple;
+        };
+    };
+    let une_pac: Money = match sous_cas {
+        PRET_APRES_30_09_2017 => match zone {
+            ZONE_I => PlafondMensualiteAp2017NeufZone1UnePac;
+            ZONE_II => PlafondMensualiteAp2017NeufZone2UnePac;
+            ZONE_III => PlafondMensualiteAp2017NeufZone3UnePac;
+        };
+        PRET_APRES_30_09_2019 => match zone {
+            ZONE_I => PlafondMensualiteAp2019NeufZone1UnePac;
+            ZONE_II => PlafondMensualiteAp2019NeufZone2UnePac;
+            ZONE_III => PlafondMensualiteAp2019NeufZone3UnePac;
+        };
+    };
+    let majoration: Money = match sous_cas {
+        PRET_APRES_30_09_2017 => match zone {
+            ZONE_I => PlafondMensualiteAp2017NeufZone1ParPacSup;
+            ZONE_II => PlafondMensualiteAp2017NeufZone2ParPacSup;
+            ZONE_III => PlafondMensualiteAp2017NeufZone3ParPacSup;
+        };
+        PRET_APRES_30_09_2019 => match zone {
+            ZONE_I => PlafondMensualiteAp2019NeufZone1ParPacSup;
+            ZONE_II => PlafondMensualiteAp2019NeufZone2ParPacSup;
+            ZONE_III => PlafondMensualiteAp2019NeufZone3ParPacSup;
+        };
+    };
+    let sans_pac: Money = match situation {
+        PERSONNE_SEULE => isole;
+        COUPLE => couple;
+    };
+    return if pac >= 1 then une_pac + majoration * max(0, pac - 1) else sans_pac;
+}
+
+function plafond_mensualite_acquis_colonnes(sous_cas: SousCasMensualitePlafond,
+                                            zone: Zone,
+                                            situation: SituationFamiliale,
+                                            pac: Integer) -> Money {
+    let isole: Money = match sous_cas {
+        PRET_APRES_30_09_2017 => match zone {
+            ZONE_I => PlafondMensualiteAp2017AcquisAmelioreZone1Isole;
+            ZONE_II => PlafondMensualiteAp2017AcquisAmelioreZone2Isole;
+            ZONE_III => PlafondMensualiteAp2017AcquisAmelioreZone3Isole;
+        };
+        PRET_APRES_30_09_2019 => match zone {
+            ZONE_I => PlafondMensualiteAp2019AcquisAmelioreZone1Isole;
+            ZONE_II => PlafondMensualiteAp2019AcquisAmelioreZone2Isole;
+            ZONE_III => PlafondMensualiteAp2019AcquisAmelioreZone3Isole;
+        };
+    };
+    let couple: Money = match sous_cas {
+        PRET_APRES_30_09_2017 => match zone {
+            ZONE_I => PlafondMensualiteAp2017AcquisAmelioreZone1Couple;
+            ZONE_II => PlafondMensualiteAp2017AcquisAmelioreZone2Couple;
+            ZONE_III => PlafondMensualiteAp2017AcquisAmelioreZone3Couple;
+        };
+        PRET_APRES_30_09_2019 => match zone {
+            ZONE_I => PlafondMensualiteAp2019AcquisAmelioreZone1Couple;
+            ZONE_II => PlafondMensualiteAp2019AcquisAmelioreZone2Couple;
+            ZONE_III => PlafondMensualiteAp2019AcquisAmelioreZone3Couple;
+        };
+    };
+    let une_pac: Money = match sous_cas {
+        PRET_APRES_30_09_2017 => match zone {
+            ZONE_I => PlafondMensualiteAp2017AcquisAmelioreZone1UnePac;
+            ZONE_II => PlafondMensualiteAp2017AcquisAmelioreZone2UnePac;
+            ZONE_III => PlafondMensualiteAp2017AcquisAmelioreZone3UnePac;
+        };
+        PRET_APRES_30_09_2019 => match zone {
+            ZONE_I => PlafondMensualiteAp2019AcquisAmelioreZone1UnePac;
+            ZONE_II => PlafondMensualiteAp2019AcquisAmelioreZone2UnePac;
+            ZONE_III => PlafondMensualiteAp2019AcquisAmelioreZone3UnePac;
+        };
+    };
+    let majoration: Money = match sous_cas {
+        PRET_APRES_30_09_2017 => match zone {
+            ZONE_I => PlafondMensualiteAp2017AcquisAmelioreZone1ParPacSup;
+            ZONE_II => PlafondMensualiteAp2017AcquisAmelioreZone2ParPacSup;
+            ZONE_III => PlafondMensualiteAp2017AcquisAmelioreZone3ParPacSup;
+        };
+        PRET_APRES_30_09_2019 => match zone {
+            ZONE_I => PlafondMensualiteAp2019AcquisAmelioreZone1ParPacSup;
+            ZONE_II => PlafondMensualiteAp2019AcquisAmelioreZone2ParPacSup;
+            ZONE_III => PlafondMensualiteAp2019AcquisAmelioreZone3ParPacSup;
+        };
+    };
+    let sans_pac: Money = match situation {
+        PERSONNE_SEULE => isole;
+        COUPLE => couple;
+    };
+    return if pac >= 1 then une_pac + majoration * max(0, pac - 1) else sans_pac;
+}
+
+// Ст. 24 1°: у сособственников плафон есть 75 % плафона ст. 17 и 18. Доля
+// названа самим арретэ, поэтому это шаг нормы, а не отдельная таблица.
+function part_plafond_selon_propriete(mode: ModePropriete) -> Decimal = match mode {
+    PROPRIETAIRE_UNIQUE => 1.0;
+    COPROPRIETAIRE => PartCoproprietairePlafond;
+};
+
+// --- D. 832-11 4°: доли N -------------------------------------------------
+
+function parts_accession(situation: SituationFamiliale, pac: Integer) -> Decimal {
+    let sans_pac: Decimal = match situation {
+        PERSONNE_SEULE => PartsAccessionIsole;
+        COUPLE => PartsAccessionCouple;
+    };
+    return if pac == 0 then sans_pac
+        else if pac == 1 then PartsAccessionUnePac
+        else if pac == 2 then PartsAccessionDeuxPac
+        else if pac == 3 then PartsAccessionTroisPac
+        else if pac == 4 then PartsAccessionQuatrePac
+        else PartsAccessionQuatrePac + PartsAccessionParPacSup * max(0, pac - 4);
+}
+
+// --- D. 832-15 1° и ст. 23 арретэ: L0 операций с приобретением -----------
+//
+// Две транши: ставка нижней до границы, умноженной на N, ставка верхней — на
+// остаток. «Ce résultat est divisé par douze». Норма округления не названа;
+// деление записано `/ 12.0`, потому что пары `Money / Integer` в закрытом
+// перечне делимых §58 нет, а `Money / Decimal` даёт тот же вид и громкий
+// INEXACT_DIVISION вместо молчаливого округления.
+
+function mensualite_minimale_acquisition(situation: SituationFamiliale,
+                                         pac: Integer,
+                                         ressources: Money) -> Money {
+    let parts: Decimal = parts_accession(situation, pac);
+    let borne: Money = BorneL0 * parts;
+    let basse: Money = min(ressources, borne) * TauxL0TrancheBasse;
+    let haute: Money = if ressources <= borne then 0 EUR
+        else (ressources - borne) * TauxL0TrancheHaute;
+    return (basse + haute) / 12.0;
+}
+
+// --- D. 832-15 2°: L0 существующего жилья, улучшенного собственником ------
+//
+// «selon les dispositions du premier alinéa de l'article D. 832-26 dans
+// lesquelles la mensualité minimale L0 se substitue à l'équivalence minimale
+// E0»: та же машина транширования, что у сектора фойе, с долями N первого
+// пункта D. 832-25 и форфейтом, умноженным на N. Функции модуля 04
+// переиспользуются целиком — это буквально та же норма.
+
+function mensualite_minimale_amelioration(situation: SituationFamiliale,
+                                          pac: Integer,
+                                          ressources: Money) -> Money {
+    let parts: Decimal = parts_general(situation, pac);
+    return (somme_tranches_e0(parts, ressources) + ForfaitE0General * parts) / 12.0;
+}
+
+// --- ст. 19 и ст. 24 2° арретэ: форфейт расходов -------------------------
+
+function forfait_charges_accession_calcule(mode: ModePropriete,
+                                           situation: SituationFamiliale,
+                                           pac: Integer) -> Money {
+    let copro_sans_pac: Money = match situation {
+        PERSONNE_SEULE => ForfaitChargesCoproIsole;
+        COUPLE => ForfaitChargesCoproCouple;
+    };
+    return match mode {
+        PROPRIETAIRE_UNIQUE => ForfaitChargesAccessionBase
+            + ForfaitChargesAccessionParPacSup * pac;
+        COPROPRIETAIRE => copro_sans_pac + ForfaitChargesCoproMajoration * pac;
+    };
+}
+
+// --- ст. 25 арретэ: коэффициент минимального чистого расхода -------------
+
+function coefficient_depense_nette_calcule(finalite: FinaliteOperation,
+                                           vintage: VintagePretDepenseNette) -> Decimal {
+    let autres_cas: Decimal = match vintage {
+        PRET_AVANT_OCTOBRE_1998 => CoefDepenseNetteAvantOctobre1998;
+        PRET_DEPUIS_OCTOBRE_1998 => CoefDepenseNetteDepuisOctobre1998;
+    };
+    return match finalite {
+        LOGEMENT_NEUF => autres_cas;
+        LOGEMENT_ACQUIS_AMELIORE => autres_cas;
+        LOGEMENT_AMELIORE_PAR_OCCUPANT => CoefDepenseNetteAmelioreParOccupant;
+    };
+}
+
+// --- шаги расчёта как заключения норм ------------------------------------
+
+pub relation plafond_mensualite(m: Menage, plafond: Money) kind institutional {
+    key(m);
+    label fr official "mensualité plafond applicable à l'opération";
+    label ru unofficial "плафон мензуальности, применимый к операции";
+}
+
+pub relation mensualite_eligible(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "L: mensualité éligible, prise en compte dans la limite du plafond";
+    label ru unofficial "L: мензуальность, взятая в расчёт в пределах плафона";
+}
+
+pub relation forfait_charges_accession(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "C: montant forfaitaire des charges en secteur accession";
+    label ru unofficial "C: форфейт расходов в секторе приобретения";
+}
+
+pub relation nombre_parts_accession(m: Menage, parts: Decimal) kind institutional {
+    key(m);
+    label fr official "N: nombre de parts du 4° de l'article D. 832-11";
+    label ru unofficial "N: число долей по 4° ст. D. 832-11";
+}
+
+pub relation mensualite_minimale(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "L0: mensualité minimale";
+    label ru unofficial "L0: минимальная мензуальность";
+}
+
+pub relation plancher_ressources(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "plancher de ressources de l'article D. 832-18";
+    label ru unofficial "пол ресурсов ст. D. 832-18";
+}
+
+pub relation coefficient_depense_nette(m: Menage, coefficient: Decimal) kind institutional {
+    key(m);
+    label fr official "coefficient de la dépense nette minimale de l'article D. 832-17";
+    label ru unofficial "коэффициент минимального чистого расхода ст. D. 832-17";
+}
+
+// Колонка c) — «logements améliorés par leur propriétaire occupant» — есть
+// только у франковых подслучаев 1°–3° ст. 18, поэтому у перенесённых винтажей
+// плафона для неё НЕТ, и правил на неё нет тоже: дело с таким назначением
+// плафона не получает, а не получает неверный.
+@source(CCH_D832_10, CCH_D832_10_ED2019_12, CCH_D832_10_ED2020_01,
+        CCH_D832_10_ED2021_01, CCH_D832_10_ED2023_04, CCH_D832_10_ED2023_09,
+        CCH_D832_10_ED2023_12, CCH_D832_10_ED2026_07, ARR_ART18_ED2019_10,
+        ARR_ART18_ED2020_01, ARR_ART18_ED2020_10, ARR_ART18_ED2021_01,
+        ARR_ART18_ED2021_10, ARR_ART18_ED2022_01, ARR_ART18_ED2022_07,
+        ARR_ART18_ED2023_01, ARR_ART18_ED2023_10, ARR_ART18_ED2024_01,
+        ARR_ART18_ED2024_10, ARR_ART18_ED2025_01, ARR_ART18_ED2025_10,
+        ARR_ART24_ED2019_10, ARR_ART24_ED2020_01, ARR_ART24_ED2020_10,
+        ARR_ART24_ED2021_01, ARR_ART24_ED2021_10, ARR_ART24_ED2022_01,
+        ARR_ART24_ED2025_10, ARR_ART24_ED2022_07, ARR_ART24_ED2023_01,
+        ARR_ART24_ED2023_10, ARR_ART24_ED2024_01, ARR_ART24_ED2024_10,
+        ARR_ART24_ED2025_01, ARR_ART24_ED2026_10)
+rule PlafondMensualiteNeuf(m: Menage, sous_cas: SousCasMensualitePlafond,
+                           zone: Zone, situation: SituationFamiliale,
+                           pac: Integer, mode: ModePropriete) strict {
+    label fr official "L est la mensualité éligible, prise en compte dans la limite d'un plafond fixé par arrêté en fonction de la zone géographique, de la composition familiale et de la finalité de l'opération";
+    label ru unofficial "плафон мензуальности: новое жильё";
+    when secteur_accession(m) and finalite_operation(m, LOGEMENT_NEUF)
+        and sous_cas_mensualite(m, sous_cas) and zone_du_logement(m, zone)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and mode_propriete(m, mode);
+    then plafond_mensualite(m,
+        plafond_mensualite_neuf_colonnes(sous_cas, zone, situation, pac)
+        * part_plafond_selon_propriete(mode));
+}
+
+@source(CCH_D832_10, CCH_D832_10_ED2019_12, CCH_D832_10_ED2020_01,
+        CCH_D832_10_ED2021_01, CCH_D832_10_ED2023_04, CCH_D832_10_ED2023_09,
+        CCH_D832_10_ED2023_12, CCH_D832_10_ED2026_07, ARR_ART18_ED2019_10,
+        ARR_ART18_ED2020_01, ARR_ART18_ED2020_10, ARR_ART18_ED2021_01,
+        ARR_ART18_ED2021_10, ARR_ART18_ED2022_01, ARR_ART18_ED2022_07,
+        ARR_ART18_ED2023_01, ARR_ART18_ED2023_10, ARR_ART18_ED2024_01,
+        ARR_ART18_ED2024_10, ARR_ART18_ED2025_01, ARR_ART18_ED2025_10,
+        ARR_ART24_ED2019_10, ARR_ART24_ED2020_01, ARR_ART24_ED2020_10,
+        ARR_ART24_ED2021_01, ARR_ART24_ED2021_10, ARR_ART24_ED2022_01,
+        ARR_ART24_ED2025_10, ARR_ART24_ED2022_07, ARR_ART24_ED2023_01,
+        ARR_ART24_ED2023_10, ARR_ART24_ED2024_01, ARR_ART24_ED2024_10,
+        ARR_ART24_ED2025_01, ARR_ART24_ED2026_10)
+rule PlafondMensualiteAcquisAmeliore(m: Menage, sous_cas: SousCasMensualitePlafond,
+                                     zone: Zone, situation: SituationFamiliale,
+                                     pac: Integer, mode: ModePropriete) strict {
+    label fr official "L est la mensualité éligible, prise en compte dans la limite d'un plafond fixé par arrêté en fonction de la zone géographique, de la composition familiale et de la finalité de l'opération";
+    label ru unofficial "плафон мензуальности: жильё приобретённое и улучшенное";
+    when secteur_accession(m) and finalite_operation(m, LOGEMENT_ACQUIS_AMELIORE)
+        and sous_cas_mensualite(m, sous_cas) and zone_du_logement(m, zone)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and mode_propriete(m, mode);
+    then plafond_mensualite(m,
+        plafond_mensualite_acquis_colonnes(sous_cas, zone, situation, pac)
+        * part_plafond_selon_propriete(mode));
+}
+
+@source(CCH_D832_10, CCH_D832_10_ED2019_12, CCH_D832_10_ED2020_01,
+        CCH_D832_10_ED2021_01, CCH_D832_10_ED2023_04, CCH_D832_10_ED2023_09,
+        CCH_D832_10_ED2023_12, CCH_D832_10_ED2026_07, CCH_D832_12,
+        CCH_D832_12_ED2019_12, CCH_D832_12_ED2020_01, CCH_D832_12_ED2021_01,
+        CCH_D832_12_ED2023_04, CCH_D832_12_ED2023_09, CCH_D832_12_ED2023_12,
+        CCH_D832_12_ED2026_07)
+rule MensualiteEligible(m: Menage, declaree: Money, plafond: Money) strict {
+    label fr official "L est la mensualité éligible, déterminée selon les dispositions de l'article D. 832-12, prise en compte dans la limite d'un plafond";
+    label ru unofficial "L: заявленная мензуальность, ограниченная плафоном";
+    when mensualite_declaree(m, declaree) and plafond_mensualite(m, plafond);
+    then mensualite_eligible(m, min(declaree, plafond));
+}
+
+@source(CCH_D832_10, CCH_D832_10_ED2019_12, CCH_D832_10_ED2020_01,
+        CCH_D832_10_ED2021_01, CCH_D832_10_ED2023_04, CCH_D832_10_ED2023_09,
+        CCH_D832_10_ED2023_12, CCH_D832_10_ED2026_07, ARR_ART19_ED2019_10,
+        ARR_ART19_ED2020_01, ARR_ART19_ED2020_10, ARR_ART19_ED2021_01,
+        ARR_ART19_ED2021_10, ARR_ART19_ED2022_01, ARR_ART24_ED2019_10,
+        ARR_ART24_ED2020_01, ARR_ART24_ED2020_10, ARR_ART24_ED2021_01,
+        ARR_ART24_ED2021_10, ARR_ART24_ED2022_01, ARR_ART19_ED2025_10,
+        ARR_ART24_ED2025_10, ARR_ART24_ED2022_07, ARR_ART24_ED2023_01,
+        ARR_ART24_ED2023_10, ARR_ART24_ED2024_01, ARR_ART24_ED2024_10,
+        ARR_ART24_ED2025_01, ARR_ART19_ED2022_07, ARR_ART19_ED2023_01,
+        ARR_ART19_ED2023_10, ARR_ART19_ED2024_01, ARR_ART19_ED2024_10,
+        ARR_ART19_ED2025_01, ARR_ART19_ED2026_10, ARR_ART24_ED2026_10)
+rule ForfaitChargesAccession(m: Menage, mode: ModePropriete,
+                             situation: SituationFamiliale, pac: Integer) strict {
+    label fr official "C est le montant forfaitaire au titre des charges, fixé par arrêté en fonction de la composition familiale";
+    label ru unofficial "C: форфейт расходов по составу домохозяйства";
+    when secteur_accession(m) and mode_propriete(m, mode)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac);
+    then forfait_charges_accession(m, forfait_charges_accession_calcule(mode, situation, pac));
+}
+
+@source(CCH_D832_11, CCH_D832_11_ED2019_12, CCH_D832_11_ED2020_01,
+        CCH_D832_11_ED2021_01, CCH_D832_11_ED2023_04, CCH_D832_11_ED2023_09,
+        CCH_D832_11_ED2023_12, CCH_D832_11_ED2026_07)
+rule NombrePartsAccession(m: Menage, situation: SituationFamiliale,
+                          pac: Integer) strict {
+    label fr official "N représente le nombre de parts déterminé selon le barème suivant";
+    label ru unofficial "N: число долей по барему 4° ст. D. 832-11";
+    when secteur_accession(m) and situation_familiale(m, situation)
+        and personnes_a_charge(m, pac);
+    then nombre_parts_accession(m, parts_accession(situation, pac));
+}
+
+@source(CCH_D832_15, CCH_D832_15_ED2019_12, CCH_D832_15_ED2020_01,
+        CCH_D832_15_ED2021_01, CCH_D832_15_ED2023_04, CCH_D832_15_ED2023_09,
+        CCH_D832_15_ED2023_12, CCH_D832_15_ED2026_07, ARR_ART23_ED2019_10,
+        ARR_ART23_ED2020_01, ARR_ART23_ED2020_10, ARR_ART23_ED2021_01,
+        ARR_ART23_ED2021_10, ARR_ART23_ED2022_01, ARR_ART23_ED2022_07,
+        ARR_ART23_ED2023_01, ARR_ART23_ED2023_10, ARR_ART23_ED2024_01,
+        ARR_ART23_ED2024_10, ARR_ART23_ED2025_01, ARR_ART23_ED2025_10)
+rule MensualiteMinimaleSansTravaux(m: Menage, situation: SituationFamiliale,
+                                   pac: Integer, ressources: Money) strict {
+    label fr official "L0 est calculée pour les logements construits, agrandis, aménagés à partir de locaux non destinés à l'habitation, acquis et améliorés, par l'application de pourcentages à des tranches de ressources dont les limites sont multipliées par le nombre de parts N; ce résultat est divisé par douze";
+    label ru unofficial "L0 по ветви 1°: работ нет, операция связана с приобретением";
+    when secteur_accession(m) and type_travaux(m, PAS_DE_TRAVAUX)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources);
+    then mensualite_minimale(m,
+        mensualite_minimale_acquisition(situation, pac, ressources));
+}
+
+@source(CCH_D832_15, CCH_D832_15_ED2019_12, CCH_D832_15_ED2020_01,
+        CCH_D832_15_ED2021_01, CCH_D832_15_ED2023_04, CCH_D832_15_ED2023_09,
+        CCH_D832_15_ED2023_12, CCH_D832_15_ED2026_07, ARR_ART23_ED2019_10,
+        ARR_ART23_ED2020_01, ARR_ART23_ED2020_10, ARR_ART23_ED2021_01,
+        ARR_ART23_ED2021_10, ARR_ART23_ED2022_01, ARR_ART23_ED2022_07,
+        ARR_ART23_ED2023_01, ARR_ART23_ED2023_10, ARR_ART23_ED2024_01,
+        ARR_ART23_ED2024_10, ARR_ART23_ED2025_01, ARR_ART23_ED2025_10)
+rule MensualiteMinimaleTravauxAcquisition(m: Menage, situation: SituationFamiliale,
+                                          pac: Integer, ressources: Money) strict {
+    label fr official "L0 est calculée pour les logements construits, agrandis, aménagés à partir de locaux non destinés à l'habitation, acquis et améliorés, par l'application de pourcentages à des tranches de ressources dont les limites sont multipliées par le nombre de parts N; ce résultat est divisé par douze";
+    label ru unofficial "L0 по ветви 1°: работы для приобретения";
+    when secteur_accession(m) and type_travaux(m, TRAVAUX_POUR_ACQUISITION)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources);
+    then mensualite_minimale(m,
+        mensualite_minimale_acquisition(situation, pac, ressources));
+}
+
+@source(CCH_D832_15, CCH_D832_15_ED2019_12, CCH_D832_15_ED2020_01,
+        CCH_D832_15_ED2021_01, CCH_D832_15_ED2023_04, CCH_D832_15_ED2023_09,
+        CCH_D832_15_ED2023_12, CCH_D832_15_ED2026_07, CCH_D832_26,
+        CCH_D832_26_ED2019_12, CCH_D832_26_ED2020_01, CCH_D832_26_ED2021_01,
+        CCH_D832_26_ED2023_04, CCH_D832_26_ED2023_09, CCH_D832_26_ED2023_12,
+        CCH_D832_26_ED2026_07, ARR_ART31_ED2019_10, ARR_ART31_ED2020_01,
+        ARR_ART31_ED2020_10, ARR_ART31_ED2021_01, ARR_ART31_ED2021_10,
+        ARR_ART31_ED2022_01, ARR_ART31_ED2022_07, ARR_ART31_ED2023_01,
+        ARR_ART31_ED2023_10, ARR_ART31_ED2024_01, ARR_ART31_ED2024_10,
+        ARR_ART31_ED2025_01, ARR_ART31_ED2025_10)
+rule MensualiteMinimaleAmelioration(m: Menage, situation: SituationFamiliale,
+                                    pac: Integer, ressources: Money) strict {
+    label fr official "pour les logements existants améliorés et occupés par leur propriétaire, L0 est calculée selon les dispositions du premier alinéa de l'article D. 832-26 dans lesquelles elle se substitue à l'équivalence minimale de loyer et de charges E0";
+    label ru unofficial "L0 по ветви 2°: существующее жильё, улучшенное собственником";
+    when secteur_accession(m) and type_travaux(m, TRAVAUX_SUR_LOGEMENT_DEJA_ACQUIS)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources);
+    then mensualite_minimale(m,
+        mensualite_minimale_amelioration(situation, pac, ressources));
+}
+
+@source(CCH_D832_18, CCH_D832_18_ED2019_12, CCH_D832_18_ED2020_01,
+        CCH_D832_18_ED2021_01, CCH_D832_18_ED2023_04, CCH_D832_18_ED2023_09,
+        CCH_D832_18_ED2023_12, CCH_D832_18_ED2026_07, ARR_ART26_ED2019_10,
+        ARR_ART26_ED2020_01, ARR_ART26_ED2020_10, ARR_ART26_ED2021_01,
+        ARR_ART26_ED2021_10, ARR_ART26_ED2022_01, ARR_ART26_ED2022_07,
+        ARR_ART26_ED2023_01, ARR_ART26_ED2023_10, ARR_ART26_ED2024_01,
+        ARR_ART26_ED2024_10, ARR_ART26_ED2025_01, ARR_ART26_ED2025_10)
+rule PlancherRessources(m: Menage, declaree: Money) strict {
+    label fr official "si les ressources sont inférieures à un montant déterminé par le produit d'un coefficient, fixé par arrêté, et des mensualités déclarées, les ressources sont réputées égales à ce montant, sauf lorsque les intéressés se trouvent dans l'une des situations mentionnées aux articles R. 822-11 et R. 822-13 à R. 822-17";
+    label ru unofficial "пол ресурсов: коэффициент × заявленные мензуальности, кроме ситуаций R. 822-11 и R. 822-13…R. 822-17";
+    when secteur_accession(m) and mensualite_declaree(m, declaree)
+        and situation_r822_11_13_17(m, false);
+    then plancher_ressources(m, declaree * CoefPlancherRessources);
+}
+
+@source(CCH_D832_17, CCH_D832_17_ED2019_12, CCH_D832_17_ED2020_01,
+        CCH_D832_17_ED2021_01, CCH_D832_17_ED2023_04, CCH_D832_17_ED2023_09,
+        CCH_D832_17_ED2023_12, CCH_D832_17_ED2026_07, ARR_ART25_ED2019_10,
+        ARR_ART25_ED2020_01, ARR_ART25_ED2020_10, ARR_ART25_ED2021_01,
+        ARR_ART25_ED2021_10, ARR_ART25_ED2022_01, ARR_ART25_ED2022_07,
+        ARR_ART25_ED2023_01, ARR_ART25_ED2023_10, ARR_ART25_ED2024_01,
+        ARR_ART25_ED2024_10, ARR_ART25_ED2025_01, ARR_ART25_ED2025_10)
+rule CoefficientDepenseNette(m: Menage, finalite: FinaliteOperation,
+                             vintage: VintagePretDepenseNette) strict {
+    label fr official "lorsque la dépense nette ainsi calculée est inférieure au produit des ressources et d'un coefficient fixé par arrêté, selon la date de signature du contrat et la finalité de l'opération, il est appliqué un abattement sur le montant mensuel de l'aide égal à la différence constatée";
+    label ru unofficial "коэффициент минимального чистого расхода по назначению операции и дате займа";
+    when secteur_accession(m) and finalite_operation(m, finalite)
+        and vintage_pret_depense_nette(m, vintage);
+    then coefficient_depense_nette(m,
+        coefficient_depense_nette_calcule(finalite, vintage));
+}

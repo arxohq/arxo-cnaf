@@ -1,0 +1,17 @@
+// Transition: 30 % of the 400.00 reference allowance = 120.00
+// suspended per month (decree 2025-478 art. 12, I).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-transitoire" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "trans-01": sanction_taux(entity_ref("urn:fr:rsa:case:transitoire"), 0.30) { origin case_input; }
+        assert "trans-02": sanction_allocation_reference(entity_ref("urn:fr:rsa:case:transitoire"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(sanction_montant_mensuel(entity_ref("urn:fr:rsa:case:transitoire"), 120.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

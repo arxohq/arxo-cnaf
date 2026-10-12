@@ -1,0 +1,17 @@
+// ASF stopped by new union: orphaned child whose holder remarries - payment stops (L. 523-2 paragraph 2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-renvoi-asf-cessation-couple" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "renvoi-asf-cessation-couple-01": asf_cas_orphelin(entity_ref("urn:fr:pf:case:enfant-remarie")) { origin case_input; }
+        assert "renvoi-asf-cessation-couple-02": parent_charge(entity_ref("urn:fr:pf:case:titulaire-remarie"), entity_ref("urn:fr:pf:case:enfant-remarie")) { origin case_input; }
+        assert "renvoi-asf-cessation-couple-03": asf_couple_nouveau(entity_ref("urn:fr:pf:case:titulaire-remarie")) { origin case_input; }
+    }
+    evaluate truth(asf_ouvre_droit(entity_ref("urn:fr:pf:case:enfant-remarie")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

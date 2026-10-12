@@ -1,0 +1,20 @@
+// Window 2022-07..2023-03 WITHOUT the reading MfJuillet2022ArrondiCentime: art. 9 of law
+// 2022-1158 (+4 %) bridges the window only under that reading (the rounding of the product
+// is not in the text), so with no selection no base is built and no flat-rate is derived
+// (boundary B-RSA-MF-EURO): the stale 2022-04 figure (575.52) is NOT carried forward, the
+// proposition is not established. With the reading: mf-loi-2022-07 and its siblings.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-decret-trou-2022" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2022-09-15T12:00:00Z; knowledge_time @2022-09-15T12:00:00Z; legal_time @2022-09-15; timezone "Europe/Paris"; }
+        assert "t-trou-01": mois_droit(entity_ref("urn:fr:rsa:case:mf-decret-trou-2022"), @2022-09-01) { origin case_input; }
+        assert "t-trou-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-decret-trou-2022"), 1) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-decret-trou-2022"), 575.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

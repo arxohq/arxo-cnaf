@@ -1,0 +1,552 @@
+// Structure and employer aid (L. 531-6): scale, EAJE, majorations.
+//
+// D. 531-20 (reform): the L. 531-6 ceilings use the published DSS bases
+// and per-child supplements, including the isolated-parent table. D. 531-21: 85% of the
+// expense under BMAF-band maxima — childminder 172.57/143.81/115.05,
+// home/EAJE 208.53/179.76/151.00 — halved between three and six (IV)
+// and for part-time PreParE (VII); EAJE capacity and 10 EUR/h tariff
+// conditions (I); monthly payment on justification (VI). Old D. 531-23
+// carries the same band figures with halves on the old grounds
+// (age_taux_reduit, PreParE) and the 16-hour minimum (V). The old-law
+// 1°/2°/4° majorations have no decree measure pre-reform
+// (B-CMG-MAJO-ANCIENNE): only the single 40% is built there.
+// New D. 531-22: +10% specific hours (25h declared, yearly control),
+// +30% AAH/disability/single. Per-family pooling of home care
+// (D. 531-21 III 4°) is a boundary (B-CMG-STRUCTURE-FAMILLE): the aid
+// is computed per child, exact for single-child cases.
+
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+use self::{
+    CSS_D531_20_ED2025_09,
+    CSS_D531_21_ED2025_09,
+    CSS_D531_22_ED2025_09,
+    CSS_D531_23_ED2020_01,
+    CSS_D531_23_ED2021_09,
+    CSS_L531_6_ED2020_01,
+    CSS_L531_6_ED2024_09,
+    CSS_L531_6_ED2025_01,
+    CSS_L531_6_ED2025_02,
+    CSS_L531_6_ED2025_09,
+    ModeGarde,
+    activite_requise_remplie,
+    age_eligible,
+    age_moitie36,
+    age_revolu_ans,
+    age_taux_reduit,
+    aide_structure,
+    arrondi_maximum_cmg,
+    beneficiaire_aah,
+    bmaf_retenu,
+    depense_engagee,
+    droit_structure_ouvert,
+    eaje_capacite,
+    eaje_seuil_capacite,
+    eaje_tarif_horaire,
+    enfant_aeeh,
+    heures_remunerees,
+    heures_specifiques,
+    horaires_atypiques,
+    maximum_structure,
+    mode_garde,
+    montant_structure_du,
+    nb_enfants_charge,
+    personne_seule,
+    plafond1_applicable,
+    plafond2_applicable,
+    plafond_a_base_isole_publie,
+    plafond_a_base_publie,
+    plafond_a_enfant_isole_publie,
+    plafond_a_enfant_publie,
+    plafond_ancien_montant,
+    plafond_c_base_isole_publie,
+    plafond_c_base_publie,
+    plafond_c_enfant_isole_publie,
+    plafond_c_enfant_publie,
+    preparer_temps_partiel,
+    ressources_annuelles,
+    taux_bande_structure_am,
+    taux_bande_structure_dom,
+};
+
+// --- L. 531-6 ceilings (published DSS components) ------------------------------
+
+@source(CSS_D531_20_ED2025_09)
+rule Plafond1Nouveau(p: fr.pf.core::Personne, n: Integer, base: Money, incr: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "nouveau plafond a: base publiée + majoration par enfant (D. 531-20)";
+    label en unofficial "new a-ceiling: published base + supplement per child (D. 531-20)";
+    when nb_enfants_charge(p, n) and plafond_a_base_publie(p, base) and plafond_a_enfant_publie(p, incr) and not_known(personne_seule(p));
+    then plafond1_applicable(p, plafond_ancien_montant(base, incr, n));
+}
+
+@source(CSS_D531_20_ED2025_09, CSS_D531_21_ED2025_09)
+rule Plafond1NouveauSeule(p: fr.pf.core::Personne, n: Integer, base: Money, incr: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "nouveau plafond a majoré de 40 % (personne seule)";
+    label en unofficial "new a-ceiling plus 40% (single person)";
+    when personne_seule(p) and nb_enfants_charge(p, n) and plafond_a_base_isole_publie(p, base) and plafond_a_enfant_isole_publie(p, incr);
+    then plafond1_applicable(p, plafond_ancien_montant(base, incr, n));
+}
+
+@source(CSS_D531_20_ED2025_09)
+rule Plafond2Nouveau(p: fr.pf.core::Personne, n: Integer, base: Money, incr: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "nouveau plafond c: base publiée + majoration par enfant (D. 531-20)";
+    label en unofficial "new c-ceiling: published base + supplement per child (D. 531-20)";
+    when nb_enfants_charge(p, n) and plafond_c_base_publie(p, base) and plafond_c_enfant_publie(p, incr) and not_known(personne_seule(p));
+    then plafond2_applicable(p, plafond_ancien_montant(base, incr, n));
+}
+
+@source(CSS_D531_20_ED2025_09, CSS_D531_21_ED2025_09)
+rule Plafond2NouveauSeule(p: fr.pf.core::Personne, n: Integer, base: Money, incr: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "nouveau plafond c majoré de 40 % (personne seule)";
+    label en unofficial "new c-ceiling plus 40% (single person)";
+    when personne_seule(p) and nb_enfants_charge(p, n) and plafond_c_base_isole_publie(p, base) and plafond_c_enfant_isole_publie(p, incr);
+    then plafond2_applicable(p, plafond_ancien_montant(base, incr, n));
+}
+
+// --- Right opening ---------------------------------------------------------------
+//
+// L. 531-6: the L. 531-5 opening conditions plus the structure channel.
+// Old law adds the 16-hour monthly minimum (old D. 531-23, V; old
+// L. 531-6). EAJE adds capacity and tariff gates (D. 531-21, I).
+
+@source(CSS_L531_6_ED2020_01, CSS_L531_6_ED2024_09, CSS_L531_6_ED2025_01, CSS_L531_6_ED2025_02, CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule DroitStructureAncien(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, heures: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "structure, seize heures minimum: droit ouvert (ancien droit)";
+    label en unofficial "structure, sixteen-hour minimum: right open (old law)";
+    when mode_garde(p, e, STRUCTURE)
+        and activite_requise_remplie(p)
+        and age_eligible(p, e)
+        and fr.pf.core::parent_charge(p, e)
+        and heures_remunerees(p, e, heures) and heures >= SeuilHeuresStructure16;
+    then droit_structure_ouvert(p, e);
+}
+
+@source(CSS_L531_6_ED2025_09, CSS_D531_21_ED2025_09)
+rule DroitStructureReforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "structure: droit ouvert sans minimum d'heures (réforme)";
+    label en unofficial "structure: right open with no hour minimum (reform)";
+    when mode_garde(p, e, STRUCTURE)
+        and activite_requise_remplie(p)
+        and age_eligible(p, e)
+        and fr.pf.core::parent_charge(p, e);
+    then droit_structure_ouvert(p, e);
+}
+
+@source(CSS_L531_6_ED2020_01, CSS_L531_6_ED2024_09, CSS_L531_6_ED2025_01, CSS_L531_6_ED2025_02, CSS_L531_6_ED2025_09, CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule DroitStructureEAJE(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, places: Integer, seuil: Integer, tarif: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "EAJE sous seuil de capacité et tarif 10 €/h: droit ouvert";
+    label en unofficial "EAJE within capacity threshold and 10 €/h tariff: right open";
+    when mode_garde(p, e, EAJE)
+        and activite_requise_remplie(p)
+        and age_eligible(p, e)
+        and fr.pf.core::parent_charge(p, e)
+        and eaje_capacite(p, e, places) and eaje_seuil_capacite(p, e, seuil) and places <= seuil
+        and eaje_tarif_horaire(p, e, tarif) and tarif <= TarifHoraireMaxEAJE;
+    then droit_structure_ouvert(p, e);
+}
+
+// --- Band maxima (same figures old and new: single rows, both sources) -----
+//
+// Childminder via structure: 172.57 / 143.81 / 115.05% of BMAF.
+// Home care or EAJE: 208.53 / 179.76 / 151.00% of BMAF.
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureAssmat1(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum structure assistante maternelle bande 1: 172,57 % (ancien droit)";
+    label en unofficial "structure childminder band-1 maximum: 172.57% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and r <= p1 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_structure(p, e, TauxStructureAssmatBande1 * bmaf);
+}
+
+@source(CSS_D531_21_ED2025_09)
+rule MaximumStructureAssmat1Reforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, bmaf: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "maximum structure assistante maternelle bande 1: 172,57 % (réforme)";
+    label en unofficial "structure childminder band-1 maximum: 172.57% (reform)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and r <= p1 and bmaf_retenu(p, bmaf) and not_known(age_moitie36(e)) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p));
+    then maximum_structure(p, e, round(TauxStructureAssmatBande1 * bmaf, 2, "HALF_UP"));
+}
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureAssmat2(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum structure assistante maternelle bande 2: 143,81 % (ancien droit)";
+    label en unofficial "structure childminder band-2 maximum: 143.81% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p1 and r <= p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_structure(p, e, TauxStructureAssmatBande2 * bmaf);
+}
+
+@source(CSS_D531_21_ED2025_09)
+rule MaximumStructureAssmat2Reforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "maximum structure assistante maternelle bande 2: 143,81 % (réforme)";
+    label en unofficial "structure childminder band-2 maximum: 143.81% (reform)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p1 and r <= p2 and bmaf_retenu(p, bmaf) and not_known(age_moitie36(e)) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p));
+    then maximum_structure(p, e, round(TauxStructureAssmatBande2 * bmaf, 2, "HALF_UP"));
+}
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureAssmat3(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum structure assistante maternelle bande 3: 115,05 % (ancien droit)";
+    label en unofficial "structure childminder band-3 maximum: 115.05% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and ressources_annuelles(p, r) and plafond2_applicable(p, p2) and r > p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_structure(p, e, TauxStructureAssmatBande3 * bmaf);
+}
+
+@source(CSS_D531_21_ED2025_09)
+rule MaximumStructureAssmat3Reforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p2: Money, bmaf: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "maximum structure assistante maternelle bande 3: 115,05 % (réforme)";
+    label en unofficial "structure childminder band-3 maximum: 115.05% (reform)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and ressources_annuelles(p, r) and plafond2_applicable(p, p2) and r > p2 and bmaf_retenu(p, bmaf) and not_known(age_moitie36(e)) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p));
+    then maximum_structure(p, e, round(TauxStructureAssmatBande3 * bmaf, 2, "HALF_UP"));
+}
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureDom1(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum domicile/EAJE bande 1: 208,53 % (ancien droit)";
+    label en unofficial "home/EAJE band-1 maximum: 208.53% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and r <= p1 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_structure(p, e, TauxStructureDomBande1 * bmaf);
+}
+
+@source(CSS_D531_21_ED2025_09)
+rule MaximumStructureDom1Reforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, bmaf: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "maximum domicile/EAJE bande 1: 208,53 % (réforme)";
+    label en unofficial "home/EAJE band-1 maximum: 208.53% (reform)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and r <= p1 and bmaf_retenu(p, bmaf) and not_known(age_moitie36(e)) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p));
+    then maximum_structure(p, e, round(TauxStructureDomBande1 * bmaf, 2, "HALF_UP"));
+}
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureDom2(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum domicile/EAJE bande 2: 179,76 % (ancien droit)";
+    label en unofficial "home/EAJE band-2 maximum: 179.76% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p1 and r <= p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_structure(p, e, TauxStructureDomBande2 * bmaf);
+}
+
+@source(CSS_D531_21_ED2025_09)
+rule MaximumStructureDom2Reforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "maximum domicile/EAJE bande 2: 179,76 % (réforme)";
+    label en unofficial "home/EAJE band-2 maximum: 179.76% (reform)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p1 and r <= p2 and bmaf_retenu(p, bmaf) and not_known(age_moitie36(e)) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p));
+    then maximum_structure(p, e, round(TauxStructureDomBande2 * bmaf, 2, "HALF_UP"));
+}
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureDom3(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum domicile/EAJE bande 3: 151,00 % (ancien droit)";
+    label en unofficial "home/EAJE band-3 maximum: 151.00% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and ressources_annuelles(p, r) and plafond2_applicable(p, p2) and r > p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_structure(p, e, TauxStructureDomBande3 * bmaf);
+}
+
+@source(CSS_D531_21_ED2025_09)
+rule MaximumStructureDom3Reforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p2: Money, bmaf: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "maximum domicile/EAJE bande 3: 151,00 % (réforme)";
+    label en unofficial "home/EAJE band-3 maximum: 151.00% (reform)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and ressources_annuelles(p, r) and plafond2_applicable(p, p2) and r > p2 and bmaf_retenu(p, bmaf) and not_known(age_moitie36(e)) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p));
+    then maximum_structure(p, e, round(TauxStructureDomBande3 * bmaf, 2, "HALF_UP"));
+}
+// --- Halves ------------------------------------------------------------------------
+//
+// Old grounds (full window — age_taux_reduit only exists pre-reform):
+// reduced-rate age and part-time PreParE. New ground 3–6 (reform
+// window, D. 531-21 IV; VII sends part-time PreParE to the same halves).
+
+// --- Band rate readers (shared by the halved rows) ------------------------------
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule TauxBandeStructureAm1(p: fr.pf.core::Personne, r: Money, p1: Money, p2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bande structure assistante maternelle 1";
+    label en unofficial "structure childminder band 1";
+    when ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r <= p1;
+    then taux_bande_structure_am(p, r, p1, p2, TauxStructureAssmatBande1);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule TauxBandeStructureAm2(p: fr.pf.core::Personne, r: Money, p1: Money, p2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bande structure assistante maternelle 2";
+    label en unofficial "structure childminder band 2";
+    when ressources_annuelles(p, r)
+        and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and r > p1 and r <= p2;
+    then taux_bande_structure_am(p, r, p1, p2, TauxStructureAssmatBande2);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule TauxBandeStructureAm3(p: fr.pf.core::Personne, r: Money, p1: Money, p2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bande structure assistante maternelle 3";
+    label en unofficial "structure childminder band 3";
+    when ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p2;
+    then taux_bande_structure_am(p, r, p1, p2, TauxStructureAssmatBande3);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule TauxBandeStructureDom1(p: fr.pf.core::Personne, r: Money, p1: Money, p2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bande domicile/EAJE 1";
+    label en unofficial "home/EAJE band 1";
+    when ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r <= p1;
+    then taux_bande_structure_dom(p, r, p1, p2, TauxStructureDomBande1);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule TauxBandeStructureDom2(p: fr.pf.core::Personne, r: Money, p1: Money, p2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bande domicile/EAJE 2";
+    label en unofficial "home/EAJE band 2";
+    when ressources_annuelles(p, r)
+        and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and r > p1 and r <= p2;
+    then taux_bande_structure_dom(p, r, p1, p2, TauxStructureDomBande2);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule TauxBandeStructureDom3(p: fr.pf.core::Personne, r: Money, p1: Money, p2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bande domicile/EAJE 3";
+    label en unofficial "home/EAJE band 3";
+    when ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p2;
+    then taux_bande_structure_dom(p, r, p1, p2, TauxStructureDomBande3);
+}
+
+// --- Halved maxima ------------------------------------------------------------------
+//
+// Old grounds (age_taux_reduit implies the old window; PreParE spans
+// both): halved on the old and new figures alike. New ground 3–6
+// (reform window only).
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule MaximumStructureReduitAmAge(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum assistante maternelle divisé par deux (taux réduit ancien)";
+    label en unofficial "childminder maximum halved (old reduced rate)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and age_taux_reduit(p, e)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_am(p, r, p1, p2, t) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_structure(p, e, t * bmaf / 2.0);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule MaximumStructureReduitDomAge(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum domicile/EAJE divisé par deux (taux réduit ancien)";
+    label en unofficial "home/EAJE maximum halved (old reduced rate)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and age_taux_reduit(p, e)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_dom(p, r, p1, p2, t) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_structure(p, e, t * bmaf / 2.0);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureReduitAmPreParE(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "maximum assistante maternelle divisé par deux (PreParE à temps partiel)";
+    label en unofficial "childminder maximum halved (part-time PreParE)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and preparer_temps_partiel(p)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_am(p, r, p1, p2, t) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_structure(p, e, t * bmaf / 2.0);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureReduitDomPreParE(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "maximum domicile/EAJE divisé par deux (PreParE à temps partiel)";
+    label en unofficial "home/EAJE maximum halved (part-time PreParE)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and preparer_temps_partiel(p)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_dom(p, r, p1, p2, t) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_structure(p, e, t * bmaf / 2.0);
+}
+
+@source(CSS_D531_21_ED2025_09)
+rule MaximumStructureReduitAm36(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "maximum assistante maternelle divisé par deux entre trois et six ans (D. 531-21, IV)";
+    label en unofficial "childminder maximum halved between three and six (D. 531-21, IV)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE)
+        and age_revolu_ans(e, n) and n >= AgeSeuil3 and n < AgeLimite6
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_am(p, r, p1, p2, t);
+    then maximum_structure(p, e, t * bmaf / 2.0);
+}
+
+@source(CSS_D531_21_ED2025_09)
+rule MaximumStructureReduitDom36(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "maximum domicile/EAJE divisé par deux entre trois et six ans (D. 531-21, IV)";
+    label en unofficial "home/EAJE maximum halved between three and six (D. 531-21, IV)";
+    when droit_structure_ouvert(p, e)
+        and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE
+        and age_revolu_ans(e, n) and n >= AgeSeuil3 and n < AgeLimite6
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_dom(p, r, p1, p2, t);
+    then maximum_structure(p, e, t * bmaf / 2.0);
+}
+
+// --- Aid: 85% of expense under the maxima (strict disjoint rows) -------------------
+//
+// «La prise en charge partielle ... est fixée au maximum à 85 % de la
+// dépense engagée». Majorations raise the maxima (+10% specific hours,
+// +30% AAH/disability/single): the base aid rows are strict and
+// disjoint from the majorated rows (not_known on the majoration
+// grounds); the majorated rows conclude under the raised maxima on the
+// positive grounds. Co-occurring +30% grounds yield the same value, so
+// no precedence is needed among them; a +10% ground co-occurring with
+// a +30% ground yields to the +30% rows (B-CMG-MAJO-COEX: no
+// cumulation of majorations, single majoration retained).
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule AideStructureSousMaximum(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, depense: Money, maximum: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "85 % de la dépense sous le maximum: 85 %";
+    label en unofficial "85% of expense under the maximum: 85%";
+    when droit_structure_ouvert(p, e) and depense_engagee(p, e, depense) and maximum_structure(p, e, maximum) and TauxPriseEnCharge85 * depense <= maximum and not_known(horaires_atypiques(p)) and not_known(beneficiaire_aah(p)) and not_known(personne_seule(p)) and not_known(enfant_aeeh(e));
+    then aide_structure(p, e, TauxPriseEnCharge85 * depense);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule AideStructureEcretee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, depense: Money, maximum: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "85 % écrêté au maximum";
+    label en unofficial "85% cut to the maximum";
+    when droit_structure_ouvert(p, e) and depense_engagee(p, e, depense) and maximum_structure(p, e, maximum) and TauxPriseEnCharge85 * depense > maximum and not_known(horaires_atypiques(p)) and not_known(beneficiaire_aah(p)) and not_known(personne_seule(p)) and not_known(enfant_aeeh(e));
+    then aide_structure(p, e, maximum);
+}
+
+@source(CSS_D531_22_ED2025_09)
+rule AideStructureSpecifiquesSousMaximum(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, depense: Money, maximum: Money, h: Decimal) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "horaires spécifiques: 85 % sous maximum majoré de 10 %";
+    label en unofficial "specific hours: 85% under the 10%-raised maximum";
+    when droit_structure_ouvert(p, e) and horaires_atypiques(p) and heures_specifiques(p, e, h) and h >= SeuilSpecifiques25 and depense_engagee(p, e, depense) and maximum_structure(p, e, maximum) and TauxPriseEnCharge85 * depense <= maximum * MajorationSpecifiques10 and not_known(beneficiaire_aah(p)) and not_known(personne_seule(p)) and not_known(enfant_aeeh(e));
+    then aide_structure(p, e, TauxPriseEnCharge85 * depense);
+}
+
+@source(CSS_D531_22_ED2025_09)
+rule AideStructureSpecifiquesEcretee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, depense: Money, maximum: Money, h: Decimal) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "horaires spécifiques: maximum majoré de 10 %";
+    label en unofficial "specific hours: 10%-raised maximum";
+    when droit_structure_ouvert(p, e) and horaires_atypiques(p) and heures_specifiques(p, e, h) and h >= SeuilSpecifiques25 and depense_engagee(p, e, depense) and maximum_structure(p, e, maximum) and TauxPriseEnCharge85 * depense > maximum * MajorationSpecifiques10 and not_known(beneficiaire_aah(p)) and not_known(personne_seule(p)) and not_known(enfant_aeeh(e));
+    then aide_structure(p, e, maximum * MajorationSpecifiques10);
+}
+
+@source(CSS_D531_22_ED2025_09)
+rule AideStructureMajoree30AAHSousMaximum(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, depense: Money, maximum: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "AAH: 85 % sous maximum majoré de 30 %";
+    label en unofficial "AAH: 85% under the 30%-raised maximum";
+    when droit_structure_ouvert(p, e) and beneficiaire_aah(p)
+        and depense_engagee(p, e, depense)
+        and maximum_structure(p, e, maximum)
+        and TauxPriseEnCharge85 * depense <= maximum * MajorationTrente30;
+    then aide_structure(p, e, TauxPriseEnCharge85 * depense);
+}
+
+@source(CSS_D531_22_ED2025_09)
+rule AideStructureMajoree30AAHEcretee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, depense: Money, maximum: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "AAH: maximum majoré de 30 %";
+    label en unofficial "AAH: 30%-raised maximum";
+    when droit_structure_ouvert(p, e) and beneficiaire_aah(p)
+        and depense_engagee(p, e, depense)
+        and maximum_structure(p, e, maximum)
+        and TauxPriseEnCharge85 * depense > maximum * MajorationTrente30;
+    then aide_structure(p, e, maximum * MajorationTrente30);
+}
+
+@source(CSS_D531_22_ED2025_09)
+rule AideStructureMajoree30SeuleSousMaximum(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, depense: Money, maximum: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "personne seule: 85 % sous maximum majoré de 30 %";
+    label en unofficial "single person: 85% under the 30%-raised maximum";
+    when droit_structure_ouvert(p, e) and personne_seule(p)
+        and depense_engagee(p, e, depense)
+        and maximum_structure(p, e, maximum)
+        and TauxPriseEnCharge85 * depense <= maximum * MajorationTrente30;
+    then aide_structure(p, e, TauxPriseEnCharge85 * depense);
+}
+
+@source(CSS_D531_22_ED2025_09)
+rule AideStructureMajoree30SeuleEcretee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, depense: Money, maximum: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "personne seule: maximum majoré de 30 %";
+    label en unofficial "single person: 30%-raised maximum";
+    when droit_structure_ouvert(p, e) and personne_seule(p)
+        and depense_engagee(p, e, depense)
+        and maximum_structure(p, e, maximum)
+        and TauxPriseEnCharge85 * depense > maximum * MajorationTrente30;
+    then aide_structure(p, e, maximum * MajorationTrente30);
+}
+
+@source(CSS_D531_22_ED2025_09)
+rule AideStructureMajoree30AEEHSousMaximum(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, depense: Money, maximum: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "L. 541-1: 85 % sous maximum majoré de 30 %";
+    label en unofficial "L. 541-1: 85% under the 30%-raised maximum";
+    when droit_structure_ouvert(p, e) and enfant_aeeh(e)
+        and depense_engagee(p, e, depense)
+        and maximum_structure(p, e, maximum)
+        and TauxPriseEnCharge85 * depense <= maximum * MajorationTrente30;
+    then aide_structure(p, e, TauxPriseEnCharge85 * depense);
+}
+
+@source(CSS_D531_22_ED2025_09)
+rule AideStructureMajoree30AEEHEcretee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, depense: Money, maximum: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "L. 541-1: maximum majoré de 30 %";
+    label en unofficial "L. 541-1: 30%-raised maximum";
+    when droit_structure_ouvert(p, e) and enfant_aeeh(e)
+        and depense_engagee(p, e, depense)
+        and maximum_structure(p, e, maximum)
+        and TauxPriseEnCharge85 * depense > maximum * MajorationTrente30;
+    then aide_structure(p, e, maximum * MajorationTrente30);
+}
+
+// --- Monthly amount due ------------------------------------------------------------------
+//
+// Halves 3-6 (IV) and PreParE part-time (VII) already sit in the
+// maxima; monthly payment on filed justification (VI) gates the duty
+// in 08, not the amount.
+
+@source(CSS_L531_6_ED2020_01, CSS_L531_6_ED2024_09, CSS_L531_6_ED2025_01, CSS_L531_6_ED2025_02, CSS_L531_6_ED2025_09, CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MontantStructureDu(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, aide: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant L. 531-6 dû, arrondi au centime";
+    label en unofficial "L. 531-6 amount due, rounded to cents";
+    when aide_structure(p, e, aide);
+    then montant_structure_du(p, e, round(aide, 2, "HALF_UP"));
+}
+
+// --- Three-to-six age marker (reform halve ground, D. 531-21 IV) -------------------
+//
+// The reform full rows above read it through not_known; the halved rows
+// below read the positive age range inline.
+
+@source(CSS_D531_21_ED2025_09)
+rule AgeMoitie36(e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "trois à six ans révolus: assiette de la moitié (D. 531-21, IV)";
+    label en unofficial "age three to six: halve base (D. 531-21, IV)";
+    when age_revolu_ans(e, n) and n >= AgeSeuil3 and n < AgeLimite6;
+    then age_moitie36(e);
+}

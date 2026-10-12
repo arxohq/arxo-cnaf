@@ -1,0 +1,24 @@
+// SMIC ceiling fails: pay of 2134 € above 106.25% of the monthly SMIC
+// (2133.2025 €) — no part-time right, the 249.84 € award is NEITHER.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-smic-50-depasse" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-sd50-01": quotite_declaree(entity_ref("urn:fr:paje:benef:prepare-sd50"), JUSQUA_50) { origin adjudicated; }
+        assert "prepare-sd50-02": categorie_plafond_smic(entity_ref("urn:fr:paje:benef:prepare-sd50")) { origin adjudicated; }
+        assert "prepare-sd50-03": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-sd50"), entity_ref("urn:fr:paje:case:prepare-sd50")) { origin case_input; }
+        assert "prepare-sd50-04": revenu_mensuel_activite(entity_ref("urn:fr:paje:benef:prepare-sd50"), 2134 EUR) { origin case_input; }
+        assert "prepare-sd50-05": smic_mensuel(entity_ref("urn:fr:paje:case:prepare-sd50"), 2007.72 EUR) { origin case_input; }
+        assert "prepare-sd50-06": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-sd50"), entity_ref("urn:fr:paje:enfant:prepare-sd50")) { origin adjudicated; }
+        assert "prepare-sd50-07": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-sd50")) { origin adjudicated; }
+        assert "prepare-sd50-08": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-sd50"), 400.00 EUR) { origin case_input; }
+        assert "prepare-sd50-09": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-sd50"), entity_ref("urn:fr:paje:enfant:prepare-sd50"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-sd50"), entity_ref("urn:fr:paje:enfant:prepare-sd50"), 249.84 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

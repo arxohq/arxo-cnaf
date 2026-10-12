@@ -1,0 +1,47 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Band 3 with a positive tapering top-up: resources 89 700 EUR,
+// two children, factor 1.0, BMAF 400.00 EUR (stated assumption).
+// Ceiling II (2 children): 78 300 + 2 x 5 595 = 89 490.
+// Monthly: 0.08 x 400 = 32.00; top-up: (89 490 + 384 - 89 700)/12 = 14.50;
+// total due: 46.50.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-bande-3-complement" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "bande-3-01": territoire(entity_ref("urn:fr:pf-af:case:bande-3-complement"), METROPOLE) { origin case_input; }
+        assert "bande-3-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 2) { origin case_input; }
+        assert "bande-3-03": ressources_menage(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 89700 EUR) { origin case_input; }
+        assert "bande-3-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 55950 EUR) { origin case_input; }
+        assert "bande-3-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 78300 EUR) { origin case_input; }
+        assert "bande-3-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 5595 EUR) { origin case_input; }
+        assert "bande-3-05": bmaf_retenu(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 400.00 EUR) { origin case_input; }
+        assert "bande-3-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 0) { origin case_input; }
+        assert "bande-3-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 0) { origin case_input; }
+        assert "bande-3-08": forfait_total_menage(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 0 EUR) { origin case_input; }
+        assert "bande-3-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 0) { origin case_input; }
+        assert "bande-3-10": foyer_du_cas(entity_ref("urn:fr:pf-af:case:bande-3-complement")) { origin case_input; }
+    }
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:bande-3-complement"), BANDE_3));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 32.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(complement_degressif(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 14.50 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:bande-3-complement"), 46.50 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

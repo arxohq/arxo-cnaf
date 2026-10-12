@@ -1,0 +1,49 @@
+// OpenFisca cf.yaml `revenus_fonciers_base_ressources_cf` (2018-01):
+// foncier 20000 (2016) -> their cf_base_ressources 20000. The N-2 base
+// computation is upstream (R. 532 wave, boundary); the port takes their
+// base as our fund-stated ressources_menage on the Cas-1 household and
+// asserts our amount on the stated BMAF 320.00. Resources 20000 exceed the
+// half ceiling (18000, tiered reading D-36) and sit under the full ceiling
+// (36000): the BASE amount 0.4165 x 320.00 = 133.28 is due (D-29(a) base/
+// increased exclusivity respected).
+// Class (b): household borrowed, base is theirs; their 2018 BMAF and
+// ceiling tables are unpinned here. See tests/foreign/REPORT.md (CF, 0).
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-of-cf-base-ressources" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2018-01-15T12:00:00Z; knowledge_time @2018-01-15T12:00:00Z; legal_time @2018-01-15; timezone "Europe/Paris"; }
+        assert "ofb-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources-e1")) { origin case_input; }
+        assert "ofb-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources-e2")) { origin case_input; }
+        assert "ofb-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources-e3")) { origin case_input; }
+        assert "ofb-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources-e1")) { origin case_input; }
+        assert "ofb-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources-e2")) { origin case_input; }
+        assert "ofb-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources-e3")) { origin case_input; }
+        assert "ofb-07": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources-e1"), @2005-06-01) { origin case_input; }
+        assert "ofb-08": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources-e2"), @2007-06-01) { origin case_input; }
+        assert "ofb-09": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources-e3"), @2010-06-01) { origin case_input; }
+        assert "ofb-10": mois_droit(@2018-01-01) { origin case_input; }
+        assert "ofb-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), 3) { origin case_input; }
+        assert "ofb-12": ressources_menage(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), 20000 EUR) { origin case_input; }
+        assert "ofb-13": plafond_base_cf(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), 20000 EUR) { origin case_input; }
+        assert "ofb-13a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), 5000 EUR) { origin case_input; }
+        assert "ofb-13b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), 6000 EUR) { origin case_input; }
+        assert "ofb-13c": plafond_base_majore(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), 10000 EUR) { origin case_input; }
+        assert "ofb-13d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), 2500 EUR) { origin case_input; }
+        assert "ofb-13e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), 3000 EUR) { origin case_input; }
+        assert "ofb-14": foyer_du_cas(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources")) { origin case_input; }
+        assert "ofb-15": cadre_cf_remplie(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources")) { origin case_input; }
+        assert "ofb-16": bmaf_retenu(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), 320.00 EUR) { origin case_input; }
+    }
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_montant_du(entity_ref("urn:fr:pf-cf:foreign:of-cf-base-ressources"), 133.28 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

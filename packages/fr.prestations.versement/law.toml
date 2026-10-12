@@ -1,0 +1,227 @@
+# Manifest §10 — package root marker (DECISION-0033). Normative headings per §22
+# live in the .law files themselves; the manifest must match them (LDC-E1109, lawc check).
+[package]
+name = "fr.prestations.versement"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:prestations-versement"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after editing .law files run
+# `law fix imports fr/prestations-versement`; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Catalog metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-prestations-versement"
+title = "Payment stage for all CNAF benefits: CRDS, rounding, non-payment floors, cross-benefit recovery and limitation; wave 5"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française"
+verifiedAgainstSource = false
+
+[dependencies]
+"fr.pf.core" = "0.1.0"
+"fr.apl" = "0.1.0"
+"fr.apl.versement" = "0.1.0"
+"fr.pf.af" = "0.1.0"
+"fr.pf.paje" = "0.1.0"
+"fr.pf.cf" = "0.1.0"
+"fr.pf.ars" = "0.1.0"
+"fr.pf.asf" = "0.1.0"
+"fr.pf.cmg" = "0.1.0"
+"fr.pf.aeeh" = "0.1.0"
+"fr.pf.ajpp" = "0.1.0"
+"fr.css.ajpa" = "0.1.0"
+"fr.casf.rsa" = "0.1.0"
+"fr.css.aah" = "0.1.0"
+"fr.css.prime_activite" = "0.1.0"
+"fr.minima.ressources" = "0.1.0"
+
+# Own families (DECISION-0127): regression = false until the ratchet is registered.
+[[tests]]
+family = "fr.prestations.versement#crds"
+regression = false
+suites = [
+    "tests/crds-af-retenue.lawtest",
+    "tests/crds-af-net.lawtest",
+    "tests/crds-af-exact.lawtest",
+    "tests/crds-cf-net.lawtest",
+    "tests/crds-cf-majore-net.lawtest",
+    "tests/crds-cf-differentiel-net.lawtest",
+    "tests/crds-ars-net.lawtest",
+    "tests/crds-ars-differentiel-net.lawtest",
+    "tests/crds-asf-net.lawtest",
+    "tests/crds-asf-differentiel-net.lawtest",
+    "tests/crds-prime-net.lawtest",
+    "tests/crds-base-net.lawtest",
+    "tests/crds-prepare-net.lawtest",
+    "tests/crds-cmg-direct-net.lawtest",
+    "tests/crds-cmg-structure-net.lawtest",
+    "tests/crds-cmg-differentiel-net.lawtest",
+    "tests/crds-ajpp-net.lawtest",
+    "tests/crds-ajpp-complement-net.lawtest",
+]
+world = ["fr.prestations.versement", "fr.pf.af", "fr.pf.cf", "fr.pf.ars", "fr.pf.asf", "fr.pf.paje", "fr.pf.cmg", "fr.pf.ajpp"]
+
+[[tests]]
+family = "fr.prestations.versement#devoir-versement"
+regression = false
+suites = [
+    "tests/devoir-af.lawtest",
+    "tests/devoir-cf.lawtest",
+    "tests/devoir-cf-majore.lawtest",
+    "tests/devoir-cf-differentiel.lawtest",
+    "tests/devoir-ars.lawtest",
+    "tests/devoir-ars-differentiel.lawtest",
+    "tests/devoir-asf.lawtest",
+    "tests/devoir-asf-differentiel.lawtest",
+    "tests/devoir-prime.lawtest",
+    "tests/devoir-base.lawtest",
+    "tests/devoir-prepare.lawtest",
+    "tests/devoir-cmg-direct.lawtest",
+    "tests/devoir-cmg-structure.lawtest",
+    "tests/devoir-cmg-differentiel.lawtest",
+    "tests/devoir-cmg-direct-reforme.lawtest",
+    "tests/devoir-cmg-structure-reforme.lawtest",
+    "tests/devoir-cmg-direct-jour-bascule.lawtest",
+    "tests/devoir-asf-seuil.lawtest",
+    "tests/devoir-ars-seuil.lawtest",
+    "tests/devoir-ajpp-mensuel.lawtest",
+    "tests/devoir-ajpp-complement.lawtest",
+    "tests/devoir-ajpp-sans-montant.lawtest",
+]
+world = ["fr.prestations.versement", "fr.pf.core", "fr.pf.af", "fr.pf.cf", "fr.pf.ars", "fr.pf.asf", "fr.pf.paje", "fr.pf.cmg", "fr.pf.ajpp"]
+
+[[tests]]
+family = "fr.prestations.versement#seuils"
+regression = false
+suites = [
+    "tests/seuils-asf-sous-seuil.lawtest",
+    "tests/seuils-asf-atteint.lawtest",
+    "tests/seuils-ars-sous-seuil.lawtest",
+    "tests/seuils-ars-atteint.lawtest",
+    "tests/seuils-asf-total-net.lawtest",
+    "tests/seuils-ars-total-net.lawtest",
+]
+world = ["fr.prestations.versement"]
+
+[[tests]]
+family = "fr.prestations.versement#recouvrement"
+regression = false
+suites = [
+    "tests/rec-af-base.lawtest",
+    "tests/rec-af-retenue.lawtest",
+    "tests/rec-af-fraude.lawtest",
+    "tests/rec-af-reiteration.lawtest",
+    "tests/rec-af-prescription.lawtest",
+    "tests/rec-af-plafond-dette.lawtest",
+    "tests/rec-af-report-rsa.lawtest",
+    "tests/rec-af-option-unique.lawtest",
+    "tests/rec-af-prescription-report-survit.lawtest",
+    "tests/rec-af-prescription-fraude.lawtest",
+    "tests/rec-rsa-base.lawtest",
+    "tests/rec-rsa-fraude.lawtest",
+    "tests/rec-rsa-suspensif.lawtest",
+    "tests/rec-rsa-report-pf.lawtest",
+    "tests/rec-rsa-option-unique.lawtest",
+    "tests/rec-aah-base.lawtest",
+    "tests/rec-aah-fraude.lawtest",
+    "tests/rec-aah-reports.lawtest",
+    "tests/rec-logement-base.lawtest",
+    "tests/rec-logement-fraude.lawtest",
+    "tests/rec-logement-reports.lawtest",
+    "tests/rec-pa-base.lawtest",
+    "tests/rec-pa-fraude.lawtest",
+    "tests/rec-pa-suspensif.lawtest",
+    "tests/rec-pa-report-rsa.lawtest",
+    "tests/rec-pa-option-unique.lawtest",
+    "tests/rec-af-report-pa.lawtest",
+    "tests/rec-af-report-pa-pre2024.lawtest",
+    "tests/rec-af-report-pa-positions.lawtest",
+    "tests/rec-rsa-report-pa.lawtest",
+    "tests/rec-aah-report-pa.lawtest",
+    "tests/rec-logement-report-pa.lawtest",
+]
+world = ["fr.prestations.versement", "fr.pf.core", "fr.pf.af", "fr.casf.rsa", "fr.minima.ressources", "fr.css.aah", "fr.css.prime_activite", "fr.apl.versement", "fr.apl"]
+
+[[tests]]
+family = "fr.prestations.versement#dossier"
+regression = false
+suites = [
+    "tests/dossier-af-2024-03.lawtest",
+    "tests/dossier-ars-2024-08.lawtest",
+    "tests/dossier-prime-2025-07.lawtest",
+    "tests/dossier-af-rec-2025-12.lawtest",
+    "tests/dossier-af-presc-2026-03.lawtest",
+    "tests/dossier-rsa-carry-2026-03.lawtest",
+    "tests/dossier-pa-2026-06.lawtest",
+    "tests/dossier-pa-cascade-2026-06.lawtest",
+    "tests/dossier-pa-cascade-positions-2026-06.lawtest",
+]
+world = ["fr.prestations.versement", "fr.pf.core", "fr.pf.af", "fr.pf.ars", "fr.pf.paje", "fr.casf.rsa", "fr.minima.ressources", "fr.css.prime_activite", "fr.pf.cmg"]
+
+[[tests]]
+family = "fr.prestations.versement#bareme-retenues"
+regression = false
+suites = [
+    "tests/bareme-r-total.lawtest",
+    "tests/bareme-charges-defaut.lawtest",
+    "tests/bareme-chaine-isole.lawtest",
+    "tests/bareme-chaine-menage.lawtest",
+    "tests/bareme-forfait.lawtest",
+    "tests/bareme-tranche1.lawtest",
+    "tests/bareme-tranche2-lisiere.lawtest",
+    "tests/bareme-tranche3.lawtest",
+    "tests/bareme-tranche4.lawtest",
+    "tests/bareme-trou-691.lawtest",
+    "tests/bareme-tranche4-lisiere.lawtest",
+    "tests/bareme-repute-1096.lawtest",
+    "tests/bareme-repute-2023.lawtest",
+    "tests/bareme-trimestriel-connu.lawtest",
+    "tests/bareme-trimestriel-4-mois.lawtest",
+    "tests/bareme-informer-bases.lawtest",
+    "tests/bareme-nouvelles-bases-hausse.lawtest",
+    "tests/bareme-nouvelles-bases-stable.lawtest",
+    "tests/bareme-saisie-fraude.lawtest",
+    "tests/bareme-saisie-alimentaire.lawtest",
+    "tests/bareme-report.lawtest",
+    "tests/bareme-priorite-direct.lawtest",
+    "tests/bareme-reglement-mensuel.lawtest",
+    "tests/bareme-dom-applicable.lawtest",
+    "tests/bareme-dom-absent.lawtest",
+    "tests/bareme-cmg-date-arrete.lawtest",
+    "tests/bareme-pondere-sans-formule.lawtest",
+    "tests/bareme-lisiere-fraction-345.lawtest",
+    "tests/bareme-lisiere-fraction-516.lawtest",
+    "tests/bareme-informer-logement.lawtest",
+    "tests/bareme-priorite-tiers.lawtest",
+    "tests/bareme-trimestriel-informations-recues.lawtest",
+    "tests/bareme-trimestriel-declaration-recue.lawtest",
+    "tests/bareme-repute-declaration-recue.lawtest",
+    "tests/bareme-trimestriel-4-mois-declaration-recue.lawtest",
+    "tests/bareme-trimestriel-4-mois-informations-recues.lawtest",
+    "tests/bareme-informer-trimestriel.lawtest",
+    "tests/bareme-indus-ordre-anciennete.lawtest",
+    "tests/bareme-indus-ordre-meme-date.lawtest",
+    "tests/bareme-indus-ordre-extinction.lawtest",
+    "tests/bareme-indus-affectation-premier.lawtest",
+    "tests/bareme-indus-sans-registre.lawtest",
+    "tests/bareme-indus-egalite-parfaite.lawtest",
+    "tests/bareme-saisie-fausse-declaration.lawtest",
+    "tests/bareme-d5531-delai-expire.lawtest",
+    "tests/bareme-d5531-delai-encours.lawtest",
+    "tests/bareme-d5531-dates-manquantes.lawtest",
+    "tests/bareme-d5534-trois-indus.lawtest",
+    "tests/bareme-d5534-meme-date.lawtest",
+    "tests/bareme-d5534-egalite-parfaite.lawtest",
+    "tests/bareme-d5534-registre-incomplet.lawtest",
+]
+world = ["fr.prestations.versement", "fr.pf.core"]

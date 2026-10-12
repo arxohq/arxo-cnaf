@@ -1,0 +1,72 @@
+// DOM attribution after the D76 territory split: the L. 755-22 award
+// is available in all six L. 751-1 collectivities and is no longer
+// gated on the department-only R. 755-14 status. Guadeloupe department
+// household (7-year-old in care, inside both R543-2 lines, enrolled,
+// collectivity + department residence with provenance): award and
+// R543 applicability both hold. Saint-Barthélemy collectivity-only
+// household (no department fact, classification unknown): the award
+// holds, R. 755-14 applicability stays silent. Metropolitan control
+// (no residence facts): the child stays eligible but award and
+// applicability stay silent.
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-dom-attribution" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "ada-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dom-attribution"), entity_ref("urn:fr:pf-ars:case:dom-attribution-e1")) { origin case_input; }
+        assert "ada-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dom-attribution-e1")) { origin case_input; }
+        assert "ada-03": date_naissance(entity_ref("urn:fr:pf-ars:case:dom-attribution-e1"), @2014-06-01) { origin case_input; }
+        assert "ada-04": seuil_six_ans(@2022-02-01) { origin case_input; }
+        assert "ada-05": seuil_dix_huit_ans(@2021-09-15) { origin case_input; }
+        assert "ada-06": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dom-attribution-e1")) { origin case_input; }
+        assert "ada-07": residence_dom(entity_ref("urn:fr:pf-ars:case:dom-attribution")) { origin case_input; }
+        assert "ada-08": residence_departement_dom(entity_ref("urn:fr:pf-ars:case:dom-attribution")) { origin case_input; }
+        assert "ada-09": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dom-attribution-sb"), entity_ref("urn:fr:pf-ars:case:dom-attribution-sb-e2")) { origin case_input; }
+        assert "ada-10": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dom-attribution-sb-e2")) { origin case_input; }
+        assert "ada-11": date_naissance(entity_ref("urn:fr:pf-ars:case:dom-attribution-sb-e2"), @2014-06-01) { origin case_input; }
+        assert "ada-12": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dom-attribution-sb-e2")) { origin case_input; }
+        assert "ada-13": residence_dom(entity_ref("urn:fr:pf-ars:case:dom-attribution-sb")) { origin case_input; }
+        assert "ada-14": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dom-attribution-out"), entity_ref("urn:fr:pf-ars:case:dom-attribution-out-e3")) { origin case_input; }
+        assert "ada-15": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dom-attribution-out-e3")) { origin case_input; }
+        assert "ada-16": date_naissance(entity_ref("urn:fr:pf-ars:case:dom-attribution-out-e3"), @2014-06-01) { origin case_input; }
+        assert "ada-17": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dom-attribution-out-e3")) { origin case_input; }
+    }
+    evaluate truth(ars_enfant_eligible(entity_ref("urn:fr:pf-ars:case:dom-attribution-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_r543_applicable_dom(entity_ref("urn:fr:pf-ars:case:dom-attribution")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_attribuee_dom(entity_ref("urn:fr:pf-ars:case:dom-attribution-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_enfant_eligible(entity_ref("urn:fr:pf-ars:case:dom-attribution-sb-e2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_r543_applicable_dom(entity_ref("urn:fr:pf-ars:case:dom-attribution-sb")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_attribuee_dom(entity_ref("urn:fr:pf-ars:case:dom-attribution-sb-e2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_enfant_eligible(entity_ref("urn:fr:pf-ars:case:dom-attribution-out-e3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_r543_applicable_dom(entity_ref("urn:fr:pf-ars:case:dom-attribution-out")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_attribuee_dom(entity_ref("urn:fr:pf-ars:case:dom-attribution-out-e3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

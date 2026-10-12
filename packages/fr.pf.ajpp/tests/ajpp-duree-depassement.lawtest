@@ -1,0 +1,16 @@
+// Three-year limit exceeded: four recorded years for the accident —
+// no record either way.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-duree-depassement" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-durd-01": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-durd"), ACCIDENT, 4) { origin case_input; }
+    }
+    evaluate truth(ajpp_duree_dans_limite(entity_ref("urn:fr:pf-ajpp:case:enfant-durd"), ACCIDENT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

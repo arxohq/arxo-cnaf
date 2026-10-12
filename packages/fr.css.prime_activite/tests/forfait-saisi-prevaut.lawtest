@@ -1,0 +1,47 @@
+// База дела вытесняет сумму декрета (марка forfait_base_saisi); сверка предъявленного числа с построенным.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+// 2024-10-01: предъявлено 600.00 — оно и применяется, число декрета вытеснено
+test "urn:query:fr-ppa-forfait-saisi-prevaut" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "forfait-saisi-prevaut-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-saisi-prevaut"), @2024-10-01, SEUL) { origin case_input; }
+        assert "forfait-saisi-prevaut-02": forfait_base_retenu(@2024-10-01, 600.00 EUR) { origin case_input; }
+    }
+    evaluate truth(forfait_base_du_mois(@2024-10-01, 600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_base_du_mois(@2024-10-01, 622.63 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2024-10-01 под чтением: 600.00 не равно построенному
+test "urn:query:fr-ppa-forfait-saisi-ecart" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; interpretation ForfaitRevalorisationArrondiCentime; }
+        assert "forfait-saisi-ecart-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-saisi-ecart"), @2024-10-01, SEUL) { origin case_input; }
+        assert "forfait-saisi-ecart-02": forfait_base_retenu(@2024-10-01, 600.00 EUR) { origin case_input; }
+    }
+    evaluate truth(forfait_saisi_conforme_construit(@2024-10-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2024-10-01 под чтением: предъявленное число равно построенному
+test "urn:query:fr-ppa-forfait-saisi-conforme" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; interpretation ForfaitRevalorisationArrondiCentime; }
+        assert "forfait-saisi-conforme-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-saisi-conforme"), @2024-10-01, SEUL) { origin case_input; }
+        assert "forfait-saisi-conforme-02": forfait_base_retenu(@2024-10-01, 622.63 EUR) { origin case_input; }
+    }
+    evaluate truth(forfait_saisi_conforme_construit(@2024-10-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

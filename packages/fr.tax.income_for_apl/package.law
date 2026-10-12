@@ -1,0 +1,199 @@
+// `fr.tax.income_for_apl` — норма CGI, которую читает раздел 2 главы II APL
+// (D. 823-17 4°, R. 822-3, R. 822-4 CCH): вычет ст. 83 3° за профессиональные
+// расходы, применяемый к зарплате и пособию по безработице.
+//
+// ТРИ СЛОЯ (образец `de.tax.income_for_wohngeld`): исходные факты — помесячные
+// суммы DSN, чистые от взносов соцстраха (ЭТОТ вычет пакет НЕ считает — он
+// сделан платёжной системой до DSN, граница объёма, README); вычисление —
+// форфейтный вычет 10% с потолком и полом; результат — чистый категориальный
+// доход за окно.
+//
+// ГОДОВОЙ ВЫЧЕТ В МЕСЯЧНОМ ОКНЕ — ЗАПИСАННОЕ ТОЛКОВАНИЕ, не буква текста.
+// Ст. 83 3° CGI писана для ГОДОВОЙ налоговой декларации, а R. 822-3 1°
+// задаёт для DSN-дохода скользящее окно «с 13-го по 2-й месяц» (двенадцать
+// месяцев), а не календарный год. R. 823-6/R. 823-6-1 (проверено 15.09.2026)
+// — о периодичности ПЕРЕСМОТРА права (раз в три месяца) и её синхронизации с
+// РСА/премией за активность/AAH, а не о годовом/месячном пересчёте вычета:
+// они НЕ решают вопрос. Принятое толкование: сумма двенадцати месяцев окна
+// R. 822-3 1° берётся ЦЕЛИКОМ как годовая база ст. 83 3°, а потолок и пол
+// читаются ПО `context.legalTime` дела (то есть по месяцу пересмотра права),
+// а не по «году, к которому относится доход», как называет сам текст ст. 83.
+// Второе — не выбор нормы, а свойство языка: параметр A3 читается голым
+// именем строго по `context.legalTime` (`references/a3-surfaces.md`), и
+// механизма прочитать его «на 1 января года N» отдельно от даты дела нет.
+// Различие способно сдвинуть отнесение суммы к потолку одного года вместо
+// соседнего на несколько месяцев в году публикации закона о финансах;
+// последствие названо явно, а не скрыто. Записано 15.09.2026 как решение,
+// требующее слова владельца при подтверждении вертикального среза.
+//
+// ГРАНИЦЫ ПЕРВОГО ВЫПУСКА (D-B-02, D-B-03, 06.10.2026). Пакет закрепляет
+// и исполняет ТОЛЬКО 3° ст. 83 CGI (форфейтные 10% с потолком и полом).
+// Особые режимы отдельных профессий (журналисты, творческие работники)
+// проверены по полному тексту ст. 83 (LEGIARTI000041471577, 10 163 знака):
+// их в статье НЕТ вовсе — вне охвата тем более. Внутри самого 3° опция
+// frais réels («admis à justifier») — граница: выбор и обоснование
+// налогоплательщика, каналу дела не предъявлены.
+// CSS L. 133-5-3 (обмен данными соцзащиты) — граница: организационная норма,
+// не расчётная; в тексте R. 822-2 упоминается контекстом, исполнения не требует.
+
+language "law.core" version "0.2";
+package fr.tax.income_for_apl version "0.1.0";
+namespace "urn:fr:tax:clir:income-for-apl";
+
+use self::{
+    CGI_ART83_3_2020_01,
+    CGI_ART83_3_2020_07,
+    CGI_ART83_3_2021_06,
+    CGI_ART83_3_2022_05,
+    CGI_ART83_3_2023_06,
+    CGI_ART83_3_2024_06,
+    CGI_ART83_3_2025_06,
+};
+
+pub entity Person {
+    label fr official "personne physique dont le revenu est apprécié";
+    label ru unofficial "физическое лицо, чей доход учитывается";
+}
+
+// --- Исходные факты: помесячные суммы DSN ----------------------------------
+//
+// «avant_abattement»: сумма ПОСЛЕ взносов соцстраха (1°-2° ter ст. 83 CGI —
+// перечисление категорий взносов в объём пакета не введено, платёжная
+// система указывает эту сумму как «net imposable» в самой DSN), но ДО
+// форфейтного вычета 10% (3° ст. 83). Случай ОБЯЗАН предъявить сумму (в т.ч.
+// нулевую) за КАЖДЫЙ месяц окна — отсутствующий месяц не читается нулём:
+// правило `RevenuNetCategorielPeriode` не срабатывает без полных двенадцати
+// значений (счётчик, а не пустой агрегат — §59 пустой sum не есть ноль).
+
+pub relation salaire_net_mensuel_avant_abattement(p: Person, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "salaire net imposable perçu au cours du mois (après cotisations de sécurité sociale, avant la déduction forfaitaire de l'article 83 3° du CGI); zéro si aucun salaire ce mois-là";
+    label ru unofficial "зарплата за месяц, чистая от взносов соцстраха, ДО форфейтного вычета ст. 83 3° CGI; ноль, если в этом месяце зарплаты не было";
+}
+
+pub relation indemnite_chomage_nette_mensuelle_avant_abattement(p: Person, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "indemnité de chômage nette perçue au cours du mois, avant la déduction forfaitaire de l'article 83 3° du CGI; zéro si aucune indemnité ce mois-là";
+    label ru unofficial "пособие по безработице за месяц, чистое от взносов, ДО форфейтного вычета ст. 83 3° CGI; ноль, если пособия не было";
+}
+
+// --- Вычет ст. 83 3° CGI: точная арифметика (Rational 1/10, §58) ----------
+//
+// Порядок из текста: 10% от дохода → потолок сверху → пол снизу → повторный
+// потолок доходом (пол не может превысить сам брутто-доход, крайний случай
+// низкого заработка). `revenu * (1/10)` — Money * Rational (errata E-0085,
+// §58): ТОЧНО, деление на 10 никогда не даёт непредставимого остатка —
+// округления здесь нет и не требуется.
+//
+// БЕЗ отдельной именованной `function`: измерено 15.09.2026 (три независимых
+// изолированных пробы, см. отчёт) — вызов пользовательской `function` с
+// аргументом, связанным через правило с ДВУМЯ агрегатными посылками-счётчиками
+// (`count … == 12`), даёт `NEITHER` без единой диагностики, притом что (а) тот
+// же агрегат как ПРЯМОЙ аргумент реляции работает, (b) та же `function` с
+// ЛИТЕРАЛЬНЫМ или простым (без счётчика) аргументом работает, (c) голые
+// параметры A3 сами по себе читаются нормально. Встроенные `min`/`max` и
+// арифметика ПРЯМО в `then` (не через `function`) с тем же входом работают
+// без отказа — подозрение на дефект `lawc`/`lawref` в связке
+// «function-call ← переменная ← правило с ⩾2 агрегатными счётчиками»,
+// воспроизведено ОБЕИМИ реализациями (`--python-only` тоже даёт NEITHER).
+// Не квалифицировано (нужен derivational минимальный вектор — работа фазы 2,
+// не входит в эту сессию); здесь — обход без функции, отмеченный явно.
+
+// --- Revenu net catégoriel sur une période ---------------------------------
+//
+// Somme des DOUZE mois du salaire et de l'indemnité de chômage, diminuée de
+// la déduction unique (3° ст. 83 ne connaît qu'une seule déduction par
+// personne, pas une déduction distincte par type de revenu — R. 822-4 I
+// traite salaire et indemnités de chômage comme UNE seule masse « traitements
+// et salaires »).
+//
+// Les bornes [debut, fin) sont fournies par l'APPELANT (§190: connexité —
+// le pacquet ne devine pas la fenêtre de référence, art. R. 822-3 1° du
+// CCH appartient à `fr.apl`, pas à ce paquet fiscal générique).
+
+pub relation periode_evaluee(p: Person, debut: Date, fin: Date) kind empirical {
+    key(p, debut, fin);
+    label fr official "période de douze mois pour laquelle le revenu net catégoriel est demandé; bornes fournies par l'appelant (art. R. 822-3 1° du CCH)";
+    label ru unofficial "двенадцатимесячное окно, для которого запрошен чистый категориальный доход; границы задаёт вызывающий пакет (ст. R. 822-3 1° CCH)";
+}
+
+pub relation revenu_brut_periode(p: Person, debut: Date, fin: Date, montant: Money) kind institutional {
+    key(p, debut, fin);
+    label fr official "somme du salaire et de l'indemnité de chômage sur les douze mois de la période, avant déduction forfaitaire (art. R. 822-4 I du CCH)";
+    label ru unofficial "сумма зарплаты и пособия по безработице за двенадцать месяцев окна, ДО форфейтного вычета";
+}
+
+pub relation revenu_net_categoriel_periode(p: Person, debut: Date, fin: Date, montant: Money) kind institutional {
+    key(p, debut, fin);
+    label fr official "revenu net catégoriel (salaire et indemnités de chômage) retenu pour la période de douze mois, après déduction forfaitaire de l'article 83 3° du CGI (art. R. 822-4 I du CCH)";
+    label ru unofficial "чистый категориальный доход (зарплата + пособие по безработице) за двенадцатимесячное окно, после вычета ст. 83 3° CGI";
+}
+
+// ДВА правила, а не одно: аргумент `function` не берёт агрегат §59 напрямую
+// (измерено 15.09.2026 — `deduction_frais_professionnels((sum all …), …)`
+// даёт NEITHER без диагностики; посредующая институциональная связка чинит).
+// Сумма — отдельным правилом, вычет читает уже связанную переменную.
+
+rule RevenuBrutPeriode(p: Person, debut: Date, fin: Date) strict {
+    label fr official "le revenu brut de la période est le total du salaire et de l'indemnité de chômage des douze mois";
+    label ru unofficial "брутто-доход за период — сумма зарплаты и пособия по безработице за двенадцать месяцев";
+    when periode_evaluee(p, debut, fin)
+        and ((count all mois: Date for m: Money where mois >= debut and mois < fin
+              and salaire_net_mensuel_avant_abattement(p, mois, m)) == 12)
+        and ((count all mois: Date for m: Money where mois >= debut and mois < fin
+              and indemnite_chomage_nette_mensuelle_avant_abattement(p, mois, m)) == 12);
+    then revenu_brut_periode(p, debut, fin,
+        (sum all m: Money for mois: Date where mois >= debut and mois < fin
+            and salaire_net_mensuel_avant_abattement(p, mois, m))
+      + (sum all m: Money for mois: Date where mois >= debut and mois < fin
+            and indemnite_chomage_nette_mensuelle_avant_abattement(p, mois, m)));
+}
+
+@source(CGI_ART83_3_2020_01, CGI_ART83_3_2020_07, CGI_ART83_3_2021_06,
+        CGI_ART83_3_2022_05, CGI_ART83_3_2023_06, CGI_ART83_3_2024_06,
+        CGI_ART83_3_2025_06)
+rule RevenuNetCategorielPeriode(p: Person, debut: Date, fin: Date, brut: Money) strict {
+    label fr official "le revenu net catégoriel de la période est le revenu brut diminué de la déduction forfaitaire de l'article 83 3° (10 % du revenu, limitée au plafond, non inférieure au plancher, sans excéder le revenu)";
+    label ru unofficial "чистый категориальный доход за период — брутто-доход минус форфейтный вычет ст. 83 3° (10% дохода, не выше потолка, не ниже пола, не выше самого дохода)";
+    when revenu_brut_periode(p, debut, fin, brut);
+    then revenu_net_categoriel_periode(p, debut, fin,
+        brut - min(max(min(brut * (1 / 10), DeductionForfaitairePlafond), DeductionForfaitairePlancher), brut));
+}
+
+// --- Exposition du potentiel/plancher pour un appelant qui agrège lui-même -
+//
+// `fr.apl` doit appliquer les neutralisations R. 822-13/16/17 (mensuelles,
+// AVANT la somme) sur ses PROPRES montants ajustés — il ne peut pas insérer
+// de fait dans les relations `kind empirical` de CE paquet (chaque paquet ne
+// produit que ses propres relations, §190/connexité). Ces deux relations
+// exposent le potentiel et le plancher COURANTS (selon `context.legalTime` de
+// l'appelant) en LECTURE, pour que l'appelant reproduise la même formule sur
+// sa propre base.
+
+pub relation deduction_forfaitaire_plafond_courant(montant: Money) kind institutional {
+    label fr official "plafond courant de la déduction forfaitaire de l'article 83 3° du CGI, selon le context.legalTime de l'appelant";
+    label ru unofficial "текущий потолок форфейтного вычета ст. 83 3° CGI, по context.legalTime вызывающей стороны";
+}
+
+pub relation deduction_forfaitaire_plancher_courant(montant: Money) kind institutional {
+    label fr official "plancher courant de la déduction forfaitaire de l'article 83 3° du CGI, selon le context.legalTime de l'appelant";
+    label ru unofficial "текущий пол форфейтного вычета ст. 83 3° CGI, по context.legalTime вызывающей стороны";
+}
+
+@source(CGI_ART83_3_2020_01, CGI_ART83_3_2020_07, CGI_ART83_3_2021_06,
+        CGI_ART83_3_2022_05, CGI_ART83_3_2023_06, CGI_ART83_3_2024_06,
+        CGI_ART83_3_2025_06)
+rule DeductionForfaitairePlafondCourant() strict {
+    when true;
+    then deduction_forfaitaire_plafond_courant(DeductionForfaitairePlafond);
+}
+
+@source(CGI_ART83_3_2020_01, CGI_ART83_3_2020_07, CGI_ART83_3_2021_06,
+        CGI_ART83_3_2022_05, CGI_ART83_3_2023_06, CGI_ART83_3_2024_06,
+        CGI_ART83_3_2025_06)
+rule DeductionForfaitairePlancherCourant() strict {
+    when true;
+    then deduction_forfaitaire_plancher_courant(DeductionForfaitairePlancher);
+}
+
+

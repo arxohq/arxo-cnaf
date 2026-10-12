@@ -1,0 +1,19 @@
+// Delegate costs, several benefits with highest-payer selection explicitly denied for the stated serving body: no cost duty (L. 552-6 al. 2, PC-R02-02, PC-R07-06 explicit negative).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-frais-plusieurs-sans-choix" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-delegue-frais-plusieurs-sans-choix-01": delegue_percoit(entity_ref("urn:fr:pf:case:budget-sans-choix")) { origin case_input; }
+        assert "devoir-delegue-frais-plusieurs-sans-choix-02": plusieurs_prestations_delegue(entity_ref("urn:fr:pf:case:budget-sans-choix")) { origin case_input; }
+        assert "devoir-delegue-frais-plusieurs-sans-choix-03": organisme_verse_prestation_delegue(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:budget-sans-choix")) { origin case_input; }
+        assert "devoir-delegue-frais-plusieurs-sans-choix-04": not prestation_delegue_unique(entity_ref("urn:fr:pf:case:budget-sans-choix")) { origin case_input; }
+        assert "devoir-delegue-frais-plusieurs-sans-choix-05": not beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:budget-sans-choix")) { origin case_input; }
+        assert "devoir-delegue-frais-plusieurs-sans-choix-06": not organisme_montant_le_plus_eleve(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:budget-sans-choix")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(SupporterFraisMesure, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

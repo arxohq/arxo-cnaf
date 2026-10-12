@@ -1,0 +1,34 @@
+// Director-actor evidence (PA-FE09-04/05): a complete date-certain
+// notice with a timely request and a dated rejection, but no proof
+// of the director of the serving organism. Notice completeness
+// holds on contents + means, yet neither the D7 initial duty nor
+// the D7bis follow-up duty activates (R. 847-1-1 I, III).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-notification-directeur-incertain-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-25T12:00:00Z; knowledge_time @2026-06-25T12:00:00Z; legal_time @2026-06-25; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_recupere(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), 300.00 EUR) { origin case_input; }
+        assert "ppa-02": constat_indu(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-03": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026")) { origin case_input; }
+        assert "ppa-04": notification_recouvrement(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-05": notification_contenu_base(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-06": notification_modalites_rectification(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-07": notification_possibilite_recouvrement(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-08": notification_voies_recours(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-09": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026")) { origin case_input; }
+        assert "ppa-10": reception_notification(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), @2026-05-25) { origin case_input; }
+        assert "ppa-11": demande_rectification(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), @2026-06-10) { origin case_input; }
+        assert "ppa-12": decision_rectification_rejet(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), @2026-06-20) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(NotifierIndu, ACTIVE);
+    expect not position(NotifierRejetRectification, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(notification_recouvrement_complete(entity_ref("urn:fr:ppa:case:notification-directeur-incertain-2026"), @2026-05-20));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,21 @@
+// Title void for withheld information: full chain plus positive proof the 1° information never reached the body and a decision issued - title void (L. 582-2 nullity paragraph, PC-R07-24).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-titre-nullite" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-titre-nullite-01": demande_conjointe_parents_separes(entity_ref("urn:fr:pf:case:creance-null")) { origin case_input; }
+        assert "creance-titre-nullite-02": attestation_absence_creance(entity_ref("urn:fr:pf:case:creance-null")) { origin case_input; }
+        assert "creance-titre-nullite-03": attestation_absence_demarche(entity_ref("urn:fr:pf:case:creance-null")) { origin case_input; }
+        assert "creance-titre-nullite-04": contribution_seuil_atteint(entity_ref("urn:fr:pf:case:creance-null")) { origin case_input; }
+        assert "creance-titre-nullite-05": infos_contribution_precisees(entity_ref("urn:fr:pf:case:creance-null")) { origin case_input; }
+        assert "creance-titre-nullite-06": information_1degre_non_portee(entity_ref("urn:fr:pf:case:creance-null")) { origin case_input; }
+        assert "creance-titre-nullite-07": decision_organisme_delivree(entity_ref("urn:fr:pf:case:creance-null")) { origin case_input; }
+    }
+    evaluate truth(titre_executoire_delivre(entity_ref("urn:fr:pf:case:creance-null")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

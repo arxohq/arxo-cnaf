@@ -1,0 +1,23 @@
+// DOM mixed prime+eligible (PC-R05-08): measure + DOM + eligible benefit received; prime also received but does not block the liberty (benefit-specific exclusion).
+// D-42: (1) the case lacked the seized court (juge_mesure_aide_gestion binds the liberty holder, L. 755-4
+// al. 1). (2) The query asked truth(designer_delegue_action(...)) == TRUE_ONLY - legally wrong: L. 755-4
+// al. 1 grants the judge a liberty ("peut decider"); the liberty does not establish that the judge acted,
+// and the action stays unestablished without a case fact. The claim of this case (the prime does not block
+// the liberty) is now checked as position(DesignerDeleguePrestationsDOM, ACTIVE).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-dom-mixte-prime-eligible" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "dom-m1": mesure_judiciaire_aide_gestion(entity_ref("urn:fr:pf:case:dom-mixte")) { origin case_input; }
+        assert "dom-m2": beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:dom-mixte")) { origin case_input; }
+        assert "dom-m3": delegue_percoit_prestation_eligible(entity_ref("urn:fr:pf:case:dom-mixte")) { origin case_input; }
+        assert "dom-m4": delegue_percoit_prime_forfaitaire(entity_ref("urn:fr:pf:case:dom-mixte")) { origin case_input; }
+        assert "dom-m5": juge_mesure_aide_gestion(entity_ref("urn:fr:pf:case:tribunal"), entity_ref("urn:fr:pf:case:dom-mixte")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DesignerDeleguePrestationsDOM, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

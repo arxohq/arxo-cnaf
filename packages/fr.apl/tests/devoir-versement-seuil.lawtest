@@ -1,0 +1,35 @@
+// Deontics D1, threshold pair: same inputs as frontiere-seuil-versement-als
+// (result 6.0316618 € below the ALS 10 € threshold — aide_non_versee), plus
+// the opened right and the debtor agency. No aide_due — no duty: the position
+// is absent.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-devoir-versement-seuil" {
+    given {
+        // D-42: G-A13 migration (24-lecture-pp.law) — D. 823-17 "P0 ... ne peut etre
+        // inferieure a un montant minimum" has two readings in group SensMinimumPp
+        // (selection exactly_one); this hand suite selects the working reading, as
+        // the other hand suites do. No expectation changed.
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "devoir-versement-seuil-01": secteur_locatif(entity_ref("urn:fr:apl:case:devoir-versement-seuil")) { origin case_input; }
+        assert "devoir-versement-seuil-02": zone_du_logement(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), ZONE_III) { origin case_input; }
+        assert "devoir-versement-seuil-03": aide_demandee(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), ALS) { origin case_input; }
+        assert "devoir-versement-seuil-04": situation_familiale(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), PERSONNE_SEULE) { origin case_input; }
+        assert "devoir-versement-seuil-05": personnes_a_charge(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), 0) { origin case_input; }
+        assert "devoir-versement-seuil-06": loyer_principal(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), 280 EUR) { origin case_input; }
+        assert "devoir-versement-seuil-07": ressources_du_menage(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), 12800 EUR) { origin case_input; }
+        assert "devoir-versement-seuil-08": mode_location(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), LOCATION_SEULE) { origin case_input; }
+        assert "devoir-versement-seuil-09": forme_logement(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "devoir-versement-seuil-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), 0 EUR) { origin case_input; }
+        assert "devoir-versement-seuil-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), false) { origin case_input; }
+        assert "devoir-versement-seuil-12": territoire(entity_ref("urn:fr:apl:case:devoir-versement-seuil"), METROPOLE) { origin case_input; }
+        assert "devoir-versement-seuil-13": occupation_residence_principale(entity_ref("urn:fr:apl:case:devoir-versement-seuil")) { origin case_input; }
+        assert "devoir-versement-seuil-14": logement_decent(entity_ref("urn:fr:apl:case:devoir-versement-seuil")) { origin adjudicated; }
+        assert "devoir-versement-seuil-15": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:devoir-versement-seuil")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserAideTheoriqueDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

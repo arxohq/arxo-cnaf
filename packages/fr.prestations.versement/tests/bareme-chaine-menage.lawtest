@@ -1,0 +1,19 @@
+// Stated-weighted chain, household: R 1 800, N 2.5 derived; organ-stated weighted 720 - levy 228.25 (D. 553-1, B-VERS-D5531-PONDERE-FORMULE: no R/N division is computed).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-chaine-menage" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "ch-a": revenus_mensuels_a(entity_ref("urn:fr:pv:case:menage2"), 1500.00 EUR) { origin case_input; }
+        assert "ch-b": prestations_mensuelles_b(entity_ref("urn:fr:pv:case:menage2"), 500.00 EUR) { origin case_input; }
+        assert "ch-c": charges_logement_c(entity_ref("urn:fr:pv:case:menage2"), 200.00 EUR) { origin case_input; }
+        assert "ch-m": menage(entity_ref("urn:fr:pv:case:menage2")) { origin case_input; }
+        assert "ch-n": nb_enfants_charge(entity_ref("urn:fr:pv:case:menage2"), 1) { origin case_input; }
+        assert "ch-w": revenu_pondere_calcule_organisme(entity_ref("urn:fr:pv:case:menage2"), 720.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prelevement_mensuel(entity_ref("urn:fr:pv:case:menage2"), 228.25 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

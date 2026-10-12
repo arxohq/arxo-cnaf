@@ -1,0 +1,21 @@
+// No delegate measure with the judicial order explicitly absent: plain allocataire, no budget-management measure pronounced - the judge liberty does not arise (L. 552-6 al. 1, PC-R07-06 explicit negative).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-sans-mesure" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-delegue-sans-mesure-01": parent_charge(entity_ref("urn:fr:pf:case:ordinaire"), entity_ref("urn:fr:pf:case:enfant-ordinaire")) { origin case_input; }
+        assert "devoir-delegue-sans-mesure-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:ordinaire"), entity_ref("urn:fr:pf:case:enfant-ordinaire")) { origin adjudicated; }
+        assert "devoir-delegue-sans-mesure-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-ordinaire")) { origin case_input; }
+        assert "devoir-delegue-sans-mesure-04": reside_france_stable(entity_ref("urn:fr:pf:case:ordinaire")) { origin case_input; }
+        assert "devoir-delegue-sans-mesure-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-ordinaire")) { origin case_input; }
+        assert "devoir-delegue-sans-mesure-06": not mesure_judiciaire_aide_gestion(entity_ref("urn:fr:pf:case:ordinaire")) { origin case_input; }
+        assert "devoir-delegue-sans-mesure-07": not beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:ordinaire")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(DesignerDeleguePrestations, ACTIVE);
+    expect not position(DesignerDeleguePrestationsDOM, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

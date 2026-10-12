@@ -1,0 +1,152 @@
+// DOM scope and non-cumulation (L. 755-19, FINISH D73 transfer from the
+// dom line): PAJE attribution in the L. 751-1 collectivities under Book V
+// Title III conditions, and the two cumulation bars of paras. 2–3.
+//
+// L. 755-19, para. 1: «La prestation d'accueil du jeune enfant est
+// attribuée dans les collectivités mentionnées à l'article L. 751-1 dans
+// les conditions définies au titre III du livre V du présent code.» The
+// Book V Title III conditions are exactly what this package formalizes
+// (L. 531/R. 531/D. 531), so para. 1 concludes an applicability status —
+// no new duty; the existing D1/D1B/D1P payment duties trigger on the
+// awards unchanged. The status gates the bars below: the whole article
+// sits in Title V (DOM), and para. 3 names the DOM complément familial
+// explicitly; para. 2 is DOM-only by its own terms (single-child family
+// allowances exist only under L. 755-11/12 — metro L. 521-1 needs two
+// children). The territory reading mirrors fr.pf.af (four DOM in scope;
+// Mayotte is wave 7, AUTRE out; B-PAJE2-DOM-L751-1).
+// L. 755-19, para. 2: «L'allocation de base ... n'est pas cumulable avec
+// les allocations familiales et leurs majorations pour âge servies au
+// titre d'un seul enfant à charge.» Two rules (full/part-rate base
+// right) conclude the literal head; the single-child AF award is an
+// established fund-side fact (fr.pf.af substance — B-PAJE2-DOM-AF-UNIQUE),
+// not a duplicate rule.
+// L. 755-19, para. 3: «L'allocation de base et la prestation partagée
+// d'éducation de l'enfant ne sont pas cumulables avec le complément
+// familial défini à l'article L. 755-16.» Four rules (base plein/partiel,
+// PreParE plein/partiel — the text names no rate, so both rates are
+// barred) conclude two literal heads; the L. 755-16 CF award is an
+// established fund-side fact (fr.pf.cf substance — B-PAJE2-DOM-CF).
+// The bars are literal heads (phase-1 criterion — the barred combination
+// is only a premise for the versement-stage exclusion; same rationale as
+// fr.pf.cmg N1/N2): the payment exclusion applies at the versement stage,
+// not as a defeater into the D1B/D1P duties (B-PAJE2-DOM-EFFET).
+
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+use self::{
+    CSS_L755_19_ED2015_10,
+    Beneficiaire,
+    Enfant,
+    Menage,
+    Territoire,
+    af_enfant_unique_servies,
+    cf_dom_l755_16_servi,
+    cumul_base_af_unique_interdit,
+    cumul_base_cf_dom_interdit,
+    cumul_prepare_cf_dom_interdit,
+    droit_base_partiel,
+    droit_base_plein,
+    droit_prepare_partiel,
+    droit_prepare_plein,
+    menage_beneficiaire,
+    paje_dom_applicable,
+    territoire,
+};
+
+// --- L. 755-19, para. 1: PAJE applicable in the L. 751-1 collectivities --
+//
+// «... est attribuée dans les collectivités mentionnées à l'article
+// L. 751-1 dans les conditions définies au titre III du livre V ...»
+
+@source(CSS_L755_19_ED2015_10)
+rule PajeDomApplicable(m: Menage, t: Territoire) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "dans les collectivités L. 751-1, la PAJE est attribuée dans les conditions du titre III du livre V";
+    label en unofficial "in the L. 751-1 collectivities, PAJE is awarded under the Book V Title III conditions";
+    when territoire(m, t) and t != METROPOLE and t != MAYOTTE and t != AUTRE;
+    then paje_dom_applicable(m);
+}
+
+// --- L. 755-19, para. 2: base allowance vs single-child family allowances
+//
+// «L'allocation de base ... n'est pas cumulable avec les allocations
+// familiales et leurs majorations pour âge servies au titre d'un seul
+// enfant à charge.»
+
+@source(CSS_L755_19_ED2015_10)
+rule NonCumulBaseAfUniquePlein(m: Menage, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "allocation de base à taux plein et allocations familiales pour un seul enfant à charge : cumul interdit (L. 755-19, al. 2)";
+    label en unofficial "full-rate base allowance plus single-child family allowances: cumulation barred (L. 755-19, para. 2)";
+    when paje_dom_applicable(m)
+        and droit_base_plein(m, e)
+        and af_enfant_unique_servies(m, e);
+    then cumul_base_af_unique_interdit(m, e);
+}
+
+@source(CSS_L755_19_ED2015_10)
+rule NonCumulBaseAfUniquePartiel(m: Menage, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "allocation de base à taux partiel et allocations familiales pour un seul enfant à charge : cumul interdit (L. 755-19, al. 2)";
+    label en unofficial "part-rate base allowance plus single-child family allowances: cumulation barred (L. 755-19, para. 2)";
+    when paje_dom_applicable(m)
+        and droit_base_partiel(m, e)
+        and af_enfant_unique_servies(m, e);
+    then cumul_base_af_unique_interdit(m, e);
+}
+
+// --- L. 755-19, para. 3: base allowance vs L. 755-16 complément familial
+//
+// «L'allocation de base et la prestation partagée d'éducation de l'enfant
+// ne sont pas cumulables avec le complément familial défini à l'article
+// L. 755-16.»
+
+@source(CSS_L755_19_ED2015_10)
+rule NonCumulBaseCfDomPlein(m: Menage, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "allocation de base à taux plein et complément familial L. 755-16 : cumul interdit (L. 755-19, al. 3)";
+    label en unofficial "full-rate base allowance plus L. 755-16 complément familial: cumulation barred (L. 755-19, para. 3)";
+    when paje_dom_applicable(m)
+        and droit_base_plein(m, e)
+        and cf_dom_l755_16_servi(m);
+    then cumul_base_cf_dom_interdit(m, e);
+}
+
+@source(CSS_L755_19_ED2015_10)
+rule NonCumulBaseCfDomPartiel(m: Menage, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "allocation de base à taux partiel et complément familial L. 755-16 : cumul interdit (L. 755-19, al. 3)";
+    label en unofficial "part-rate base allowance plus L. 755-16 complément familial: cumulation barred (L. 755-19, para. 3)";
+    when paje_dom_applicable(m)
+        and droit_base_partiel(m, e)
+        and cf_dom_l755_16_servi(m);
+    then cumul_base_cf_dom_interdit(m, e);
+}
+
+// --- L. 755-19, para. 3: PreParE vs L. 755-16 complément familial --------
+
+@source(CSS_L755_19_ED2015_10)
+rule NonCumulPrepareCfDomPlein(b: Beneficiaire, e: Enfant, m: Menage) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE à taux plein et complément familial L. 755-16 : cumul interdit (L. 755-19, al. 3)";
+    label en unofficial "full-rate PreParE plus L. 755-16 complément familial: cumulation barred (L. 755-19, para. 3)";
+    when menage_beneficiaire(b, m)
+        and paje_dom_applicable(m)
+        and droit_prepare_plein(b, e)
+        and cf_dom_l755_16_servi(m);
+    then cumul_prepare_cf_dom_interdit(b, e);
+}
+
+@source(CSS_L755_19_ED2015_10)
+rule NonCumulPrepareCfDomPartiel(b: Beneficiaire, e: Enfant, m: Menage) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE à taux partiel et complément familial L. 755-16 : cumul interdit (L. 755-19, al. 3)";
+    label en unofficial "part-time PreParE plus L. 755-16 complément familial: cumulation barred (L. 755-19, para. 3)";
+    when menage_beneficiaire(b, m)
+        and paje_dom_applicable(m)
+        and droit_prepare_partiel(b, e)
+        and cf_dom_l755_16_servi(m);
+    then cumul_prepare_cf_dom_interdit(b, e);
+}

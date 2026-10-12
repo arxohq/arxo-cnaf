@@ -1,0 +1,307 @@
+// 310-day ceiling, exceptional once-renewal, reopening, advance (L. 544-3).
+//
+// The ceiling (310 daily allowances per child per pathology) applies to the
+// fund-established counters: first envelope and renewal envelope alike.
+// The exceptional once-renewal (2021 text: new certificate + explicit
+// medical agreement before the initial term ends), the reopening on relapse
+// or persistent gravity past the expired maximum duration (2019 text),
+// and the advance pending the agreement
+// (2023 text) each carry their reform window. The F05-01 qualified
+// envelope joins the 310-day status with the three-year duration status
+// (initial/renewal branch) or the expiry-gated reopened right with the
+// beyond-maximum payment (reopening branch); monthly amounts gate on it
+// plus the month conformity. All keyed premises arrive
+// bound (per-child keys).
+
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+use self::{
+    CSS_D544_1_ED2020_09,
+    CSS_D544_1_ED2021_11,
+    CSS_D544_1_ED2022_01,
+    CSS_D544_1_ED2022_04,
+    CSS_D544_1_ED2022_07,
+    CSS_D544_1_ED2022_10,
+    CSS_D544_1_ED2023_01,
+    CSS_D544_1_ED2023_07,
+    CSS_D544_1_ED2024_02,
+    CSS_D544_1_ED2024_07,
+    CSS_D544_1_ED2025_12,
+    CSS_D544_1_ED2026_01,
+    CSS_D544_1_ED2026_06,
+    CSS_D544_3,
+    CSS_D544_3_ED2022_07,
+    CSS_D544_3_ED2022_10,
+    CSS_D544_3_ED2023_01,
+    CSS_D544_3_ED2023_07,
+    CSS_D544_3_ED2024_02,
+    CSS_D544_3_ED2024_07,
+    CSS_D544_3_ED2025_12,
+    CSS_D544_3_ED2026_01,
+    CSS_D544_3_ED2026_06,
+    CSS_D544_3_PRE2022_ED2020_09,
+    CSS_D544_3_PRE2022_ED2021_11,
+    CSS_D544_3_PRE2022_ED2022_01,
+    CSS_L544_3,
+    CSS_L544_3_ED2024_02,
+    CSS_L544_3_ED2024_07,
+    CSS_L544_3_ED2025_12,
+    CSS_L544_3_ED2026_01,
+    CSS_L544_3_ED2026_06,
+    CSS_L544_3_PRE2021_ED2020_09,
+    CSS_L544_3_PRE2023,
+    CSS_L544_3_PRE2023_ED2022_01,
+    CSS_L544_3_PRE2023_ED2022_04,
+    CSS_L544_3_PRE2023_ED2022_07,
+    CSS_L544_3_PRE2023_ED2022_10,
+    CSS_L544_3_PRE2023_ED2023_01,
+    CausePathologie,
+    ajpp_dans_limite,
+    ajpp_droit_ouvert,
+    ajpp_duree_dans_limite,
+    accord_controle_renouvellement,
+    avance_accordee,
+    avant_terme_initial,
+    avis_en_attente,
+    certificat_gravite,
+    droit_rouvert,
+    duree_maximale_expiree,
+    enveloppe_ajpp_qualifiee,
+    gravite_persistante,
+    jours_ajpp_second_enveloppe,
+    jours_ajpp_verses,
+    nouveau_certificat,
+    rechute_pathologie,
+    renouvellement_accorde,
+    versement_au_dela_max,
+};
+
+// --- L. 544-3, para. 1: 310 ceiling, first envelope ----------------------
+
+@source(
+    CSS_L544_3_PRE2021_ED2020_09,
+    CSS_L544_3_PRE2023,
+    CSS_L544_3_PRE2023_ED2022_01,
+    CSS_L544_3_PRE2023_ED2022_04,
+    CSS_L544_3_PRE2023_ED2022_07,
+    CSS_L544_3_PRE2023_ED2022_10,
+    CSS_L544_3_PRE2023_ED2023_01,
+    CSS_L544_3,
+    CSS_L544_3_ED2024_02,
+    CSS_L544_3_ED2024_07,
+    CSS_L544_3_ED2025_12,
+    CSS_L544_3_ED2026_01,
+    CSS_L544_3_ED2026_06)
+rule Plafond310Premiere(e: fr.pf.core::Enfant, jours: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "première enveloppe dans la limite des trois cent dix jours";
+    label en unofficial "first envelope within the three-hundred-ten-day ceiling";
+    when ajpp_droit_ouvert(e) and jours_ajpp_verses(e, jours)
+        and jours <= Plafond310Jours;
+    then ajpp_dans_limite(e);
+}
+
+// --- L. 544-3, para. 1: 310 ceiling, renewal envelope --------------------
+
+@source(
+    CSS_L544_3_PRE2023,
+    CSS_L544_3_PRE2023_ED2022_01,
+    CSS_L544_3_PRE2023_ED2022_04,
+    CSS_L544_3_PRE2023_ED2022_07,
+    CSS_L544_3_PRE2023_ED2022_10,
+    CSS_L544_3_PRE2023_ED2023_01,
+    CSS_L544_3,
+    CSS_L544_3_ED2024_02,
+    CSS_L544_3_ED2024_07,
+    CSS_L544_3_ED2025_12,
+    CSS_L544_3_ED2026_01,
+    CSS_L544_3_ED2026_06)
+rule Plafond310Renouvellement(e: fr.pf.core::Enfant, jours: Integer) strict {
+    effective [@2021-11-17, infinity);
+    label fr official "enveloppe du renouvellement unique dans la limite des trois cent dix jours";
+    label en unofficial "once-renewal envelope within the three-hundred-ten-day ceiling";
+    when renouvellement_accorde(e) and jours_ajpp_second_enveloppe(e, jours)
+        and jours <= Plafond310Jours;
+    then ajpp_dans_limite(e);
+}
+
+// --- L. 544-3, para. 2: exceptional once-renewal (2021 text) -------------
+
+@source(
+    CSS_L544_3_PRE2023,
+    CSS_L544_3_PRE2023_ED2022_01,
+    CSS_L544_3_PRE2023_ED2022_04,
+    CSS_L544_3_PRE2023_ED2022_07,
+    CSS_L544_3_PRE2023_ED2022_10,
+    CSS_L544_3_PRE2023_ED2023_01,
+    CSS_L544_3,
+    CSS_L544_3_ED2024_02,
+    CSS_L544_3_ED2024_07,
+    CSS_L544_3_ED2025_12,
+    CSS_L544_3_ED2026_01,
+    CSS_L544_3_ED2026_06)
+rule RenouvellementUnique(e: fr.pf.core::Enfant, jours: Integer) strict {
+    effective [@2021-11-17, infinity);
+    label fr official "maximum atteint, nouveau certificat et accord avant le terme : durée maximale renouvelée une fois";
+    label en unofficial "maximum reached, new certificate and agreement before the term: maximum duration renewed once";
+    when ajpp_droit_ouvert(e) and jours_ajpp_verses(e, jours)
+        and jours >= Plafond310Jours
+        and nouveau_certificat(e) and accord_controle_renouvellement(e)
+        and avant_terme_initial(e);
+    then renouvellement_accorde(e);
+}
+
+// --- L. 544-3, para. 3: reopening on relapse -----------------------------
+// «Au-delà de la durée maximale prévue au premier alinéa» (2019 text:
+// para. 2, same gate): the reopening needs the expired original
+// duration — not the 310-day exhaustion, which belongs to the
+// exceptional once-renewal of para. 2.
+
+@source(
+    CSS_L544_3_PRE2021_ED2020_09,
+    CSS_L544_3_PRE2023,
+    CSS_L544_3_PRE2023_ED2022_01,
+    CSS_L544_3_PRE2023_ED2022_04,
+    CSS_L544_3_PRE2023_ED2022_07,
+    CSS_L544_3_PRE2023_ED2022_10,
+    CSS_L544_3_PRE2023_ED2023_01,
+    CSS_L544_3,
+    CSS_L544_3_ED2024_02,
+    CSS_L544_3_ED2024_07,
+    CSS_L544_3_ED2025_12,
+    CSS_L544_3_ED2026_01,
+    CSS_L544_3_ED2026_06)
+rule ReouvertureRechute(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée maximale expirée, rechute ou récidive, conditions L. 544-1/2 réunies : droit rouvert";
+    label en unofficial "maximum duration expired, relapse or recurrence, L. 544-1/2 conditions met: right reopened";
+    when ajpp_droit_ouvert(e) and rechute_pathologie(e)
+        and duree_maximale_expiree(e);
+    then droit_rouvert(e);
+}
+
+// --- L. 544-3, para. 3: reopening on persistent gravity ------------------
+
+@source(
+    CSS_L544_3_PRE2021_ED2020_09,
+    CSS_L544_3_PRE2023,
+    CSS_L544_3_PRE2023_ED2022_01,
+    CSS_L544_3_PRE2023_ED2022_04,
+    CSS_L544_3_PRE2023_ED2022_07,
+    CSS_L544_3_PRE2023_ED2022_10,
+    CSS_L544_3_PRE2023_ED2023_01,
+    CSS_L544_3,
+    CSS_L544_3_ED2024_02,
+    CSS_L544_3_ED2024_07,
+    CSS_L544_3_ED2025_12,
+    CSS_L544_3_ED2026_01,
+    CSS_L544_3_ED2026_06)
+rule ReouvertureGravite(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée maximale expirée, gravité persistante exigeant toujours présence et soins, conditions réunies : droit rouvert";
+    label en unofficial "maximum duration expired, persistent gravity still requiring presence and care, conditions met: right reopened";
+    when ajpp_droit_ouvert(e) and gravite_persistante(e)
+        and duree_maximale_expiree(e);
+    then droit_rouvert(e);
+}
+
+// --- L. 544-3 (2023): advance pending the agreement ----------------------
+
+@source(
+    CSS_L544_3,
+    CSS_L544_3_ED2024_02,
+    CSS_L544_3_ED2024_07,
+    CSS_L544_3_ED2025_12,
+    CSS_L544_3_ED2026_01,
+    CSS_L544_3_ED2026_06)
+rule AvanceAttenteAvis(e: fr.pf.core::Enfant) strict {
+    effective [@2023-07-21, infinity);
+    label fr official "certificat sans avis encore rendu : avance dans l'attente de l'avis";
+    label en unofficial "certificate without agreement yet: advance pending the agreement";
+    when certificat_gravite(e) and avis_en_attente(e);
+    then avance_accordee(e);
+}
+
+// --- F05-01: qualified envelope for monthly amounts ----------------------
+// Monthly daily amounts gate on enveloppe_ajpp_qualifiee plus the month
+// conformity (mensuel_dans_limite or forfait_22_conforme). Two branches,
+// never a blanket lifetime cap: the initial / once-renewal branch joins
+// the 310-day status (first envelope OR renewal envelope — ajpp_dans_limite
+// is already that disjunction) with the three-year duration status for the
+// qualifying cause; the beyond-maximum reopening branch joins the
+// expiry-gated reopened right with the beyond-maximum payment head, so old
+// exhaustion or expiry never blocks a lawful reopened payment. Single-cause
+// worlds are assumed (INPUT CONTRACT); with several causes the duration
+// premise is existential.
+
+@source(
+    CSS_L544_3_PRE2021_ED2020_09,
+    CSS_L544_3_PRE2023,
+    CSS_L544_3_PRE2023_ED2022_01,
+    CSS_L544_3_PRE2023_ED2022_04,
+    CSS_L544_3_PRE2023_ED2022_07,
+    CSS_L544_3_PRE2023_ED2022_10,
+    CSS_L544_3_PRE2023_ED2023_01,
+    CSS_L544_3,
+    CSS_L544_3_ED2024_02,
+    CSS_L544_3_ED2024_07,
+    CSS_L544_3_ED2025_12,
+    CSS_L544_3_ED2026_01,
+    CSS_L544_3_ED2026_06,
+    CSS_D544_1_ED2020_09,
+    CSS_D544_1_ED2021_11,
+    CSS_D544_1_ED2022_01,
+    CSS_D544_1_ED2022_04,
+    CSS_D544_1_ED2022_07,
+    CSS_D544_1_ED2022_10,
+    CSS_D544_1_ED2023_01,
+    CSS_D544_1_ED2023_07,
+    CSS_D544_1_ED2024_02,
+    CSS_D544_1_ED2024_07,
+    CSS_D544_1_ED2025_12,
+    CSS_D544_1_ED2026_01,
+    CSS_D544_1_ED2026_06)
+rule EnveloppeInitialeQualifiee(e: fr.pf.core::Enfant, cause: CausePathologie) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "compteur dans les 310 et durée dans les trois ans : enveloppe initiale ou de renouvellement qualifiée";
+    label en unofficial "count within 310 and duration within three years: qualified initial or renewal envelope";
+    when ajpp_dans_limite(e) and ajpp_duree_dans_limite(e, cause);
+    then enveloppe_ajpp_qualifiee(e);
+}
+
+@source(
+    CSS_L544_3_PRE2021_ED2020_09,
+    CSS_L544_3_PRE2023,
+    CSS_L544_3_PRE2023_ED2022_01,
+    CSS_L544_3_PRE2023_ED2022_04,
+    CSS_L544_3_PRE2023_ED2022_07,
+    CSS_L544_3_PRE2023_ED2022_10,
+    CSS_L544_3_PRE2023_ED2023_01,
+    CSS_L544_3,
+    CSS_L544_3_ED2024_02,
+    CSS_L544_3_ED2024_07,
+    CSS_L544_3_ED2025_12,
+    CSS_L544_3_ED2026_01,
+    CSS_L544_3_ED2026_06,
+    CSS_D544_3,
+    CSS_D544_3_ED2022_07,
+    CSS_D544_3_ED2022_10,
+    CSS_D544_3_ED2023_01,
+    CSS_D544_3_ED2023_07,
+    CSS_D544_3_ED2024_02,
+    CSS_D544_3_ED2024_07,
+    CSS_D544_3_ED2025_12,
+    CSS_D544_3_ED2026_01,
+    CSS_D544_3_ED2026_06,
+    CSS_D544_3_PRE2022_ED2020_09,
+    CSS_D544_3_PRE2022_ED2021_11,
+    CSS_D544_3_PRE2022_ED2022_01)
+rule EnveloppeReouvertureQualifiee(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "droit rouvert et versement au-delà du maximum : enveloppe de réouverture qualifiée";
+    label en unofficial "reopened right and beyond-maximum payment: qualified reopening envelope";
+    when droit_rouvert(e) and versement_au_dela_max(e);
+    then enveloppe_ajpp_qualifiee(e);
+}

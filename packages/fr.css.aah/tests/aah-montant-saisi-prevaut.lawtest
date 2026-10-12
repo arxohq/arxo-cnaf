@@ -1,0 +1,44 @@
+// Число дела вытесняет сумму декрета (марка aah_montant_saisi); сверка предъявленного числа с построенным.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+// 2024-06-15: предъявлено 1000.00 — оно и применяется, число декрета вытеснено
+test "urn:query:fr-css-aah-saisi-prevaut" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "saisi-prevaut-01": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_aah_applicable(1000.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_aah_applicable(1016.05 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2024-06-15 под чтением: 1000.00 не равно построенному
+test "urn:query:fr-css-aah-saisi-ecart" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation AahRevalorisationArrondiCentime; }
+        assert "saisi-ecart-01": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+    }
+    evaluate truth(aah_saisi_conforme_construit());
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2024-06-15 под чтением: предъявленное число равно построенному
+test "urn:query:fr-css-aah-saisi-conforme" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation AahRevalorisationArrondiCentime; }
+        assert "saisi-conforme-01": montant_mensuel_retenu(1016.05 EUR) { origin case_input; }
+    }
+    evaluate truth(aah_saisi_conforme_construit());
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,735 @@
+// Package dictionary: birth and adoption grant (PAJE, wave 1) + base
+// allowance and PreParE (wave 3, W3-PFPAJE2).
+// The rules of `02-prime.law`, `04-base.law` and `05-prepare.law` derive
+// values from the pinned fragments; the case supplies resources, the
+// applicable ceilings, the BMAF, the monthly SMIC, civil-record facts (care,
+// age cohort, prior activity) and the examination and payment dates
+// (provenance — case facts; the BMAF/ceiling series are neighbours
+// `fr.pf.core`/`fr.tax.income_for_pf`, the SMIC series is
+// `fr.travail.smic`; see boundaries).
+//
+// DEONTIC MAP OVER PINNED TEXTS ONLY (bytes of 01-sources.law; outside
+// them — boundary, not conjecture).
+//
+//   D1. Duty of the fund to pay. The bytes contain no «l'organisme verse»
+//   formula; there is the link «prime attribuée et versée» (L. 531-2,
+//   para. 1) + «prime attribuée selon le montant en vigueur» (R. 531-1,
+//   para. 6). The duty triggers on prime_attribuee (right + computed amount
+//   + examination of the situation). The bearer is unnamed in the texts —
+//   the «debtor fund of the case» link is empirical (deontic-migration.md
+//   pattern), performance is the empirical fact prime_versee. Window
+//   [@2021-01-01, ∞) is the package coverage window.
+//   D2. No «ne sont pas dues» exceptions in scope: no defeaters.
+//   No duties of the recipient («doit», «est tenu») in the 7 fragments —
+//   only conditions for opening the right and requisites (examination of
+//   the situation in R. 531-1, declaration of pregnancy from the NOTA of
+//   D. 531-2 — an applicability condition of the wording, established by
+//   the fund within the examination; see B-PAJE-DECLARATION).
+//   No powers of bodies, sanctions, or recovery procedures in scope:
+//   cross recovery under L. 553-2 is package fr.prestations.versement
+//   (wave 5).
+//   Time limits: payment of naissance (L. 531-2, para. 2) and adoption
+//   (D. 531-2, II) — the engine does not compute the calendar derivation
+//   «dernier jour du mois civil suivant» backwards (§86); the deadline
+//   date is an established case fact (B-PAJE-DEADLINE-CALC), the rule
+//   records lateness.
+//   D1B. Duty of the fund to pay the awarded base allowance. Triggers on
+//   base_attribuee (right + computed amount + eligible month). the bearer is
+//   the empirical organisme_debiteur (the texts name only «versée»); performance
+//   is base_versee. Window [@2021-01-01, ∞).
+//   D1P. Duty of the fund to pay the awarded PreParE. Triggers on
+//   prepare_attribuee; bearer performance is prepare_versee.
+//   Window [@2021-01-01, ∞).
+//   D2 (unchanged) + L. 531-4, III, para. 4 «ne peuvent cumuler» (two
+//   full-rate PreParE in one couple) and the part-time sum cap/top-up
+//   (L. 531-4, III + D. 531-4, last para.): no rules — cumulation needs a
+//   sum over co-claimants; boundary B-PAJE2-COUPLE-CUMUL with a scenario
+//   pair showing individual amounts still compute.
+//   Wave-3 prohibitions/sanctions: none built — overpayment recovery
+//   (D. 531-9, III) is cross recovery under L. 553-2 — package
+//   fr.prestations.versement (wave 5), boundary B-PAJE2-RECOUVREMENT.
+//   D3. Duty of the allocataire to declare the pregnancy within the first
+//   14 weeks (D. 532-1, para. 1; both wordings identical for this norm).
+//   duty-holder, lowercase-typed m: Menage (household/person — the allocataire);
+//   beneficiary — the debtor fund (o) as the modeled party; both statutory
+//   destinations and the in-window timing are enforced through the derived
+//   performance declaration_grossesse_effectuee (both-destination sending +
+//   conforming medical document — FULL RETURN 03, R02-01/02 — plus
+//   envoi within [debut, limite] — RETURN04, R03-01: the window check is
+//   enforced in the derivation because the achieved head is timeless and
+//   would otherwise let a late send satisfy the duty, E-0315), so no
+//   generic performed-declaration assertion can satisfy the duty without
+//   proof of both addressees and of timely sending. The health-insurance
+//   body itself stays unmodeled —
+//   boundary B-PAJE2-D532-ASSURANCE-MALADIE (narrowed). The closed window
+//   [debut, limite] is declared as data in
+//   07-examens-medicaux.deontic-window.toml (RETURN 2026-10-08;
+//   `law gen deontic-window --write` pending, GENERATED_OUTPUT_PENDING).
+//   Para. 2 (attestation by the prescribed medical document of the first
+//   prenatal exam, conforming to the standard model) is the established
+//   documentary fact document_medical_conforme, a premise of the derived
+//   performance; the external form identity stays established-input
+//   provenance — boundary B-PAJE2-D532-FORMULAIRE (narrowed).
+//   D4. Suspension of PAJE payment (D. 532-2): the PMI head doctor's power
+//   to request (demande_medecin_pmi trigger) + the fund's duty to suspend,
+//   expressed as the literal head suspension_versement_paje (no separate
+//   duty head — performance coincides with the institutional effect; same
+//   rationale as fr.pf.cmg N1/N2 and fr.casf.rsa sanction_suspension).
+//   «En l'absence de motifs légitimes» is an affirmative established fact
+//   sans_motif_legitime_examens (RETURN 2026-10-08: missing evidence must
+//   not prove absence; the RSA not_known precedent is not followed here).
+//   motif_legitime_examens (positive) and sans_motif_legitime_examens
+//   (affirmative absence) are mutually exclusive fund inputs; neither
+//   established means unevaluated — no suspension. The income-pf
+//   §47.3-judgment proposal was decided the other way (the text names no
+//   evaluating organ; journal records the proposal). The effect on the
+//   D1/D1B/D1P payment duties is fund/versement-stage applied, not
+//   a defeater — boundary B-PAJE2-D532-EFFET with a scenario pair.
+//   D5. DOM scope and non-cumulation (L. 755-19, FINISH D73). Para. 1
+//   («est attribuée dans les collectivités mentionnées à l'article
+//   L. 751-1 dans les conditions définies au titre III du livre V») is
+//   an applicability status: the Book V Title III conditions are exactly
+//   what this package formalizes, so no new duty — the existing D1/D1B/
+//   D1P payment duties trigger on the awards unchanged. Para. 2
+//   («n'est pas cumulable avec les allocations familiales et leurs
+//   majorations pour âge servies au titre d'un seul enfant à charge»)
+//   and para. 3 («ne sont pas cumulables avec le complément familial
+//   défini à l'article L. 755-16») are prohibitions with literal heads
+//   (phase-1 criterion: the barred combination is only a premise for
+//   the versement-stage exclusion — same rationale as fr.pf.cmg N1/N2;
+//   no fulfillment-by-date, violation, sanction or registry consumer
+//   calls for a norm-conclusion now). The AF single-child award and the
+//   L. 755-16 CF award are established fund-side facts (substance owned
+//   by fr.pf.af / fr.pf.cf — no duplicate rules here). No recipient
+//   duties, powers, sanctions or deadlines in L. 755-19.
+//
+// LAYER BOUNDARIES (omission records, not norms):
+// B-PAJE-BMAF: BMAF series (L. 551-1) — neighbour fr.pf.core; in the case — bmaf fact.
+// B-PAJE-PLAFOND: ceiling of the full-rate base allowance (CF, L. 522-1,
+// wave 3) and N-2 resources (R. 532-1/R. 532-3, fr.tax.income_for_pf); in the
+// case — facts; the rule builds the 119.47% ratio (D. 531-3-1 is its own anchor).
+// R. 531-1, para. 3 revalues «les plafonds annuels respectifs» on 1 January
+// each year, each from its own previous value (opposable DSS instruction
+// DSS/2B/2024/181: «ces différents plafonds … sont revalorisés de 4,8 %»):
+// the published 2025 grant ceiling (table 3.1: 1 child, lone parent —
+// 48 186 €) is not 119.47% of the published full-rate ceiling (table 3.2:
+// 40 330 € → 48 182.25 €). A case that establishes the revalued grant
+// ceiling (plafond_prime_revalorise) gets it as plafond_prime directly
+// (rule PlafondPrimeRevalorise); the 119.47% construction stays for cases
+// that establish only the full-rate ceiling. The two inputs are exclusive
+// in one case: both would key-conflict on plafond_prime (§45.1). Found by
+// the OpenFisca-France 176.1.2 transfer (analysis/openfisca-176).
+// B-PAJE-DATE-DECRET: «date fixée par décret» (L. 531-2, para. 2: 1°/2° and
+// adoption) — decree dates not pinned; the right is derived, the exact
+// award date is not.
+// B-PAJE-DEADLINE-CALC: derivation of the deadline date from «dernier jour
+// du mois civil suivant le sixième mois» / «deuxième mois qui suit
+// l'arrivée» — date_limite fact established by the fund.
+// B-PAJE-TRANSITOIRE-2021: NOTA of L. 531-2 III — April 2021 payment for
+// 06–09.2020 pregnancies — paid out; no rule built.
+// B-PAJE-DECLARATION: NOTA of D. 531-2 — old provisions of II.1 for
+// pregnancies declared from 01.01.2015; declaration established by the fund.
+// B-PAJE-AGE-ADOPTION: age limits (L. 531-1/D. 531-1/L. 512-3 2°) and
+// reception conditions of L. 512-4 — condition_age_adoption fact
+// (thresholds — pf.core).
+// B-PAJE-ALLOCATION-BASE: built in wave 3 (04-base.law); the ceiling
+// reference from D. 531-3-1 stays shared (base partiel uses plafond_prime).
+//
+// WAVE-3 BOUNDARIES (omission records, not norms):
+// B-PAJE2-PLAFOND-PLEIN: the full-rate ceiling is the CF ceiling (L. 531-3,
+// current para. 2 → L. 522-1; old para. 1 → decree) — package fr.pf.cf,
+// not yet formalized; in the case — the plafond_base_taux_plein fact.
+// B-PAJE2-SMIC: monthly SMIC (= hourly SMIC × 169) — series fr.travail.smic;
+// in the case — the smic_mensuel fact (the ×169 step is fund-side).
+// B-PAJE2-PERIODE: monthly entitlement (mois_eligible_*) and period ends are
+// fund-established (calendar derivation, same class as B-PAJE-DEADLINE-CALC).
+// B-PAJE2-DUREE-CALC: month counts (D. 531-13/14/14-1/16/16-1, L. 531-4
+// I.3/IV/V/VI, R. 531-4 six-month lock, D. 531-16 two-month extension) need
+// month arithmetic; duration articles are pinned, no computational rules.
+// B-PAJE2-ETAT-CIVIL: care, age cohort, prior activity + assimilation
+// (R. 531-2/D. 531-15: 2/4/5-year references, 8 quarters), quotité
+// attestations and elected-official thresholds are fund-established from
+// civil, retirement and tax records (condition_age_base, cohorte_enfant,
+// activite_anterieure_suffisante, condition_age_prepare, attestation_quotite,
+// condition_elu) — same class as B-PAJE-AGE-ADOPTION.
+// B-PAJE2-COUPLE-CUMUL: couple-wide non-cumul of two full PreParE and the
+// part-time sum cap/top-up (L. 531-4, III; D. 531-4, last para.) — no rules.
+// B-PAJE2-VI-CUMUL-REVENU: L. 531-4, VI, para. 1 (full benefit cumulated with
+// professional income under decree conditions) — decree unpinned, no rule.
+// B-PAJE2-PROLONGATION: L. 531-4, I.3, paras. 2–4 (shared-claim extension,
+// single-parent extension, September school-place extension) — duration
+// mechanics fund-side (B-PAJE2-DUREE-CALC).
+// B-PAJE2-CONVENTION: L. 531-4-1 (return-to-work agreement procedure) —
+// pinned (both wordings), no rules: procedure, not a computable norm.
+// B-PAJE2-CMG-VOISIN: D. 531-24, R. 531-5, R. 531-6 read L. 531-5 (CMG) —
+// not pinned; package fr.pf.cmg.
+// B-PAJE2-D531-12: no current version in the registry — nothing to pin.
+// B-PAJE2-OWNERSHIP: R. 531-2/3/4, D. 531-14-1, D. 531-16-1, L. 531-1 and
+// L. 531-4-1 are PENDING_WAVE in INVENTORY (no owner) — pinned here as
+// PreParE substance; reassignment to CNAF-PFPAJE proposed to the coordinator.
+// B-PAJE2-RECOUVREMENT: D. 531-9, III (recovery of overpaid part-time
+// benefit) — cross recovery, package fr.prestations.versement (wave 5).
+// B-PAJE2-DSS: no DSS instructions available — amounts are built from the
+// text (DECISION-0452); the published-value cross-check stays DSS_PENDING.
+// B-PAJE2-OPENFISCA: every OpenFisca base/PreParE case runs in 2013–2018
+// (outside the [2021-01-01, ∞) window) and paje_prepare is a TODO stub in
+// their code — OUT_OF_COVERAGE, recorded in tools/foreign-map.json.
+// B-PAJE2-D531-1-FIX: wave-1 pinned D. 531-1 (and would have pinned R. 531-3)
+// EMPTY — the fetch walk read only `<p>`; fixed in wave 3 (see 01-sources.law).
+// The six non-empty wave-1 documents rebuild byte-identical.
+// B-PAJE2-MAJORE-DOUBLE: under the VI increased-amount option the plain full
+// amount (96.62%) still concludes as montant_prepare_plein (intermediate) but
+// only the increased amount (157.93%) is awarded — PreparePleinAttribue carries
+// `not_known(option_majoree)`, otherwise both awards conclude and §45.1
+// key-conflicts on prepare_attribuee. Scenario prepare-majore pins the
+// 631.72 € award.
+//
+// FINISH D72 BOUNDARIES (omission records, not norms):
+// B-PAJE2-D532-ASSURANCE-MALADIE (FULL RETURN 03, narrowed): the
+// health-insurance body as a party belongs to another branch and stays
+// unmodeled (no second beneficiary party); its destination is enforced —
+// the derived performance requires the both-destination sending fact, so
+// fulfillment without proof of this addressee cannot conclude.
+// B-PAJE2-D532-FORMULAIRE (FULL RETURN 03, narrowed): the prescribed-model
+// conformity (ministerial arrêté before 2023, formulaire homologué since)
+// is the established documentary fact document_medical_conforme, a premise
+// of the derived performance; the external form identity and content stay
+// established-input provenance (unpinned ministerial instrument).
+// B-PAJE2-D532-L5331-PLURIEL: D. 532-2 reads «les examens» while the pinned
+// L. 533-1 (package fr.pf.core) names the first prenatal exam; the reading
+// is upstream — here an established input (examens_l5331_non_passes).
+// B-PAJE2-D532-MOIS-EFFET: the «mois civil qui suit» derivation is
+// fund-established (same class as B-PAJE-DEADLINE-CALC).
+// B-PAJE2-D532-EFFET: suspension is not wired as a defeater into the D1/
+// D1B/D1P payment duties (strict rules; §149); the fund applies the effect
+// at the versement stage. Scenario suspension-avec-prime shows the award
+// still computing while the suspension concludes.
+// B-PAJE2-D532-VIOLATION (RETURN04): VIOLATED needs explicit
+// non-performance (§136.3: established `not effectuee` or a completeness
+// certificate over timely conforming sending); the fund establishes it —
+// here only ACTIVE / SATISFIED / UNDETERMINED positions are shown.
+// B-PAJE2-D532-OWNERSHIP: D. 532-1/D. 532-2 are PENDING_WAVE in INVENTORY
+// (no owner) — pinned here as PAJE substance per the D72 transfer from the
+// income-pf line; reassignment to CNAF-PFPAJE proposed to the coordinator.
+//
+// FINISH D73 BOUNDARIES (omission records, not norms):
+// B-PAJE2-DOM-L751-1 (FULL RETURN 03, modelled 6/6): the L. 751-1 list is
+// read for the Territoire reading, not pinned here (context owned by the
+// DOM line, D-76: LEGIARTI000031323778, 2015-10-16→2028-01-01 — «en
+// Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy
+// et à Saint-Martin»); all six collectivities are now Territoire members.
+// Mayotte is correctly out (not in the L. 751-1 list; wave 7), AUTRE out.
+// B-PAJE2-DOM-AF-UNIQUE: single-child AF with age supplements (L. 755-11/12,
+// D. 755-5 substance) is owned by fr.pf.af; here the established input
+// af_enfant_unique_servies. A future liaison on the fr.pf.af award is a
+// request, not an edit.
+// B-PAJE2-DOM-CF: the L. 755-16 complément familial is owned by fr.pf.cf
+// (D73 transfer); here the established input cf_dom_l755_16_servi. A
+// future liaison on the fr.pf.cf DOM award is a request, not an edit.
+// B-PAJE2-DOM-EFFET: the cumulation bars are literal heads; the payment
+// exclusion applies at the versement stage (same rationale as
+// B-CMG-L531-9-PREPARE and B-PAJE2-D532-EFFET), not as a defeater into
+// the D1B/D1P payment duties (strict rules; §149).
+// B-PAJE2-DOM-OWNERSHIP: L. 755-19 is PENDING_WAVE in INVENTORY
+// (no owner) — pinned here as PAJE substance per the D73 transfer from the
+// dom line; reassignment to CNAF-PFPAJE proposed to the coordinator.
+//
+// Scenarios: tests/prime-naissance-*.lawtest, tests/prime-adoption-*.lawtest
+// (families fr.pf.paje#prime-naissance / #prime-adoption in law.toml):
+// inputs→value; boundary pairs (ceiling ±1 €, wordings D. 531-2 03/04.2021,
+// R. 531-1 10.2022, décès/terme, retard); tests/devoir-versement-*.lawtest
+// (positions: ACTIVE / no right / threshold).
+// Wave 3: tests/base-*.lawtest (family fr.pf.paje#allocation-base):
+// inputs→value; ceiling pairs (full = / ±1 €, partiel = / over);
+// cohort regime pairs (pre-2018 child at 02.2021 old rate / 05.2021 new
+// rate); adoption; sans-mois; tests/prepare-*.lawtest (family
+// fr.pf.paje#prepare): full/part-time bands, SMIC caps pass/fail, garde and
+// forfait-jours ratios, majoré, élus, sans-prior-activity, D. 531-15
+// 06/07.2026 wording pair; tests/devoir-base-*.lawtest and
+// tests/devoir-prepare-*.lawtest (positions ACTIVE / no right).
+// FINISH D72: tests/declaration-*.lawtest, tests/devoir-declarer-*.lawtest
+// and tests/suspension-*.lawtest (family fr.pf.paje#examens-medicaux):
+// inputs→status; boundaries (sending on the deadline day; pre-start send
+// is neither on-time nor late — RETURN 2026-10-08); wording pair
+// (2022 predecessor / 2025 current); positions ACTIVE / SATISFIED timely /
+// UNDETERMINED late / no pregnancy; derived performance (both-destination
+// sending + conforming document + in-window timing; missing input or
+// out-of-window send stays silent — FULL RETURN 03 + RETURN04 R03-01);
+// suspension granted (affirmative absence) / barred by legitimate reasons /
+// unevaluated when neither motive nor absence established / no request /
+// exams taken; award+suspension interaction pair.
+// FINISH D73: tests/dom-*.lawtest (family fr.pf.paje#dom-paje):
+// scope applicable / metro / outside the package window; al. 2 bars
+// (plein / partiel / no single-child AF); al. 3 bars (plein / partiel /
+// plein PreParE / part-time PreParE / no CF); out-of-DOM pair with both
+// benefits open; Saint-Barthélemy / Saint-Martin applicable pair plus a
+// Saint-Barthélemy no-AF bar control (FULL RETURN 03).
+
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+pub entity Menage {
+    label fr official "ménage ou personne (L. 531-2 : prime attribuée et versée au ménage ou à la personne)";
+    label en unofficial "household or person (L. 531-2: the grant is awarded and paid to the household or the person)";
+}
+
+pub entity Enfant {
+    label fr official "enfant à naître ou enfant adopté ou accueilli en vue d'adoption (L. 531-2)";
+    label en unofficial "child: expected, adopted, or taken in with a view to adoption (L. 531-2)";
+}
+
+pub entity Organisme {
+    label fr official "organisme débiteur des prestations familiales chargé du dossier";
+    label en unofficial "body owing family benefits and handling the case";
+}
+
+pub relation ressources_annuelles(m: Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "ressources annuelles du ménage ou de la personne, appréciées dans les conditions de l'article R. 532-1 (fait du dossier; série N-2 — fr.tax.income_for_pf)";
+    label en unofficial "annual resources of the household or person under the conditions of Art. R. 532-1 (case fact; N-2 series — fr.tax.income_for_pf)";
+}
+
+pub relation plafond_base_taux_plein(m: Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "plafond de l'allocation de base versée à taux plein, référence du plafond prime (L. 522-1, vague 3; fait du dossier)";
+    label en unofficial "ceiling of the full-rate base allowance — basis of the grant ceiling (L. 522-1, wave 3; case fact)";
+}
+
+pub relation plafond_prime(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "plafond de ressources de la prime, construit à 119,47 % du plafond base taux plein (D. 531-3-1)";
+    label en unofficial "grant resources ceiling, built as 119.47% of the full-rate base ceiling (D. 531-3-1)";
+}
+
+pub relation plafond_prime_revalorise(m: Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "plafond de ressources de la prime revalorisé au 1er janvier pour le ménage (R. 531-1, al. 3; série — tableau 3.1 de l'instruction DSS; fait du dossier)";
+    label en unofficial "grant resources ceiling as revalued on 1 January for the household (R. 531-1, para. 3; series — table 3.1 of the DSS instruction; case fact)";
+}
+
+pub relation bmaf_applicable(m: Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "base mensuelle en vigueur à la date d'examen de la situation (L. 551-1; série — fr.pf.core; fait du dossier)";
+    label en unofficial "BMAF in force on the date the situation is examined (L. 551-1; series — fr.pf.core; case fact)";
+}
+
+pub relation attente_naissance(m: Menage, e: Enfant) kind empirical {
+    label fr official "grossesse en cours, enfant à naître avant la naissance (L. 531-2, al. 1)";
+    label en unofficial "pregnancy in progress, child not yet born (L. 531-2, para. 1)";
+}
+
+pub relation naissance_avant_terme_prevu(e: Enfant) kind empirical {
+    label fr official "naissance intervenue avant le sixième mois prévu de la grossesse (L. 531-2, al. 2, 1°)";
+    label en unofficial "birth before the sixth expected month of pregnancy (L. 531-2, para. 2, 1°)";
+}
+
+pub relation deces_apres_20_semaines(e: Enfant) kind empirical {
+    label fr official "décès de l'enfant au delà de la vingtième semaine de grossesse (L. 531-2, al. 2, 2°)";
+    label en unofficial "death of the child after the 20th week of pregnancy (L. 531-2, para. 2, 2°)";
+}
+
+pub relation adoption_arrivee(m: Menage, e: Enfant) kind empirical {
+    label fr official "arrivée de l'enfant adopté ou accueilli en vue d'adoption au foyer, dans les conditions de l'article L. 512-4 (fait établi)";
+    label en unofficial "arrival of the adopted or taken-in child in the household under the conditions of Art. L. 512-4 (established fact)";
+}
+
+pub relation condition_age_adoption(e: Enfant) kind empirical {
+    label fr official "condition d'âge adoption remplie, limites L. 531-1 et L. 512-3 2° comprises (seuils — fr.pf.core; fait établi)";
+    label en unofficial "adoption age condition met, including the limits of L. 531-1 and L. 512-3 2° (thresholds — fr.pf.core; established fact)";
+}
+
+pub relation date_examen_situation(m: Menage, e: Enfant, date: Date) kind empirical {
+    label fr official "date d'examen de la situation de la famille (R. 531-1: premier jour du mois civil suivant le cinquième mois / mois de l'arrivée)";
+    label en unofficial "date the family situation is examined (R. 531-1: first day of the month after the fifth month / month of arrival)";
+}
+
+pub relation droit_prime_naissance(m: Menage, e: Enfant) kind institutional {
+    label fr official "droit à la prime à la naissance ouvert (L. 531-2)";
+    label en unofficial "right to the birth grant is open (L. 531-2)";
+}
+
+pub relation droit_prime_adoption(m: Menage, e: Enfant) kind institutional {
+    label fr official "droit à la prime à l'adoption ouvert (L. 531-2)";
+    label en unofficial "right to the adoption grant is open (L. 531-2)";
+}
+
+pub enum RegimeVersement {
+    label fr official "régime temporel du versement de la prime à la naissance";
+    label en unofficial "timing regime for payment of the birth grant";
+    APRES_NAISSANCE, AVANT_NAISSANCE
+}
+
+pub relation regime_versement_naissance(m: Menage, e: Enfant, regime: RegimeVersement) kind institutional {
+    label fr official "régime applicable: après la naissance (D. 531-2 éd. 2015) ou avant la naissance dès le 7e mois (L. 531-2 éd. 2020)";
+    label en unofficial "applicable regime: after birth (D. 531-2, 2015 wording) or before birth from the 7th month (L. 531-2, 2020 wording)";
+}
+
+pub relation montant_prime_naissance(m: Menage, e: Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "montant de la prime à la naissance: 229,75 % de la BMAF (D. 531-2, I)";
+    label en unofficial "birth grant amount: 229.75% of the BMAF (D. 531-2, I)";
+}
+
+pub relation montant_prime_adoption(m: Menage, e: Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "montant de la prime à l'adoption: 459,5 % de la BMAF, majoration adoption comprise (D. 531-2, I)";
+    label en unofficial "adoption grant amount: 459.5% of the BMAF, including the adoption supplement (D. 531-2, I)";
+}
+
+pub relation prime_attribuee(m: Menage, e: Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "prime attribuée selon le montant en vigueur à la date d'examen (R. 531-1)";
+    label en unofficial "grant awarded at the amount in force on the examination date (R. 531-1)";
+}
+
+pub relation montant_primes_adoption_menage(m: Menage, total: Money) kind institutional {
+    key(m);
+    label fr official "total des primes à l'adoption attribuées au ménage, une prime pour chaque enfant adopté (L. 531-2, al. 1)";
+    label en unofficial "total of the adoption grants awarded to the household, one grant per adopted child (L. 531-2, para. 1)";
+}
+
+pub relation organisme_debiteur(o: Organisme, m: Menage) kind empirical {
+    label fr official "l'organisme est débiteur de la prime du ménage (fait du dossier)";
+    label en unofficial "body owing the household's grant (case fact)";
+}
+
+pub relation prime_versee(m: Menage, e: Enfant, montant: Money) kind empirical {
+    key(m, e);
+    label fr official "la prime a été versée au ménage (exécution)";
+    label en unofficial "grant paid to the household (performance)";
+}
+
+pub relation date_versement_prime(m: Menage, e: Enfant, date: Date) kind empirical {
+    label fr official "date du versement de la prime (fait du dossier)";
+    label en unofficial "date the grant was paid (case fact)";
+}
+
+pub relation date_limite_versement(m: Menage, e: Enfant, date: Date) kind empirical {
+    label fr official "date limite de versement établie par la caisse (dérivation calendaire — fait établi)";
+    label en unofficial "payment deadline set by the fund (calendar derivation — established fact)";
+}
+
+pub relation versement_tardif(m: Menage, e: Enfant) kind institutional {
+    label fr official "versement après la date limite (L. 531-2, al. 2 ; D. 531-2, II)";
+    label en unofficial "payment after the deadline (L. 531-2, para. 2; D. 531-2, II)";
+}
+
+// --- Wave 3: base allowance (04-base.law) --------------------------------
+
+pub relation enfant_en_charge(m: Menage, e: Enfant) kind empirical {
+    label fr official "enfant à la charge du ménage, né ou arrivé au foyer par adoption ou accueil (L. 531-3, al. 1 et 3 ; fait établi)";
+    label en unofficial "child in the household's care, born or arrived through adoption or taking-in (L. 531-3, paras. 1 and 3; established fact)";
+}
+
+pub relation condition_age_base(e: Enfant) kind empirical {
+    label fr official "condition d'âge base remplie : moins de trois ans (D. 531-1) ou limites L. 531-1/L. 512-3 2° pour l'adopté (L. 531-3, al. 3 ; fait établi)";
+    label en unofficial "base age condition met: under three (D. 531-1), or the L. 531-1/L. 512-3 2° limits for an adopted child (L. 531-3, para. 3; established fact)";
+}
+
+pub enum CohorteEnfant {
+    label fr official "cohorte de naissance ou d'adoption au regard du 1er avril 2018 (NOTA L. 531-3/D. 531-3)";
+    label en unofficial "birth or adoption cohort against 01.04.2018 (NOTA of L. 531-3/D. 531-3)";
+    NE_AVANT_AVRIL_2018, NE_APARTIR_AVRIL_2018
+}
+
+pub relation cohorte_enfant(e: Enfant, c: CohorteEnfant) kind empirical {
+    label fr official "cohorte de l'enfant : né ou adopté avant le 1er avril 2018 ou à compter de cette date (fait établi d'état civil)";
+    label en unofficial "child cohort: born or adopted before 01.04.2018 or from that date (established civil-record fact)";
+}
+
+pub relation droit_base_plein(m: Menage, e: Enfant) kind institutional {
+    label fr official "droit à l'allocation de base à taux plein ouvert (L. 531-3)";
+    label en unofficial "right to the full-rate base allowance is open (L. 531-3)";
+}
+
+pub relation droit_base_partiel(m: Menage, e: Enfant) kind institutional {
+    label fr official "droit à l'allocation de base à taux partiel ouvert (L. 531-3)";
+    label en unofficial "right to the part-rate base allowance is open (L. 531-3)";
+}
+
+pub relation montant_base_plein(m: Menage, e: Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "montant mensuel de l'allocation de base à taux plein (D. 531-3)";
+    label en unofficial "monthly full-rate base allowance amount (D. 531-3)";
+}
+
+pub relation montant_base_partiel(m: Menage, e: Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "montant mensuel de l'allocation de base à taux partiel (D. 531-3)";
+    label en unofficial "monthly part-rate base allowance amount (D. 531-3)";
+}
+
+pub relation mois_eligible_base(m: Menage, e: Enfant, mois: Date) kind empirical {
+    label fr official "mois au titre duquel l'allocation de base est due (période établie par la caisse)";
+    label en unofficial "month for which the base allowance is due (fund-established period)";
+}
+
+pub relation base_attribuee(m: Menage, e: Enfant, montant: Money, mois: Date) kind institutional {
+    key(m, e);
+    label fr official "allocation de base attribuée au mois au montant en vigueur";
+    label en unofficial "base allowance awarded for the month at the amount in force";
+}
+
+pub relation base_versee(m: Menage, e: Enfant, montant: Money) kind empirical {
+    key(m, e);
+    label fr official "l'allocation de base a été versée au ménage (exécution)";
+    label en unofficial "base allowance paid to the household (performance)";
+}
+
+// --- Wave 3: PreParE (05-prepare.law) -------------------------------------
+
+pub entity Beneficiaire {
+    label fr official "personne qui demande la prestation partagée d'éducation de l'enfant (L. 531-4)";
+    label en unofficial "person claiming the shared child-raising benefit (L. 531-4)";
+}
+
+pub relation menage_beneficiaire(b: Beneficiaire, m: Menage) kind empirical {
+    label fr official "le demandeur appartient au ménage dont la BMAF et le SMIC s'appliquent (fait du dossier)";
+    label en unofficial "claimant belongs to the household whose BMAF and SMIC apply (case fact)";
+}
+
+pub relation arret_activite(b: Beneficiaire, e: Enfant) kind empirical {
+    label fr official "le demandeur a cessé son activité professionnelle pour s'occuper de l'enfant (L. 531-4, I, 1, al. 1 ; fait établi)";
+    label en unofficial "claimant stopped working to care for the child (L. 531-4, I, 1, para. 1; established fact)";
+}
+
+pub relation formation_non_remuneree(b: Beneficiaire, e: Enfant) kind empirical {
+    label fr official "le demandeur suit une formation professionnelle non rémunérée (L. 531-4, I, 1, al. 1 ; fait établi)";
+    label en unofficial "claimant follows unpaid vocational training (L. 531-4, I, 1, para. 1; established fact)";
+}
+
+pub relation activite_anterieure_suffisante(b: Beneficiaire, e: Enfant) kind empirical {
+    label fr official "activité antérieure suffisante : périodes de référence 2/4/5 ans et 8 trimestres (R. 531-2), assimilations comprises (D. 531-15 ; fait établi)";
+    label en unofficial "sufficient prior activity: 2/4/5-year reference periods and 8 quarters (R. 531-2), including assimilated periods (D. 531-15; established fact)";
+}
+
+pub relation condition_age_prepare(e: Enfant) kind empirical {
+    label fr official "condition d'âge PreParE remplie : limite D. 531-1 ou limites adoption L. 531-4, IV et L. 512-3 2° (fait établi)";
+    label en unofficial "PreParE age condition met: D. 531-1 limit, or the adoption limits of L. 531-4, IV and L. 512-3 2° (established fact)";
+}
+
+pub enum BandeQuotite {
+    label fr official "bande de quotité d'activité à temps partiel (D. 531-4, II)";
+    label en unofficial "part-time activity share band (D. 531-4, II)";
+    JUSQUA_50, DE_50_A_80
+}
+
+pub relation attestation_quotite(b: Beneficiaire, q: BandeQuotite) kind empirical {
+    label fr official "quotité attestée par l'employeur : employés du particulier employeur, vacataires, accueillants familiaux (D. 531-6 à D. 531-8 ; fait établi)";
+    label en unofficial "employer-certified share: home employees, vacataires, family carers (D. 531-6 to D. 531-8; established fact)";
+}
+
+pub relation jours_garde(b: Beneficiaire, total_jours: Integer, enfants_gardes: Integer, jours_ouvres: Integer) kind empirical {
+    label fr official "assistants maternels : jours de garde du premier mois, enfants gardés, jours ouvrés (D. 531-10 ; fait établi)";
+    label en unofficial "childminders: first-month care days, children kept, working days (D. 531-10; established fact)";
+}
+
+pub relation jours_contrat(b: Beneficiaire, jours: Integer) kind empirical {
+    label fr official "cadres au forfait-jours : jours travaillés fixés par le contrat (D. 531-11 ; fait établi)";
+    label en unofficial "forfait-jours managers: working days set by the contract (D. 531-11; established fact)";
+}
+
+pub relation jours_accord(b: Beneficiaire, jours: Integer) kind empirical {
+    label fr official "cadres au forfait-jours : jours autorisés par l'accord collectif ou le plafond légal (D. 531-11 ; fait établi)";
+    label en unofficial "forfait-jours managers: days allowed by the collective agreement or the legal ceiling (D. 531-11; established fact)";
+}
+
+pub relation quotite_declaree(b: Beneficiaire, q: BandeQuotite) kind empirical {
+    label fr official "quotité déclarée sur l'honneur : au plus 50 % ou 50–80 % de la durée légale (D. 531-9, I–II ; fait établi)";
+    label en unofficial "share declared on honour: at most 50% or 50-80% of the legal working time (D. 531-9, I-II; established fact)";
+}
+
+pub relation categorie_plafond_smic(b: Beneficiaire) kind empirical {
+    label fr official "demandeur d'une catégorie à plafond SMIC : salarié L. 7311-3, non-salarié, élu local (D. 531-9 ; fait établi)";
+    label en unofficial "claimant in a SMIC-capped category: L. 7311-3 employee, self-employed, local elected official (D. 531-9; established fact)";
+}
+
+pub relation bande_activite(b: Beneficiaire, q: BandeQuotite) kind institutional {
+    label fr official "bande de quotité applicable au demandeur (D. 531-4, II ; R. 531-3 : premier mois)";
+    label en unofficial "applicable activity-share band of the claimant (D. 531-4, II; R. 531-3: first month)";
+}
+
+pub relation smic_mensuel(m: Menage, montant: Money) kind empirical {
+    label fr official "SMIC mensuel (SMIC horaire × 169 ; série — fr.travail.smic ; fait du dossier)";
+    label en unofficial "monthly SMIC (hourly SMIC x 169; series — fr.travail.smic; case fact)";
+}
+
+pub relation revenu_mensuel_activite(b: Beneficiaire, montant: Money) kind empirical {
+    label fr official "rémunération mensuelle nette ou revenu professionnel mensuel du temps partiel (D. 531-9 ; fait établi)";
+    label en unofficial "monthly net pay or monthly professional income from part-time work (D. 531-9; established fact)";
+}
+
+pub relation condition_elu(b: Beneficiaire) kind empirical {
+    label fr official "élu ayant cessé son activité : indemnités au plus égales à la fraction représentative (D. 531-5 ; fait établi)";
+    label en unofficial "elected official who stopped working: allowances within the representative fraction (D. 531-5; established fact)";
+}
+
+pub relation option_majoree(b: Beneficiaire, e: Enfant) kind empirical {
+    label fr official "option définitive du montant majoré : aucune activité pendant la durée, trois enfants à charge (L. 531-4, VI, al. 2 ; D. 531-16-1 ; fait établi)";
+    label en unofficial "final option for the increased amount: no activity during the period, three dependent children (L. 531-4, VI, para. 2; D. 531-16-1; established fact)";
+}
+
+pub relation droit_prepare_plein(b: Beneficiaire, e: Enfant) kind institutional {
+    label fr official "droit à la PreParE à taux plein ouvert (L. 531-4)";
+    label en unofficial "right to full-rate PreParE is open (L. 531-4)";
+}
+
+pub relation droit_prepare_partiel(b: Beneficiaire, e: Enfant) kind institutional {
+    label fr official "droit à la PreParE à taux partiel ouvert (L. 531-4)";
+    label en unofficial "right to part-time PreParE is open (L. 531-4)";
+}
+
+pub relation montant_prepare_plein(b: Beneficiaire, e: Enfant, montant: Money) kind institutional {
+    key(b, e);
+    label fr official "montant mensuel PreParE à taux plein : 96,62 % de la BMAF (D. 531-4, I, 1°)";
+    label en unofficial "monthly full-rate PreParE: 96.62% of the BMAF (D. 531-4, I, 1)";
+}
+
+pub relation montant_prepare_partiel(b: Beneficiaire, e: Enfant, montant: Money) kind institutional {
+    key(b, e);
+    label fr official "montant mensuel PreParE à taux partiel : 62,46 % ou 36,03 % de la BMAF (D. 531-4, II)";
+    label en unofficial "monthly part-time PreParE: 62.46% or 36.03% of the BMAF (D. 531-4, II)";
+}
+
+pub relation montant_prepare_majore(b: Beneficiaire, e: Enfant, montant: Money) kind institutional {
+    key(b, e);
+    label fr official "montant mensuel PreParE majoré : 157,93 % de la BMAF (D. 531-4, I, 2°)";
+    label en unofficial "monthly increased PreParE: 157.93% of the BMAF (D. 531-4, I, 2)";
+}
+
+pub relation mois_eligible_prepare(b: Beneficiaire, e: Enfant, mois: Date) kind empirical {
+    label fr official "mois au titre duquel la PreParE est due (période établie par la caisse)";
+    label en unofficial "month for which PreParE is due (fund-established period)";
+}
+
+pub relation prepare_attribuee(b: Beneficiaire, e: Enfant, montant: Money, mois: Date) kind institutional {
+    key(b, e);
+    label fr official "PreParE attribuée au mois au montant en vigueur";
+    label en unofficial "PreParE awarded for the month at the amount in force";
+}
+
+pub relation prepare_versee(b: Beneficiaire, e: Enfant, montant: Money) kind empirical {
+    key(b, e);
+    label fr official "la PreParE a été versée au demandeur (exécution)";
+    label en unofficial "PreParE paid to the claimant (performance)";
+}
+
+// --- FINISH D72: medical-exam duties (07-examens-medicaux.law) -------------
+
+pub relation debut_grossesse(m: Menage, e: Enfant, debut: Date) kind empirical {
+    label fr official "début de la grossesse, datation médicale (D. 532-1 : les quatorze premières semaines ; fait établi)";
+    label en unofficial "pregnancy start, medical dating (D. 532-1: the first fourteen weeks; established fact)";
+}
+
+pub relation date_limite_declaration(m: Menage, e: Enfant, limite: Date) kind empirical {
+    label fr official "date limite de déclaration établie par la caisse (fin des quatorze premières semaines ; dérivation calendaire — fait établi)";
+    label en unofficial "declaration deadline set by the fund (end of the first fourteen weeks; calendar derivation — established fact)";
+}
+
+pub relation declaration_grossesse_adressee(m: Menage, e: Enfant, envoi: Date) kind empirical {
+    label fr official "déclaration de grossesse adressée aux deux organismes à la date d'envoi, attestée par le document médical du premier examen prénatal (D. 532-1 ; fait établi)";
+    label en unofficial "pregnancy declaration sent to both bodies on the sending date, attested by the first-prenatal-exam medical document (D. 532-1; established fact)";
+}
+
+pub relation document_medical_conforme(m: Menage, e: Enfant) kind empirical {
+    label fr official "déclaration attestée par le document médical prévu à cet effet constatant la passation du premier examen prénatal, conforme au modèle type — arrêté avant 2023, formulaire homologué depuis (D. 532-1, al. 2 ; fait documentaire établi)";
+    label en unofficial "declaration attested by the prescribed medical document recording the first prenatal exam, conforming to the standard model — ministerial order before 2023, homologated form since (D. 532-1, para. 2; established documentary fact)";
+}
+
+pub relation declaration_grossesse_effectuee(m: Menage, e: Enfant) kind institutional {
+    label fr official "déclaration de grossesse effectuée : envoi aux deux organismes dans les quatorze premières semaines et document médical prescrit conforme (exécution dérivée du devoir D. 532-1)";
+    label en unofficial "pregnancy declaration made: both-destination sending within the first fourteen weeks plus conforming prescribed medical document (derived performance of the D. 532-1 duty)";
+}
+
+pub relation declaration_grossesse_en_delai(m: Menage, e: Enfant) kind institutional {
+    label fr official "déclaration de grossesse adressée dans les quatorze premières semaines (D. 532-1)";
+    label en unofficial "pregnancy declaration sent within the first fourteen weeks (D. 532-1)";
+}
+
+pub relation declaration_grossesse_tardive(m: Menage, e: Enfant) kind institutional {
+    label fr official "déclaration de grossesse adressée après les quatorze premières semaines (D. 532-1)";
+    label en unofficial "pregnancy declaration sent after the first fourteen weeks (D. 532-1)";
+}
+
+pub relation examens_l5331_non_passes(m: Menage, e: Enfant) kind empirical {
+    label fr official "examens mentionnés à l'article L. 533-1 non passés (substance amont fr.pf.core ; fait établi)";
+    label en unofficial "examinations of Art. L. 533-1 not taken (upstream fr.pf.core substance; established fact)";
+}
+
+pub relation motif_legitime_examens(m: Menage, e: Enfant) kind empirical {
+    label fr official "motifs légitimes de ne pas passer les examens, établis (font obstacle à la suspension ; D. 532-2)";
+    label en unofficial "established legitimate reasons for missing the examinations (bar the suspension; D. 532-2)";
+}
+
+pub relation sans_motif_legitime_examens(m: Menage, e: Enfant) kind empirical {
+    label fr official "absence de motifs légitimes de ne pas passer les examens, établie (condition de la suspension ; D. 532-2 « en l'absence de motifs légitimes »)";
+    label en unofficial "established absence of legitimate reasons for missing the examinations (suspension condition; D. 532-2 'en l'absence de motifs légitimes')";
+}
+
+pub relation demande_medecin_pmi(m: Menage, e: Enfant, transmission: Date) kind empirical {
+    label fr official "demande de suspension du médecin responsable du service départemental de protection maternelle et infantile, transmise à la date (D. 532-2 ; fait établi)";
+    label en unofficial "suspension request of the departmental PMI head doctor, transmitted on the date (D. 532-2; established fact)";
+}
+
+pub relation mois_effet_suspension(m: Menage, e: Enfant, mois: Date) kind empirical {
+    label fr official "mois d'effet de la suspension établi par la caisse (mois civil suivant la demande ; dérivation calendaire — fait établi)";
+    label en unofficial "suspension effect month set by the fund (calendar month after the request; calendar derivation — established fact)";
+}
+
+pub relation suspension_versement_paje(m: Menage, e: Enfant, mois: Date) kind institutional {
+    label fr official "suspension du versement de la prestation d'accueil du jeune enfant prenant effet au mois (D. 532-2)";
+    label en unofficial "suspension of the young-child benefit payment taking effect in the month (D. 532-2)";
+}
+
+// --- FINISH D73: DOM scope and non-cumulation (08-dom.law) ------------------
+
+pub enum Territoire {
+    label fr official "territoire de résidence pour la règle DOM PAJE (L. 755-19, collectivités L. 751-1)";
+    label en unofficial "residence territory for the DOM PAJE rule (L. 755-19, L. 751-1 collectivities)";
+    METROPOLE,
+    GUADELOUPE,
+    GUYANE,
+    MARTINIQUE,
+    REUNION,
+    SAINT_BARTHELEMY,
+    SAINT_MARTIN,
+    MAYOTTE,
+    AUTRE
+}
+
+pub relation territoire(m: Menage, t: Territoire) kind empirical {
+    key(m);
+    label fr official "territoire de résidence du ménage (fait du dossier)";
+    label en unofficial "household residence territory (case fact)";
+}
+
+pub relation paje_dom_applicable(m: Menage) kind institutional {
+    label fr official "la prestation d'accueil du jeune enfant est attribuée au ménage dans les conditions du titre III du livre V (L. 755-19, al. 1)";
+    label en unofficial "the young-child benefit is awarded to the household under the Book V Title III conditions (L. 755-19, para. 1)";
+}
+
+pub relation af_enfant_unique_servies(m: Menage, e: Enfant) kind empirical {
+    label fr official "allocations familiales et leurs majorations pour âge servies au titre d'un seul enfant à charge (substance fr.pf.af ; fait établi)";
+    label en unofficial "family allowances with age supplements served for a single dependent child (fr.pf.af substance; established fact)";
+}
+
+pub relation cf_dom_l755_16_servi(m: Menage) kind empirical {
+    label fr official "complément familial défini à l'article L. 755-16 servi au ménage (substance fr.pf.cf ; fait établi)";
+    label en unofficial "complément familial of Art. L. 755-16 served to the household (fr.pf.cf substance; established fact)";
+}
+
+pub relation cumul_base_af_unique_interdit(m: Menage, e: Enfant) kind institutional {
+    label fr official "l'allocation de base n'est pas cumulable avec les allocations familiales servies au titre d'un seul enfant à charge (L. 755-19, al. 2)";
+    label en unofficial "the base allowance is not cumulable with family allowances served for a single dependent child (L. 755-19, para. 2)";
+}
+
+pub relation cumul_base_cf_dom_interdit(m: Menage, e: Enfant) kind institutional {
+    label fr official "l'allocation de base n'est pas cumulable avec le complément familial défini à l'article L. 755-16 (L. 755-19, al. 3)";
+    label en unofficial "the base allowance is not cumulable with the complément familial of Art. L. 755-16 (L. 755-19, para. 3)";
+}
+
+pub relation cumul_prepare_cf_dom_interdit(b: Beneficiaire, e: Enfant) kind institutional {
+    label fr official "la prestation partagée d'éducation de l'enfant n'est pas cumulable avec le complément familial défini à l'article L. 755-16 (L. 755-19, al. 3)";
+    label en unofficial "the shared child-raising benefit is not cumulable with the complément familial of Art. L. 755-16 (L. 755-19, para. 3)";
+}

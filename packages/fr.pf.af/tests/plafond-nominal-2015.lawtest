@@ -1,0 +1,30 @@
+// D-81: до первой ревалоризации (01.01.2016) плафоны строятся из сумм самого
+// D. 521-3 (CSS_D521_3_PRE2022: 55 950 и 78 300 €, надбавка 5 595 € за ребёнка),
+// входов-сумм нет. Два ребёнка: I = 55 950 + 2 × 5 595 = 67 140; II = 78 300 +
+// 2 × 5 595 = 89 490. Ресурсы ровно 89 490 — полоса 2 (D. 521-1 I 2°: «inférieur
+// ou égal»).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-plafond-nominal-2015" {
+    given {
+        context { decision_time @2015-09-15T12:00:00Z; knowledge_time @2015-09-15T12:00:00Z; legal_time @2015-09-15; timezone "Europe/Paris"; }
+        assert "pn15-01": territoire(entity_ref("urn:fr:pf-af:case:plafond-nominal-2015"), METROPOLE) { origin case_input; }
+        assert "pn15-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:plafond-nominal-2015"), 2) { origin case_input; }
+        assert "pn15-03": ressources_menage(entity_ref("urn:fr:pf-af:case:plafond-nominal-2015"), 89490 EUR) { origin case_input; }
+        assert "pn15-04": foyer_du_cas(entity_ref("urn:fr:pf-af:case:plafond-nominal-2015")) { origin case_input; }
+    }
+    evaluate truth(plafond1_applicable(entity_ref("urn:fr:pf-af:case:plafond-nominal-2015"), 67140 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond2_applicable(entity_ref("urn:fr:pf-af:case:plafond-nominal-2015"), 89490 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:plafond-nominal-2015"), BANDE_2));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

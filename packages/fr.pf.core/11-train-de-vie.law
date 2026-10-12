@@ -1,0 +1,1798 @@
+// Train-de-vie evaluation section (R. 553-3 to R. 553-3-7): scope,
+// ten-item scale, reference-period renvoi, private-use prorata,
+// adversarial procedure, disproportion threshold, exceptional
+// circumstances, reporting chain.
+//
+// R. 553-3-2 (reference period = R. 532-1 / R. 543-5 mechanics) is a
+// pure renvoi to the income-PF and ARS lines: no rule, SOURCE_ONLY
+// (reason journaled). R. 553-3-3 (private-use prorata, professional
+// exclusion) is implemented through the part_privee slots of the
+// R. 553-3-1 rules, which cite both articles.
+//
+// DEONTIC MAP: the section is computational (institutional statuses)
+// with three organ duties (inform the allocataire by registered letter
+// with acknowledgement of receipt and the full 1/2 content R. 553-3-4,
+// notify a motivated refusal by registered letter with AR R. 553-3-6,
+// report up the chain R. 553-3-7) and one organ judgment
+// ("circonstances exceptionnelles", section 47.3). R. 553-3-6 keeps
+// grant two ways: exceptional circumstances (judgment) or established
+// cessation of the marked disproportion (stated fact). The R. 553-3-7
+// local report is conforming only when transmitted without delay
+// (stated, no fixed calendar in the source), anonymised, and carrying
+// the four particulars: reply timeliness 1°, decision direction 2°,
+// evaluated items 3° (attested: no list type), sanction kind/amount
+// 4° (or its stated absence); the national bilan must carry those
+// elements over to the minister.
+// The regulatory disproportion test (R. 553-3-5) is distinct from the
+// L. 553-5 organ finding (07): it feeds it as evidence, channels stay
+// separate (DECISION-0194).
+// Rate map (R. 553-3-1, PC-A11): 1-2 rental value in full (no rate),
+// 3/4/6/8/9 at 80 %, 5 at 25 % of market value over 10 000 EUR,
+// 7 at 3 %, 10 at 10 % of capital.
+//
+// INPUT CONTRACTS (PC-R05-03/04/05: per-item, per-category gating):
+// - 1°/2° rental values are per Bien (batie/non_batie_bien_valeur +
+//   inapplicable flag per item); direct or occupied-dwelling fallback
+//   (same dwelling amount per fallback item) is retained per item, and
+//   each item contributes its apport (100 %, prorata). Mixed
+//   direct+fallback across items sums both; no whole-category fallback
+//   suppresses another direct property.
+// - 3°/4°/6°/8°/9° spending aggregates cover every listed subcategory
+//   (3 travaux+charges+entretien, 4 personnels+services, 6 menager+
+//   hifi-video+informatique, 8 voyages+hotels+locations+restaurants+
+//   reception+culturels+educatifs+communication+loisirs, 9 clubs+
+//   chasse); the caller sums subcategories upstream. Each spending
+//   apport requires household benefit during the reference period
+//   (II 1°, depenses_foyer_periode_reference); categories without
+//   spending derive no apport and do not block the total.
+// - 5°/7° market values are per Bien with per-item disposal date
+//   (II 2°) and per-item value-bearing evidence (assurance amount,
+//   professional-estimate amount, publication reference value, each
+//   Money per Bien when available, or explicit sans_preuve); the
+//   assessed real value plus its date plus one available evidence
+//   (or attested absence) yields the institutional retained value
+//   per Bien, and each item derives its apport only from that
+//   retained value. No equality with an evidence amount, no evidence
+//   hierarchy, no averaging: differing insurance/retained amounts are
+//   lawful where the assessment accounts for the evidence. 5° tests
+//   >10 000 EUR per vehicle ("de chaque bien"), 25 %; 7° is 3 %;
+//   <=10k vehicles and missing dates/evidence yield no apport
+//   (not zero).
+// - The total is the sum of all derived apports (no blanket dates or
+//   period); it requires the complete inventory
+//   (inventaire_tdv_complet) and the section. Capital (10°) needs no
+//   period; property needs no dates.
+// - The plafond comes from the benefit packages; excluded incomes
+//   (R. 532-3..8) arrive as provenanced facts.
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_R553_3,
+    CSS_R553_3_CSS_ED2021_05,
+    CSS_R553_3_CSS_ED2021_11,
+    CSS_R553_3_CSS_ED2021_12,
+    CSS_R553_3_CSS_ED2022_01,
+    CSS_R553_3_CSS_ED2022_02,
+    CSS_R553_3_CSS_ED2022_03,
+    CSS_R553_3_CSS_ED2022_09,
+    CSS_R553_3_CSS_ED2023_07,
+    CSS_R553_3_CSS_ED2024_01,
+    CSS_R553_3_CSS_ED2025_02,
+    CSS_R553_3_CSS_ED2025_09,
+    CSS_R553_3_CSS_ED2025_12,
+    CSS_R553_3_CSS_ED2026_01,
+    CSS_R553_3_CSS_ED2026_04,
+    CSS_R553_3_CSS_ED2026_06,
+    CSS_R553_3_1,
+    CSS_R553_3_1_CSS_ED2021_05,
+    CSS_R553_3_1_CSS_ED2021_11,
+    CSS_R553_3_1_CSS_ED2021_12,
+    CSS_R553_3_1_CSS_ED2022_01,
+    CSS_R553_3_1_CSS_ED2022_02,
+    CSS_R553_3_1_CSS_ED2022_03,
+    CSS_R553_3_1_CSS_ED2022_09,
+    CSS_R553_3_1_CSS_ED2023_07,
+    CSS_R553_3_1_CSS_ED2024_01,
+    CSS_R553_3_1_CSS_ED2025_02,
+    CSS_R553_3_1_CSS_ED2025_09,
+    CSS_R553_3_1_CSS_ED2025_12,
+    CSS_R553_3_1_CSS_ED2026_01,
+    CSS_R553_3_1_CSS_ED2026_04,
+    CSS_R553_3_1_CSS_ED2026_06,
+    CSS_R553_3_3,
+    CSS_R553_3_3_CSS_ED2021_05,
+    CSS_R553_3_3_CSS_ED2021_11,
+    CSS_R553_3_3_CSS_ED2021_12,
+    CSS_R553_3_3_CSS_ED2022_01,
+    CSS_R553_3_3_CSS_ED2022_02,
+    CSS_R553_3_3_CSS_ED2022_03,
+    CSS_R553_3_3_CSS_ED2022_09,
+    CSS_R553_3_3_CSS_ED2023_07,
+    CSS_R553_3_3_CSS_ED2024_01,
+    CSS_R553_3_3_CSS_ED2025_02,
+    CSS_R553_3_3_CSS_ED2025_09,
+    CSS_R553_3_3_CSS_ED2025_12,
+    CSS_R553_3_3_CSS_ED2026_01,
+    CSS_R553_3_3_CSS_ED2026_04,
+    CSS_R553_3_3_CSS_ED2026_06,
+    CSS_R553_3_4,
+    CSS_R553_3_4_CSS_ED2021_05,
+    CSS_R553_3_4_CSS_ED2021_11,
+    CSS_R553_3_4_CSS_ED2021_12,
+    CSS_R553_3_4_CSS_ED2022_01,
+    CSS_R553_3_4_CSS_ED2022_02,
+    CSS_R553_3_4_CSS_ED2022_03,
+    CSS_R553_3_4_CSS_ED2022_09,
+    CSS_R553_3_4_CSS_ED2023_07,
+    CSS_R553_3_4_CSS_ED2024_01,
+    CSS_R553_3_4_CSS_ED2025_02,
+    CSS_R553_3_4_CSS_ED2025_09,
+    CSS_R553_3_4_CSS_ED2025_12,
+    CSS_R553_3_4_CSS_ED2026_01,
+    CSS_R553_3_4_CSS_ED2026_04,
+    CSS_R553_3_4_CSS_ED2026_06,
+    CSS_R553_3_5,
+    CSS_R553_3_5_CSS_ED2021_05,
+    CSS_R553_3_5_CSS_ED2021_11,
+    CSS_R553_3_5_CSS_ED2021_12,
+    CSS_R553_3_5_CSS_ED2022_01,
+    CSS_R553_3_5_CSS_ED2022_02,
+    CSS_R553_3_5_CSS_ED2022_03,
+    CSS_R553_3_5_CSS_ED2022_09,
+    CSS_R553_3_5_CSS_ED2023_07,
+    CSS_R553_3_5_CSS_ED2024_01,
+    CSS_R553_3_5_CSS_ED2025_02,
+    CSS_R553_3_5_CSS_ED2025_09,
+    CSS_R553_3_5_CSS_ED2025_12,
+    CSS_R553_3_5_CSS_ED2026_01,
+    CSS_R553_3_5_CSS_ED2026_04,
+    CSS_R553_3_5_CSS_ED2026_06,
+    CSS_R553_3_6,
+    CSS_R553_3_6_CSS_ED2021_05,
+    CSS_R553_3_6_CSS_ED2021_11,
+    CSS_R553_3_6_CSS_ED2021_12,
+    CSS_R553_3_6_CSS_ED2022_01,
+    CSS_R553_3_6_CSS_ED2022_02,
+    CSS_R553_3_6_CSS_ED2022_03,
+    CSS_R553_3_6_CSS_ED2022_09,
+    CSS_R553_3_6_CSS_ED2023_07,
+    CSS_R553_3_6_CSS_ED2024_01,
+    CSS_R553_3_6_CSS_ED2025_02,
+    CSS_R553_3_6_CSS_ED2025_09,
+    CSS_R553_3_6_CSS_ED2025_12,
+    CSS_R553_3_6_CSS_ED2026_01,
+    CSS_R553_3_6_CSS_ED2026_04,
+    CSS_R553_3_6_CSS_ED2026_06,
+    CSS_R553_3_7,
+    CSS_R553_3_7_CSS_ED2021_05,
+    CSS_R553_3_7_CSS_ED2021_11,
+    CSS_R553_3_7_CSS_ED2021_12,
+    CSS_R553_3_7_CSS_ED2022_01,
+    CSS_R553_3_7_CSS_ED2022_02,
+    CSS_R553_3_7_CSS_ED2022_03,
+    CSS_R553_3_7_CSS_ED2022_09,
+    CSS_R553_3_7_CSS_ED2023_07,
+    CSS_R553_3_7_CSS_ED2024_01,
+    CSS_R553_3_7_CSS_ED2025_02,
+    CSS_R553_3_7_CSS_ED2025_09,
+    CSS_R553_3_7_CSS_ED2025_12,
+    CSS_R553_3_7_CSS_ED2026_01,
+    CSS_R553_3_7_CSS_ED2026_04,
+    CSS_R553_3_7_CSS_ED2026_06,
+    Bien,
+    Ministre,
+    Organisme,
+    OrganismeNational,
+    Personne,
+    organisme_debiteur_pf,
+};
+
+// Policy for the 30-day questionnaire deadline (section 86).
+deadline policy TRAIN_VIE_DELAI {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+relation prestation_soumise_section(p: Personne) kind empirical {
+    label fr official "prestation demandée: PAJE, complément familial ou ARS (champ R. 553-3)";
+    label en unofficial "benefit claimed: PAJE, family complement or ARS (R. 553-3 scope)";
+}
+
+relation prestation_hors_section(p: Personne) kind empirical {
+    label fr official "prestation en cause hors section R. 553-3, autre prestation du livre V (L. 553-5, hors allocation logement L. 821-1 CCH)";
+    label en unofficial "benefit at issue outside the R. 553-3 section, other Livre V benefit (L. 553-5, except L. 821-1 CCH housing allowance)";
+}
+
+relation section_train_vie_applicable(p: Personne) kind institutional {
+    key(p);
+    label fr official "la section train de vie s'applique à l'examen (R. 553-3)";
+    label en unofficial "the lifestyle section applies to the examination (R. 553-3)";
+}
+
+relation valeur_locative_batie(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "DEPRECATED PC-R05-03: remplacé par batie_bien_valeur par bien (R. 553-3-1 1°)";
+    label en unofficial "DEPRECATED PC-R05-03: replaced by per-item batie_bien_valeur (R. 553-3-1 1)";
+}
+
+relation valeur_locative_non_batie(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "DEPRECATED PC-R05-03: remplacé par non_batie_bien_valeur par bien (R. 553-3-1 2°)";
+    label en unofficial "DEPRECATED PC-R05-03: replaced by per-item non_batie_bien_valeur (R. 553-3-1 2)";
+}
+
+relation depenses_travaux(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "travaux, charges et frais d'entretien des immeubles, montant des dépenses, part privée (R. 553-3-1 3° + R. 553-3-3; foyer/période en II 1° attestés séparément)";
+    label en unofficial "works, charges and maintenance costs of buildings, spending amount, private share (R. 553-3-1 3 + R. 553-3-3; II 1 household/period attested separately)";
+}
+
+relation depenses_domestiques(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "personnels et services domestiques, montant des dépenses, part privée (R. 553-3-1 4° + R. 553-3-3; foyer/période en II 1° attestés séparément)";
+    label en unofficial "domestic staff and services, spending amount, private share (R. 553-3-1 4 + R. 553-3-3; II 1 household/period attested separately)";
+}
+
+relation valeur_venale_vehicules(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "DEPRECATED PC-R05-04: remplacé par vehicule_bien_valeur par bien (R. 553-3-1 5°)";
+    label en unofficial "DEPRECATED PC-R05-04: replaced by per-item vehicule_bien_valeur (R. 553-3-1 5)";
+}
+
+relation depenses_equipement(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "appareils électroménagers, équipements son-hifi-vidéo, matériels informatiques, montant des dépenses, part privée (R. 553-3-1 6° + R. 553-3-3; foyer/période en II 1° attestés séparément)";
+    label en unofficial "household appliances, audio-hifi-video, computer equipment, spending amount, private share (R. 553-3-1 6 + R. 553-3-3; II 1 household/period attested separately)";
+}
+
+relation valeur_venale_art(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "DEPRECATED PC-R05-03/04: remplacé par art_bien_valeur par bien (R. 553-3-1 7°)";
+    label en unofficial "DEPRECATED PC-R05-03/04: replaced by per-item art_bien_valeur (R. 553-3-1 7)";
+}
+
+relation batie_bien_valeur(p: Personne, b: Bien, montant: Money, part_privee: Decimal) kind empirical {
+    key(p, b);
+    label fr official "propriété bâtie b: valeur locative annuelle directe CGI 1494-1508 et 1516-1518 B, part privée (R. 553-3-1 1° + R. 553-3-3)";
+    label en unofficial "built property b: direct annual rental value CGI 1494-1508 and 1516-1518 B, private share (R. 553-3-1 1 + R. 553-3-3)";
+}
+
+relation batie_bien_inapplicable(p: Personne, b: Bien) kind empirical {
+    label fr official "propriété bâtie b sur un territoire sans valeur applicable ou connaissable, repli logement occupé (R. 553-3-1 1° seconde phrase)";
+    label en unofficial "built property b in a territory with no applicable or knowable value, occupied-dwelling fallback (R. 553-3-1 1 second sentence)";
+}
+
+relation batie_bien_retenue(p: Personne, b: Bien, montant: Money, part_privee: Decimal) kind institutional {
+    key(p, b);
+    label fr official "propriété bâtie b: valeur locative retenue, directe ou repli logement occupé (R. 553-3-1 1°)";
+    label en unofficial "built property b: retained rental value, direct or occupied-dwelling fallback (R. 553-3-1 1)";
+}
+
+relation non_batie_bien_valeur(p: Personne, b: Bien, montant: Money, part_privee: Decimal) kind empirical {
+    key(p, b);
+    label fr official "propriété non bâtie b: valeur locative annuelle directe CGI 1509-1518 A, part privée (R. 553-3-1 2° + R. 553-3-3)";
+    label en unofficial "unbuilt property b: direct annual rental value CGI 1509-1518 A, private share (R. 553-3-1 2 + R. 553-3-3)";
+}
+
+relation non_batie_bien_inapplicable(p: Personne, b: Bien) kind empirical {
+    label fr official "propriété non bâtie b sur un territoire sans valeur applicable ou connaissable, repli logement occupé (R. 553-3-1 2° seconde phrase)";
+    label en unofficial "unbuilt property b in a territory with no applicable or knowable value, occupied-dwelling fallback (R. 553-3-1 2 second sentence)";
+}
+
+relation non_batie_bien_retenue(p: Personne, b: Bien, montant: Money, part_privee: Decimal) kind institutional {
+    key(p, b);
+    label fr official "propriété non bâtie b: valeur locative retenue, directe ou repli logement occupé (R. 553-3-1 2°)";
+    label en unofficial "unbuilt property b: retained rental value, direct or occupied-dwelling fallback (R. 553-3-1 2)";
+}
+
+relation vehicule_bien_valeur(p: Personne, b: Bien, montant: Money, part_privee: Decimal) kind empirical {
+    key(p, b);
+    label fr official "véhicule b (auto, bateau, moto): valeur réelle attestée par expertise/organisme à la date de disposition, part privée, avant retenue institutionnelle étayée (R. 553-3-1 5° + R. 553-3-3 + II 2°)";
+    label en unofficial "vehicle b (car, boat, bike): expert/body-stated real value on disposal date, private share, before supported institutional retention (R. 553-3-1 5 + R. 553-3-3 + II 2)";
+}
+
+relation vehicule_bien_date(p: Personne, b: Bien, date: Date) kind empirical {
+    key(p, b);
+    label fr official "véhicule b: date de la disposition pour la valeur vénale réelle (R. 553-3-1 II 2°)";
+    label en unofficial "vehicle b: disposal date for the real market value (R. 553-3-1 II 2)";
+}
+
+relation vehicule_bien_preuve_assurance(p: Personne, b: Bien, montant: Money) kind empirical {
+    key(p, b);
+    label fr official "véhicule b: montant garanti par le contrat d'assurance retenu à fin d'évaluation, lorsqu'il existe (R. 553-3-1 II 2° a)";
+    label en unofficial "vehicle b: insurance-guaranteed amount retained for evaluation, where available (R. 553-3-1 II 2 a)";
+}
+
+relation vehicule_bien_preuve_estimation(p: Personne, b: Bien, montant: Money) kind empirical {
+    key(p, b);
+    label fr official "véhicule b: montant de l'estimation particulière effectuée par un professionnel, retenu à fin d'évaluation, lorsqu'il existe (R. 553-3-1 II 2° b)";
+    label en unofficial "vehicle b: professional-estimate amount retained for evaluation, where available (R. 553-3-1 II 2 b)";
+}
+
+relation vehicule_bien_preuve_publication(p: Personne, b: Bien, montant: Money) kind empirical {
+    key(p, b);
+    label fr official "véhicule b: valeur de référence issue d'une publication professionnelle faisant autorité, retenue à fin d'évaluation, lorsqu'elle existe (R. 553-3-1 II 2° c)";
+    label en unofficial "vehicle b: authoritative professional-publication reference value retained for evaluation, where available (R. 553-3-1 II 2 c)";
+}
+
+relation vehicule_bien_sans_preuve(p: Personne, b: Bien) kind empirical {
+    label fr official "véhicule b: aucune preuve assurance/estimation/publication disponible, attesté (R. 553-3-1 II 2°)";
+    label en unofficial "vehicle b: no insurance/estimate/publication evidence available, attested (R. 553-3-1 II 2)";
+}
+
+relation vehicule_bien_justifie(p: Personne, b: Bien) kind institutional {
+    key(p, b);
+    label fr official "véhicule b: preuve chiffrée disponible ou absence attestée, valeur étayée (R. 553-3-1 II 2° a/b/c)";
+    label en unofficial "vehicle b: available amount-bearing evidence or attested absence, value supported (R. 553-3-1 II 2 a/b/c)";
+}
+
+relation vehicule_bien_valeur_retenue(p: Personne, b: Bien, montant: Money, part_privee: Decimal, date: Date) kind institutional {
+    key(p, b);
+    label fr official "véhicule b: valeur réelle à la date de disposition retenue par appréciation étayée d'une preuve chiffrée disponible ou d'une absence attestée (R. 553-3-1 5° + II 2° a/b/c)";
+    label en unofficial "vehicle b: real disposal-date value retained by supported appreciation of one available amount-bearing evidence or attested absence (R. 553-3-1 5 + II 2 a/b/c)";
+}
+
+relation art_bien_valeur(p: Personne, b: Bien, montant: Money, part_privee: Decimal) kind empirical {
+    key(p, b);
+    label fr official "objet d'art b: valeur réelle attestée par expertise/organisme à la date de disposition, part privée, avant retenue institutionnelle étayée (R. 553-3-1 7° + R. 553-3-3 + II 2°)";
+    label en unofficial "art item b: expert/body-stated real value on disposal date, private share, before supported institutional retention (R. 553-3-1 7 + R. 553-3-3 + II 2)";
+}
+
+relation art_bien_date(p: Personne, b: Bien, date: Date) kind empirical {
+    key(p, b);
+    label fr official "objet d'art b: date de la disposition pour la valeur vénale réelle (R. 553-3-1 II 2°)";
+    label en unofficial "art item b: disposal date for the real market value (R. 553-3-1 II 2)";
+}
+
+relation art_bien_preuve_assurance(p: Personne, b: Bien, montant: Money) kind empirical {
+    key(p, b);
+    label fr official "objet d'art b: montant garanti par le contrat d'assurance retenu à fin d'évaluation, lorsqu'il existe (R. 553-3-1 II 2° a)";
+    label en unofficial "art item b: insurance-guaranteed amount retained for evaluation, where available (R. 553-3-1 II 2 a)";
+}
+
+relation art_bien_preuve_estimation(p: Personne, b: Bien, montant: Money) kind empirical {
+    key(p, b);
+    label fr official "objet d'art b: montant de l'estimation particulière effectuée par un professionnel, retenu à fin d'évaluation, lorsqu'il existe (R. 553-3-1 II 2° b)";
+    label en unofficial "art item b: professional-estimate amount retained for evaluation, where available (R. 553-3-1 II 2 b)";
+}
+
+relation art_bien_preuve_publication(p: Personne, b: Bien, montant: Money) kind empirical {
+    key(p, b);
+    label fr official "objet d'art b: valeur de référence issue d'une publication professionnelle faisant autorité, retenue à fin d'évaluation, lorsqu'elle existe (R. 553-3-1 II 2° c)";
+    label en unofficial "art item b: authoritative professional-publication reference value retained for evaluation, where available (R. 553-3-1 II 2 c)";
+}
+
+relation art_bien_sans_preuve(p: Personne, b: Bien) kind empirical {
+    label fr official "objet d'art b: aucune preuve assurance/estimation/publication disponible, attesté (R. 553-3-1 II 2°)";
+    label en unofficial "art item b: no insurance/estimate/publication evidence available, attested (R. 553-3-1 II 2)";
+}
+
+relation art_bien_justifie(p: Personne, b: Bien) kind institutional {
+    key(p, b);
+    label fr official "objet d'art b: preuve chiffrée disponible ou absence attestée, valeur étayée (R. 553-3-1 II 2° a/b/c)";
+    label en unofficial "art item b: available amount-bearing evidence or attested absence, value supported (R. 553-3-1 II 2 a/b/c)";
+}
+
+relation art_bien_valeur_retenue(p: Personne, b: Bien, montant: Money, part_privee: Decimal, date: Date) kind institutional {
+    key(p, b);
+    label fr official "objet d'art b: valeur réelle à la date de disposition retenue par appréciation étayée d'une preuve chiffrée disponible ou d'une absence attestée (R. 553-3-1 7° + II 2° a/b/c)";
+    label en unofficial "art item b: real disposal-date value retained by supported appreciation of one available amount-bearing evidence or attested absence (R. 553-3-1 7 + II 2 a/b/c)";
+}
+
+relation apport_forfaitaire(p: Personne, montant: Money) kind institutional {
+    label fr official "apport d'un poste au forfait du train de vie, prorata appliqué (R. 553-3-1)";
+    label en unofficial "item contribution to the lifestyle schedule, prorata applied (R. 553-3-1)";
+}
+
+// D-42 (12.10.2026): R. 553-3-1 I sums every element ("prend en compte les
+// éléments et barèmes suivants"). The total used to collect the amounts of
+// apport_forfaitaire(p, m): a relation holds one tuple per value, so two
+// equal contributions (8° 1 000 x 0.5 x 80 % = 400 and 9° 500 x 80 % = 400)
+// were one solution and the sum undercounted (SPEC 52.1: only a binder
+// distinguishes equal values; measured: tdv-total 12 200 instead of 12 600).
+// Each contribution now carries its line - the item for 1°, 2°, 5°, 7°
+// (apport_bien) and the spending/capital line for 3°, 4°, 6°, 8°, 9°, 10°
+// (apport_poste) - and the total sums both lists. apport_forfaitaire(p, m)
+// stays derived from both for per-amount questions.
+enum PosteTrainVie { label fr official "postes du barème du train de vie évalués sans bien individualisé (R. 553-3-1 3°, 4°, 6°, 8°, 9°, 10°)"; label en unofficial "lifestyle-schedule lines assessed without an individual item (R. 553-3-1 3, 4, 6, 8, 9, 10)"; TRAVAUX, DOMESTIQUES, EQUIPEMENT, LOISIRS, CLUBS, CAPITAUX }
+
+relation apport_bien(p: Personne, b: Bien, montant: Money) kind institutional {
+    label fr official "apport d'un bien au forfait du train de vie, prorata appliqué (R. 553-3-1 1°, 2°, 5°, 7°)";
+    label en unofficial "item contribution to the lifestyle schedule, prorata applied (R. 553-3-1 1, 2, 5, 7)";
+}
+
+relation apport_poste(p: Personne, k: PosteTrainVie, montant: Money) kind institutional {
+    label fr official "apport d'un poste de dépenses ou de capitaux au forfait du train de vie, prorata appliqué (R. 553-3-1 3°, 4°, 6°, 8°, 9°, 10°)";
+    label en unofficial "spending or capital line contribution to the lifestyle schedule, prorata applied (R. 553-3-1 3, 4, 6, 8, 9, 10)";
+}
+
+relation inventaire_tdv_complet(p: Personne) kind empirical {
+    label fr official "inventaire des éléments de train de vie complet, aucun poste omis (R. 553-3-1)";
+    label en unofficial "lifestyle items inventory complete, no item omitted (R. 553-3-1)";
+}
+
+relation depenses_loisirs(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "voyages, séjours hôtels et locations saisonnières, restaurants, frais de réception, biens et services culturels, éducatifs, de communication ou de loisirs, part privée (R. 553-3-1 8° + R. 553-3-3; foyer/période en II 1° attestés séparément)";
+    label en unofficial "travel, hotel stays and seasonal rentals, restaurants, reception costs, cultural, educational, communications or leisure goods and services, private share (R. 553-3-1 8 + R. 553-3-3; II 1 household/period attested separately)";
+}
+
+relation depenses_clubs(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "clubs de sports et de loisirs, droits de chasse, montant des dépenses, part privée (R. 553-3-1 9° + R. 553-3-3; foyer/période en II 1° attestés séparément)";
+    label en unofficial "sports and leisure clubs, hunting rights, spending amount, private share (R. 553-3-1 9 + R. 553-3-3; II 1 household/period attested separately)";
+}
+
+relation capitaux_fin_periode(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "capitaux détenus en fin de période de référence et part d'usage privé (R. 553-3-1 10°, R. 553-3-3)";
+    label en unofficial "capital held at the end of the reference period with the private-use share (R. 553-3-1 10, R. 553-3-3)";
+}
+
+relation batie_valeur_locative_inapplicable(p: Personne) kind empirical {
+    label fr official "DEPRECATED PC-R05-03: remplacé par batie_bien_inapplicable par bien (R. 553-3-1 1°)";
+    label en unofficial "DEPRECATED PC-R05-03: replaced by per-item batie_bien_inapplicable (R. 553-3-1 1)";
+}
+
+relation non_batie_valeur_locative_inapplicable(p: Personne) kind empirical {
+    label fr official "DEPRECATED PC-R05-03: remplacé par non_batie_bien_inapplicable par bien (R. 553-3-1 2°)";
+    label en unofficial "DEPRECATED PC-R05-03: replaced by per-item non_batie_bien_inapplicable (R. 553-3-1 2)";
+}
+
+relation valeur_locative_batie_fallback_logement(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "repli 1°: valeur locative du logement occupé par le demandeur ou le bénéficiaire, part privée (R. 553-3-1 1°)";
+    label en unofficial "1 fallback: rental value of the dwelling occupied by the claimant or beneficiary, private share (R. 553-3-1 1)";
+}
+
+relation valeur_locative_non_batie_fallback_logement(p: Personne, montant: Money, part_privee: Decimal) kind empirical {
+    key(p);
+    label fr official "repli 2°: valeur locative du logement occupé par le demandeur ou le bénéficiaire, part privée (R. 553-3-1 2°)";
+    label en unofficial "2 fallback: rental value of the dwelling occupied by the claimant or beneficiary, private share (R. 553-3-1 2)";
+}
+
+relation valeur_locative_batie_retenue(p: Personne, montant: Money, part_privee: Decimal) kind institutional {
+    key(p);
+    label fr official "DEPRECATED PC-R05-03: remplacé par batie_bien_retenue par bien (R. 553-3-1 1°)";
+    label en unofficial "DEPRECATED PC-R05-03: replaced by per-item batie_bien_retenue (R. 553-3-1 1)";
+}
+
+relation valeur_locative_non_batie_retenue(p: Personne, montant: Money, part_privee: Decimal) kind institutional {
+    key(p);
+    label fr official "DEPRECATED PC-R05-03: remplacé par non_batie_bien_retenue par bien (R. 553-3-1 2°)";
+    label en unofficial "DEPRECATED PC-R05-03: replaced by per-item non_batie_bien_retenue (R. 553-3-1 2)";
+}
+
+relation depenses_foyer_periode_reference(p: Personne) kind empirical {
+    label fr official "les dépenses alléguées sont réglées au bénéfice du foyer pendant la période de référence (R. 553-3-1 II 1°)";
+    label en unofficial "the claimed spending was paid for the household during the reference period (R. 553-3-1 II 1)";
+}
+
+relation vehicules_date_disposition(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "DEPRECATED PC-R05-04: remplacé par vehicule_bien_date par bien (R. 553-3-1 II 2°)";
+    label en unofficial "DEPRECATED PC-R05-04: replaced by per-item vehicule_bien_date (R. 553-3-1 II 2)";
+}
+
+relation art_date_disposition(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "DEPRECATED PC-R05-04: remplacé par art_bien_date par bien (R. 553-3-1 II 2°)";
+    label en unofficial "DEPRECATED PC-R05-04: replaced by per-item art_bien_date (R. 553-3-1 II 2)";
+}
+
+relation preuve_assurance_valeur_venale(p: Personne) kind empirical {
+    label fr official "DEPRECATED PC-R05-04: remplacé par preuves par bien (R. 553-3-1 II 2° a)";
+    label en unofficial "DEPRECATED PC-R05-04: replaced by per-item evidence (R. 553-3-1 II 2 a)";
+}
+
+relation preuve_estimation_valeur_venale(p: Personne) kind empirical {
+    label fr official "DEPRECATED PC-R05-04: remplacé par preuves par bien (R. 553-3-1 II 2° b)";
+    label en unofficial "DEPRECATED PC-R05-04: replaced by per-item evidence (R. 553-3-1 II 2 b)";
+}
+
+relation preuve_publication_valeur_venale(p: Personne) kind empirical {
+    label fr official "DEPRECATED PC-R05-04: remplacé par preuves par bien (R. 553-3-1 II 2° c)";
+    label en unofficial "DEPRECATED PC-R05-04: replaced by per-item evidence (R. 553-3-1 II 2 c)";
+}
+
+relation valeurs_venales_justifiees(p: Personne) kind institutional {
+    key(p);
+    label fr official "DEPRECATED PC-R05-04: remplacé par justifie par bien (R. 553-3-1 II 2°)";
+    label en unofficial "DEPRECATED PC-R05-04: replaced by per-item justified (R. 553-3-1 II 2)";
+}
+
+relation contribution_vehicules(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "DEPRECATED PC-R05-05: remplacé par apports par bien/catégorie (R. 553-3-1 5°)";
+    label en unofficial "DEPRECATED PC-R05-05: replaced by per-item/category apports (R. 553-3-1 5)";
+}
+
+relation contribution_equipement(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "DEPRECATED PC-R05-05: remplacé par apport équipement (R. 553-3-1 6°)";
+    label en unofficial "DEPRECATED PC-R05-05: replaced by equipment apport (R. 553-3-1 6)";
+}
+
+relation evaluation_forfaitaire_train_vie(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "évaluation forfaitaire du train de vie, somme des dix postes (R. 553-3-1)";
+    label en unofficial "scheduled lifestyle evaluation, sum of the ten items (R. 553-3-1)";
+}
+
+relation plafond_prestation(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "plafond de ressources de la prestation demandée (paquets prestations — R. 553-3-5)";
+    label en unofficial "resource ceiling of the claimed benefit (benefit packages - R. 553-3-5)";
+}
+
+relation revenus_exclus_evaluation(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "revenus R. 532-3 à R. 532-8 exclus de l'assiette, ajoutés au forfait (R. 553-3-5)";
+    label en unofficial "R. 532-3 to R. 532-8 incomes excluded from the base, added to the schedule (R. 553-3-5)";
+}
+
+relation disproportion_reglementaire_constatee(p: Personne) kind institutional {
+    key(p);
+    label fr official "disproportion réglementaire constatée: forfait au moins égal au double du plafond (R. 553-3-5)";
+    label en unofficial "regulatory disproportion found: schedule at least twice the ceiling (R. 553-3-5)";
+}
+
+relation procedure_train_vie_envisagee(p: Personne) kind empirical {
+    label fr official "l'organisme envisage la procédure d'évaluation du train de vie (R. 553-3-4)";
+    label en unofficial "the body contemplates the lifestyle evaluation procedure (R. 553-3-4)";
+}
+
+relation lettre_procedure_adressee(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "lettre recommandée d'information sur la procédure adressée (R. 553-3-4)";
+    label en unofficial "registered procedure-information letter sent (R. 553-3-4)";
+}
+
+relation lettre_procedure_le(o: Organisme, p: Personne, date: Date) kind empirical {
+    key(o, p);
+    label fr official "date d'envoi de la lettre recommandée de l'organisme (R. 553-3-4)";
+    label en unofficial "dispatch date of the body's registered letter (R. 553-3-4)";
+}
+
+relation lettre_procedure_accuse_reception(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "accusé de réception de la lettre recommandée de procédure reçu (R. 553-3-4)";
+    label en unofficial "acknowledgement of receipt of the registered procedure letter received (R. 553-3-4)";
+}
+
+relation lettre_contenu_procedure(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "la lettre informe de l'objet, du déroulement et des conséquences de la procédure (R. 553-3-4 1°)";
+    label en unofficial "the letter states the purpose, course and consequences of the procedure (R. 553-3-4 1)";
+}
+
+relation lettre_contenu_audition_conseil(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "la lettre informe de la possibilité d'être entendu et assisté du conseil de son choix (R. 553-3-4 1°)";
+    label en unofficial "the letter states the right to be heard and assisted by counsel of choice (R. 553-3-4 1)";
+}
+
+relation lettre_contenu_sanctions(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "la lettre informe des sanctions en cas de déclarations fausses ou incomplètes (R. 553-3-4 1°)";
+    label en unofficial "the letter states the sanctions for false or incomplete declarations (R. 553-3-4 1)";
+}
+
+relation lettre_contenu_transmission(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "la lettre informe de la transmission du résultat aux autres organismes servant des prestations sous conditions de ressources (R. 553-3-4 1°)";
+    label en unofficial "the letter states the outcome is transmitted to other resource-tested benefit bodies (R. 553-3-4 1)";
+}
+
+relation lettre_contenu_questionnaire(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "la lettre invite à renvoyer dans les trente jours le questionnaire joint (R. 553-3-4 2°)";
+    label en unofficial "the letter invites return of the enclosed questionnaire within thirty days (R. 553-3-4 2)";
+}
+
+relation lettre_contenu_pieces_l5833(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "la lettre exige toutes pièces justificatives et avertit de l'application du dernier alinéa de L. 583-3 à défaut de réponse complète (R. 553-3-4 2°)";
+    label en unofficial "the letter requires all supporting documents and warns of the last paragraph of L. 583-3 absent a complete reply (R. 553-3-4 2)";
+}
+
+relation lettre_procedure_conforme(o: Organisme, p: Personne) kind institutional {
+    key(o, p);
+    label fr official "lettre de procédure recommandée avec accusé de réception et tout le contenu obligatoire du 1° et du 2° (R. 553-3-4)";
+    label en unofficial "registered procedure letter with acknowledgement of receipt and all mandatory 1 and 2 content (R. 553-3-4)";
+}
+
+relation echeance_questionnaire(p: Personne, date: Date) kind institutional {
+    key(p);
+    label fr official "échéance du questionnaire: trente jours après la lettre (R. 553-3-4)";
+    label en unofficial "questionnaire deadline: thirty days after the letter (R. 553-3-4)";
+}
+
+relation evaluation_sans_droit(p: Personne) kind empirical {
+    label fr official "l'évaluation conclut à l'absence de droit (R. 553-3-6)";
+    label en unofficial "the evaluation concludes there is no entitlement (R. 553-3-6)";
+}
+
+@source(CSS_R553_3_6, CSS_R553_3_6_CSS_ED2021_05, CSS_R553_3_6_CSS_ED2021_11,
+        CSS_R553_3_6_CSS_ED2021_12, CSS_R553_3_6_CSS_ED2022_01, CSS_R553_3_6_CSS_ED2022_02,
+        CSS_R553_3_6_CSS_ED2022_03, CSS_R553_3_6_CSS_ED2022_09, CSS_R553_3_6_CSS_ED2023_07,
+        CSS_R553_3_6_CSS_ED2024_01, CSS_R553_3_6_CSS_ED2025_02, CSS_R553_3_6_CSS_ED2025_09,
+        CSS_R553_3_6_CSS_ED2025_12, CSS_R553_3_6_CSS_ED2026_01, CSS_R553_3_6_CSS_ED2026_04,
+        CSS_R553_3_6_CSS_ED2026_06)
+external judgment relation circonstances_exceptionnelles(p: Personne) {
+    authority Organisme;
+    label fr official "circonstances exceptionnelles justifiant l'attribution malgré l'évaluation (R. 553-3-6)";
+    label en unofficial "exceptional circumstances warranting grant despite the evaluation (R. 553-3-6)";
+}
+
+relation attribution_maintenue_exceptionnelle(p: Personne) kind institutional {
+    key(p);
+    label fr official "attribution maintenue en raison de circonstances exceptionnelles (R. 553-3-6)";
+    label en unofficial "grant kept on exceptional-circumstances grounds (R. 553-3-6)";
+}
+
+relation disproportion_cessee_etablie(p: Personne) kind empirical {
+    key(p);
+    label fr official "il est établi que la disproportion marquée a cessé (fait constaté — R. 553-3-6)";
+    label en unofficial "the marked disproportion is established to have ceased (stated fact - R. 553-3-6)";
+}
+
+relation attribution_non_refusee_cessation(p: Personne) kind institutional {
+    key(p);
+    label fr official "attribution ou renouvellement non refusé, la disproportion marquée ayant cessé (R. 553-3-6)";
+    label en unofficial "grant or renewal not refused, the marked disproportion having ceased (R. 553-3-6)";
+}
+
+relation refus_train_vie_decide(p: Personne) kind empirical {
+    label fr official "refus d'attribution décidé au vu de l'évaluation (R. 553-3-6)";
+    label en unofficial "refusal of grant decided on the evaluation (R. 553-3-6)";
+}
+
+relation refus_motive_notifie(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "décision de refus motivée notifiée par lettre recommandée avec voies de recours (R. 553-3-6)";
+    label en unofficial "motivated refusal notified by registered letter with remedies (R. 553-3-6)";
+}
+
+relation refus_accuse_reception(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "accusé de réception de la lettre recommandée de refus reçu (R. 553-3-6)";
+    label en unofficial "acknowledgement of receipt of the registered refusal letter received (R. 553-3-6)";
+}
+
+relation refus_motive_notifie_conforme(o: Organisme, p: Personne) kind institutional {
+    key(o, p);
+    label fr official "refus motivé notifié par lettre recommandée avec accusé de réception et voies de recours (R. 553-3-6)";
+    label en unofficial "motivated refusal notified by registered letter with acknowledgement of receipt and remedies (R. 553-3-6)";
+}
+
+relation evaluation_effectuee(p: Personne) kind empirical {
+    label fr official "évaluation du train de vie effectuée (R. 553-3-7)";
+    label en unofficial "lifestyle evaluation carried out (R. 553-3-7)";
+}
+
+relation releve_organisme_national(o: Organisme, n: OrganismeNational) kind empirical {
+    key(o);
+    label fr official "l'organisme débiteur relève de cet organisme national (R. 553-3-7)";
+    label en unofficial "the debtor body reports to this national body (R. 553-3-7)";
+}
+
+relation compte_rendu_transmis(o: Organisme, n: OrganismeNational) kind empirical {
+    key(o);
+    label fr official "compte rendu anonyme de la mise en oeuvre transmis (R. 553-3-7)";
+    label en unofficial "anonymous implementation report transmitted (R. 553-3-7)";
+}
+
+relation compte_rendu_transmis_sans_delai(o: Organisme, n: OrganismeNational) kind empirical {
+    key(o);
+    label fr official "le compte rendu est transmis sans délai à l'organisme national, délai constaté (R. 553-3-7 al. 1)";
+    label en unofficial "the report is transmitted without delay to the national body, delay stated (R. 553-3-7 para. 1)";
+}
+
+relation compte_rendu_anonymise(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "le compte rendu sur l'évaluation est transmis après suppression de tout élément d'identification (R. 553-3-7 al. 1)";
+    label en unofficial "the evaluation report is transmitted with all identifying elements removed (R. 553-3-7 para. 1)";
+}
+
+relation compte_rendu_reponse_dans_delai(p: Personne) kind empirical {
+    label fr official "le compte rendu précise que le demandeur a transmis une réponse dans le délai prescrit (R. 553-3-7 1°)";
+    label en unofficial "the report states the claimant sent a reply within the required deadline (R. 553-3-7 1)";
+}
+
+relation compte_rendu_reponse_hors_delai(p: Personne) kind empirical {
+    label fr official "le compte rendu précise que le demandeur n'a pas transmis de réponse dans le délai prescrit (R. 553-3-7 1°)";
+    label en unofficial "the report states the claimant sent no reply within the required deadline (R. 553-3-7 1)";
+}
+
+relation compte_rendu_decision_attribution(p: Personne) kind empirical {
+    label fr official "le compte rendu précise le sens de la décision prise: attribution ou maintien (R. 553-3-7 2°)";
+    label en unofficial "the report states the decision direction taken: grant or keeping (R. 553-3-7 2)";
+}
+
+relation compte_rendu_decision_refus(p: Personne) kind empirical {
+    label fr official "le compte rendu précise le sens de la décision prise: refus ou non-renouvellement (R. 553-3-7 2°)";
+    label en unofficial "the report states the decision direction taken: refusal or non-renewal (R. 553-3-7 2)";
+}
+
+relation compte_rendu_elements_evalues(p: Personne) kind empirical {
+    label fr official "les éléments de train de vie qui ont fait l'objet de l'évaluation sont précisés au compte rendu (R. 553-3-7 3°)";
+    label en unofficial "the lifestyle items covered by the evaluation are stated in the report (R. 553-3-7 3)";
+}
+
+relation compte_rendu_sanction_fraude(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "le compte rendu précise la sanction pour fraude, nature et montant (R. 553-3-7 4°)";
+    label en unofficial "the report states the fraud sanction, kind and amount (R. 553-3-7 4)";
+}
+
+relation compte_rendu_sanction_fausse_declaration(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "le compte rendu précise la sanction pour fausse déclaration, nature et montant (R. 553-3-7 4°)";
+    label en unofficial "the report states the false-statement sanction, kind and amount (R. 553-3-7 4)";
+}
+
+relation compte_rendu_aucune_sanction(p: Personne) kind empirical {
+    label fr official "le compte rendu précise l'absence de sanction pour fraude ou fausse déclaration, 4° sans objet (R. 553-3-7 4° « le cas échéant »)";
+    label en unofficial "the report states no fraud or false-statement sanction, item 4 not applicable (R. 553-3-7 4 'le cas echeant')";
+}
+
+relation compte_rendu_sanction_precisee(p: Personne) kind institutional {
+    key(p);
+    label fr official "la sanction (nature et montant) ou son absence est précisée au compte rendu (R. 553-3-7 4°)";
+    label en unofficial "the sanction (kind and amount) or its absence is stated in the report (R. 553-3-7 4)";
+}
+
+relation compte_rendu_evaluation_conforme(o: Organisme, n: OrganismeNational, p: Personne) kind institutional {
+    key(o, n, p);
+    label fr official "compte rendu anonyme transmis sans délai avec les précisions 1° à 4° (R. 553-3-7)";
+    label en unofficial "anonymous report transmitted without delay with the 1 to 4 particulars (R. 553-3-7)";
+}
+
+relation bilan_periodique_du(n: OrganismeNational) kind empirical {
+    label fr official "bilan périodique de la mise en oeuvre dû (R. 553-3-7)";
+    label en unofficial "periodic implementation review due (R. 553-3-7)";
+}
+
+relation ministre_tutelle(m: Ministre) kind empirical {
+    label fr official "ministre chargé de la sécurité sociale (R. 553-3-7)";
+    label en unofficial "minister for social security (R. 553-3-7)";
+}
+
+relation bilan_transmis_ministre(n: OrganismeNational, m: Ministre) kind empirical {
+    key(n);
+    label fr official "bilan périodique transmis au ministre (R. 553-3-7)";
+    label en unofficial "periodic review transmitted to the minister (R. 553-3-7)";
+}
+
+relation bilan_elements_transmis(n: OrganismeNational) kind empirical {
+    label fr official "le bilan périodique reprend les éléments des comptes rendus, réponses, sens, éléments et sanctions (R. 553-3-7 al. 2)";
+    label en unofficial "the periodic review carries over the report elements: replies, directions, items and sanctions (R. 553-3-7 para. 2)";
+}
+
+relation bilan_ministre_conforme(n: OrganismeNational, m: Ministre) kind institutional {
+    key(n);
+    label fr official "bilan périodique transmis au ministre avec les éléments des évaluations (R. 553-3-7 al. 2)";
+    label en unofficial "periodic review transmitted to the minister with the evaluation elements (R. 553-3-7 para. 2)";
+}
+
+const TauxTrainVie80: Decimal = 0.80 {
+    label fr official "taux de 80 % (R. 553-3-1 3°, 4°, 6°, 8°, 9°)";
+    label en unofficial "80% rate (R. 553-3-1 3, 4, 6, 8, 9)";
+}
+
+const TauxValeurLocative100: Decimal = 1.00 {
+    label fr official "valeur locative prise sans abattement (R. 553-3-1 1°, 2°: aucun taux)";
+    label en unofficial "rental value taken in full (R. 553-3-1 1, 2: no rate stated)";
+}
+
+const TauxVehicules25: Decimal = 0.25 {
+    label fr official "taux de 25 % de la valeur vénale de chaque véhicule de plus de 10 000 euros (R. 553-3-1 5°)";
+    label en unofficial "25% rate on the market value of each vehicle over EUR 10,000 (R. 553-3-1 5)";
+}
+
+const TauxObjetsArt3: Decimal = 0.03 {
+    label fr official "taux de 3 % de la valeur vénale des objets d'art, de collection, pierres et métaux précieux (R. 553-3-1 7°)";
+    label en unofficial "3% rate on the market value of art, collectors items, gems and precious metals (R. 553-3-1 7)";
+}
+
+const TauxCapitaux10: Decimal = 0.10 {
+    label fr official "taux de 10 % du montant des capitaux à la fin de la période de référence (R. 553-3-1 10°)";
+    label en unofficial "10% rate on capital held at the end of the reference period (R. 553-3-1 10)";
+}
+
+const SeuilVehicules: Money = 10000.00 EUR {
+    label fr official "seuil de 10 000 euros par véhicule (R. 553-3-1 5°)";
+    label en unofficial "EUR 10,000 threshold per vehicle (R. 553-3-1 5)";
+}
+
+const SeuilEquipement: Money = 1000.00 EUR {
+    label fr official "seuil de 1 000 euros de dépenses d'équipement (R. 553-3-1 6°)";
+    label en unofficial "EUR 1,000 equipment-spending threshold (R. 553-3-1 6)";
+}
+
+const ZeroTrainVie: Money = 0.00 EUR {
+    label fr official "contribution nulle sous les seuils (R. 553-3-1 5°/6°)";
+    label en unofficial "zero contribution below thresholds (R. 553-3-1 5/6)";
+}
+
+function contribution_bareme(montant: Money, part: Decimal, taux: Decimal) -> Money =
+    montant * part * taux;
+
+function seuil_disproportion(plafond: Money, exclus: Money) -> Money =
+    plafond * 2.0 + exclus;
+
+@source(CSS_R553_3, CSS_R553_3_CSS_ED2021_05, CSS_R553_3_CSS_ED2021_11, CSS_R553_3_CSS_ED2021_12,
+        CSS_R553_3_CSS_ED2022_01, CSS_R553_3_CSS_ED2022_02, CSS_R553_3_CSS_ED2022_03,
+        CSS_R553_3_CSS_ED2022_09, CSS_R553_3_CSS_ED2023_07, CSS_R553_3_CSS_ED2024_01,
+        CSS_R553_3_CSS_ED2025_02, CSS_R553_3_CSS_ED2025_09, CSS_R553_3_CSS_ED2025_12,
+        CSS_R553_3_CSS_ED2026_01, CSS_R553_3_CSS_ED2026_04, CSS_R553_3_CSS_ED2026_06)
+rule SectionTrainVieApplicable(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "La section s'applique aux demandes de PAJE, complément familial et ARS";
+    label en unofficial "The section applies to PAJE, family complement and ARS claims";
+    when prestation_soumise_section(p);
+    then section_train_vie_applicable(p);
+}
+
+@source(CSS_R553_3, CSS_R553_3_CSS_ED2021_05, CSS_R553_3_CSS_ED2021_11, CSS_R553_3_CSS_ED2021_12,
+        CSS_R553_3_CSS_ED2022_01, CSS_R553_3_CSS_ED2022_02, CSS_R553_3_CSS_ED2022_03,
+        CSS_R553_3_CSS_ED2022_09, CSS_R553_3_CSS_ED2023_07, CSS_R553_3_CSS_ED2024_01,
+        CSS_R553_3_CSS_ED2025_02, CSS_R553_3_CSS_ED2025_09, CSS_R553_3_CSS_ED2025_12,
+        CSS_R553_3_CSS_ED2026_01, CSS_R553_3_CSS_ED2026_04, CSS_R553_3_CSS_ED2026_06)
+rule SectionTrainVieHorsChamp(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "La section ne s'applique pas aux autres prestations du livre V (L. 553-5 hors section)";
+    label en unofficial "The section does not apply to the other Livre V benefits (L. 553-5 outside the section)";
+    when prestation_hors_section(p);
+    then not section_train_vie_applicable(p);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule VehiculeBienJustifieAssurance(p: Personne, b: Bien, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Véhicule étayé par le montant garanti d'assurance chiffré du même bien (R. 553-3-1 II 2° a)";
+    label en unofficial "Vehicle supported by the same-item amount-bearing insurance guarantee (R. 553-3-1 II 2 a)";
+    when vehicule_bien_preuve_assurance(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then vehicule_bien_justifie(p, b);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule VehiculeBienJustifieEstimation(p: Personne, b: Bien, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Véhicule étayé par l'estimation chiffrée de professionnel du même bien (R. 553-3-1 II 2° b)";
+    label en unofficial "Vehicle supported by the same-item amount-bearing professional estimate (R. 553-3-1 II 2 b)";
+    when vehicule_bien_preuve_estimation(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then vehicule_bien_justifie(p, b);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule VehiculeBienJustifiePublication(p: Personne, b: Bien, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Véhicule étayé par la référence chiffrée de publication professionnelle du même bien (R. 553-3-1 II 2° c)";
+    label en unofficial "Vehicle supported by the same-item amount-bearing publication reference (R. 553-3-1 II 2 c)";
+    when vehicule_bien_preuve_publication(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then vehicule_bien_justifie(p, b);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule VehiculeBienJustifieSansPreuve(p: Personne, b: Bien) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Véhicule étayé par absence attestée de preuve du même bien (R. 553-3-1 II 2° lorsqu'ils existent)";
+    label en unofficial "Vehicle supported by attested absence of evidence for the same item (R. 553-3-1 II 2 where available)";
+    when vehicule_bien_sans_preuve(p, b)
+        and section_train_vie_applicable(p);
+    then vehicule_bien_justifie(p, b);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule VehiculeBienValeurRetenueAssurance(p: Personne, b: Bien, valeur: Money, part: Decimal, date: Date, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Véhicule retenu: valeur réelle à la disposition étayée par l'assurance chiffrée du même bien, sans égalité imposée (R. 553-3-1 5° + II 2° a)";
+    label en unofficial "Vehicle retained: real disposal value supported by the same-item insurance amount, no forced equality (R. 553-3-1 5 + II 2 a)";
+    when vehicule_bien_valeur(p, b, valeur, part) and vehicule_bien_date(p, b, date)
+        and vehicule_bien_preuve_assurance(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then vehicule_bien_valeur_retenue(p, b, valeur, part, date);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule VehiculeBienValeurRetenueEstimation(p: Personne, b: Bien, valeur: Money, part: Decimal, date: Date, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Véhicule retenu: valeur réelle à la disposition étayée par l'estimation chiffrée du même bien, sans égalité imposée (R. 553-3-1 5° + II 2° b)";
+    label en unofficial "Vehicle retained: real disposal value supported by the same-item estimate amount, no forced equality (R. 553-3-1 5 + II 2 b)";
+    when vehicule_bien_valeur(p, b, valeur, part) and vehicule_bien_date(p, b, date)
+        and vehicule_bien_preuve_estimation(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then vehicule_bien_valeur_retenue(p, b, valeur, part, date);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule VehiculeBienValeurRetenuePublication(p: Personne, b: Bien, valeur: Money, part: Decimal, date: Date, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Véhicule retenu: valeur réelle à la disposition étayée par la référence chiffrée du même bien, sans égalité imposée (R. 553-3-1 5° + II 2° c)";
+    label en unofficial "Vehicle retained: real disposal value supported by the same-item publication reference, no forced equality (R. 553-3-1 5 + II 2 c)";
+    when vehicule_bien_valeur(p, b, valeur, part) and vehicule_bien_date(p, b, date)
+        and vehicule_bien_preuve_publication(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then vehicule_bien_valeur_retenue(p, b, valeur, part, date);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule VehiculeBienValeurRetenueSansPreuve(p: Personne, b: Bien, valeur: Money, part: Decimal, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Véhicule retenu: valeur réelle à la disposition avec absence attestée de preuve du même bien (R. 553-3-1 5° + II 2° lorsqu'ils existent)";
+    label en unofficial "Vehicle retained: real disposal value with attested absence of evidence for the same item (R. 553-3-1 5 + II 2 where available)";
+    when vehicule_bien_valeur(p, b, valeur, part) and vehicule_bien_date(p, b, date)
+        and vehicule_bien_sans_preuve(p, b)
+        and section_train_vie_applicable(p);
+    then vehicule_bien_valeur_retenue(p, b, valeur, part, date);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule VehiculeBienApport(p: Personne, b: Bien, valeur: Money, part: Decimal, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Véhicule de plus de 10 000 euros, valeur réelle retenue étayée à la disposition: 25 %, part privée";
+    label en unofficial "Vehicle over EUR 10,000, supported retained real disposal value: 25%, private share";
+    when vehicule_bien_valeur_retenue(p, b, valeur, part, date) and valeur > SeuilVehicules
+        and section_train_vie_applicable(p);
+    then apport_bien(p, b, contribution_bareme(valeur, part, TauxVehicules25));
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule EquipementApport(p: Personne, depenses: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Equipement de plus de 1 000 euros, foyer/période: 80 %, part privée";
+    label en unofficial "Equipment over EUR 1,000, household/period: 80%, private share";
+    when depenses_equipement(p, depenses, part) and depenses > SeuilEquipement
+        and depenses_foyer_periode_reference(p)
+        and section_train_vie_applicable(p);
+    then apport_poste(p, EQUIPEMENT, contribution_bareme(depenses, part, TauxTrainVie80));
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ArtBienJustifieAssurance(p: Personne, b: Bien, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Objet d'art étayé par le montant garanti d'assurance chiffré du même bien (R. 553-3-1 II 2° a)";
+    label en unofficial "Art item supported by the same-item amount-bearing insurance guarantee (R. 553-3-1 II 2 a)";
+    when art_bien_preuve_assurance(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then art_bien_justifie(p, b);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ArtBienJustifieEstimation(p: Personne, b: Bien, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Objet d'art étayé par l'estimation chiffrée de professionnel du même bien (R. 553-3-1 II 2° b)";
+    label en unofficial "Art item supported by the same-item amount-bearing professional estimate (R. 553-3-1 II 2 b)";
+    when art_bien_preuve_estimation(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then art_bien_justifie(p, b);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ArtBienJustifiePublication(p: Personne, b: Bien, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Objet d'art étayé par la référence chiffrée de publication professionnelle du même bien (R. 553-3-1 II 2° c)";
+    label en unofficial "Art item supported by the same-item amount-bearing publication reference (R. 553-3-1 II 2 c)";
+    when art_bien_preuve_publication(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then art_bien_justifie(p, b);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ArtBienJustifieSansPreuve(p: Personne, b: Bien) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Objet d'art étayé par absence attestée de preuve du même bien (R. 553-3-1 II 2° lorsqu'ils existent)";
+    label en unofficial "Art item supported by attested absence of evidence for the same item (R. 553-3-1 II 2 where available)";
+    when art_bien_sans_preuve(p, b)
+        and section_train_vie_applicable(p);
+    then art_bien_justifie(p, b);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ArtBienValeurRetenueAssurance(p: Personne, b: Bien, valeur: Money, part: Decimal, date: Date, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Objet d'art retenu: valeur réelle à la disposition étayée par l'assurance chiffrée du même bien, sans égalité imposée (R. 553-3-1 7° + II 2° a)";
+    label en unofficial "Art item retained: real disposal value supported by the same-item insurance amount, no forced equality (R. 553-3-1 7 + II 2 a)";
+    when art_bien_valeur(p, b, valeur, part) and art_bien_date(p, b, date)
+        and art_bien_preuve_assurance(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then art_bien_valeur_retenue(p, b, valeur, part, date);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ArtBienValeurRetenueEstimation(p: Personne, b: Bien, valeur: Money, part: Decimal, date: Date, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Objet d'art retenu: valeur réelle à la disposition étayée par l'estimation chiffrée du même bien, sans égalité imposée (R. 553-3-1 7° + II 2° b)";
+    label en unofficial "Art item retained: real disposal value supported by the same-item estimate amount, no forced equality (R. 553-3-1 7 + II 2 b)";
+    when art_bien_valeur(p, b, valeur, part) and art_bien_date(p, b, date)
+        and art_bien_preuve_estimation(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then art_bien_valeur_retenue(p, b, valeur, part, date);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ArtBienValeurRetenuePublication(p: Personne, b: Bien, valeur: Money, part: Decimal, date: Date, preuve: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Objet d'art retenu: valeur réelle à la disposition étayée par la référence chiffrée du même bien, sans égalité imposée (R. 553-3-1 7° + II 2° c)";
+    label en unofficial "Art item retained: real disposal value supported by the same-item publication reference, no forced equality (R. 553-3-1 7 + II 2 c)";
+    when art_bien_valeur(p, b, valeur, part) and art_bien_date(p, b, date)
+        and art_bien_preuve_publication(p, b, preuve)
+        and section_train_vie_applicable(p);
+    then art_bien_valeur_retenue(p, b, valeur, part, date);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ArtBienValeurRetenueSansPreuve(p: Personne, b: Bien, valeur: Money, part: Decimal, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Objet d'art retenu: valeur réelle à la disposition avec absence attestée de preuve du même bien (R. 553-3-1 7° + II 2° lorsqu'ils existent)";
+    label en unofficial "Art item retained: real disposal value with attested absence of evidence for the same item (R. 553-3-1 7 + II 2 where available)";
+    when art_bien_valeur(p, b, valeur, part) and art_bien_date(p, b, date)
+        and art_bien_sans_preuve(p, b)
+        and section_train_vie_applicable(p);
+    then art_bien_valeur_retenue(p, b, valeur, part, date);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule BatieBienRetenuDirect(p: Personne, b: Bien, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Bâtie directe par bien: valeur locative applicable et connue retenue (R. 553-3-1 1°)";
+    label en unofficial "Direct built per item: applicable and known rental value retained (R. 553-3-1 1)";
+    when batie_bien_valeur(p, b, montant, part) and not_known(batie_bien_inapplicable(p, b))
+        and section_train_vie_applicable(p);
+    then batie_bien_retenue(p, b, montant, part);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule BatieBienRetenuFallback(p: Personne, b: Bien, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Bâtie repli par bien: aucune valeur applicable/connue, valeur du logement occupé retenue (R. 553-3-1 1°)";
+    label en unofficial "Built fallback per item: no applicable/known value, occupied-dwelling value retained (R. 553-3-1 1)";
+    when batie_bien_inapplicable(p, b) and valeur_locative_batie_fallback_logement(p, montant, part)
+        and section_train_vie_applicable(p);
+    then batie_bien_retenue(p, b, montant, part);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule NonBatieBienRetenuDirect(p: Personne, b: Bien, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Non bâtie directe par bien: valeur locative applicable et connue retenue (R. 553-3-1 2°)";
+    label en unofficial "Direct unbuilt per item: applicable and known rental value retained (R. 553-3-1 2)";
+    when non_batie_bien_valeur(p, b, montant, part) and not_known(non_batie_bien_inapplicable(p, b))
+        and section_train_vie_applicable(p);
+    then non_batie_bien_retenue(p, b, montant, part);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule NonBatieBienRetenuFallback(p: Personne, b: Bien, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Non bâtie repli par bien: aucune valeur applicable/connue, valeur du logement occupé retenue (R. 553-3-1 2°)";
+    label en unofficial "Unbuilt fallback per item: no applicable/known value, occupied-dwelling value retained (R. 553-3-1 2)";
+    when non_batie_bien_inapplicable(p, b) and valeur_locative_non_batie_fallback_logement(p, montant, part)
+        and section_train_vie_applicable(p);
+    then non_batie_bien_retenue(p, b, montant, part);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06)
+rule BatieBienApport(p: Personne, b: Bien, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Bâtie par bien: 100 % de la valeur retenue, part privée";
+    label en unofficial "Built per item: 100% of the retained value, private share";
+    when batie_bien_retenue(p, b, montant, part)
+        and section_train_vie_applicable(p);
+    then apport_bien(p, b, contribution_bareme(montant, part, TauxValeurLocative100));
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule NonBatieBienApport(p: Personne, b: Bien, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Non bâtie par bien: 100 % de la valeur retenue, part privée";
+    label en unofficial "Unbuilt per item: 100% of the retained value, private share";
+    when non_batie_bien_retenue(p, b, montant, part)
+        and section_train_vie_applicable(p);
+    then apport_bien(p, b, contribution_bareme(montant, part, TauxValeurLocative100));
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ArtBienApport(p: Personne, b: Bien, valeur: Money, part: Decimal, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Objet d'art par bien, valeur réelle retenue étayée à la disposition: 3 %, part privée";
+    label en unofficial "Art item per item, supported retained real disposal value: 3%, private share";
+    when art_bien_valeur_retenue(p, b, valeur, part, date)
+        and section_train_vie_applicable(p);
+    then apport_bien(p, b, contribution_bareme(valeur, part, TauxObjetsArt3));
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule TravauxApport(p: Personne, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Travaux, foyer/période: 80 %, part privée";
+    label en unofficial "Works, household/period: 80%, private share";
+    when depenses_travaux(p, montant, part)
+        and depenses_foyer_periode_reference(p)
+        and section_train_vie_applicable(p);
+    then apport_poste(p, TRAVAUX, contribution_bareme(montant, part, TauxTrainVie80));
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule DomestiquesApport(p: Personne, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Employés de maison, foyer/période: 80 %, part privée";
+    label en unofficial "Domestic staff, household/period: 80%, private share";
+    when depenses_domestiques(p, montant, part)
+        and depenses_foyer_periode_reference(p)
+        and section_train_vie_applicable(p);
+    then apport_poste(p, DOMESTIQUES, contribution_bareme(montant, part, TauxTrainVie80));
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule LoisirsApport(p: Personne, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Loisirs, foyer/période: 80 %, part privée";
+    label en unofficial "Leisure, household/period: 80%, private share";
+    when depenses_loisirs(p, montant, part)
+        and depenses_foyer_periode_reference(p)
+        and section_train_vie_applicable(p);
+    then apport_poste(p, LOISIRS, contribution_bareme(montant, part, TauxTrainVie80));
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ClubsApport(p: Personne, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Clubs, foyer/période: 80 %, part privée";
+    label en unofficial "Clubs, household/period: 80%, private share";
+    when depenses_clubs(p, montant, part)
+        and depenses_foyer_periode_reference(p)
+        and section_train_vie_applicable(p);
+    then apport_poste(p, CLUBS, contribution_bareme(montant, part, TauxTrainVie80));
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule CapitauxApport(p: Personne, montant: Money, part: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Capitaux fin de période, sans condition foyer/période: 10 %, part privée";
+    label en unofficial "End-of-period capital, no household/period condition: 10%, private share";
+    when capitaux_fin_periode(p, montant, part)
+        and section_train_vie_applicable(p);
+    then apport_poste(p, CAPITAUX, contribution_bareme(montant, part, TauxCapitaux10));
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ApportForfaitaireBien(p: Personne, b: Bien, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Apport d'un bien: apport au forfait du train de vie (R. 553-3-1 1°, 2°, 5°, 7°)";
+    label en unofficial "Item contribution: contribution to the lifestyle schedule (R. 553-3-1 1, 2, 5, 7)";
+    when apport_bien(p, b, m);
+    then apport_forfaitaire(p, m);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule ApportForfaitairePoste(p: Personne, k: PosteTrainVie, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Apport d'un poste de dépenses ou de capitaux: apport au forfait du train de vie (R. 553-3-1 3°, 4°, 6°, 8°, 9°, 10°)";
+    label en unofficial "Spending or capital line contribution: contribution to the lifestyle schedule (R. 553-3-1 3, 4, 6, 8, 9, 10)";
+    when apport_poste(p, k, m);
+    then apport_forfaitaire(p, m);
+}
+
+@source(CSS_R553_3_1, CSS_R553_3_1_CSS_ED2021_05, CSS_R553_3_1_CSS_ED2021_11,
+        CSS_R553_3_1_CSS_ED2021_12, CSS_R553_3_1_CSS_ED2022_01, CSS_R553_3_1_CSS_ED2022_02,
+        CSS_R553_3_1_CSS_ED2022_03, CSS_R553_3_1_CSS_ED2022_09, CSS_R553_3_1_CSS_ED2023_07,
+        CSS_R553_3_1_CSS_ED2024_01, CSS_R553_3_1_CSS_ED2025_02, CSS_R553_3_1_CSS_ED2025_09,
+        CSS_R553_3_1_CSS_ED2025_12, CSS_R553_3_1_CSS_ED2026_01, CSS_R553_3_1_CSS_ED2026_04,
+        CSS_R553_3_1_CSS_ED2026_06,
+        CSS_R553_3_3, CSS_R553_3_3_CSS_ED2021_05, CSS_R553_3_3_CSS_ED2021_11,
+        CSS_R553_3_3_CSS_ED2021_12, CSS_R553_3_3_CSS_ED2022_01, CSS_R553_3_3_CSS_ED2022_02,
+        CSS_R553_3_3_CSS_ED2022_03, CSS_R553_3_3_CSS_ED2022_09, CSS_R553_3_3_CSS_ED2023_07,
+        CSS_R553_3_3_CSS_ED2024_01, CSS_R553_3_3_CSS_ED2025_02, CSS_R553_3_3_CSS_ED2025_09,
+        CSS_R553_3_3_CSS_ED2025_12, CSS_R553_3_3_CSS_ED2026_01, CSS_R553_3_3_CSS_ED2026_04,
+        CSS_R553_3_3_CSS_ED2026_06)
+rule EvaluationForfaitaireTotale(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Evaluation forfaitaire: somme des apports par bien et par poste, inventaire complet (R. 553-3-1, II 1° aux dépenses, II 2° aux valeurs vénales)";
+    label en unofficial "Scheduled evaluation: sum of the per-item and per-category apports, complete inventory (R. 553-3-1, II 1 for spending, II 2 for market values)";
+    when section_train_vie_applicable(p) and inventaire_tdv_complet(p);
+    then evaluation_forfaitaire_train_vie(p,
+            sum(collect all m: Money, b: Bien where apport_bien(p, b, m), empty: 0.00 EUR)
+            + sum(collect all m: Money, k: PosteTrainVie where apport_poste(p, k, m), empty: 0.00 EUR));
+}
+
+@source(CSS_R553_3_4, CSS_R553_3_4_CSS_ED2021_05, CSS_R553_3_4_CSS_ED2021_11,
+        CSS_R553_3_4_CSS_ED2021_12, CSS_R553_3_4_CSS_ED2022_01, CSS_R553_3_4_CSS_ED2022_02,
+        CSS_R553_3_4_CSS_ED2022_03, CSS_R553_3_4_CSS_ED2022_09, CSS_R553_3_4_CSS_ED2023_07,
+        CSS_R553_3_4_CSS_ED2024_01, CSS_R553_3_4_CSS_ED2025_02, CSS_R553_3_4_CSS_ED2025_09,
+        CSS_R553_3_4_CSS_ED2025_12, CSS_R553_3_4_CSS_ED2026_01, CSS_R553_3_4_CSS_ED2026_04,
+        CSS_R553_3_4_CSS_ED2026_06)
+rule InformerProcedure(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'organisme informe par lettre recommandée avec accusé de réception et tout le contenu obligatoire du 1° et du 2°";
+    label en unofficial "The body informs by registered letter with acknowledgement of receipt and all mandatory 1 and 2 content";
+    when organisme_debiteur_pf(o, p) and procedure_train_vie_envisagee(p)
+        and section_train_vie_applicable(p);
+    then duty InformerProcedureTrainVie {
+        bearer o;
+        beneficiary p;
+        maintain lettre_procedure_conforme(o, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_R553_3_4, CSS_R553_3_4_CSS_ED2021_05, CSS_R553_3_4_CSS_ED2021_11,
+        CSS_R553_3_4_CSS_ED2021_12, CSS_R553_3_4_CSS_ED2022_01, CSS_R553_3_4_CSS_ED2022_02,
+        CSS_R553_3_4_CSS_ED2022_03, CSS_R553_3_4_CSS_ED2022_09, CSS_R553_3_4_CSS_ED2023_07,
+        CSS_R553_3_4_CSS_ED2024_01, CSS_R553_3_4_CSS_ED2025_02, CSS_R553_3_4_CSS_ED2025_09,
+        CSS_R553_3_4_CSS_ED2025_12, CSS_R553_3_4_CSS_ED2026_01, CSS_R553_3_4_CSS_ED2026_04,
+        CSS_R553_3_4_CSS_ED2026_06)
+rule LettreConforme(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Lettre conforme: recommandée avec accusé de réception et six mentions obligatoires (procédure, audition et conseil, sanctions, transmission, questionnaire, pièces et avertissement L. 583-3)";
+    label en unofficial "Conforming letter: registered with acknowledgement of receipt and the six mandatory items (procedure, hearing and counsel, sanctions, transmission, questionnaire, documents and L. 583-3 warning)";
+    when lettre_procedure_adressee(o, p) and lettre_procedure_accuse_reception(o, p)
+        and lettre_contenu_procedure(o, p) and lettre_contenu_audition_conseil(o, p)
+        and lettre_contenu_sanctions(o, p) and lettre_contenu_transmission(o, p)
+        and lettre_contenu_questionnaire(o, p) and lettre_contenu_pieces_l5833(o, p)
+        and section_train_vie_applicable(p);
+    then lettre_procedure_conforme(o, p);
+}
+
+@source(CSS_R553_3_4, CSS_R553_3_4_CSS_ED2021_05, CSS_R553_3_4_CSS_ED2021_11,
+        CSS_R553_3_4_CSS_ED2021_12, CSS_R553_3_4_CSS_ED2022_01, CSS_R553_3_4_CSS_ED2022_02,
+        CSS_R553_3_4_CSS_ED2022_03, CSS_R553_3_4_CSS_ED2022_09, CSS_R553_3_4_CSS_ED2023_07,
+        CSS_R553_3_4_CSS_ED2024_01, CSS_R553_3_4_CSS_ED2025_02, CSS_R553_3_4_CSS_ED2025_09,
+        CSS_R553_3_4_CSS_ED2025_12, CSS_R553_3_4_CSS_ED2026_01, CSS_R553_3_4_CSS_ED2026_04,
+        CSS_R553_3_4_CSS_ED2026_06)
+rule EcheanceQuestionnaire(o: Organisme, p: Personne, envoi: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Le questionnaire est rempli et renvoyé dans les trente jours de l'envoi de la lettre qui l'exige";
+    label en unofficial "The questionnaire is completed and returned within thirty days of the letter requiring it";
+    when lettre_procedure_adressee(o, p) and lettre_contenu_questionnaire(o, p)
+        and lettre_procedure_le(o, p, envoi) and section_train_vie_applicable(p);
+    then echeance_questionnaire(p, add_calendar_period(envoi, 30 calendar_day));
+}
+
+@source(CSS_R553_3_5, CSS_R553_3_5_CSS_ED2021_05, CSS_R553_3_5_CSS_ED2021_11,
+        CSS_R553_3_5_CSS_ED2021_12, CSS_R553_3_5_CSS_ED2022_01, CSS_R553_3_5_CSS_ED2022_02,
+        CSS_R553_3_5_CSS_ED2022_03, CSS_R553_3_5_CSS_ED2022_09, CSS_R553_3_5_CSS_ED2023_07,
+        CSS_R553_3_5_CSS_ED2024_01, CSS_R553_3_5_CSS_ED2025_02, CSS_R553_3_5_CSS_ED2025_09,
+        CSS_R553_3_5_CSS_ED2025_12, CSS_R553_3_5_CSS_ED2026_01, CSS_R553_3_5_CSS_ED2026_04,
+        CSS_R553_3_5_CSS_ED2026_06)
+rule DisproportionReglementaire(p: Personne, evaluation: Money, plafond: Money, exclus: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Disproportion si le forfait est au moins égal au double du plafond, revenus exclus ajoutés";
+    label en unofficial "Disproportion where the schedule is at least twice the ceiling, excluded incomes added";
+    when evaluation_forfaitaire_train_vie(p, evaluation) and plafond_prestation(p, plafond)
+        and revenus_exclus_evaluation(p, exclus)
+        and evaluation >= seuil_disproportion(plafond, exclus)
+        and section_train_vie_applicable(p);
+    then disproportion_reglementaire_constatee(p);
+}
+
+@source(CSS_R553_3_6, CSS_R553_3_6_CSS_ED2021_05, CSS_R553_3_6_CSS_ED2021_11,
+        CSS_R553_3_6_CSS_ED2021_12, CSS_R553_3_6_CSS_ED2022_01, CSS_R553_3_6_CSS_ED2022_02,
+        CSS_R553_3_6_CSS_ED2022_03, CSS_R553_3_6_CSS_ED2022_09, CSS_R553_3_6_CSS_ED2023_07,
+        CSS_R553_3_6_CSS_ED2024_01, CSS_R553_3_6_CSS_ED2025_02, CSS_R553_3_6_CSS_ED2025_09,
+        CSS_R553_3_6_CSS_ED2025_12, CSS_R553_3_6_CSS_ED2026_01, CSS_R553_3_6_CSS_ED2026_04,
+        CSS_R553_3_6_CSS_ED2026_06)
+rule AttributionMaintenueExceptionnelle(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'évaluation ne fait pas obstacle à l'attribution en cas de circonstances exceptionnelles";
+    label en unofficial "The evaluation does not bar grant in exceptional circumstances";
+    when evaluation_sans_droit(p) and circonstances_exceptionnelles(p)
+        and section_train_vie_applicable(p);
+    then attribution_maintenue_exceptionnelle(p);
+}
+
+@source(CSS_R553_3_6, CSS_R553_3_6_CSS_ED2021_05, CSS_R553_3_6_CSS_ED2021_11,
+        CSS_R553_3_6_CSS_ED2021_12, CSS_R553_3_6_CSS_ED2022_01, CSS_R553_3_6_CSS_ED2022_02,
+        CSS_R553_3_6_CSS_ED2022_03, CSS_R553_3_6_CSS_ED2022_09, CSS_R553_3_6_CSS_ED2023_07,
+        CSS_R553_3_6_CSS_ED2024_01, CSS_R553_3_6_CSS_ED2025_02, CSS_R553_3_6_CSS_ED2025_09,
+        CSS_R553_3_6_CSS_ED2025_12, CSS_R553_3_6_CSS_ED2026_01, CSS_R553_3_6_CSS_ED2026_04,
+        CSS_R553_3_6_CSS_ED2026_06)
+rule AttributionNonRefuseeCessation(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'attribution ou le renouvellement n'est pas refusé s'il est établi que la disproportion marquée a cessé";
+    label en unofficial "Grant or renewal is not refused where the marked disproportion is established to have ceased";
+    when evaluation_sans_droit(p) and disproportion_cessee_etablie(p)
+        and section_train_vie_applicable(p);
+    then attribution_non_refusee_cessation(p);
+}
+
+@source(CSS_R553_3_6, CSS_R553_3_6_CSS_ED2021_05, CSS_R553_3_6_CSS_ED2021_11,
+        CSS_R553_3_6_CSS_ED2021_12, CSS_R553_3_6_CSS_ED2022_01, CSS_R553_3_6_CSS_ED2022_02,
+        CSS_R553_3_6_CSS_ED2022_03, CSS_R553_3_6_CSS_ED2022_09, CSS_R553_3_6_CSS_ED2023_07,
+        CSS_R553_3_6_CSS_ED2024_01, CSS_R553_3_6_CSS_ED2025_02, CSS_R553_3_6_CSS_ED2025_09,
+        CSS_R553_3_6_CSS_ED2025_12, CSS_R553_3_6_CSS_ED2026_01, CSS_R553_3_6_CSS_ED2026_04,
+        CSS_R553_3_6_CSS_ED2026_06)
+rule NotifierRefus(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Le refus est motivé et notifié par lettre recommandée avec accusé de réception et voies de recours";
+    label en unofficial "Refusal is motivated and notified by registered letter with acknowledgement of receipt and remedies";
+    when organisme_debiteur_pf(o, p) and refus_train_vie_decide(p)
+        and section_train_vie_applicable(p);
+    then duty NotifierRefusMotive {
+        bearer o;
+        beneficiary p;
+        maintain refus_motive_notifie_conforme(o, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_R553_3_6, CSS_R553_3_6_CSS_ED2021_05, CSS_R553_3_6_CSS_ED2021_11,
+        CSS_R553_3_6_CSS_ED2021_12, CSS_R553_3_6_CSS_ED2022_01, CSS_R553_3_6_CSS_ED2022_02,
+        CSS_R553_3_6_CSS_ED2022_03, CSS_R553_3_6_CSS_ED2022_09, CSS_R553_3_6_CSS_ED2023_07,
+        CSS_R553_3_6_CSS_ED2024_01, CSS_R553_3_6_CSS_ED2025_02, CSS_R553_3_6_CSS_ED2025_09,
+        CSS_R553_3_6_CSS_ED2025_12, CSS_R553_3_6_CSS_ED2026_01, CSS_R553_3_6_CSS_ED2026_04,
+        CSS_R553_3_6_CSS_ED2026_06)
+rule RefusNotifieConforme(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Refus conforme: motivé, notifié par lettre recommandée avec accusé de réception et voies de recours";
+    label en unofficial "Conforming refusal: motivated, notified by registered letter with acknowledgement of receipt and remedies";
+    when refus_motive_notifie(o, p) and refus_accuse_reception(o, p)
+        and section_train_vie_applicable(p);
+    then refus_motive_notifie_conforme(o, p);
+}
+
+@source(CSS_R553_3_7, CSS_R553_3_7_CSS_ED2021_05, CSS_R553_3_7_CSS_ED2021_11,
+        CSS_R553_3_7_CSS_ED2021_12, CSS_R553_3_7_CSS_ED2022_01, CSS_R553_3_7_CSS_ED2022_02,
+        CSS_R553_3_7_CSS_ED2022_03, CSS_R553_3_7_CSS_ED2022_09, CSS_R553_3_7_CSS_ED2023_07,
+        CSS_R553_3_7_CSS_ED2024_01, CSS_R553_3_7_CSS_ED2025_02, CSS_R553_3_7_CSS_ED2025_09,
+        CSS_R553_3_7_CSS_ED2025_12, CSS_R553_3_7_CSS_ED2026_01, CSS_R553_3_7_CSS_ED2026_04,
+        CSS_R553_3_7_CSS_ED2026_06)
+rule RendreCompte(o: Organisme, n: OrganismeNational, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'organisme rend compte sans délai et anonymement à l'organisme national, en précisant réponse, sens, éléments et sanction";
+    label en unofficial "The body reports without delay and anonymously to the national body, stating reply, direction, items and sanction";
+    when organisme_debiteur_pf(o, p) and evaluation_effectuee(p) and releve_organisme_national(o, n)
+        and section_train_vie_applicable(p);
+    then duty RendreCompteEvaluation {
+        bearer o;
+        beneficiary n;
+        maintain compte_rendu_evaluation_conforme(o, n, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_R553_3_7, CSS_R553_3_7_CSS_ED2021_05, CSS_R553_3_7_CSS_ED2021_11,
+        CSS_R553_3_7_CSS_ED2021_12, CSS_R553_3_7_CSS_ED2022_01, CSS_R553_3_7_CSS_ED2022_02,
+        CSS_R553_3_7_CSS_ED2022_03, CSS_R553_3_7_CSS_ED2022_09, CSS_R553_3_7_CSS_ED2023_07,
+        CSS_R553_3_7_CSS_ED2024_01, CSS_R553_3_7_CSS_ED2025_02, CSS_R553_3_7_CSS_ED2025_09,
+        CSS_R553_3_7_CSS_ED2025_12, CSS_R553_3_7_CSS_ED2026_01, CSS_R553_3_7_CSS_ED2026_04,
+        CSS_R553_3_7_CSS_ED2026_06)
+rule SanctionFraudePrecisee(p: Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Sanction pour fraude précisée au compte rendu, nature et montant";
+    label en unofficial "Fraud sanction stated in the report, kind and amount";
+    when compte_rendu_sanction_fraude(p, montant) and section_train_vie_applicable(p);
+    then compte_rendu_sanction_precisee(p);
+}
+
+@source(CSS_R553_3_7, CSS_R553_3_7_CSS_ED2021_05, CSS_R553_3_7_CSS_ED2021_11,
+        CSS_R553_3_7_CSS_ED2021_12, CSS_R553_3_7_CSS_ED2022_01, CSS_R553_3_7_CSS_ED2022_02,
+        CSS_R553_3_7_CSS_ED2022_03, CSS_R553_3_7_CSS_ED2022_09, CSS_R553_3_7_CSS_ED2023_07,
+        CSS_R553_3_7_CSS_ED2024_01, CSS_R553_3_7_CSS_ED2025_02, CSS_R553_3_7_CSS_ED2025_09,
+        CSS_R553_3_7_CSS_ED2025_12, CSS_R553_3_7_CSS_ED2026_01, CSS_R553_3_7_CSS_ED2026_04,
+        CSS_R553_3_7_CSS_ED2026_06)
+rule SanctionFausseDeclarationPrecisee(p: Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Sanction pour fausse déclaration précisée au compte rendu, nature et montant";
+    label en unofficial "False-statement sanction stated in the report, kind and amount";
+    when compte_rendu_sanction_fausse_declaration(p, montant) and section_train_vie_applicable(p);
+    then compte_rendu_sanction_precisee(p);
+}
+
+@source(CSS_R553_3_7, CSS_R553_3_7_CSS_ED2021_05, CSS_R553_3_7_CSS_ED2021_11,
+        CSS_R553_3_7_CSS_ED2021_12, CSS_R553_3_7_CSS_ED2022_01, CSS_R553_3_7_CSS_ED2022_02,
+        CSS_R553_3_7_CSS_ED2022_03, CSS_R553_3_7_CSS_ED2022_09, CSS_R553_3_7_CSS_ED2023_07,
+        CSS_R553_3_7_CSS_ED2024_01, CSS_R553_3_7_CSS_ED2025_02, CSS_R553_3_7_CSS_ED2025_09,
+        CSS_R553_3_7_CSS_ED2025_12, CSS_R553_3_7_CSS_ED2026_01, CSS_R553_3_7_CSS_ED2026_04,
+        CSS_R553_3_7_CSS_ED2026_06)
+rule AucuneSanctionPrecisee(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Absence de sanction pour fraude ou fausse déclaration précisée au compte rendu";
+    label en unofficial "Absence of any fraud or false-statement sanction stated in the report";
+    when compte_rendu_aucune_sanction(p) and section_train_vie_applicable(p);
+    then compte_rendu_sanction_precisee(p);
+}
+
+@source(CSS_R553_3_7, CSS_R553_3_7_CSS_ED2021_05, CSS_R553_3_7_CSS_ED2021_11,
+        CSS_R553_3_7_CSS_ED2021_12, CSS_R553_3_7_CSS_ED2022_01, CSS_R553_3_7_CSS_ED2022_02,
+        CSS_R553_3_7_CSS_ED2022_03, CSS_R553_3_7_CSS_ED2022_09, CSS_R553_3_7_CSS_ED2023_07,
+        CSS_R553_3_7_CSS_ED2024_01, CSS_R553_3_7_CSS_ED2025_02, CSS_R553_3_7_CSS_ED2025_09,
+        CSS_R553_3_7_CSS_ED2025_12, CSS_R553_3_7_CSS_ED2026_01, CSS_R553_3_7_CSS_ED2026_04,
+        CSS_R553_3_7_CSS_ED2026_06)
+rule CompteRenduConforme(o: Organisme, n: OrganismeNational, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Compte rendu conforme: transmis sans délai, anonymisé, avec réponse dans ou hors délai, sens de la décision, éléments évalués et sanction précisée";
+    label en unofficial "Conforming report: transmitted without delay, anonymised, with timely or late reply, decision direction, evaluated items and stated sanction";
+    when compte_rendu_transmis(o, n) and compte_rendu_transmis_sans_delai(o, n)
+        and compte_rendu_anonymise(o, p)
+        and (compte_rendu_reponse_dans_delai(p) or compte_rendu_reponse_hors_delai(p))
+        and (compte_rendu_decision_attribution(p) or compte_rendu_decision_refus(p))
+        and compte_rendu_elements_evalues(p) and compte_rendu_sanction_precisee(p)
+        and section_train_vie_applicable(p);
+    then compte_rendu_evaluation_conforme(o, n, p);
+}
+
+@source(CSS_R553_3_7, CSS_R553_3_7_CSS_ED2021_05, CSS_R553_3_7_CSS_ED2021_11,
+        CSS_R553_3_7_CSS_ED2021_12, CSS_R553_3_7_CSS_ED2022_01, CSS_R553_3_7_CSS_ED2022_02,
+        CSS_R553_3_7_CSS_ED2022_03, CSS_R553_3_7_CSS_ED2022_09, CSS_R553_3_7_CSS_ED2023_07,
+        CSS_R553_3_7_CSS_ED2024_01, CSS_R553_3_7_CSS_ED2025_02, CSS_R553_3_7_CSS_ED2025_09,
+        CSS_R553_3_7_CSS_ED2025_12, CSS_R553_3_7_CSS_ED2026_01, CSS_R553_3_7_CSS_ED2026_04,
+        CSS_R553_3_7_CSS_ED2026_06)
+rule TransmettreBilan(n: OrganismeNational, m: Ministre) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'organisme national transmet périodiquement au ministre un bilan des éléments des évaluations";
+    label en unofficial "The national body periodically transmits to the minister a review of the evaluation elements";
+    when bilan_periodique_du(n) and ministre_tutelle(m);
+    then duty TransmettreBilanMinistre {
+        bearer n;
+        beneficiary m;
+        maintain bilan_ministre_conforme(n, m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_R553_3_7, CSS_R553_3_7_CSS_ED2021_05, CSS_R553_3_7_CSS_ED2021_11,
+        CSS_R553_3_7_CSS_ED2021_12, CSS_R553_3_7_CSS_ED2022_01, CSS_R553_3_7_CSS_ED2022_02,
+        CSS_R553_3_7_CSS_ED2022_03, CSS_R553_3_7_CSS_ED2022_09, CSS_R553_3_7_CSS_ED2023_07,
+        CSS_R553_3_7_CSS_ED2024_01, CSS_R553_3_7_CSS_ED2025_02, CSS_R553_3_7_CSS_ED2025_09,
+        CSS_R553_3_7_CSS_ED2025_12, CSS_R553_3_7_CSS_ED2026_01, CSS_R553_3_7_CSS_ED2026_04,
+        CSS_R553_3_7_CSS_ED2026_06)
+rule BilanConforme(n: OrganismeNational, m: Ministre) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Bilan conforme: transmis au ministre avec les éléments des évaluations";
+    label en unofficial "Conforming review: transmitted to the minister with the evaluation elements";
+    when bilan_transmis_ministre(n, m) and bilan_elements_transmis(n);
+    then bilan_ministre_conforme(n, m);
+}

@@ -1,0 +1,36 @@
+// Год без закреплённого arrêté (до ряда, после него или пропуск внутри) не получает значения.
+language "law.core" version "0.2";
+package fr.css.pass version "0.1.0";
+namespace "urn:fr:corpus:clir:pass";
+
+// 2014: arrêté не закреплён (год вне закреплённого ряда или пропуск в нём): ни месячное, ни годовое
+// значение не устанавливается; предъявленное число (здесь 1 € и 12 €, не претензия на величину) не подтверждено.
+test "urn:query:fr-pass-annee-non-epinglee-2014" {
+    given {
+        context { decision_time @2018-06-15T12:00:00Z; knowledge_time @2018-06-15T12:00:00Z; legal_time @2018-06-15; timezone "Europe/Paris"; }
+    }
+    evaluate truth(pass_mensuel_arrete(2014, 1 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(pass_annuel_arrete(2014, 12 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2027: arrêté не закреплён (год вне закреплённого ряда или пропуск в нём): ни месячное, ни годовое
+// значение не устанавливается; предъявленное число (здесь 1 € и 12 €, не претензия на величину) не подтверждено.
+test "urn:query:fr-pass-annee-non-epinglee-2027" {
+    given {
+        context { decision_time @2018-06-15T12:00:00Z; knowledge_time @2018-06-15T12:00:00Z; legal_time @2018-06-15; timezone "Europe/Paris"; }
+    }
+    evaluate truth(pass_mensuel_arrete(2027, 1 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(pass_annuel_arrete(2027, 12 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

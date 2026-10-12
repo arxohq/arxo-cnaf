@@ -1,0 +1,28 @@
+// Couple, annual track, former rules (2023-09-30): the single-person rule
+// must not fire for a couple (G-A05). Own resources 2400.00, spouse 3000.00,
+// monthly amount 1000.00 retained. Couple ceiling 12 x 1000.00 x 1.81 =
+// 21720.00; (21720.00 - 5400.00) / 12 = 1360.00, capped at the monthly
+// amount: ancien 1000.00 only (no spurious 800.00 from the single track).
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-montant-couple-exclut-seul" {
+    given {
+        context { decision_time @2023-09-30T12:00:00Z; knowledge_time @2023-09-30T12:00:00Z; legal_time @2023-09-30; timezone "Europe/Paris"; }
+        assert "c1-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:c1")) { origin adjudicated; }
+        assert "c1-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:c1")) { origin case_input; }
+        assert "c1-03": residence_permanente(entity_ref("urn:fr:css-aah:case:c1")) { origin case_input; }
+        assert "c1-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:c1")) { origin case_input; }
+        assert "c1-05": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:c1")) { origin case_input; }
+        assert "c1-06": en_couple(entity_ref("urn:fr:css-aah:case:c1")) { origin case_input; }
+        assert "c1-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "c1-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:c1"), 2400.00 EUR) { origin case_input; }
+        assert "c1-09": ressources_conjoint_retenues(entity_ref("urn:fr:css-aah:case:c1"), 3000.00 EUR) { origin case_input; }
+        assert "c1-10": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_ancien(entity_ref("urn:fr:css-aah:case:c1"), 1000.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,326 @@
+// R. 541-2: six-category classification criteria.
+//
+// DEONTIC MAP: computation only — each 1°/2°/3°/4°/5°/6° gate is an
+// institutional derivation (categorieN_criteres_remplis) from the retained
+// evidence facts. The commission act of classifying stays the established
+// categorie_attribuee fact (B-PFAEEH-CATEGORIE); the evaluation guide and
+// the expense amounts by arrêté are unpinned (B-PFAEEH-GUIDE-EVALUATION,
+// B-PFAEEH-SEUILS-ARRETE); the plein-temps definition reads external
+// working-time law (B-PFAEEH-TEMPS-PLEIN).
+// Shape note: one rule per gate, no `or` across value-bearing relations
+// (unbound-variable risk unverifiable without execution; a later pass may
+// fold gates once the reviewer confirms disjunction semantics).
+// Thresholds are Decimal points read from the bareme (SeuilReduction20/50,
+// SeuilTierce8h/20h); expense edges compare Money against the retained
+// per-category arrêté amount.
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+use self::{
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04,
+    CategorieComplement,
+    categorie1_criteres_remplis,
+    categorie2_criteres_remplis,
+    categorie3a_criteres_remplis,
+    categorie3b_criteres_remplis,
+    categorie3c_criteres_remplis,
+    categorie4a_criteres_remplis,
+    categorie4b_criteres_remplis,
+    categorie4c_criteres_remplis,
+    categorie4d_criteres_remplis,
+    categorie5_criteres_remplis,
+    categorie6_criteres_remplis,
+    cessation_activite_totale,
+    contraintes_permanentes,
+    depenses_supplementaires,
+    heures_tierce_remuneree,
+    seuil_depenses_retenu,
+    taux_reduction_activite,
+    tierce_temps_plein,
+};
+
+// --- R. 541-2, 1°: expenses -----------------------------------------------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie1Depenses(e: fr.pf.core::Enfant, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "1re catégorie : dépenses égales ou supérieures au montant fixé par arrêté (R. 541-2, 1°)";
+    label en unofficial "1st category: expenses at or above the arretes-set amount (R. 541-2, 1)";
+    when depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_1, s)
+        and d >= s;
+    then categorie1_criteres_remplis(e);
+}
+
+// --- R. 541-2, 2°: three alternative gates --------------------------------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie2Reduction(e: fr.pf.core::Enfant, r: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "2e catégorie : activité à temps partiel réduite d'au moins 20 % (R. 541-2, 2°)";
+    label en unofficial "2nd category: part-time work reduced by at least 20% (R. 541-2, 2)";
+    when taux_reduction_activite(e, r) and r >= SeuilReduction20;
+    then categorie2_criteres_remplis(e);
+}
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie2Tierce(e: fr.pf.core::Enfant, h: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "2e catégorie : tierce personne rémunérée au moins huit heures par semaine (R. 541-2, 2°)";
+    label en unofficial "2nd category: paid third person at least eight hours a week (R. 541-2, 2)";
+    when heures_tierce_remuneree(e, h) and h >= SeuilTierce8h;
+    then categorie2_criteres_remplis(e);
+}
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie2Depenses(e: fr.pf.core::Enfant, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "2e catégorie : dépenses égales ou supérieures au montant fixé par arrêté (R. 541-2, 2°)";
+    label en unofficial "2nd category: expenses at or above the arretes-set amount (R. 541-2, 2)";
+    when depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_2, s)
+        and d >= s;
+    then categorie2_criteres_remplis(e);
+}
+
+// --- R. 541-2, 3° a): reduction 50 % or third person 20 h ------------------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie3aReduction(e: fr.pf.core::Enfant, r: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "3e catégorie a) : activité réduite d'au moins 50 % (R. 541-2, 3° a))";
+    label en unofficial "3rd category (a): work reduced by at least 50% (R. 541-2, 3(a))";
+    when taux_reduction_activite(e, r) and r >= SeuilReduction50;
+    then categorie3a_criteres_remplis(e);
+}
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie3aTierce(e: fr.pf.core::Enfant, h: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "3e catégorie a) : tierce personne rémunérée au moins vingt heures par semaine (R. 541-2, 3° a))";
+    label en unofficial "3rd category (a): paid third person at least twenty hours a week (R. 541-2, 3(a))";
+    when heures_tierce_remuneree(e, h) and h >= SeuilTierce20h;
+    then categorie3a_criteres_remplis(e);
+}
+
+// --- R. 541-2, 3° b): 20 %/8 h plus other expenses --------------------------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie3bReductionDepenses(e: fr.pf.core::Enfant, r: Decimal, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "3e catégorie b) : réduction d'au moins 20 % et autres dépenses au montant d'arrêté (R. 541-2, 3° b))";
+    label en unofficial "3rd category (b): reduction of at least 20% plus further expenses at the arretes amount (R. 541-2, 3(b))";
+    when taux_reduction_activite(e, r) and r >= SeuilReduction20
+        and depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_3, s)
+        and d >= s;
+    then categorie3b_criteres_remplis(e);
+}
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie3bTierceDepenses(e: fr.pf.core::Enfant, h: Decimal, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "3e catégorie b) : tierce personne au moins huit heures et autres dépenses au montant d'arrêté (R. 541-2, 3° b))";
+    label en unofficial "3rd category (b): third person at least eight hours plus further expenses at the arretes amount (R. 541-2, 3(b))";
+    when heures_tierce_remuneree(e, h) and h >= SeuilTierce8h
+        and depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_3, s)
+        and d >= s;
+    then categorie3b_criteres_remplis(e);
+}
+
+// --- R. 541-2, 3° c): expenses ----------------------------------------------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie3cDepenses(e: fr.pf.core::Enfant, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "3e catégorie c) : dépenses égales ou supérieures au montant fixé par arrêté (R. 541-2, 3° c))";
+    label en unofficial "3rd category (c): expenses at or above the arretes-set amount (R. 541-2, 3(c))";
+    when depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_3, s)
+        and d >= s;
+    then categorie3c_criteres_remplis(e);
+}
+
+// --- R. 541-2, 4° a): no activity or full-time third person -----------------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie4aCessation(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "4e catégorie a) : aucune activité professionnelle (R. 541-2, 4° a))";
+    label en unofficial "4th category (a): no professional activity (R. 541-2, 4(a))";
+    when cessation_activite_totale(e);
+    then categorie4a_criteres_remplis(e);
+}
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie4aTiercePlein(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "4e catégorie a) : tierce personne rémunérée à temps plein (R. 541-2, 4° a))";
+    label en unofficial "4th category (a): full-time paid third person (R. 541-2, 4(a))";
+    when tierce_temps_plein(e);
+    then categorie4a_criteres_remplis(e);
+}
+
+// --- R. 541-2, 4° b): 50 %/20 h plus expenses --------------------------------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie4bReductionDepenses(e: fr.pf.core::Enfant, r: Decimal, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "4e catégorie b) : réduction d'au moins 50 % et dépenses au montant d'arrêté (R. 541-2, 4° b))";
+    label en unofficial "4th category (b): reduction of at least 50% plus expenses at the arretes amount (R. 541-2, 4(b))";
+    when taux_reduction_activite(e, r) and r >= SeuilReduction50
+        and depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_4, s)
+        and d >= s;
+    then categorie4b_criteres_remplis(e);
+}
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie4bTierceDepenses(e: fr.pf.core::Enfant, h: Decimal, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "4e catégorie b) : tierce personne au moins vingt heures et dépenses au montant d'arrêté (R. 541-2, 4° b))";
+    label en unofficial "4th category (b): third person at least twenty hours plus expenses at the arretes amount (R. 541-2, 4(b))";
+    when heures_tierce_remuneree(e, h) and h >= SeuilTierce20h
+        and depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_4, s)
+        and d >= s;
+    then categorie4b_criteres_remplis(e);
+}
+
+// --- R. 541-2, 4° c): 20 %/8 h plus expenses ----------------------------------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie4cReductionDepenses(e: fr.pf.core::Enfant, r: Decimal, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "4e catégorie c) : réduction d'au moins 20 % et dépenses au montant d'arrêté (R. 541-2, 4° c))";
+    label en unofficial "4th category (c): reduction of at least 20% plus expenses at the arretes amount (R. 541-2, 4(c))";
+    when taux_reduction_activite(e, r) and r >= SeuilReduction20
+        and depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_4, s)
+        and d >= s;
+    then categorie4c_criteres_remplis(e);
+}
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie4cTierceDepenses(e: fr.pf.core::Enfant, h: Decimal, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "4e catégorie c) : tierce personne au moins huit heures et dépenses au montant d'arrêté (R. 541-2, 4° c))";
+    label en unofficial "4th category (c): third person at least eight hours plus expenses at the arretes amount (R. 541-2, 4(c))";
+    when heures_tierce_remuneree(e, h) and h >= SeuilTierce8h
+        and depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_4, s)
+        and d >= s;
+    then categorie4c_criteres_remplis(e);
+}
+
+// --- R. 541-2, 4° d): expenses ------------------------------------------------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie4dDepenses(e: fr.pf.core::Enfant, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "4e catégorie d) : dépenses égales ou supérieures au montant fixé par arrêté (R. 541-2, 4° d))";
+    label en unofficial "4th category (d): expenses at or above the arretes-set amount (R. 541-2, 4(d))";
+    when depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_4, s)
+        and d >= s;
+    then categorie4d_criteres_remplis(e);
+}
+
+// --- R. 541-2, 5°: no activity/full-time plus expenses ------------------------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie5CessationDepenses(e: fr.pf.core::Enfant, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "5e catégorie : aucune activité et dépenses au montant d'arrêté (R. 541-2, 5°)";
+    label en unofficial "5th category: no activity plus expenses at the arretes amount (R. 541-2, 5)";
+    when cessation_activite_totale(e)
+        and depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_5, s)
+        and d >= s;
+    then categorie5_criteres_remplis(e);
+}
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie5TierceDepenses(e: fr.pf.core::Enfant, d: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "5e catégorie : tierce personne à temps plein et dépenses au montant d'arrêté (R. 541-2, 5°)";
+    label en unofficial "5th category: full-time third person plus expenses at the arretes amount (R. 541-2, 5)";
+    when tierce_temps_plein(e)
+        and depenses_supplementaires(e, d) and seuil_depenses_retenu(CATEGORIE_5, s)
+        and d >= s;
+    then categorie5_criteres_remplis(e);
+}
+
+// --- R. 541-2, 6°: no activity/full-time plus permanent constraints -----------
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie6CessationContraintes(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "6e catégorie : aucune activité et contraintes permanentes de surveillance et de soins (R. 541-2, 6°)";
+    label en unofficial "6th category: no activity plus permanent supervision and care constraints (R. 541-2, 6)";
+    when cessation_activite_totale(e) and contraintes_permanentes(e);
+    then categorie6_criteres_remplis(e);
+}
+
+@source(
+    CSS_R541_2_ED2021_01,
+    CSS_R541_2_ED2022_01,
+    CSS_R541_2_ED2026_04)
+rule CritereCategorie6TierceContraintes(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "6e catégorie : tierce personne à temps plein et contraintes permanentes de surveillance et de soins (R. 541-2, 6°)";
+    label en unofficial "6th category: full-time third person plus permanent supervision and care constraints (R. 541-2, 6)";
+    when tierce_temps_plein(e) and contraintes_permanentes(e);
+    then categorie6_criteres_remplis(e);
+}

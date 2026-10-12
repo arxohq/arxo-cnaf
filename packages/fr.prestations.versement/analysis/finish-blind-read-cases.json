@@ -1,0 +1,385 @@
+{
+  "$comment": "FINISH-W2 blind-read cases for the PA linkage in fr.prestations.versement (B-PV-PA follow-up 6): facts + legal_time + probed relations only, NO answers. An independent reader (Luna, prompt C) fills answers from pinned sources without opening .law/tests/bareme. Coverage: PA echeance choice (served quarter), base/fraud/uplift/debt-cap, suspensive silence, single-repayment bar, RSA carry, prescription via the neighbour, pre-2024 reserve, zero echeance, rate edges, ill-formed uplift, reiteration without status, missing-input silence, duty positions, cascade stage 4, CRDS/rounding silence, reserved carry pairs, quarterly granularity. Separate from analysis/blind-read-cases.json (wave 5); pv-blind-24 there is superseded by this linkage.",
+  "cases": [
+    {
+      "id": "pvf-01",
+      "legal_time": "2024-03-15",
+      "boundary": "PA recovery base: served quarter, own indu, no fraud, no carry",
+      "facts": {
+        "prime_due_trimestre": "450.00 EUR",
+        "indu_recupere": "300.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.25"
+      },
+      "probe": [
+        "dette_recouvrable_pa",
+        "taux_effectif_pa",
+        "retenue_mensuelle_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-02",
+      "legal_time": "2024-09-15",
+      "boundary": "PA fraud: 10 percent indemnity joins the debt, uplift at the 0.50 cap",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "1000.00 EUR",
+        "indu_frauduleux": true,
+        "indemnite_fraude": "100.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30",
+        "taux_majoration_fraude_pa_retenu": "0.50"
+      },
+      "probe": [
+        "dette_recouvrable_pa",
+        "taux_effectif_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-03",
+      "legal_time": "2024-03-15",
+      "boundary": "PA fraud stated but no indemnity stated: neither dette rule completes",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "1000.00 EUR",
+        "indu_frauduleux": true,
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30",
+        "taux_majoration_fraude_pa_retenu": "0.50"
+      },
+      "probe": [
+        "dette_recouvrable_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-04",
+      "legal_time": "2024-03-15",
+      "boundary": "PA suspensive appeal: neighbour withholds recoverability, silence not zero",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "taux_retenue_pa_retenu": "0.30",
+        "recours_suspensif": true
+      },
+      "probe": [
+        "retenue_appliquee_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-05",
+      "legal_time": "2024-03-15",
+      "boundary": "PA single-repayment option bars deduction: echeance paid whole",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "500.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30",
+        "option_remboursement_unique": true
+      },
+      "probe": [
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-06",
+      "legal_time": "2025-06-15",
+      "boundary": "Cross-benefit carry: RSA indu deducted from the PA echeance, no own indu",
+      "facts": {
+        "prime_due_trimestre": "280.00 EUR",
+        "indu_recupere": "0 EUR",
+        "rsa_indu_reporte_sur_pa": "200.00 EUR",
+        "taux_retenue_pa_retenu": "0.25"
+      },
+      "probe": [
+        "dette_recouvrable_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-07",
+      "legal_time": "2024-03-15",
+      "boundary": "PA debt cap: deduction capped at the debt, not echeance-times-rate",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "10.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30"
+      },
+      "probe": [
+        "retenue_mensuelle_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-08",
+      "legal_time": "2024-03-15",
+      "boundary": "PA prescription via the neighbour: time-barred action, recoverability withheld",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_constate": "400.00 EUR",
+        "action_prescrite_retenue": true,
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30"
+      },
+      "probe": [
+        "dette_recouvrable_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-09",
+      "legal_time": "2023-06-15",
+      "boundary": "Pre-2024 reserve: PA recovery rules start 2024-01-01",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "500.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30"
+      },
+      "probe": [
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-10",
+      "legal_time": "2024-03-15",
+      "boundary": "PA served zero (below the minimum-payment floor): deduction and net are zero",
+      "facts": {
+        "prime_due_trimestre": "0 EUR",
+        "indu_recupere": "500.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30"
+      },
+      "probe": [
+        "retenue_mensuelle_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-11",
+      "legal_time": "2024-03-15",
+      "boundary": "PA uplift above the 0.50 statutory cap: ill-formed input, no rule enforces the cap",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "1000.00 EUR",
+        "indu_frauduleux": true,
+        "indemnite_fraude": "100.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30",
+        "taux_majoration_fraude_pa_retenu": "0.60"
+      },
+      "probe": [
+        "taux_effectif_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-12",
+      "legal_time": "2024-03-15",
+      "boundary": "PA repeat fraud without a repeat status: fund states the effective (doubled) uplift",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "1000.00 EUR",
+        "indu_frauduleux": true,
+        "indemnite_fraude": "100.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.20",
+        "taux_majoration_fraude_pa_retenu": "0.50"
+      },
+      "probe": [
+        "taux_effectif_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-13",
+      "legal_time": "2024-03-15",
+      "boundary": "PA zero rate: no deduction, full echeance",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "500.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.00"
+      },
+      "probe": [
+        "retenue_mensuelle_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-14",
+      "legal_time": "2024-03-15",
+      "boundary": "PA rate edge 1.00: deduction takes the whole echeance up to the debt",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "500.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "1.00"
+      },
+      "probe": [
+        "retenue_mensuelle_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-15",
+      "legal_time": "2024-03-15",
+      "boundary": "PA option plus fraud: the option bars deduction despite fraud",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "1000.00 EUR",
+        "indu_frauduleux": true,
+        "indemnite_fraude": "100.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30",
+        "taux_majoration_fraude_pa_retenu": "0.50",
+        "option_remboursement_unique": true
+      },
+      "probe": [
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-16",
+      "legal_time": "2024-03-15",
+      "boundary": "PA missing rate: silence, not zero",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "500.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR"
+      },
+      "probe": [
+        "taux_effectif_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-17",
+      "legal_time": "2024-03-15",
+      "boundary": "PA missing echeance: silence, not zero",
+      "facts": {
+        "indu_recupere": "500.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30"
+      },
+      "probe": [
+        "dette_recouvrable_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-18",
+      "legal_time": "2026-06-15",
+      "boundary": "PA duty position: the serving fund owes the served amount (entitlement, not payable net)",
+      "facts": {
+        "prime_due_trimestre": "280.00 EUR",
+        "organisme_serviteur": true
+      },
+      "probe": [
+        "prime_versee"
+      ]
+    },
+    {
+      "id": "pvf-19",
+      "legal_time": "2026-06-15",
+      "boundary": "Cascade stage 4: RSA net paid through this layer, PA echeance recovered with an RSA carry",
+      "facts": {
+        "allocation_mensuelle": "600.00 EUR",
+        "indu_recouvrable": "0 EUR",
+        "pf_indu_reporte_sur_rsa": "300.00 EUR",
+        "taux_retenue_rsa_retenu": "0.30",
+        "prime_due_trimestre": "280.00 EUR",
+        "indu_recupere": "150.00 EUR",
+        "rsa_indu_reporte_sur_pa": "60.00 EUR",
+        "taux_retenue_pa_retenu": "0.25"
+      },
+      "probe": [
+        "net_verse_rsa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-20",
+      "legal_time": "2024-03-15",
+      "boundary": "CRDS silence on PA: no withholding head derives",
+      "facts": {
+        "prime_due_trimestre": "300.00 EUR"
+      },
+      "probe": []
+    },
+    {
+      "id": "pvf-21",
+      "legal_time": "2024-03-15",
+      "boundary": "PA exactness: sub-centime products kept, no rounding rule in text",
+      "facts": {
+        "prime_due_trimestre": "333.335 EUR",
+        "indu_recupere": "100.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.33"
+      },
+      "probe": [
+        "retenue_mensuelle_pa",
+        "net_verse_pa"
+      ]
+    },
+    {
+      "id": "pvf-22",
+      "legal_time": "2024-03-15",
+      "boundary": "PF to PA carry reserved: a PF indu cannot enter the PA dette (titre IV inference, MIRROR)",
+      "facts": {
+        "prime_due_trimestre": "600.00 EUR",
+        "indu_recupere": "100.00 EUR",
+        "rsa_indu_reporte_sur_pa": "0 EUR",
+        "taux_retenue_pa_retenu": "0.30"
+      },
+      "probe": [
+        "dette_recouvrable_pa"
+      ]
+    },
+    {
+      "id": "pvf-23",
+      "legal_time": "2024-03-15",
+      "boundary": "PA-source carry reserved: a PA indu cannot enter the AF dette yet",
+      "facts": {
+        "af_montant_du": "192.00 EUR",
+        "indu_constate": "100.00 EUR",
+        "rsa_indu_reporte_sur_pf": "0 EUR",
+        "taux_retenue_pf_retenu": "0.25"
+      },
+      "probe": [
+        "dette_recouvrable_af",
+        "net_verse_af"
+      ]
+    },
+    {
+      "id": "pvf-24",
+      "legal_time": "2026-01-15",
+      "boundary": "PA quarterly granularity: one served quarter, monthly apportionment unmodelled",
+      "facts": {
+        "prime_due_trimestre": "280.00 EUR",
+        "indu_recupere": "150.00 EUR",
+        "rsa_indu_reporte_sur_pa": "60.00 EUR",
+        "taux_retenue_pa_retenu": "0.25"
+      },
+      "probe": [
+        "net_verse_pa"
+      ]
+    }
+  ],
+  "method": "record served/debt/rate inputs + legal_time + probed payment-stage relations + boundary note; no amounts derived, no answers; PA echeance is the neighbour-served quarterly amount, never the monthly computed intermediate",
+  "source_anchors": [
+    "ORD9650_ART14",
+    "ORD9650_ART19",
+    "CSS_D523_3",
+    "CSS_D543_2",
+    "CSS_L553_1",
+    "CSS_L553_2",
+    "CASF_L262_46",
+    "CSS_L843_1",
+    "CSS_L845_3",
+    "CSS_L845_4"
+  ]
+}

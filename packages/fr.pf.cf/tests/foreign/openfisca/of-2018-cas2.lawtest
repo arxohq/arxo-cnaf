@@ -1,0 +1,45 @@
+// OpenFisca cf_2018 Cas 2 (2018-01): 4 children (12, 10, 7, 5),
+// N-2 35000. Base track under the 4-child 42000 ceiling. Our brut
+// 133.28 on stated BMAF 320.00; their 169.03 as in Cas 1. Class (b).
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-of-2018-cas2" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2018-01-15T12:00:00Z; knowledge_time @2018-01-15T12:00:00Z; legal_time @2018-01-15; timezone "Europe/Paris"; }
+        assert "oc2-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e1")) { origin case_input; }
+        assert "oc2-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e2")) { origin case_input; }
+        assert "oc2-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e3")) { origin case_input; }
+        assert "oc2-04": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e4")) { origin case_input; }
+        assert "oc2-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e1")) { origin case_input; }
+        assert "oc2-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e2")) { origin case_input; }
+        assert "oc2-07": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e3")) { origin case_input; }
+        assert "oc2-08": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e4")) { origin case_input; }
+        assert "oc2-09": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e1"), @2005-06-01) { origin case_input; }
+        assert "oc2-10": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e2"), @2007-06-01) { origin case_input; }
+        assert "oc2-11": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e3"), @2010-06-01) { origin case_input; }
+        assert "oc2-12": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2-e4"), @2012-06-01) { origin case_input; }
+        assert "oc2-13": mois_droit(@2018-01-01) { origin case_input; }
+        assert "oc2-14": nb_enfants_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), 4) { origin case_input; }
+        assert "oc2-15": ressources_menage(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), 35000 EUR) { origin case_input; }
+        assert "oc2-16": plafond_base_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), 20000 EUR) { origin case_input; }
+        assert "oc2-16a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), 5000 EUR) { origin case_input; }
+        assert "oc2-16b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), 6000 EUR) { origin case_input; }
+        assert "oc2-16c": plafond_base_majore(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), 10000 EUR) { origin case_input; }
+        assert "oc2-16d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), 2500 EUR) { origin case_input; }
+        assert "oc2-16e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), 3000 EUR) { origin case_input; }
+        assert "oc2-17": foyer_du_cas(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2")) { origin case_input; }
+        assert "oc2-18": cadre_cf_remplie(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2")) { origin case_input; }
+        assert "oc2-19": bmaf_retenu(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), 320.00 EUR) { origin case_input; }
+    }
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_montant_du(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas2"), 133.28 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

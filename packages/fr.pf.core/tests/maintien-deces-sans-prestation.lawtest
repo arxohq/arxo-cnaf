@@ -1,0 +1,26 @@
+// Death maintien no listed item: decree period fixed but none of the six enumerated benefits paid for the child - no maintien (L. 552-7 al. 1, PC-R07-17 negative control).
+// D-42: the context lacked deadline_policy SERVICE_MOIS (B-PFCORE-POLICY-CONTEXT): the R. 552-4
+// gate MaintienOuvertureCondition steps one calendar_month (MISSING_POLICY without it). Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-maintien-deces-sans-prestation" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "maintien-deces-sans-prestation-01": deces_enfant_charge(entity_ref("urn:fr:pf:case:deces-sans")) { origin case_input; }
+        assert "maintien-deces-sans-prestation-02": duree_maintien_fixee(entity_ref("urn:fr:pf:case:deces-sans")) { origin case_input; }
+        assert "maintien-deces-sans-prestation-03": not forfait_l5211_verse_enfant(entity_ref("urn:fr:pf:case:deces-sans")) { origin case_input; }
+        assert "maintien-deces-sans-prestation-04": not majoration_l5213_versee_enfant(entity_ref("urn:fr:pf:case:deces-sans")) { origin case_input; }
+        assert "maintien-deces-sans-prestation-05": not aeeh_versee_enfant(entity_ref("urn:fr:pf:case:deces-sans")) { origin case_input; }
+        assert "maintien-deces-sans-prestation-06": not prepare_versee_enfant(entity_ref("urn:fr:pf:case:deces-sans")) { origin case_input; }
+        assert "maintien-deces-sans-prestation-07": not base_versee_enfant(entity_ref("urn:fr:pf:case:deces-sans")) { origin case_input; }
+        assert "maintien-deces-sans-prestation-08": not asf_versee_enfant(entity_ref("urn:fr:pf:case:deces-sans")) { origin case_input; }
+        assert "maintien-deces-sans-prestation-09": deces_le(entity_ref("urn:fr:pf:case:deces-sans"), @2026-02-10) { origin case_input; }
+        assert "maintien-deces-sans-prestation-10": ouverture_droit_mois(entity_ref("urn:fr:pf:case:deces-sans"), @2025-06-01) { origin case_input; }
+    }
+    evaluate truth(prestations_maintenues_deces(entity_ref("urn:fr:pf:case:deces-sans")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

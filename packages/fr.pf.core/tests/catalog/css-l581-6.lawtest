@@ -1,0 +1,23 @@
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+// Generated witness scenarios of the question catalog (DECISION-0190):
+// the world fulfils the rule premises, the query asks its conclusion.
+// Built by corpus/tools/questions_catalog/build_catalog.py from the package CLIR;
+// hand edits — only together with the catalog.
+
+// 
+// D-42: witness world completed by hand - rule AideRecouvrementSansAsf (09b) requires the age limit,
+// the ASF conditions not met and the request (L. 581-6); card and test id unchanged.
+test "CATALOG-AIDERECOUVREMENTSANSASF" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": creance_alimentaire_titre(entity_ref("urn:law:catalog:aiderecouvrementsansasf:v0")) { origin case_input; }
+        assert "cat-1": creance_enfant_avant_limite_age(entity_ref("urn:law:catalog:aiderecouvrementsansasf:v0")) { origin case_input; }
+        assert "cat-2": conditions_asf_non_remplies(entity_ref("urn:law:catalog:aiderecouvrementsansasf:v0")) { origin case_input; }
+        assert "cat-3": aide_recouvrement_demandee(entity_ref("urn:law:catalog:aiderecouvrementsansasf:v0")) { origin case_input; }
+    }
+    evaluate truth(aide_recouvrement_accordee(entity_ref("urn:law:catalog:aiderecouvrementsansasf:v0")));
+    expect truth_status == TRUE_ONLY;
+}

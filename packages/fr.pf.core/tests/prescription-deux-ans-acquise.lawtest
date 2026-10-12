@@ -1,0 +1,18 @@
+// Two-year limitation acquired: claim due 2022-06-01 assessed 2024-06-01 - action time-barred (L. 553-1).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-prescription-deux-ans-acquise" {
+    given {
+        context { decision_time @2024-06-01T12:00:00Z; knowledge_time @2024-06-01T12:00:00Z; legal_time @2024-06-01; timezone "Europe/Paris"; deadline_policy PRESCRIPTION_ANNEES; }
+        assert "prescription-deux-ans-acquise-01": creance_exigible_le(entity_ref("urn:fr:pf:case:prescription-2ans"), @2022-06-01) { origin case_input; }
+        assert "prescription-deux-ans-acquise-02": date_appreciation(entity_ref("urn:fr:pf:case:prescription-2ans"), @2024-06-01) { origin case_input; }
+        assert "prescription-deux-ans-acquise-03": manoeuvre_frauduleuse(entity_ref("urn:fr:pf:case:prescription-2ans"), false) { origin case_input; }
+        assert "prescription-deux-ans-acquise-04": fausse_declaration(entity_ref("urn:fr:pf:case:prescription-2ans"), false) { origin case_input; }
+    }
+    evaluate truth(action_prescrite(entity_ref("urn:fr:pf:case:prescription-2ans")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

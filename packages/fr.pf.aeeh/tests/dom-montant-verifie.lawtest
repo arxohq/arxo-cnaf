@@ -1,0 +1,32 @@
+// D. 755-11 check pair: same inputs as the build case (BMAF 400.00,
+// no supplement, no MPI, built DOM amount 128.00). A presented DOM
+// amount of 128.00 EUR verifies; a presented 100.00 EUR does not.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-dom-montant-verifie" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "dom-mv-01": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ok")) { origin adjudicated; }
+        assert "dom-mv-02": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ok"), MARTINIQUE) { origin case_input; }
+        assert "dom-mv-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ok"), 400.00 EUR) { origin case_input; }
+        assert "dom-mv-04": sans_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ok")) { origin case_input; }
+        assert "dom-mv-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ok")) { origin case_input; }
+        assert "dom-mv-06": montant_aeeh_dom_presente(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ok"), 128.00 EUR) { origin case_input; }
+        assert "dom-mv-07": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ko")) { origin adjudicated; }
+        assert "dom-mv-08": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ko"), GUADELOUPE) { origin case_input; }
+        assert "dom-mv-09": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ko"), 400.00 EUR) { origin case_input; }
+        assert "dom-mv-10": sans_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ko")) { origin case_input; }
+        assert "dom-mv-11": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ko")) { origin case_input; }
+        assert "dom-mv-12": montant_aeeh_dom_presente(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ko"), 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_aeeh_dom_verifie(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ok"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_aeeh_dom_verifie(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-ko"), 100.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

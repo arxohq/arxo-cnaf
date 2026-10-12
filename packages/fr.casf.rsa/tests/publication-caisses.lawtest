@@ -1,0 +1,17 @@
+// Regular publication, national-fund side: the national fund
+// ensures the regular publication of the results (D. 262-100). No
+// claim trigger and no individual beneficiary in the text: no claim
+// and no person in the case. Pair of publication-resultats.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-publication-caisses" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "pubc-01": est_caisse_nationale(entity_ref("urn:fr:rsa:org:cnaf")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PublierResultatsCaisses, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

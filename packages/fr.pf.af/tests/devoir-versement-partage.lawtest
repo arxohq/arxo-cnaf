@@ -1,0 +1,49 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Active fund duties under a split: each parent's 96.00 share is
+// paid by the debtor fund. Both PayerPartParentaleDue positions
+// are ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-devoir-versement-partage" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "devoirp-01": territoire(entity_ref("urn:fr:pf-af:parent:pere-devp"), METROPOLE) { origin case_input; }
+        assert "devoirp-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:parent:pere-devp"), 2) { origin case_input; }
+        assert "devoirp-03": ressources_menage(entity_ref("urn:fr:pf-af:parent:pere-devp"), 30000 EUR) { origin case_input; }
+        assert "devoirp-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:parent:pere-devp"), 55950 EUR) { origin case_input; }
+        assert "devoirp-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:parent:pere-devp"), 78300 EUR) { origin case_input; }
+        assert "devoirp-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:parent:pere-devp"), 5595 EUR) { origin case_input; }
+        assert "devoirp-05": bmaf_retenu(entity_ref("urn:fr:pf-af:parent:pere-devp"), 400.00 EUR) { origin case_input; }
+        assert "devoirp-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:parent:pere-devp"), 0) { origin case_input; }
+        assert "devoirp-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:parent:pere-devp"), 0) { origin case_input; }
+        assert "devoirp-08": forfait_total_menage(entity_ref("urn:fr:pf-af:parent:pere-devp"), 0 EUR) { origin case_input; }
+        assert "devoirp-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:parent:pere-devp"), 0) { origin case_input; }
+        assert "devoirp-10": foyer_du_cas(entity_ref("urn:fr:pf-af:parent:pere-devp")) { origin case_input; }
+        assert "devoirp-11": territoire(entity_ref("urn:fr:pf-af:parent:mere-devp"), METROPOLE) { origin case_input; }
+        assert "devoirp-12": nb_enfants_charge(entity_ref("urn:fr:pf-af:parent:mere-devp"), 2) { origin case_input; }
+        assert "devoirp-13": ressources_menage(entity_ref("urn:fr:pf-af:parent:mere-devp"), 30000 EUR) { origin case_input; }
+        assert "devoirp-14": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:parent:mere-devp"), 55950 EUR) { origin case_input; }
+        assert "devoirp-14b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:parent:mere-devp"), 78300 EUR) { origin case_input; }
+        assert "devoirp-14c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:parent:mere-devp"), 5595 EUR) { origin case_input; }
+        assert "devoirp-15": bmaf_retenu(entity_ref("urn:fr:pf-af:parent:mere-devp"), 400.00 EUR) { origin case_input; }
+        assert "devoirp-16": nb_majorations_pleines(entity_ref("urn:fr:pf-af:parent:mere-devp"), 0) { origin case_input; }
+        assert "devoirp-17": nb_majorations_demi(entity_ref("urn:fr:pf-af:parent:mere-devp"), 0) { origin case_input; }
+        assert "devoirp-18": forfait_total_menage(entity_ref("urn:fr:pf-af:parent:mere-devp"), 0 EUR) { origin case_input; }
+        assert "devoirp-19": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:parent:mere-devp"), 0) { origin case_input; }
+        assert "devoirp-20": desaccord_designation(entity_ref("urn:fr:pf-af:parent:pere-devp"), entity_ref("urn:fr:pf-af:parent:mere-devp")) { origin case_input; }
+        assert "devoirp-21": enfants_propres(entity_ref("urn:fr:pf-af:parent:pere-devp"), 1) { origin case_input; }
+        assert "devoirp-22": enfants_propres(entity_ref("urn:fr:pf-af:parent:mere-devp"), 1) { origin case_input; }
+        assert "devoirp-23": enfants_alternes(1) { origin case_input; }
+        assert "devoirp-24": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-af:org:caisse-p"), entity_ref("urn:fr:pf-af:parent:pere-devp")) { origin case_input; }
+        assert "devoirp-25": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-af:org:caisse-p"), entity_ref("urn:fr:pf-af:parent:mere-devp")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PayerPartParentaleDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

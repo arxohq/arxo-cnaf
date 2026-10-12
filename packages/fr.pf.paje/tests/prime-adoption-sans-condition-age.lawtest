@@ -1,0 +1,19 @@
+// Adoption: age condition not met (above the L. 512-3 2° limit) —
+// no right although resources are within bounds.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-adoption-sans-condition-age" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "adoption-age-01": adoption_arrivee(entity_ref("urn:fr:paje:case:adoption-age"), entity_ref("urn:fr:paje:enfant:adoption-age")) { origin adjudicated; }
+        assert "adoption-age-02": ressources_annuelles(entity_ref("urn:fr:paje:case:adoption-age"), 20000 EUR) { origin case_input; }
+        assert "adoption-age-03": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:adoption-age"), 30000 EUR) { origin case_input; }
+        assert "adoption-age-04": bmaf_applicable(entity_ref("urn:fr:paje:case:adoption-age"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(droit_prime_adoption(entity_ref("urn:fr:paje:case:adoption-age"), entity_ref("urn:fr:paje:enfant:adoption-age")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

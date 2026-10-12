@@ -1,0 +1,34 @@
+// OpenFisca AEEH case 1 (tests/formulas/aeeh.yaml, period 2012-01):
+// couple, one 9-year-old disabled child, handicap level 4. Their BMAF
+// 395.04, their expectation 395.04 x (0.32 + 0.92).
+// Mapping: OF niveau 4 (non-isolated) = complement category 3 without MPI
+// (OF aeeh.py: niveau 4 -> complement.categorie_3 + majoration.
+// categorie_4 x isole; isole = 0 for a couple). Entitlement via the package
+// head on the established decision fact. Their case -> our answer -> class:
+// REPORT.md (OpenFisca, 1).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-of-2012-01-couple-categorie" {
+    given {
+        context { decision_time @2012-01-15T12:00:00Z; knowledge_time @2012-01-15T12:00:00Z; legal_time @2012-01-15; timezone "Europe/Paris"; }
+        assert "of1201a-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-couple"), entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant")) { origin case_input; }
+        assert "of1201a-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant")) { origin adjudicated; }
+        assert "of1201a-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant"), 395.04 EUR) { origin case_input; }
+        assert "of1201a-04": categorie_attribuee(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant"), CATEGORIE_3) { origin adjudicated; }
+        assert "of1201a-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant")) { origin case_input; }
+    }
+    evaluate truth(aeeh_montant_base(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant"), 126.4128 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_complement(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant"), 363.4368 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_total(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant"), 489.8496 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

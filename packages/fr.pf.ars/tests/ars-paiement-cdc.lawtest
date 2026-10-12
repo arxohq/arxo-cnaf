@@ -1,0 +1,26 @@
+// Placed child outside the family: the allowance routes to the CDC
+// pecule (TRUE), not to the family (NEITHER) via the closure negative.
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-paiement-cdc" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "apc-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:paiement-cdc"), entity_ref("urn:fr:pf-ars:case:paiement-cdc-e1")) { origin case_input; }
+        assert "apc-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:paiement-cdc-e1")) { origin case_input; }
+        assert "apc-03": date_naissance(entity_ref("urn:fr:pf-ars:case:paiement-cdc-e1"), @2014-06-01) { origin case_input; }
+        assert "apc-04": seuil_six_ans(@2022-02-01) { origin case_input; }
+        assert "apc-05": seuil_dix_huit_ans(@2021-09-15) { origin case_input; }
+        assert "apc-06": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:paiement-cdc-e1")) { origin case_input; }
+        assert "apc-07": placement_ase(entity_ref("urn:fr:pf-ars:case:paiement-cdc-e1")) { origin case_input; }
+    }
+    evaluate truth(ars_paiement_cdc(entity_ref("urn:fr:pf-ars:case:paiement-cdc-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_paiement_famille(entity_ref("urn:fr:pf-ars:case:paiement-cdc-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

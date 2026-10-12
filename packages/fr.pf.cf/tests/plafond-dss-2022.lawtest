@@ -1,0 +1,49 @@
+// D-83: плафоны 2022 года из ОПУБЛИКОВАННЫХ сумм инструкции DSS/2021/247 (срезы sources/dss-plafonds/): плафон CF и montant majoré.
+// Ожидания — напечатанные строки таблиц той же инструкции: 3 ребёнка без надбавки (CF 39196, montant majoré 19603) и 4 ребёнка для parent isolé (CF 54481, montant majoré 27246); плафон строит пакет, не сценарий.
+// Файл порождается tools/build_plafonds_tests.py — руками не править.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-plafond-dss-2022" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "pd22-01": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 21775 EUR) { origin case_input; }
+        assert "pd22-02": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 5444 EUR) { origin case_input; }
+        assert "pd22-03": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 6533 EUR) { origin case_input; }
+        assert "pd22-04": majoration_biactivite(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 8752 EUR) { origin case_input; }
+        assert "pd22-05": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 10890 EUR) { origin case_input; }
+        assert "pd22-06": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 2723 EUR) { origin case_input; }
+        assert "pd22-07": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 3267 EUR) { origin case_input; }
+        assert "pd22-08": majoration_biactivite_majore(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 4376 EUR) { origin case_input; }
+        assert "pd22-09": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 3) { origin case_input; }
+        assert "pd22-10": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a")) { origin case_input; }
+        assert "pd22-11": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 21775 EUR) { origin case_input; }
+        assert "pd22-12": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 5444 EUR) { origin case_input; }
+        assert "pd22-13": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 6533 EUR) { origin case_input; }
+        assert "pd22-14": majoration_biactivite(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 8752 EUR) { origin case_input; }
+        assert "pd22-15": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 10890 EUR) { origin case_input; }
+        assert "pd22-16": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 2723 EUR) { origin case_input; }
+        assert "pd22-17": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 3267 EUR) { origin case_input; }
+        assert "pd22-18": majoration_biactivite_majore(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 4376 EUR) { origin case_input; }
+        assert "pd22-19": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 4) { origin case_input; }
+        assert "pd22-20": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b")) { origin case_input; }
+        assert "pd22-21": parent_isole(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b")) { origin case_input; }
+    }
+    evaluate truth(plafond_cf_applicable(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 39196 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond_majore_applicable(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-a"), 19603 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond_cf_applicable(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 54481 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond_majore_applicable(entity_ref("urn:fr:pf-cf:case:plafond-dss-2022-b"), 27246 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

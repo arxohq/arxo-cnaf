@@ -1,0 +1,430 @@
+// Shared surface of the package: case facts and predicates that the
+// quarterly-resource modules fill in. The downstream RSA package
+// (fr.casf.rsa, same wave 4 lane) reads the retained monthly resources,
+// the quarterly average and the housing flat-rate qualified here;
+// NOTHING owned by a neighbour package is redefined here.
+//
+// Module map:
+//   01-sources.law    - sources, back-to-back editions, fragments (generated)
+//   02-trimestre.law  - R.262-4/4-1/4-2/7: quarter mechanics and averaging
+//   03-matrice.law    - R.262-6/10-1/11/12/13/14/18-25: resource matrix
+//   04-forfait.law    - R.262-9/10: housing flat-rate and housing-aid cap
+//   bareme/*.lawparam.json - percentages (generated)
+//
+// SCOPE BOUNDARY. The package computes the retained monthly resources and
+// the quarterly average for metropolitan France and the DOM collectivities
+// under the same CASF text. Outside: DSN/MNS extraction (plan §1.1: monthly
+// DSN and declared amounts arrive as case inputs with provenance), the euro
+// MF base and the 1 April factor (unpinned decrees/DSS: B-RSA-MF-EURO,
+// DSS_PENDING), the R.262-7 I. average when the monthly MF moves inside the
+// quarter (B-RSA-MF-INPUT-CONTRACT: mf_mois and mf_composition are written
+// by fr.casf.rsa, which owns R.262-1 and the pinned revaluation decrees, when
+// that package is in the world; a world without it, or a month outside its
+// pinned series, still supplies them as case inputs equal to its
+// computation), Mayotte
+// (wave 7), the PA quarter (R.843-1, owned by CNAF-PPA: B-MINRES-PA-TRIMESTRE).
+// Full list - README, "Boundaries".
+
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+pub entity Personne {
+    label fr official "personne physique dont les ressources entrent dans le trimestre de référence du RSA";
+    label en unofficial "natural person whose resources enter the RSA reference quarter";
+}
+
+pub enum CategorieRessource {
+    label fr official "catégorie de ressource mensuelle pour le trimestre de référence (R. 262-6, R. 262-7, R. 262-10 à R. 262-12)";
+    label en unofficial "monthly resource category for the reference quarter (R. 262-6, R. 262-7, R. 262-10 to R. 262-12)";
+    REVENU_PRO_SALARIE,
+    REVENU_PRO_NON_SALARIE,
+    REVENU_PRO_EXCEPTIONNEL,
+    ALLOCATION_CHOMAGE,
+    PENSION,
+    REVENU_CAPITAL,
+    PRESTATION_SERVICE,
+    AIDE_LOGEMENT,
+    AF_BASE,
+    CF_BASE,
+    CF_MAJORE,
+    ASF_PERCUE,
+    PRIME_ACTIVITE,
+    AUTRE_COMPTEE,
+    EXCLUE
+}
+
+pub enum ItemExclusion {
+    label fr official "poste d'exclusion de l'article R. 262-11";
+    label en unofficial "R. 262-11 exclusion item";
+    EXCL_PF_NAISSANCE,
+    EXCL_PF_BASE_NAISSANCE,
+    EXCL_PF_MAJO_AGE_FORFAIT,
+    EXCL_ARS_CMG_AEEH_AJPP,
+    EXCL_DEMENAGEMENT,
+    EXCL_PCH,
+    EXCL_PRESTATION_NATURE,
+    EXCL_REMPLACEMENT,
+    EXCL_CAPITAL_AT,
+    EXCL_REEDUCATION,
+    EXCL_SECOURS_IRREGULIER,
+    EXCL_SECOURS_FAMILLE,
+    EXCL_RETOUR_EMPLOI,
+    EXCL_BOURSE,
+    EXCL_DECES_CAPITAL,
+    EXCL_DECES_ENFANT,
+    EXCL_ANCIENS_COMBATTANTS,
+    EXCL_VIAGERE_2015,
+    EXCL_REPARATION,
+    EXCL_RSO,
+    EXCL_PRIME_ACTIVITE,
+    EXCL_AIDANT,
+    EXCL_AJPA,
+    EXCL_AUTONOMIE_TIERCE,
+    EXCL_FIN_VIE_URGENCE
+}
+
+pub enum Logement {
+    label fr official "situation de logement pour le forfait de l'article R. 262-9";
+    label en unofficial "housing situation for the R. 262-9 flat-rate";
+    PROPRIETAIRE_SANS_AIDE,
+    LOGE_GRATUIT,
+    AUTRE
+}
+
+pub enum Territoire {
+    label fr official "territoire de résidence du foyer";
+    label en unofficial "household residence territory";
+    METROPOLE,
+    GUADELOUPE,
+    GUYANE,
+    MARTINIQUE,
+    REUNION,
+    MAYOTTE,
+    AUTRE
+}
+
+// --- Household case inputs (empirical) ---
+
+pub relation mf_mois(p: Personne, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "montant forfaitaire mensuel retenu pour le foyer (base L. 262-2 x composition R. 262-1, majoration L. 262-9 incluse ; contrat d'entrée : égal au calcul fr.casf.rsa)";
+    label en unofficial "monthly flat-rate amount retained for the household (L. 262-2 base x R. 262-1 composition, L. 262-9 increase included; input contract: equal to the fr.casf.rsa computation)";
+}
+
+/* montant_dsn_mois removed 06.10.2026: per-category DSN input superseded
+   by the fund-block totals dsn_pro_mois/dsn_autre_mois (B-MINRES-DUAL-FEED);
+   declared but never read. */
+
+pub relation dsn_pro_mois(p: Personne, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "total mensuel DSN des ressources à caractère professionnel (R. 262-12), établi par la caisse";
+    label en unofficial "monthly DSN total of professional-character resources (R. 262-12), established by the fund";
+}
+
+pub relation dsn_autre_mois(p: Personne, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "total mensuel DSN des autres catégories DSN, établi par la caisse";
+    label en unofficial "monthly DSN total of the other DSN categories, established by the fund";
+}
+
+pub relation declare_total_mois(p: Personne, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "total mensuel déclaré hors DSN et hors prestations de service (R. 262-7, II 2°), établi par la caisse";
+    label en unofficial "monthly declared total outside the DSN and service benefits (R. 262-7, II 2°), established by the fund";
+}
+
+pub relation pro_exceptionnel_mois(p: Personne, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "revenu professionnel exceptionnel du mois, caractère établi (R. 262-7_PRE2025, II 3°)";
+    label en unofficial "month's exceptional professional income, character established (R. 262-7_PRE2025, II 3°)";
+}
+
+pub relation ressource_declaree_mois(p: Personne, mois: Date, cat: CategorieRessource, montant: Money) kind empirical {
+    key(p, mois, cat);
+    label fr official "ressource mensuelle déclarée hors DSN, par catégorie";
+    label en unofficial "monthly declared resource outside the DSN, by category";
+}
+
+pub relation prestation_service_mois(p: Personne, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "prestations mensuelles versées par l'organisme chargé du service (R. 262-7, II 3°)";
+    label en unofficial "monthly benefits paid by the paying body (R. 262-7, II 3°)";
+}
+
+pub relation aide_logement_percue(p: Personne, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "aide personnelle au logement perçue pour le mois (montant fr.apl, contrat d'entrée ; APL-FORFAIT-PENDING)";
+    label en unofficial "personal housing aid received for the month (fr.apl figure, input contract; APL-FORFAIT-PENDING)";
+}
+
+pub relation prestation_exclue_mois(p: Personne, mois: Date, motif: ItemExclusion, montant: Money) kind empirical {
+    key(p, mois, motif);
+    label fr official "prestation perçue relevant d'un poste d'exclusion R. 262-11, établie par la caisse";
+    label en unofficial "benefit received falling under an R. 262-11 exclusion item, established by the fund";
+}
+
+pub relation bmaf_retenue(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "base mensuelle de calcul des allocations familiales retenue (arrêté, montant non épinglé)";
+    label en unofficial "monthly family-benefit calculation base retained (arrete figure, unpinned)";
+}
+
+pub relation tns_evalue_annuel(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "revenu professionnel non salarié annuel arrêté par le président du conseil départemental (R. 262-23)";
+    label en unofficial "annual non-salaried professional income set by the department council president (R. 262-23)";
+}
+
+pub relation foyer_du_cas(p: Personne) kind empirical {
+    label fr official "personne-ancre du foyer décrite par le cas (domaine de clôture §70)";
+    label en unofficial "household anchor person recorded in the case (§70 closure domain)";
+}
+
+pub relation territoire(p: Personne, t: Territoire) kind empirical {
+    key(p);
+    label fr official "territoire de résidence constaté du foyer (réserve DOM, vague 7)";
+    label en unofficial "household residence territory as found (DOM reserve, wave 7)";
+}
+
+pub relation nb_personnes_forfait(p: Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "nombre de personnes du foyer pour le forfait logement (1, 2, 3 ou plus)";
+    label en unofficial "household size for the housing flat-rate (1, 2, 3 or more)";
+}
+
+pub relation logement(p: Personne, l: Logement) kind empirical {
+    key(p);
+    label fr official "situation de logement du foyer pour le forfait (R. 262-9)";
+    label en unofficial "household housing situation for the flat-rate (R. 262-9)";
+}
+
+/* mois_droit(mois) removed 06.10.2026: superseded by fr.casf.rsa's own
+   mois_droit(p, mois); declared but never read. */
+
+pub relation mois_demande(d: Date) kind empirical {
+    label fr official "mois de la demande ou du réexamen périodique (premier jour du mois)";
+    label en unofficial "month of the claim or periodic review (first day of the month)";
+}
+
+pub relation mois_reference(m1: Date, m2: Date, m3: Date) kind empirical {
+    label fr official "les trois mois du trimestre de référence retenus pour le réexamen";
+    label en unofficial "the three reference-quarter months retained for the review";
+}
+
+pub relation perception_interrompue(p: Personne, cat: CategorieRessource) kind empirical {
+    label fr official "perception de la ressource interrompue de manière certaine, sans revenu de substitution (R. 262-13)";
+    label en unofficial "resource receipt certainly interrupted, with no substitute income (R. 262-13)";
+}
+
+pub relation interruption_sanction_chomage(p: Personne) kind empirical {
+    label fr official "interruption d'une allocation chômage résultant d'une sanction L. 5412-1 (R. 262-13 al. 2)";
+    label en unofficial "unemployment-benefit interruption from an L. 5412-1 sanction (R. 262-13 para. 2)";
+}
+
+pub relation dispense_president_interruption(p: Personne) kind empirical {
+    label fr official "le président du conseil départemental écarte l'exception sanction-chômage au vu de la situation particulière (R. 262-13 al. 2)";
+    label en unofficial "the department council president sets aside the unemployment-sanction exception on the particular situation (R. 262-13 para. 2)";
+}
+
+pub relation demission_interruption(p: Personne) kind empirical {
+    label fr official "l'interruption de perception résulte d'une démission (R. 262-13 al. 5)";
+    label en unofficial "the receipt interruption follows a resignation (R. 262-13 para. 5)";
+}
+
+pub relation situation_exceptionnelle_insertion(p: Personne) kind empirical {
+    label fr official "situation exceptionnelle du demandeur au regard de l'insertion, constatée pour décision individuelle (R. 262-13 al. 5, R. 262-14)";
+    label en unofficial "applicant's exceptional situation for integration, recorded for an individual decision (R. 262-13 para. 5, R. 262-14)";
+}
+
+pub relation liberalites_foyer(p: Personne, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "libéralités consenties aux membres du foyer (R. 262-14)";
+    label en unofficial "gifts made to household members (R. 262-14)";
+}
+
+pub relation decision_individuelle_liberalites(p: Personne) kind empirical {
+    label fr official "décision individuelle du président écartant les libéralités (R. 262-14, canal adjudicated)";
+    label en unofficial "individual presidential decision setting aside gifts (R. 262-14, adjudicated channel)";
+}
+
+pub relation caractere_exceptionnel_pro(p: Personne, mois: Date) kind empirical {
+    label fr official "revenu professionnel à caractère exceptionnel au sens de l'arrêté (R. 262-7_PRE2025, II 3°)";
+    label en unofficial "exceptional professional income under the arrete (R. 262-7_PRE2025, II 3°)";
+}
+
+pub relation activite_saisonniere(p: Personne) kind empirical {
+    label fr official "activité à caractère saisonnier exercée dans le foyer (R. 262-25)";
+    label en unofficial "seasonal activity carried on in the household (R. 262-25)";
+}
+
+pub relation ressources_n_moins_2(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "ressources annuelles N-2 au sens de R. 532-3 pour le barrage saisonnier (R. 262-25)";
+    label en unofficial "N-2 annual resources under R. 532-3 for the seasonal bar (R. 262-25)";
+}
+
+pub relation modification_situation_pro(p: Personne) kind empirical {
+    label fr official "modification effective de la situation professionnelle justifiée (R. 262-25)";
+    label en unofficial "justified effective change of the professional situation (R. 262-25)";
+}
+
+/* composition_mois removed 06.10.2026: composition arrives per month via
+   mf_mois/mf_composition; declared but never read. */
+
+pub relation ancien_conjoint_sorti(p: Personne) kind empirical {
+    label fr official "l'ancien conjoint, concubin ou partenaire a quitté le foyer avant la demande ou le réexamen (R. 262-4, 1°)";
+    label en unofficial "the former spouse, cohabitant or partner left the household before the claim or review (R. 262-4, 1°)";
+}
+
+pub relation conjoint_repute_present(p: Personne) kind empirical {
+    label fr official "le conjoint au dépôt est réputé présent tout le trimestre (R. 262-4, 2°)";
+    label en unofficial "the spouse at filing is deemed present the whole quarter (R. 262-4, 2°)";
+}
+
+// --- Institutional conclusions ---
+
+pub relation montant_retenu_mois(p: Personne, mois: Date, cat: CategorieRessource, montant: Money) kind institutional {
+    key(p, mois, cat);
+    label fr official "montant mensuel retenu par catégorie après matrice (R. 262-6 à R. 262-13)";
+    label en unofficial "monthly amount retained by category after the matrix (R. 262-6 to R. 262-13)";
+}
+
+/* ressources_retenues_mois removed 06.10.2026: the monthly base is
+   base_ressources_mois; declared but never read. */
+
+pub relation forfait_logement(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "forfait logement mensuel du foyer (R. 262-9)";
+    label en unofficial "household monthly housing flat-rate (R. 262-9)";
+}
+
+pub relation plafond_forfait_logement(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "valeur du barème du forfait logement selon la composition du foyer, sans condition de situation de logement (R. 262-9, barème)";
+    label en unofficial "housing flat-rate scale value by household size, with no housing-situation condition (R. 262-9 scale)";
+}
+
+pub relation aide_logement_retenue(p: Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "aide au logement comptée dans la limite du forfait (R. 262-10)";
+    label en unofficial "housing aid counted up to the flat-rate (R. 262-10)";
+}
+
+pub relation aide_logement_connue(p: Personne, mois: Date) kind institutional {
+    key(p, mois);
+    label fr official "présence d'une aide au logement retenue pour le mois (dérivé de R. 262-10)";
+    label en unofficial "a retained housing aid is present for the month (derived from R. 262-10)";
+}
+
+pub relation forfait_logement_connu(p: Personne) kind institutional {
+    key(p);
+    label fr official "présence d'un forfait logement en nature (dérivé de R. 262-9)";
+    label en unofficial "an in-kind housing flat-rate is present (derived from R. 262-9)";
+}
+
+pub relation montant_intermediaire(p: Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "montant intermédiaire du mois : MF moins ressources retenues (R. 262-7, I)";
+    label en unofficial "monthly intermediate amount: MF minus retained resources (R. 262-7, I)";
+}
+
+pub relation montant_du_trimestre(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant dû au foyer : moyenne des montants intermédiaires (R. 262-7, I)";
+    label en unofficial "amount due to the household: average of the intermediate amounts (R. 262-7, I)";
+}
+
+pub relation trimestre_reference(p: Personne, m1: Date, m2: Date, m3: Date) kind institutional {
+    key(p);
+    label fr official "trimestre de référence applicable (M-4…M-2 depuis le 01.03.2025, trois mois précédents avant)";
+    label en unofficial "applicable reference quarter (M-4…M-2 since 01.03.2025, three previous months before)";
+}
+
+pub relation neutralisation_revenu(p: Personne, cat: CategorieRessource) kind institutional {
+    key(p, cat);
+    label fr official "revenu neutralisé après interruption certaine (R. 262-13)";
+    label en unofficial "income disregarded after certain interruption (R. 262-13)";
+}
+
+pub relation barrage_saisonnier(p: Personne) kind institutional {
+    key(p);
+    label fr official "barrage saisonnier applicable : pas de droit sauf changement justifié (R. 262-25)";
+    label en unofficial "seasonal bar applies: no right absent a justified change (R. 262-25)";
+}
+
+pub relation revision_mi_trimestre(p: Personne) kind institutional {
+    key(p);
+    label fr official "révision entre réexamens ouverte (R. 262-4-1)";
+    label en unofficial "mid-quarter revision open (R. 262-4-1)";
+}
+
+pub relation conditions_mois_droit(p: Personne) kind institutional {
+    key(p);
+    label fr official "conditions L. 262-2 et L. 262-4 remplies le mois du droit (R. 262-4-2)";
+    label en unofficial "L. 262-2 and L. 262-4 conditions met in the month of right (R. 262-4-2)";
+}
+
+pub enum ClasseAsf {
+    label fr official "classe d'enfant pour le forfait ASF (R. 262-10-1, II)";
+    label en unofficial "child class for the ASF flat-rate (R. 262-10-1, II)";
+    RANG_1,
+    RANG_2
+}
+
+pub relation asf_percue(p: Personne, mois: Date, classe: ClasseAsf, montant: Money) kind empirical {
+    key(p, mois, classe);
+    label fr official "ASF perçue pour le mois, par classe d'enfant L. 523-3";
+    label en unofficial "ASF received for the month, by L. 523-3 child class";
+}
+
+pub relation asf_rang_present(p: Personne, mois: Date, classe: ClasseAsf) kind institutional {
+    key(p, mois, classe);
+    label fr official "classe ASF servie pour le mois (présence d'un montant perçu, R. 262-10-1)";
+    label en unofficial "ASF class served for the month (a received amount is present, R. 262-10-1)";
+}
+
+pub relation asf_retenu_rang(p: Personne, mois: Date, classe: ClasseAsf, montant: Money) kind institutional {
+    key(p, mois, classe);
+    label fr official "ASF retenue pour le mois et la classe, après forfait R. 262-10-1 (montant intermédiaire par rang)";
+    label en unofficial "ASF retained for the month and class, after the R. 262-10-1 flat-rate (per-class intermediate amount)";
+}
+
+pub relation brut_pro_declare_mois(p: Personne, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "revenus professionnels déclarés hors DSN, valeur brute (R. 262-12, II)";
+    label en unofficial "professional income declared outside the DSN, gross value (R. 262-12, II)";
+}
+
+pub relation cotisations_pro_mois(p: Personne, mois: Date, montant: Money) kind empirical {
+    key(p, mois);
+    label fr official "cotisations et contributions sociales à la charge du bénéficiaire (R. 262-12, II 2°)";
+    label en unofficial "employee social contributions and levies (R. 262-12, II 2°)";
+}
+
+pub relation mf_reference_annuelle(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant forfaitaire mensuel applicable au foyer au 1er janvier de l'année N-2 (R. 262-25)";
+    label en unofficial "monthly flat-rate amount for the household on 1 January of year N-2 (R. 262-25)";
+}
+
+pub relation maintien_demission_decide(p: Personne) kind empirical {
+    label fr official "décision individuelle du président : pas de neutralisation après démission (R. 262-13 al. 5, canal)";
+    label en unofficial "individual presidential decision: no disregard after resignation (R. 262-13 para. 5, channel)";
+}
+
+pub relation mf_composition(p: Personne, taille: Integer, montant: Money) kind empirical {
+    key(p, taille);
+    label fr official "montant forfaitaire par taille de foyer (R. 262-1), établi par fr.casf.rsa ; contrat d'entrée (1, 2, 3 ou plus)";
+    label en unofficial "flat-rate amount by household size (R. 262-1), established by fr.casf.rsa; input contract (1, 2, 3 or more)";
+}
+
+pub relation forfait_logement_element_pro(p: Personne) kind empirical {
+    label fr official "l'avantage logement constitue un élément des revenus professionnels R. 262-12 (pas de forfait)";
+    label en unofficial "the housing benefit is part of R. 262-12 professional income (no flat-rate)";
+}
+
+pub relation interruption_autres_plafond(p: Personne, cat: CategorieRessource) kind empirical {
+    label fr official "autres ressources interrompues de manière certaine, dans la limite du MF personne seule (R. 262-13 al. 3), établi par la caisse";
+    label en unofficial "other resources certainly interrupted, within the single-person MF limit (R. 262-13 para. 3), established by the fund";
+}

@@ -1,0 +1,46 @@
+// F05-01 reopening positive: first envelope spent (311) and original
+// duration expired (4 years), but the right reopened on relapse past
+// the maximum (L. 544-3 para. 3) with beyond-maximum payment
+// (D. 544-3 2°). Old exhaustion and expiry do not block the reopened
+// envelope: the 10-day month at 60.00 pays 600.00.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-montant-reouverture-qualifie" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-mqreo-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo")) { origin adjudicated; }
+        assert "ajpp-mqreo-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo")) { origin adjudicated; }
+        assert "ajpp-mqreo-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-mqreo"), entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo")) { origin case_input; }
+        assert "ajpp-mqreo-04": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo"), 311) { origin case_input; }
+        assert "ajpp-mqreo-05": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo"), MALADIE, 4) { origin case_input; }
+        assert "ajpp-mqreo-06": rechute_pathologie(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo")) { origin case_input; }
+        assert "ajpp-mqreo-07": jours_ajpp_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo"), @2024-03-01, 10) { origin case_input; }
+        assert "ajpp-mqreo-08": montant_journalier_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo"), 60.00 EUR) { origin case_input; }
+    }
+    evaluate truth(duree_maximale_expiree(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droit_rouvert(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(versement_au_dela_max(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_dans_limite(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(enveloppe_ajpp_qualifiee(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mqreo"), @2024-03-01, 600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

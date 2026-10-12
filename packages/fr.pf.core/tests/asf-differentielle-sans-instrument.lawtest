@@ -1,0 +1,17 @@
+// ASF differential without instrument: low integral amount but no qualifying decision or IV act - no differential (L. 523-1 I 4°, PC-R07-16 missing-instrument control).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-asf-differentielle-sans-instrument" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "asf-differentielle-sans-instrument-01": asf_cas_pension_faible(entity_ref("urn:fr:pf:case:asf-sans-inst"), 100 EUR) { origin case_input; }
+        assert "asf-differentielle-sans-instrument-02": asf_pension_versement_integral(entity_ref("urn:fr:pf:case:asf-sans-inst")) { origin case_input; }
+        assert "asf-differentielle-sans-instrument-03": not asf_pension_instrument_qualifie(entity_ref("urn:fr:pf:case:asf-sans-inst")) { origin case_input; }
+    }
+    evaluate truth(asf_ouvre_droit(entity_ref("urn:fr:pf:case:asf-sans-inst")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

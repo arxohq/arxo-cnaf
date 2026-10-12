@@ -1,0 +1,79 @@
+// Cas 2 под прочтением D-82: одинокое лицо, зона III, наём 608 €, ресурсы 6 900 € — пропорция дегрессивности округляется до сантима
+//
+// РЕШЕНИЕ ВЛАДЕЛЬЦА D-82 (08.10.2026): когда деление не точное, а текст
+// политики округления не задаёт, промежуточное значение округляется до
+// сантима по HALF_UP. Это ПРОЧТЕНИЕ §152, основание — практика CNAF, а не
+// текст (27-lecture-arrondi-centime.law). Сценарий `openfisca-02` без выбора
+// прочтения закрепляет прежний ОТКАЗ (INEXACT_DIVISION) и НЕ менялся; здесь
+// то же дело с `interpretation ArrondiCentimeHalfUp;` в context.
+//
+// ОЖИДАНИЯ — из независимой реплики на дробях (Fraction, HALF_UP), а не из
+// их кода. Закреплённый барем 2021-01, зона III, одинокое лицо, 0 иждивенцев:
+//   L = min(608, 242,46) = 242,46; C = 53,99; P0 = max(0,085·(L + C) = 25,2, пол участия) = 35,24;
+//   TF = 0,0283; TL = 0,00262; R = 6 900; R0 = 4 588;
+//   Pp = 35,24 + (0,0283 + 0,00262)·(6 900 − 4 588) = 106,72704;
+//   Af = L + C − Pp = 189,72296;
+//   плафон дегрессивности 606,150, плафон прекращения 751,626 (наём 608 между ними);
+//   доля = (751,626 − 608) / (751,626 − 606,150) = 71813/72738 (не 10-гладкая);
+//   Af·доля = 187,31027697… → до сантима HALF_UP: 187,31 (шаг D-82);
+//   минорация −5 → 182,31; взносы 0,5 % = 0,91155; ⌊182,31 − 0,91155⌋ = 181;
+//   181 + 0,91155 = 181,91155 (aide_mensuelle); RLS нет;
+//   удержание CRDS 0,5 %: 181,91155 × 0,995 = 181,00199225 (aide_nette_precompte_crds).
+// Их код: 181,40 (шаг взносов ×0,995 вместо «arrondi à l'euro inférieur»);
+// после D-82 пропорция у нас и у них совпадает (187,31), расхождение с
+// 181,40 целиком из шага взносов — класс (б), README, «Квалификация расхождений».
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-openfisca-02-arrondi-centime" {
+    given {
+        context { decision_time @2021-01-15T12:00:00Z; knowledge_time @2021-01-15T12:00:00Z; legal_time @2021-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "openfisca-02-arrondi-a-01": secteur_locatif(entity_ref("urn:fr:apl:case:openfisca-02-d82")) { origin case_input; }
+        assert "openfisca-02-arrondi-a-02": zone_du_logement(entity_ref("urn:fr:apl:case:openfisca-02-d82"), ZONE_III) { origin case_input; }
+        assert "openfisca-02-arrondi-a-03": aide_demandee(entity_ref("urn:fr:apl:case:openfisca-02-d82"), ALS) { origin case_input; }
+        assert "openfisca-02-arrondi-a-04": situation_familiale(entity_ref("urn:fr:apl:case:openfisca-02-d82"), PERSONNE_SEULE) { origin case_input; }
+        assert "openfisca-02-arrondi-a-05": personnes_a_charge(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 0) { origin case_input; }
+        assert "openfisca-02-arrondi-a-06": loyer_principal(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 608 EUR) { origin case_input; }
+        assert "openfisca-02-arrondi-a-07": ressources_du_menage(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 6900 EUR) { origin case_input; }
+        assert "openfisca-02-arrondi-a-08": mode_location(entity_ref("urn:fr:apl:case:openfisca-02-d82"), LOCATION_SEULE) { origin case_input; }
+        assert "openfisca-02-arrondi-a-09": forme_logement(entity_ref("urn:fr:apl:case:openfisca-02-d82"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "openfisca-02-arrondi-a-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 0 EUR) { origin case_input; }
+        assert "openfisca-02-arrondi-a-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:openfisca-02-d82"), false) { origin case_input; }
+        assert "openfisca-02-arrondi-a-12": territoire(entity_ref("urn:fr:apl:case:openfisca-02-d82"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_apres_degressivite(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 187.31 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 181.91155 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_nette_precompte_crds(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 181.00199225 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Контроль: тот же сценарий без выбора D-82 — прежний отказ, число не выводится.
+test "urn:query:fr-apl-openfisca-02-arrondi-centime-sans-lecture" {
+    given {
+        context { decision_time @2021-01-15T12:00:00Z; knowledge_time @2021-01-15T12:00:00Z; legal_time @2021-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "openfisca-02-arrondi-b-01": secteur_locatif(entity_ref("urn:fr:apl:case:openfisca-02-d82")) { origin case_input; }
+        assert "openfisca-02-arrondi-b-02": zone_du_logement(entity_ref("urn:fr:apl:case:openfisca-02-d82"), ZONE_III) { origin case_input; }
+        assert "openfisca-02-arrondi-b-03": aide_demandee(entity_ref("urn:fr:apl:case:openfisca-02-d82"), ALS) { origin case_input; }
+        assert "openfisca-02-arrondi-b-04": situation_familiale(entity_ref("urn:fr:apl:case:openfisca-02-d82"), PERSONNE_SEULE) { origin case_input; }
+        assert "openfisca-02-arrondi-b-05": personnes_a_charge(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 0) { origin case_input; }
+        assert "openfisca-02-arrondi-b-06": loyer_principal(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 608 EUR) { origin case_input; }
+        assert "openfisca-02-arrondi-b-07": ressources_du_menage(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 6900 EUR) { origin case_input; }
+        assert "openfisca-02-arrondi-b-08": mode_location(entity_ref("urn:fr:apl:case:openfisca-02-d82"), LOCATION_SEULE) { origin case_input; }
+        assert "openfisca-02-arrondi-b-09": forme_logement(entity_ref("urn:fr:apl:case:openfisca-02-d82"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "openfisca-02-arrondi-b-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 0 EUR) { origin case_input; }
+        assert "openfisca-02-arrondi-b-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:openfisca-02-d82"), false) { origin case_input; }
+        assert "openfisca-02-arrondi-b-12": territoire(entity_ref("urn:fr:apl:case:openfisca-02-d82"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:openfisca-02-d82"), 181.91155 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}

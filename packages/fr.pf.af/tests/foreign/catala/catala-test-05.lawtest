@@ -1,0 +1,33 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Catala AF Test5 (2020-05-01, Metropole, resources 30 000): one
+// 13-year-old. No right in metropolitan France under two children:
+// the package concludes nothing (neither opened nor zeroed), while
+// their engine prints 0.00. Same economics, different shape.
+// Their case -> our answer -> class: REPORT.md (Catala, 5).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-catala-test-05" {
+    given {
+        context { decision_time @2020-05-01T12:00:00Z; knowledge_time @2020-05-01T12:00:00Z; legal_time @2020-05-01; timezone "Europe/Paris"; }
+        assert "ct05-01": territoire(entity_ref("urn:fr:pf-af:foreign:catala-05"), METROPOLE) { origin case_input; }
+        assert "ct05-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:foreign:catala-05"), 1) { origin case_input; }
+        assert "ct05-03": ressources_menage(entity_ref("urn:fr:pf-af:foreign:catala-05"), 30000 EUR) { origin case_input; }
+        assert "ct05-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:foreign:catala-05"), 55950 EUR) { origin case_input; }
+        assert "ct05-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:foreign:catala-05"), 78300 EUR) { origin case_input; }
+        assert "ct05-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:foreign:catala-05"), 5595 EUR) { origin case_input; }
+        assert "ct05-05": bmaf_retenu(entity_ref("urn:fr:pf-af:foreign:catala-05"), 400.00 EUR) { origin case_input; }
+        assert "ct05-06": foyer_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-05")) { origin case_input; }
+        assert "ct05-07": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:catala-05"), entity_ref("urn:fr:pf-af:foreign:catala-05-e1")) { origin case_input; }
+        assert "ct05-08": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-05-e1")) { origin case_input; }
+    }
+    evaluate truth(af_droit_ouvert(entity_ref("urn:fr:pf-af:foreign:catala-05")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

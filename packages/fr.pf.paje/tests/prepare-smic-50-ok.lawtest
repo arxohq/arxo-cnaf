@@ -1,0 +1,25 @@
+// SMIC path, 50% band (D. 531-9, I): declared share up to 50%, pay of
+// 1900 € under 106.25% of the monthly SMIC (2007.72 × 1.0625 = 2133.2025 €)
+// → 249.84 €.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-smic-50-ok" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-s50-01": quotite_declaree(entity_ref("urn:fr:paje:benef:prepare-s50"), JUSQUA_50) { origin adjudicated; }
+        assert "prepare-s50-02": categorie_plafond_smic(entity_ref("urn:fr:paje:benef:prepare-s50")) { origin adjudicated; }
+        assert "prepare-s50-03": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-s50"), entity_ref("urn:fr:paje:case:prepare-s50")) { origin case_input; }
+        assert "prepare-s50-04": revenu_mensuel_activite(entity_ref("urn:fr:paje:benef:prepare-s50"), 1900 EUR) { origin case_input; }
+        assert "prepare-s50-05": smic_mensuel(entity_ref("urn:fr:paje:case:prepare-s50"), 2007.72 EUR) { origin case_input; }
+        assert "prepare-s50-06": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-s50"), entity_ref("urn:fr:paje:enfant:prepare-s50")) { origin adjudicated; }
+        assert "prepare-s50-07": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-s50")) { origin adjudicated; }
+        assert "prepare-s50-08": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-s50"), 400.00 EUR) { origin case_input; }
+        assert "prepare-s50-09": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-s50"), entity_ref("urn:fr:paje:enfant:prepare-s50"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-s50"), entity_ref("urn:fr:paje:enfant:prepare-s50"), 249.84 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

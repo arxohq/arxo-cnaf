@@ -1,0 +1,19 @@
+// Monthly total at the retained daily rate: 10 days at 60.00 in
+// March 2024 = 600.00. The rate is a decree figure (B-PFAJPA-D168).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-montant-normal" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-mn-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-mn"), entity_ref("urn:fr:css:ajpa:case:aide-mn")) { origin case_input; }
+        assert "ajpa-mn-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-mn")) { origin adjudicated; }
+        assert "ajpa-mn-03": jours_ajpa_mois(entity_ref("urn:fr:css:ajpa:case:aidant-mn"), entity_ref("urn:fr:css:ajpa:case:aide-mn"), @2024-03-01, 10) { origin case_input; }
+        assert "ajpa-mn-04": montant_journalier_retenu(entity_ref("urn:fr:css:ajpa:case:aidant-mn"), 60.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ajpa_montant_mois(entity_ref("urn:fr:css:ajpa:case:aidant-mn"), entity_ref("urn:fr:css:ajpa:case:aide-mn"), @2024-03-01, 600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

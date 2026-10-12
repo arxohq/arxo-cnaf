@@ -1,0 +1,54 @@
+// Unknown department class: a Guadeloupe household meets every other R. 755-1
+// premise (two children over three with one under five, resources 30000 on
+// the 30000 ceiling, DOM frame and young-child presence), but the
+// provenance-bearing departement_l751_1 fact is absent, so the department
+// right and the department base amount stay silent. Title V scope holds
+// without that fact, and the retained Title V frame makes the base amount
+// 166.60 available on the broad track.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-departement-preuve-manquante" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "dpm-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante-e1")) { origin case_input; }
+        assert "dpm-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante-e2")) { origin case_input; }
+        assert "dpm-03": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante-e1")) { origin case_input; }
+        assert "dpm-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante-e2")) { origin case_input; }
+        assert "dpm-05": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante-e1"), @2017-03-15) { origin case_input; }
+        assert "dpm-06": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante-e2"), @2015-03-15) { origin case_input; }
+        assert "dpm-07": mois_droit(@2021-06-01) { origin case_input; }
+        assert "dpm-08": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 2) { origin case_input; }
+        assert "dpm-09": ressources_menage(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 30000 EUR) { origin case_input; }
+        assert "dpm-10": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 20000 EUR) { origin case_input; }
+        assert "dpm-10a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 5000 EUR) { origin case_input; }
+        assert "dpm-10b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 6000 EUR) { origin case_input; }
+        assert "dpm-10c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 10000 EUR) { origin case_input; }
+        assert "dpm-10d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 2500 EUR) { origin case_input; }
+        assert "dpm-10e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 3000 EUR) { origin case_input; }
+        assert "dpm-11": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante")) { origin case_input; }
+        assert "dpm-12": territoire(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), GUADELOUPE) { origin case_input; }
+        assert "dpm-13": cadre_cf_dom_remplie(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante")) { origin case_input; }
+        assert "dpm-14": presence_jeune_dom(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante")) { origin case_input; }
+        assert "dpm-15": base_dom_retenue(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 400.00 EUR) { origin case_input; }
+        assert "dpm-16": cadre_cf_titre_v_remplie(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante")) { origin case_input; }
+    }
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_montant_disponible(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 166.60 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_droit_ouvert(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_montant_du(entity_ref("urn:fr:pf-cf:case:dom-departement-preuve-manquante"), 166.60 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

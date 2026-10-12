@@ -1,0 +1,407 @@
+// Recovery (L. 845-3/4/5, radiation L. 843-5).
+//
+// «Tout paiement indu de prime d'activité est récupéré par l'organisme
+// chargé de son service» (L. 845-3 al. 1): stated undue amounts are
+// recovered by the serving fund (empirical bearer). Fraud adds a 10 %
+// management indemnity recovered like the undue amount (al. 1). Appeals
+// and remission requests suspend recovery (al. 2, suspensive character).
+// «Sauf si le bénéficiaire opte pour le remboursement en une seule fois»
+// (al. 3): single repayment on the retained option, else recovery from
+// future payments (rates belong to wave 5 fr.prestations.versement).
+// «L'article L. 553-1 est applicable» (L. 845-4): limitation arrives as
+// the retained prescription fact (pf-core owns the L. 553-1 mechanics;
+// cross-package consumption lives in fr.prestations.versement).
+// PA-R4-10: recovery needs positive non-prescription and no-stay
+// status; unseizability a positive no-maintenance-claim status.
+// «La prime est incessible et insaisissable» (L. 845-5) except the
+// L. 581-1/581-3 claims via L. 553-2 al. 3 (retained exception fact).
+// Radiation after a decree-defined no-payment period (L. 843-5): the
+// duration arrives retained (decree figure unpinned).
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_L843_5_ED2021_01_01,
+    CSS_L843_5_ED2021_03_25,
+    CSS_L843_5_ED2021_06_01,
+    CSS_L843_5_ED2022_03_21,
+    CSS_L843_5_ED2023_12_31,
+    CSS_L843_5_ED2024_01_01,
+    CSS_L843_5_ED2024_07_01,
+    CSS_L843_5_ED2025_01_01,
+    CSS_L843_5_ED2025_02_28,
+    CSS_L843_5_ED2025_03_31,
+    CSS_L843_5_ED2026_04_01,
+    CSS_L843_5_ED2026_06_27,
+    CSS_L845_3_ED2024_01_01,
+    CSS_L845_3_ED2024_07_01,
+    CSS_L845_3_ED2025_01_01,
+    CSS_L845_3_ED2025_02_28,
+    CSS_L845_3_ED2025_03_31,
+    CSS_L845_3_ED2026_04_01,
+    CSS_L845_3_ED2026_06_27,
+    CSS_L845_3_PRE2024_ED2021_01_01,
+    CSS_L845_3_PRE2024_ED2021_03_25,
+    CSS_L845_3_PRE2024_ED2021_06_01,
+    CSS_L845_3_PRE2024_ED2022_03_21,
+    CSS_L845_3_PRE2024_ED2023_12_31,
+    CSS_L845_4_ED2021_01_01,
+    CSS_L845_4_ED2021_03_25,
+    CSS_L845_4_ED2021_06_01,
+    CSS_L845_4_ED2022_03_21,
+    CSS_L845_4_ED2023_12_31,
+    CSS_L845_4_ED2024_01_01,
+    CSS_L845_4_ED2024_07_01,
+    CSS_L845_4_ED2025_01_01,
+    CSS_L845_4_ED2025_02_28,
+    CSS_L845_4_ED2025_03_31,
+    CSS_L845_4_ED2026_04_01,
+    CSS_L845_4_ED2026_06_27,
+    CSS_L845_5_ED2021_01_01,
+    CSS_L845_5_ED2021_03_25,
+    CSS_L845_5_ED2021_06_01,
+    CSS_L845_5_ED2022_03_21,
+    CSS_L845_5_ED2023_12_31,
+    CSS_L845_5_ED2024_01_01,
+    CSS_L845_5_ED2024_07_01,
+    CSS_L845_5_ED2025_01_01,
+    CSS_L845_5_ED2025_02_28,
+    CSS_L845_5_ED2025_03_31,
+    CSS_L845_5_ED2026_04_01,
+    CSS_L845_5_ED2026_06_27,
+    Demandeur,
+    droit_ouvert,
+};
+
+pub relation indu_constate(d: Demandeur, montant: Money) kind empirical {
+    key(d);
+    label fr official "paiement indu constaté (L. 845-3 al. 1; fait retenu)";
+    label en unofficial "stated undue payment (L. 845-3 para. 1; retained fact)";
+}
+
+pub relation indu_frauduleux(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "indu résultant d'une fraude (L. 845-3 al. 1; fait retenu)";
+    label en unofficial "undue payment from fraud (L. 845-3 para. 1; retained fact)";
+}
+
+pub relation recours_suspensif(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "réclamation/remise/recours pendant contre la récupération (L. 845-3 al. 2; fait retenu)";
+    label en unofficial "pending claim/remission/appeal against recovery (L. 845-3 para. 2; retained fact)";
+}
+
+pub relation option_remboursement_unique(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "option du remboursement en une seule fois (L. 845-3 al. 3; fait retenu)";
+    label en unofficial "single-repayment option (L. 845-3 para. 3; retained fact)";
+}
+
+pub relation action_prescrite_retenue(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "prescription L. 553-1 applicable via L. 845-4 (fait retenu; mécanique pf-core)";
+    label en unofficial "L. 553-1 limitation via L. 845-4 (retained fact; pf-core mechanics)";
+}
+
+pub relation creance_alimentaire_exception(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "créance L. 581-1/581-3 recouvrable sur la prime (L. 845-5; fait retenu)";
+    label en unofficial "L. 581-1/581-3 claim recoverable from the bonus (L. 845-5; retained fact)";
+}
+
+pub relation action_non_prescrite(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "action en recouvrement non prescrite au regard de L. 553-1 via L. 845-4 (fait retenu)";
+    label en unofficial "recovery action not time-barred under L. 553-1 via L. 845-4 (retained fact)";
+}
+
+pub relation aucun_recours_suspensif(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "aucune réclamation, remise ou recours suspensif pendant contre la récupération (L. 845-3 al. 2; fait retenu)";
+    label en unofficial "no pending suspensive claim, remission or appeal against recovery (L. 845-3 para. 2; retained fact)";
+}
+
+pub relation sans_creance_alimentaire(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "aucune créance L. 581-1/581-3 recouvrable sur la prime (L. 845-5; fait retenu)";
+    label en unofficial "no L. 581-1/581-3 claim recoverable from the bonus (L. 845-5; retained fact)";
+}
+
+pub relation periode_sans_versement_ecoulee(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "période réglementaire sans versement écoulée (L. 843-5, durée du décret; fait retenu)";
+    label en unofficial "regulatory no-payment period elapsed (L. 843-5, decree duration; retained fact)";
+}
+
+pub relation indu_recupere(d: Demandeur, montant: Money) kind institutional {
+    key(d);
+    label fr official "indu récupéré par l'organisme (L. 845-3 al. 1)";
+    label en unofficial "undue amount recovered by the fund (L. 845-3 para. 1)";
+}
+
+pub relation indemnite_fraude(d: Demandeur, montant: Money) kind institutional {
+    key(d);
+    label fr official "indemnité 10 % pour frais de gestion en cas de fraude (L. 845-3 al. 1)";
+    label en unofficial "10 % management-fee indemnity on fraud (L. 845-3 para. 1)";
+}
+
+pub relation recouvrement_suspendu(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "recouvrement suspendu pendant le recours (L. 845-3 al. 2)";
+    label en unofficial "recovery suspended during appeal (L. 845-3 para. 2)";
+}
+
+pub relation remboursement_unique_du(d: Demandeur, montant: Money) kind institutional {
+    key(d);
+    label fr official "remboursement en une seule fois sur option (L. 845-3 al. 3)";
+    label en unofficial "single repayment on option (L. 845-3 para. 3)";
+}
+
+pub relation insaisissable(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "prime incessible et insaisissable (L. 845-5)";
+    label en unofficial "unassignable and unseizable bonus (L. 845-5)";
+}
+
+pub relation radie_sans_versement(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "radié après la période sans versement (L. 843-5)";
+    label en unofficial "removed after the no-payment period (L. 843-5)";
+}
+
+@source(
+    CSS_L845_3_PRE2024_ED2021_01_01,
+    CSS_L845_3_PRE2024_ED2021_03_25,
+    CSS_L845_3_PRE2024_ED2021_06_01,
+    CSS_L845_3_PRE2024_ED2022_03_21,
+    CSS_L845_3_PRE2024_ED2023_12_31,
+    CSS_L845_3_ED2024_01_01,
+    CSS_L845_3_ED2024_07_01,
+    CSS_L845_3_ED2025_01_01,
+    CSS_L845_3_ED2025_02_28,
+    CSS_L845_3_ED2025_03_31,
+    CSS_L845_3_ED2026_04_01,
+    CSS_L845_3_ED2026_06_27,
+    CSS_L845_4_ED2021_01_01,
+    CSS_L845_4_ED2021_03_25,
+    CSS_L845_4_ED2021_06_01,
+    CSS_L845_4_ED2022_03_21,
+    CSS_L845_4_ED2023_12_31,
+    CSS_L845_4_ED2024_01_01,
+    CSS_L845_4_ED2024_07_01,
+    CSS_L845_4_ED2025_01_01,
+    CSS_L845_4_ED2025_02_28,
+    CSS_L845_4_ED2025_03_31,
+    CSS_L845_4_ED2026_04_01,
+    CSS_L845_4_ED2026_06_27)
+rule InduRecupere(d: Demandeur, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "indu récupéré sauf prescription et hors sursis (L. 845-3 al. 1-2, L. 845-4)";
+    label en unofficial "undue recovered unless time-barred and stayed (L. 845-3 paras. 1-2, L. 845-4)";
+    when indu_constate(d, montant) and action_non_prescrite(d)
+        and not_known(action_prescrite_retenue(d))
+        and aucun_recours_suspensif(d) and not_known(recours_suspensif(d));
+    then indu_recupere(d, montant);
+}
+
+// D-42: affirmative refutations of the recovery head. A failed
+// not_known guard leaves NEITHER, never FALSE; the stay (L. 845-3
+// al. 2 «ont un caractère suspensif») and the time bar (L. 845-4 ->
+// L. 553-1) are written as explicit contraries.
+@source(
+    CSS_L845_3_PRE2024_ED2021_01_01,
+    CSS_L845_3_PRE2024_ED2021_03_25,
+    CSS_L845_3_PRE2024_ED2021_06_01,
+    CSS_L845_3_PRE2024_ED2022_03_21,
+    CSS_L845_3_PRE2024_ED2023_12_31,
+    CSS_L845_3_ED2024_01_01,
+    CSS_L845_3_ED2024_07_01,
+    CSS_L845_3_ED2025_01_01,
+    CSS_L845_3_ED2025_02_28,
+    CSS_L845_3_ED2025_03_31,
+    CSS_L845_3_ED2026_04_01,
+    CSS_L845_3_ED2026_06_27,
+    CSS_L845_4_ED2021_01_01,
+    CSS_L845_4_ED2021_03_25,
+    CSS_L845_4_ED2021_06_01,
+    CSS_L845_4_ED2022_03_21,
+    CSS_L845_4_ED2023_12_31,
+    CSS_L845_4_ED2024_01_01,
+    CSS_L845_4_ED2024_07_01,
+    CSS_L845_4_ED2025_01_01,
+    CSS_L845_4_ED2025_02_28,
+    CSS_L845_4_ED2025_03_31,
+    CSS_L845_4_ED2026_04_01,
+    CSS_L845_4_ED2026_06_27)
+rule InduNonRecupereSursis(d: Demandeur, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "réclamation/recours suspensif: l'indu n'est pas récupéré pendant le sursis (L. 845-3 al. 2)";
+    label en unofficial "suspensive claim/appeal: the undue is not recovered while stayed (L. 845-3 para. 2)";
+    when indu_constate(d, montant) and recours_suspensif(d);
+    then not indu_recupere(d, montant);
+}
+
+@source(
+    CSS_L845_3_PRE2024_ED2021_01_01,
+    CSS_L845_3_PRE2024_ED2021_03_25,
+    CSS_L845_3_PRE2024_ED2021_06_01,
+    CSS_L845_3_PRE2024_ED2022_03_21,
+    CSS_L845_3_PRE2024_ED2023_12_31,
+    CSS_L845_3_ED2024_01_01,
+    CSS_L845_3_ED2024_07_01,
+    CSS_L845_3_ED2025_01_01,
+    CSS_L845_3_ED2025_02_28,
+    CSS_L845_3_ED2025_03_31,
+    CSS_L845_3_ED2026_04_01,
+    CSS_L845_3_ED2026_06_27,
+    CSS_L845_4_ED2021_01_01,
+    CSS_L845_4_ED2021_03_25,
+    CSS_L845_4_ED2021_06_01,
+    CSS_L845_4_ED2022_03_21,
+    CSS_L845_4_ED2023_12_31,
+    CSS_L845_4_ED2024_01_01,
+    CSS_L845_4_ED2024_07_01,
+    CSS_L845_4_ED2025_01_01,
+    CSS_L845_4_ED2025_02_28,
+    CSS_L845_4_ED2025_03_31,
+    CSS_L845_4_ED2026_04_01,
+    CSS_L845_4_ED2026_06_27)
+rule InduNonRecuperePrescrit(d: Demandeur, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "action en recouvrement prescrite: l'indu n'est pas récupéré (L. 845-4, L. 553-1)";
+    label en unofficial "time-barred recovery action: the undue is not recovered (L. 845-4, L. 553-1)";
+    when indu_constate(d, montant) and action_prescrite_retenue(d);
+    then not indu_recupere(d, montant);
+}
+
+@source(
+    CSS_L845_3_PRE2024_ED2021_01_01,
+    CSS_L845_3_PRE2024_ED2021_03_25,
+    CSS_L845_3_PRE2024_ED2021_06_01,
+    CSS_L845_3_PRE2024_ED2022_03_21,
+    CSS_L845_3_PRE2024_ED2023_12_31,
+    CSS_L845_3_ED2024_01_01,
+    CSS_L845_3_ED2024_07_01,
+    CSS_L845_3_ED2025_01_01,
+    CSS_L845_3_ED2025_02_28,
+    CSS_L845_3_ED2025_03_31,
+    CSS_L845_3_ED2026_04_01,
+    CSS_L845_3_ED2026_06_27)
+rule IndemniteFraude(d: Demandeur, indu: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "fraude: indemnité 10 % des sommes réclamées (L. 845-3 al. 1)";
+    label en unofficial "fraud: 10 % indemnity on claimed sums (L. 845-3 para. 1)";
+    when indu_recupere(d, indu) and indu_frauduleux(d);
+    then indemnite_fraude(d, indu * 0.10);
+}
+
+@source(
+    CSS_L845_3_PRE2024_ED2021_01_01,
+    CSS_L845_3_PRE2024_ED2021_03_25,
+    CSS_L845_3_PRE2024_ED2021_06_01,
+    CSS_L845_3_PRE2024_ED2022_03_21,
+    CSS_L845_3_PRE2024_ED2023_12_31,
+    CSS_L845_3_ED2024_01_01,
+    CSS_L845_3_ED2024_07_01,
+    CSS_L845_3_ED2025_01_01,
+    CSS_L845_3_ED2025_02_28,
+    CSS_L845_3_ED2025_03_31,
+    CSS_L845_3_ED2026_04_01,
+    CSS_L845_3_ED2026_06_27)
+rule SursisRecours(d: Demandeur, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "réclamation/remise/recours: caractère suspensif (L. 845-3 al. 2)";
+    label en unofficial "claim/remission/appeal: suspensive character (L. 845-3 para. 2)";
+    when indu_constate(d, montant) and recours_suspensif(d);
+    then recouvrement_suspendu(d);
+}
+
+@source(
+    CSS_L845_3_PRE2024_ED2021_01_01,
+    CSS_L845_3_PRE2024_ED2021_03_25,
+    CSS_L845_3_PRE2024_ED2021_06_01,
+    CSS_L845_3_PRE2024_ED2022_03_21,
+    CSS_L845_3_PRE2024_ED2023_12_31,
+    CSS_L845_3_ED2024_01_01,
+    CSS_L845_3_ED2024_07_01,
+    CSS_L845_3_ED2025_01_01,
+    CSS_L845_3_ED2025_02_28,
+    CSS_L845_3_ED2025_03_31,
+    CSS_L845_3_ED2026_04_01,
+    CSS_L845_3_ED2026_06_27)
+rule RemboursementUnique(d: Demandeur, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "option: remboursement en une seule fois (L. 845-3 al. 3)";
+    label en unofficial "option: single repayment (L. 845-3 para. 3)";
+    when indu_recupere(d, montant) and option_remboursement_unique(d);
+    then remboursement_unique_du(d, montant);
+}
+
+@source(
+    CSS_L845_5_ED2021_01_01,
+    CSS_L845_5_ED2021_03_25,
+    CSS_L845_5_ED2021_06_01,
+    CSS_L845_5_ED2022_03_21,
+    CSS_L845_5_ED2023_12_31,
+    CSS_L845_5_ED2024_01_01,
+    CSS_L845_5_ED2024_07_01,
+    CSS_L845_5_ED2025_01_01,
+    CSS_L845_5_ED2025_02_28,
+    CSS_L845_5_ED2025_03_31,
+    CSS_L845_5_ED2026_04_01,
+    CSS_L845_5_ED2026_06_27)
+rule Insaisissable(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prime incessible et insaisissable hors créances alimentaires (L. 845-5)";
+    label en unofficial "unassignable unseizable bonus except maintenance claims (L. 845-5)";
+    when droit_ouvert(d) and sans_creance_alimentaire(d)
+        and not_known(creance_alimentaire_exception(d));
+    then insaisissable(d);
+}
+
+// D-42: «sauf pour le recouvrement des créances mentionnées aux
+// articles L. 581-1 et L. 581-3» (L. 845-5) — a present L. 581-1/581-3
+// claim is the affirmative contrary of the protection.
+@source(
+    CSS_L845_5_ED2021_01_01,
+    CSS_L845_5_ED2021_03_25,
+    CSS_L845_5_ED2021_06_01,
+    CSS_L845_5_ED2022_03_21,
+    CSS_L845_5_ED2023_12_31,
+    CSS_L845_5_ED2024_01_01,
+    CSS_L845_5_ED2024_07_01,
+    CSS_L845_5_ED2025_01_01,
+    CSS_L845_5_ED2025_02_28,
+    CSS_L845_5_ED2025_03_31,
+    CSS_L845_5_ED2026_04_01,
+    CSS_L845_5_ED2026_06_27)
+rule SaisissableCreanceAlimentaire(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "créance L. 581-1/581-3: la prime n'est pas insaisissable à son égard (L. 845-5)";
+    label en unofficial "L. 581-1/581-3 claim: the bonus is not unseizable against it (L. 845-5)";
+    when droit_ouvert(d) and creance_alimentaire_exception(d);
+    then not insaisissable(d);
+}
+
+@source(
+    CSS_L843_5_ED2021_01_01,
+    CSS_L843_5_ED2021_03_25,
+    CSS_L843_5_ED2021_06_01,
+    CSS_L843_5_ED2022_03_21,
+    CSS_L843_5_ED2023_12_31,
+    CSS_L843_5_ED2024_01_01,
+    CSS_L843_5_ED2024_07_01,
+    CSS_L843_5_ED2025_01_01,
+    CSS_L843_5_ED2025_02_28,
+    CSS_L843_5_ED2025_03_31,
+    CSS_L843_5_ED2026_04_01,
+    CSS_L843_5_ED2026_06_27)
+rule RadiationSansVersement(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "période sans versement écoulée : radiation de la liste (L. 843-5)";
+    label en unofficial "payment-free period elapsed: removal from the list (L. 843-5)";
+    when periode_sans_versement_ecoulee(d);
+    then radie_sans_versement(d);
+}

@@ -1,0 +1,34 @@
+// Below the floor: single person, income and resources 3000.00/month
+// (Feb-Apr 2026), base 640.00. Monthly difference 640 + 1795.5 +
+// 241.28 - 3000 = -323.22 -> monthly prime zero; average zero below
+// 15.00 -> nothing due (L.842-3, floor rules).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-prime-sous-seuil-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": forfait_base_retenu(@2026-02-01, 640.00 EUR) { origin case_input; }
+        assert "ppa-02": forfait_base_retenu(@2026-03-01, 640.00 EUR) { origin case_input; }
+        assert "ppa-03": forfait_base_retenu(@2026-04-01, 640.00 EUR) { origin case_input; }
+        assert "ppa-04": smic_horaire_retenu(@2026-02-01, 12.00 EUR) { origin case_input; }
+        assert "ppa-05": smic_horaire_retenu(@2026-03-01, 12.00 EUR) { origin case_input; }
+        assert "ppa-06": smic_horaire_retenu(@2026-04-01, 12.00 EUR) { origin case_input; }
+        assert "ppa-07": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), @2026-02-01, SEUL) { origin case_input; }
+        assert "ppa-08": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), @2026-03-01, SEUL) { origin case_input; }
+        assert "ppa-09": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), @2026-04-01, SEUL) { origin case_input; }
+        assert "ppa-10": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), @2026-02-01, 3000.00 EUR) { origin case_input; }
+        assert "ppa-11": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), @2026-03-01, 3000.00 EUR) { origin case_input; }
+        assert "ppa-12": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), @2026-04-01, 3000.00 EUR) { origin case_input; }
+        assert "ppa-13": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), @2026-02-01, 3000.00 EUR) { origin case_input; }
+        assert "ppa-14": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), @2026-03-01, 3000.00 EUR) { origin case_input; }
+        assert "ppa-15": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), @2026-04-01, 3000.00 EUR) { origin case_input; }
+        assert "ppa-16": mois_revue(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-17": minimum_paiement_retenu(@2026-06-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:sous-seuil-2026"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,37 @@
+// D-86: DSS 2024 published isolated-parent base 27,401 + 4,532; 31,261 is in band 1.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-isole-40-publie" {
+    given {
+        context { decision_time @2024-06-20T12:00:00Z; knowledge_time @2024-06-20T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation ArrondiMaximumCmgCentime; }
+        assert "isole40-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), entity_ref("urn:fr:pf-cmg:child:sh"), STRUCTURE) { origin case_input; }
+        assert "isole40-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:isole-40-publie")) { origin case_input; }
+        assert "isole40-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), entity_ref("urn:fr:pf-cmg:child:sh")) { origin case_input; }
+        assert "isole40-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:sh"), 4) { origin case_input; }
+        assert "isole40-05": age_base_ans(entity_ref("urn:fr:pf-cmg:child:sh"), 3) { origin case_input; }
+        assert "isole40-06": heures_remunerees(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), entity_ref("urn:fr:pf-cmg:child:sh"), 16.0) { origin case_input; }
+        assert "isole40-07": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 1) { origin case_input; }
+        assert "isole40-08-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 19572 EUR) { origin case_input; }
+        assert "isole40-08-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 3237 EUR) { origin case_input; }
+        assert "isole40-08-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 43491 EUR) { origin case_input; }
+        assert "isole40-08-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 7195 EUR) { origin case_input; }
+        assert "isole40-isole": personne_seule(entity_ref("urn:fr:pf-cmg:case:isole-40-publie")) { origin case_input; }
+        assert "isole40-p1": plafond_a_base_isole_publie(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 27401 EUR) { origin case_input; }
+        assert "isole40-p2": plafond_a_enfant_isole_publie(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 4532 EUR) { origin case_input; }
+        assert "isole40-p3": plafond_c_base_isole_publie(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 60887 EUR) { origin case_input; }
+        assert "isole40-p4": plafond_c_enfant_isole_publie(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 10073 EUR) { origin case_input; }
+        assert "isole40-09": ressources_annuelles(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 31261 EUR) { origin case_input; }
+        assert "isole40-10": bmaf_retenu(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 466.44 EUR) { origin case_input; }
+        assert "isole40-11": depense_engagee(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), entity_ref("urn:fr:pf-cmg:child:sh"), 500 EUR) { origin case_input; }
+    }
+    evaluate truth(plafond1_applicable(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), 31933 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(maximum_structure(entity_ref("urn:fr:pf-cmg:case:isole-40-publie"), entity_ref("urn:fr:pf-cmg:child:sh"), 402.47 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

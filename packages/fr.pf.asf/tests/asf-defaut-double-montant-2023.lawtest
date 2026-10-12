@@ -1,0 +1,21 @@
+// D-29(c), F-CH6-ASF-DEFAUT-DOUBLE-MORT: double default March 2023, opening April 2023, request filed: eligible under the 3rd ground (both parents) and paid at the 2022 row 0.5625 x 400.00 = 225.00.
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-defaut-double-montant-2023" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "odq-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-2023"), entity_ref("urn:fr:pf-asf:case:defaut-double-montant-2023-e1")) { origin case_input; }
+        assert "odq-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-2023-e1")) { origin case_input; }
+        assert "odq-03": motif_asf(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-2023-e1"), DEFAUT_DOUBLE) { origin case_input; }
+        assert "odq-04": demande_asf(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-2023-e1")) { origin case_input; }
+        assert "odq-05": manquement_debiteur(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-2023-e1"), @2023-03-01) { origin case_input; }
+        assert "odq-06": mois_ouverture_asf(@2023-04-01) { origin case_input; }
+        assert "odq-07": bmaf_retenu(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-2023"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(asf_montant_du(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-2023-e1"), 225.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

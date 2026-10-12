@@ -1,0 +1,23 @@
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+// Generated witness scenarios of the question catalog (DECISION-0190):
+// the world fulfils the rule premises, the query asks its conclusion.
+// Built by corpus/tools/questions_catalog/build_catalog.py from the package CLIR;
+// hand edits — only together with the catalog.
+
+// 
+// D-42: witness world rebuilt by hand - rule DevoirTransmettreIJ (09b) binds the compulsory scheme (v0),
+// the competent tax administration (v1) and the insured (v2) (L. 583-4); the rule does not
+// read organisme_debiteur_pf. Card and test id unchanged.
+test "CATALOG-DEVOIRTRANSMETTREIJ" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": ij_l4311_dues(entity_ref("urn:law:catalog:devoirtransmettreij:v0"), entity_ref("urn:law:catalog:devoirtransmettreij:v2"), 800 EUR) { origin case_input; }
+        assert "cat-1": administration_fiscale_competente(entity_ref("urn:law:catalog:devoirtransmettreij:v1"), entity_ref("urn:law:catalog:devoirtransmettreij:v2")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(TransmettreIndemnitesJournalieres, ACTIVE);
+}

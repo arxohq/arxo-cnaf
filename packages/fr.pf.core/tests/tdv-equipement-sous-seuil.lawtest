@@ -1,0 +1,17 @@
+// Equipment band edge (PC-R05-05): spending exactly 1 000 EUR with period - no apport (R. 553-3-1 6, strict threshold).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-equipement-sous-seuil" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-equipement-sous-seuil-01": depenses_equipement(entity_ref("urn:fr:pf:case:peu-equipe"), 1000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-equipement-sous-seuil-02": prestation_soumise_section(entity_ref("urn:fr:pf:case:peu-equipe")) { origin case_input; }
+        assert "tdv-equipement-sous-seuil-03": depenses_foyer_periode_reference(entity_ref("urn:fr:pf:case:peu-equipe")) { origin case_input; }
+    }
+    evaluate truth(apport_forfaitaire(entity_ref("urn:fr:pf:case:peu-equipe"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

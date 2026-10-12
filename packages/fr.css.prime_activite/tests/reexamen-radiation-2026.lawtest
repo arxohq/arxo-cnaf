@@ -1,0 +1,22 @@
+// Quarterly re-examination -> D3 declaration duty ACTIVE; last
+// payment May 2024, observed June 2026 -> 24-month delay elapsed.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-reexamen-radiation-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": reexamen_trimestriel_du(entity_ref("urn:fr:ppa:case:reexamen-radiation-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-02": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:reexamen-radiation-2026")) { origin case_input; }
+        assert "ppa-03": dernier_versement(entity_ref("urn:fr:ppa:case:reexamen-radiation-2026"), @2024-05-01) { origin case_input; }
+        assert "ppa-04": date_observation(entity_ref("urn:fr:ppa:case:reexamen-radiation-2026"), @2026-06-15) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DeclarerRessourcesReexamen, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(delai_radiation_24m_ecoule(entity_ref("urn:fr:ppa:case:reexamen-radiation-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

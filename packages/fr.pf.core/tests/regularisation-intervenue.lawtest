@@ -1,0 +1,16 @@
+// Settlement status: dated administrative settlement - transfer settled (R. 552-1, PC-R03-08).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-regularisation-intervenue" {
+    given {
+        context { decision_time @2026-05-15T12:00:00Z; knowledge_time @2026-05-15T12:00:00Z; legal_time @2026-05-15; timezone "Europe/Paris"; }
+        assert "regularisation-01": transfert_regime(entity_ref("urn:fr:pf:case:transfere-reg")) { origin case_input; }
+        assert "regularisation-02": regularisation_administrative_le(entity_ref("urn:fr:pf:case:transfere-reg"), @2026-04-15) { origin case_input; }
+    }
+    evaluate truth(regularisation_intervenue(entity_ref("urn:fr:pf:case:transfere-reg")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

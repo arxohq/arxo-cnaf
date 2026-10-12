@@ -1,0 +1,36 @@
+// Дело Catala «CasTest1» (logement-foyer, APL).
+//
+// ШАГ: число долей N по таблице 1° ст. D. 832-25 — «ménage sans personne à
+// charge | 1,8». Catala утверждает то же: n_nombre_parts_d832_25 = 1,8.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-foyer-apl-01-nombre-parts" {
+    given {
+        // D-42: G-A13 migration (24-lecture-pp.law) — D. 823-17 "P0 ... ne peut etre
+        // inferieure a un montant minimum" has two readings in group SensMinimumPp
+        // (selection exactly_one); this hand suite selects the working reading, as
+        // the other hand suites do. No expectation changed.
+        context { decision_time @2022-04-23T12:00:00Z; knowledge_time @2022-04-23T12:00:00Z; legal_time @2022-04-23; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "foyer-apl-01-nombre-parts-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-01")) { origin case_input; }
+        assert "foyer-apl-01-nombre-parts-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-apl-01"), APL) { origin case_input; }
+        assert "foyer-apl-01-nombre-parts-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-apl-01"), ZONE_III) { origin case_input; }
+        assert "foyer-apl-01-nombre-parts-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-apl-01"), COUPLE) { origin case_input; }
+        assert "foyer-apl-01-nombre-parts-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-apl-01"), 0) { origin case_input; }
+        assert "foyer-apl-01-nombre-parts-06": type_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-01"), GENERAL) { origin case_input; }
+        assert "foyer-apl-01-nombre-parts-07": redevance(entity_ref("urn:fr:apl:case:foyer-apl-01"), 360 EUR) { origin case_input; }
+        assert "foyer-apl-01-nombre-parts-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-apl-01"), 15000 EUR) { origin case_input; }
+        assert "foyer-apl-01-nombre-parts-09": territoire(entity_ref("urn:fr:apl:case:foyer-apl-01"), METROPOLE) { origin case_input; }
+    }
+    // D-42 BOUNDARY: the derived value is Decimal (barème parameter / Decimal
+    // function), while the query literal in a Decimal slot lowers to Number
+    // (law.core 0.2.7 Number domain) and does not match a Decimal value —
+    // named outside E-0324 ("Вне правки": Decimal slots are a separate errata
+    // candidate). Both lawc and lawref agree; the expectation follows the pinned
+    // text and is kept. Not decidable in the package.
+    evaluate truth(nombre_parts(entity_ref("urn:fr:apl:case:foyer-apl-01"), 1.8));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

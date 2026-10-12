@@ -1,0 +1,21 @@
+// Part-time 50–80% via employer certificate: certified share 50–80% →
+// 400 × 0.3603 = 144.12 €.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-partiel-80-attestation" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-a80-01": attestation_quotite(entity_ref("urn:fr:paje:benef:prepare-a80"), DE_50_A_80) { origin adjudicated; }
+        assert "prepare-a80-02": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-a80"), entity_ref("urn:fr:paje:enfant:prepare-a80")) { origin adjudicated; }
+        assert "prepare-a80-03": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-a80")) { origin adjudicated; }
+        assert "prepare-a80-04": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-a80"), entity_ref("urn:fr:paje:case:prepare-a80")) { origin case_input; }
+        assert "prepare-a80-05": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-a80"), 400.00 EUR) { origin case_input; }
+        assert "prepare-a80-06": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-a80"), entity_ref("urn:fr:paje:enfant:prepare-a80"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-a80"), entity_ref("urn:fr:paje:enfant:prepare-a80"), 144.12 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

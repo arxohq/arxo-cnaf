@@ -1,0 +1,32 @@
+// Reform date pair, before side: review February 2025 still uses the old
+// window (three previous months Nov/Dec/Jan). Declared 300.00 each, no
+// service, MF 600.00: base 300.00, intermediate 300.00, due 300.00.
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-trimestre-2025-02-ancien" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "trim2502-01": foyer_du_cas(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien")) { origin case_input; }
+        assert "trim2502-02": mois_demande(@2025-02-01) { origin case_input; }
+        assert "trim2502-03": mois_reference(@2024-11-01, @2024-12-01, @2025-01-01) { origin case_input; }
+        assert "trim2502-04": mf_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), @2024-11-01, 600.00 EUR) { origin case_input; }
+        assert "trim2502-05": mf_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), @2024-12-01, 600.00 EUR) { origin case_input; }
+        assert "trim2502-06": mf_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), @2025-01-01, 600.00 EUR) { origin case_input; }
+        assert "trim2502-07": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), @2024-11-01, 300.00 EUR) { origin case_input; }
+        assert "trim2502-08": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), @2024-12-01, 300.00 EUR) { origin case_input; }
+        assert "trim2502-09": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), @2025-01-01, 300.00 EUR) { origin case_input; }
+        assert "trim2502-10": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "trim2502-11": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), @2024-12-01, 0 EUR) { origin case_input; }
+        assert "trim2502-12": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), @2025-01-01, 0 EUR) { origin case_input; }
+    }
+    evaluate truth(trimestre_reference(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), @2024-11-01, @2024-12-01, @2025-01-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_du_trimestre(entity_ref("urn:fr:minima-ressources:case:trimestre-2025-02-ancien"), 300.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,217 @@
+// D-82 / D-86: lecture des maxima du barème ancien au centime HALF_UP.
+// L'instruction DSS imprime les montants en centimes; le texte codifié ne fixe pas l'arrondi.
+// Sans sélection, les règles de base conservent leur valeur exacte.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+use self::{
+    CSS_D531_18_ED2018_04,
+    CSS_D531_20_ED2020_01,
+    CSS_D531_21_ED2015_01,
+    CSS_D531_21_ED2025_09,
+    CSS_D531_23_ED2020_01,
+    CSS_D531_23_ED2021_09,
+    ModeGarde,
+    age_taux_reduit,
+    bmaf_retenu,
+    droit_cmg_ouvert,
+    droit_structure_ouvert,
+    maximum_ancien_b,
+    maximum_structure,
+    mode_garde,
+    plafond1_applicable,
+    plafond2_applicable,
+    preparer_temps_partiel,
+    ressources_annuelles,
+    taux_bande_ancienne,
+    taux_bande_structure_am,
+    taux_bande_structure_dom,
+};
+
+relation arrondi_maximum_cmg(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    key(p, e);
+    label fr official "lecture : maximum CMG arrondi au centime HALF_UP";
+    label en unofficial "reading: CMG maximum rounded to cents HALF_UP";
+    label ru unofficial "D-82: округление максимума CMG до сантима по HALF_UP";
+}
+
+@source(CSS_D531_18_ED2018_04, CSS_D531_23_ED2021_09)
+rule ArrondiMaximumCmg(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "lecture D-82 : calcul du maximum au centime";
+    label en unofficial "D-82 reading: maximum calculated to cents";
+    label ru unofficial "D-82: расчёт максимума до сантима";
+    when fr.pf.core::parent_charge(p, e) and bmaf_retenu(p, bmaf);
+    then arrondi_maximum_cmg(p, e);
+}
+
+@source(CSS_D531_18_ED2018_04)
+rule MaximumAncienBande1Centime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien maximum bande 1: 114,04 % de la BMAF";
+    label en unofficial "old band-1 maximum: 114.04% of the BMAF";
+    when droit_cmg_ouvert(p, e) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and r <= p1 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and arrondi_maximum_cmg(p, e);
+    then maximum_ancien_b(p, e, round(TauxBMAFAncienBande1 * bmaf, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_18_ED2018_04)
+rule MaximumAncienBande2Centime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien maximum bande 2: 71,91 % de la BMAF";
+    label en unofficial "old band-2 maximum: 71.91% of the BMAF";
+    when droit_cmg_ouvert(p, e) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p1 and r <= p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and arrondi_maximum_cmg(p, e);
+    then maximum_ancien_b(p, e, round(TauxBMAFAncienBande2 * bmaf, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_18_ED2018_04)
+rule MaximumAncienBande3Centime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien maximum bande 3: 43,14 % de la BMAF";
+    label en unofficial "old band-3 maximum: 43.14% of the BMAF";
+    when droit_cmg_ouvert(p, e) and ressources_annuelles(p, r) and plafond2_applicable(p, p2) and r > p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and arrondi_maximum_cmg(p, e);
+    then maximum_ancien_b(p, e, round(TauxBMAFAncienBande3 * bmaf, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_20_ED2020_01)
+rule MaximumAncienReduitAgeCentime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien maximum divisé par deux entre trois et six ans";
+    label en unofficial "old maximum halved between three and six";
+    when droit_cmg_ouvert(p, e) and age_taux_reduit(p, e)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_ancienne(p, r, p1, p2, t) and arrondi_maximum_cmg(p, e);
+    then maximum_ancien_b(p, e, div_round(t * bmaf, 2.0, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_21_ED2015_01)
+rule MaximumAncienReduitPreParECentime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien maximum divisé par deux (PreParE à temps partiel)";
+    label en unofficial "old maximum halved (part-time PreParE)";
+    when droit_cmg_ouvert(p, e) and preparer_temps_partiel(p)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_ancienne(p, r, p1, p2, t) and arrondi_maximum_cmg(p, e);
+    then maximum_ancien_b(p, e, div_round(t * bmaf, 2.0, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureAssmat1Centime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum structure assistante maternelle bande 1: 172,57 % (ancien droit)";
+    label en unofficial "structure childminder band-1 maximum: 172.57% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and r <= p1 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and arrondi_maximum_cmg(p, e);
+    then maximum_structure(p, e, round(TauxStructureAssmatBande1 * bmaf, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureAssmat2Centime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum structure assistante maternelle bande 2: 143,81 % (ancien droit)";
+    label en unofficial "structure childminder band-2 maximum: 143.81% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p1 and r <= p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and arrondi_maximum_cmg(p, e);
+    then maximum_structure(p, e, round(TauxStructureAssmatBande2 * bmaf, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureAssmat3Centime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum structure assistante maternelle bande 3: 115,05 % (ancien droit)";
+    label en unofficial "structure childminder band-3 maximum: 115.05% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and ressources_annuelles(p, r) and plafond2_applicable(p, p2) and r > p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and arrondi_maximum_cmg(p, e);
+    then maximum_structure(p, e, round(TauxStructureAssmatBande3 * bmaf, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureDom1Centime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum domicile/EAJE bande 1: 208,53 % (ancien droit)";
+    label en unofficial "home/EAJE band-1 maximum: 208.53% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and r <= p1 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and arrondi_maximum_cmg(p, e);
+    then maximum_structure(p, e, round(TauxStructureDomBande1 * bmaf, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureDom2Centime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum domicile/EAJE bande 2: 179,76 % (ancien droit)";
+    label en unofficial "home/EAJE band-2 maximum: 179.76% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p1 and r <= p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and arrondi_maximum_cmg(p, e);
+    then maximum_structure(p, e, round(TauxStructureDomBande2 * bmaf, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureDom3Centime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum domicile/EAJE bande 3: 151,00 % (ancien droit)";
+    label en unofficial "home/EAJE band-3 maximum: 151.00% (old law)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and ressources_annuelles(p, r) and plafond2_applicable(p, p2) and r > p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and arrondi_maximum_cmg(p, e);
+    then maximum_structure(p, e, round(TauxStructureDomBande3 * bmaf, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule MaximumStructureReduitAmAgeCentime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum assistante maternelle divisé par deux (taux réduit ancien)";
+    label en unofficial "childminder maximum halved (old reduced rate)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and age_taux_reduit(p, e)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_am(p, r, p1, p2, t) and arrondi_maximum_cmg(p, e);
+    then maximum_structure(p, e, div_round(t * bmaf, 2.0, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule MaximumStructureReduitDomAgeCentime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum domicile/EAJE divisé par deux (taux réduit ancien)";
+    label en unofficial "home/EAJE maximum halved (old reduced rate)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and age_taux_reduit(p, e)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_dom(p, r, p1, p2, t) and arrondi_maximum_cmg(p, e);
+    then maximum_structure(p, e, div_round(t * bmaf, 2.0, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureReduitAmPreParECentime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum assistante maternelle divisé par deux (PreParE à temps partiel)";
+    label en unofficial "childminder maximum halved (part-time PreParE)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, STRUCTURE) and preparer_temps_partiel(p)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_am(p, r, p1, p2, t) and arrondi_maximum_cmg(p, e);
+    then maximum_structure(p, e, div_round(t * bmaf, 2.0, 2, "HALF_UP"));
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09, CSS_D531_21_ED2025_09)
+rule MaximumStructureReduitDomPreParECentime(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "maximum domicile/EAJE divisé par deux (PreParE à temps partiel)";
+    label en unofficial "home/EAJE maximum halved (part-time PreParE)";
+    when droit_structure_ouvert(p, e) and mode_garde(p, e, mode) and mode != ASSISTANT_MATERNEL and mode != STRUCTURE and preparer_temps_partiel(p)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_dom(p, r, p1, p2, t) and arrondi_maximum_cmg(p, e);
+    then maximum_structure(p, e, div_round(t * bmaf, 2.0, 2, "HALF_UP"));
+}
+
+pub interpretation ArrondiMaximumCmgCentime {
+    status disputed;
+    label fr official "lecture : maxima du CMG ancien au centime HALF_UP (D-82 ; tableaux DSS)";
+    label en unofficial "reading: old CMG maxima rounded to cents HALF_UP (D-82; DSS tables)";
+    label ru unofficial "D-82: максимумы прежнего CMG до сантима HALF_UP";
+    include ArrondiMaximumCmg;
+    include MaximumAncienBande1Centime;
+    include MaximumAncienBande2Centime;
+    include MaximumAncienBande3Centime;
+    include MaximumAncienReduitAgeCentime;
+    include MaximumAncienReduitPreParECentime;
+    include MaximumStructureAssmat1Centime;
+    include MaximumStructureAssmat2Centime;
+    include MaximumStructureAssmat3Centime;
+    include MaximumStructureDom1Centime;
+    include MaximumStructureDom2Centime;
+    include MaximumStructureDom3Centime;
+    include MaximumStructureReduitAmAgeCentime;
+    include MaximumStructureReduitDomAgeCentime;
+    include MaximumStructureReduitAmPreParECentime;
+    include MaximumStructureReduitDomPreParECentime;
+}

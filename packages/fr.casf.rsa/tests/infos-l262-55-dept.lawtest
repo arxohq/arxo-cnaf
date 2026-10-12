@@ -1,0 +1,22 @@
+// L. 262-55 information, department side: the department transmits
+// the in-sample person's information to the statistical services
+// ("informations relatives aux personnes physiques destinées à la
+// constitution d'échantillons statistiquement représentatifs",
+// L. 262-55 via D. 262-98). A filed claim alone does not prove
+// sample inclusion: the filed-but-out-of-sample control is
+// infos-l262-55-dept-hors-echantillon. Pair of infos-l262-55.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-infos-l262-55-dept" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "infd-01": departement_competent(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:case:infos-l262-55-dept")) { origin case_input; }
+        assert "infd-02": echantillon_l262_55(entity_ref("urn:fr:rsa:case:infos-l262-55-dept")) { origin case_input; }
+        assert "infd-03": est_service_statistique(entity_ref("urn:fr:rsa:org:drees")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreInfosL262_55Departement, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

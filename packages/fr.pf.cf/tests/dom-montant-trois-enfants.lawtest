@@ -1,0 +1,50 @@
+// DOM base amount, three children in Martinique: the ceilings come from the
+// metropolitan machinery by liaison (36000 / 18000 on nominal 20000), while
+// the amount stays DOM: 41.65 % x L755-3 base 320 = 133.28. Resources 30000
+// open the base track (above 18000, within 36000).
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-montant-trois-enfants" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "dmt-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants-e1")) { origin case_input; }
+        assert "dmt-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants-e2")) { origin case_input; }
+        assert "dmt-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants-e3")) { origin case_input; }
+        assert "dmt-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants-e1")) { origin case_input; }
+        assert "dmt-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants-e2")) { origin case_input; }
+        assert "dmt-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants-e3")) { origin case_input; }
+        assert "dmt-07": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants-e1"), @2019-03-15) { origin case_input; }
+        assert "dmt-08": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants-e2"), @2017-03-15) { origin case_input; }
+        assert "dmt-09": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants-e3"), @2015-03-15) { origin case_input; }
+        assert "dmt-10": mois_droit(@2023-03-01) { origin case_input; }
+        assert "dmt-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 3) { origin case_input; }
+        assert "dmt-12": ressources_menage(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 30000 EUR) { origin case_input; }
+        assert "dmt-13": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 20000 EUR) { origin case_input; }
+        assert "dmt-13a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 5000 EUR) { origin case_input; }
+        assert "dmt-13b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 6000 EUR) { origin case_input; }
+        assert "dmt-13c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 10000 EUR) { origin case_input; }
+        assert "dmt-13d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 2500 EUR) { origin case_input; }
+        assert "dmt-13e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 3000 EUR) { origin case_input; }
+        assert "dmt-14": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants")) { origin case_input; }
+        assert "dmt-15": territoire(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), MARTINIQUE) { origin case_input; }
+        assert "dmt-16": cadre_cf_dom_remplie(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants")) { origin case_input; }
+        assert "dmt-17": presence_jeune_dom(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants")) { origin case_input; }
+        assert "dmt-18": base_dom_retenue(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 320.00 EUR) { origin case_input; }
+        assert "dmt-19": departement_l751_1(MARTINIQUE) { origin case_input; }
+    }
+    evaluate truth(plafond_cf_applicable(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 36000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_droit_ouvert(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_montant_du(entity_ref("urn:fr:pf-cf:case:dom-montant-trois-enfants"), 133.28 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

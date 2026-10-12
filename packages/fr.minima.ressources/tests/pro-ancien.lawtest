@@ -1,0 +1,16 @@
+// Declared professional income, pre-2024: retained as established, no
+// gross-net rule in the text (R.262-12_PRE2024; B-MINRES-PRO-PRE2024).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-pro-ancien" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "proanc-01": ressource_declaree_mois(entity_ref("urn:fr:minima-ressources:case:pro-ancien"), @2022-04-01, REVENU_PRO_SALARIE, 1500.00 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_retenu_mois(entity_ref("urn:fr:minima-ressources:case:pro-ancien"), @2022-04-01, REVENU_PRO_SALARIE, 1500.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

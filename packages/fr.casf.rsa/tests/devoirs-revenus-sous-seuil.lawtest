@@ -1,0 +1,19 @@
+// Duties income limb: monthly average (400.00 + 450.00 + 500.00) / 3
+// = 450.00 < 500.00 -> the L. 262-28 income limb holds (D. 262-65).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-devoirs-revenus-sous-seuil" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "rev-01": mois_trimestre_reference(entity_ref("urn:fr:rsa:case:devoirs-revenus-sous-seuil"), @2025-02-01, @2025-03-01, @2025-04-01) { origin case_input; }
+        assert "rev-02": revenus_pro_mois(entity_ref("urn:fr:rsa:case:devoirs-revenus-sous-seuil"), @2025-02-01, 400.00 EUR) { origin case_input; }
+        assert "rev-03": revenus_pro_mois(entity_ref("urn:fr:rsa:case:devoirs-revenus-sous-seuil"), @2025-03-01, 450.00 EUR) { origin case_input; }
+        assert "rev-04": revenus_pro_mois(entity_ref("urn:fr:rsa:case:devoirs-revenus-sous-seuil"), @2025-04-01, 500.00 EUR) { origin case_input; }
+    }
+    evaluate truth(condition_revenus_l262_28(entity_ref("urn:fr:rsa:case:devoirs-revenus-sous-seuil")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

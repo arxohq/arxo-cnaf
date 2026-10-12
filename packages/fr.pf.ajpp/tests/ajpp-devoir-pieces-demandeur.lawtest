@@ -1,0 +1,18 @@
+// Monthly pieces duty, job-seekers (D5 active): job-seeker,
+// debtor-body link and the concerned month recorded — the
+// TransmettreDeclarationCessation position is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-pieces-demandeur" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-dpd-01": demandeur_emploi_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-dpd")) { origin case_input; }
+        assert "ajpp-dpd-02": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-dpd")) { origin case_input; }
+        assert "ajpp-dpd-03": mois_concerne_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-dpd"), @2024-03-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreDeclarationCessation, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

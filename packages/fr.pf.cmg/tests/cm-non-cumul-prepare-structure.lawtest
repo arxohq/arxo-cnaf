@@ -1,0 +1,23 @@
+// L. 531-9, para. 1 for the L. 531-6 aid: open structure right plus
+// full-rate PreParE with established non-VI status, 2014-cohort child —
+// the marker concludes. RETURN 2026-10-08: affirmative hors-VI and cohort.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-non-cumul-prepare-structure" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "ncps-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:ncps"), entity_ref("urn:fr:pf-cmg:child:ncps"), STRUCTURE) { origin case_input; }
+        assert "ncps-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:ncps")) { origin case_input; }
+        assert "ncps-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:ncps"), entity_ref("urn:fr:pf-cmg:child:ncps")) { origin case_input; }
+        assert "ncps-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:ncps"), 2) { origin case_input; }
+        assert "ncps-05": beneficie_prepare_plein(entity_ref("urn:fr:pf-cmg:case:ncps"), entity_ref("urn:fr:pf-cmg:child:ncps")) { origin case_input; }
+        assert "ncps-06": prepare_plein_hors_vi(entity_ref("urn:fr:pf-cmg:case:ncps"), entity_ref("urn:fr:pf-cmg:child:ncps")) { origin adjudicated; }
+        assert "ncps-07": cohorte_l5319_2014(entity_ref("urn:fr:pf-cmg:child:ncps")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_prepare_plein_interdit(entity_ref("urn:fr:pf-cmg:case:ncps"), entity_ref("urn:fr:pf-cmg:child:ncps")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

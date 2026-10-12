@@ -1,0 +1,31 @@
+// Incomplete-year evidence (PA-R4 sweep): farm profits with a
+// positive incomplete-year status take the M-4..M-2 fallback
+// (9000/3 at 10% -> 2700); BIC receipts without any completeness
+// evidence stay undetermined (R.845-1/2).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-non-salarie-incomplet-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": regime_general(entity_ref("urn:fr:ppa:case:non-salarie-incomplet-2026")) { origin case_input; }
+        assert "ppa-02": annee_agri_incomplete(entity_ref("urn:fr:ppa:case:non-salarie-incomplet-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-03": recettes_agri_m_4_m_2(entity_ref("urn:fr:ppa:case:non-salarie-incomplet-2026"), @2026-06-01, 9000.00 EUR) { origin case_input; }
+        assert "ppa-04": abattement_64bis(entity_ref("urn:fr:ppa:case:non-salarie-incomplet-2026"), @2026-06-01, 0.10) { origin case_input; }
+        assert "ppa-05": ca_bic_m_4_m_2(entity_ref("urn:fr:ppa:case:non-salarie-incomplet-2026"), @2026-06-01, 9000.00 EUR) { origin case_input; }
+        assert "ppa-06": abattement_50_0_102ter(entity_ref("urn:fr:ppa:case:non-salarie-incomplet-2026"), @2026-06-01, 0.34) { origin case_input; }
+        // D-42: the NOTA gate (dispositions_nouvelles_2025) now binds its date
+        // through the claim/review month (mois_revue, R. 843-1 I); the
+        // computation at review @2026-06-01 states that month explicitly.
+        assert "ppa-07": mois_revue(entity_ref("urn:fr:ppa:case:non-salarie-incomplet-2026"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:non-salarie-incomplet-2026"), @2026-06-01, 2700.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:non-salarie-incomplet-2026"), @2026-06-01, 1980.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

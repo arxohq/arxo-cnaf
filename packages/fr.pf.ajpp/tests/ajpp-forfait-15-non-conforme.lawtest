@@ -1,0 +1,23 @@
+// Non-conforming flat-day count: 15 asserted days against the
+// pinned decree 22 (D. 544-8) — the conformance head stays NEITHER
+// (check mode: months number the cases, no negative from unknown).
+// No monthly total is queried here: 900 from 15 days contradicts
+// the pinned 22 × rate figure.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-forfait-15-non-conforme" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-f15-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-f15")) { origin adjudicated; }
+        assert "ajpp-f15-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-f15")) { origin adjudicated; }
+        assert "ajpp-f15-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-f15"), entity_ref("urn:fr:pf-ajpp:case:enfant-f15")) { origin case_input; }
+        assert "ajpp-f15-04": demandeur_emploi_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-f15")) { origin case_input; }
+        assert "ajpp-f15-05": jours_forfaitaires(entity_ref("urn:fr:pf-ajpp:case:enfant-f15"), @2024-03-01, 15) { origin case_input; }
+    }
+    evaluate truth(forfait_22_conforme(entity_ref("urn:fr:pf-ajpp:case:enfant-f15"), @2024-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,23 @@
+// Young worker on a mixed path without the prorated turnover finding:
+// hours alone (2000.00 + 100.00 + 1300.00 = 3400.00) meet the minimum
+// but the D. 262-25-4 in-fine turnover proviso is not established ->
+// the mixed route does not open. Pair of jeune-mixte.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-jeune-mixte-sans-ca" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "jeun-01": jeune_18_25(entity_ref("urn:fr:rsa:case:jeune-mixte-sans-ca")) { origin case_input; }
+        assert "jeun-02": heures_travail_reference(entity_ref("urn:fr:rsa:case:jeune-mixte-sans-ca"), 2000.0) { origin case_input; }
+        assert "jeun-03": heures_occasionnelles(entity_ref("urn:fr:rsa:case:jeune-mixte-sans-ca"), 100.0) { origin case_input; }
+        assert "jeun-04": equivalent_tns_prorata(entity_ref("urn:fr:rsa:case:jeune-mixte-sans-ca"), 1300.0) { origin case_input; }
+        assert "jeun-05": heures_annuelles_reference(entity_ref("urn:fr:rsa:case:jeune-mixte-sans-ca"), 1607.0) { origin case_input; }
+        assert "jeun-06": mois_prestations_exclus(entity_ref("urn:fr:rsa:case:jeune-mixte-sans-ca"), 0) { origin case_input; }
+    }
+    evaluate truth(condition_heures_jeune(entity_ref("urn:fr:rsa:case:jeune-mixte-sans-ca")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

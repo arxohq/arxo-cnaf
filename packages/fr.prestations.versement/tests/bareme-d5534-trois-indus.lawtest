@@ -1,0 +1,23 @@
+// D553-4 three-debt queue (PC-R05-01): A (2022-01, 60 EUR) before B (2022-02, 50 EUR) before C (2022-03, 40 EUR); retention 100 EUR allocates 60 to A, 40 to B, 0 to C (remainder carried, capped); complete ledger.
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-d5534-trois-indus-repartition" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "d5534-3a": indu_constate_le(entity_ref("urn:fr:pv:case:indu-a"), entity_ref("urn:fr:pv:case:alloc"), @2022-01-10, 60.00 EUR) { origin case_input; }
+        assert "d5534-3b": indu_constate_le(entity_ref("urn:fr:pv:case:indu-b"), entity_ref("urn:fr:pv:case:alloc"), @2022-02-10, 50.00 EUR) { origin case_input; }
+        assert "d5534-3c": indu_constate_le(entity_ref("urn:fr:pv:case:indu-c"), entity_ref("urn:fr:pv:case:alloc"), @2022-03-10, 40.00 EUR) { origin case_input; }
+        assert "d5534-3d": indu_solde_restant(entity_ref("urn:fr:pv:case:indu-a"), entity_ref("urn:fr:pv:case:alloc"), 60.00 EUR) { origin case_input; }
+        assert "d5534-3e": indu_solde_restant(entity_ref("urn:fr:pv:case:indu-b"), entity_ref("urn:fr:pv:case:alloc"), 50.00 EUR) { origin case_input; }
+        assert "d5534-3f": indu_solde_restant(entity_ref("urn:fr:pv:case:indu-c"), entity_ref("urn:fr:pv:case:alloc"), 40.00 EUR) { origin case_input; }
+        assert "d5534-3g": indus_multiples(entity_ref("urn:fr:pv:case:alloc")) { origin case_input; }
+        assert "d5534-3h": retenue_unique_indus_multiples(entity_ref("urn:fr:pv:case:alloc")) { origin case_input; }
+        assert "d5534-3i": registre_indus_complet(entity_ref("urn:fr:pv:case:alloc")) { origin case_input; }
+        assert "d5534-3j": prelevement_mensuel(entity_ref("urn:fr:pv:case:alloc"), 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(retenue_affectee_montant(entity_ref("urn:fr:pv:case:indu-a"), entity_ref("urn:fr:pv:case:alloc"), 60.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

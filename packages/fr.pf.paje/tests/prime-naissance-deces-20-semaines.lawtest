@@ -1,0 +1,20 @@
+// L. 531-2, para. 2, 2°: death of the child after the 20th week — right by
+// way of exception, same amount (400 × 2.2975 = 919.00 €).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-naissance-deces-20-semaines" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "deces-01": deces_apres_20_semaines(entity_ref("urn:fr:paje:enfant:deces")) { origin adjudicated; }
+        assert "deces-02": ressources_annuelles(entity_ref("urn:fr:paje:case:deces"), 20000 EUR) { origin case_input; }
+        assert "deces-03": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:deces"), 30000 EUR) { origin case_input; }
+        assert "deces-04": bmaf_applicable(entity_ref("urn:fr:paje:case:deces"), 400.00 EUR) { origin case_input; }
+        assert "deces-05": date_examen_situation(entity_ref("urn:fr:paje:case:deces"), entity_ref("urn:fr:paje:enfant:deces"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prime_attribuee(entity_ref("urn:fr:paje:case:deces"), entity_ref("urn:fr:paje:enfant:deces"), 919.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

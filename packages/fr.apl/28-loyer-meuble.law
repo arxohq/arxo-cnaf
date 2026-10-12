@@ -1,0 +1,170 @@
+// Наём меблированного жилья: «loyer principal» D. 823-16 — две трети
+// фактически уплаченной цены (D. 842-2 CCH), решение владельца D-85 (09.10.2026).
+//
+// ИСТОЧНИК. Закреплены 09.10.2026 из того же глобального дампа LEGI, что и
+// остальной кодекс (Freemium_legi_global_20250713-140000, файлы версий
+// LEGIARTI000038878687 — D. 842-1 и LEGIARTI000038878685 — D. 842-2, обе в силе
+// с 01.09.2019, единственные версии по реестру LEGI с цепочкой инкрементов до
+// 05.10.2026):
+//   D. 842-1: «Les dispositions de la section 1 du chapitre III du titre II du
+//     présent livre sont applicables au calcul de l'allocation de logement versée
+//     en secteur locatif, sous réserve des dispositions des articles D. 842-2 et
+//     D. 842-4» — AL (ALF, ALS) считается по D. 823-16 С ОГОВОРКОЙ D. 842-2;
+//   D. 842-2: «… lorsque l'allocataire occupe un logement loué en meublé, le prix
+//     du loyer est remplacé par les deux tiers du prix effectivement payé dans la
+//     limite du loyer-plafond»;
+//   D. 823-18, последний абзац (версия с 11.01.2020, LEGIARTI000041477261): «Lorsque
+//     le logement est loué ou sous-loué en meublé, les dispositions de l'article
+//     D. 842-2 s'appliquent le cas échéant pour la détermination des loyers pris en
+//     compte» — то же правило для APL. До 11.01.2020 у D. 823-18 этого абзаца нет:
+//     у APL в меблированном найме loyer principal — уплаченная цена.
+// «Dans la limite du loyer-plafond» уже исполняет LoyerEligible (min с плафоном);
+// дегрессивность D. 823-16 сравнивает с плафонами тот же loyer principal, то есть
+// две трети.
+//
+// ЧТЕНИЕ «le cas échéant» (APL). Пакет читает буквально: абзац отсылает к D. 842-2
+// в случае, который тот описывает, — меблированный наём. Их код (OpenFisca 176.1.2,
+// aide_logement_loyer_reel) у APL берёт две трети ТОЛЬКО у меблированной комнаты
+// (`locataire_meuble * logement_chambre`); такого сужения в закреплённом тексте нет.
+// Открытый вопрос владельцу записан в README («Меблированный наём»).
+//
+// ОКРУГЛЕНИЕ. D. 842-2 его не называет. Две трети суммы в сантимах — конечная
+// десятичная дробь, только если число сантимов кратно трём; иначе базовое правило
+// отказывает (INEXACT_DIVISION). Под прочтением D-82 ArrondiCentimeHalfUp
+// (27-lecture-arrondi-centime.law) — до сантима HALF_UP (700 € → 466,67 €). Их код
+// округляет до целого евро (`round_(loyer * 2 / 3)` → 467 €): этого нет ни в тексте,
+// ни в D-82.
+//
+// ФАКТ ДЕЛА. Цена меблированного найма приходит СВОИМ фактом
+// prix_paye_logement_meuble, а не loyer_principal: loyer_principal у такого дела
+// ВЫВОДИТСЯ (ключ m, второе значение было бы конфликтом ключа).
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_D823_16,
+    CCH_D823_16_ED2019_12,
+    CCH_D823_18,
+    CCH_D823_18_ED2019_12,
+    CCH_D823_18_ED2020_01,
+    CCH_D823_18_ED2021_01,
+    CCH_D823_18_ED2023_04,
+    CCH_D823_18_ED2023_09,
+    CCH_D823_18_ED2023_12,
+    CCH_D823_18_ED2026_07,
+    CCH_D842_1,
+    CCH_D842_1_ED2019_12,
+    CCH_D842_1_ED2020_01,
+    CCH_D842_1_ED2021_01,
+    CCH_D842_1_ED2023_04,
+    CCH_D842_1_ED2023_09,
+    CCH_D842_1_ED2023_12,
+    CCH_D842_1_ED2026_07,
+    CCH_D842_2,
+    CCH_D842_2_ED2019_12,
+    CCH_D842_2_ED2020_01,
+    CCH_D842_2_ED2021_01,
+    CCH_D842_2_ED2023_04,
+    CCH_D842_2_ED2023_09,
+    CCH_D842_2_ED2023_12,
+    CCH_D842_2_ED2026_07,
+    Menage,
+    TypeAide,
+    aide_demandee,
+    arrondi_intermediaire_centime,
+    loyer_principal,
+    secteur_locatif,
+};
+
+@source(CCH_D842_2, CCH_D842_2_ED2019_12, CCH_D842_2_ED2020_01,
+        CCH_D842_2_ED2021_01, CCH_D842_2_ED2023_04, CCH_D842_2_ED2023_09,
+        CCH_D842_2_ED2023_12, CCH_D842_2_ED2026_07)
+pub relation prix_paye_logement_meuble(m: Menage, prix: Money) kind empirical {
+    key(m);
+    label fr official "prix effectivement payé pour un logement loué en meublé";
+    label ru unofficial "фактически уплаченная цена найма меблированного жилья (констатация)";
+}
+
+relation loyer_meuble_aux_deux_tiers(m: Menage) kind institutional {
+    label fr official "le prix du loyer est remplacé par les deux tiers du prix effectivement payé";
+    label ru unofficial "наём меблированного жилья учитывается в двух третях уплаченной цены";
+}
+
+// AL (ALF, ALS): D. 842-1 — расчёт D. 823-16 «sous réserve des dispositions des
+// articles D. 842-2»; D. 842-2 — две трети. Обе статьи в силе на всём охвате.
+@source(CCH_D842_1, CCH_D842_1_ED2019_12, CCH_D842_1_ED2020_01,
+        CCH_D842_1_ED2021_01, CCH_D842_1_ED2023_04, CCH_D842_1_ED2023_09,
+        CCH_D842_1_ED2023_12, CCH_D842_1_ED2026_07,
+        CCH_D842_2, CCH_D842_2_ED2019_12, CCH_D842_2_ED2020_01,
+        CCH_D842_2_ED2021_01, CCH_D842_2_ED2023_04, CCH_D842_2_ED2023_09,
+        CCH_D842_2_ED2023_12, CCH_D842_2_ED2026_07)
+rule LoyerMeubleDeuxTiersAlf(m: Menage, prix: Money) strict {
+    label fr official "lorsque l'allocataire occupe un logement loué en meublé, le prix du loyer est remplacé par les deux tiers du prix effectivement payé dans la limite du loyer-plafond";
+    label ru unofficial "ALF, меблированный наём: наём заменяется двумя третями уплаченной цены (D. 842-1, D. 842-2)";
+    when secteur_locatif(m) and aide_demandee(m, ALF) and prix_paye_logement_meuble(m, prix);
+    then loyer_meuble_aux_deux_tiers(m);
+}
+
+@source(CCH_D842_1, CCH_D842_1_ED2019_12, CCH_D842_1_ED2020_01,
+        CCH_D842_1_ED2021_01, CCH_D842_1_ED2023_04, CCH_D842_1_ED2023_09,
+        CCH_D842_1_ED2023_12, CCH_D842_1_ED2026_07,
+        CCH_D842_2, CCH_D842_2_ED2019_12, CCH_D842_2_ED2020_01,
+        CCH_D842_2_ED2021_01, CCH_D842_2_ED2023_04, CCH_D842_2_ED2023_09,
+        CCH_D842_2_ED2023_12, CCH_D842_2_ED2026_07)
+rule LoyerMeubleDeuxTiersAls(m: Menage, prix: Money) strict {
+    label fr official "lorsque l'allocataire occupe un logement loué en meublé, le prix du loyer est remplacé par les deux tiers du prix effectivement payé dans la limite du loyer-plafond";
+    label ru unofficial "ALS, меблированный наём: наём заменяется двумя третями уплаченной цены (D. 842-1, D. 842-2)";
+    when secteur_locatif(m) and aide_demandee(m, ALS) and prix_paye_logement_meuble(m, prix);
+    then loyer_meuble_aux_deux_tiers(m);
+}
+
+// APL: последний абзац D. 823-18 в версии с 11.01.2020 отсылает к D. 842-2.
+@source(CCH_D823_18_ED2020_01, CCH_D823_18_ED2021_01, CCH_D823_18_ED2023_04,
+        CCH_D823_18_ED2023_09, CCH_D823_18_ED2023_12, CCH_D823_18_ED2026_07,
+        CCH_D842_2_ED2020_01, CCH_D842_2_ED2021_01, CCH_D842_2_ED2023_04,
+        CCH_D842_2_ED2023_09, CCH_D842_2_ED2023_12, CCH_D842_2_ED2026_07)
+rule LoyerMeubleDeuxTiersApl(m: Menage, prix: Money) strict {
+    label fr official "Lorsque le logement est loué ou sous-loué en meublé, les dispositions de l'article D. 842-2 s'appliquent le cas échéant pour la détermination des loyers pris en compte";
+    label ru unofficial "APL, меблированный наём с 11.01.2020: учитываемый наём определяется по D. 842-2 (D. 823-18, последний абзац)";
+    effective [@2020-01-11, infinity);
+    when secteur_locatif(m) and aide_demandee(m, APL) and prix_paye_logement_meuble(m, prix);
+    then loyer_meuble_aux_deux_tiers(m);
+}
+
+// До 11.01.2020 у D. 823-18 абзаца о меблированном найме нет: loyer principal APL
+// по D. 823-16 — уплаченная цена.
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_18, CCH_D823_18_ED2019_12)
+rule LoyerMeubleAplAvant2020(m: Menage, prix: Money) strict {
+    label fr official "L est le loyer éligible, correspondant au loyer principal pris en compte dans la limite d'un plafond";
+    label ru unofficial "APL до 11.01.2020: отсылки D. 823-18 к D. 842-2 ещё нет, loyer principal — уплаченная цена меблированного найма";
+    effective [@2019-09-01, @2020-01-11);
+    when secteur_locatif(m) and aide_demandee(m, APL) and prix_paye_logement_meuble(m, prix);
+    then loyer_principal(m, prix);
+}
+
+// Две трети точно: только когда частное — конечная десятичная дробь; иначе
+// отказ INEXACT_DIVISION (§50). Под прочтением D-82 правило гасится охранным
+// условием, и то же место считает LoyerPrincipalMeubleArrondi.
+@source(CCH_D842_2, CCH_D842_2_ED2019_12, CCH_D842_2_ED2020_01,
+        CCH_D842_2_ED2021_01, CCH_D842_2_ED2023_04, CCH_D842_2_ED2023_09,
+        CCH_D842_2_ED2023_12, CCH_D842_2_ED2026_07)
+rule LoyerPrincipalMeuble(m: Menage, prix: Money) strict {
+    label fr official "le prix du loyer est remplacé par les deux tiers du prix effectivement payé";
+    label ru unofficial "Loyer principal меблированного найма — две трети уплаченной цены (точно)";
+    when loyer_meuble_aux_deux_tiers(m) and prix_paye_logement_meuble(m, prix)
+        and not_known(arrondi_intermediaire_centime(m));
+    then loyer_principal(m, prix * 2.0 / 3.0);
+}
+
+// D-82: две трети с округлением до сантима HALF_UP — включено в прочтение
+// ArrondiCentimeHalfUp (27-lecture-arrondi-centime.law).
+@source(CCH_D842_2, CCH_D842_2_ED2019_12, CCH_D842_2_ED2020_01,
+        CCH_D842_2_ED2021_01, CCH_D842_2_ED2023_04, CCH_D842_2_ED2023_09,
+        CCH_D842_2_ED2023_12, CCH_D842_2_ED2026_07)
+rule LoyerPrincipalMeubleArrondi(m: Menage, prix: Money) strict {
+    label fr official "le prix du loyer est remplacé par les deux tiers du prix effectivement payé";
+    label ru unofficial "D-82: две трети уплаченной цены меблированного найма с округлением до сантима (HALF_UP)";
+    when loyer_meuble_aux_deux_tiers(m) and prix_paye_logement_meuble(m, prix);
+    then loyer_principal(m, div_round(prix * 2.0, 3.0, 2, "HALF_UP"));
+}

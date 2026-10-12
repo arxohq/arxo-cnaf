@@ -1,0 +1,49 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// New regime at 18, reached: same child (born 2012-03-15), claimed
+// month 2030-04-01 (18th birthday 2030-03-15 passed). Non-eldest of
+// two, full custody: eligible, 0.16 x 400 = 64.00. Pair of
+// majoration-18-nouveau-zero.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-majoration-18-atteint" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2030-04-01T12:00:00Z; knowledge_time @2030-04-01T12:00:00Z; legal_time @2030-04-01; timezone "Europe/Paris"; }
+        assert "m18a-01": territoire(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), METROPOLE) { origin case_input; }
+        assert "m18a-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), 2) { origin case_input; }
+        assert "m18a-03": ressources_menage(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), 30000 EUR) { origin case_input; }
+        assert "m18a-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), 55950 EUR) { origin case_input; }
+        assert "m18a-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), 78300 EUR) { origin case_input; }
+        assert "m18a-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), 5595 EUR) { origin case_input; }
+        assert "m18a-05": bmaf_retenu(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), 400.00 EUR) { origin case_input; }
+        assert "m18a-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), 1) { origin case_input; }
+        assert "m18a-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), 0) { origin case_input; }
+        assert "m18a-08": forfait_total_menage(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), 0 EUR) { origin case_input; }
+        assert "m18a-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), 0) { origin case_input; }
+        assert "m18a-10": foyer_du_cas(entity_ref("urn:fr:pf-af:case:majoration-18-atteint")) { origin case_input; }
+        assert "m18a-11": mois_droit(@2030-04-01) { origin case_input; }
+        assert "m18a-12": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), entity_ref("urn:fr:pf-af:child:aine-18a")) { origin case_input; }
+        assert "m18a-13": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:majoration-18-atteint"), entity_ref("urn:fr:pf-af:child:cadet-18a")) { origin case_input; }
+        assert "m18a-14": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:aine-18a")) { origin case_input; }
+        assert "m18a-15": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:cadet-18a")) { origin case_input; }
+        assert "m18a-16": date_naissance(entity_ref("urn:fr:pf-af:child:aine-18a"), @2008-05-01) { origin case_input; }
+        assert "m18a-17": date_naissance(entity_ref("urn:fr:pf-af:child:cadet-18a"), @2012-03-15) { origin case_input; }
+        assert "m18a-18": enfant_du_cas(entity_ref("urn:fr:pf-af:child:aine-18a")) { origin case_input; }
+        assert "m18a-19": enfant_du_cas(entity_ref("urn:fr:pf-af:child:cadet-18a")) { origin case_input; }
+        assert "m18a-20": garde(entity_ref("urn:fr:pf-af:child:aine-18a"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "m18a-21": garde(entity_ref("urn:fr:pf-af:child:cadet-18a"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+    }
+    evaluate truth(age_requis_atteint(entity_ref("urn:fr:pf-af:child:cadet-18a")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:child:cadet-18a"), 64.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,47 @@
+// Словарь пакета: сущность, территория, входные и выводимые отношения.
+// Значения выводят правила `02-montants.law` из закреплённых фрагментов;
+// делом приходят только территория и дата (legal_time).
+
+language "law.core" version "0.2";
+package fr.travail.smic version "0.1.0";
+namespace "urn:fr:corpus:clir:smic";
+
+pub entity Travailleur {
+    label fr official "travailleur dont la rémunération ne peut être inférieure au SMIC (catégories de l'article L. 2211-1 du code du travail)";
+    label ru unofficial "работник, ниже SMIC платить нельзя (категории ст. L. 2211-1 трудового кодекса)";
+}
+
+pub enum TerritoireSmic {
+    label fr official "territoire d'application du taux: métropole et outre-mer du 1° ou Mayotte du 2°";
+    label ru unofficial "территория применения ставки: метрополия+ (1°) либо Майотта (2°)";
+    METROPOLE_ET_DOM, MAYOTTE
+}
+
+pub relation territoire_smic(t: Travailleur, territoire: TerritoireSmic) kind empirical {
+    key(t);
+    label fr official "territoire d'emploi du travailleur (1° ou 2° des articles de relèvement)";
+    label ru unofficial "территория занятости работника (1° или 2° статей о повышении)";
+}
+
+pub relation smic_horaire(t: Travailleur, montant: Money) kind institutional {
+    key(t);
+    label fr official "taux horaire du SMIC applicable au travailleur";
+    label ru unofficial "часовая ставка SMIC, применимая к работнику";
+}
+
+pub relation smic_horaire_publie(t: Travailleur, montant: Money) kind institutional {
+    key(t);
+    label fr official "taux horaire du SMIC tel que l'arrêté de majoration le publie à son article 2 (valeur de vérification de la valeur construite)";
+    label ru unofficial "часовая ставка SMIC, опубликованная в ст. 2 arrêté о повышении (значение для проверки построенной ставки)";
+}
+
+pub relation smic_conforme_publie(t: Travailleur) kind institutional {
+    label fr official "le taux construit par la majoration de l'article 1 coïncide avec le montant publié à l'article 2";
+    label ru unofficial "ставка, построенная по проценту ст. 1, совпала с суммой, опубликованной в ст. 2";
+}
+
+pub relation minimum_garanti(t: Travailleur, montant: Money) kind institutional {
+    key(t);
+    label fr official "montant du minimum garanti de l'article L. 3231-12 du code du travail";
+    label ru unofficial "величина гарантированного минимума ст. L. 3231-12 трудового кодекса";
+}

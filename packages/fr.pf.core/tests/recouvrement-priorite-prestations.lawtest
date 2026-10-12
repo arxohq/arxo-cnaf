@@ -1,0 +1,20 @@
+// Priority of family benefits: same child, listed increase, 300 EUR PF against 500 EUR - increases cut to 200 EUR (L. 553-3, PC-R03-02).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-recouvrement-priorite-prestations" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "recouvrement-priorite-prestations-01": montant_prestations_familiales(entity_ref("urn:fr:pf:case:priorite-pf"), 300 EUR) { origin case_input; }
+        assert "recouvrement-priorite-prestations-02": montant_majorations_concurrentes(entity_ref("urn:fr:pf:case:priorite-pf"), 500 EUR) { origin case_input; }
+        assert "recouvrement-priorite-prestations-03": meme_enfant_pf_majoration(entity_ref("urn:fr:pf:case:priorite-pf"), entity_ref("urn:fr:pf:case:enfant-priorite")) { origin case_input; }
+        assert "recouvrement-priorite-prestations-04": majoration_enumereree_l5533(entity_ref("urn:fr:pf:case:priorite-pf"), entity_ref("urn:fr:pf:case:enfant-priorite")) { origin case_input; }
+        assert "recouvrement-priorite-prestations-05": not cumul_logement_handicape_exception(entity_ref("urn:fr:pf:case:priorite-pf"), entity_ref("urn:fr:pf:case:enfant-priorite")) { origin case_input; }
+        assert "recouvrement-priorite-prestations-06": not asf_en_cause_l5533(entity_ref("urn:fr:pf:case:priorite-pf"), entity_ref("urn:fr:pf:case:enfant-priorite")) { origin case_input; }
+    }
+    evaluate truth(majorations_reduites(entity_ref("urn:fr:pf:case:priorite-pf"), 200 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

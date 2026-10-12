@@ -1,0 +1,19 @@
+// From 2024 the renewal silence turns favourable: renewal
+// requested, control silent through the second month — the opinion is
+// deemed favourable (R. 544-3 current).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-silence-renouvellement-2024" {
+    given {
+        context { decision_time @2024-05-15T12:00:00Z; knowledge_time @2024-05-15T12:00:00Z; legal_time @2024-05-15; timezone "Europe/Paris"; }
+        assert "ajpp-sr4-01": demande_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-sr4")) { origin case_input; }
+        assert "ajpp-sr4-02": demande_recue_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-sr4"), 10) { origin case_input; }
+        assert "ajpp-sr4-03": silence_observe_jusqu_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-sr4"), 12) { origin case_input; }
+    }
+    evaluate truth(avis_silence_repute_favorable(entity_ref("urn:fr:pf-ajpp:case:enfant-sr4")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

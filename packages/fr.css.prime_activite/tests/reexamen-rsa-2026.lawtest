@@ -1,0 +1,22 @@
+// RSA right opening triggers the periodic re-examination on the
+// opening date itself (D. 846-1, PA-COV-02): review due, D3
+// declaration duty ACTIVE. No resource amounts asserted: the
+// trigger is the opening event, not a cash figure.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-reexamen-rsa-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-05-15T12:00:00Z; knowledge_time @2026-05-15T12:00:00Z; legal_time @2026-05-15; timezone "Europe/Paris"; }
+        assert "ppa-01": ouverture_rsa(entity_ref("urn:fr:ppa:case:reexamen-rsa-2026"), @2026-04-15) { origin case_input; }
+        assert "ppa-02": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:reexamen-rsa-2026")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DeclarerRessourcesReexamen, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(reexamen_du(entity_ref("urn:fr:ppa:case:reexamen-rsa-2026"), @2026-04-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

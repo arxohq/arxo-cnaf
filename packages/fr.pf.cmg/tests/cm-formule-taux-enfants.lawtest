@@ -1,0 +1,33 @@
+// Reform formula, childminder, three children: effort rate 0.0413;
+// part b = 650 x (1 - 3000 x 0.0413 / 4.85) = 483.94840;
+// total 683.95.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-formule-taux-enfants" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "formule-tx-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:formule-taux"), entity_ref("urn:fr:pf-cmg:child:tx"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "formule-tx-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:formule-taux")) { origin case_input; }
+        assert "formule-tx-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:formule-taux"), entity_ref("urn:fr:pf-cmg:child:tx")) { origin case_input; }
+        assert "formule-tx-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:tx"), 2) { origin case_input; }
+        assert "formule-tx-05": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:formule-taux"), 3) { origin case_input; }
+        assert "formule-tx-06": facteur_smic(entity_ref("urn:fr:pf-cmg:case:formule-taux"), 1.0) { origin case_input; }
+        assert "formule-tx-07": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:formule-taux"), entity_ref("urn:fr:pf-cmg:child:tx"), 600 EUR) { origin case_input; }
+        assert "formule-tx-08": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:formule-taux"), entity_ref("urn:fr:pf-cmg:child:tx"), 50 EUR) { origin case_input; }
+        assert "formule-tx-09": heures_remunerees(entity_ref("urn:fr:pf-cmg:case:formule-taux"), entity_ref("urn:fr:pf-cmg:child:tx"), 130.0) { origin case_input; }
+        assert "formule-tx-10": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:formule-taux"), entity_ref("urn:fr:pf-cmg:child:tx"), 200 EUR) { origin case_input; }
+        assert "formule-tx-11": cout_reference_retenu(entity_ref("urn:fr:pf-cmg:case:formule-taux"), entity_ref("urn:fr:pf-cmg:child:tx"), 4.85 EUR) { origin case_input; }
+        assert "formule-tx-12": montant_forfaitaire_isole(entity_ref("urn:fr:pf-cmg:case:formule-taux"), 700 EUR) { origin case_input; }
+        assert "formule-tx-13": forfait_logement(entity_ref("urn:fr:pf-cmg:case:formule-taux"), 100 EUR) { origin case_input; }
+        assert "formule-tx-14": revenu_mensuel_brut(entity_ref("urn:fr:pf-cmg:case:formule-taux"), 3000 EUR) { origin case_input; }
+    }
+    // The rate itself is not asserted: bare Decimal literals are not
+    // exactly expressible in scenario form (D-11); the total below
+    // discriminates the rate.
+    evaluate truth(montant_cmg_du(entity_ref("urn:fr:pf-cmg:case:formule-taux"), entity_ref("urn:fr:pf-cmg:child:tx"), 683.95 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

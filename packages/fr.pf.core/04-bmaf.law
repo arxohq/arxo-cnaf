@@ -1,0 +1,98 @@
+// BMAF (L. 551-1) and the prestations list (L. 511-1).
+//
+// L. 551-1: amounts follow bases mensuelles revalued on 1 April by the
+// L. 161-25 coefficient. Euro amounts and ceilings are published by DSS
+// instructions DSS/2B/2026/46 and DSS/2B/2025/177, pinned in
+// fr.css.revalorisation (phase W0-06); tools/build_bareme.py transcribes
+// them into bareme.json (95 rows, every formula self-checked) - boundary
+// B-PFCORE-BAREME is REMOVED. Executable here: the CMG (L. 531-5) and AJPP
+// (L. 544-1) exclusions from the BMAF base (exact match function) and the
+// L. 511-1 list itself as an enum. The "BMAF(n) = BMAF(n-1) x coeff
+// L. 161-25" chain is executable in fr.css.revalorisation (02-bmaf.law).
+//
+// L. 511-1 "comprennent: 1-9" - declarative list; its formalization
+// is PrestationSocle below. L'allocation de logement (4) is computed by housing.
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_L511_1,
+    CSS_L511_1_CSS_ED2021_05,
+    CSS_L511_1_CSS_ED2021_11,
+    CSS_L511_1_CSS_ED2021_12,
+    CSS_L511_1_CSS_ED2022_01,
+    CSS_L511_1_CSS_ED2022_02,
+    CSS_L511_1_CSS_ED2022_03,
+    CSS_L511_1_CSS_ED2022_09,
+    CSS_L511_1_CSS_ED2023_07,
+    CSS_L511_1_CSS_ED2024_01,
+    CSS_L511_1_CSS_ED2025_02,
+    CSS_L511_1_CSS_ED2025_09,
+    CSS_L511_1_CSS_ED2025_12,
+    CSS_L511_1_CSS_ED2026_01,
+    CSS_L511_1_CSS_ED2026_04,
+    CSS_L511_1_CSS_ED2026_06,
+    CSS_L551_1,
+    CSS_L551_1_CSS_ED2025_12,
+    CSS_L551_1_CSS_ED2026_01,
+    CSS_L551_1_CSS_ED2026_04,
+    CSS_L551_1_CSS_ED2026_06,
+    Personne,
+};
+
+pub enum PrestationSocle {
+    label fr official "prestations familiales énumérées à l'article L. 511-1";
+    label en unofficial "family benefits listed in article L. 511-1";
+    PAJE,
+    ALLOCATIONS_FAMILIALES,
+    COMPLEMENT_FAMILIAL,
+    ALLOCATION_LOGEMENT,
+    AEEH,
+    ASF,
+    ARS,
+    ALLOCATION_FORFAITAIRE_DECES,
+    AJPP,
+    CMG
+}
+
+relation prestation_demandee(p: Personne, prestation: PrestationSocle) kind empirical {
+    key(p);
+    label fr official "prestation demandée par la personne, parmi celles de l'article L. 511-1";
+    label en unofficial "benefit claimed by the person, from the article L. 511-1 list";
+}
+
+relation base_bmaf_classee(p: Personne, releve: Boolean) kind institutional {
+    key(p);
+    label fr official "la prestation relève (vrai) ou non (faux) des bases mensuelles de l'article L. 551-1";
+    label en unofficial "benefit falls (true) or not (false) under the monthly bases of article L. 551-1";
+}
+
+function releve_bmaf(prestation: PrestationSocle) -> Boolean = match prestation {
+    PAJE => true;
+    ALLOCATIONS_FAMILIALES => true;
+    COMPLEMENT_FAMILIAL => true;
+    ALLOCATION_LOGEMENT => true;
+    AEEH => true;
+    ASF => true;
+    ARS => true;
+    ALLOCATION_FORFAITAIRE_DECES => true;
+    AJPP => false;
+    CMG => false;
+};
+
+@source(CSS_L551_1, CSS_L551_1_CSS_ED2025_12, CSS_L551_1_CSS_ED2026_01, CSS_L551_1_CSS_ED2026_04,
+        CSS_L551_1_CSS_ED2026_06, CSS_L511_1, CSS_L511_1_CSS_ED2021_05, CSS_L511_1_CSS_ED2021_11,
+        CSS_L511_1_CSS_ED2021_12, CSS_L511_1_CSS_ED2022_01, CSS_L511_1_CSS_ED2022_02,
+        CSS_L511_1_CSS_ED2022_03, CSS_L511_1_CSS_ED2022_09, CSS_L511_1_CSS_ED2023_07,
+        CSS_L511_1_CSS_ED2024_01, CSS_L511_1_CSS_ED2025_02, CSS_L511_1_CSS_ED2025_09,
+        CSS_L511_1_CSS_ED2025_12, CSS_L511_1_CSS_ED2026_01, CSS_L511_1_CSS_ED2026_04,
+        CSS_L511_1_CSS_ED2026_06)
+rule BaseBmafClasse(p: Personne, prestation: PrestationSocle) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "Le montant est déterminé d'après des bases mensuelles, à l'exception du CMG (L. 531-5) et de l'AJPP (L. 544-1)";
+    label en unofficial "Amounts follow the monthly bases, except CMG (L. 531-5) and AJPP (L. 544-1)";
+    when prestation_demandee(p, prestation);
+    then base_bmaf_classee(p, releve_bmaf(prestation));
+}

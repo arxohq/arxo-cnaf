@@ -1,0 +1,315 @@
+// DOM (L755-11/12, D755-5, D755-5-1).
+//
+// DEONTIC MAP: right-conferring rules only. L755-11 extends the L521-1/3
+// conditions to the L751-1 collectivities; L755-12 opens the right from the
+// first child and disapplies the last four L521-1 alinas for single-child
+// households (no modulation, no complement); D755-5 sets the single-child
+// rate and the 11/16 supplements on the L755-3 base. D755-5-1 extends the
+// D521-2 (forfait), D521-3 (ceilings) and D521-4 (resources) provisions to
+// the L751-1 departments as applicability statuses; it adds no duty,
+// prohibition, power, liberty or immunity, and no new computation: the
+// 03/05 rules already run without a territory gate, so the extension is
+// effective for DOM households through them (proven by the dom-d521
+// scenarios, not by duplicated rules).
+//
+// Evaluative elements (three channels): none in D755-5-1. Applicability
+// is decided by the evidenced household territory (channel 3 direct case
+// fact); no organ judgment (channel 1) and no adjudicated establishment
+// (channel 2) appear in the sentence.
+//
+// READINGS:
+// - Multi-child DOM households reuse the metropolitan computation (03/04)
+//   on the L551-1 base: D755-5 I cites only the D521-1 RATES, and the
+//   foreign expectation structure fits a metro-scale base
+//   (D-PFAF-DOM-BASE, blind probe PFAF-B-08).
+// - Single-child supplement (D755-5 II): opened for the non-eldest single
+//   dependent child (same eldest reading as 04); the eldest single child
+//   gets none (matches the foreign single-child structure).
+// - D755-5-1 "départements mentionnés à l'article L. 751-1" inherits the
+//   package Territoire reading of L755-11/12 (the four DOM; Mayotte and
+//   AUTRE excluded, B-PFAF-MAYOTTE). The article states applicability
+//   ("sont applicables"), not exclusivity: the 03/05 rules are not gated.
+// - Mayotte (wave 7) and AUTRE: no conclusion (B-PFAF-MAYOTTE).
+
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+use self::{
+    CSS_D755_5,
+    CSS_D755_5_1,
+    CSS_D755_5_1_ED2015_10,
+    CSS_D755_5_1_ED2021_09,
+    CSS_D755_5_1_ED2022_01,
+    CSS_D755_5_1_ED2026_03,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03,
+    CSS_L755_11,
+    CSS_L755_11_ED2021_09,
+    CSS_L755_11_ED2022_01,
+    CSS_L755_11_ED2026_03,
+    CSS_L755_12,
+    CSS_L755_12_ED2015_03,
+    CSS_L755_12_ED2015_07,
+    CSS_L755_12_ED2015_10,
+    CSS_L755_12_ED2021_09,
+    CSS_L755_12_ED2022_01,
+    CSS_L755_12_ED2026_03,
+    Territoire,
+    af_droit_ouvert,
+    af_montant_du,
+    arrondi_lignes_dss,
+    base_dom_retenue,
+    d521_2_applicable_dom,
+    d521_3_applicable_dom,
+    d521_4_applicable_dom,
+    date_naissance,
+    est_aine,
+    forfait_total_menage,
+    mois_droit,
+    montant_majoration,
+    montant_mensuel_af,
+    montant_mensuel_af_dom,
+    nb_enfants_charge,
+    nest_pas_aine,
+    territoire,
+};
+
+deadline policy DOM_AGE_ATTEINT {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+@source(
+    CSS_L755_12,
+    CSS_L755_12_ED2015_03,
+    CSS_L755_12_ED2015_07,
+    CSS_L755_12_ED2015_10,
+    CSS_L755_12_ED2021_09,
+    CSS_L755_12_ED2022_01,
+    CSS_L755_12_ED2026_03)
+rule DroitOuvertDOM(p: fr.pf.core::Personne, n: Integer, t: Territoire) strict {
+    effective [@2014-12-25, infinity);
+    label fr official "dans les DOM, les allocations sont dues pour tout enfant";
+    label en unofficial "in the DOM, benefits are due for every child";
+    when territoire(p, t) and t != METROPOLE and t != MAYOTTE and t != AUTRE
+        and nb_enfants_charge(p, n) and n >= 1;
+    then af_droit_ouvert(p);
+}
+
+@source(
+    CSS_L755_11,
+    CSS_L755_11_ED2021_09,
+    CSS_L755_11_ED2022_01,
+    CSS_L755_11_ED2026_03,
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03)
+rule DomMultiMiroir(p: fr.pf.core::Personne, m: Money, t: Territoire) strict {
+    effective [@2015-10-16, infinity);
+    label fr official "plusieurs enfants dans les DOM: mêmes taux que D. 521-1 (D. 755-5, I)";
+    label en unofficial "several children in the DOM: same rates as D. 521-1 (D. 755-5, I)";
+    when af_droit_ouvert(p) and territoire(p, t) and t != METROPOLE
+        and t != MAYOTTE and t != AUTRE
+        and montant_mensuel_af(p, m);
+    then montant_mensuel_af_dom(p, m);
+}
+
+@source(
+    CSS_L755_12,
+    CSS_L755_12_ED2015_03,
+    CSS_L755_12_ED2015_07,
+    CSS_L755_12_ED2015_10,
+    CSS_L755_12_ED2021_09,
+    CSS_L755_12_ED2022_01,
+    CSS_L755_12_ED2026_03,
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03)
+rule DomMontantUnique(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, t: Territoire, base: Money) strict {
+    effective [@1998-12-30, infinity);
+    label fr official "enfant unique dans les DOM: 5,88 p. 100 de la base L. 755-3";
+    label en unofficial "single child in the DOM: 5.88% of the L. 755-3 base";
+    when af_droit_ouvert(p) and territoire(p, t) and t != METROPOLE
+        and t != MAYOTTE and t != AUTRE
+        and nb_enfants_charge(p, 1) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::enfant_ouvre_droit(e) and base_dom_retenue(p, base)
+        and not_known(arrondi_lignes_dss(p));
+    then montant_mensuel_af_dom(p, TauxDomEnfantUnique * base);
+}
+
+@source(
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03)
+rule DomMajoOnze(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date, base: Money) strict {
+    effective [@1998-12-30, infinity);
+    label fr official "enfant unique non aîné de onze ans: 3,69 p. 100 de la base L. 755-3";
+    label en unofficial "non-eldest single child aged eleven: 3.69% of the L. 755-3 base";
+    when nb_enfants_charge(p, 1) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::enfant_ouvre_droit(e) and date_naissance(e, naissance)
+        and nest_pas_aine(e) and mois_droit(mois)
+        and mois >= add_calendar_period(naissance, 11 calendar_year)
+        and mois < add_calendar_period(naissance, 16 calendar_year)
+        and base_dom_retenue(p, base)
+        and not_known(arrondi_lignes_dss(p));
+    then montant_majoration(e, TauxDomMajorationOnzeAns * base);
+}
+
+@source(
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03)
+rule DomMajoSeize(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date, base: Money) strict {
+    effective [@1998-12-30, infinity);
+    label fr official "enfant unique non aîné de seize ans: 5,67 p. 100 de la base L. 755-3";
+    label en unofficial "non-eldest single child aged sixteen: 5.67% of the L. 755-3 base";
+    when nb_enfants_charge(p, 1) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::enfant_ouvre_droit(e) and date_naissance(e, naissance)
+        and nest_pas_aine(e) and mois_droit(mois)
+        and mois >= add_calendar_period(naissance, 16 calendar_year)
+        and base_dom_retenue(p, base)
+        and not_known(arrondi_lignes_dss(p));
+    then montant_majoration(e, TauxDomMajorationSeizeAns * base);
+}
+
+@source(
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03)
+rule DomMajoZeroAine(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@1998-12-30, infinity);
+    label fr official "enfant unique aîné: pas de majoration";
+    label en unofficial "eldest single child: no supplement";
+    when nb_enfants_charge(p, 1) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::enfant_ouvre_droit(e) and est_aine(e);
+    then montant_majoration(e, 0 EUR);
+}
+
+@source(
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03)
+rule DomMajoZeroJeune(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, naissance: Date, mois: Date) strict {
+    effective [@1998-12-30, infinity);
+    label fr official "enfant unique de moins de onze ans: pas de majoration";
+    label en unofficial "single child under eleven: no supplement";
+    when nb_enfants_charge(p, 1) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::enfant_ouvre_droit(e) and date_naissance(e, naissance)
+        and nest_pas_aine(e) and mois_droit(mois)
+        and mois < add_calendar_period(naissance, 11 calendar_year);
+    then montant_majoration(e, 0 EUR);
+}
+
+@source(
+    CSS_L755_12,
+    CSS_L755_12_ED2015_03,
+    CSS_L755_12_ED2015_07,
+    CSS_L755_12_ED2015_10,
+    CSS_L755_12_ED2021_09,
+    CSS_L755_12_ED2022_01,
+    CSS_L755_12_ED2026_03)
+rule DomMontantDu(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, m: Money, maj: Money, f: Money) strict {
+    effective [@2014-12-25, infinity);
+    label fr official "total DOM enfant unique: 5,88 p. 100 plus majoration 11/16 ans (ni barème ni complément)";
+    label en unofficial "single-child DOM total: 5.88% plus the 11/16 supplement (no scale, no top-up)";
+    when montant_mensuel_af_dom(p, m) and nb_enfants_charge(p, 1)
+        and fr.pf.core::parent_charge(p, e) and montant_majoration(e, maj)
+        and forfait_total_menage(p, f);
+    then af_montant_du(p, round(m + maj + f, 2, "HALF_UP"));
+}
+
+// D-42 (08.10.2026): multi-head `then {…}` is not executable (LDC-E1321);
+// rule D521_2_4ApplicablesDOM split into one rule per head, same body and sources.
+@source(
+    CSS_D755_5_1,
+    CSS_D755_5_1_ED2015_10,
+    CSS_D755_5_1_ED2021_09,
+    CSS_D755_5_1_ED2022_01,
+    CSS_D755_5_1_ED2026_03)
+rule D521_2_4ApplicablesDOMD5212ApplicableDom(p: fr.pf.core::Personne, t: Territoire) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "D. 521-2 à D. 521-4 applicables dans les DOM (D. 755-5-1)";
+    label en unofficial "D. 521-2 to D. 521-4 applicable in the DOM departments (D. 755-5-1)";
+    when territoire(p, t) and t != METROPOLE and t != MAYOTTE and t != AUTRE;
+    then d521_2_applicable_dom(t);
+}
+
+@source(
+    CSS_D755_5_1,
+    CSS_D755_5_1_ED2015_10,
+    CSS_D755_5_1_ED2021_09,
+    CSS_D755_5_1_ED2022_01,
+    CSS_D755_5_1_ED2026_03)
+rule D521_2_4ApplicablesDOMD5213ApplicableDom(p: fr.pf.core::Personne, t: Territoire) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "D. 521-2 à D. 521-4 applicables dans les DOM (D. 755-5-1)";
+    label en unofficial "D. 521-2 to D. 521-4 applicable in the DOM departments (D. 755-5-1)";
+    when territoire(p, t) and t != METROPOLE and t != MAYOTTE and t != AUTRE;
+    then d521_3_applicable_dom(t);
+}
+
+@source(
+    CSS_D755_5_1,
+    CSS_D755_5_1_ED2015_10,
+    CSS_D755_5_1_ED2021_09,
+    CSS_D755_5_1_ED2022_01,
+    CSS_D755_5_1_ED2026_03)
+rule D521_2_4ApplicablesDOMD5214ApplicableDom(p: fr.pf.core::Personne, t: Territoire) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "D. 521-2 à D. 521-4 applicables dans les DOM (D. 755-5-1)";
+    label en unofficial "D. 521-2 to D. 521-4 applicable in the DOM departments (D. 755-5-1)";
+    when territoire(p, t) and t != METROPOLE and t != MAYOTTE and t != AUTRE;
+    then d521_4_applicable_dom(t);
+}

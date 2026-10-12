@@ -1,0 +1,19 @@
+// Free instruction by department services: the services that
+// received the filing and performed the instruction must not charge
+// for it (D. 262-28, department side). An instructor that did not
+// receive the filing owes nothing (control:
+// gratuite-autre-destinataire-dept).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-gratuite-interdite-dept" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "grat-01": instruction_effectuee_dept(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:case:gratuite-interdite-dept")) { origin case_input; }
+        assert "grat-02": demande_deposee_aupres_dept(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:case:gratuite-interdite-dept")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InstruireGratuitementDept, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

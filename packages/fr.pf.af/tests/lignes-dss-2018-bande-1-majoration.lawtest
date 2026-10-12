@@ -1,0 +1,44 @@
+// Прочтение D-83 выбрано в context (`interpretation ArrondiLignesDss;`): суммы AF — округлённые
+// строки таблицы DSS, итог — их сумма (08-lecture-arrondi-lignes.law). Ожидания — строки
+// закреплённой таблицы DSS/SD2B/2017/97 (revalorisation/sources/dss-2017-97.txt), BMAF 407,84 € с 01.04.2017
+// (фрагмент DSS_SD2B_2017_97_BMAF): «3 enfants 73 % 297,72» (:147) и majoration «16 % 65,25» (:163).
+// Три ребёнка, одна надбавка, полоса 1 (ресурсы 40 000 ≤ I(3) = 56 286 + 3 × 5 628 = 73 170, плафоны 2018 —
+// фрагмент DSS_SD2B_2017_352_PLAFOND_AF). Итог — сумма строк 297,72 + 65,25 = 362,97; без прочтения пакет
+// округлял один итог 0,89 × 407,84 = 362,9776 → 362,98 (дело OpenFisca of176-af-2018-01-05).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-lignes-dss-2018-bande-1-majoration" {
+    given {
+        context { decision_time @2018-01-15T12:00:00Z; knowledge_time @2018-01-15T12:00:00Z; legal_time @2018-01-15; timezone "Europe/Paris"; interpretation ArrondiLignesDss; }
+        assert "l83-01": territoire(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), METROPOLE) { origin case_input; }
+        assert "l83-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 3) { origin case_input; }
+        assert "l83-03": ressources_menage(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 40000 EUR) { origin case_input; }
+        assert "l83-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 56286 EUR) { origin case_input; }
+        assert "l83-05": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 78770 EUR) { origin case_input; }
+        assert "l83-06": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 5628 EUR) { origin case_input; }
+        assert "l83-07": bmaf_retenu(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 407.84 EUR) { origin case_input; }
+        assert "l83-08": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 1) { origin case_input; }
+        assert "l83-09": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 0) { origin case_input; }
+        assert "l83-10": forfait_total_menage(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 0 EUR) { origin case_input; }
+        assert "l83-11": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 0) { origin case_input; }
+        assert "l83-12": foyer_du_cas(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration")) { origin case_input; }
+    }
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), BANDE_1));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 362.97 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(complement_degressif(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-1-majoration"), 362.97 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

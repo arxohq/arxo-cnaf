@@ -1,0 +1,32 @@
+// Overrun exactly at the April-amount sum (17876.70): the strict
+// under-sum test fails, so no differential (NEITHER).
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-differentiel-seuil-egal" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "afs-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal"), entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal-e1")) { origin case_input; }
+        assert "afs-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal"), entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal-e2")) { origin case_input; }
+        assert "afs-03": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal-e1")) { origin case_input; }
+        assert "afs-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal-e2")) { origin case_input; }
+        assert "afs-05": date_naissance(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal-e1"), @2014-06-01) { origin case_input; }
+        assert "afs-06": date_naissance(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal-e2"), @2005-06-01) { origin case_input; }
+        assert "afs-07": seuil_six_ans(@2022-02-01) { origin case_input; }
+        assert "afs-08": seuil_dix_huit_ans(@2021-09-15) { origin case_input; }
+        assert "afs-09": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal-e1")) { origin case_input; }
+        assert "afs-10": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal-e2")) { origin case_input; }
+        assert "afs-11": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal"), 2) { origin case_input; }
+        assert "afs-12": nb_bande(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal"), ARS_MOINS_11, 1) { origin case_input; }
+        assert "afs-13": nb_bande(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal"), ARS_11_14, 0) { origin case_input; }
+        assert "afs-14": nb_bande(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal"), ARS_15_PLUS, 1) { origin case_input; }
+        assert "afs-15": ressources_menage(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal"), 17876.70 EUR) { origin case_input; }
+        assert "afs-16": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal"), 10000 EUR) { origin case_input; }
+        assert "afs-17": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal"), 1000.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ars_differentiel_du(entity_ref("urn:fr:pf-ars:case:differentiel-seuil-egal-e1"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

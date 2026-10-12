@@ -1,0 +1,190 @@
+// Base allowance (allocation de base): the right and the monthly amount are
+// built from the inputs. The case supplies resources, the full-rate ceiling
+// (CF ceiling — neighbour fr.pf.cf, B-PAJE2-PLAFOND-PLEIN), the BMAF, the
+// age and cohort facts and the eligible months; the rules derive the right,
+// the cohort-dependent amount and the award.
+//
+// Current L. 531-3/D. 531-3 (2018) govern children born or adopted from
+// 01.04.2018 at once and every other child from 01.04.2021 (NOTA); the 2015
+// wordings still govern pre-2018 children until 01.04.2021 — three montant
+// rules per rate (recent cohort / old cohort new regime / old regime).
+//
+// Pitfall §5.3: bare parameter names only inside the `function` below;
+// rule heads have none. Rates hold across the whole coverage window.
+
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+use self::{
+    CSS_D531_3_ED2015_01,
+    CSS_D531_3_ED2018_04,
+    CSS_L531_3_ED2015_01,
+    CSS_L531_3_ED2018_01,
+    CohorteEnfant,
+    Enfant,
+    Menage,
+    base_attribuee,
+    bmaf_applicable,
+    cohorte_enfant,
+    condition_age_base,
+    droit_base_partiel,
+    droit_base_plein,
+    enfant_en_charge,
+    mois_eligible_base,
+    montant_base_partiel,
+    montant_base_plein,
+    plafond_base_taux_plein,
+    plafond_prime,
+    ressources_annuelles,
+};
+
+function montant_base_calcule(bmaf: Money, taux: Decimal) -> Money {
+    return bmaf * taux;
+}
+
+// --- L. 531-3, para. 1 (both wordings): full-rate right -------------------
+//
+// «Elle est versée à taux plein lorsque les ressources ne dépassent pas un
+// plafond ...» — the ceiling value is the CF ceiling (B-PAJE2-PLAFOND-PLEIN).
+
+@source(CSS_L531_3_ED2018_01, CSS_L531_3_ED2015_01)
+rule DroitBasePlein(m: Menage, e: Enfant, ressources: Money, plafond: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'allocation de base est versée à taux plein lorsque les ressources ne dépassent pas le plafond";
+    label en unofficial "the base allowance is paid at the full rate where resources do not exceed the ceiling";
+    when enfant_en_charge(m, e)
+        and condition_age_base(e)
+        and ressources_annuelles(m, ressources)
+        and plafond_base_taux_plein(m, plafond)
+        and ressources <= plafond;
+    then droit_base_plein(m, e);
+}
+
+// --- L. 531-3, para. 1: part-rate right ------------------------------------
+//
+// «L'allocation de base est versée à taux partiel aux ménages ... dont les
+// ressources ne dépassent pas le plafond défini à l'article L. 531-2.» The
+// L. 531-2 ceiling is the built plafond_prime (119.47% — D. 531-3-1); the
+// part rate covers the band above the full-rate ceiling.
+
+@source(CSS_L531_3_ED2018_01, CSS_L531_3_ED2015_01)
+rule DroitBasePartiel(m: Menage, e: Enfant, ressources: Money, plafond_plein: Money, plafond: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'allocation de base est versée à taux partiel entre le plafond taux plein et le plafond L. 531-2";
+    label en unofficial "the base allowance is paid at the part rate between the full-rate ceiling and the L. 531-2 ceiling";
+    when enfant_en_charge(m, e)
+        and condition_age_base(e)
+        and ressources_annuelles(m, ressources)
+        and plafond_base_taux_plein(m, plafond_plein)
+        and plafond_prime(m, plafond)
+        and ressources > plafond_plein
+        and ressources <= plafond;
+    then droit_base_partiel(m, e);
+}
+
+// --- D. 531-3 (2018): amounts, recent cohort, whole window -----------------
+
+@source(CSS_D531_3_ED2018_04)
+rule MontantBasePleinRecent(m: Menage, e: Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "taux plein 41,65 % de la BMAF : enfant né ou adopté à compter du 1er avril 2018";
+    label en unofficial "full rate 41.65% of the BMAF: child born or adopted from 01.04.2018";
+    when droit_base_plein(m, e)
+        and cohorte_enfant(e, NE_APARTIR_AVRIL_2018)
+        and bmaf_applicable(m, bmaf);
+    then montant_base_plein(m, e, montant_base_calcule(bmaf, TauxBasePlein));
+}
+
+@source(CSS_D531_3_ED2018_04)
+rule MontantBasePartielRecent(m: Menage, e: Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "taux partiel 20,825 % de la BMAF : enfant né ou adopté à compter du 1er avril 2018";
+    label en unofficial "part rate 20.825% of the BMAF: child born or adopted from 01.04.2018";
+    when droit_base_partiel(m, e)
+        and cohorte_enfant(e, NE_APARTIR_AVRIL_2018)
+        and bmaf_applicable(m, bmaf);
+    then montant_base_partiel(m, e, montant_base_calcule(bmaf, TauxBasePartiel));
+}
+
+// --- D. 531-3 (2018): old cohort joins the new regime from 01.04.2021 -----
+
+@source(CSS_D531_3_ED2018_04)
+rule MontantBasePleinNouveauRegime(m: Menage, e: Enfant, bmaf: Money) strict {
+    effective [@2021-04-01, infinity);
+    label fr official "taux plein 41,65 % : enfant antérieur au 1er avril 2018, à compter du 1er avril 2021";
+    label en unofficial "full rate 41.65%: pre-01.04.2018 child, from 01.04.2021";
+    when droit_base_plein(m, e)
+        and cohorte_enfant(e, NE_AVANT_AVRIL_2018)
+        and bmaf_applicable(m, bmaf);
+    then montant_base_plein(m, e, montant_base_calcule(bmaf, TauxBasePlein));
+}
+
+@source(CSS_D531_3_ED2018_04)
+rule MontantBasePartielNouveauRegime(m: Menage, e: Enfant, bmaf: Money) strict {
+    effective [@2021-04-01, infinity);
+    label fr official "taux partiel 20,825 % : enfant antérieur au 1er avril 2018, à compter du 1er avril 2021";
+    label en unofficial "part rate 20.825%: pre-01.04.2018 child, from 01.04.2021";
+    when droit_base_partiel(m, e)
+        and cohorte_enfant(e, NE_AVANT_AVRIL_2018)
+        and bmaf_applicable(m, bmaf);
+    then montant_base_partiel(m, e, montant_base_calcule(bmaf, TauxBasePartiel));
+}
+
+// --- D. 531-3 (2015): old cohort before 01.04.2021 — 45.95% / half --------
+
+// The 2018 NOTA keeps the 2015 rates governing pre-2018 children until
+// 01.04.2021: both wordings anchor the rule (rate text 2015, transitional
+// authority 2018 — an applicable anchor at 2021 keeps the rule live, §92.3).
+@source(CSS_D531_3_ED2015_01, CSS_D531_3_ED2018_04)
+rule MontantBasePleinAncienRegime(m: Menage, e: Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, @2021-04-01);
+    label fr official "taux plein antérieur 45,95 % : enfant antérieur au 1er avril 2018, avant le 1er avril 2021";
+    label en unofficial "former full rate 45.95%: pre-01.04.2018 child, before 01.04.2021";
+    when droit_base_plein(m, e)
+        and cohorte_enfant(e, NE_AVANT_AVRIL_2018)
+        and bmaf_applicable(m, bmaf);
+    then montant_base_plein(m, e, montant_base_calcule(bmaf, TauxBasePleinAncien));
+}
+
+// Same dual anchoring as the full-rate old-regime rule (rate text 2015,
+// transitional authority 2018).
+@source(CSS_D531_3_ED2015_01, CSS_D531_3_ED2018_04)
+rule MontantBasePartielAncienRegime(m: Menage, e: Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, @2021-04-01);
+    label fr official "taux partiel antérieur, moitié du plein : enfant antérieur au 1er avril 2018, avant le 1er avril 2021";
+    label en unofficial "former part rate, half of the full rate: pre-01.04.2018 child, before 01.04.2021";
+    when droit_base_partiel(m, e)
+        and cohorte_enfant(e, NE_AVANT_AVRIL_2018)
+        and bmaf_applicable(m, bmaf);
+    then montant_base_partiel(m, e, montant_base_calcule(bmaf, TauxBasePartielAncien));
+}
+
+// --- Award for the eligible month -------------------------------------------
+//
+// No examination article governs the base (R. 531-1 is prime-specific;
+// opening of the right is L. 552-1 — pf.core): the eligible month is a
+// fund-established fact (B-PAJE2-PERIODE); the rule requires it, mirroring
+// the sans-examen pair of the prime.
+
+@source(CSS_L531_3_ED2018_01, CSS_L531_3_ED2015_01)
+rule BasePleineAttribuee(m: Menage, e: Enfant, montant: Money, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'allocation à taux plein est attribuée au mois au montant en vigueur";
+    label en unofficial "the full-rate allowance is awarded for the month at the amount in force";
+    when droit_base_plein(m, e)
+        and montant_base_plein(m, e, montant)
+        and mois_eligible_base(m, e, mois);
+    then base_attribuee(m, e, round(montant, 2, "HALF_UP"), mois);
+}
+
+@source(CSS_L531_3_ED2018_01, CSS_L531_3_ED2015_01)
+rule BasePartielleAttribuee(m: Menage, e: Enfant, montant: Money, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'allocation à taux partiel est attribuée au mois au montant en vigueur";
+    label en unofficial "the part-rate allowance is awarded for the month at the amount in force";
+    when droit_base_partiel(m, e)
+        and montant_base_partiel(m, e, montant)
+        and mois_eligible_base(m, e, mois);
+    then base_attribuee(m, e, round(montant, 2, "HALF_UP"), mois);
+}

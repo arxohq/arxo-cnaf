@@ -1,0 +1,159 @@
+// Social-contribution part (part a of L. 531-5, I): D. 531-17 in its
+// three wordings.
+//
+// Old law: childminder 100% when the daily pay per child stays within
+// five times the hourly SMIC (else nothing — the text sets no fallback);
+// home employee 50% within an arrete cap (case fact, DSS_PENDING).
+// Reform: childminder 100% while the hourly average stays within the
+// D. 531-18 1° cap, else scaled by cap x hours / monthly cost; home
+// employee 50% within the same arrete cap.
+
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+use self::{
+    CSS_D531_17_ED2012_06,
+    CSS_D531_17_ED2022_01,
+    CSS_D531_17_ED2025_09,
+    CSS_D531_18_ED2025_09,
+    ModeGarde,
+    cotisations_sociales,
+    cout_mensuel_retenu,
+    droit_cmg_ouvert,
+    heures_remunerees,
+    jours_remuneres,
+    mode_garde,
+    part_cotisations,
+    plafond_cotisations_domicile,
+    plafond_horaire,
+    salaire_net_verse,
+    smic_horaire_retenu,
+};
+
+// --- Old childminder 100% under the daily SMIC cap ---------------------------
+//
+// «à la condition que la rémunération servie ..., au titre de la garde
+// de l'enfant, ne dépasse pas par jour et par enfant cinq fois la valeur
+// horaire du SMIC» — monthly pay compared as salaire <= 5 x smic x jours.
+
+@source(CSS_D531_17_ED2012_06, CSS_D531_17_ED2022_01)
+rule CotisationsAssmatAncien(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, cotis: Money, salaire: Money, smic: Money, jours: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "assistante maternelle: totalité des cotisations sous le plafond journalier SMIC (ancien droit)";
+    label en unofficial "childminder: all contributions under the daily SMIC cap (old law)";
+    when droit_cmg_ouvert(p, e)
+        and mode_garde(p, e, ASSISTANT_MATERNEL)
+        and cotisations_sociales(p, e, cotis)
+        and salaire_net_verse(p, e, salaire)
+        and smic_horaire_retenu(p, smic)
+        and jours_remuneres(p, e, jours)
+        and salaire <= 5.0 * smic * jours;
+    then part_cotisations(p, e, cotis);
+}
+
+@source(CSS_D531_17_ED2012_06, CSS_D531_17_ED2022_01)
+rule CotisationsAssmatAncienZero(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, salaire: Money, smic: Money, jours: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "assistante maternelle: plafond journalier dépassé, rien (ancien droit)";
+    label en unofficial "childminder: daily cap exceeded, nothing (old law)";
+    when droit_cmg_ouvert(p, e)
+        and mode_garde(p, e, ASSISTANT_MATERNEL)
+        and salaire_net_verse(p, e, salaire)
+        and smic_horaire_retenu(p, smic)
+        and jours_remuneres(p, e, jours)
+        and salaire > 5.0 * smic * jours;
+    then part_cotisations(p, e, 0 EUR);
+}
+
+// --- Old home employee 50% within the arrete cap -------------------------------
+
+@source(CSS_D531_17_ED2012_06, CSS_D531_17_ED2022_01)
+rule CotisationsDomicileAncien(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, cotis: Money, plafond: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "domicile: 50 % des cotisations sous plafond (ancien droit)";
+    label en unofficial "home employment: 50% of contributions under the cap (old law)";
+    when droit_cmg_ouvert(p, e)
+        and mode_garde(p, e, EMPLOYE_DOMICILE)
+        and cotisations_sociales(p, e, cotis)
+        and plafond_cotisations_domicile(p, plafond)
+        and TauxPriseEnCharge50 * cotis <= plafond;
+    then part_cotisations(p, e, TauxPriseEnCharge50 * cotis);
+}
+
+@source(CSS_D531_17_ED2012_06, CSS_D531_17_ED2022_01)
+rule CotisationsDomicileAncienPlafond(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, cotis: Money, plafond: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "domicile: 50 % écrêté au plafond (ancien droit)";
+    label en unofficial "home employment: 50% cut to the cap (old law)";
+    when droit_cmg_ouvert(p, e)
+        and mode_garde(p, e, EMPLOYE_DOMICILE)
+        and cotisations_sociales(p, e, cotis)
+        and plafond_cotisations_domicile(p, plafond)
+        and TauxPriseEnCharge50 * cotis > plafond;
+    then part_cotisations(p, e, plafond);
+}
+
+// --- Reform childminder: hourly cap from D. 531-18 1° ---------------------------
+//
+// The 8 EUR nominal (PlafondHoraireAssmat) times the SMIC factor is the
+// cap; the monthly cost and hours come from 04-formule-2025. Full 100%
+// while the hourly average holds, else the ratio cap x hours / cost.
+
+@source(CSS_D531_17_ED2025_09, CSS_D531_18_ED2025_09)
+rule CotisationsAssmatReforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, cotis: Money, cout: Money, heures: Decimal, cap: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "assistante maternelle: totalité des cotisations sous le plafond horaire (réforme)";
+    label en unofficial "childminder: all contributions under the hourly cap (reform)";
+    when droit_cmg_ouvert(p, e)
+        and mode_garde(p, e, ASSISTANT_MATERNEL)
+        and cotisations_sociales(p, e, cotis)
+        and cout_mensuel_retenu(p, e, cout)
+        and heures_remunerees(p, e, heures)
+        and plafond_horaire(p, e, cap)
+        and cout <= cap * heures;
+    then part_cotisations(p, e, cotis);
+}
+
+@source(CSS_D531_17_ED2025_09, CSS_D531_18_ED2025_09)
+rule CotisationsAssmatReformeRatio(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, cotis: Money, cout: Money, heures: Decimal, cap: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "assistante maternelle: prise en charge affectée du rapport plafond x heures / coût (réforme)";
+    label en unofficial "childminder: coverage scaled by cap x hours / cost (reform)";
+    when droit_cmg_ouvert(p, e)
+        and mode_garde(p, e, ASSISTANT_MATERNEL)
+        and cotisations_sociales(p, e, cotis)
+        and cout_mensuel_retenu(p, e, cout)
+        and heures_remunerees(p, e, heures)
+        and plafond_horaire(p, e, cap)
+        and cout > cap * heures;
+    then part_cotisations(p, e, cotis * div_round(cap * heures, cout, 6, "HALF_UP"));
+}
+
+// --- Reform home employee 50% within the arrete cap ------------------------------
+
+@source(CSS_D531_17_ED2025_09)
+rule CotisationsDomicileReforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, cotis: Money, plafond: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "domicile: 50 % des cotisations sous plafond (réforme)";
+    label en unofficial "home employment: 50% of contributions under the cap (reform)";
+    when droit_cmg_ouvert(p, e)
+        and mode_garde(p, e, EMPLOYE_DOMICILE)
+        and cotisations_sociales(p, e, cotis)
+        and plafond_cotisations_domicile(p, plafond)
+        and TauxPriseEnCharge50 * cotis <= plafond;
+    then part_cotisations(p, e, TauxPriseEnCharge50 * cotis);
+}
+
+@source(CSS_D531_17_ED2025_09)
+rule CotisationsDomicileReformePlafond(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, cotis: Money, plafond: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "domicile: 50 % écrêté au plafond (réforme)";
+    label en unofficial "home employment: 50% cut to the cap (reform)";
+    when droit_cmg_ouvert(p, e)
+        and mode_garde(p, e, EMPLOYE_DOMICILE)
+        and cotisations_sociales(p, e, cotis)
+        and plafond_cotisations_domicile(p, plafond)
+        and TauxPriseEnCharge50 * cotis > plafond;
+    then part_cotisations(p, e, plafond);
+}

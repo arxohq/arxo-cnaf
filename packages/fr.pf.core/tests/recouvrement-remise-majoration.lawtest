@@ -1,0 +1,22 @@
+// Remission of the applied increase: full majoration chain (notice, rejected observations, demand) plus debtor body - the body may remit the 200 EUR increase (L. 553-2-1 al. 2-4 « peut faire l'objet d'une remise », PC-R08-02/06).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-recouvrement-remise-majoration" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "recouvrement-remise-majoration-01": etablissement_service_eligible_l5532_1(entity_ref("urn:fr:pf:case:indu-remise")) { origin case_input; }
+        assert "recouvrement-remise-majoration-02": mise_en_demeure_adressee_le(entity_ref("urn:fr:pf:case:indu-remise"), @2026-01-10) { origin case_input; }
+        assert "recouvrement-remise-majoration-03": sommes_mise_issues_notification(entity_ref("urn:fr:pf:case:indu-remise"), 2000 EUR) { origin case_input; }
+        assert "recouvrement-remise-majoration-04": sommes_non_reglees(entity_ref("urn:fr:pf:case:indu-remise"), 2000 EUR) { origin case_input; }
+        assert "recouvrement-remise-majoration-05": date_exigibilite_mise_le(entity_ref("urn:fr:pf:case:indu-remise"), @2026-02-10) { origin case_input; }
+        assert "recouvrement-remise-majoration-06": date_appreciation(entity_ref("urn:fr:pf:case:indu-remise"), @2026-03-15) { origin case_input; }
+        assert "recouvrement-remise-majoration-07": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:indu-remise")) { origin case_input; }
+        assert "recouvrement-remise-majoration-08": notification_recouvrement_adressee(entity_ref("urn:fr:pf:case:indu-remise")) { origin case_input; }
+        assert "recouvrement-remise-majoration-09": observations_interesse_rejetees(entity_ref("urn:fr:pf:case:indu-remise")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(RemettreMajorationMiseEnDemeure, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

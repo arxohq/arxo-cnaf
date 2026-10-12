@@ -1,0 +1,14 @@
+// Seizure scale on fraud: fraudulent overpayment - seizure levies follow D. 553-1/2 (L. 553-4 I first branch authorizes; D. 553-3 covers only paragraph-II seizures, H-PAY-CALC08-001).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-saisie-fraude" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "s-fraude": fr.pf.core::indu_frauduleux(entity_ref("urn:fr:pv:case:saisi")) { origin case_input; }
+    }
+    evaluate truth(prelevements_saisie_bareme(entity_ref("urn:fr:pv:case:saisi")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

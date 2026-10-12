@@ -1,0 +1,625 @@
+// File completeness, competent service, silence rules and the monthly
+// and expense duties (R. 544-1/2/3, D. 544-8 duty, D. 544-9/10).
+//
+// R. 544-1 builds the complete-file heads (claim, re-examination,
+// renewal from 2024) from the employer attestation and the sealed
+// medical certificate. R. 544-2 attributes competence to the child's
+// health-cost service. R. 544-3 builds the elapsed silence months from
+// the recorded months and deems the agreement (second month) and the
+// decision (third month) favourable; the 2022-2024 renewal derogation
+// deems them unfavourable instead and adds the notification duty; from
+// 2024 the renewal silence is favourable like the initial request. The
+// deemed agreement opens the right through the same channel as the
+// recorded one. D. 544-8 makes the L. 5421-1 job-seeker declare the days
+// taken to France Travail; D. 544-9 the five monthly supporting-document
+// duties; D. 544-10 the monthly sworn expense declaration and the
+// production of proof on demand. Each D. 544-9/10 duty instance and its
+// performance carry the concerned month (mois_concerne_ajpp, first of
+// the month); «chaque mois au plus» is read as the monthly proof rhythm
+// (package map, D3-D9): one transmission per concerned month satisfies
+// that month, with no over-frequency prohibition modelled.
+
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+use self::{
+    CSS_D544_8,
+    CSS_D544_8_ED2025_12,
+    CSS_D544_8_ED2026_01,
+    CSS_D544_8_ED2026_06,
+    CSS_D544_8_PRE2024,
+    CSS_D544_8_PRE2024_ED2021_11,
+    CSS_D544_8_PRE2024_ED2022_01,
+    CSS_D544_8_PRE2024_ED2022_04,
+    CSS_D544_8_PRE2024_ED2022_07,
+    CSS_D544_8_PRE2024_ED2022_10,
+    CSS_D544_8_PRE2024_ED2023_01,
+    CSS_D544_8_PRE2024_ED2023_07,
+    CSS_D544_8_PRE2024_ED2024_02,
+    CSS_D544_9,
+    CSS_D544_9_ED2023_01,
+    CSS_D544_9_ED2023_07,
+    CSS_D544_9_ED2024_02,
+    CSS_D544_9_ED2024_07,
+    CSS_D544_9_ED2025_12,
+    CSS_D544_9_ED2026_01,
+    CSS_D544_9_ED2026_06,
+    CSS_D544_9_PRE2022_ED2020_09,
+    CSS_D544_9_PRE2022_ED2021_11,
+    CSS_D544_9_PRE2022_ED2022_01,
+    CSS_D544_9_PRE2022_ED2022_04,
+    CSS_D544_9_PRE2022_ED2022_07,
+    CSS_D544_10_ED2020_09,
+    CSS_D544_10_ED2021_11,
+    CSS_D544_10_ED2022_01,
+    CSS_D544_10_ED2022_04,
+    CSS_D544_10_ED2022_07,
+    CSS_D544_10_ED2022_10,
+    CSS_D544_10_ED2023_01,
+    CSS_D544_10_ED2023_07,
+    CSS_D544_10_ED2024_02,
+    CSS_D544_10_ED2024_07,
+    CSS_D544_10_ED2025_12,
+    CSS_D544_10_ED2026_01,
+    CSS_D544_10_ED2026_06,
+    CSS_R544_1,
+    CSS_R544_1_ED2024_07,
+    CSS_R544_1_ED2025_12,
+    CSS_R544_1_ED2026_01,
+    CSS_R544_1_ED2026_06,
+    CSS_R544_1_PRE2022_ED2020_09,
+    CSS_R544_1_PRE2022_ED2021_11,
+    CSS_R544_1_PRE2022_ED2022_01,
+    CSS_R544_1_PRE2024,
+    CSS_R544_1_PRE2024_ED2022_07,
+    CSS_R544_1_PRE2024_ED2022_10,
+    CSS_R544_1_PRE2024_ED2023_01,
+    CSS_R544_1_PRE2024_ED2023_07,
+    CSS_R544_2_ED2020_09,
+    CSS_R544_2_ED2021_11,
+    CSS_R544_2_ED2022_01,
+    CSS_R544_2_ED2022_04,
+    CSS_R544_2_ED2022_07,
+    CSS_R544_2_ED2022_10,
+    CSS_R544_2_ED2023_01,
+    CSS_R544_2_ED2023_07,
+    CSS_R544_2_ED2024_02,
+    CSS_R544_2_ED2024_07,
+    CSS_R544_2_ED2025_12,
+    CSS_R544_2_ED2026_01,
+    CSS_R544_2_ED2026_06,
+    CSS_R544_3,
+    CSS_R544_3_ED2024_07,
+    CSS_R544_3_ED2025_12,
+    CSS_R544_3_ED2026_01,
+    CSS_R544_3_ED2026_06,
+    CSS_R544_3_PRE2022_ED2020_09,
+    CSS_R544_3_PRE2022_ED2021_11,
+    CSS_R544_3_PRE2022_ED2022_01,
+    CSS_R544_3_PRE2024,
+    CSS_R544_3_PRE2024_ED2022_07,
+    CSS_R544_3_PRE2024_ED2022_10,
+    CSS_R544_3_PRE2024_ED2023_01,
+    CSS_R544_3_PRE2024_ED2023_07,
+    accord_controle_renouvellement,
+    agent_public_conge,
+    ajpp_droit_ouvert,
+    attestation_agent_public_transmise,
+    attestation_conge_employeur,
+    attestation_conge_employeur_transmise,
+    attestation_formateur_transmise,
+    avis_renouvellement_notifie,
+    avis_silence_repute_defavorable,
+    avis_silence_repute_favorable,
+    certificat_gravite,
+    certificat_transmis_sous_pli,
+    cesse_activite_non_salarie,
+    chomeur_l5421,
+    complement_frais_attribue,
+    conge_presence_parentale,
+    controle_medical_competent,
+    decision_silence_rejet,
+    decision_silence_reputee_favorable,
+    declaration_cessation_recherche_transmise,
+    declaration_depenses_transmise,
+    declaration_interruption_activite_transmise,
+    demande_initiale,
+    demande_pieces_organisme,
+    demande_recue_mois,
+    demande_renouvellement,
+    demandeur_emploi_ajpp,
+    dossier_demande_complet,
+    dossier_reexamen_complet,
+    dossier_renouvellement_complet,
+    france_travail_operateur,
+    jours_pris_declares_ft,
+    mois_concerne_ajpp,
+    mois_silence_ecoules,
+    nouveau_certificat,
+    organisme_connait_avis,
+    organisme_prise_en_charge_sante,
+    pieces_depenses_produites,
+    reexamen_demande_recevable,
+    silence_observe_jusqu_mois,
+    stagiaire_formation_remuneree,
+};
+
+// --- D. 544-8, para. 3: declare the days taken to France Travail ------
+
+@source(
+    CSS_D544_8,
+    CSS_D544_8_ED2025_12,
+    CSS_D544_8_ED2026_01,
+    CSS_D544_8_ED2026_06,
+    CSS_D544_8_PRE2024,
+    CSS_D544_8_PRE2024_ED2021_11,
+    CSS_D544_8_PRE2024_ED2022_01,
+    CSS_D544_8_PRE2024_ED2022_04,
+    CSS_D544_8_PRE2024_ED2022_07,
+    CSS_D544_8_PRE2024_ED2022_10,
+    CSS_D544_8_PRE2024_ED2023_01,
+    CSS_D544_8_PRE2024_ED2023_07,
+    CSS_D544_8_PRE2024_ED2024_02)
+rule DeclarerJoursFranceTravail(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    label fr official "le chômeur L. 5421-1 porte à France Travail les jours pris";
+    label en unofficial "the L. 5421-1 job-seeker reports the days taken to France Travail";
+    when chomeur_l5421(p) and fr.pf.core::parent_charge(p, e)
+        and france_travail_operateur(o);
+    then duty DeclarerJoursPrisFT {
+        bearer p;
+        beneficiary o;
+        maintain jours_pris_declares_ft(p, e) during [@2021-01-01, infinity);
+    };
+}
+
+// --- D. 544-9: five monthly supporting-document duties -----------------
+
+@source(
+    CSS_D544_9,
+    CSS_D544_9_ED2023_01,
+    CSS_D544_9_ED2023_07,
+    CSS_D544_9_ED2024_02,
+    CSS_D544_9_ED2024_07,
+    CSS_D544_9_ED2025_12,
+    CSS_D544_9_ED2026_01,
+    CSS_D544_9_ED2026_06,
+    CSS_D544_9_PRE2022_ED2020_09,
+    CSS_D544_9_PRE2022_ED2021_11,
+    CSS_D544_9_PRE2022_ED2022_01,
+    CSS_D544_9_PRE2022_ED2022_04,
+    CSS_D544_9_PRE2022_ED2022_07)
+rule DevoirTransmettreAttestationConge(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date) strict {
+    label fr official "le salarié en congé transmet l'attestation visée de congé du mois considéré";
+    label en unofficial "the employee on leave sends the stamped leave attestation for the concerned month";
+    when conge_presence_parentale(p, e) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and mois_concerne_ajpp(p, mois);
+    then duty TransmettreAttestationConge {
+        bearer p;
+        beneficiary o;
+        maintain attestation_conge_employeur_transmise(p, e, mois) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_D544_9,
+    CSS_D544_9_ED2023_01,
+    CSS_D544_9_ED2023_07,
+    CSS_D544_9_ED2024_02,
+    CSS_D544_9_ED2024_07,
+    CSS_D544_9_ED2025_12,
+    CSS_D544_9_ED2026_01,
+    CSS_D544_9_ED2026_06,
+    CSS_D544_9_PRE2022_ED2020_09,
+    CSS_D544_9_PRE2022_ED2021_11,
+    CSS_D544_9_PRE2022_ED2022_01,
+    CSS_D544_9_PRE2022_ED2022_04,
+    CSS_D544_9_PRE2022_ED2022_07)
+rule DevoirTransmettreAttestationFormateur(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, mois: Date) strict {
+    label fr official "le stagiaire rémunéré transmet attestation du formateur et déclaration sur l'honneur du mois considéré";
+    label en unofficial "the paid trainee sends the trainer attestation and sworn statement for the concerned month";
+    when stagiaire_formation_remuneree(p) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and mois_concerne_ajpp(p, mois);
+    then duty TransmettreAttestationFormateur {
+        bearer p;
+        beneficiary o;
+        maintain attestation_formateur_transmise(p, mois) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_D544_9,
+    CSS_D544_9_ED2023_01,
+    CSS_D544_9_ED2023_07,
+    CSS_D544_9_ED2024_02,
+    CSS_D544_9_ED2024_07,
+    CSS_D544_9_ED2025_12,
+    CSS_D544_9_ED2026_01,
+    CSS_D544_9_ED2026_06,
+    CSS_D544_9_PRE2022_ED2020_09,
+    CSS_D544_9_PRE2022_ED2021_11,
+    CSS_D544_9_PRE2022_ED2022_01,
+    CSS_D544_9_PRE2022_ED2022_04,
+    CSS_D544_9_PRE2022_ED2022_07)
+rule DevoirTransmettreDeclarationCessation(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, mois: Date) strict {
+    label fr official "le demandeur d'emploi transmet la déclaration de cessation de recherche du mois considéré";
+    label en unofficial "the job-seeker sends the search-cessation statement for the concerned month";
+    when demandeur_emploi_ajpp(p) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and mois_concerne_ajpp(p, mois);
+    then duty TransmettreDeclarationCessation {
+        bearer p;
+        beneficiary o;
+        maintain declaration_cessation_recherche_transmise(p, mois) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_D544_9,
+    CSS_D544_9_ED2023_01,
+    CSS_D544_9_ED2023_07,
+    CSS_D544_9_ED2024_02,
+    CSS_D544_9_ED2024_07,
+    CSS_D544_9_ED2025_12,
+    CSS_D544_9_ED2026_01,
+    CSS_D544_9_ED2026_06,
+    CSS_D544_9_PRE2022_ED2020_09,
+    CSS_D544_9_PRE2022_ED2021_11,
+    CSS_D544_9_PRE2022_ED2022_01,
+    CSS_D544_9_PRE2022_ED2022_04,
+    CSS_D544_9_PRE2022_ED2022_07)
+rule DevoirTransmettreDeclarationInterruption(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, mois: Date) strict {
+    label fr official "le non-salarié transmet la déclaration d'interruption d'activité du mois considéré";
+    label en unofficial "the non-salaried worker sends the activity-interruption statement for the concerned month";
+    when cesse_activite_non_salarie(p) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and mois_concerne_ajpp(p, mois);
+    then duty TransmettreDeclarationInterruption {
+        bearer p;
+        beneficiary o;
+        maintain declaration_interruption_activite_transmise(p, mois) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_D544_9,
+    CSS_D544_9_ED2023_01,
+    CSS_D544_9_ED2023_07,
+    CSS_D544_9_ED2024_02,
+    CSS_D544_9_ED2024_07,
+    CSS_D544_9_ED2025_12,
+    CSS_D544_9_ED2026_01,
+    CSS_D544_9_ED2026_06,
+    CSS_D544_9_PRE2022_ED2020_09,
+    CSS_D544_9_PRE2022_ED2021_11,
+    CSS_D544_9_PRE2022_ED2022_01,
+    CSS_D544_9_PRE2022_ED2022_04,
+    CSS_D544_9_PRE2022_ED2022_07)
+rule DevoirTransmettreAttestationAgentPublic(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date) strict {
+    label fr official "l'agent public en congé transmet l'attestation visée de congé du mois considéré";
+    label en unofficial "the public agent on leave sends the stamped leave attestation for the concerned month";
+    when agent_public_conge(p, e) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and mois_concerne_ajpp(p, mois);
+    then duty TransmettreAttestationAgentPublic {
+        bearer p;
+        beneficiary o;
+        maintain attestation_agent_public_transmise(p, e, mois) during [@2021-01-01, infinity);
+    };
+}
+
+// --- D. 544-10: monthly expense declaration, proof on demand ------------
+
+@source(
+    CSS_D544_10_ED2020_09,
+    CSS_D544_10_ED2021_11,
+    CSS_D544_10_ED2022_01,
+    CSS_D544_10_ED2022_04,
+    CSS_D544_10_ED2022_07,
+    CSS_D544_10_ED2022_10,
+    CSS_D544_10_ED2023_01,
+    CSS_D544_10_ED2023_07,
+    CSS_D544_10_ED2024_02,
+    CSS_D544_10_ED2024_07,
+    CSS_D544_10_ED2025_12,
+    CSS_D544_10_ED2026_01,
+    CSS_D544_10_ED2026_06)
+rule DevoirDeclarerDepensesComplement(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date) strict {
+    label fr official "l'allocataire du complément déclare les dépenses sur l'honneur pour le mois considéré";
+    label en unofficial "the supplement allocataire declares the expenses on oath for the concerned month";
+    when complement_frais_attribue(e) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::organisme_debiteur_pf(o, p)
+        and mois_concerne_ajpp(p, mois);
+    then duty DeclarerDepensesComplement {
+        bearer p;
+        beneficiary o;
+        maintain declaration_depenses_transmise(p, e, mois) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_D544_10_ED2020_09,
+    CSS_D544_10_ED2021_11,
+    CSS_D544_10_ED2022_01,
+    CSS_D544_10_ED2022_04,
+    CSS_D544_10_ED2022_07,
+    CSS_D544_10_ED2022_10,
+    CSS_D544_10_ED2023_01,
+    CSS_D544_10_ED2023_07,
+    CSS_D544_10_ED2024_02,
+    CSS_D544_10_ED2024_07,
+    CSS_D544_10_ED2025_12,
+    CSS_D544_10_ED2026_01,
+    CSS_D544_10_ED2026_06)
+rule DevoirProduirePiecesDepenses(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date) strict {
+    label fr official "à la demande de l'organisme, l'allocataire produit les justificatifs de dépenses du mois considéré";
+    label en unofficial "on the body's demand, the allocataire produces the expense proof for the concerned month";
+    when demande_pieces_organisme(o, p) and declaration_depenses_transmise(p, e, mois)
+        and mois_concerne_ajpp(p, mois);
+    then duty ProduirePiecesDepenses {
+        bearer p;
+        beneficiary o;
+        maintain pieces_depenses_produites(p, e, mois) during [@2021-01-01, infinity);
+    };
+}
+
+// --- R. 544-1: complete files -------------------------------------------
+
+@source(
+    CSS_R544_1,
+    CSS_R544_1_ED2024_07,
+    CSS_R544_1_ED2025_12,
+    CSS_R544_1_ED2026_01,
+    CSS_R544_1_ED2026_06,
+    CSS_R544_1_PRE2022_ED2020_09,
+    CSS_R544_1_PRE2022_ED2021_11,
+    CSS_R544_1_PRE2022_ED2022_01,
+    CSS_R544_1_PRE2024,
+    CSS_R544_1_PRE2024_ED2022_07,
+    CSS_R544_1_PRE2024_ED2022_10,
+    CSS_R544_1_PRE2024_ED2023_01,
+    CSS_R544_1_PRE2024_ED2023_07)
+rule DossierDemandeComplet(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande : attestation de congé et certificat sous pli au contrôle";
+    label en unofficial "claim: leave attestation and sealed certificate to the control";
+    when attestation_conge_employeur(e) and certificat_transmis_sous_pli(e);
+    then dossier_demande_complet(e);
+}
+
+@source(
+    CSS_R544_1,
+    CSS_R544_1_ED2024_07,
+    CSS_R544_1_ED2025_12,
+    CSS_R544_1_ED2026_01,
+    CSS_R544_1_ED2026_06,
+    CSS_R544_1_PRE2022_ED2020_09,
+    CSS_R544_1_PRE2022_ED2021_11,
+    CSS_R544_1_PRE2022_ED2022_01,
+    CSS_R544_1_PRE2024,
+    CSS_R544_1_PRE2024_ED2022_07,
+    CSS_R544_1_PRE2024_ED2022_10,
+    CSS_R544_1_PRE2024_ED2023_01,
+    CSS_R544_1_PRE2024_ED2023_07)
+rule DossierReexamenComplet(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "réexamen : demande recevable et nouveau certificat sous pli";
+    label en unofficial "re-examination: admissible request and new sealed certificate";
+    when reexamen_demande_recevable(e) and certificat_transmis_sous_pli(e);
+    then dossier_reexamen_complet(e);
+}
+
+@source(
+    CSS_R544_1,
+    CSS_R544_1_ED2024_07,
+    CSS_R544_1_ED2025_12,
+    CSS_R544_1_ED2026_01,
+    CSS_R544_1_ED2026_06)
+rule DossierRenouvellementComplet(e: fr.pf.core::Enfant) strict {
+    effective [@2024-02-05, infinity);
+    label fr official "renouvellement : nouveau certificat d'indispensable poursuite sous pli";
+    label en unofficial "renewal: new sealed certificate of indispensable continuation";
+    when demande_renouvellement(e) and nouveau_certificat(e)
+        and certificat_transmis_sous_pli(e);
+    then dossier_renouvellement_complet(e);
+}
+
+// --- R. 544-2: competent medical-control service ------------------------
+
+@source(
+    CSS_R544_2_ED2020_09,
+    CSS_R544_2_ED2021_11,
+    CSS_R544_2_ED2022_01,
+    CSS_R544_2_ED2022_04,
+    CSS_R544_2_ED2022_07,
+    CSS_R544_2_ED2022_10,
+    CSS_R544_2_ED2023_01,
+    CSS_R544_2_ED2023_07,
+    CSS_R544_2_ED2024_02,
+    CSS_R544_2_ED2024_07,
+    CSS_R544_2_ED2025_12,
+    CSS_R544_2_ED2026_01,
+    CSS_R544_2_ED2026_06)
+rule ControleCompetent(e: fr.pf.core::Enfant, o: fr.pf.core::Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "contrôle compétent : le service de la prise en charge santé de l'enfant";
+    label en unofficial "competent control: the child's health-cost service";
+    when organisme_prise_en_charge_sante(e, o);
+    then controle_medical_competent(e, o);
+}
+
+// --- R. 544-3: elapsed silence built from the recorded months -----------
+
+@source(
+    CSS_R544_3,
+    CSS_R544_3_ED2024_07,
+    CSS_R544_3_ED2025_12,
+    CSS_R544_3_ED2026_01,
+    CSS_R544_3_ED2026_06,
+    CSS_R544_3_PRE2022_ED2020_09,
+    CSS_R544_3_PRE2022_ED2021_11,
+    CSS_R544_3_PRE2022_ED2022_01,
+    CSS_R544_3_PRE2024,
+    CSS_R544_3_PRE2024_ED2022_07,
+    CSS_R544_3_PRE2024_ED2022_10,
+    CSS_R544_3_PRE2024_ED2023_01,
+    CSS_R544_3_PRE2024_ED2023_07)
+rule SilenceEcouleConstruit(e: fr.pf.core::Enfant, reception: Integer, observe: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "mois de silence écoulés depuis la réception, construits";
+    label en unofficial "built months of silence since receipt";
+    when demande_recue_mois(e, reception) and silence_observe_jusqu_mois(e, observe);
+    then mois_silence_ecoules(e, observe - reception);
+}
+
+// --- R. 544-3: silence deemed favourable --------------------------------
+
+@source(
+    CSS_R544_3,
+    CSS_R544_3_ED2024_07,
+    CSS_R544_3_ED2025_12,
+    CSS_R544_3_ED2026_01,
+    CSS_R544_3_ED2026_06,
+    CSS_R544_3_PRE2022_ED2020_09,
+    CSS_R544_3_PRE2022_ED2021_11,
+    CSS_R544_3_PRE2022_ED2022_01,
+    CSS_R544_3_PRE2024,
+    CSS_R544_3_PRE2024_ED2022_07,
+    CSS_R544_3_PRE2024_ED2022_10,
+    CSS_R544_3_PRE2024_ED2023_01,
+    CSS_R544_3_PRE2024_ED2023_07)
+rule AvisSilenceFavorable(e: fr.pf.core::Enfant, mois: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande initiale, silence du contrôle jusqu'au deuxième mois : avis favorable réputé";
+    label en unofficial "initial claim, control silence through the second month: deemed favourable opinion";
+    when demande_initiale(e) and mois_silence_ecoules(e, mois)
+        and mois >= DelaiSilenceControleMois;
+    then avis_silence_repute_favorable(e);
+}
+
+@source(
+    CSS_R544_3,
+    CSS_R544_3_ED2024_07,
+    CSS_R544_3_ED2025_12,
+    CSS_R544_3_ED2026_01,
+    CSS_R544_3_ED2026_06,
+    CSS_R544_3_PRE2022_ED2020_09,
+    CSS_R544_3_PRE2022_ED2021_11,
+    CSS_R544_3_PRE2022_ED2022_01,
+    CSS_R544_3_PRE2024,
+    CSS_R544_3_PRE2024_ED2022_07,
+    CSS_R544_3_PRE2024_ED2022_10,
+    CSS_R544_3_PRE2024_ED2023_01,
+    CSS_R544_3_PRE2024_ED2023_07)
+rule DecisionSilenceFavorable(e: fr.pf.core::Enfant, mois: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande initiale, silence de l'organisme jusqu'au troisième mois : décision favorable réputée";
+    label en unofficial "initial claim, body silence through the third month: deemed favourable decision";
+    when demande_initiale(e) and mois_silence_ecoules(e, mois)
+        and mois >= DelaiSilenceOrganismeMois;
+    then decision_silence_reputee_favorable(e);
+}
+
+@source(
+    CSS_R544_3,
+    CSS_R544_3_ED2024_07,
+    CSS_R544_3_ED2025_12,
+    CSS_R544_3_ED2026_01,
+    CSS_R544_3_ED2026_06,
+    CSS_R544_3_PRE2022_ED2020_09,
+    CSS_R544_3_PRE2022_ED2021_11,
+    CSS_R544_3_PRE2022_ED2022_01,
+    CSS_R544_3_PRE2024,
+    CSS_R544_3_PRE2024_ED2022_07,
+    CSS_R544_3_PRE2024_ED2022_10,
+    CSS_R544_3_PRE2024_ED2023_01,
+    CSS_R544_3_PRE2024_ED2023_07)
+rule DroitAjppOuvertSilence(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "certificat, avis réputé favorable et congé : droit ouvert";
+    label en unofficial "certificate, deemed favourable opinion and leave: right opened";
+    when certificat_gravite(e) and avis_silence_repute_favorable(e)
+        and conge_presence_parentale(p, e);
+    then ajpp_droit_ouvert(e);
+}
+
+// --- R. 544-3, 2022-2024: renewal silence deemed unfavourable -----------
+
+@source(
+    CSS_R544_3_PRE2024,
+    CSS_R544_3_PRE2024_ED2022_07,
+    CSS_R544_3_PRE2024_ED2022_10,
+    CSS_R544_3_PRE2024_ED2023_01,
+    CSS_R544_3_PRE2024_ED2023_07)
+rule RenouvellementSilenceDefavorable(e: fr.pf.core::Enfant, mois: Integer) strict {
+    effective [@2022-04-30, @2024-02-05);
+    label fr official "2022-2024, renouvellement : silence du contrôle vaut avis défavorable";
+    label en unofficial "2022-2024, renewal: control silence is an unfavourable opinion";
+    when demande_renouvellement(e) and mois_silence_ecoules(e, mois)
+        and mois >= DelaiSilenceControleMois;
+    then avis_silence_repute_defavorable(e);
+}
+
+@source(
+    CSS_R544_3_PRE2024,
+    CSS_R544_3_PRE2024_ED2022_07,
+    CSS_R544_3_PRE2024_ED2022_10,
+    CSS_R544_3_PRE2024_ED2023_01,
+    CSS_R544_3_PRE2024_ED2023_07)
+rule RenouvellementSilenceRejet(e: fr.pf.core::Enfant, mois: Integer) strict {
+    effective [@2022-04-30, @2024-02-05);
+    label fr official "2022-2024, renouvellement : silence de l'organisme vaut rejet";
+    label en unofficial "2022-2024, renewal: body silence is a rejection";
+    when demande_renouvellement(e) and mois_silence_ecoules(e, mois)
+        and mois >= DelaiSilenceOrganismeMois;
+    then decision_silence_rejet(e);
+}
+
+@source(
+    CSS_R544_3_PRE2024,
+    CSS_R544_3_PRE2024_ED2022_07,
+    CSS_R544_3_PRE2024_ED2022_10,
+    CSS_R544_3_PRE2024_ED2023_01,
+    CSS_R544_3_PRE2024_ED2023_07)
+rule DevoirNotifierAvisRenouvellement(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2022-04-30, @2024-02-05);
+    label fr official "2022-2024 : l'organisme notifie au demandeur l'avis favorable connu";
+    label en unofficial "2022-2024: the body notifies the known favourable opinion to the claimant";
+    when demande_renouvellement(e) and accord_controle_renouvellement(e)
+        and organisme_connait_avis(o, e) and conge_presence_parentale(p, e)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty NotifierAvisRenouvellement {
+        bearer o;
+        beneficiary p;
+        maintain avis_renouvellement_notifie(p, e) during [@2022-04-30, @2024-02-05);
+    };
+}
+
+// --- R. 544-3, from 2024: renewal silence deemed favourable -------------
+
+@source(
+    CSS_R544_3,
+    CSS_R544_3_ED2024_07,
+    CSS_R544_3_ED2025_12,
+    CSS_R544_3_ED2026_01,
+    CSS_R544_3_ED2026_06)
+rule RenouvellementSilenceFavorable(e: fr.pf.core::Enfant, mois: Integer) strict {
+    effective [@2024-02-05, infinity);
+    label fr official "dès 2024, renouvellement : silence du contrôle vaut avis favorable";
+    label en unofficial "from 2024, renewal: control silence is a favourable opinion";
+    when demande_renouvellement(e) and mois_silence_ecoules(e, mois)
+        and mois >= DelaiSilenceControleMois;
+    then avis_silence_repute_favorable(e);
+}
+
+@source(
+    CSS_R544_3,
+    CSS_R544_3_ED2024_07,
+    CSS_R544_3_ED2025_12,
+    CSS_R544_3_ED2026_01,
+    CSS_R544_3_ED2026_06)
+rule RenouvellementDecisionFavorable(e: fr.pf.core::Enfant, mois: Integer) strict {
+    effective [@2024-02-05, infinity);
+    label fr official "dès 2024, renouvellement : silence de l'organisme vaut décision favorable";
+    label en unofficial "from 2024, renewal: body silence is a favourable decision";
+    when demande_renouvellement(e) and mois_silence_ecoules(e, mois)
+        and mois >= DelaiSilenceOrganismeMois;
+    then decision_silence_reputee_favorable(e);
+}

@@ -1,0 +1,22 @@
+// L. 755-19, para. 2, premise control: Guadeloupe household with a
+// full-rate base right open, but no single-child family allowances served
+// (e.g. several children in care) — no cumulation bar concludes.
+// Control — dom-base-af-unique-plein.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-base-af-sans-af-unique" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-afno-01": territoire(entity_ref("urn:fr:paje:case:dom-afno"), GUADELOUPE) { origin case_input; }
+        assert "dom-afno-02": enfant_en_charge(entity_ref("urn:fr:paje:case:dom-afno"), entity_ref("urn:fr:paje:enfant:dom-afno")) { origin case_input; }
+        assert "dom-afno-03": condition_age_base(entity_ref("urn:fr:paje:enfant:dom-afno")) { origin adjudicated; }
+        assert "dom-afno-04": ressources_annuelles(entity_ref("urn:fr:paje:case:dom-afno"), 20000 EUR) { origin case_input; }
+        assert "dom-afno-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:dom-afno"), 30000 EUR) { origin case_input; }
+    }
+    evaluate truth(cumul_base_af_unique_interdit(entity_ref("urn:fr:paje:case:dom-afno"), entity_ref("urn:fr:paje:enfant:dom-afno")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

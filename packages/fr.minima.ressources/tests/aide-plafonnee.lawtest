@@ -1,0 +1,23 @@
+// Three-person household: MF 1200.00 -> 16.5 % flat-rate 198.00; aid
+// 250.00 received in April is cut to the flat-rate (R.262-9, 3°; R.262-10).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-aide-plafonnee" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "aideplaf-01": nb_personnes_forfait(entity_ref("urn:fr:minima-ressources:case:aide-plafonnee"), 3) { origin case_input; }
+        assert "aideplaf-02": logement(entity_ref("urn:fr:minima-ressources:case:aide-plafonnee"), PROPRIETAIRE_SANS_AIDE) { origin case_input; }
+        assert "aideplaf-03": mf_composition(entity_ref("urn:fr:minima-ressources:case:aide-plafonnee"), 3, 1200.00 EUR) { origin case_input; }
+        assert "aideplaf-04": aide_logement_percue(entity_ref("urn:fr:minima-ressources:case:aide-plafonnee"), @2025-04-01, 250.00 EUR) { origin case_input; }
+    }
+    evaluate truth(forfait_logement(entity_ref("urn:fr:minima-ressources:case:aide-plafonnee"), 198.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_logement_retenue(entity_ref("urn:fr:minima-ressources:case:aide-plafonnee"), @2025-04-01, 198.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

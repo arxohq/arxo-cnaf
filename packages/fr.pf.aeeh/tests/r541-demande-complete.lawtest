@@ -1,0 +1,42 @@
+// R. 541-3 al. 2, 1°/2°, completeness (DemandeComplete): the filed request
+// with the sealed medical certificate, both declaration branches and the
+// adjudicated dossier useful-pieces record bound to that filing date is
+// complete; a file missing the care-coverage declaration stays incomplete,
+// and so does a file with the statutory branches but no dossier
+// usefulness record (missing premise is not proof that nothing further is
+// useful). The source names no usefulness evaluator
+// (B-PFAEEH-PIECES-APPRECIATION): the dossier fact arrives as an
+// adjudicated record.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-demande-complete" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-dc-10": demande_aeeh_deposee(entity_ref("urn:fr:pf-aeeh:case:enfant-dc"), @2024-01-10) { origin case_input; }
+        assert "r541-dc-01": certificat_medical(entity_ref("urn:fr:pf-aeeh:case:enfant-dc")) { origin case_input; }
+        assert "r541-dc-02": declaration_admission(entity_ref("urn:fr:pf-aeeh:case:enfant-dc")) { origin case_input; }
+        assert "r541-dc-03": declaration_soins(entity_ref("urn:fr:pf-aeeh:case:enfant-dc")) { origin case_input; }
+        assert "r541-dc-06": pieces_utiles_completes(entity_ref("urn:fr:pf-aeeh:case:enfant-dc"), @2024-01-10) { origin adjudicated; }
+        assert "r541-dc-11": demande_aeeh_deposee(entity_ref("urn:fr:pf-aeeh:case:enfant-dc-partiel"), @2024-01-10) { origin case_input; }
+        assert "r541-dc-04": certificat_medical(entity_ref("urn:fr:pf-aeeh:case:enfant-dc-partiel")) { origin case_input; }
+        assert "r541-dc-05": declaration_admission(entity_ref("urn:fr:pf-aeeh:case:enfant-dc-partiel")) { origin case_input; }
+        assert "r541-dc-12": demande_aeeh_deposee(entity_ref("urn:fr:pf-aeeh:case:enfant-dc-sans-dossier"), @2024-01-10) { origin case_input; }
+        assert "r541-dc-07": certificat_medical(entity_ref("urn:fr:pf-aeeh:case:enfant-dc-sans-dossier")) { origin case_input; }
+        assert "r541-dc-08": declaration_admission(entity_ref("urn:fr:pf-aeeh:case:enfant-dc-sans-dossier")) { origin case_input; }
+        assert "r541-dc-09": declaration_soins(entity_ref("urn:fr:pf-aeeh:case:enfant-dc-sans-dossier")) { origin case_input; }
+    }
+    evaluate truth(demande_complete(entity_ref("urn:fr:pf-aeeh:case:enfant-dc")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(demande_complete(entity_ref("urn:fr:pf-aeeh:case:enfant-dc-partiel")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(demande_complete(entity_ref("urn:fr:pf-aeeh:case:enfant-dc-sans-dossier")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

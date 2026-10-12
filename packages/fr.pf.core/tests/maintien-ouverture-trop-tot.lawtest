@@ -1,0 +1,16 @@
+// Maintien inapplicable: opened January, death 15 January - before the following month (R. 552-4).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-maintien-ouverture-trop-tot" {
+    given {
+        context { decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "maintien-ouverture-trop-tot-01": ouverture_droit_mois(entity_ref("urn:fr:pf:case:enfant-tot"), @2026-01-01) { origin case_input; }
+        assert "maintien-ouverture-trop-tot-02": deces_le(entity_ref("urn:fr:pf:case:enfant-tot"), @2026-01-15) { origin case_input; }
+    }
+    evaluate truth(maintien_applicable(entity_ref("urn:fr:pf:case:enfant-tot")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

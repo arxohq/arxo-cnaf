@@ -1,0 +1,16 @@
+// Conforming national review: periodic bilan transmitted to the minister with the carried-over evaluation elements - the bilan is conforming (R. 553-3-7 al. 2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-bilan-conforme" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-bilan-conforme-01": bilan_transmis_ministre(entity_ref("urn:fr:pf:org:cnaf"), entity_ref("urn:fr:pf:org:ministre")) { origin case_input; }
+        assert "tdv-bilan-conforme-02": bilan_elements_transmis(entity_ref("urn:fr:pf:org:cnaf")) { origin case_input; }
+    }
+    evaluate truth(bilan_ministre_conforme(entity_ref("urn:fr:pf:org:cnaf"), entity_ref("urn:fr:pf:org:ministre")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

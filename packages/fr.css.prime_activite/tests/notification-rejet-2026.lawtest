@@ -1,0 +1,26 @@
+// Explicit director rejection within a month, timely 20-day request
+// (reception 05-25, request 06-10) on a date-certain notice, new
+// notification not yet sent: D7 and D7bis ACTIVE (R. 847-1-1 I,
+// III; PA-FE09-03/04/05).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-notification-rejet-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-25T12:00:00Z; knowledge_time @2026-06-25T12:00:00Z; legal_time @2026-06-25; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_recupere(entity_ref("urn:fr:ppa:case:notification-rejet-2026"), 300.00 EUR) { origin case_input; }
+        assert "ppa-02": constat_indu(entity_ref("urn:fr:ppa:case:notification-rejet-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-03": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:notification-rejet-2026")) { origin case_input; }
+        assert "ppa-04": demande_rectification(entity_ref("urn:fr:ppa:case:notification-rejet-2026"), @2026-06-10) { origin case_input; }
+        assert "ppa-05": decision_rectification_rejet(entity_ref("urn:fr:ppa:case:notification-rejet-2026"), @2026-06-20) { origin case_input; }
+        assert "ppa-06": reception_notification(entity_ref("urn:fr:ppa:case:notification-rejet-2026"), @2026-05-25) { origin case_input; }
+        assert "ppa-07": directeur_de(entity_ref("urn:fr:ppa:org:directeur"), entity_ref("urn:fr:ppa:org:caisse")) { origin case_input; }
+        assert "ppa-08": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:notification-rejet-2026")) { origin case_input; }
+        assert "ppa-09": decision_rectification_rejet_directeur(entity_ref("urn:fr:ppa:case:notification-rejet-2026"), @2026-06-20, entity_ref("urn:fr:ppa:org:directeur")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NotifierIndu, ACTIVE);
+    expect position(NotifierRejetRectification, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

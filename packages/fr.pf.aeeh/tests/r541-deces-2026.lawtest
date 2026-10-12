@@ -1,0 +1,37 @@
+// Death extension under the current 2026 wording (legal_time 2026-06,
+// CSS_ED2026_04): death on 2026-05-10 prolongs payment until
+// 2026-08-31 at the higher previous-month amount for L. 541-1 para. 4
+// leave/suspension periods. A second death with the same month amounts
+// but no such periods gets the R. 541-4 V end date and no amount.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-deces-2026" {
+    given {
+        context { deadline_policy AEEH_PROLONGATION; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "r541-d26-01": deces_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026"), @2026-05-10) { origin case_input; }
+        assert "r541-d26-02": montant_mois_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026"), 128.00 EUR) { origin case_input; }
+        assert "r541-d26-03": montant_mois_precedent(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026"), 496.00 EUR) { origin case_input; }
+        assert "r541-d26-04": periodes_conges_internat(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026")) { origin case_input; }
+        assert "r541-d26-05": deces_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026-sans"), @2026-05-10) { origin case_input; }
+        assert "r541-d26-06": montant_mois_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026-sans"), 128.00 EUR) { origin case_input; }
+        assert "r541-d26-07": montant_mois_precedent(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026-sans"), 496.00 EUR) { origin case_input; }
+    }
+    evaluate truth(date_fin_prolongation_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026"), @2026-08-31));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_prolongation_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026"), 496.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(date_fin_prolongation_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026-sans"), @2026-08-31));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_prolongation_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2026-sans"), 496.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

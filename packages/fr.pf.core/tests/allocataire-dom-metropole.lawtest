@@ -1,0 +1,15 @@
+// Split couple metropole/DOM: metropolitan entitlement opens through the spouse living with the children (L. 512-6).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-allocataire-dom-metropole" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "allocataire-dom-metropole-01": conjoint_metropole_avec_enfants(entity_ref("urn:fr:pf:case:allocataire-dom")) { origin case_input; }
+    }
+    evaluate truth(droit_metropolitain_ouvert(entity_ref("urn:fr:pf:case:allocataire-dom")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

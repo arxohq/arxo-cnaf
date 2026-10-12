@@ -1,0 +1,17 @@
+// Death lump-sum eligible: charge at death, request filed, death within the decree age limit - awardable (L. 545-1, PC-R07-12).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-forfait-deces-eligible" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "forfait-deces-eligible-01": forfait_deces_demande(entity_ref("urn:fr:pf:case:forfait-par"), entity_ref("urn:fr:pf:case:forfait-enf")) { origin case_input; }
+        assert "forfait-deces-eligible-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:forfait-par"), entity_ref("urn:fr:pf:case:forfait-enf")) { origin adjudicated; }
+        assert "forfait-deces-eligible-03": deces_enfant_avant_limite_age(entity_ref("urn:fr:pf:case:forfait-enf")) { origin case_input; }
+    }
+    evaluate truth(forfait_deces_eligible(entity_ref("urn:fr:pf:case:forfait-par"), entity_ref("urn:fr:pf:case:forfait-enf")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

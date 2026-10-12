@@ -1,0 +1,138 @@
+// Ряд PASS (plafond de la sécurité sociale) по календарным годам — из закреплённых arrêtés.
+// Порождено tools/build_pass.py из sources/pass/ (tools/pin_pass.py) — руками не править.
+//
+// Arrêté на год называет valeur mensuelle и valeur journalière (D. 242-17); правило ряда несёт
+// valeur mensuelle ЛИТЕРАЛОМ (сама норма arrêté). Годовое значение СТРОИТ правило PassAnnuelArrete:
+// 12 × valeur mensuelle (D. 242-17: valeur journalière = valeur mensuelle × 12 / число рабочих дней;
+// множитель стоит в правиле, а не в готовой сумме) — DECISION-0452, сначала строит.
+//
+// КЛЮЧ — календарный год (annee), а не legal_time: потребитель спрашивает PASS «en vigueur au 1er
+// janvier» года отсчёта, который не совпадает с датой дела (fr.pf.cf, R. 522-2 al. 3: год N−2). Поэтому
+// окно правила [1 января года, ∞): факт «PASS года Y равен X» установлен с первого дня Y и не гаснет.
+// Год без закреплённого arrêté (вне ряда или в пропуске) не даёт значения — не устанавливается.
+
+language "law.core" version "0.2";
+package fr.css.pass version "0.1.0";
+namespace "urn:fr:corpus:clir:pass";
+
+use self::{
+    ARRETE_2014_11_26_PASS_ART1,
+    ARRETE_2015_12_17_PASS_ART1,
+    ARRETE_2016_12_05_PASS_ART1,
+    ARRETE_2017_12_05_PASS_ART1,
+    ARRETE_2018_12_11_PASS_ART1,
+    ARRETE_2019_12_02_PASS_ART1,
+    ARRETE_2020_12_22_PASS_ART1,
+    ARRETE_2021_12_15_PASS_ART1,
+    ARRETE_2022_12_09_PASS_ART1,
+    ARRETE_2023_12_19_PASS_ART1,
+    ARRETE_2024_12_19_PASS_ART1,
+    ARRETE_2025_12_22_PASS_ART1,
+    pass_annuel_arrete,
+    pass_mensuel_arrete,
+};
+
+@source(ARRETE_2014_11_26_PASS_ART1)
+rule PassMensuelArrete2015() strict {
+    effective [@2015-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2015 : valeur mensuelle 3170 euros selon l'arrêté du 2014-11-26 (AFSS1428039A), article 1";
+    label ru unofficial "PASS 2015: месячное значение 3170 € по приказу от 2014-11-26 (AFSS1428039A), ст. 1";
+    then pass_mensuel_arrete(2015, 3170 EUR);
+}
+
+@source(ARRETE_2015_12_17_PASS_ART1)
+rule PassMensuelArrete2016() strict {
+    effective [@2016-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2016 : valeur mensuelle 3218 euros selon l'arrêté du 2015-12-17 (AFSS1530064A), article 1";
+    label ru unofficial "PASS 2016: месячное значение 3218 € по приказу от 2015-12-17 (AFSS1530064A), ст. 1";
+    then pass_mensuel_arrete(2016, 3218 EUR);
+}
+
+@source(ARRETE_2016_12_05_PASS_ART1)
+rule PassMensuelArrete2017() strict {
+    effective [@2017-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2017 : valeur mensuelle 3269 euros selon l'arrêté du 2016-12-05 (AFSS1628753A), article 1";
+    label ru unofficial "PASS 2017: месячное значение 3269 € по приказу от 2016-12-05 (AFSS1628753A), ст. 1";
+    then pass_mensuel_arrete(2017, 3269 EUR);
+}
+
+@source(ARRETE_2017_12_05_PASS_ART1)
+rule PassMensuelArrete2018() strict {
+    effective [@2018-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2018 : valeur mensuelle 3311 euros selon l'arrêté du 2017-12-05 (SSAS1733749A), article 1";
+    label ru unofficial "PASS 2018: месячное значение 3311 € по приказу от 2017-12-05 (SSAS1733749A), ст. 1";
+    then pass_mensuel_arrete(2018, 3311 EUR);
+}
+
+@source(ARRETE_2018_12_11_PASS_ART1)
+rule PassMensuelArrete2019() strict {
+    effective [@2019-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2019 : valeur mensuelle 3377 euros selon l'arrêté du 2018-12-11 (SSAS1833942A), article 1";
+    label ru unofficial "PASS 2019: месячное значение 3377 € по приказу от 2018-12-11 (SSAS1833942A), ст. 1";
+    then pass_mensuel_arrete(2019, 3377 EUR);
+}
+
+@source(ARRETE_2019_12_02_PASS_ART1)
+rule PassMensuelArrete2020() strict {
+    effective [@2020-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2020 : valeur mensuelle 3428 euros selon l'arrêté du 2019-12-02 (SSAS1934384A), article 1";
+    label ru unofficial "PASS 2020: месячное значение 3428 € по приказу от 2019-12-02 (SSAS1934384A), ст. 1";
+    then pass_mensuel_arrete(2020, 3428 EUR);
+}
+
+@source(ARRETE_2020_12_22_PASS_ART1)
+rule PassMensuelArrete2021() strict {
+    effective [@2021-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2021 : valeur mensuelle 3428 euros selon l'arrêté du 2020-12-22 (SSAS2036535A), article 1";
+    label ru unofficial "PASS 2021: месячное значение 3428 € по приказу от 2020-12-22 (SSAS2036535A), ст. 1";
+    then pass_mensuel_arrete(2021, 3428 EUR);
+}
+
+@source(ARRETE_2021_12_15_PASS_ART1)
+rule PassMensuelArrete2022() strict {
+    effective [@2022-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2022 : valeur mensuelle 3428 euros selon l'arrêté du 2021-12-15 (SSAS2137621A), article 1";
+    label ru unofficial "PASS 2022: месячное значение 3428 € по приказу от 2021-12-15 (SSAS2137621A), ст. 1";
+    then pass_mensuel_arrete(2022, 3428 EUR);
+}
+
+@source(ARRETE_2022_12_09_PASS_ART1)
+rule PassMensuelArrete2023() strict {
+    effective [@2023-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2023 : valeur mensuelle 3666 euros selon l'arrêté du 2022-12-09 (SPRS2236037A), article 1";
+    label ru unofficial "PASS 2023: месячное значение 3666 € по приказу от 2022-12-09 (SPRS2236037A), ст. 1";
+    then pass_mensuel_arrete(2023, 3666 EUR);
+}
+
+@source(ARRETE_2023_12_19_PASS_ART1)
+rule PassMensuelArrete2024() strict {
+    effective [@2024-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2024 : valeur mensuelle 3864 euros selon l'arrêté du 2023-12-19 (SPRS2330283A), article 1";
+    label ru unofficial "PASS 2024: месячное значение 3864 € по приказу от 2023-12-19 (SPRS2330283A), ст. 1";
+    then pass_mensuel_arrete(2024, 3864 EUR);
+}
+
+@source(ARRETE_2024_12_19_PASS_ART1)
+rule PassMensuelArrete2025() strict {
+    effective [@2025-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2025 : valeur mensuelle 3925 euros selon l'arrêté du 2024-12-19 (TSSS2429581A), article 1";
+    label ru unofficial "PASS 2025: месячное значение 3925 € по приказу от 2024-12-19 (TSSS2429581A), ст. 1";
+    then pass_mensuel_arrete(2025, 3925 EUR);
+}
+
+@source(ARRETE_2025_12_22_PASS_ART1)
+rule PassMensuelArrete2026() strict {
+    effective [@2026-01-01, infinity);
+    label fr official "plafond de la sécurité sociale 2026 : valeur mensuelle 4005 euros selon l'arrêté du 2025-12-22 (CPPS2536168A), article 1";
+    label ru unofficial "PASS 2026: месячное значение 4005 € по приказу от 2025-12-22 (CPPS2536168A), ст. 1";
+    then pass_mensuel_arrete(2026, 4005 EUR);
+}
+
+@source(ARRETE_2014_11_26_PASS_ART1, ARRETE_2015_12_17_PASS_ART1, ARRETE_2016_12_05_PASS_ART1, ARRETE_2017_12_05_PASS_ART1, ARRETE_2018_12_11_PASS_ART1, ARRETE_2019_12_02_PASS_ART1, ARRETE_2020_12_22_PASS_ART1, ARRETE_2021_12_15_PASS_ART1, ARRETE_2022_12_09_PASS_ART1, ARRETE_2023_12_19_PASS_ART1, ARRETE_2024_12_19_PASS_ART1, ARRETE_2025_12_22_PASS_ART1)
+rule PassAnnuelArrete(annee: Integer, mensuel: Money) strict {
+    effective [@2015-01-01, infinity);
+    label fr official "le plafond annuel de la sécurité sociale est douze fois la valeur mensuelle de l'arrêté (D. 242-17 ; R. 522-2 al. 3 pour fr.pf.cf)";
+    label ru unofficial "годовой PASS строится как 12 × месячное значение arrêté (D. 242-17; для fr.pf.cf — R. 522-2 al. 3)";
+    when pass_mensuel_arrete(annee, mensuel);
+    then pass_annuel_arrete(annee, mensuel * 12.0);
+}

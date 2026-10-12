@@ -1,0 +1,29 @@
+// ОСЬ РЕДАКЦИЙ, вторая половина пары: те же входы 15 января 2022 года, когда
+// вступила версия ст. 15 с форфейтом 8 182 € на двух иждивенцев. Разница с
+// frontiere-edition-r0-decembre-2021.lawtest — только в дате вопроса, и
+// итог другой: 117.5883979 € против 112.56611175 €.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-edition-r0-janvier-2022" {
+    given {
+        context { decision_time @2022-01-15T12:00:00Z; knowledge_time @2022-01-15T12:00:00Z; legal_time @2022-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frontiere-edition-r0-janvier-2022-01": secteur_locatif(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022")) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-02": zone_du_logement(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), ZONE_II) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-03": aide_demandee(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), APL) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-04": situation_familiale(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), COUPLE) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-05": personnes_a_charge(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), 2) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-06": loyer_principal(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), 400 EUR) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-07": ressources_du_menage(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), 20000 EUR) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-08": mode_location(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), LOCATION_SEULE) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-09": forme_logement(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), 0 EUR) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), false) { origin case_input; }
+        assert "frontiere-edition-r0-janvier-2022-12": territoire(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:frontiere-edition-r0-janvier-2022"), 117.5883979 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

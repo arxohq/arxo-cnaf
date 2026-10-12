@@ -1,0 +1,31 @@
+// РАСХОДИТСЯ_(б): наше 43.12489475, их 43.53, разница -0.40510525; их файл: round(43.7498 * (1 - 0.005), 2) — те же отличия их модели; их файл прямо пишет формулу round(x × (1 − 0,005), 2) — шаг CRDS не по D. 823-16
+// Файл отложен: в [tests] не входит, ждёт квалификации либо закрепления акта.
+// ИСТОЧНИК: OpenFisca-France, openfisca/openfisca-france@b2ab9943, tests/formulas/tests_formulas_aides_logement.yaml.
+// ИХ КОД: aide_logement_montant = 43.53; их файл: round(43.7498 * (1 - 0.005), 2).
+// Факты сняты с их же прогона (зона, ресурсы, состав семьи, наём).
+// Файл порождён corpus/tools/foreign/openfisca_tests.py по tools/foreign-map.json.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-of-personne-isol-e-2026-08-2026-08-aide-logement-montant" {
+    given {
+        context { decision_time @2026-08-15T12:00:00Z; knowledge_time @2026-08-15T12:00:00Z; legal_time @2026-08-15; timezone "Europe/Paris"; }
+        assert "of-personne-isol-e-2026-08-2026-08-01": secteur_locatif(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08")) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-02": aide_demandee(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), APL) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-03": zone_du_logement(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), ZONE_I) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-04": situation_familiale(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), PERSONNE_SEULE) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-05": personnes_a_charge(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), 0) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-06": ressources_du_menage(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), 9900.00 EUR) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-07": loyer_principal(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), 200.00 EUR) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-08": mode_location(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), LOCATION_SEULE) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-09": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), 35.99 EUR) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-10": territoire(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), METROPOLE) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-11": forme_logement(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "of-personne-isol-e-2026-08-2026-08-12": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), false) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:of-personne-isol-e-2026-08-2026-08"), 43.53 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

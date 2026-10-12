@@ -1,0 +1,18 @@
+// Questionnaire deadline: letter sent 1 March with the return invitation - due 31 March, thirty days later (R. 553-3-4 2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-echeance-questionnaire" {
+    given {
+        context { decision_time @2026-04-15T12:00:00Z; knowledge_time @2026-04-15T12:00:00Z; legal_time @2026-04-15; timezone "Europe/Paris"; deadline_policy TRAIN_VIE_DELAI; }
+        assert "tdv-echeance-questionnaire-01": lettre_procedure_adressee(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:examine")) { origin case_input; }
+        assert "tdv-echeance-questionnaire-02": lettre_contenu_questionnaire(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:examine")) { origin case_input; }
+        assert "tdv-echeance-questionnaire-03": lettre_procedure_le(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:examine"), @2026-03-01) { origin case_input; }
+        assert "tdv-echeance-questionnaire-04": prestation_soumise_section(entity_ref("urn:fr:pf:case:examine")) { origin case_input; }
+    }
+    evaluate truth(echeance_questionnaire(entity_ref("urn:fr:pf:case:examine"), @2026-03-31));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,23 @@
+// Third-party OpenFisca-France 176.1.2 case, paje_adoption.yaml,
+// «Cas P1R1E1B1NON_ELIGIBLE»: same inputs, base ressources 48187 (1 €
+// higher) → paje_adoption 0. Our case ceiling is 48186.43245 €: 48187 is
+// above — no right. Pair of openfisca-adoption-eligible.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-of-adoption-non-eligible" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "of-non-01": adoption_arrivee(entity_ref("urn:fr:paje:case:of-non-eligible"), entity_ref("urn:fr:paje:enfant:of-non-eligible")) { origin adjudicated; }
+        assert "of-non-02": condition_age_adoption(entity_ref("urn:fr:paje:enfant:of-non-eligible")) { origin adjudicated; }
+        assert "of-non-03": ressources_annuelles(entity_ref("urn:fr:paje:case:of-non-eligible"), 48187 EUR) { origin case_input; }
+        assert "of-non-04": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:of-non-eligible"), 40333.50 EUR) { origin case_input; }
+        assert "of-non-05": bmaf_applicable(entity_ref("urn:fr:paje:case:of-non-eligible"), 474.37 EUR) { origin case_input; }
+        assert "of-non-06": date_examen_situation(entity_ref("urn:fr:paje:case:of-non-eligible"), entity_ref("urn:fr:paje:enfant:of-non-eligible"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prime_attribuee(entity_ref("urn:fr:paje:case:of-non-eligible"), entity_ref("urn:fr:paje:enfant:of-non-eligible"), 2179.73015 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

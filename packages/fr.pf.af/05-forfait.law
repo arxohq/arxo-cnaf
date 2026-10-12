@@ -1,0 +1,256 @@
+// Lump-sum allowance for the 20-year-old (L521-1 al. 2, D521-2).
+//
+// DEONTIC MAP: right-conferring rules only (eligibility, one-year window,
+// amounts). No must/must-not positions; the duty to pay the household
+// total (forfait included) lives in 07-devoir-versement.law.
+//
+// WINDOW. "versée pendant un an": the payment year [start, start + 1 year)
+// (FORFAIT_UN_AN policy). The start is the upstream-established date the
+// child hit the L512-3 2° age limit; month mechanics (R552-2/3) are assumed
+// calendar (B-PFAF-MOIS-DROIT). The claimed month arrives as mois_droit
+// (normally the legal_time month, prescription pattern of pf-core 06).
+// COUNT. The aged-out child still counts as "à charge" for the three
+// minimum (non-age conditions met); the fund establishes the count
+// (B-PFAF-COMPTAGE). The household forfait sum is upstream-established
+// (forfait_total_menage); per-child amounts are built here.
+
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+use self::{
+    BandeRessources,
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03,
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    arrondi_lignes_dss,
+    bande_ressources,
+    bmaf_retenu,
+    complement_forfait,
+    conditions_hormis_age,
+    date_limite_age_atteinte,
+    forfait_ouvert,
+    forfait_periode,
+    mois_droit,
+    montant_forfait,
+    nb_enfants_charge_forfait,
+    plafond1_applicable,
+    plafond2_applicable,
+    ressources_retenues,
+};
+
+deadline policy FORFAIT_UN_AN {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+function taux_forfait(b: BandeRessources) -> Decimal = match b {
+    BANDE_1 => TauxForfaitBande1;
+    BANDE_2 => TauxForfaitBande2;
+    BANDE_3 => TauxForfaitBande3;
+};
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03)
+rule ForfaitPeriode(e: fr.pf.core::Enfant, debut: Date) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "le forfait est versé pendant un an à compter de la limite d'âge (L. 521-1 al. 2)";
+    label en unofficial "the lump sum is paid for one year from the age limit (L. 521-1 para. 2)";
+    when date_limite_age_atteinte(e, debut);
+    then forfait_periode(e, debut, add_calendar_period(debut, 1 calendar_year));
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitOuvert(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer, mois: Date, debut: Date, fin: Date) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "forfait: trois enfants minimum, conditions hors âge remplies, mois dans l'année (D. 521-2, III)";
+    label en unofficial "forfait: three-child minimum, non-age conditions met, month within the year (D. 521-2, III)";
+    when fr.pf.core::parent_charge(p, e) and nb_enfants_charge_forfait(p, n)
+        and n >= SeuilEnfantsForfaitMinimum
+        and conditions_hormis_age(e) and forfait_periode(e, debut, fin)
+        and mois_droit(mois) and mois >= debut and mois < fin;
+    then forfait_ouvert(e);
+}
+
+@source(
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitMontant(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, b: BandeRessources, bmaf: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "montant du forfait: taux de la tranche par la base (D. 521-2, I)";
+    label en unofficial "lump-sum amount: band rate times the base (D. 521-2, I)";
+    when forfait_ouvert(e) and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, b) and bmaf_retenu(p, bmaf)
+        and not_known(arrondi_lignes_dss(p));
+    then montant_forfait(e, taux_forfait(b) * bmaf);
+}
+
+@source(
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitComplementP1(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, r: Money, p1: Money, f: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "complément dégressif du forfait au franchissement du plafond du I (D. 521-2, II)";
+    label en unofficial "forfait tapering top-up crossing the I ceiling (D. 521-2, II)";
+    when montant_forfait(e, f) and f > 0 EUR and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, BANDE_2)
+        and ressources_retenues(p, r) and plafond1_applicable(p, p1)
+        and r - p1 < 12.0 * f
+        and not_known(arrondi_lignes_dss(p));
+    then complement_forfait(e, (p1 + 12.0 * f - r) / 12.0);
+}
+
+@source(
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitComplementP2(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, r: Money, p2: Money, f: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "complément dégressif du forfait au franchissement du plafond du II (D. 521-2, II)";
+    label en unofficial "forfait tapering top-up crossing the II ceiling (D. 521-2, II)";
+    when montant_forfait(e, f) and f > 0 EUR and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, BANDE_3)
+        and ressources_retenues(p, r) and plafond2_applicable(p, p2)
+        and r - p2 < 12.0 * f
+        and not_known(arrondi_lignes_dss(p));
+    then complement_forfait(e, (p2 + 12.0 * f - r) / 12.0);
+}
+
+@source(
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitComplementZeroBande1(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "bande 1: pas de complément sur le forfait";
+    label en unofficial "band 1: no top-up on the forfait";
+    when forfait_ouvert(e) and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, BANDE_1);
+    then complement_forfait(e, 0 EUR);
+}
+
+@source(
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitComplementZeroMontantNul(e: fr.pf.core::Enfant, zero: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "forfait mensuel nul: pas de complément (disjoint des règles positives par f > 0)";
+    label en unofficial "zero forfait monthly: no top-up (disjoint from positive rules via f > 0)";
+    when montant_forfait(e, zero) and zero == 0 EUR;
+    then complement_forfait(e, 0 EUR);
+}
+
+@source(
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitComplementZeroEcart1(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, r: Money, p1: Money, f: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "dépassement au-delà de douze forfaits: complément éteint (bande 2)";
+    label en unofficial "overshoot beyond twelve forfaits: top-up extinguished (band 2)";
+    when montant_forfait(e, f) and f > 0 EUR and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, BANDE_2)
+        and ressources_retenues(p, r) and plafond1_applicable(p, p1)
+        and r - p1 >= 12.0 * f;
+    then complement_forfait(e, 0 EUR);
+}
+
+@source(
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitComplementZeroEcart2(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, r: Money, p2: Money, f: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "dépassement au-delà de douze forfaits: complément éteint (bande 3)";
+    label en unofficial "overshoot beyond twelve forfaits: top-up extinguished (band 3)";
+    when montant_forfait(e, f) and f > 0 EUR and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, BANDE_3)
+        and ressources_retenues(p, r) and plafond2_applicable(p, p2)
+        and r - p2 >= 12.0 * f;
+    then complement_forfait(e, 0 EUR);
+}
+
+// No rule concludes a zero when the non-age conditions fail: the fund's
+// refusal is a case-established negative, and the month simply carries no
+// forfait conclusion (demonstrated by the failed-conditions scenario).
+// A `not` on the input relation without a package holder would never fire
+// (E4113), and inventing a negative holder would fake fund assessment.
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitZeroFenetre(e: fr.pf.core::Enfant, mois: Date, debut: Date, fin: Date) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "année écoulée: forfait éteint";
+    label en unofficial "year elapsed: forfait extinguished";
+    when forfait_periode(e, debut, fin) and mois_droit(mois) and mois >= fin;
+    then montant_forfait(e, 0 EUR);
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitZeroPetitFoyer(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer, d: Date) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "moins de trois enfants à charge: pas de forfait (D. 521-2, III)";
+    label en unofficial "fewer than three dependent children: no forfait (D. 521-2, III)";
+    when fr.pf.core::parent_charge(p, e) and nb_enfants_charge_forfait(p, n)
+        and n < SeuilEnfantsForfaitMinimum and date_limite_age_atteinte(e, d);
+    then montant_forfait(e, 0 EUR);
+}

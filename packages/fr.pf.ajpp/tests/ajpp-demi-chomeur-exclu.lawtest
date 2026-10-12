@@ -1,0 +1,18 @@
+// Half-day exclusion: the carer holds L. 5421-1 status — no 2021
+// half-day rate either way.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-demi-chomeur-exclu" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ajpp-dch-01": bmaf_retenue_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-dch"), 400.00 EUR) { origin case_input; }
+        assert "ajpp-dch-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ajpp:case:parent-dch"), entity_ref("urn:fr:pf-ajpp:case:enfant-dch")) { origin case_input; }
+        assert "ajpp-dch-03": chomeur_l5421(entity_ref("urn:fr:pf-ajpp:case:parent-dch")) { origin case_input; }
+    }
+    evaluate truth(taux_demi_journee_2021(entity_ref("urn:fr:pf-ajpp:case:enfant-dch"), 21.26 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

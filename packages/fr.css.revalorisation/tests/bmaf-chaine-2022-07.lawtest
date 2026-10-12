@@ -1,0 +1,27 @@
+// BMAF July 2022 step (art. 9 of act 2022-1158, LOI_2022_1158_ART9): previous
+// base 422.28 (1 April 2022, DSS/2B/2022/82), anticipated coefficient 1.04
+// printed in the article -> 422.28 x 1.04 = 439.1712, rounded to the centime ->
+// 439.17. The 439.17 figure is CONSTRUCTED by the chain rule (DECISION-0452);
+// no pinned DSS instruction prints it (DSS/2B/2023/41 cites the +4 % only as a
+// deduction from its 1.056 coefficient). Coefficient 1.04 is at/above one,
+// retained nominally.
+language "law.core" version "0.2";
+package fr.css.revalorisation version "0.1.0";
+namespace "urn:fr:corpus:clir:revalorisation";
+
+test "urn:query:fr-revalorisation-bmaf-chaine-2022-07" {
+    given {
+        context { deadline_policy REVALO_EXERCICE; decision_time @2022-07-01T12:00:00Z; knowledge_time @2022-07-01T12:00:00Z; legal_time @2022-07-01; timezone "Europe/Paris"; }
+        assert "bmaf-01": annee_exercice(entity_ref("urn:fr:revalorisation:exercice:2022-07"), 2022) { origin case_input; }
+        assert "bmaf-02": bmaf_precedente(entity_ref("urn:fr:revalorisation:exercice:2022-07"), 422.28 EUR) { origin case_input; }
+        assert "bmaf-03": coefficient_annee(entity_ref("urn:fr:revalorisation:exercice:2022-07"), 1.04) { origin case_input; }
+    }
+    evaluate truth(coefficient_retenu(entity_ref("urn:fr:revalorisation:exercice:2022-07"), 1.04));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bmaf_revalorisee(entity_ref("urn:fr:revalorisation:exercice:2022-07"), 439.17 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,18 @@
+// Cessation June 2021, assessed June 2021: payment ends (L. 523-2).
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-cessation-active" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "oca-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:cessation-active"), entity_ref("urn:fr:pf-asf:case:cessation-active-e1")) { origin case_input; }
+        assert "oca-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:cessation-active-e1")) { origin case_input; }
+        assert "oca-03": mois_cessation_couple(@2021-06-01) { origin case_input; }
+        assert "oca-04": mois_droit_asf(@2021-06-01) { origin case_input; }
+    }
+    evaluate truth(asf_cessation_couple(entity_ref("urn:fr:pf-asf:case:cessation-active"), entity_ref("urn:fr:pf-asf:case:cessation-active-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

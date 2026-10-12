@@ -1,0 +1,20 @@
+// Past 20: 22-year-old with low pay - the age guard fails, no entitlement (R. 512-2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-enfant-charge-21-ans" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; deadline_policy ENFANT_VINGT_ANS; }
+        assert "enfant-charge-21-ans-01": date_naissance(entity_ref("urn:fr:pf:case:enfant-21-ans"), @2004-01-10) { origin case_input; }
+        assert "enfant-charge-21-ans-02": date_reference_enfant(entity_ref("urn:fr:pf:case:enfant-21-ans"), @2026-03-15) { origin case_input; }
+        assert "enfant-charge-21-ans-03": remuneration_mensuelle(entity_ref("urn:fr:pf:case:enfant-21-ans"), 500 EUR) { origin case_input; }
+        assert "enfant-charge-21-ans-04": smic_applicable(entity_ref("urn:fr:pf:case:enfant-21-ans"), entity_ref("urn:fr:pf:case:travailleur-21-ans")) { origin case_input; }
+        assert "enfant-charge-21-ans-05": fr.travail.smic::territoire_smic(entity_ref("urn:fr:pf:case:travailleur-21-ans"), fr.travail.smic::METROPOLE_ET_DOM) { origin case_input; }
+        assert "enfant-charge-21-ans-06": apres_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-21-ans")) { origin case_input; }
+    }
+    evaluate truth(enfant_ouvre_droit(entity_ref("urn:fr:pf:case:enfant-21-ans")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

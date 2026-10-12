@@ -1,0 +1,18 @@
+// Non-cumulation with parental presence leave itself: the certificate
+// is established but leave recorded for neither parent — the head
+// fails independently of the non-cumul channel.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-noncumul-conge" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-ncc-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-ncc")) { origin adjudicated; }
+        assert "ajpp-ncc-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-ncc")) { origin adjudicated; }
+    }
+    evaluate truth(ajpp_droit_ouvert(entity_ref("urn:fr:pf-ajpp:case:enfant-ncc")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

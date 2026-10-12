@@ -1,0 +1,26 @@
+// Maximum not yet passed: relapse recorded but only three elapsed
+// years — «Au-delà de la durée maximale» is strict, so neither the
+// expiry head nor the L. 544-3 para. 3 reopening establishes (both
+// NEITHER, not a finding that the duration is short).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reouverture-max-non-expire" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-mne-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-mne")) { origin adjudicated; }
+        assert "ajpp-mne-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-mne")) { origin adjudicated; }
+        assert "ajpp-mne-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-mne"), entity_ref("urn:fr:pf-ajpp:case:enfant-mne")) { origin case_input; }
+        assert "ajpp-mne-04": rechute_pathologie(entity_ref("urn:fr:pf-ajpp:case:enfant-mne")) { origin case_input; }
+        assert "ajpp-mne-05": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-mne"), MALADIE, 3) { origin case_input; }
+    }
+    evaluate truth(duree_maximale_expiree(entity_ref("urn:fr:pf-ajpp:case:enfant-mne")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droit_rouvert(entity_ref("urn:fr:pf-ajpp:case:enfant-mne")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

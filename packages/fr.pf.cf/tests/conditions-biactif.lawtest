@@ -1,0 +1,17 @@
+// Two-earner couple: the weaker professional income (6000 EUR) reaches
+// 13.6 % of the stated annual ceiling (0.136 x 40000 = 5440.00).
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-conditions-biactif" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "cbi-01": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:cond-biactif"), 6000 EUR) { origin case_input; }
+        assert "cbi-02": pass_annuel(40000 EUR) { origin case_input; }
+    }
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:cond-biactif")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

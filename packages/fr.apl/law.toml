@@ -1,0 +1,440 @@
+# Манифест §10 — маркер корня пакета (DECISION-0033). Нормативны заголовки §22
+# в самих .law; манифест обязан с ними совпадать (LDC-E1109, lawc check).
+[package]
+name = "fr.apl"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:apl"
+
+# Каталожная метадата (DECISION-0051). НЕ семантика.
+[metadata]
+act = "fr-apl"
+title = "Aide personnelle au logement, secteur locatif: расчёт месячного пособия по D. 823-16 и D. 823-17 CCH и главе III приказа от 27.09.2019 — плафоны найма по зонам, форфейт расходов, участие P0 и Tp, дегрессивность, минорация, вилка взносов и порог выплаты; две редакции барема (01.10.2020 и 01.10.2021 с R0 от 01.01.2022); срез ресурсов R. 822-2…18 и деонтический слой выплаты (модули 08–09)"
+primarySource = "CCH"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française; текст кодифицирован, барем установлен приказом министров, ответственных за жильё, здравоохранение и бюджет"
+verifiedAgainstSource = false
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Раздел 2 главы II (ресурсы, R. 822-3/4/13/17): вертикальный срез 15.09.2026,
+# налоговая квалификация зарплаты/пособия по безработице — отдельный пакет.
+[dependencies]
+"fr.tax.income_for_apl" = "0.1.0"
+
+# Дела Catala (CatalaLang/catala-examples@ebe5e7c2, aides_logement/tests):
+# ожидание каждого дела — ИХ число, у нас — точный итог, который к нему
+# округляется по центу. Регрессией не считаются: это замер чужих дел.
+[[tests]]
+family = "fr.apl#catala-cases"
+regression = false
+suites = [
+    "tests/catala-01-participation.lawtest",
+    "tests/catala-01.lawtest",
+    "tests/catala-02-participation.lawtest",
+    "tests/catala-02.lawtest",
+    "tests/catala-03-participation.lawtest",
+    "tests/catala-03.lawtest",
+    "tests/catala-04-participation.lawtest",
+    "tests/catala-04.lawtest",
+    "tests/catala-05-participation.lawtest",
+    "tests/catala-05.lawtest",
+    "tests/catala-06-participation.lawtest",
+    "tests/catala-06.lawtest",
+    "tests/catala-07-participation.lawtest",
+    "tests/catala-07.lawtest",
+    "tests/catala-08-participation.lawtest",
+    "tests/catala-08.lawtest",
+    "tests/catala-09-participation.lawtest",
+    "tests/catala-09.lawtest",
+    "tests/catala-al-02-participation.lawtest",
+    "tests/catala-al-02.lawtest",
+]
+world = ["fr.apl"]
+# Дела OpenFisca-France (openfisca/openfisca-france@b2ab9943,
+# tests/formulas/aides_logement_reforme_janvier_2021.yaml). Их ожидания
+# объявлены с допуском relative_error_margin 0,01, то есть НЕ точны;
+# сценарии закрепляют наш точный итог, а расхождение с их числом
+# квалифицировано в README пакета.
+[[tests]]
+family = "fr.apl#openfisca-cases"
+regression = false
+suites = [
+    "tests/openfisca-02.lawtest",
+    "tests/openfisca-03.lawtest",
+    "tests/openfisca-04.lawtest",
+    "tests/openfisca-05.lawtest",
+    "tests/openfisca-06.lawtest",
+    "tests/openfisca-07.lawtest",
+    "tests/openfisca-08.lawtest",
+    "tests/openfisca-10.lawtest",
+    "tests/openfisca-11.lawtest",
+    "tests/openfisca-02-arrondi-centime.lawtest",
+]
+world = ["fr.apl"]
+# Меблированный наём (D-85, 09.10.2026): D. 842-1/D. 842-2 CCH (AL) и последний
+# абзац D. 823-18 (APL с 11.01.2020) — loyer principal равен двум третям уплаченной
+# цены; две трети не конечной дробью — под прочтением D-82 до сантима HALF_UP.
+# Ожидания — из независимой реплики на дробях по закреплённому барему.
+[[tests]]
+family = "fr.apl#meuble"
+regression = false
+suites = [
+    "tests/meuble-d842-2.lawtest",
+]
+world = ["fr.apl"]
+# Границы самого пакета: плафон, R0, порог выплаты, ось редакций,
+# колокация, комната за плату, надбавки сверх шести иждивенцев,
+# отсутствие барема вне покрытия и канал суждения §47.3. Четыре сценария
+# `frontiere-bareme-2025-*` держат редакцию с 1 октября 2025 года, включая
+# различие даты версии (10 сентября) и даты применимости к престациям
+# (1 октября): в сентябре 2025 года барема у пакета нет, и это проверяется.
+[[tests]]
+family = "fr.apl#frontieres"
+regression = false
+suites = [
+    "tests/frontiere-bareme-2025-avant-applicabilite.lawtest",
+    "tests/frontiere-bareme-2025-chambre-zone-iii.lawtest",
+    "tests/frontiere-bareme-2026-chambre-zone-iii.lawtest",
+    "tests/frontiere-bareme-2025-octobre.lawtest",
+    "tests/frontiere-bareme-2026-octobre.lawtest",
+    "tests/frontiere-bareme-2026-septembre.lawtest",
+    "tests/frontiere-bareme-2025-participation-minimale.lawtest",
+    "tests/frontiere-bareme-2026-participation-minimale.lawtest",
+    "tests/frontiere-chambre-hebergement-onereux.lawtest",
+    "tests/frontiere-colocation.lawtest",
+    "tests/frontiere-colocation-2026.lawtest",
+    "tests/frontiere-decence-requires-judgment.lawtest",
+    "tests/frontiere-edition-r0-decembre-2021.lawtest",
+    "tests/frontiere-edition-r0-janvier-2022.lawtest",
+    "tests/frontiere-hors-couverture-bareme.lawtest",
+    "tests/frontiere-huit-personnes-a-charge.lawtest",
+    "tests/frontiere-loyer-sous-plafond.lawtest",
+    "tests/frontiere-ressources-au-dela-r0.lawtest",
+    "tests/frontiere-ressources-sous-r0.lawtest",
+    "tests/frontiere-seuil-versement-als.lawtest",
+    "tests/frontiere-seuil-versement-apl.lawtest",
+    "tests/frontiere-droit-ouvert-2026-07.lawtest",
+    "tests/frontiere-droit-ouvert-2020-11.lawtest",
+    "tests/frontiere-r0-juillet-2022.lawtest",
+    "tests/frontiere-r0-non-revise-2026.lawtest",
+]
+world = ["fr.apl"]
+
+[[tests]]
+family = "fr.apl#logement-foyer"
+regression = false
+suites = [
+    "tests/foyer-al-02-equivalence-loyer.lawtest",
+    "tests/foyer-al-02-depense-nette.lawtest",
+    "tests/foyer-al-02-forfait-charges.lawtest",
+    "tests/foyer-al-02-loyer-minimal-hors-couverture.lawtest",
+    "tests/foyer-apl-01-depense-nette.lawtest",
+    "tests/foyer-apl-01-equivalence-minimale.lawtest",
+    "tests/foyer-apl-01-nombre-parts.lawtest",
+    "tests/foyer-apl-01-plafond.lawtest",
+    "tests/foyer-apl-03-equivalence-minimale.lawtest",
+    "tests/foyer-apl-03-plafond.lawtest",
+    "tests/foyer-apl-04-plafond.lawtest",
+    "tests/foyer-apl-05-residence-sociale.lawtest",
+    "tests/foyer-al-equivalence-loyer-2025-10.lawtest",
+    "tests/foyer-al-equivalence-loyer-2026-10.lawtest",
+    "tests/foyer-al-forfait-charges-2025-10.lawtest",
+    "tests/foyer-al-forfait-charges-2026-10.lawtest",
+    "tests/foyer-apl-plafond-equivalence-2025-10.lawtest",
+    "tests/foyer-apl-plafond-equivalence-2026-10.lawtest",
+    "tests/foyer-al-loyer-minimal-2023.lawtest",
+    "tests/foyer-apl-e0-residence-sociale-2023.lawtest",
+    "tests/foyer-apl-e0-arrondi-centime.lawtest",
+    "tests/foyer-apl-01-aide-formule.lawtest",
+    "tests/foyer-apl-01-aide-mensuelle.lawtest",
+    "tests/foyer-apl-01-aide-nette-crds.lawtest",
+    "tests/foyer-apl-03-aide-mensuelle.lawtest",
+    "tests/foyer-apl-04-aide-mensuelle.lawtest",
+    "tests/foyer-apl-05-aide-formule-residence-sociale.lawtest",
+    "tests/foyer-apl-06-abattement-depense-nette.lawtest",
+    "tests/foyer-apl-07-plafond-k.lawtest",
+    "tests/foyer-apl-08-sous-seuil.lawtest",
+    "tests/foyer-apl-09-au-seuil.lawtest",
+    "tests/foyer-al-03-aide-formule.lawtest",
+    "tests/foyer-al-03-aide-mensuelle.lawtest",
+    "tests/foyer-al-03-aide-nette-crds.lawtest",
+    "tests/foyer-al-04-crous-etudiant.lawtest",
+    "tests/foyer-al-05-rapportee-redevance.lawtest",
+]
+world = ["fr.apl"]
+
+[[tests]]
+family = "fr.apl#accession"
+regression = false
+suites = [
+    "tests/accession-01-forfait-charges.lawtest",
+    "tests/accession-01-mensualite-eligible.lawtest",
+    "tests/accession-01-mensualite-minimale.lawtest",
+    "tests/accession-01-nombre-parts.lawtest",
+    "tests/accession-01-plafond-mensualite.lawtest",
+    "tests/accession-01-plancher-ressources.lawtest",
+    "tests/accession-02-coefficient-depense-nette.lawtest",
+    "tests/accession-02-mensualite-minimale-inexacte.lawtest",
+    "tests/accession-02-plafond-mensualite.lawtest",
+    "tests/accession-03-forfait-charges.lawtest",
+    "tests/accession-03-plafond-mensualite.lawtest",
+    "tests/accession-04-mensualite-minimale.lawtest",
+    "tests/accession-forfait-charges-2025-10.lawtest",
+    "tests/accession-forfait-charges-2026-10.lawtest",
+]
+world = ["fr.apl"]
+
+[[tests]]
+family = "fr.apl#accession-allocations"
+regression = false
+suites = [
+    "tests/frontiere-al-accession-coefficient-depense-nette.lawtest",
+    "tests/frontiere-al-accession-copropriete-quotient-inexact.lawtest",
+    "tests/frontiere-al-accession-copropriete-quotient.lawtest",
+    "tests/frontiere-al-accession-copropriete.lawtest",
+    "tests/frontiere-al-accession-depense-nette.lawtest",
+    "tests/frontiere-al-accession-forfait-charges-2020.lawtest",
+    "tests/frontiere-al-accession-forfait-charges-2021.lawtest",
+    "tests/frontiere-al-accession-mensualite-eligible.lawtest",
+    "tests/frontiere-al-accession-mensualite-minimale.lawtest",
+    "tests/frontiere-al-accession-plafond-2017.lawtest",
+    "tests/frontiere-al-accession-plafond-2019.lawtest",
+    "tests/frontiere-al-accession-plancher-coefficient.lawtest",
+    "tests/frontiere-al-accession-plancher-forfaitaire.lawtest",
+    "tests/frontiere-al-accession-six-pac.lawtest",
+    "tests/accession-al-forfait-charges-2025-10.lawtest",
+    "tests/accession-al-forfait-charges-2026-10.lawtest",
+]
+world = ["fr.apl"]
+
+[[tests]]
+family = "fr.apl#outre-mer"
+regression = false
+suites = [
+    "tests/metropole-accession-al-forfait-charges-2025.lawtest",
+    "tests/metropole-foyer-al-forfait-charges-2024.lawtest",
+    "tests/metropole-locatif-huit-pac-2021.lawtest",
+    "tests/metropole-locatif-r0-huit-pac-2021.lawtest",
+    "tests/metropole-locatif-r0-une-pac-2023.lawtest",
+    "tests/metropole-locatif-r0-une-pac-2024.lawtest",
+    "tests/metropole-locatif-r0-une-pac-2025.lawtest",
+    "tests/outremer-accession-al-forfait-charges-2025.lawtest",
+    "tests/outremer-accession-al-plafond-2024.lawtest",
+    "tests/outremer-foyer-al-equivalence-loyer-2025.lawtest",
+    "tests/outremer-foyer-al-forfait-charges-2024.lawtest",
+    "tests/outremer-foyer-plafond-equivalence-2024.lawtest",
+    "tests/outremer-foyer-plafond-equivalence-2025.lawtest",
+    "tests/outremer-guadeloupe-forfait-charges.lawtest",
+    "tests/outremer-guadeloupe-mensualite-eligible.lawtest",
+    "tests/outremer-guadeloupe-mensualite-minimale-inexacte.lawtest",
+    "tests/outremer-guadeloupe-plafond.lawtest",
+    "tests/outremer-locatif-deux-rythmes-forfait.lawtest",
+    "tests/outremer-locatif-deux-rythmes-r0.lawtest",
+    "tests/outremer-locatif-forfait-charges-2020.lawtest",
+    "tests/outremer-locatif-forfait-charges-2021.lawtest",
+    "tests/outremer-locatif-forfait-charges-2024.lawtest",
+    "tests/outremer-locatif-forfait-charges-2025.lawtest",
+    "tests/outremer-locatif-forfait-charges.lawtest",
+    "tests/outremer-locatif-limite-six-pac-2020.lawtest",
+    "tests/outremer-locatif-limite-six-pac-2021.lawtest",
+    "tests/outremer-locatif-limite-six-pac-2024.lawtest",
+    "tests/outremer-locatif-r0-deux-pac.lawtest",
+    "tests/outremer-locatif-r0-huit-pac-2021.lawtest",
+    "tests/outremer-locatif-r0-une-pac-2021.lawtest",
+    "tests/outremer-locatif-r0-une-pac-2022.lawtest",
+    "tests/outremer-locatif-r0-une-pac-2024.lawtest",
+    "tests/outremer-locatif-r0-une-pac-2025.lawtest",
+    "tests/outremer-locatif-r0-une-pac.lawtest",
+    "tests/outremer-locatif-tf-couple-2025.lawtest",
+    "tests/outremer-locatif-tf-couple.lawtest",
+    "tests/outremer-locatif-tf-huit-pac-2021.lawtest",
+    "tests/outremer-locatif-tf-huit-pac-2024.lawtest",
+    "tests/outremer-locatif-tf-sept-pac.lawtest",
+    "tests/outremer-saint-pierre-forfait-charges.lawtest",
+    "tests/outremer-saint-pierre-mensualite-minimale-inexacte.lawtest",
+    "tests/outremer-saint-pierre-plafond.lawtest",
+    "tests/saint-pierre-locatif-r0-couple-2025.lawtest",
+    "tests/saint-pierre-locatif-r0-couple.lawtest",
+    "tests/saint-pierre-locatif-tf-couple.lawtest",
+    "tests/outremer-foyer-al-forfait-charges-2025-10.lawtest",
+    "tests/outremer-foyer-al-forfait-charges-2026-10.lawtest",
+    "tests/outremer-locatif-forfait-charges-2025-10.lawtest",
+    "tests/outremer-locatif-forfait-charges-2026-10.lawtest",
+    "tests/outremer-locatif-r0-une-pac-2025-10.lawtest",
+    "tests/outremer-locatif-r0-une-pac-2026-10.lawtest",
+    "tests/saint-pierre-contributions-nulles.lawtest",
+    "tests/saint-pierre-montee-en-charge-2023.lawtest",
+    "tests/saint-pierre-montee-en-charge-achevee-2026.lawtest",
+    "tests/saint-pierre-montee-en-charge-avant-2022.lawtest",
+]
+world = ["fr.apl"]
+
+[[tests]]
+family = "fr.apl#catala-import"
+regression = false
+suites = [
+    "tests/foreign/catala/al_accession_propriete-exemple1-mensualit-ligible.lawtest",
+    "tests/foreign/catala/al_locatif-exemple1-montant.lawtest",
+    "tests/foreign/catala/al_locatif-exemple2-montant.lawtest",
+    "tests/foreign/catala/al_locatif-exemple3-montant.lawtest",
+    "tests/foreign/catala/al_locatif-exemple4-montant-forfaitaire-charges-d823-16.lawtest",
+    "tests/foreign/catala/al_locatif-exemple4-montant.lawtest",
+    "tests/foreign/catala/al_locatif-exemple4-participation-minimale.lawtest",
+    "tests/foreign/catala/al_locatif-exemple4-participation-personnelle.lawtest",
+    "tests/foreign/catala/al_locatif-exemple4-plafond-loyer-d823-16-2.lawtest",
+    "tests/foreign/catala/al_locatif-exemple4-taux-composition-familiale.lawtest",
+    "tests/foreign/catala/al_logement_foyer-castest1-quivalence-loyer.lawtest",
+    "tests/foreign/catala/apl_accession_propriete-exemple1-mensualit-ligible.lawtest",
+    "tests/foreign/catala/apl_accession_propriete-exemple1-mensualit-minimale.lawtest",
+    "tests/foreign/catala/apl_accession_propriete-exemple3-mensualit-ligible.lawtest",
+    "tests/foreign/catala/apl_accession_propriete-exemple3-mensualit-minimale.lawtest",
+    "tests/foreign/catala/apl_accession_propriete-exemple4-mensualit-minimale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple1-montant-forfaitaire-charges-d823-16.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple1-montant.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple1-participation-minimale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple1-participation-personnelle.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple1-plafond-loyer-d823-16-2.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple1-taux-composition-familiale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple2-montant-forfaitaire-charges-d823-16.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple2-montant.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple2-participation-minimale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple2-participation-personnelle.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple2-plafond-loyer-d823-16-2.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple2-taux-composition-familiale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple3-montant-forfaitaire-charges-d823-16.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple3-montant.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple3-participation-minimale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple3-participation-personnelle.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple3-plafond-loyer-d823-16-2.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple3-taux-composition-familiale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple4-montant-forfaitaire-charges-d823-16.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple4-montant.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple4-participation-minimale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple4-participation-personnelle.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple4-plafond-loyer-d823-16-2.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple4-taux-composition-familiale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple5-montant-forfaitaire-charges-d823-16.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple5-montant.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple5-participation-minimale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple5-participation-personnelle.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple5-plafond-loyer-d823-16-2.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple5-taux-composition-familiale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple6-montant-forfaitaire-charges-d823-16.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple6-montant.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple6-participation-minimale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple6-participation-personnelle.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple6-plafond-loyer-d823-16-2.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple6-taux-composition-familiale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple7-montant-forfaitaire-charges-d823-16.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple7-montant.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple7-participation-minimale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple7-participation-personnelle.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple7-plafond-loyer-d823-16-2.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple7-taux-composition-familiale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple8-montant-forfaitaire-charges-d823-16.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple8-montant.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple8-participation-minimale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple8-participation-personnelle.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple8-plafond-loyer-d823-16-2.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple8-taux-composition-familiale.lawtest",
+    "tests/foreign/catala/apl_locatif-exemple9-montant.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest1-montant.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest1-n-nombre-parts-d832-25.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest1-plafond-quivalence-loyer-ligible.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest1-quivalence-loyer-minimale.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest2-montant-forfaitaire-charges.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest2-quivalence-loyer.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest3-montant.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest3-plafond-quivalence-loyer-ligible.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest3-quivalence-loyer-ligible.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest3-quivalence-loyer-minimale.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest4-montant.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest4-plafond-quivalence-loyer-ligible.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest4-quivalence-loyer-ligible.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest4-quivalence-loyer-minimale.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest5-plafond-quivalence-loyer-ligible.lawtest",
+    "tests/foreign/catala/apl_logement_foyer-castest5-quivalence-loyer-ligible.lawtest",
+    "tests/foreign/catala/calculette_globale-exemple2-montant-vers.lawtest",
+]
+world = ["fr.apl"]
+
+[[tests]]
+family = "fr.apl#openfisca-import"
+regression = false
+suites = [
+    "tests/foreign/openfisca/of-aides-logements-la-limite-de-six-personnes-charg-2022-12-al-nb-personnes-a-charge.lawtest",
+    "tests/foreign/openfisca/of-aides-logements-la-limite-de-six-personnes-charg-2023-01-al-nb-personnes-a-charge.lawtest",
+    "tests/foreign/openfisca/of-aides-logements-r0-outre-mer-avec-une-personne-c-2021-01-aide-logement-r0.lawtest",
+    "tests/foreign/openfisca/of-aides-logements-r0-outre-mer-avec-une-personne-c-2022-01-aide-logement-r0.lawtest",
+    "tests/foreign/openfisca/of-aides-logements-r0-outre-mer-avec-une-personne-c-2022-07-aide-logement-r0.lawtest",
+    "tests/foreign/openfisca/of-aides-logements-r0-outre-mer-avec-une-personne-c-2023-01-aide-logement-r0.lawtest",
+    "tests/foreign/openfisca/of-aides-logements-r0-saint-pierre-et-miquelon-en-2-2023-01-aide-logement-r0.lawtest",
+    "tests/foreign/openfisca/of-aides-logements-r0-saint-pierre-et-miquelon-en-j-2022-07-aide-logement-r0.lawtest",
+    "tests/foreign/openfisca/of-personne-isol-e-2026-08-2026-08-aide-logement-participation-personnelle.lawtest",
+]
+world = ["fr.apl"]
+
+# Payment deontics (09-devoir-versement.law): the agency duty at aide_due
+# (ACTIVE), its absence below the threshold and under the L. 822-3 exclusion
+# (pairs).
+[[tests]]
+family = "fr.apl#devoir-versement"
+regression = false
+suites = [
+    "tests/devoir-versement-actif.lawtest",
+    "tests/devoir-versement-seuil.lawtest",
+    "tests/devoir-versement-exclusion-l822-3.lawtest",
+]
+world = ["fr.apl"]
+
+# Раздел 2 (ресурсы), вертикальный срез 15.09.2026: R.822-3/4/13/17.
+# world включает fr.tax.income_for_apl — мост через membre_du_menage.
+[[tests]]
+family = "fr.apl#ressources-vertical-slice"
+regression = false
+suites = [
+    "tests/ressources-r822-13-pension.lawtest",
+    "tests/ressources-r822-17-rsa.lawtest",
+    "tests/ressources-r822-calculees-01.lawtest",
+]
+world = ["fr.apl", "fr.tax.income_for_apl"]
+
+# FINISH housing (96 CCH) + family-housing (7 CSS): modules 10-25 plus the
+# G-A13 Pp reading fork (24-lecture-pp.law). Suites authored 2026-10-07/08;
+# registered here so discovery runs them (COMPARE: previously outside
+# discovery). Not regression until the checks phase greens them.
+[[tests]]
+family = "fr.apl#finish"
+regression = false
+suites = [
+    "tests/finish-champ-alf.lawtest",
+    "tests/finish-champ-apl.lawtest",
+    "tests/finish-composition.lawtest",
+    "tests/finish-contentieux.lawtest",
+    "tests/finish-dates.lawtest",
+    "tests/finish-demande.lawtest",
+    "tests/finish-dom-prets.lawtest",
+    "tests/finish-droit-defeaters.lawtest",
+    "tests/finish-exclusivite.lawtest",
+    "tests/finish-garanties.lawtest",
+    "tests/finish-impayes.lawtest",
+    "tests/finish-lecture-pp.lawtest",
+    "tests/finish-logement.lawtest",
+    "tests/finish-non-decence.lawtest",
+    "tests/finish-prets.lawtest",
+    "tests/finish-prime.lawtest",
+    "tests/finish-ressources.lawtest",
+    "tests/finish-surpeuplement.lawtest",
+    "tests/finish-trimestre.lawtest",
+    "tests/finish-versement.lawtest",
+]
+world = ["fr.apl"]
+
+[authoring]
+local_imports = "explicit"

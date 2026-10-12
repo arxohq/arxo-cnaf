@@ -1,0 +1,29 @@
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_apl_locatif.catala_fr, scope Exemple2.
+// ИХ ОЖИДАНИЕ: taux_composition_familiale = 0.0238.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-apl_locatif-exemple2-taux-composition-familiale" {
+    given {
+        context { decision_time @2022-04-03T12:00:00Z; knowledge_time @2022-04-03T12:00:00Z; legal_time @2022-04-03; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "apl_locatif-exemple2-01": secteur_locatif(entity_ref("urn:fr:apl:case:apl_locatif-exemple2")) { origin case_input; }
+        assert "apl_locatif-exemple2-02": aide_demandee(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), APL) { origin case_input; }
+        assert "apl_locatif-exemple2-03": loyer_principal(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), 425 EUR) { origin case_input; }
+        assert "apl_locatif-exemple2-04": zone_du_logement(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), ZONE_II) { origin case_input; }
+        assert "apl_locatif-exemple2-05": situation_familiale(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), COUPLE) { origin case_input; }
+        assert "apl_locatif-exemple2-06": personnes_a_charge(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), 2) { origin case_input; }
+        assert "apl_locatif-exemple2-07": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), 0 EUR) { origin case_input; }
+        assert "apl_locatif-exemple2-08": ressources_du_menage(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), 11500 EUR) { origin case_input; }
+        assert "apl_locatif-exemple2-09": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), false) { origin case_input; }
+        assert "apl_locatif-exemple2-10": territoire(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), METROPOLE) { origin case_input; }
+        assert "apl_locatif-exemple2-11": mode_location(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), LOCATION_SEULE) { origin case_input; }
+        assert "apl_locatif-exemple2-12": forme_logement(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), LOGEMENT_ORDINAIRE) { origin case_input; }
+    }
+    evaluate truth(taux_composition_familiale(entity_ref("urn:fr:apl:case:apl_locatif-exemple2"), 0.0238));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,30 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-rec-aah-fraude" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "brut": fr.css.aah::aah_montant_du(entity_ref("urn:fr:pv:case:aah"), 900.00 EUR) { origin case_input; }
+        assert "indu": indu_aah_retenu(entity_ref("urn:fr:pv:case:aah"), 500.00 EUR) { origin case_input; }
+        assert "fraud": indu_aah_frauduleux(entity_ref("urn:fr:pv:case:aah")) { origin case_input; }
+        assert "pf": pf_indu_reporte_sur_aah(entity_ref("urn:fr:pv:case:aah"), 0 EUR) { origin case_input; }
+        assert "rsa": rsa_indu_reporte_sur_aah(entity_ref("urn:fr:pv:case:aah"), 0 EUR) { origin case_input; }
+        assert "pa": pa_indu_reporte_sur_aah(entity_ref("urn:fr:pv:case:aah"), 0 EUR) { origin case_input; }
+        // D-42: the stated scale rate 0.20 is gone (contract (b), PC-R07-39): the levy
+        // arrives as the Money amount the fund applies; same case, 0.20 x AAH amount due
+        // 900.00 = 180.00 EUR. Carry pairs carry their lawful-carry gate (PC-R07-36).
+        assert "levy": retenue_mensuelle_aah_declaree(entity_ref("urn:fr:pv:case:aah"), 180.00 EUR) { origin case_input; }
+        assert "levy-pf-licite": report_pf_sur_aah_licite(entity_ref("urn:fr:pv:case:aah")) { origin case_input; }
+        assert "levy-rsa-licite": report_rsa_sur_aah_licite(entity_ref("urn:fr:pv:case:aah")) { origin case_input; }
+        assert "levy-pa-licite": report_pa_sur_aah_licite(entity_ref("urn:fr:pv:case:aah")) { origin case_input; }
+        // D-42: no stated uplift — the fraud uplift is the FIXED 50 % of D. 553-5 I (PC-R07-38).
+    }
+    // D-42: expectation changed 648.00 -> 630.00. The old case stated a 40 % uplift,
+    // which the pinned D. 553-5 I excludes (the rate is fixed at 50 %): retenue
+    // 180.00 x 1.50 = 270.00, capped by the debt 500.00 and the echeance 900.00;
+    // net 900.00 - 270.00 = 630.00.
+    evaluate truth(net_verse_aah(entity_ref("urn:fr:pv:case:aah"), 630.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

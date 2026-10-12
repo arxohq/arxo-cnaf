@@ -1,0 +1,20 @@
+// Removal of exactly two months: "au-delà de deux mois" is strict,
+// no proposal is owed yet (D. 262-73). The fulfillment literal stays
+// underived. Pair of reorientation.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-reorientation-deux-mois" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "reo-01": radiation_liste(entity_ref("urn:fr:rsa:case:reorientation-deux-mois")) { origin case_input; }
+        assert "reo-02": duree_radiation_mois(entity_ref("urn:fr:rsa:case:reorientation-deux-mois"), 2) { origin case_input; }
+        assert "reo-03": referent_attribue(entity_ref("urn:fr:rsa:ref:ref1"), entity_ref("urn:fr:rsa:case:reorientation-deux-mois")) { origin case_input; }
+        assert "reo-04": departement_competent(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:case:reorientation-deux-mois")) { origin case_input; }
+    }
+    evaluate truth(proposition_orientation(entity_ref("urn:fr:rsa:ref:ref1"), entity_ref("urn:fr:rsa:case:reorientation-deux-mois")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,29 @@
+// Under-eleven band at 31 December 2021 (born 2014-06-01):
+// 0.8972 x 400.00 = 358.88 on the stated base.
+// D-29(b): the base amount requires ars_droit_ouvert, so the case states
+// the resource facts (resources 12000 within the stated base ceiling 10000 +
+// per-child increment; illustrative).
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-montant-moins-11" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "amm-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:montant-moins-11"), entity_ref("urn:fr:pf-ars:case:montant-moins-11-e1")) { origin case_input; }
+        assert "amm-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:montant-moins-11-e1")) { origin case_input; }
+        assert "amm-03": date_naissance(entity_ref("urn:fr:pf-ars:case:montant-moins-11-e1"), @2014-06-01) { origin case_input; }
+        assert "amm-04": seuil_six_ans(@2022-02-01) { origin case_input; }
+        assert "amm-05": seuil_dix_huit_ans(@2021-09-15) { origin case_input; }
+        assert "amm-06": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:montant-moins-11-e1")) { origin case_input; }
+        assert "amm-07": date_reference_taux(@2021-12-31) { origin case_input; }
+        assert "amm-08": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:montant-moins-11"), 400.00 EUR) { origin case_input; }
+        assert "amm-rg1": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:montant-moins-11"), 1) { origin case_input; }
+        assert "amm-rg2": ressources_menage(entity_ref("urn:fr:pf-ars:case:montant-moins-11"), 12000 EUR) { origin case_input; }
+        assert "amm-rg3": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:montant-moins-11"), 10000 EUR) { origin case_input; }
+    }
+    evaluate truth(ars_montant_du(entity_ref("urn:fr:pf-ars:case:montant-moins-11-e1"), 358.88 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

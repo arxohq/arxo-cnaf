@@ -1,0 +1,198 @@
+// Shared surface of the package: case facts and predicates that the ASF
+// modules fill in. Upstream premises (child in care, opener status,
+// debtor body) belong to fr.pf.core and arrive as case inputs; NOTHING
+// owned by a neighbour package is redefined here.
+//
+// Module map:
+//   01-sources.law          - sources, back-to-back editions, fragments (generated)
+//   02-conditions.law       - L523-1, R523-1, R523-2: per-child eligibility by ground, request gate
+//   03-cessation-couple.law - L523-2, R523-4/5/6: couple cessation
+//   04-montant.law          - L523-3, R523-7: single and double rates, partial-pension differential
+//   05-maintien-controle.law - R523-3, R523-3-1/2, D523-2: continuation, fourth-month control
+//   06-ouverture-dates.law  - R523-1, R523-2, D523-1/2: opening dates after carence, hors-etat opening
+//   07-devoir-versement.law  - fund payment and quarterly-control duties
+//   08-dom.law               - L755-17, D755-7, D755-8: DOM attribution, metro applicability, rate parity
+//   bareme/*.lawparam.json  - one-month carence, fourth-month control, 15 EUR floor, rates (generated)
+//
+// SCOPE BOUNDARY. The package computes the monthly family support
+// allowance (brut) for metropolitan France from 2021-01-01, plus the DOM
+// extension (L755-17, D755-7, D755-8 in 08-dom.law: attribution,
+// applicability, parity). Outside: the
+// 15 EUR non-payment floor (no engine fold, B-PFASF-SEUIL), the RSA
+// plein-droit opener (upstream assessment, B-PFASF-RSA), the L523-1 IV
+// control regulation (not published, DSS-ELIG), subrogation and recovery
+// procedure (R523-8 inter-organisation, B-PFASF-SUBROGATION), euro BMAF
+// (unpinned arrete -> stated-assumption input), quarterly cadence of the
+// control (adopted DSS reading, B-PFASF-TRIMESTRE). Full list - README,
+// "Boundaries".
+//
+// OWN PREDECESSOR PINS (D-15). The L523-1 predecessor text (2019-2021,
+// CSS_L523_1_PREV) is pinned inside this package's @source lists; the
+// R523-7 pre-2022 rate row (2018-2022) is pinned the same way.
+// fr.pf.core is NOT edited for ASF history.
+
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+import fr.pf.core version "0.1.0";
+
+pub enum MotifAsf {
+    label fr official "cas d'ouverture du droit a l'allocation de soutien familial (L. 523-1)";
+    label en unofficial "family support allowance opening ground (L. 523-1)";
+    ORPHELIN_UN_PARENT,
+    ORPHELIN_DEUX_PARENTS,
+    DEFAUT_SIMPLE,
+    DEFAUT_DOUBLE,
+    PENSION_PARTIELLE
+}
+
+// --- Household case inputs (empirical) ---
+
+pub relation bmaf_retenu(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "base mensuelle retenue pour l'allocation (montant en vigueur, appreciation du fonds)";
+    label en unofficial "monthly base retained for the allowance (amount in force, fund assessment)";
+}
+
+pub relation mois_ouverture_asf(m: Date) kind empirical {
+    label fr official "mois d'ouverture du droit, premier jour du mois (appreciation du fonds, D. 523-1, D. 523-2)";
+    label en unofficial "right opening month, first of the month (fund assessment, D. 523-1, D. 523-2)";
+}
+
+pub relation mois_cessation_couple(c: Date) kind empirical {
+    label fr official "mois de la cessation de la vie en couple, premier jour du mois (appreciation du fonds, L. 523-2)";
+    label en unofficial "couple-life cessation month, first of the month (fund assessment, L. 523-2)";
+}
+
+pub relation mois_controle_4m(t: Date) kind empirical {
+    label fr official "mois du controle du quatrieme mois, premier jour du mois (appreciation du fonds, R. 523-3-2)";
+    label en unofficial "fourth-month control month, first of the month (fund assessment, R. 523-3-2)";
+}
+
+pub relation mois_droit_asf(m: Date) kind empirical {
+    label fr official "mois du droit apprecie, premier jour du mois (appreciation du fonds)";
+    label en unofficial "assessed right month, first of the month (fund assessment)";
+}
+
+pub relation date_limite_versement(d: Date) kind empirical {
+    label fr official "date limite du versement mensuel du par le fonds (appreciation du fonds, R. 523-6)";
+    label en unofficial "fund monthly payment deadline (fund assessment, R. 523-6)";
+}
+
+pub relation date_limite_controle(d: Date) kind empirical {
+    label fr official "date limite du controle trimestriel du par le fonds (appreciation du fonds, R. 523-3-1)";
+    label en unofficial "fund quarterly control deadline (fund assessment, R. 523-3-1)";
+}
+
+pub relation residence_dom(p: fr.pf.core::Personne) kind empirical {
+    key(p);
+    label fr official "réside dans une collectivité mentionnée à l'article L. 751-1 (appréciation du fonds, L. 755-17, D. 755-8; n'implique pas la résidence départementale)";
+    label en unofficial "resides in an L. 751-1 collectivity (fund assessment, L. 755-17, D. 755-8; does not imply department residence)";
+}
+
+pub relation residence_departement_dom(p: fr.pf.core::Personne) kind empirical {
+    key(p);
+    label fr official "réside dans un département mentionné à l'article L. 751-1 (appréciation du fonds, D. 755-7; fait indépendant avec provenance)";
+    label en unofficial "resides in a department listed in article L. 751-1 (fund assessment, D. 755-7; independent provenance-bearing fact)";
+}
+
+// --- Per-child case inputs ---
+
+pub relation motif_asf(e: fr.pf.core::Enfant, motif: MotifAsf) kind empirical {
+    key(e);
+    label fr official "cas d'ouverture du droit pour l'enfant (appreciation du fonds, L. 523-1)";
+    label en unofficial "child opening ground (fund assessment, L. 523-1)";
+}
+
+pub relation demande_asf(e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "allocation demandee pour l'enfant, recours maintenu pour le hors-etat (R. 523-2, appreciation du fonds)";
+    label en unofficial "allowance requested for the child, recourse maintained for hors-etat (R. 523-2, fund assessment)";
+}
+
+pub relation manquement_debiteur(e: fr.pf.core::Enfant, manquement: Date) kind empirical {
+    key(e);
+    label fr official "mois de la defaillance du debiteur, premier jour du mois (appreciation du fonds, R. 523-1)";
+    label en unofficial "debtor default month, first of the month (fund assessment, R. 523-1)";
+}
+
+pub relation pension_recue(e: fr.pf.core::Enfant, pension: Money) kind empirical {
+    key(e);
+    label fr official "pension alimentaire percue pour l'enfant au mois apprecie (appreciation du fonds, L. 523-1 4°)";
+    label en unofficial "support pension received for the child in the assessed month (fund assessment, L. 523-1 4°)";
+}
+
+pub relation controle_effectue(e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "le controle trimestriel a ete effectue pour l'enfant (execution)";
+    label en unofficial "the quarterly control was performed for the child (performance)";
+}
+
+// --- Institutional conclusions ---
+
+pub relation asf_enfant_eligible(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant ouvre droit a l'allocation de soutien familial (L. 523-1)";
+    label en unofficial "child opens right to the family support allowance (L. 523-1)";
+}
+
+pub relation asf_cessation_couple(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    key(p, e);
+    label fr official "la cessation de la vie en couple fait cesser le versement (L. 523-2)";
+    label en unofficial "couple-life cessation stops payment (L. 523-2)";
+}
+
+pub relation asf_montant_du(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant d'allocation du pour l'enfant, taux simple ou double (L. 523-3, R. 523-7, brut)";
+    label en unofficial "allowance amount due for the child, single or double rate (L. 523-3, R. 523-7, gross)";
+}
+
+pub relation asf_differentiel_du(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "complement differentiel du pour l'enfant, voie autonome (L. 523-1 4°, brut)";
+    label en unofficial "differential top-up due for the child, standalone track (L. 523-1 4°, gross)";
+}
+
+pub relation asf_ouverture_confirmee(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "la date d'ouverture du droit est confirmee, carence purgée ou hors-etat (R. 523-1, D. 523-1, D. 523-2)";
+    label en unofficial "the right opening date is confirmed, carence served or hors-etat (R. 523-1, D. 523-1, D. 523-2)";
+}
+
+pub relation asf_controle_confirme(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "le controle du quatrieme mois est exigible pour l'enfant (R. 523-3-1, R. 523-3-2, D. 523-2)";
+    label en unofficial "the fourth-month control is due for the child (R. 523-3-1, R. 523-3-2, D. 523-2)";
+}
+
+pub relation asf_maintien_mois(e: fr.pf.core::Enfant, m: Date) kind institutional {
+    key(e, m);
+    label fr official "le versement est maintenu pour l'enfant au mois apprecie (R. 523-3)";
+    label en unofficial "payment is continued for the child in the assessed month (R. 523-3)";
+}
+
+pub relation asf_metro_applicable_dom(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "R. 523-1 à R. 523-6, R. 523-8 et D. 523-3 applicables au cas résidant dans un département L. 751-1, hors R. 581-1 à R. 581-10 (D. 755-7)";
+    label en unofficial "R. 523-1 to R. 523-6, R. 523-8 and D. 523-3 applicable to the case residing in an L. 751-1 department, except R. 581-1 to R. 581-10 (D. 755-7)";
+}
+
+pub relation asf_taux_parite_dom(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "taux ASF du cas identiques aux taux métropolitains (D. 755-8)";
+    label en unofficial "case ASF rates identical to the metropolitan rates (D. 755-8)";
+}
+
+pub relation asf_attribuee_dom(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'allocation de soutien familial est attribuée pour l'enfant dans une collectivité L. 751-1 dans les conditions du décret (L. 755-17)";
+    label en unofficial "family support allowance granted for the child in an L. 751-1 collectivity under the decree conditions (L. 755-17)";
+}
+
+pub relation asf_verse(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(p, e);
+    label fr official "l'allocation due a ete versee au parent (execution)";
+    label en unofficial "the due allowance was paid to the parent (performance)";
+}

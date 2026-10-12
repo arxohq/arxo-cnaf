@@ -1,0 +1,21 @@
+// PreParE plein, inputs → value: stopped activity + sufficient prior
+// activity, case BMAF of 400.00 € → 400 × 0.9662 = 386.48 €.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-plein-montant" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-plein-01": arret_activite(entity_ref("urn:fr:paje:benef:prepare-plein"), entity_ref("urn:fr:paje:enfant:prepare-plein")) { origin adjudicated; }
+        assert "prepare-plein-02": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-plein"), entity_ref("urn:fr:paje:enfant:prepare-plein")) { origin adjudicated; }
+        assert "prepare-plein-03": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-plein")) { origin adjudicated; }
+        assert "prepare-plein-04": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-plein"), entity_ref("urn:fr:paje:case:prepare-plein")) { origin case_input; }
+        assert "prepare-plein-05": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-plein"), 400.00 EUR) { origin case_input; }
+        assert "prepare-plein-06": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-plein"), entity_ref("urn:fr:paje:enfant:prepare-plein"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-plein"), entity_ref("urn:fr:paje:enfant:prepare-plein"), 386.48 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,450 @@
+// Non-decency (19): conservation triggered for ALF on a finding, the
+// reduced rent during conservation, the owner-notification duty, the
+// eighteen-month non-recovery, and energy compliance by produced DPE.
+// L. 843-7 continuation (positive, missing-copy, conservation-blocked),
+// the five R. 843-6 maintenance grounds with once-only renewal, L. 843-4
+// successor conservation and expiry, the L. 843-5 above-rent excess and
+// owner refund duty, R. 843-1 hotel notices with gated extension, R. 843-3
+// tenant notice, and R. 843-7 simultaneous-procedure suspension.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-conservation-declenchee" {
+    given {
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcon-01": constat_non_decence(entity_ref("urn:fr:apl:case:fcon"), @2023-04-10) { origin case_input; }
+        assert "fcon-02": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:fcon"), true) { origin case_input; }
+        assert "fcon-03": aide_demandee(entity_ref("urn:fr:apl:case:fcon"), ALF) { origin case_input; }
+    }
+    evaluate truth(conservation_en_cours(entity_ref("urn:fr:apl:case:fcon")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-loyer-reduit-conservation" {
+    given {
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "floy-01": constat_non_decence(entity_ref("urn:fr:apl:case:floy"), @2023-04-10) { origin case_input; }
+        assert "floy-02": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:floy"), true) { origin case_input; }
+        assert "floy-03": aide_demandee(entity_ref("urn:fr:apl:case:floy"), ALF) { origin case_input; }
+        assert "floy-04": loyer_principal(entity_ref("urn:fr:apl:case:floy"), 500.00 EUR) { origin case_input; }
+        assert "floy-05": charges_recuperables(entity_ref("urn:fr:apl:case:floy"), 80.00 EUR) { origin case_input; }
+        assert "floy-06": allocation_due_conservation(entity_ref("urn:fr:apl:case:floy"), 200.00 EUR) { origin case_input; }
+        assert "floy-07": locataire_informe_montant(entity_ref("urn:fr:apl:case:floy")) { origin case_input; }
+    }
+    evaluate truth(loyer_du_reduit(entity_ref("urn:fr:apl:case:floy"), 380.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-notifier-proprietaire" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fnot-01": constat_non_decence(entity_ref("urn:fr:apl:case:fnot"), @2023-04-10) { origin case_input; }
+        assert "fnot-02": aide_demandee(entity_ref("urn:fr:apl:case:fnot"), ALS) { origin case_input; }
+        assert "fnot-03": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fnot")) { origin case_input; }
+        assert "fnot-04": bailleur_du_menage(entity_ref("urn:fr:apl:bail:fnot"), entity_ref("urn:fr:apl:case:fnot")) { origin case_input; }
+        // D-42: the duty is borne by "le bailleur"; the model keys landlord duties on the
+        // D-42: third-party role BAILLEUR (role_tiers), as the sibling suites do; the case
+        // D-42: omitted it.
+        assert "fnot-05": role_tiers(entity_ref("urn:fr:apl:bail:fnot"), BAILLEUR) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NotifierProprietaireConstat, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-non-recouvrement-18-mois" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-08-15T12:00:00Z; knowledge_time @2023-08-15T12:00:00Z; legal_time @2023-08-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fnre-01": constat_non_decence(entity_ref("urn:fr:apl:case:fnre"), @2022-01-10) { origin case_input; }
+        assert "fnre-02": date_appreciation(entity_ref("urn:fr:apl:case:fnre"), @2023-08-01) { origin case_input; }
+        assert "fnre-03": non_decence_persiste(entity_ref("urn:fr:apl:case:fnre")) { origin case_input; }
+    }
+    evaluate truth(conservation_non_recouvrable(entity_ref("urn:fr:apl:case:fnre")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-conformite-energetique-dpe" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdpe-01": conformite_energetique_cas(entity_ref("urn:fr:apl:case:fdpe")) { origin case_input; }
+        assert "fdpe-02": dpe_produit_conformite(entity_ref("urn:fr:apl:case:fdpe")) { origin case_input; }
+    }
+    evaluate truth(conformite_energetique_dpe(entity_ref("urn:fr:apl:case:fdpe")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-continuation-l843-7" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcont-01": patrimoine_dix_logements_ou_plus(entity_ref("urn:fr:apl:case:fcont")) { origin case_input; }
+        assert "fcont-02": proprietaire_gestionnaire_qualifie_843_7(entity_ref("urn:fr:apl:case:fcont")) { origin case_input; }
+        assert "fcont-03": convention_etat_conformite_843_7(entity_ref("urn:fr:apl:case:fcont")) { origin case_input; }
+        assert "fcont-04": copie_convention_transmise_organisme(entity_ref("urn:fr:apl:case:fcont")) { origin case_input; }
+    }
+    evaluate truth(continuation_perception_l843_7(entity_ref("urn:fr:apl:case:fcont")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-continuation-sans-copie" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcontx-01": patrimoine_dix_logements_ou_plus(entity_ref("urn:fr:apl:case:fcontx")) { origin case_input; }
+        assert "fcontx-02": proprietaire_gestionnaire_qualifie_843_7(entity_ref("urn:fr:apl:case:fcontx")) { origin case_input; }
+        assert "fcontx-03": convention_etat_conformite_843_7(entity_ref("urn:fr:apl:case:fcontx")) { origin case_input; }
+    }
+    evaluate truth(continuation_perception_l843_7(entity_ref("urn:fr:apl:case:fcontx")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-continuation-bloque-conservation" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcontb-01": constat_non_decence(entity_ref("urn:fr:apl:case:fcontb"), @2023-04-10) { origin case_input; }
+        assert "fcontb-02": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:fcontb"), true) { origin case_input; }
+        assert "fcontb-03": aide_demandee(entity_ref("urn:fr:apl:case:fcontb"), ALF) { origin case_input; }
+        assert "fcontb-04": patrimoine_dix_logements_ou_plus(entity_ref("urn:fr:apl:case:fcontb")) { origin case_input; }
+        assert "fcontb-05": proprietaire_gestionnaire_qualifie_843_7(entity_ref("urn:fr:apl:case:fcontb")) { origin case_input; }
+        assert "fcontb-06": convention_etat_conformite_843_7(entity_ref("urn:fr:apl:case:fcontb")) { origin case_input; }
+        assert "fcontb-07": copie_convention_transmise_organisme(entity_ref("urn:fr:apl:case:fcontb")) { origin case_input; }
+    }
+    evaluate truth(continuation_perception_l843_7(entity_ref("urn:fr:apl:case:fcontb")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(conservation_en_cours(entity_ref("urn:fr:apl:case:fcontb")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-maintien-allocation-preponderante" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fprep-01": constat_non_decence(entity_ref("urn:fr:apl:case:fprep"), @2023-04-10) { origin case_input; }
+        assert "fprep-02": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:fprep"), true) { origin case_input; }
+        assert "fprep-03": aide_demandee(entity_ref("urn:fr:apl:case:fprep"), ALF) { origin case_input; }
+        assert "fprep-04": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fprep")) { origin case_input; }
+        assert "fprep-05": allocation_hors_charges_843(entity_ref("urn:fr:apl:case:fprep"), 300.00 EUR) { origin case_input; }
+        assert "fprep-06": dernier_loyer_brut_843(entity_ref("urn:fr:apl:case:fprep"), 500.00 EUR) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(MaintienExceptionnelAllocationPreponderante, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-maintien-travaux-engages" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "ftrav-01": constat_non_decence(entity_ref("urn:fr:apl:case:ftrav"), @2023-04-10) { origin case_input; }
+        assert "ftrav-02": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:ftrav"), true) { origin case_input; }
+        assert "ftrav-03": aide_demandee(entity_ref("urn:fr:apl:case:ftrav"), ALF) { origin case_input; }
+        assert "ftrav-04": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:ftrav")) { origin case_input; }
+        assert "ftrav-05": preuve_travaux_engages_6mois(entity_ref("urn:fr:apl:case:ftrav")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(MaintienExceptionnelTravaux, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-echeance-maintien-six-mois" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "femain-01": allocation_maintenue_exceptionnelle(entity_ref("urn:fr:apl:case:femain")) { origin case_input; }
+        assert "femain-02": maintien_accorde_le(entity_ref("urn:fr:apl:case:femain"), @2023-01-15) { origin case_input; }
+    }
+    evaluate truth(maintien_expire_le(entity_ref("urn:fr:apl:case:femain"), @2023-07-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-echeance-maintien-sans-date" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "femainx-01": allocation_maintenue_exceptionnelle(entity_ref("urn:fr:apl:case:femainx")) { origin case_input; }
+    }
+    evaluate truth(maintien_expire_le(entity_ref("urn:fr:apl:case:femainx"), @2023-07-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-renouvellement-maintien-travaux" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-08-15T12:00:00Z; knowledge_time @2023-08-15T12:00:00Z; legal_time @2023-08-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fren-01": allocation_maintenue_exceptionnelle(entity_ref("urn:fr:apl:case:fren")) { origin case_input; }
+        assert "fren-02": maintien_accorde_le(entity_ref("urn:fr:apl:case:fren"), @2023-01-15) { origin case_input; }
+        assert "fren-03": preuve_travaux_delai_supplementaire(entity_ref("urn:fr:apl:case:fren")) { origin case_input; }
+        assert "fren-04": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fren")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(RenouvellementMaintienTravaux, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-conservation-successeur-l843-4" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fsuc-01": succession_logement(entity_ref("urn:fr:apl:case:fsuc"), entity_ref("urn:fr:apl:case:fprec")) { origin case_input; }
+        assert "fsuc-02": constat_non_decence(entity_ref("urn:fr:apl:case:fsuc"), @2023-02-10) { origin case_input; }
+        assert "fsuc-03": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:fsuc"), true) { origin case_input; }
+        assert "fsuc-04": aide_demandee(entity_ref("urn:fr:apl:case:fsuc"), ALF) { origin case_input; }
+    }
+    evaluate truth(conservation_en_cours(entity_ref("urn:fr:apl:case:fsuc")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-successeur-sans-nouveau-constat" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fsucx-01": succession_logement(entity_ref("urn:fr:apl:case:fsucx"), entity_ref("urn:fr:apl:case:fprecx")) { origin case_input; }
+        assert "fsucx-02": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:fsucx"), true) { origin case_input; }
+        assert "fsucx-03": aide_demandee(entity_ref("urn:fr:apl:case:fsucx"), ALF) { origin case_input; }
+    }
+    evaluate truth(conservation_en_cours(entity_ref("urn:fr:apl:case:fsucx")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-echeance-conservation-l843-4" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fsuce-01": succession_logement(entity_ref("urn:fr:apl:case:fsuce"), entity_ref("urn:fr:apl:case:fprece")) { origin case_input; }
+        assert "fsuce-02": constat_non_decence(entity_ref("urn:fr:apl:case:fsuce"), @2023-02-10) { origin case_input; }
+    }
+    evaluate truth(conservation_l843_4_expire_le(entity_ref("urn:fr:apl:case:fsuce"), @2023-08-10));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-excedent-conservation-l843-5" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fexc-01": allocation_conservee_totale(entity_ref("urn:fr:apl:case:fexc"), 1200.00 EUR) { origin case_input; }
+        assert "fexc-02": loyer_principal(entity_ref("urn:fr:apl:case:fexc"), 800.00 EUR) { origin case_input; }
+        assert "fexc-03": charges_recuperables(entity_ref("urn:fr:apl:case:fexc"), 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(excedent_conservation(entity_ref("urn:fr:apl:case:fexc"), 300.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-excedent-conservation-limite" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fexcl-01": allocation_conservee_totale(entity_ref("urn:fr:apl:case:fexcl"), 900.00 EUR) { origin case_input; }
+        assert "fexcl-02": loyer_principal(entity_ref("urn:fr:apl:case:fexcl"), 800.00 EUR) { origin case_input; }
+        assert "fexcl-03": charges_recuperables(entity_ref("urn:fr:apl:case:fexcl"), 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(excedent_conservation(entity_ref("urn:fr:apl:case:fexcl"), 0.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-reverser-excedent" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frev-01": allocation_conservee_totale(entity_ref("urn:fr:apl:case:frev"), 1200.00 EUR) { origin case_input; }
+        assert "frev-02": loyer_principal(entity_ref("urn:fr:apl:case:frev"), 800.00 EUR) { origin case_input; }
+        assert "frev-03": charges_recuperables(entity_ref("urn:fr:apl:case:frev"), 100.00 EUR) { origin case_input; }
+        assert "frev-04": conservee_reversee_proprietaire(entity_ref("urn:fr:apl:case:frev")) { origin case_input; }
+        assert "frev-05": bailleur_du_menage(entity_ref("urn:fr:apl:bail:frev"), entity_ref("urn:fr:apl:case:frev")) { origin case_input; }
+        // D-42: the duty is borne by "le bailleur"; the model keys landlord duties on the
+        // D-42: third-party role BAILLEUR (role_tiers), as the sibling suites do; the case
+        // D-42: omitted it.
+        assert "frev-06": role_tiers(entity_ref("urn:fr:apl:bail:frev"), BAILLEUR) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ReverserExcedentConservation, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-informer-hotel-r843-1" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fhot-01": derogation_decence_hotel(entity_ref("urn:fr:apl:case:fhot")) { origin case_input; }
+        assert "fhot-02": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fhot")) { origin case_input; }
+        assert "fhot-03": conseil_organisme(entity_ref("urn:fr:apl:board:conseil-exemple"), entity_ref("urn:fr:apl:org:caisse-exemple")) { origin case_input; }
+        assert "fhot-04": prefet_competent(entity_ref("urn:fr:apl:prefet:prefet-exemple"), entity_ref("urn:fr:apl:case:fhot")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InformerConseilHotel843_1, ACTIVE);
+    expect position(InformerPrefetHotel843_1, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-informer-refus-r843-1" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fref-01": refus_derogation_decence(entity_ref("urn:fr:apl:case:fref")) { origin case_input; }
+        assert "fref-02": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fref")) { origin case_input; }
+        assert "fref-03": prefet_competent(entity_ref("urn:fr:apl:prefet:prefet-exemple"), entity_ref("urn:fr:apl:case:fref")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InformerPrefetRefus843_1, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-suspension-non-decense-r843-7" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-08-15T12:00:00Z; knowledge_time @2023-08-15T12:00:00Z; legal_time @2023-08-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fsus-01": constat_non_decence(entity_ref("urn:fr:apl:case:fsus"), @2021-01-10) { origin case_input; }
+        assert "fsus-02": date_appreciation(entity_ref("urn:fr:apl:case:fsus"), @2023-08-01) { origin case_input; }
+        assert "fsus-03": non_decence_persiste(entity_ref("urn:fr:apl:case:fsus")) { origin case_input; }
+        assert "fsus-04": procedure_surpeuplement_r844(entity_ref("urn:fr:apl:case:fsus")) { origin case_input; }
+    }
+    evaluate truth(allocation_suspendue_843_7(entity_ref("urn:fr:apl:case:fsus")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-suspension-sans-persistance" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-08-15T12:00:00Z; knowledge_time @2023-08-15T12:00:00Z; legal_time @2023-08-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fsusx-01": constat_non_decence(entity_ref("urn:fr:apl:case:fsusx"), @2021-01-10) { origin case_input; }
+        assert "fsusx-02": date_appreciation(entity_ref("urn:fr:apl:case:fsusx"), @2023-08-01) { origin case_input; }
+        assert "fsusx-03": procedure_surpeuplement_r844(entity_ref("urn:fr:apl:case:fsusx")) { origin case_input; }
+    }
+    evaluate truth(allocation_suspendue_843_7(entity_ref("urn:fr:apl:case:fsusx")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-informer-locataire-r843-3" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "floc-01": constat_non_decence(entity_ref("urn:fr:apl:case:floc"), @2023-04-10) { origin case_input; }
+        assert "floc-02": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:floc"), true) { origin case_input; }
+        assert "floc-03": aide_demandee(entity_ref("urn:fr:apl:case:floc"), ALF) { origin case_input; }
+        assert "floc-04": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:floc")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InformerLocataireConformite843, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-prorogation-hotel-travaux" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fpro-01": derogation_decence_hotel(entity_ref("urn:fr:apl:case:fpro")) { origin case_input; }
+        assert "fpro-02": derogation_accordee_le(entity_ref("urn:fr:apl:case:fpro"), @2022-03-01) { origin case_input; }
+        assert "fpro-03": prorogation_hotel_six_mois(entity_ref("urn:fr:apl:case:fpro")) { origin case_input; }
+        assert "fpro-04": travaux_decides_non_acheves_843_1(entity_ref("urn:fr:apl:case:fpro")) { origin case_input; }
+    }
+    evaluate truth(fenetre_derogation_renouvelee_le(entity_ref("urn:fr:apl:case:fpro"), @2023-09-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-prorogation-hotel-sans-motif" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fprox-01": derogation_decence_hotel(entity_ref("urn:fr:apl:case:fprox")) { origin case_input; }
+        assert "fprox-02": derogation_accordee_le(entity_ref("urn:fr:apl:case:fprox"), @2022-03-01) { origin case_input; }
+        assert "fprox-03": prorogation_hotel_six_mois(entity_ref("urn:fr:apl:case:fprox")) { origin case_input; }
+    }
+    evaluate truth(fenetre_derogation_renouvelee_le(entity_ref("urn:fr:apl:case:fprox"), @2023-09-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-maintien-sans-motif" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fmainx-01": constat_non_decence(entity_ref("urn:fr:apl:case:fmainx"), @2023-04-10) { origin case_input; }
+        assert "fmainx-02": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:fmainx"), true) { origin case_input; }
+        assert "fmainx-03": aide_demandee(entity_ref("urn:fr:apl:case:fmainx"), ALF) { origin case_input; }
+        assert "fmainx-04": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fmainx")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(MaintienExceptionnelTravaux, ACTIVE);
+    expect not position(MaintienExceptionnelAllocationPreponderante, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-renouvellement-deja-accorde" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-08-15T12:00:00Z; knowledge_time @2023-08-15T12:00:00Z; legal_time @2023-08-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "frenx-01": allocation_maintenue_exceptionnelle(entity_ref("urn:fr:apl:case:frenx")) { origin case_input; }
+        assert "frenx-02": maintien_accorde_le(entity_ref("urn:fr:apl:case:frenx"), @2023-01-15) { origin case_input; }
+        assert "frenx-03": preuve_travaux_delai_supplementaire(entity_ref("urn:fr:apl:case:frenx")) { origin case_input; }
+        assert "frenx-04": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:frenx")) { origin case_input; }
+        assert "frenx-05": renouvellement_maintien_deja_accorde(entity_ref("urn:fr:apl:case:frenx")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(RenouvellementMaintienTravaux, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-renouvellement-accession-unique" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-10-15T12:00:00Z; knowledge_time @2023-10-15T12:00:00Z; legal_time @2023-10-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fracc-01": derogation_decence_accession(entity_ref("urn:fr:apl:case:fracc")) { origin case_input; }
+        assert "fracc-02": derogation_accordee_le(entity_ref("urn:fr:apl:case:fracc"), @2022-03-01) { origin case_input; }
+        assert "fracc-03": renouvellement_derogation_accession(entity_ref("urn:fr:apl:case:fracc")) { origin case_input; }
+    }
+    evaluate truth(fenetre_derogation_renouvelee_le(entity_ref("urn:fr:apl:case:fracc"), @2025-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-renouvellement-accession-second" {
+    given {
+        // D-42: month-count steps of 19 (L. 843-1..4 delays) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-10-15T12:00:00Z; knowledge_time @2023-10-15T12:00:00Z; legal_time @2023-10-15; timezone "Europe/Paris"; deadline_policy APL_CONSERVATION_MOIS; interpretation PpPlancherFinal; }
+        assert "fraccx-01": derogation_decence_accession(entity_ref("urn:fr:apl:case:fraccx")) { origin case_input; }
+        assert "fraccx-02": derogation_accordee_le(entity_ref("urn:fr:apl:case:fraccx"), @2022-03-01) { origin case_input; }
+        assert "fraccx-03": renouvellement_derogation_accession(entity_ref("urn:fr:apl:case:fraccx")) { origin case_input; }
+        assert "fraccx-04": renouvellement_accession_deja_accorde(entity_ref("urn:fr:apl:case:fraccx")) { origin case_input; }
+    }
+    evaluate truth(fenetre_derogation_renouvelee_le(entity_ref("urn:fr:apl:case:fraccx"), @2025-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

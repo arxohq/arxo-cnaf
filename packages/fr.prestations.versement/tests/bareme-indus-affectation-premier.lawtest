@@ -1,0 +1,22 @@
+// Allocation to the first: oldest indu owed - the single levy is allocated to it (D. 553-4 al. 3, PC-R04-03).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-indus-affectation-premier" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "indus-affectation-01": indus_multiples(entity_ref("urn:fr:pv:case:multi-affecte")) { origin case_input; }
+        assert "indus-affectation-02": indu_constate_le(entity_ref("urn:fr:pv:indu:premier"), entity_ref("urn:fr:pv:case:multi-affecte"), @2026-01-10, 800.00 EUR) { origin case_input; }
+        assert "indus-affectation-03": indu_constate_le(entity_ref("urn:fr:pv:indu:dernier"), entity_ref("urn:fr:pv:case:multi-affecte"), @2026-03-05, 400.00 EUR) { origin case_input; }
+        assert "indus-affectation-04": indu_solde_restant(entity_ref("urn:fr:pv:indu:premier"), entity_ref("urn:fr:pv:case:multi-affecte"), 800.00 EUR) { origin case_input; }
+        assert "indus-affectation-05": indu_solde_restant(entity_ref("urn:fr:pv:indu:dernier"), entity_ref("urn:fr:pv:case:multi-affecte"), 400.00 EUR) { origin case_input; }
+        assert "indus-affectation-06": retenue_unique_indus_multiples(entity_ref("urn:fr:pv:case:multi-affecte")) { origin case_input; }
+        assert "indus-affectation-07": registre_indus_complet(entity_ref("urn:fr:pv:case:multi-affecte")) { origin case_input; }
+        assert "indus-affectation-08": prelevement_mensuel(entity_ref("urn:fr:pv:case:multi-affecte"), 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(retenue_affectee_indu(entity_ref("urn:fr:pv:indu:premier"), entity_ref("urn:fr:pv:case:multi-affecte")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

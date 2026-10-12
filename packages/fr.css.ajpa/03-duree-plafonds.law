@@ -1,0 +1,101 @@
+// Duration ceilings and renewal (L. 168-9).
+//
+// Three generations. 2021-2025: the career number is statutory (sixty-six
+// daily allowances in the pinned 2019, 2022 and 2023-07 wordings, bareme
+// NombreMaxCarriere66). 2025: month days within the retained decree maximum,
+// the running count within the retained duration ceiling, renewable when
+// carer leave opens for another aided person (the L. 3142-19 bound is
+// external: B-PFAJPA-L3142, not checked). Pre-2021 the cap text is pinned
+// but unmodelled (B-PFAJPA-AVANT2021: L. 168-11 service attribution).
+
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+use self::{
+    CSS_L168_9,
+    CSS_L168_9_ED2025_12,
+    CSS_L168_9_PRE2022_ED2021_01,
+    CSS_L168_9_PRE2023,
+    CSS_L168_9_PRE2025,
+    ajpa_dans_duree_max,
+    ajpa_dans_limite_carriere,
+    ajpa_droit_ouvert,
+    conge_autre_aide,
+    conge_proche_aidant,
+    duree_max_retenue,
+    jours_ajpa_carriere,
+    jours_ajpa_mois,
+    jours_ajpa_verses,
+    mensuel_dans_limite,
+    plafond_mensuel_retenu,
+    renouvellement_accorde,
+};
+
+// --- L. 168-9 (2021-2025): career count within sixty-six ------------------
+//
+// D-36 (ajpa-blind-06): the statutory career ceiling does not depend on a
+// separate leave premise; the leave is already part of ajpa_droit_ouvert.
+// FINISH-W3 closes B-AJPA-CARRIERE-2021-2023: «Le nombre maximal
+// d'allocations journalières versées à un bénéficiaire pour l'ensemble de
+// sa carrière est égal à soixante-six.» stands verbatim in the pinned
+// 2019 (LEGIARTI000039787616), 2022 (LEGIARTI000044628262) and 2023-07
+// (LEGIARTI000047864765) wordings, so the window runs [@2021-01-01,
+// @2025-01-01) — coverage start to the 2025 reform, which replaces the cap
+// with a decree duration ceiling. Pre-2021 the cap text is pinned but the
+// L. 168-11 service attribution is not: B-PFAJPA-AVANT2021 stays.
+
+@source(
+    CSS_L168_9_PRE2022_ED2021_01,
+    CSS_L168_9_PRE2023,
+    CSS_L168_9_PRE2025)
+rule PlafondCarriere66(p: fr.pf.core::Personne, a: fr.pf.core::Personne, jours: Integer) strict {
+    effective [@2021-01-01, @2025-01-01);
+    label fr official "compteur carrière dans la limite des soixante-six allocations journalières";
+    label en unofficial "career count within the sixty-six daily allowance ceiling";
+    when ajpa_droit_ouvert(p, a)
+        and jours_ajpa_carriere(p, jours)
+        and jours <= NombreMaxCarriere66;
+    then ajpa_dans_limite_carriere(p);
+}
+
+// --- L. 168-9 (2025): month days within the retained maximum -------------
+
+@source(
+    CSS_L168_9,
+    CSS_L168_9_ED2025_12)
+rule MensuelDansLimite(p: fr.pf.core::Personne, a: fr.pf.core::Personne, mois: Date, jours: Integer, max: Integer) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "jours du mois civil dans le maximum retenu";
+    label en unofficial "calendar-month days within the retained maximum";
+    when ajpa_droit_ouvert(p, a) and jours_ajpa_mois(p, a, mois, jours)
+        and plafond_mensuel_retenu(p, max) and jours <= max;
+    then mensuel_dans_limite(p, a, mois);
+}
+
+// --- L. 168-9 (2025): running count within the retained duration ---------
+
+@source(
+    CSS_L168_9,
+    CSS_L168_9_ED2025_12)
+rule DansDureeMax(p: fr.pf.core::Personne, a: fr.pf.core::Personne, jours: Integer, max: Integer) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "compteur dans la durée maximale retenue";
+    label en unofficial "count within the retained maximum duration";
+    when ajpa_droit_ouvert(p, a) and jours_ajpa_verses(p, jours)
+        and duree_max_retenue(p, max) and jours <= max;
+    then ajpa_dans_duree_max(p);
+}
+
+// --- L. 168-9 (2025): renewal for another aided person -------------------
+
+@source(
+    CSS_L168_9,
+    CSS_L168_9_ED2025_12)
+rule RenouvellementAutreAide(p: fr.pf.core::Personne, a: fr.pf.core::Personne) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "durée maximale renouvelée lorsque le congé est ouvert au titre d'une autre personne aidée";
+    label en unofficial "maximum duration renewed when leave opens for another aided person";
+    when ajpa_droit_ouvert(p, a) and conge_autre_aide(p, a);
+    then renouvellement_accorde(p, a);
+}

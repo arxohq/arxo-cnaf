@@ -1,0 +1,17 @@
+// Inter-scheme reimbursement: unsettled transfer still served by the original scheme, debtor fund - the fund may claim reimbursement (R. 552-1, PC-R07-35 full chain).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-service-remboursement-regimes" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "service-remboursement-regimes-01": transfert_regime(entity_ref("urn:fr:pf:case:transfere")) { origin case_input; }
+        assert "service-remboursement-regimes-02": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:transfere")) { origin case_input; }
+        assert "service-remboursement-regimes-03": transfert_non_regularise_atteste(entity_ref("urn:fr:pf:case:transfere")) { origin case_input; }
+        assert "service-remboursement-regimes-04": not regularisation_intervenue(entity_ref("urn:fr:pf:case:transfere")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PoursuivreRemboursementRegime, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

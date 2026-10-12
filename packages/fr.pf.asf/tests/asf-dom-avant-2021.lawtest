@@ -1,0 +1,32 @@
+// Before the program window: at legal_time 2020 the DOM rules are
+// silent (effective [@2021-01-01, infinity)) even for a department
+// household (both residence facts) with an otherwise eligible child —
+// the edition-window pair of the DOM attribution and decree-condition
+// scenarios.
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-dom-avant-2021" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2020-06-15T12:00:00Z; knowledge_time @2020-06-15T12:00:00Z; legal_time @2020-06-15; timezone "Europe/Paris"; }
+        assert "adav-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:dom-avant-2021"), entity_ref("urn:fr:pf-asf:case:dom-avant-2021-e1")) { origin case_input; }
+        assert "adav-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:dom-avant-2021-e1")) { origin case_input; }
+        assert "adav-03": motif_asf(entity_ref("urn:fr:pf-asf:case:dom-avant-2021-e1"), ORPHELIN_UN_PARENT) { origin case_input; }
+        assert "adav-04": demande_asf(entity_ref("urn:fr:pf-asf:case:dom-avant-2021-e1")) { origin case_input; }
+        assert "adav-05": residence_dom(entity_ref("urn:fr:pf-asf:case:dom-avant-2021")) { origin case_input; }
+        assert "adav-06": residence_departement_dom(entity_ref("urn:fr:pf-asf:case:dom-avant-2021")) { origin case_input; }
+    }
+    evaluate truth(asf_metro_applicable_dom(entity_ref("urn:fr:pf-asf:case:dom-avant-2021")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_taux_parite_dom(entity_ref("urn:fr:pf-asf:case:dom-avant-2021")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_attribuee_dom(entity_ref("urn:fr:pf-asf:case:dom-avant-2021-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,42 @@
+// Resources within the ceiling (15000 < 16000): the base track owns
+// the household (montant 358.88 for the young child on base 400.00)
+// and the differential stays shut (NEITHER).
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-differentiel-ferme" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "aff-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:differentiel-ferme"), entity_ref("urn:fr:pf-ars:case:differentiel-ferme-e1")) { origin case_input; }
+        assert "aff-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:differentiel-ferme"), entity_ref("urn:fr:pf-ars:case:differentiel-ferme-e2")) { origin case_input; }
+        assert "aff-03": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:differentiel-ferme-e1")) { origin case_input; }
+        assert "aff-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:differentiel-ferme-e2")) { origin case_input; }
+        assert "aff-05": date_naissance(entity_ref("urn:fr:pf-ars:case:differentiel-ferme-e1"), @2014-06-01) { origin case_input; }
+        assert "aff-06": date_naissance(entity_ref("urn:fr:pf-ars:case:differentiel-ferme-e2"), @2005-06-01) { origin case_input; }
+        assert "aff-07": seuil_six_ans(@2022-02-01) { origin case_input; }
+        assert "aff-08": seuil_dix_huit_ans(@2021-09-15) { origin case_input; }
+        assert "aff-09": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:differentiel-ferme-e1")) { origin case_input; }
+        assert "aff-10": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:differentiel-ferme-e2")) { origin case_input; }
+        assert "aff-11": date_reference_taux(@2021-12-31) { origin case_input; }
+        assert "aff-12": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:differentiel-ferme"), 2) { origin case_input; }
+        assert "aff-13": nb_bande(entity_ref("urn:fr:pf-ars:case:differentiel-ferme"), ARS_MOINS_11, 1) { origin case_input; }
+        assert "aff-14": nb_bande(entity_ref("urn:fr:pf-ars:case:differentiel-ferme"), ARS_11_14, 0) { origin case_input; }
+        assert "aff-15": nb_bande(entity_ref("urn:fr:pf-ars:case:differentiel-ferme"), ARS_15_PLUS, 1) { origin case_input; }
+        assert "aff-16": ressources_menage(entity_ref("urn:fr:pf-ars:case:differentiel-ferme"), 15000 EUR) { origin case_input; }
+        assert "aff-17": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:differentiel-ferme"), 10000 EUR) { origin case_input; }
+        assert "aff-18": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:differentiel-ferme"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ars_droit_ouvert(entity_ref("urn:fr:pf-ars:case:differentiel-ferme")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_montant_du(entity_ref("urn:fr:pf-ars:case:differentiel-ferme-e1"), 358.88 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_differentiel_du(entity_ref("urn:fr:pf-ars:case:differentiel-ferme-e1"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

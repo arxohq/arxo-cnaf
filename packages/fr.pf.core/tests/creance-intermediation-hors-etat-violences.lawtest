@@ -1,0 +1,19 @@
+// Violence-based hors-etat does not suspend: full II-title chain, debtor hors d'etat only on a violence-based qualification - intermediation stays in place, no suspension (L. 582-1 al. final « sauf », PC-R08-08).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-intermediation-hors-etat-violences" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-intermediation-hors-etat-violences-01": stabilite_residence_creancier(entity_ref("urn:fr:pf:case:creance-heviol")) { origin case_input; }
+        assert "creance-intermediation-hors-etat-violences-02": debiteur_stable(entity_ref("urn:fr:pf:case:creance-heviol")) { origin case_input; }
+        assert "creance-intermediation-hors-etat-violences-03": not debiteur_hors_etat(entity_ref("urn:fr:pf:case:creance-heviol")) { origin case_input; }
+        assert "creance-intermediation-hors-etat-violences-04": intermediation_titre_3732_2_ii(entity_ref("urn:fr:pf:case:creance-heviol")) { origin case_input; }
+        assert "creance-intermediation-hors-etat-violences-05": debiteur_hors_etat_violences(entity_ref("urn:fr:pf:case:creance-heviol")) { origin case_input; }
+    }
+    evaluate truth(intermediation_mise_en_oeuvre(entity_ref("urn:fr:pf:case:creance-heviol")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

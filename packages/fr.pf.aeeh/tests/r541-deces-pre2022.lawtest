@@ -1,0 +1,25 @@
+// Death extension, pre-reform edition (legal_time 2021-12,
+// CSS_ED2021_01): the death sentence entered R. 541-1 al. 5 and R. 541-4
+// section V only with decree 2022-85, so a 2021 death prolongs nothing —
+// even with L. 541-1 para. 4 periods and both month amounts present.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-deces-pre2022" {
+    given {
+        context { decision_time @2021-12-15T12:00:00Z; knowledge_time @2021-12-15T12:00:00Z; legal_time @2021-12-15; timezone "Europe/Paris"; }
+        assert "r541-dpre-01": deces_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2021"), @2021-06-15) { origin case_input; }
+        assert "r541-dpre-02": montant_mois_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2021"), 496.00 EUR) { origin case_input; }
+        assert "r541-dpre-03": montant_mois_precedent(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2021"), 496.00 EUR) { origin case_input; }
+        assert "r541-dpre-04": periodes_conges_internat(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2021")) { origin case_input; }
+    }
+    evaluate truth(date_fin_prolongation_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2021"), @2021-09-30));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_prolongation_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-deces-2021"), 496.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

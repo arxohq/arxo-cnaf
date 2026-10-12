@@ -1,0 +1,48 @@
+// Прочтение D-83 выбрано в context (`interpretation ArrondiLignesDss;`): суммы AF — округлённые
+// строки таблицы DSS, итог — их сумма (08-lecture-arrondi-lignes.law). Ожидания — строки
+// закреплённой таблицы DSS/SD2B/2017/97 (revalorisation/sources/dss-2017-97.txt), BMAF 407,84 €: «4 enfants
+// … 28,5 % 116,23» (:148). Плафоны 2018 (DSS_SD2B_2017_352_PLAFOND_AF): II(4) = 78 770 + 4 × 5 628 = 101 282.
+// Ресурсы 101 782 — полоса 3, превышение 500 < 12 × 116,23 = 1 394,76: complément dégressif D. 521-1 II —
+// douzième (101 282 + 1 394,76 − 101 782) / 12 = 74,563… → 74,56 (до сантима, D-82). Итог 116,23 + 74,56 = 190,79.
+// Без прочтения douzième над точной суммой 0,285 × 407,84 = 116,2344 не терминирует (INEXACT_DIVISION).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-lignes-dss-2018-bande-3-douzieme" {
+    given {
+        context { decision_time @2018-01-15T12:00:00Z; knowledge_time @2018-01-15T12:00:00Z; legal_time @2018-01-15; timezone "Europe/Paris"; interpretation ArrondiLignesDss; }
+        assert "l83-01": territoire(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), METROPOLE) { origin case_input; }
+        assert "l83-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 4) { origin case_input; }
+        assert "l83-03": ressources_menage(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 101782 EUR) { origin case_input; }
+        assert "l83-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 56286 EUR) { origin case_input; }
+        assert "l83-05": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 78770 EUR) { origin case_input; }
+        assert "l83-06": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 5628 EUR) { origin case_input; }
+        assert "l83-07": bmaf_retenu(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 407.84 EUR) { origin case_input; }
+        assert "l83-08": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 0) { origin case_input; }
+        assert "l83-09": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 0) { origin case_input; }
+        assert "l83-10": forfait_total_menage(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 0 EUR) { origin case_input; }
+        assert "l83-11": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 0) { origin case_input; }
+        assert "l83-12": foyer_du_cas(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme")) { origin case_input; }
+    }
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), BANDE_3));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond2_applicable(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 101282 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 116.23 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(complement_degressif(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 74.56 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:lignes-dss-2018-bande-3-douzieme"), 190.79 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

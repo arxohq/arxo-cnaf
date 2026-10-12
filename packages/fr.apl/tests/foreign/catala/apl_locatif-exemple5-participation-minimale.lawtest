@@ -1,0 +1,29 @@
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_apl_locatif.catala_fr, scope Exemple5.
+// ИХ ОЖИДАНИЕ: participation_minimale = 35.39.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-apl_locatif-exemple5-participation-minimale" {
+    given {
+        context { decision_time @2022-04-05T12:00:00Z; knowledge_time @2022-04-05T12:00:00Z; legal_time @2022-04-05; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "apl_locatif-exemple5-01": secteur_locatif(entity_ref("urn:fr:apl:case:apl_locatif-exemple5")) { origin case_input; }
+        assert "apl_locatif-exemple5-02": aide_demandee(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), APL) { origin case_input; }
+        assert "apl_locatif-exemple5-03": loyer_principal(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), 610 EUR) { origin case_input; }
+        assert "apl_locatif-exemple5-04": zone_du_logement(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), ZONE_I) { origin case_input; }
+        assert "apl_locatif-exemple5-05": situation_familiale(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), PERSONNE_SEULE) { origin case_input; }
+        assert "apl_locatif-exemple5-06": personnes_a_charge(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), 0) { origin case_input; }
+        assert "apl_locatif-exemple5-07": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), 0 EUR) { origin case_input; }
+        assert "apl_locatif-exemple5-08": ressources_du_menage(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), 2700 EUR) { origin case_input; }
+        assert "apl_locatif-exemple5-09": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), false) { origin case_input; }
+        assert "apl_locatif-exemple5-10": territoire(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), METROPOLE) { origin case_input; }
+        assert "apl_locatif-exemple5-11": mode_location(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), LOCATION_SEULE) { origin case_input; }
+        assert "apl_locatif-exemple5-12": forme_logement(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), LOGEMENT_ORDINAIRE) { origin case_input; }
+    }
+    evaluate truth(participation_minimale(entity_ref("urn:fr:apl:case:apl_locatif-exemple5"), 35.39 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

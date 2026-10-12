@@ -1,0 +1,22 @@
+// Notified 500.00 overpayment within two years, no appeal:
+// recoverable, collected by withholding (L.262-45 ; L.262-46 ; R.262-92-1).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-indu-recouvrable" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "indu-01": indu_montant(entity_ref("urn:fr:rsa:case:indu-recouvrable"), 500.00 EUR) { origin case_input; }
+        assert "indu-02": prescription_cours(entity_ref("urn:fr:rsa:case:indu-recouvrable"), 1) { origin case_input; }
+        assert "indu-03": notification_indu(entity_ref("urn:fr:rsa:case:indu-recouvrable")) { origin case_input; }
+    }
+    evaluate truth(indu_recouvrable(entity_ref("urn:fr:rsa:case:indu-recouvrable"), 500.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recouvrement_retenues_echeoir(entity_ref("urn:fr:rsa:case:indu-recouvrable")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

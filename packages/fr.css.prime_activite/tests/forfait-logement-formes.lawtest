@@ -1,0 +1,102 @@
+// Forfait logement R. 844-3 par composition du foyer: 12 % du montant forfaitaire d'une personne, 16 % du montant
+// calculé pour deux personnes (x 1.5), 16,5 % du montant calculé pour trois personnes (x 1.8; D. 843-1 al. 1).
+// Base du mois 2024-10-01: 622.63 (décret 2024-403, chaîne 11-forfait-chaine.law), non fournie par le cas.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+// SEUL: one person -> 622.63 x 1 x 0.12 = 74.7156
+test "urn:query:fr-ppa-fl-seul" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-seul-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-seul"), @2024-10-01, SEUL) { origin case_input; }
+    }
+    evaluate truth(forfait_logement_du_mois(entity_ref("urn:fr:ppa:case:fl-seul"), @2024-10-01, 74.7156 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ISOLE: isolated one person -> 622.63 x 1 x 0.12 = 74.7156
+test "urn:query:fr-ppa-fl-isole" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-isole-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-isole"), @2024-10-01, ISOLE) { origin case_input; }
+    }
+    evaluate truth(forfait_logement_du_mois(entity_ref("urn:fr:ppa:case:fl-isole"), @2024-10-01, 74.7156 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// COUPLE: two persons (couple) -> 622.63 x 1.5 x 0.16 = 149.43120
+test "urn:query:fr-ppa-fl-couple" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-couple-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-couple"), @2024-10-01, COUPLE) { origin case_input; }
+    }
+    evaluate truth(forfait_logement_du_mois(entity_ref("urn:fr:ppa:case:fl-couple"), @2024-10-01, 149.43120 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ISOLE_1E: two persons (isolated parent, 1 child) -> 622.63 x 1.5 x 0.16 = 149.43120
+test "urn:query:fr-ppa-fl-isole-1e" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-isole-1e-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-isole-1e"), @2024-10-01, ISOLE_1E) { origin case_input; }
+    }
+    evaluate truth(forfait_logement_du_mois(entity_ref("urn:fr:ppa:case:fl-isole-1e"), @2024-10-01, 149.43120 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// COUPLE_1E: three persons -> 622.63 x 1.8 x 0.165 = 184.921110
+test "urn:query:fr-ppa-fl-couple-1e" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-couple-1e-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-couple-1e"), @2024-10-01, COUPLE_1E) { origin case_input; }
+    }
+    evaluate truth(forfait_logement_du_mois(entity_ref("urn:fr:ppa:case:fl-couple-1e"), @2024-10-01, 184.921110 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// COUPLE_2E: four persons: scale of three persons -> 622.63 x 1.8 x 0.165 = 184.921110
+test "urn:query:fr-ppa-fl-couple-2e" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-couple-2e-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-couple-2e"), @2024-10-01, COUPLE_2E) { origin case_input; }
+    }
+    evaluate truth(forfait_logement_du_mois(entity_ref("urn:fr:ppa:case:fl-couple-2e"), @2024-10-01, 184.921110 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// COUPLE_3E: five persons: scale of three persons -> 622.63 x 1.8 x 0.165 = 184.921110
+test "urn:query:fr-ppa-fl-couple-3e" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-couple-3e-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-couple-3e"), @2024-10-01, COUPLE_3E) { origin case_input; }
+    }
+    evaluate truth(forfait_logement_du_mois(entity_ref("urn:fr:ppa:case:fl-couple-3e"), @2024-10-01, 184.921110 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ISOLE_2E: three persons (isolated parent, 2 children) -> 622.63 x 1.8 x 0.165 = 184.921110
+test "urn:query:fr-ppa-fl-isole-2e" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-isole-2e-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-isole-2e"), @2024-10-01, ISOLE_2E) { origin case_input; }
+    }
+    evaluate truth(forfait_logement_du_mois(entity_ref("urn:fr:ppa:case:fl-isole-2e"), @2024-10-01, 184.921110 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

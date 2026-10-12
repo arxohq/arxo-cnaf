@@ -1,0 +1,37 @@
+// Active fund duty, differential track: 89.96 EUR due on the
+// standalone R. 522-3 chain (no base right). Position
+// PayerCfDifferentielDu is ACTIVE.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-devoir-versement-differentiel" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "dvd-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel-e1")) { origin case_input; }
+        assert "dvd-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel-e2")) { origin case_input; }
+        assert "dvd-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel-e3")) { origin case_input; }
+        assert "dvd-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel-e1")) { origin case_input; }
+        assert "dvd-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel-e2")) { origin case_input; }
+        assert "dvd-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel-e3")) { origin case_input; }
+        assert "dvd-07": date_naissance(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel-e1"), @2016-03-15) { origin case_input; }
+        assert "dvd-08": date_naissance(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel-e2"), @2014-03-15) { origin case_input; }
+        assert "dvd-09": date_naissance(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel-e3"), @2012-03-15) { origin case_input; }
+        assert "dvd-10": mois_droit(@2021-06-01) { origin case_input; }
+        assert "dvd-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), 3) { origin case_input; }
+        assert "dvd-12": ressources_menage(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), 36120 EUR) { origin case_input; }
+        assert "dvd-13": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), 20000 EUR) { origin case_input; }
+        assert "dvd-13a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), 5000 EUR) { origin case_input; }
+        assert "dvd-13b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), 6000 EUR) { origin case_input; }
+        assert "dvd-13c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), 10000 EUR) { origin case_input; }
+        assert "dvd-13d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), 2500 EUR) { origin case_input; }
+        assert "dvd-13e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), 3000 EUR) { origin case_input; }
+        assert "dvd-14": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel")) { origin case_input; }
+        assert "dvd-15": bmaf_retenu(entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel"), 240.00 EUR) { origin case_input; }
+        assert "dvd-16": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-cf:org:caisse"), entity_ref("urn:fr:pf-cf:case:devoir-versement-differentiel")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PayerCfDifferentielDu, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

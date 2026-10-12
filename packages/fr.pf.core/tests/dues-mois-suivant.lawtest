@@ -1,0 +1,21 @@
+// Due-from default: conditions met in March - benefits due from 1 April (R. 552-2 I).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-dues-mois-suivant" {
+    given {
+        context { decision_time @2026-04-15T12:00:00Z; knowledge_time @2026-04-15T12:00:00Z; legal_time @2026-04-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "dues-mois-suivant-01": conditions_reunies_mois(entity_ref("urn:fr:pf:case:ouvre"), @2026-03-01) { origin case_input; }
+        assert "dues-mois-suivant-02": not prepare_enfant_unique_ou_option(entity_ref("urn:fr:pf:case:ouvre")) { origin case_input; }
+        assert "dues-mois-suivant-03": not prestation_cmg(entity_ref("urn:fr:pf:case:ouvre")) { origin case_input; }
+        assert "dues-mois-suivant-04": not prestation_ajpp(entity_ref("urn:fr:pf:case:ouvre")) { origin case_input; }
+        assert "dues-mois-suivant-05": not prestation_aeeh(entity_ref("urn:fr:pf:case:ouvre")) { origin case_input; }
+        assert "dues-mois-suivant-06": not asf_cas3_soustrait_seul(entity_ref("urn:fr:pf:case:ouvre")) { origin case_input; }
+        assert "dues-mois-suivant-07": not fixation_judiciaire_apres_recouvrement(entity_ref("urn:fr:pf:case:ouvre")) { origin case_input; }
+    }
+    evaluate truth(prestations_dues_a_compter(entity_ref("urn:fr:pf:case:ouvre"), @2026-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

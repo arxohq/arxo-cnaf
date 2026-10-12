@@ -1,0 +1,21 @@
+// D-83: PASS 2016 = 3 218 x 12 = 38 616 (arrêté du 17 décembre 2015). Порог 13,6 % = 5 251,776; доход 5 251,77
+// не достигает его (граница снизу): статус не установлен (NEITHER; замкнутости foyer_du_cas в сценарии нет).
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-pass-2016-sous-seuil" {
+    given {
+        context { decision_time @2018-06-15T12:00:00Z; knowledge_time @2018-06-15T12:00:00Z; legal_time @2018-06-15; timezone "Europe/Paris"; }
+        assert "p2ss-01": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:pass-2016-sous-seuil"), 5251.77 EUR) { origin case_input; }
+        assert "p2ss-02": annee_reference_ressources(entity_ref("urn:fr:pf-cf:case:pass-2016-sous-seuil"), 2016) { origin case_input; }
+    }
+    evaluate truth(pass_reference(entity_ref("urn:fr:pf-cf:case:pass-2016-sous-seuil"), 38616 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:pass-2016-sous-seuil")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

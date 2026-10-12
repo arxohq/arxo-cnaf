@@ -1,0 +1,53 @@
+// Lane integration: a 300.00-pro new-regime quarter is established
+// by fr.minima.ressources (moyenne 300.00) and consumed here: single
+// person, base 600.00 -> allowance 300.00 for June 2025 (L.262-2).
+// The right month is the filing month (June): "le revenu de
+// solidarité active est ouvert à compter de la date de dépôt de la
+// demande" (L. 262-18); the February-April reference quarter stays
+// (fourth-to-second months before the June claim, R. 262-7 I).
+// (Bare-zero Money in evaluate positions does not match derived zeros;
+// the lane tests use nonzero figures.)
+// The minima-side composition input carries the value derived on this
+// side (B-RSA-MF-INPUT-CONTRACT, case-by-case consistency).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-cascade-trimestre-300" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "casc-01": fr.minima.ressources::foyer_du_cas(entity_ref("urn:fr:rsa:case:cascade-trimestre-300")) { origin case_input; }
+        assert "casc-02": fr.minima.ressources::mois_demande(@2025-06-01) { origin case_input; }
+        assert "casc-03": fr.minima.ressources::mois_reference(@2025-02-01, @2025-03-01, @2025-04-01) { origin case_input; }
+        assert "casc-04": fr.minima.ressources::mf_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-02-01, 600.00 EUR) { origin case_input; }
+        assert "casc-05": fr.minima.ressources::mf_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-03-01, 600.00 EUR) { origin case_input; }
+        assert "casc-06": fr.minima.ressources::mf_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-04-01, 600.00 EUR) { origin case_input; }
+        assert "casc-07": fr.minima.ressources::dsn_pro_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-02-01, 300.00 EUR) { origin case_input; }
+        assert "casc-08": fr.minima.ressources::dsn_pro_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-03-01, 300.00 EUR) { origin case_input; }
+        assert "casc-09": fr.minima.ressources::dsn_pro_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-04-01, 300.00 EUR) { origin case_input; }
+        assert "casc-10": fr.minima.ressources::dsn_autre_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "casc-11": fr.minima.ressources::dsn_autre_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "casc-12": fr.minima.ressources::dsn_autre_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-04-01, 0 EUR) { origin case_input; }
+        assert "casc-13": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "casc-14": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "casc-15": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-04-01, 0 EUR) { origin case_input; }
+        assert "casc-16": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "casc-17": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "casc-18": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-04-01, 0 EUR) { origin case_input; }
+        assert "casc-19": mf_base(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), 600.00 EUR) { origin case_input; }
+        assert "casc-20": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), 1) { origin case_input; }
+        assert "casc-21": mois_droit(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-06-01) { origin case_input; }
+        assert "casc-22": residence_stable(entity_ref("urn:fr:rsa:case:cascade-trimestre-300")) { origin case_input; }
+        assert "casc-23": age_charge_condition(entity_ref("urn:fr:rsa:case:cascade-trimestre-300")) { origin case_input; }
+        assert "casc-24": sejour_travail_condition(entity_ref("urn:fr:rsa:case:cascade-trimestre-300")) { origin case_input; }
+        assert "casc-25": conjoint_enfants_comptes(entity_ref("urn:fr:rsa:case:cascade-trimestre-300")) { origin case_input; }
+    }
+    evaluate truth(fr.minima.ressources::montant_du_trimestre(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), 300.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(allocation_mensuelle(entity_ref("urn:fr:rsa:case:cascade-trimestre-300"), @2025-06-01, 300.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

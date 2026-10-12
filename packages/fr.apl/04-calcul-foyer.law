@@ -1,0 +1,1321 @@
+// Сектор logement-foyer: D. 832-24..D. 832-27 (APL) и D. 842-15..D. 842-17
+// (аллокации), главы V и VII арретэ от 27 сентября 2019 года.
+//
+// ФОРМУЛЫ ДВЕ, и обе называет сам текст:
+//   APL-foyer (D. 832-24):  Af = K × (E − E0)
+//   AL-foyer  (D. 842-15):  Af = K × (L + C − L0)
+//
+// ЧТО ИСПОЛНЕНО. ВСЕ слагаемые обеих формул и коэффициент K (в конце модуля) —
+// до конечной суммы включительно: минорация, абатмент минимума чистого расхода,
+// предел redevance (аллокации), шаг взносов D. 823-16 и порог выплаты.
+//
+// ОГРАНИЧЕНИЕ, КОТОРОЕ ПАКЕТ НЕ СКРЫВАЕТ. Вычисление K предписано D. 832-25
+// (этот сектор) и D. 832-11 (сектор приобретения), и в открытых данных LEGI обе
+// статьи отдают формулу НЕ ТЕКСТОМ, а отсылкой к картинке:
+//
+//   «Vous pouvez consulter l'intégralité du texte avec ses images à partir de
+//    l'extrait du Journal officiel électronique authentifié accessible à
+//    l'adresse suivante : https://www.legifrance.gouv.fr/jo_pdf.do?id=JORFTEXT000038812273»
+//
+// Алгебра K фойе (D. 832-25) поэтому ЧИТАЕТСЯ из текста отменённых 01.09.2019 тем
+// же декретом статей R. 351-61 и R. 351-61-1 (закреплены, в глобальном дампе их
+// текст есть) — см. блок «КОЭФФИЦИЕНТ K» в конце модуля. Для D. 832-11 (приобретение)
+// аналог — R. 351-19 — не закреплён, K приобретения по-прежнему не считается.
+//
+// Каналы, проверенные на картинку формулы D. 832-25 и не давшие ТЕКСТА самой
+// статьи:
+//   * LEGI (глобальный дамп DILA) — картинка вместо формулы у обеих статей;
+//   * Légifrance (jo_pdf.do, download/pdf, страница статьи) — 403/303, DataDome
+//     (повторено 08.10.2026: jo_pdf.do → 303 на страницу, страница и download/pdf — 403);
+//   * Wayback Machine — захватов JORFTEXT000038812273 нет вовсе;
+//   * data.gouv.fr — публикует только те же XML DILA;
+//   * дамп JORF (9 142 611 членов) — по идентификатору декрета два файла,
+//     `texte/struct` и `texte/version`, оба без `BLOC_TEXTUEL`; файлы статей
+//     `JORFARTI*` этим фильтром не захватывались;
+//   * статьи самого декрета в LEGI (LEGIARTI000038820709…775, ст. 1–35) формулы
+//     K фойе не несут (ст. 29 — K для Майотты — тоже картинка).
+// ИСПРАВЛЕНИЕ 08.10.2026: прежняя запись «R. 351-19, R. 351-61 и R. 351-61-1 в
+// дампе несут только метаданные, текст версий пуст» НЕВЕРНА — прямое чтение
+// глобального дампа даёт текст всех их версий (R. 351-61: 1 153 знака, формула
+// «K = 0,95-((R-(r X N))/ (CM X N))» в тексте).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    ARR_ART27_ED2019_10,
+    ARR_ART27_ED2020_01,
+    ARR_ART27_ED2020_10,
+    ARR_ART27_ED2021_01,
+    ARR_ART27_ED2021_10,
+    ARR_ART27_ED2022_01,
+    ARR_ART27_ED2025_10,
+    ARR_ART27_ED2026_10,
+    ARR_ART28_ED2019_10,
+    ARR_ART28_ED2020_01,
+    ARR_ART28_ED2020_10,
+    ARR_ART28_ED2021_01,
+    ARR_ART28_ED2021_10,
+    ARR_ART28_ED2022_01,
+    ARR_ART28_ED2022_07,
+    ARR_ART28_ED2023_01,
+    ARR_ART28_ED2023_10,
+    ARR_ART28_ED2024_01,
+    ARR_ART28_ED2024_10,
+    ARR_ART28_ED2025_01,
+    ARR_ART28_ED2025_10,
+    ARR_ART28_ED2026_10,
+    ARR_ART29_ED2019_10,
+    ARR_ART29_ED2020_01,
+    ARR_ART29_ED2020_10,
+    ARR_ART29_ED2021_01,
+    ARR_ART29_ED2021_10,
+    ARR_ART29_ED2022_01,
+    ARR_ART29_ED2022_07,
+    ARR_ART29_ED2023_01,
+    ARR_ART29_ED2023_10,
+    ARR_ART29_ED2024_01,
+    ARR_ART29_ED2024_10,
+    ARR_ART29_ED2025_01,
+    ARR_ART29_ED2025_10,
+    ARR_ART29_ED2026_10,
+    ARR_ART30_ED2019_10,
+    ARR_ART30_ED2020_01,
+    ARR_ART30_ED2020_10,
+    ARR_ART30_ED2021_01,
+    ARR_ART30_ED2021_10,
+    ARR_ART30_ED2022_01,
+    ARR_ART30_ED2022_07,
+    ARR_ART30_ED2023_01,
+    ARR_ART30_ED2023_10,
+    ARR_ART30_ED2024_01,
+    ARR_ART30_ED2024_10,
+    ARR_ART30_ED2025_01,
+    ARR_ART30_ED2025_10,
+    ARR_ART30_ED2026_10,
+    ARR_ART31_ED2019_10,
+    ARR_ART31_ED2020_01,
+    ARR_ART31_ED2020_10,
+    ARR_ART31_ED2021_01,
+    ARR_ART31_ED2021_10,
+    ARR_ART31_ED2022_01,
+    ARR_ART31_ED2022_07,
+    ARR_ART31_ED2023_01,
+    ARR_ART31_ED2023_10,
+    ARR_ART31_ED2024_01,
+    ARR_ART31_ED2024_10,
+    ARR_ART31_ED2025_01,
+    ARR_ART31_ED2025_10,
+    ARR_ART32_ED2019_10,
+    ARR_ART32_ED2020_01,
+    ARR_ART32_ED2020_10,
+    ARR_ART32_ED2021_01,
+    ARR_ART32_ED2021_10,
+    ARR_ART32_ED2022_01,
+    ARR_ART32_ED2022_07,
+    ARR_ART32_ED2023_01,
+    ARR_ART32_ED2023_10,
+    ARR_ART32_ED2024_01,
+    ARR_ART32_ED2024_10,
+    ARR_ART32_ED2025_01,
+    ARR_ART32_ED2025_10,
+    ARR_ART32_ED2026_10,
+    ARR_ART40_ED2019_10,
+    ARR_ART40_ED2020_01,
+    ARR_ART40_ED2020_10,
+    ARR_ART40_ED2021_01,
+    ARR_ART40_ED2021_10,
+    ARR_ART40_ED2022_01,
+    ARR_ART40_ED2025_10,
+    ARR_ART40_ED2026_10,
+    ARR_ART41_ED2019_10,
+    ARR_ART41_ED2020_01,
+    ARR_ART41_ED2020_10,
+    ARR_ART41_ED2021_01,
+    ARR_ART41_ED2021_10,
+    ARR_ART41_ED2022_01,
+    ARR_ART41_ED2022_07,
+    ARR_ART41_ED2023_01,
+    ARR_ART41_ED2023_10,
+    ARR_ART41_ED2024_01,
+    ARR_ART41_ED2024_10,
+    ARR_ART41_ED2025_01,
+    ARR_ART41_ED2025_10,
+    ARR_ART41_ED2026_10,
+    ARR_ART42_ED2019_10,
+    ARR_ART42_ED2020_01,
+    ARR_ART42_ED2020_10,
+    ARR_ART42_ED2021_01,
+    ARR_ART42_ED2021_10,
+    ARR_ART42_ED2022_01,
+    ARR_ART42_ED2022_07,
+    ARR_ART42_ED2023_01,
+    ARR_ART42_ED2023_10,
+    ARR_ART42_ED2024_01,
+    ARR_ART42_ED2024_10,
+    ARR_ART42_ED2025_01,
+    ARR_ART42_ED2025_10,
+    ARR_ART42_ED2026_10,
+    ARR_ART43_ED2019_10,
+    ARR_ART43_ED2020_01,
+    ARR_ART43_ED2020_10,
+    ARR_ART43_ED2021_01,
+    ARR_ART43_ED2021_10,
+    ARR_ART43_ED2022_01,
+    ARR_ART43_ED2025_10,
+    ARR_ART43_ED2026_10,
+    ARR_ART44_ED2019_10,
+    ARR_ART44_ED2020_01,
+    ARR_ART44_ED2020_10,
+    ARR_ART44_ED2021_01,
+    ARR_ART44_ED2021_10,
+    ARR_ART44_ED2022_01,
+    ARR_ART44_ED2022_07,
+    ARR_ART44_ED2023_01,
+    ARR_ART44_ED2023_10,
+    ARR_ART44_ED2024_01,
+    ARR_ART44_ED2024_10,
+    ARR_ART44_ED2025_01,
+    ARR_ART44_ED2025_10,
+    ARR_ART44_ED2026_10,
+    ARR_ART46_ED2023_01,
+    ARR_ART46_ED2025_10,
+    ARR_ART46_ED2026_10,
+    CCH_D832_24,
+    CCH_D832_24_ED2019_12,
+    CCH_D832_24_ED2020_01,
+    CCH_D832_24_ED2021_01,
+    CCH_D832_24_ED2023_04,
+    CCH_D832_24_ED2023_09,
+    CCH_D832_24_ED2023_12,
+    CCH_D832_24_ED2026_07,
+    CCH_D832_25,
+    CCH_D832_25_ED2019_12,
+    CCH_D832_25_ED2020_01,
+    CCH_D832_25_ED2021_01,
+    CCH_D832_25_ED2023_04,
+    CCH_D832_25_ED2023_09,
+    CCH_D832_25_ED2023_12,
+    CCH_D832_25_ED2026_07,
+    CCH_D832_26,
+    CCH_D832_26_ED2019_12,
+    CCH_D832_26_ED2020_01,
+    CCH_D832_26_ED2021_01,
+    CCH_D832_26_ED2023_04,
+    CCH_D832_26_ED2023_09,
+    CCH_D832_26_ED2023_12,
+    CCH_D832_26_ED2026_07,
+    CCH_D832_27,
+    CCH_D832_27_ED2019_12,
+    CCH_D832_27_ED2020_01,
+    CCH_D832_27_ED2021_01,
+    CCH_D832_27_ED2023_04,
+    CCH_D832_27_ED2023_09,
+    CCH_D832_27_ED2023_12,
+    CCH_D832_27_ED2026_07,
+    CCH_D842_15,
+    CCH_D842_15_ED2019_12,
+    CCH_D842_15_ED2020_01,
+    CCH_D842_15_ED2021_01,
+    CCH_D842_15_ED2023_04,
+    CCH_D842_15_ED2023_09,
+    CCH_D842_15_ED2023_12,
+    CCH_D842_15_ED2026_07,
+    CCH_D842_16,
+    CCH_D842_16_ED2019_12,
+    CCH_D842_16_ED2020_01,
+    CCH_D842_16_ED2021_01,
+    CCH_D842_16_ED2023_04,
+    CCH_D842_16_ED2023_09,
+    CCH_D842_16_ED2023_12,
+    CCH_D842_16_ED2026_07,
+    CCH_D842_17,
+    CCH_D842_17_ED2019_12,
+    CCH_D842_17_ED2020_01,
+    CCH_D842_17_ED2021_01,
+    CCH_D842_17_ED2023_04,
+    CCH_D842_17_ED2023_09,
+    CCH_D842_17_ED2023_12,
+    CCH_D842_17_ED2026_07,
+    CCH_R351_61,
+    CCH_R351_61_1,
+    CGCT_LO6414_1,
+    CategorieEquivalenceLoyer,
+    Menage,
+    ORD9650_ART19_ED2019_09,
+    ORD9650_ART19_ED2020_01,
+    SituationFamiliale,
+    Territoire,
+    TypeAide,
+    TypeLogementFoyer,
+    Zone,
+    aide_demandee,
+    aide_non_versee,
+    aide_theorique,
+    arrondi_intermediaire_centime,
+    categorie_equivalence_loyer,
+    contributions_selon_territoire,
+    personnes_a_charge,
+    redevance,
+    ressources_retenues,
+    secteur_logement_foyer,
+    situation_familiale,
+    territoire,
+    type_logement_foyer,
+    zone_du_logement,
+};
+
+// --- ст. 27 арретэ: плафон эквивалентности найма и расходов E --------------
+//
+// Столбцов семь: изолированный получатель, пара без иждивенцев, затем один,
+// два, три и четыре иждивенца, и надбавка за каждого следующего. Отдельные
+// строки до четырёх иждивенцев — это САМ барем, а не развёртка формулы: у
+// locatif их три, здесь семь, и сокращать их до арифметики было бы подгонкой.
+
+function plafond_equivalence_isole(zone: Zone) -> Money = match zone {
+    ZONE_I => PlafondEquivalenceZone1Isole;
+    ZONE_II => PlafondEquivalenceZone2Isole;
+    ZONE_III => PlafondEquivalenceZone3Isole;
+};
+
+function plafond_equivalence_couple(zone: Zone) -> Money = match zone {
+    ZONE_I => PlafondEquivalenceZone1Couple;
+    ZONE_II => PlafondEquivalenceZone2Couple;
+    ZONE_III => PlafondEquivalenceZone3Couple;
+};
+
+function plafond_equivalence_une_pac(zone: Zone) -> Money = match zone {
+    ZONE_I => PlafondEquivalenceZone1UnePac;
+    ZONE_II => PlafondEquivalenceZone2UnePac;
+    ZONE_III => PlafondEquivalenceZone3UnePac;
+};
+
+function plafond_equivalence_deux_pac(zone: Zone) -> Money = match zone {
+    ZONE_I => PlafondEquivalenceZone1DeuxPac;
+    ZONE_II => PlafondEquivalenceZone2DeuxPac;
+    ZONE_III => PlafondEquivalenceZone3DeuxPac;
+};
+
+function plafond_equivalence_trois_pac(zone: Zone) -> Money = match zone {
+    ZONE_I => PlafondEquivalenceZone1TroisPac;
+    ZONE_II => PlafondEquivalenceZone2TroisPac;
+    ZONE_III => PlafondEquivalenceZone3TroisPac;
+};
+
+function plafond_equivalence_quatre_pac(zone: Zone) -> Money = match zone {
+    ZONE_I => PlafondEquivalenceZone1QuatrePac;
+    ZONE_II => PlafondEquivalenceZone2QuatrePac;
+    ZONE_III => PlafondEquivalenceZone3QuatrePac;
+};
+
+function plafond_equivalence_majoration(zone: Zone) -> Money = match zone {
+    ZONE_I => PlafondEquivalenceZone1ParPacSup;
+    ZONE_II => PlafondEquivalenceZone2ParPacSup;
+    ZONE_III => PlafondEquivalenceZone3ParPacSup;
+};
+
+function plafond_equivalence_applicable(zone: Zone, situation: SituationFamiliale,
+                                        pac: Integer) -> Money {
+    let sans_pac: Money = match situation {
+        PERSONNE_SEULE => plafond_equivalence_isole(zone);
+        COUPLE => plafond_equivalence_couple(zone);
+    };
+    return if pac == 0 then sans_pac
+        else if pac == 1 then plafond_equivalence_une_pac(zone)
+        else if pac == 2 then plafond_equivalence_deux_pac(zone)
+        else if pac == 3 then plafond_equivalence_trois_pac(zone)
+        else if pac == 4 then plafond_equivalence_quatre_pac(zone)
+        else plafond_equivalence_quatre_pac(zone)
+             + plafond_equivalence_majoration(zone) * max(0, pac - 4);
+}
+
+// --- D. 832-25: доли N ----------------------------------------------------
+
+function parts_general(situation: SituationFamiliale, pac: Integer) -> Decimal {
+    let sans_pac: Decimal = match situation {
+        PERSONNE_SEULE => PartsFoyerGeneralIsole;
+        COUPLE => PartsFoyerGeneralCouple;
+    };
+    return if pac == 0 then sans_pac
+        else if pac == 1 then PartsFoyerGeneralUnePac
+        else if pac == 2 then PartsFoyerGeneralDeuxPac
+        else if pac == 3 then PartsFoyerGeneralTroisPac
+        else if pac == 4 then PartsFoyerGeneralQuatrePac
+        else PartsFoyerGeneralQuatrePac
+             + PartsFoyerGeneralParPacSup * max(0, pac - 4);
+}
+
+function parts_jeunes_travailleurs(situation: SituationFamiliale,
+                                   pac: Integer) -> Decimal {
+    let sans_pac: Decimal = match situation {
+        PERSONNE_SEULE => PartsFoyerJeunesTravailleursIsole;
+        COUPLE => PartsFoyerJeunesTravailleursCouple;
+    };
+    return if pac == 0 then sans_pac
+        else if pac == 1 then PartsFoyerJeunesTravailleursUnePac
+        else if pac == 2 then PartsFoyerJeunesTravailleursDeuxPac
+        else if pac == 3 then PartsFoyerJeunesTravailleursTroisPac
+        else if pac == 4 then PartsFoyerJeunesTravailleursQuatrePac
+        else PartsFoyerJeunesTravailleursQuatrePac
+             + PartsFoyerJeunesTravailleursParPacSup * max(0, pac - 4);
+}
+
+function parts_applicables(type_foyer: TypeLogementFoyer,
+                           situation: SituationFamiliale,
+                           pac: Integer) -> Decimal = match type_foyer {
+    GENERAL => parts_general(situation, pac);
+    JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE => parts_jeunes_travailleurs(situation, pac);
+};
+
+// --- D. 832-26 и ст. 31 арретэ: минимальная эквивалентность E0 ------------
+//
+// «par application de pourcentages à des tranches de ressources, dont les
+// limites inférieures et supérieures sont multipliées par le nombre de parts
+// N»: ставка бьёт по СВОЕЙ доле ресурсов, границы траншей масштабируются N.
+// «Le résultat est majoré du produit d'un montant forfaitaire par le nombre de
+// parts N» (1°) либо «majoré d'un montant forfaitaire» (2° — без N), «le total
+// étant divisé par douze».
+//
+// Деление на двенадцать записано `/ 12.0`: список делимых §58 закрыт и пары
+// `Money / Integer` в нём нет, а двенадцать как Decimal даёт `Money / Decimal`
+// — тот же вид, что делимое, и громкий INEXACT_DIVISION вместо молчаливого
+// округления, если частное непредставимо. Норма округления здесь не названа.
+//
+// D-82 (08.10.2026): под прочтением ArrondiCentimeHalfUp
+// (27-lecture-arrondi-centime.law) E0 считают правила того прочтения —
+// `div_round(…, 12.0, 2, "HALF_UP")`; охранное условие not_known(…) в обоих
+// правилах E0 ниже гасит базовое правило под выбранным прочтением. Без выбора
+// поведение прежнее — отказ. L0 (D. 842-15 5°, «se substitue à E0») прочтение
+// не затрагивает: решение D-82 названо для E0.
+
+function tranche_e0(ressources: Money, basse: Money, haute: Money,
+                    taux: Decimal) -> Money =
+    if ressources <= basse then 0 EUR
+    else (min(ressources, haute) - basse) * taux;
+
+function somme_tranches_e0(parts: Decimal, ressources: Money) -> Money {
+    let borne1: Money = BorneE0Tranche1 * parts;
+    let borne2: Money = BorneE0Tranche2 * parts;
+    let borne3: Money = BorneE0Tranche3 * parts;
+    let borne4: Money = BorneE0Tranche4 * parts;
+    let borne5: Money = BorneE0Tranche5 * parts;
+    let derniere: Money = if ressources <= borne5 then 0 EUR
+        else (ressources - borne5) * TauxE0Tranche6;
+    return tranche_e0(ressources, 0 EUR, borne1, TauxE0Tranche1)
+        + tranche_e0(ressources, borne1, borne2, TauxE0Tranche2)
+        + tranche_e0(ressources, borne2, borne3, TauxE0Tranche3)
+        + tranche_e0(ressources, borne3, borne4, TauxE0Tranche4)
+        + tranche_e0(ressources, borne4, borne5, TauxE0Tranche5)
+        + derniere;
+}
+
+// ДВЕ ЭПОХИ ВТОРОГО АБЗАЦА D. 832-26. Редакция ст. 31 арретэ 2019 года давала
+// ОДИН набор транш «mentionnés à l'article D. 832-26» и два форфейта — «aux
+// premier et deuxième alinéas … respectivement 45,57 et 76,32»: у фойе молодых
+// работников и социальных резиденций те же ставки, границы × N и свой форфейт.
+// Редакция, применимая с 1 июля 2022 года, расщепила ставки: «b) Au deuxième
+// alinéa» — свои пять транш. Обе эпохи — свои правила с окном `effective`
+// (§87, условие 4 §13): до июля 2022 года — первая таблица, с июля — вторая.
+// Замер 14.09.2026 конвертером дел Catala: их CasTest5 (май 2022 года,
+// résidence sociale) даёт 124,64 € — это ВТОРАЯ таблица, применимая лишь с
+// июля; по тексту месяца права — 115,19 € (первая таблица × N + 76,32).
+
+function somme_tranches_second_alinea_depuis_2022(parts: Decimal,
+                                                  ressources: Money) -> Money {
+    let borne1: Money = BorneL0SecondAlinea1 * parts;
+    let borne2: Money = BorneL0SecondAlinea2 * parts;
+    let borne3: Money = BorneL0SecondAlinea3 * parts;
+    let borne4: Money = BorneL0SecondAlinea4 * parts;
+    let derniere: Money = if ressources <= borne4 then 0 EUR
+        else (ressources - borne4) * TauxL0SecondAlinea5;
+    return tranche_e0(ressources, 0 EUR, borne1, TauxL0SecondAlinea1)
+        + tranche_e0(ressources, borne1, borne2, TauxL0SecondAlinea2)
+        + tranche_e0(ressources, borne2, borne3, TauxL0SecondAlinea3)
+        + tranche_e0(ressources, borne3, borne4, TauxL0SecondAlinea4)
+        + derniere;
+}
+
+function equivalence_minimale_avant_2022(type_foyer: TypeLogementFoyer,
+                                         situation: SituationFamiliale,
+                                         pac: Integer,
+                                         ressources: Money) -> Money {
+    let parts: Decimal = parts_applicables(type_foyer, situation, pac);
+    let forfait: Money = match type_foyer {
+        GENERAL => ForfaitE0General * parts;
+        JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE => ForfaitE0JeunesTravailleurs;
+    };
+    return (somme_tranches_e0(parts, ressources) + forfait) / 12.0;
+}
+
+function equivalence_minimale_calculee(type_foyer: TypeLogementFoyer,
+                                       situation: SituationFamiliale,
+                                       pac: Integer,
+                                       ressources: Money) -> Money {
+    let parts: Decimal = parts_applicables(type_foyer, situation, pac);
+    return match type_foyer {
+        GENERAL => (somme_tranches_e0(parts, ressources) + ForfaitE0General * parts) / 12.0;
+        JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE =>
+            (somme_tranches_second_alinea_depuis_2022(parts, ressources)
+                + ForfaitE0JeunesTravailleurs) / 12.0;
+    };
+}
+
+// D. 842-15 5°: «L0 est le loyer minimal; il est calculé selon les dispositions
+// du deuxième alinéa de l'article D. 832-26, dans lequel il se substitue à
+// « E0 »». Второй абзац D. 832-26 — ветвь фойе молодых работников: доли N из d
+// пункта 2° и форфейт БЕЗ умножения на N. Поэтому у аллокаций L0 считается по
+// этой ветви ВСЕГДА, независимо от типа фойе.
+//
+// У ВТОРОГО АБЗАЦА СВОИ ТРАНШИ, И ЭТО БЫЛО НАШЕЙ ОШИБКОЙ. До 14.09.2026 модуль
+// считал второй абзац теми же ставками, что первый: версия ст. 31 арретэ,
+// действовавшая с 2019 года, давала ОДИН набор «mentionnés à l'article
+// D. 832-26», и другого в закреплённом тексте не было. Версия, применимая с
+// 1 июля 2022 года, расщепила их явно — «a) Au premier alinéa … b) Au deuxième
+// alinéa», — и у второго абзаца оказались ПЯТЬ своих транш с другими ставками
+// (0 %, 2,40 %, 20,80 %, 23,20 %, 32,80 %) и другими границами (1 423,03,
+// 2 047,61, 2 629,85, 4 095,05). Именно они воспроизводят все три дела Catala,
+// числившиеся расхождением: 307,97 € (фойе CasTest2), 267,90 € (Гваделупа) и
+// 296,96 € (Сен-Пьер-и-Микелон) — до цента.
+//
+// Квалификация прежнего расхождения после находки: класс (а), наш дефект — мы
+// применяли ставки первого абзаца ко второму. Остаток у дела CasTest2 — класс
+// (б), их дефект: дело датировано апрелем 2022 года, а числа у них те, что
+// названы редакцией, применимой лишь с 1 июля 2022 года. Строки этих транш
+// заведены только той редакцией, поэтому на апреле 2022 года наш параметр
+// отсутствует и оценка отвечает MISSING_PARAMETER_VALUE, а не значением нормы,
+// вступившей позже даты дела.
+
+function loyer_minimal_calcule(situation: SituationFamiliale, pac: Integer,
+                               ressources: Money) -> Money {
+    let parts: Decimal = parts_jeunes_travailleurs(situation, pac);
+    return (somme_tranches_second_alinea_depuis_2022(parts, ressources)
+        + ForfaitE0JeunesTravailleurs) / 12.0;
+}
+
+function loyer_minimal_avant_2022(situation: SituationFamiliale, pac: Integer,
+                                  ressources: Money) -> Money {
+    let parts: Decimal = parts_jeunes_travailleurs(situation, pac);
+    return (somme_tranches_e0(parts, ressources) + ForfaitE0JeunesTravailleurs) / 12.0;
+}
+
+// --- ст. 40 и ст. 43 арретэ: C и L сектора аллокаций ---------------------
+
+// Ст. 46 2° a) называет вместе арт. 9, 34 и 40, поэтому заморский форфейт фойе —
+// та же пара параметров, что у найма и приобретения.
+function forfait_charges_foyer_calcule(pac: Integer, zone_geo: Territoire) -> Money =
+    match zone_geo {
+        METROPOLE => ForfaitChargesFoyerBase + ForfaitChargesFoyerParPacSup * pac;
+        OUTRE_MER => ForfaitChargesBaseOutreMer + ForfaitChargesParPacSupOutreMer * pac;
+        SAINT_PIERRE_ET_MIQUELON => ForfaitChargesFoyerBase
+            + ForfaitChargesFoyerParPacSup * pac;
+    };
+
+function equivalence_loyer_categorie(categorie: CategorieEquivalenceLoyer,
+                                     situation: SituationFamiliale) -> Money {
+    let seule: Money = match categorie {
+        ETUDIANT_CHAMBRE => EquivalenceLoyerEtudiantChambreSeule;
+        ETUDIANT_CHAMBRE_REHABILITEE => EquivalenceLoyerEtudiantChambreRehabiliteeSeule;
+        PERSONNES_AGEES => EquivalenceLoyerPersonnesAgeesSeule;
+        AUTRES_PERSONNES => EquivalenceLoyerAutresPersonnesSeule;
+    };
+    let couple: Money = match categorie {
+        ETUDIANT_CHAMBRE => EquivalenceLoyerEtudiantChambreDeux;
+        ETUDIANT_CHAMBRE_REHABILITEE => EquivalenceLoyerEtudiantChambreRehabiliteeDeux;
+        PERSONNES_AGEES => EquivalenceLoyerPersonnesAgeesDeux;
+        AUTRES_PERSONNES => EquivalenceLoyerAutresPersonnesDeux;
+    };
+    return match situation {
+        PERSONNE_SEULE => seule;
+        COUPLE => couple;
+    };
+}
+
+// --- ст. 32 и ст. 44 арретэ: минимум чистого расхода ---------------------
+
+// Голый параметр в ГОЛОВЕ правила проходит `check`, но заключения на исполнении
+// НЕ даёт (замер 14.09.2026, сектор аллокаций приобретения: `truth_status
+// NEITHER` при зелёной статике). Поэтому даже одно-параметровый шаг идёт через
+// функцию — она читает параметр по оси `legal_time`, как все прочие.
+function depense_nette_minimale_al_foyer() -> Money = DepenseNetteMinimaleFoyerAL;
+
+function depense_nette_minimale_apl(type_foyer: TypeLogementFoyer) -> Money = match type_foyer {
+    GENERAL => DepenseNetteMinimaleFoyerAPL;
+    JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE => DepenseNetteMinimaleFoyerJeunesTravailleurs;
+};
+
+// --- шаги расчёта как заключения норм ------------------------------------
+
+pub relation plafond_equivalence_loyer(m: Menage, plafond: Money) kind institutional {
+    key(m);
+    label fr official "plafond de l'équivalence de loyer et de charges locatives éligible";
+    label ru unofficial "плафон эквивалентности найма и расходов";
+}
+
+pub relation equivalence_loyer_eligible(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "E: équivalence de loyer et de charges locatives éligible";
+    label ru unofficial "E: эквивалентность найма и расходов, взятая в расчёт";
+}
+
+pub relation nombre_parts(m: Menage, parts: Decimal) kind institutional {
+    key(m);
+    label fr official "N: nombre de parts déterminé selon le barème de l'article D. 832-25";
+    label ru unofficial "N: число долей по барему ст. D. 832-25";
+}
+
+pub relation equivalence_loyer_minimale(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "E0: équivalence de loyer et de charges locatives minimale";
+    label ru unofficial "E0: минимальная эквивалентность найма и расходов";
+}
+
+pub relation forfait_charges_foyer(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "C: montant forfaitaire au titre des charges en logement-foyer";
+    label ru unofficial "C: форфейт расходов в logement-foyer";
+}
+
+pub relation equivalence_loyer_retenue(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "L: équivalence de loyer prise en compte pour les allocations de logement";
+    label ru unofficial "L: эквивалентность найма, взятая для аллокаций";
+}
+
+pub relation loyer_minimal(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "L0: loyer minimal des allocations de logement en logement-foyer";
+    label ru unofficial "L0: минимальный наём аллокаций в logement-foyer";
+}
+
+pub relation depense_nette_minimale(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "montant minimum de dépense nette de logement";
+    label ru unofficial "минимальный чистый расход на жильё";
+}
+
+@source(CCH_D832_24, CCH_D832_24_ED2019_12, CCH_D832_24_ED2020_01,
+        CCH_D832_24_ED2021_01, CCH_D832_24_ED2023_04, CCH_D832_24_ED2023_09,
+        CCH_D832_24_ED2023_12, CCH_D832_24_ED2026_07, ARR_ART27_ED2019_10,
+        ARR_ART27_ED2020_01, ARR_ART27_ED2020_10, ARR_ART27_ED2021_01,
+        ARR_ART27_ED2021_10, ARR_ART27_ED2022_01, ARR_ART27_ED2025_10,
+        ARR_ART27_ED2026_10)
+rule PlafondEquivalenceLoyer(m: Menage, zone: Zone, situation: SituationFamiliale,
+                             pac: Integer) strict {
+    label fr official "E est prise en compte dans la limite d'un plafond fixé par arrêté en fonction de la zone géographique et de la composition familiale";
+    label ru unofficial "плафон E по зоне и составу домохозяйства";
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and zone_du_logement(m, zone)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac);
+    then plafond_equivalence_loyer(m, plafond_equivalence_applicable(zone, situation, pac));
+}
+
+@source(CCH_D832_24, CCH_D832_24_ED2019_12, CCH_D832_24_ED2020_01,
+        CCH_D832_24_ED2021_01, CCH_D832_24_ED2023_04, CCH_D832_24_ED2023_09,
+        CCH_D832_24_ED2023_12, CCH_D832_24_ED2026_07)
+rule EquivalenceLoyerEligible(m: Menage, redev: Money, plafond: Money) strict {
+    label fr official "E est l'équivalence de loyer et de charges locatives éligible, prise en compte dans la limite d'un plafond";
+    label ru unofficial "E: плата, ограниченная плафоном";
+    when redevance(m, redev) and plafond_equivalence_loyer(m, plafond);
+    then equivalence_loyer_eligible(m, min(redev, plafond));
+}
+
+@source(CCH_D832_25, CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01,
+        CCH_D832_25_ED2021_01, CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09,
+        CCH_D832_25_ED2023_12, CCH_D832_25_ED2026_07)
+rule NombreParts(m: Menage, type_foyer: TypeLogementFoyer,
+                 situation: SituationFamiliale, pac: Integer) strict {
+    label fr official "N représente le nombre de parts déterminé selon le barème suivant";
+    label ru unofficial "N: число долей по барему статьи";
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and type_logement_foyer(m, type_foyer)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac);
+    then nombre_parts(m, parts_applicables(type_foyer, situation, pac));
+}
+
+@source(CCH_D832_26, CCH_D832_26_ED2019_12, CCH_D832_26_ED2020_01,
+        CCH_D832_26_ED2021_01, CCH_D832_26_ED2023_04,
+        CCH_D832_26_ED2023_09, CCH_D832_26_ED2023_12,
+        CCH_D832_26_ED2026_07, ARR_ART31_ED2019_10, ARR_ART31_ED2020_01,
+        ARR_ART31_ED2020_10, ARR_ART31_ED2021_01, ARR_ART31_ED2021_10,
+        ARR_ART31_ED2022_01)
+rule EquivalenceLoyerMinimaleAvantJuillet2022(m: Menage, type_foyer: TypeLogementFoyer,
+                              situation: SituationFamiliale, pac: Integer,
+                              ressources: Money) strict {
+    label fr official "E0 est obtenue par application de pourcentages à des tranches de ressources, dont les limites inférieures et supérieures sont multipliées par le nombre de parts N, majorée d'un montant forfaitaire, le total étant divisé par douze";
+    label ru unofficial "E0 до июля 2022 года, единая таблица ст. 31: прогрессивные транши ресурсов с границами, умноженными на N, плюс форфейт, всё делится на двенадцать";
+    effective [@2019-10-02, @2022-07-01);
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and type_logement_foyer(m, type_foyer)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources)
+        and not_known(arrondi_intermediaire_centime(m));
+    then equivalence_loyer_minimale(m,
+        equivalence_minimale_avant_2022(type_foyer, situation, pac, ressources));
+}
+
+@source(CCH_D832_26, CCH_D832_26_ED2019_12, CCH_D832_26_ED2020_01,
+        CCH_D832_26_ED2021_01, CCH_D832_26_ED2023_04,
+        CCH_D832_26_ED2023_09, CCH_D832_26_ED2023_12,
+        CCH_D832_26_ED2026_07, ARR_ART31_ED2022_07, ARR_ART31_ED2023_01,
+        ARR_ART31_ED2023_10, ARR_ART31_ED2024_01, ARR_ART31_ED2024_10,
+        ARR_ART31_ED2025_01, ARR_ART31_ED2025_10)
+rule EquivalenceLoyerMinimale(m: Menage, type_foyer: TypeLogementFoyer,
+                              situation: SituationFamiliale, pac: Integer,
+                              ressources: Money) strict {
+    label fr official "E0 est obtenue par application de pourcentages à des tranches de ressources, dont les limites inférieures et supérieures sont multipliées par le nombre de parts N, majorée d'un montant forfaitaire, le total étant divisé par douze";
+    label ru unofficial "E0: прогрессивные транши ресурсов с границами, умноженными на N, плюс форфейт, всё делится на двенадцать";
+    effective [@2022-07-01, infinity);
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and type_logement_foyer(m, type_foyer)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources)
+        and not_known(arrondi_intermediaire_centime(m));
+    then equivalence_loyer_minimale(m,
+        equivalence_minimale_calculee(type_foyer, situation, pac, ressources));
+}
+
+// Сектор аллокаций — это ALF и ALS. «Не APL» в v1 не выражается (сравнение
+// перечисления с константой в guard вне объёма), поэтому у каждого шага две
+// нормы с одной головой — по члену перечня. Перечень L. 821-1 закрыт.
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07, ARR_ART40_ED2019_10,
+        ARR_ART40_ED2020_01, ARR_ART40_ED2020_10, ARR_ART40_ED2021_01,
+        ARR_ART40_ED2021_10, ARR_ART40_ED2022_01, ARR_ART46_ED2023_01,
+        ARR_ART40_ED2025_10, ARR_ART46_ED2025_10,
+        ARR_ART40_ED2026_10, ARR_ART46_ED2026_10)
+rule ForfaitChargesFoyerALF(m: Menage, pac: Integer, zone_geo: Territoire) strict {
+    label fr official "C est le montant forfaitaire au titre des charges, fixé par arrêté en fonction de la composition familiale";
+    label ru unofficial "C: форфейт расходов по составу домохозяйства (ALF)";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALF)
+        and personnes_a_charge(m, pac) and territoire(m, zone_geo);
+    then forfait_charges_foyer(m, forfait_charges_foyer_calcule(pac, zone_geo));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07, ARR_ART40_ED2019_10,
+        ARR_ART40_ED2020_01, ARR_ART40_ED2020_10, ARR_ART40_ED2021_01,
+        ARR_ART40_ED2021_10, ARR_ART40_ED2022_01, ARR_ART46_ED2023_01,
+        ARR_ART40_ED2025_10, ARR_ART46_ED2025_10,
+        ARR_ART40_ED2026_10, ARR_ART46_ED2026_10)
+rule ForfaitChargesFoyerALS(m: Menage, pac: Integer, zone_geo: Territoire) strict {
+    label fr official "C est le montant forfaitaire au titre des charges, fixé par arrêté en fonction de la composition familiale";
+    label ru unofficial "C: форфейт расходов по составу домохозяйства (ALS)";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALS)
+        and personnes_a_charge(m, pac) and territoire(m, zone_geo);
+    then forfait_charges_foyer(m, forfait_charges_foyer_calcule(pac, zone_geo));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04,
+        CCH_D842_15_ED2023_09, CCH_D842_15_ED2023_12,
+        CCH_D842_15_ED2026_07, CCH_D832_26, CCH_D832_26_ED2019_12,
+        CCH_D832_26_ED2020_01, CCH_D832_26_ED2021_01,
+        CCH_D832_26_ED2023_04, CCH_D832_26_ED2023_09,
+        CCH_D832_26_ED2023_12, CCH_D832_26_ED2026_07, ARR_ART31_ED2019_10,
+        ARR_ART31_ED2020_01, ARR_ART31_ED2020_10, ARR_ART31_ED2021_01,
+        ARR_ART31_ED2021_10, ARR_ART31_ED2022_01)
+rule LoyerMinimalALFAvantJuillet2022(m: Menage, situation: SituationFamiliale, pac: Integer,
+                     ressources: Money) strict {
+    label fr official "L0 est le loyer minimal; il est calculé selon les dispositions du deuxième alinéa de l'article D. 832-26, dans lequel il se substitue à E0";
+    label ru unofficial "L0 до июля 2022 года: единая таблица транш ст. 31 (ALF)";
+    effective [@2019-10-02, @2022-07-01);
+    when secteur_logement_foyer(m) and aide_demandee(m, ALF)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources);
+    then loyer_minimal(m, loyer_minimal_avant_2022(situation, pac, ressources));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04,
+        CCH_D842_15_ED2023_09, CCH_D842_15_ED2023_12,
+        CCH_D842_15_ED2026_07, CCH_D832_26, CCH_D832_26_ED2019_12,
+        CCH_D832_26_ED2020_01, CCH_D832_26_ED2021_01,
+        CCH_D832_26_ED2023_04, CCH_D832_26_ED2023_09,
+        CCH_D832_26_ED2023_12, CCH_D832_26_ED2026_07, ARR_ART31_ED2022_07,
+        ARR_ART31_ED2023_01, ARR_ART31_ED2023_10, ARR_ART31_ED2024_01,
+        ARR_ART31_ED2024_10, ARR_ART31_ED2025_01, ARR_ART31_ED2025_10)
+rule LoyerMinimalALF(m: Menage, situation: SituationFamiliale, pac: Integer,
+                     ressources: Money) strict {
+    label fr official "L0 est le loyer minimal; il est calculé selon les dispositions du deuxième alinéa de l'article D. 832-26, dans lequel il se substitue à E0";
+    label ru unofficial "L0: по второму абзацу D. 832-26 (ALF)";
+    effective [@2022-07-01, infinity);
+    when secteur_logement_foyer(m) and aide_demandee(m, ALF)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources);
+    then loyer_minimal(m, loyer_minimal_calcule(situation, pac, ressources));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04,
+        CCH_D842_15_ED2023_09, CCH_D842_15_ED2023_12,
+        CCH_D842_15_ED2026_07, CCH_D832_26, CCH_D832_26_ED2019_12,
+        CCH_D832_26_ED2020_01, CCH_D832_26_ED2021_01,
+        CCH_D832_26_ED2023_04, CCH_D832_26_ED2023_09,
+        CCH_D832_26_ED2023_12, CCH_D832_26_ED2026_07, ARR_ART31_ED2019_10,
+        ARR_ART31_ED2020_01, ARR_ART31_ED2020_10, ARR_ART31_ED2021_01,
+        ARR_ART31_ED2021_10, ARR_ART31_ED2022_01)
+rule LoyerMinimalALSAvantJuillet2022(m: Menage, situation: SituationFamiliale, pac: Integer,
+                     ressources: Money) strict {
+    label fr official "L0 est le loyer minimal; il est calculé selon les dispositions du deuxième alinéa de l'article D. 832-26, dans lequel il se substitue à E0";
+    label ru unofficial "L0 до июля 2022 года: единая таблица транш ст. 31 (ALS)";
+    effective [@2019-10-02, @2022-07-01);
+    when secteur_logement_foyer(m) and aide_demandee(m, ALS)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources);
+    then loyer_minimal(m, loyer_minimal_avant_2022(situation, pac, ressources));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04,
+        CCH_D842_15_ED2023_09, CCH_D842_15_ED2023_12,
+        CCH_D842_15_ED2026_07, CCH_D832_26, CCH_D832_26_ED2019_12,
+        CCH_D832_26_ED2020_01, CCH_D832_26_ED2021_01,
+        CCH_D832_26_ED2023_04, CCH_D832_26_ED2023_09,
+        CCH_D832_26_ED2023_12, CCH_D832_26_ED2026_07, ARR_ART31_ED2022_07,
+        ARR_ART31_ED2023_01, ARR_ART31_ED2023_10, ARR_ART31_ED2024_01,
+        ARR_ART31_ED2024_10, ARR_ART31_ED2025_01, ARR_ART31_ED2025_10)
+rule LoyerMinimalALS(m: Menage, situation: SituationFamiliale, pac: Integer,
+                     ressources: Money) strict {
+    label fr official "L0 est le loyer minimal; il est calculé selon les dispositions du deuxième alinéa de l'article D. 832-26, dans lequel il se substitue à E0";
+    label ru unofficial "L0: по второму абзацу D. 832-26 (ALS)";
+    effective [@2022-07-01, infinity);
+    when secteur_logement_foyer(m) and aide_demandee(m, ALS)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources);
+    then loyer_minimal(m, loyer_minimal_calcule(situation, pac, ressources));
+}
+
+@source(CCH_D842_16, CCH_D842_16_ED2019_12, CCH_D842_16_ED2020_01,
+        CCH_D842_16_ED2021_01, CCH_D842_16_ED2023_04, CCH_D842_16_ED2023_09,
+        CCH_D842_16_ED2023_12, CCH_D842_16_ED2026_07, ARR_ART43_ED2019_10,
+        ARR_ART43_ED2020_01, ARR_ART43_ED2020_10, ARR_ART43_ED2021_01,
+        ARR_ART43_ED2021_10, ARR_ART43_ED2022_01, ARR_ART43_ED2025_10,
+        ARR_ART43_ED2026_10)
+rule EquivalenceLoyerRetenueALF(m: Menage, categorie: CategorieEquivalenceLoyer,
+                                situation: SituationFamiliale) strict {
+    label fr official "un arrêté fixe l'équivalence de loyer L pour chacune des catégories de personnes résidant dans un logement-foyer";
+    label ru unofficial "L: эквивалентность найма по категории проживающего (ALF)";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALF)
+        and categorie_equivalence_loyer(m, categorie)
+        and situation_familiale(m, situation);
+    then equivalence_loyer_retenue(m, equivalence_loyer_categorie(categorie, situation));
+}
+
+@source(CCH_D842_16, CCH_D842_16_ED2019_12, CCH_D842_16_ED2020_01,
+        CCH_D842_16_ED2021_01, CCH_D842_16_ED2023_04, CCH_D842_16_ED2023_09,
+        CCH_D842_16_ED2023_12, CCH_D842_16_ED2026_07, ARR_ART43_ED2019_10,
+        ARR_ART43_ED2020_01, ARR_ART43_ED2020_10, ARR_ART43_ED2021_01,
+        ARR_ART43_ED2021_10, ARR_ART43_ED2022_01, ARR_ART43_ED2025_10,
+        ARR_ART43_ED2026_10)
+rule EquivalenceLoyerRetenueALS(m: Menage, categorie: CategorieEquivalenceLoyer,
+                                situation: SituationFamiliale) strict {
+    label fr official "un arrêté fixe l'équivalence de loyer L pour chacune des catégories de personnes résidant dans un logement-foyer";
+    label ru unofficial "L: эквивалентность найма по категории проживающего (ALS)";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALS)
+        and categorie_equivalence_loyer(m, categorie)
+        and situation_familiale(m, situation);
+    then equivalence_loyer_retenue(m, equivalence_loyer_categorie(categorie, situation));
+}
+
+@source(CCH_D832_27, CCH_D832_27_ED2019_12, CCH_D832_27_ED2020_01,
+        CCH_D832_27_ED2021_01, CCH_D832_27_ED2023_04, CCH_D832_27_ED2023_09,
+        CCH_D832_27_ED2023_12, CCH_D832_27_ED2026_07, ARR_ART32_ED2019_10,
+        ARR_ART32_ED2020_01, ARR_ART32_ED2020_10, ARR_ART32_ED2021_01,
+        ARR_ART32_ED2021_10, ARR_ART32_ED2022_01, ARR_ART32_ED2022_07,
+        ARR_ART32_ED2023_01, ARR_ART32_ED2023_10, ARR_ART32_ED2024_01,
+        ARR_ART32_ED2024_10, ARR_ART32_ED2025_01, ARR_ART32_ED2025_10)
+rule DepenseNetteMinimale(m: Menage, type_foyer: TypeLogementFoyer) strict {
+    label fr official "lorsque cette dépense nette de logement est inférieure à un montant fixé par arrêté selon le type de logements-foyer, l'abattement à effectuer sur le montant mensuel de l'aide est égal à la différence constatée";
+    label ru unofficial "минимум чистого расхода: ниже него аббатмент равен разнице";
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and type_logement_foyer(m, type_foyer);
+    then depense_nette_minimale(m, depense_nette_minimale_apl(type_foyer));
+}
+
+@source(CCH_D842_17, CCH_D842_17_ED2019_12, CCH_D842_17_ED2020_01,
+        CCH_D842_17_ED2021_01, CCH_D842_17_ED2023_04, CCH_D842_17_ED2023_09,
+        CCH_D842_17_ED2023_12, CCH_D842_17_ED2026_07, ARR_ART44_ED2019_10,
+        ARR_ART44_ED2020_01, ARR_ART44_ED2020_10, ARR_ART44_ED2021_01,
+        ARR_ART44_ED2021_10, ARR_ART44_ED2022_01, ARR_ART44_ED2022_07,
+        ARR_ART44_ED2023_01, ARR_ART44_ED2023_10, ARR_ART44_ED2024_01,
+        ARR_ART44_ED2024_10, ARR_ART44_ED2025_01, ARR_ART44_ED2025_10)
+rule DepenseNetteMinimaleALF(m: Menage) strict {
+    label fr official "lorsque sa valeur est inférieure à un montant fixé par arrêté, l'abattement sur le montant mensuel de l'aide est égal à la différence constatée";
+    label ru unofficial "минимум чистого расхода аллокации: ниже него аббатмент равен разнице (ALF)";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALF);
+    then depense_nette_minimale(m, depense_nette_minimale_al_foyer());
+}
+
+@source(CCH_D842_17, CCH_D842_17_ED2019_12, CCH_D842_17_ED2020_01,
+        CCH_D842_17_ED2021_01, CCH_D842_17_ED2023_04, CCH_D842_17_ED2023_09,
+        CCH_D842_17_ED2023_12, CCH_D842_17_ED2026_07, ARR_ART44_ED2019_10,
+        ARR_ART44_ED2020_01, ARR_ART44_ED2020_10, ARR_ART44_ED2021_01,
+        ARR_ART44_ED2021_10, ARR_ART44_ED2022_01, ARR_ART44_ED2022_07,
+        ARR_ART44_ED2023_01, ARR_ART44_ED2023_10, ARR_ART44_ED2024_01,
+        ARR_ART44_ED2024_10, ARR_ART44_ED2025_01, ARR_ART44_ED2025_10)
+rule DepenseNetteMinimaleALS(m: Menage) strict {
+    label fr official "lorsque sa valeur est inférieure à un montant fixé par arrêté, l'abattement sur le montant mensuel de l'aide est égal à la différence constatée";
+    label ru unofficial "минимум чистого расхода аллокации: ниже него аббатмент равен разнице (ALS)";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALS);
+    then depense_nette_minimale(m, depense_nette_minimale_al_foyer());
+}
+
+// ============================================================================
+// КОЭФФИЦИЕНТ K И КОНЕЧНАЯ СУММА СЕКТОРА (08.10.2026, сессия 7)
+// ============================================================================
+//
+// ИСТОЧНИК АЛГЕБРЫ K. Текст D. 832-25 (1° и 2°) в открытых данных LEGI отдаёт
+// формулу картинкой (`<p class="cliche">`: «Vous pouvez consulter l'intégralité
+// du texte avec ses images…»), поэтому алгебраическая форма берётся из
+// ПРЕДШЕСТВУЮЩИХ статей того же кодекса, которые отменил 1 сентября 2019 года тот
+// же декрет (JORFTEXT000038812273), создавший D. 832-25, и чей текст в
+// глобальном дампе ЕСТЬ (закреплён: `CCH_R351_61`, `CCH_R351_61_1`,
+// sources/fr-apl/cch-ante-2019-09.txt):
+//
+//   R. 351-61   — «K = 0,95-((R-(r X N))/ (CM X N))», K «au plus égal à 0,95»,
+//                 «arrondi à deux décimales par défaut» — общий случай, то есть 1°
+//                 D. 832-25 (те же R, r, cm, N и та же таблица N: 1,40/1,80/2,50/3/
+//                 3,7/4,3, +0,50);
+//   R. 351-61-1 — «K = 0,9-(R/ (CM X N))», N = 1,2/1,5/2,5/3/3,7/4,3, +0,5 —
+//                 фойе молодых работников и социальные резиденции, то есть 2° D. 832-25.
+//
+// ЭТО ЧТЕНИЕ, А НЕ ЦИТАТА D. 832-25: тождество формулы картинки и формулы
+// отменённой статьи пакет не может проверить по байтам картинки. Его держат три
+// независимых свидетельства: (1) набор переменных, их определения и обе таблицы N
+// статьи D. 832-25 совпадают с R. 351-61 и R. 351-61-1; (2) ВСЕ ШЕСТЬ значений K,
+// которые называют дела Catala (0,41, 0,64, 0,64 и 0,60 для APL; 0,60 и 0,43 для
+// аллокаций), воспроизводятся этой алгеброй на значениях r и cm, закреплённых
+// ст. 30 арретэ; (3) код OpenFisca-France (`aides_logement_foyer_k_apl` и
+// `_k_al`) считает ту же алгебру. Ни одно из трёх не доказательство, все три —
+// основание держать чтение рабочим; граница названа в README пакета
+// («Коэффициент K»).
+//
+// ОКРУГЛЕНИЕ. «Arrondi à deux décimales par défaut» (D. 832-25, a) обоих пунктов) —
+// K = ⌊(плафон − q) × 100⌋ / 100 при q = (R − r×N)/(cm×N) либо R/(cm×N); так как
+// плафон кратен 0,01, это ровно «плафон − q, округлённое ВВЕРХ до сотой»:
+// `div_round(…, 2, "CEILING")`. Плафон (0,95 либо 0,90) закреплён тем же
+// D. 832-25 как «considéré égal à», и тот же параметр служит константой формулы
+// (оба текста называют одно число).
+//
+// ПОЛА У K НЕТ. Текст не называет нижнюю границу K; при очень больших ресурсах
+// расчёт даёт K < 0, и ничего не дописывается. Выплату в таком случае решают
+// арифметика и порог ниже (ст. 29 и 42 арретэ), а не молчаливый пол.
+//
+// АЛЛОКАЦИИ. D. 842-15 2° отсылает к «2° de l'article D. 832-25» БЕЗУСЛОВНО,
+// поэтому K аллокаций — ВСЕГДА формула 2° (потолок 0,90, cm второго абзаца,
+// таблица N 1,2/1,5/…), независимо от типа фойе.
+//
+// КОНЕЧНАЯ СУММА (D. 832-24 и D. 842-15): формула → форфейтная минорация
+// (ст. 28 и 41 арретэ) → абатмент минимума чистого расхода (D. 832-27 и
+// D. 842-17) → [аллокации: не больше redevance] → «montant représentatif des
+// contributions sociales» (тот же шаг D. 823-16, функция
+// `contributions_selon_territoire`) → порог выплаты (ст. 29 и 42 арретэ, «avant
+// application de la contribution» — то же чтение, что у ст. 12 в секторе найма:
+// порог сравнивается с результатом шага взносов).
+// Выход — `aide_theorique` / `aide_non_versee`, то есть те же головы, что у
+// сектора найма: `aide_mensuelle` и стадия CRDS (26-precompte-crds.law) общие.
+
+function ratio_k_par_exces(numerateur: Money, denominateur: Money) -> Decimal =
+    div_round(numerateur, denominateur, 2, "CEILING");
+
+function coefficient_k_general(ressources: Money, parts: Decimal) -> Decimal {
+    let plafond: Decimal = PlafondCoefficientPriseEnChargeGeneral;
+    let calcule: Decimal = plafond - ratio_k_par_exces(
+        ressources - CoefficientRFoyer * parts,
+        CoefMultiplicateurFoyerGeneral * parts);
+    return min(plafond, calcule);
+}
+
+function coefficient_k_jeunes_travailleurs(ressources: Money, parts: Decimal) -> Decimal {
+    let plafond: Decimal = PlafondCoefficientPriseEnChargeJeunesTravailleurs;
+    let calcule: Decimal = plafond - ratio_k_par_exces(
+        ressources,
+        CoefMultiplicateurFoyerJeunesTravailleurs * parts);
+    return min(plafond, calcule);
+}
+
+function minoration_forfaitaire_foyer(type_aide: TypeAide) -> Money = match type_aide {
+    APL => MinorationForfaitaireFoyerAPL;
+    ALF => MinorationForfaitaireFoyerAL;
+    ALS => MinorationForfaitaireFoyerAL;
+};
+
+function seuil_versement_foyer(type_aide: TypeAide) -> Money = match type_aide {
+    APL => SeuilVersementFoyerAPL;
+    ALF => SeuilVersementFoyerAL;
+    ALS => SeuilVersementFoyerAL;
+};
+
+// «Lorsque cette dépense nette … est inférieure à un montant fixé par arrêté,
+// l'abattement … est égal à la différence constatée»: dépense nette = base −
+// aide (base = E pour APL, L + C pour аллокации), абатмент = max(0, минимум −
+// dépense nette).
+function aide_apres_abattement_depense_nette(aide: Money, base: Money, minimum: Money) -> Money =
+    aide - max(0 EUR, minimum - (base - aide));
+
+pub relation coefficient_prise_en_charge(m: Menage, k: Decimal) kind institutional {
+    key(m);
+    label fr official "K : coefficient de prise en charge, arrondi à deux décimales par défaut et plafonné";
+    label ru unofficial "K: коэффициент покрытия, округлённый до сотых вниз и ограниченный потолком";
+}
+
+pub relation aide_foyer_formule(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "Af : aide mensuelle issue de la formule de calcul en logement-foyer";
+    label ru unofficial "Af: пособие по формуле в logement-foyer";
+}
+
+relation aide_foyer_apres_minoration(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "aide en logement-foyer après minoration forfaitaire";
+    label ru unofficial "пособие в logement-foyer после форфейтной минорации";
+}
+
+relation aide_foyer_apres_depense_nette(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "aide en logement-foyer après abattement au titre de la dépense nette minimale";
+    label ru unofficial "пособие в logement-foyer после абатмента минимума чистого расхода";
+}
+
+relation aide_foyer_rapportee_redevance(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "allocation en logement-foyer rapportée, si elle la dépasse, au montant de la redevance";
+    label ru unofficial "аллокация в logement-foyer, ограниченная redevance";
+}
+
+relation aide_foyer_apres_contributions(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "aide en logement-foyer après le montant représentatif des contributions sociales";
+    label ru unofficial "пособие в logement-foyer после представительной суммы взносов";
+}
+
+@source(CCH_D832_25, CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01,
+        CCH_D832_25_ED2021_01, CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09,
+        CCH_D832_25_ED2023_12, CCH_D832_25_ED2026_07, CCH_D842_15,
+        CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01, CCH_D842_15_ED2021_01,
+        CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09, CCH_D842_15_ED2023_12,
+        CCH_D842_15_ED2026_07)
+rule NombrePartsAllocationALF(m: Menage, situation: SituationFamiliale, pac: Integer) strict {
+    label fr official "N représente le nombre de parts déterminé selon le barème du 2° (K des allocations: 2° de l'article D. 832-25)";
+    label ru unofficial "N аллокаций (ALF): таблица 2° ст. D. 832-25 (на неё отсылает D. 842-15)";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALF)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac);
+    then nombre_parts(m, parts_jeunes_travailleurs(situation, pac));
+}
+
+@source(CCH_D832_25, CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01,
+        CCH_D832_25_ED2021_01, CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09,
+        CCH_D832_25_ED2023_12, CCH_D832_25_ED2026_07, CCH_D842_15,
+        CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01, CCH_D842_15_ED2021_01,
+        CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09, CCH_D842_15_ED2023_12,
+        CCH_D842_15_ED2026_07)
+rule NombrePartsAllocationALS(m: Menage, situation: SituationFamiliale, pac: Integer) strict {
+    label fr official "N représente le nombre de parts déterminé selon le barème du 2° (K des allocations: 2° de l'article D. 832-25)";
+    label ru unofficial "N аллокаций (ALS): таблица 2° ст. D. 832-25 (на неё отсылает D. 842-15)";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALS)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac);
+    then nombre_parts(m, parts_jeunes_travailleurs(situation, pac));
+}
+
+@source(CCH_D832_25, CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01,
+        CCH_D832_25_ED2021_01, CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09,
+        CCH_D832_25_ED2023_12, CCH_D832_25_ED2026_07, CCH_R351_61,
+        ARR_ART30_ED2019_10, ARR_ART30_ED2020_01, ARR_ART30_ED2020_10,
+        ARR_ART30_ED2021_01, ARR_ART30_ED2021_10, ARR_ART30_ED2022_01,
+        ARR_ART30_ED2022_07, ARR_ART30_ED2023_01, ARR_ART30_ED2023_10,
+        ARR_ART30_ED2024_01, ARR_ART30_ED2024_10, ARR_ART30_ED2025_01,
+        ARR_ART30_ED2025_10, ARR_ART30_ED2026_10)
+rule CoefficientPriseEnChargeAPLGeneral(m: Menage, parts: Decimal, ressources: Money) strict {
+    label fr official "K = 0,95 − (R − r × N) / (cm × N), arrondi à deux décimales par défaut, au plus égal à 0,95 (1° de l'article D. 832-25)";
+    label ru unofficial "K APL фойе, общий случай (1°): 0,95 − (R − r·N)/(cm·N), вниз до сотых, не выше 0,95";
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and type_logement_foyer(m, GENERAL)
+        and nombre_parts(m, parts) and ressources_retenues(m, ressources);
+    then coefficient_prise_en_charge(m, coefficient_k_general(ressources, parts));
+}
+
+@source(CCH_D832_25, CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01,
+        CCH_D832_25_ED2021_01, CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09,
+        CCH_D832_25_ED2023_12, CCH_D832_25_ED2026_07, CCH_R351_61_1,
+        ARR_ART30_ED2019_10, ARR_ART30_ED2020_01, ARR_ART30_ED2020_10,
+        ARR_ART30_ED2021_01, ARR_ART30_ED2021_10, ARR_ART30_ED2022_01,
+        ARR_ART30_ED2022_07, ARR_ART30_ED2023_01, ARR_ART30_ED2023_10,
+        ARR_ART30_ED2024_01, ARR_ART30_ED2024_10, ARR_ART30_ED2025_01,
+        ARR_ART30_ED2025_10, ARR_ART30_ED2026_10)
+rule CoefficientPriseEnChargeAPLJeunesTravailleurs(m: Menage, parts: Decimal, ressources: Money) strict {
+    label fr official "K = 0,90 − R / (cm × N), arrondi à deux décimales par défaut, au plus égal à 0,90 (2° de l'article D. 832-25)";
+    label ru unofficial "K APL фойе молодых работников и социальных резиденций (2°): 0,90 − R/(cm·N), вниз до сотых, не выше 0,90";
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and type_logement_foyer(m, JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE)
+        and nombre_parts(m, parts) and ressources_retenues(m, ressources);
+    then coefficient_prise_en_charge(m, coefficient_k_jeunes_travailleurs(ressources, parts));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07, CCH_D832_25,
+        CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01, CCH_D832_25_ED2021_01,
+        CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09, CCH_D832_25_ED2023_12,
+        CCH_D832_25_ED2026_07, CCH_R351_61_1, ARR_ART30_ED2019_10,
+        ARR_ART30_ED2020_01, ARR_ART30_ED2020_10, ARR_ART30_ED2021_01,
+        ARR_ART30_ED2021_10, ARR_ART30_ED2022_01, ARR_ART30_ED2022_07,
+        ARR_ART30_ED2023_01, ARR_ART30_ED2023_10, ARR_ART30_ED2024_01,
+        ARR_ART30_ED2024_10, ARR_ART30_ED2025_01, ARR_ART30_ED2025_10,
+        ARR_ART30_ED2026_10)
+rule CoefficientPriseEnChargeAllocationALF(m: Menage, parts: Decimal, ressources: Money) strict {
+    label fr official "K est calculé selon les dispositions du 2° de l'article D. 832-25 : 0,90 − R / (cm × N)";
+    label ru unofficial "K аллокаций (ALF) — всегда по 2° ст. D. 832-25: 0,90 − R/(cm·N), вниз до сотых, не выше 0,90";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALF)
+        and nombre_parts(m, parts) and ressources_retenues(m, ressources);
+    then coefficient_prise_en_charge(m, coefficient_k_jeunes_travailleurs(ressources, parts));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07, CCH_D832_25,
+        CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01, CCH_D832_25_ED2021_01,
+        CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09, CCH_D832_25_ED2023_12,
+        CCH_D832_25_ED2026_07, CCH_R351_61_1, ARR_ART30_ED2019_10,
+        ARR_ART30_ED2020_01, ARR_ART30_ED2020_10, ARR_ART30_ED2021_01,
+        ARR_ART30_ED2021_10, ARR_ART30_ED2022_01, ARR_ART30_ED2022_07,
+        ARR_ART30_ED2023_01, ARR_ART30_ED2023_10, ARR_ART30_ED2024_01,
+        ARR_ART30_ED2024_10, ARR_ART30_ED2025_01, ARR_ART30_ED2025_10,
+        ARR_ART30_ED2026_10)
+rule CoefficientPriseEnChargeAllocationALS(m: Menage, parts: Decimal, ressources: Money) strict {
+    label fr official "K est calculé selon les dispositions du 2° de l'article D. 832-25 : 0,90 − R / (cm × N)";
+    label ru unofficial "K аллокаций (ALS) — всегда по 2° ст. D. 832-25: 0,90 − R/(cm·N), вниз до сотых, не выше 0,90";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALS)
+        and nombre_parts(m, parts) and ressources_retenues(m, ressources);
+    then coefficient_prise_en_charge(m, coefficient_k_jeunes_travailleurs(ressources, parts));
+}
+
+@source(CCH_D832_24, CCH_D832_24_ED2019_12, CCH_D832_24_ED2020_01,
+        CCH_D832_24_ED2021_01, CCH_D832_24_ED2023_04, CCH_D832_24_ED2023_09,
+        CCH_D832_24_ED2023_12, CCH_D832_24_ED2026_07, CCH_D832_25,
+        CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01, CCH_D832_25_ED2021_01,
+        CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09, CCH_D832_25_ED2023_12,
+        CCH_D832_25_ED2026_07)
+rule AideFoyerFormuleAPL(m: Menage, k: Decimal, e: Money, e0: Money) strict {
+    label fr official "Af = K × (E − E0)";
+    label ru unofficial "Af APL фойе: K × (E − E0)";
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and coefficient_prise_en_charge(m, k)
+        and equivalence_loyer_eligible(m, e) and equivalence_loyer_minimale(m, e0);
+    then aide_foyer_formule(m, k * (e - e0));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07, CCH_D832_25,
+        CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01, CCH_D832_25_ED2021_01,
+        CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09, CCH_D832_25_ED2023_12,
+        CCH_D832_25_ED2026_07)
+rule AideFoyerFormuleAllocationALF(m: Menage, k: Decimal, l: Money, c: Money, l0: Money) strict {
+    label fr official "Af = K × (L + C − L0)";
+    label ru unofficial "Af аллокации (ALF) в фойе: K × (L + C − L0)";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALF)
+        and coefficient_prise_en_charge(m, k)
+        and equivalence_loyer_retenue(m, l) and forfait_charges_foyer(m, c)
+        and loyer_minimal(m, l0);
+    then aide_foyer_formule(m, k * (l + c - l0));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07, CCH_D832_25,
+        CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01, CCH_D832_25_ED2021_01,
+        CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09, CCH_D832_25_ED2023_12,
+        CCH_D832_25_ED2026_07)
+rule AideFoyerFormuleAllocationALS(m: Menage, k: Decimal, l: Money, c: Money, l0: Money) strict {
+    label fr official "Af = K × (L + C − L0)";
+    label ru unofficial "Af аллокации (ALS) в фойе: K × (L + C − L0)";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALS)
+        and coefficient_prise_en_charge(m, k)
+        and equivalence_loyer_retenue(m, l) and forfait_charges_foyer(m, c)
+        and loyer_minimal(m, l0);
+    then aide_foyer_formule(m, k * (l + c - l0));
+}
+
+@source(CCH_D832_24, CCH_D832_24_ED2019_12, CCH_D832_24_ED2020_01,
+        CCH_D832_24_ED2021_01, CCH_D832_24_ED2023_04, CCH_D832_24_ED2023_09,
+        CCH_D832_24_ED2023_12, CCH_D832_24_ED2026_07, CCH_D842_15,
+        CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01, CCH_D842_15_ED2021_01,
+        CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09, CCH_D842_15_ED2023_12,
+        CCH_D842_15_ED2026_07, ARR_ART28_ED2019_10, ARR_ART28_ED2020_01,
+        ARR_ART28_ED2020_10, ARR_ART28_ED2021_01, ARR_ART28_ED2021_10,
+        ARR_ART28_ED2022_01, ARR_ART28_ED2022_07, ARR_ART28_ED2023_01,
+        ARR_ART28_ED2023_10, ARR_ART28_ED2024_01, ARR_ART28_ED2024_10,
+        ARR_ART28_ED2025_01, ARR_ART28_ED2025_10, ARR_ART28_ED2026_10,
+        ARR_ART41_ED2019_10, ARR_ART41_ED2020_01, ARR_ART41_ED2020_10,
+        ARR_ART41_ED2021_01, ARR_ART41_ED2021_10, ARR_ART41_ED2022_01,
+        ARR_ART41_ED2022_07, ARR_ART41_ED2023_01, ARR_ART41_ED2023_10,
+        ARR_ART41_ED2024_01, ARR_ART41_ED2024_10, ARR_ART41_ED2025_01,
+        ARR_ART41_ED2025_10, ARR_ART41_ED2026_10)
+rule MinorationForfaitaireFoyer(m: Menage, type_aide: TypeAide, aide: Money) strict {
+    label fr official "Le montant ainsi calculé est minoré d'un montant fixé forfaitairement par arrêté";
+    label ru unofficial "Из результата формулы вычитается форфейтная минорация (ст. 28 арретэ для APL, ст. 41 для аллокаций)";
+    when secteur_logement_foyer(m) and aide_demandee(m, type_aide)
+        and aide_foyer_formule(m, aide);
+    then aide_foyer_apres_minoration(m, aide - minoration_forfaitaire_foyer(type_aide));
+}
+
+@source(CCH_D832_24, CCH_D832_24_ED2019_12, CCH_D832_24_ED2020_01,
+        CCH_D832_24_ED2021_01, CCH_D832_24_ED2023_04, CCH_D832_24_ED2023_09,
+        CCH_D832_24_ED2023_12, CCH_D832_24_ED2026_07, CCH_D832_27,
+        CCH_D832_27_ED2019_12, CCH_D832_27_ED2020_01, CCH_D832_27_ED2021_01,
+        CCH_D832_27_ED2023_04, CCH_D832_27_ED2023_09, CCH_D832_27_ED2023_12,
+        CCH_D832_27_ED2026_07, ARR_ART32_ED2019_10, ARR_ART32_ED2020_01,
+        ARR_ART32_ED2020_10, ARR_ART32_ED2021_01, ARR_ART32_ED2021_10,
+        ARR_ART32_ED2022_01, ARR_ART32_ED2022_07, ARR_ART32_ED2023_01,
+        ARR_ART32_ED2023_10, ARR_ART32_ED2024_01, ARR_ART32_ED2024_10,
+        ARR_ART32_ED2025_01, ARR_ART32_ED2025_10, ARR_ART32_ED2026_10)
+rule AbattementDepenseNetteAPL(m: Menage, aide: Money, e: Money, minimum: Money) strict {
+    label fr official "lorsque la dépense nette de logement (E moins l'aide calculée) est inférieure à un montant fixé par arrêté, l'abattement est égal à la différence constatée";
+    label ru unofficial "APL фойе: если чистый расход (E минус пособие) ниже минимума, пособие уменьшается на разницу";
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and aide_foyer_apres_minoration(m, aide)
+        and equivalence_loyer_eligible(m, e) and depense_nette_minimale(m, minimum);
+    then aide_foyer_apres_depense_nette(m,
+        aide_apres_abattement_depense_nette(aide, e, minimum));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07, CCH_D842_17,
+        CCH_D842_17_ED2019_12, CCH_D842_17_ED2020_01, CCH_D842_17_ED2021_01,
+        CCH_D842_17_ED2023_04, CCH_D842_17_ED2023_09, CCH_D842_17_ED2023_12,
+        CCH_D842_17_ED2026_07, ARR_ART44_ED2019_10, ARR_ART44_ED2020_01,
+        ARR_ART44_ED2020_10, ARR_ART44_ED2021_01, ARR_ART44_ED2021_10,
+        ARR_ART44_ED2022_01, ARR_ART44_ED2022_07, ARR_ART44_ED2023_01,
+        ARR_ART44_ED2023_10, ARR_ART44_ED2024_01, ARR_ART44_ED2024_10,
+        ARR_ART44_ED2025_01, ARR_ART44_ED2025_10, ARR_ART44_ED2026_10)
+rule AbattementDepenseNetteAllocationALF(m: Menage, aide: Money, l: Money, c: Money,
+                                         minimum: Money) strict {
+    label fr official "lorsque la dépense nette de logement (L + C moins l'aide calculée) est inférieure à un montant fixé par arrêté, l'abattement est égal à la différence constatée";
+    label ru unofficial "Аллокации (ALF) в фойе: если чистый расход (L + C минус пособие) ниже минимума, пособие уменьшается на разницу";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALF)
+        and aide_foyer_apres_minoration(m, aide)
+        and equivalence_loyer_retenue(m, l) and forfait_charges_foyer(m, c)
+        and depense_nette_minimale(m, minimum);
+    then aide_foyer_apres_depense_nette(m,
+        aide_apres_abattement_depense_nette(aide, l + c, minimum));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07, CCH_D842_17,
+        CCH_D842_17_ED2019_12, CCH_D842_17_ED2020_01, CCH_D842_17_ED2021_01,
+        CCH_D842_17_ED2023_04, CCH_D842_17_ED2023_09, CCH_D842_17_ED2023_12,
+        CCH_D842_17_ED2026_07, ARR_ART44_ED2019_10, ARR_ART44_ED2020_01,
+        ARR_ART44_ED2020_10, ARR_ART44_ED2021_01, ARR_ART44_ED2021_10,
+        ARR_ART44_ED2022_01, ARR_ART44_ED2022_07, ARR_ART44_ED2023_01,
+        ARR_ART44_ED2023_10, ARR_ART44_ED2024_01, ARR_ART44_ED2024_10,
+        ARR_ART44_ED2025_01, ARR_ART44_ED2025_10, ARR_ART44_ED2026_10)
+rule AbattementDepenseNetteAllocationALS(m: Menage, aide: Money, l: Money, c: Money,
+                                         minimum: Money) strict {
+    label fr official "lorsque la dépense nette de logement (L + C moins l'aide calculée) est inférieure à un montant fixé par arrêté, l'abattement est égal à la différence constatée";
+    label ru unofficial "Аллокации (ALS) в фойе: если чистый расход (L + C минус пособие) ниже минимума, пособие уменьшается на разницу";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALS)
+        and aide_foyer_apres_minoration(m, aide)
+        and equivalence_loyer_retenue(m, l) and forfait_charges_foyer(m, c)
+        and depense_nette_minimale(m, minimum);
+    then aide_foyer_apres_depense_nette(m,
+        aide_apres_abattement_depense_nette(aide, l + c, minimum));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07)
+rule AideFoyerRapporteeRedevanceALF(m: Menage, aide: Money, redev: Money) strict {
+    label fr official "Si le montant obtenu est supérieur au montant de la redevance supportée par le résident, il est rapporté au montant de cette redevance";
+    label ru unofficial "Аллокации (ALF) в фойе: пособие не больше redevance, которую несёт проживающий";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALF)
+        and aide_foyer_apres_depense_nette(m, aide) and redevance(m, redev);
+    then aide_foyer_rapportee_redevance(m, min(aide, redev));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07)
+rule AideFoyerRapporteeRedevanceALS(m: Menage, aide: Money, redev: Money) strict {
+    label fr official "Si le montant obtenu est supérieur au montant de la redevance supportée par le résident, il est rapporté au montant de cette redevance";
+    label ru unofficial "Аллокации (ALS) в фойе: пособие не больше redevance, которую несёт проживающий";
+    when secteur_logement_foyer(m) and aide_demandee(m, ALS)
+        and aide_foyer_apres_depense_nette(m, aide) and redevance(m, redev);
+    then aide_foyer_rapportee_redevance(m, min(aide, redev));
+}
+
+@source(CCH_D832_24, CCH_D832_24_ED2019_12, CCH_D832_24_ED2020_01,
+        CCH_D832_24_ED2021_01, CCH_D832_24_ED2023_04, CCH_D832_24_ED2023_09,
+        CCH_D832_24_ED2023_12, CCH_D832_24_ED2026_07,
+        ORD9650_ART19_ED2019_09, ORD9650_ART19_ED2020_01, CGCT_LO6414_1)
+rule ContributionsSocialesFoyerAPL(m: Menage, aide: Money, zone_geo: Territoire) strict {
+    label fr official "Ce dernier résultat est diminué d'un montant représentatif des contributions sociales qui s'y appliquent, arrondi à l'euro inférieur, puis majoré de ce montant représentatif";
+    label ru unofficial "APL фойе: результат уменьшается на представительную сумму взносов, округляется к нижнему евро, взносы возвращаются (как D. 823-16)";
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and aide_foyer_apres_depense_nette(m, aide) and territoire(m, zone_geo);
+    then aide_foyer_apres_contributions(m, contributions_selon_territoire(aide, zone_geo));
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07,
+        ORD9650_ART19_ED2019_09, ORD9650_ART19_ED2020_01, CGCT_LO6414_1)
+rule ContributionsSocialesFoyerAllocation(m: Menage, aide: Money, zone_geo: Territoire) strict {
+    label fr official "Ce dernier résultat est diminué d'un montant représentatif des contributions sociales qui s'y appliquent, arrondi à l'euro inférieur, puis majoré de ce montant représentatif";
+    label ru unofficial "Аллокации в фойе: результат уменьшается на представительную сумму взносов, округляется к нижнему евро, взносы возвращаются (как D. 823-16)";
+    when secteur_logement_foyer(m) and aide_foyer_rapportee_redevance(m, aide)
+        and territoire(m, zone_geo);
+    then aide_foyer_apres_contributions(m, contributions_selon_territoire(aide, zone_geo));
+}
+
+@source(CCH_D832_24, CCH_D832_24_ED2019_12, CCH_D832_24_ED2020_01,
+        CCH_D832_24_ED2021_01, CCH_D832_24_ED2023_04, CCH_D832_24_ED2023_09,
+        CCH_D832_24_ED2023_12, CCH_D832_24_ED2026_07, CCH_D842_15,
+        CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01, CCH_D842_15_ED2021_01,
+        CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09, CCH_D842_15_ED2023_12,
+        CCH_D842_15_ED2026_07, ARR_ART29_ED2019_10, ARR_ART29_ED2020_01,
+        ARR_ART29_ED2020_10, ARR_ART29_ED2021_01, ARR_ART29_ED2021_10,
+        ARR_ART29_ED2022_01, ARR_ART29_ED2022_07, ARR_ART29_ED2023_01,
+        ARR_ART29_ED2023_10, ARR_ART29_ED2024_01, ARR_ART29_ED2024_10,
+        ARR_ART29_ED2025_01, ARR_ART29_ED2025_10, ARR_ART29_ED2026_10,
+        ARR_ART42_ED2019_10, ARR_ART42_ED2020_01, ARR_ART42_ED2020_10,
+        ARR_ART42_ED2021_01, ARR_ART42_ED2021_10, ARR_ART42_ED2022_01,
+        ARR_ART42_ED2022_07, ARR_ART42_ED2023_01, ARR_ART42_ED2023_10,
+        ARR_ART42_ED2024_01, ARR_ART42_ED2024_10, ARR_ART42_ED2025_01,
+        ARR_ART42_ED2025_10, ARR_ART42_ED2026_10)
+rule AideFoyerVersee(m: Menage, type_aide: TypeAide, aide: Money) strict {
+    label fr official "l'aide en logement-foyer est versée lorsque le montant atteint le seuil fixé par arrêté";
+    label ru unofficial "Фойе: пособие выплачивается, когда итог не ниже порога (ст. 29 арретэ для APL, ст. 42 для аллокаций)";
+    when secteur_logement_foyer(m) and aide_demandee(m, type_aide)
+        and aide_foyer_apres_contributions(m, aide)
+        and aide >= seuil_versement_foyer(type_aide);
+    then aide_theorique(m, aide);
+}
+
+@source(CCH_D832_24, CCH_D832_24_ED2019_12, CCH_D832_24_ED2020_01,
+        CCH_D832_24_ED2021_01, CCH_D832_24_ED2023_04, CCH_D832_24_ED2023_09,
+        CCH_D832_24_ED2023_12, CCH_D832_24_ED2026_07, CCH_D842_15,
+        CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01, CCH_D842_15_ED2021_01,
+        CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09, CCH_D842_15_ED2023_12,
+        CCH_D842_15_ED2026_07, ARR_ART29_ED2019_10, ARR_ART29_ED2020_01,
+        ARR_ART29_ED2020_10, ARR_ART29_ED2021_01, ARR_ART29_ED2021_10,
+        ARR_ART29_ED2022_01, ARR_ART29_ED2022_07, ARR_ART29_ED2023_01,
+        ARR_ART29_ED2023_10, ARR_ART29_ED2024_01, ARR_ART29_ED2024_10,
+        ARR_ART29_ED2025_01, ARR_ART29_ED2025_10, ARR_ART29_ED2026_10,
+        ARR_ART42_ED2019_10, ARR_ART42_ED2020_01, ARR_ART42_ED2020_10,
+        ARR_ART42_ED2021_01, ARR_ART42_ED2021_10, ARR_ART42_ED2022_01,
+        ARR_ART42_ED2022_07, ARR_ART42_ED2023_01, ARR_ART42_ED2023_10,
+        ARR_ART42_ED2024_01, ARR_ART42_ED2024_10, ARR_ART42_ED2025_01,
+        ARR_ART42_ED2025_10, ARR_ART42_ED2026_10)
+rule AideFoyerNonVersee(m: Menage, type_aide: TypeAide, aide: Money) strict {
+    label fr official "Lorsque le montant mensuel de l'aide est inférieur à un montant fixé par arrêté, il n'est pas procédé à son versement";
+    label ru unofficial "Фойе: итог ниже порога — выплата не производится";
+    when secteur_logement_foyer(m) and aide_demandee(m, type_aide)
+        and aide_foyer_apres_contributions(m, aide)
+        and aide < seuil_versement_foyer(type_aide);
+    then aide_non_versee(m);
+}

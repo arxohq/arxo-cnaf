@@ -1,0 +1,19 @@
+// 2025 duration ceiling met: 60 days paid within a retained maximum
+// of 66 (decree ceiling as assumed input, B-PFAJPA-D168).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-duree-max-ok" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-dm-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-dm"), entity_ref("urn:fr:css:ajpa:case:aide-dm")) { origin case_input; }
+        assert "ajpa-dm-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-dm")) { origin adjudicated; }
+        assert "ajpa-dm-03": jours_ajpa_verses(entity_ref("urn:fr:css:ajpa:case:aidant-dm"), 60) { origin case_input; }
+        assert "ajpa-dm-04": duree_max_retenue(entity_ref("urn:fr:css:ajpa:case:aidant-dm"), 66) { origin case_input; }
+    }
+    evaluate truth(ajpa_dans_duree_max(entity_ref("urn:fr:css:ajpa:case:aidant-dm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

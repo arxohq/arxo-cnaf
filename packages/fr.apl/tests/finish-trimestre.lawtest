@@ -1,0 +1,56 @@
+// Quarterly review (15): the three-month period, nine-month maintenance
+// with the new-request duty, and RSA alignment.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-trimestre-periode" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; deadline_policy APL_TRIMESTRE; interpretation PpPlancherFinal; }
+        assert "ftri-01": date_conditions_reunies(entity_ref("urn:fr:apl:case:ftri"), @2022-01-15) { origin case_input; }
+    }
+    evaluate truth(periode_calcul_trimestre(entity_ref("urn:fr:apl:case:ftri"), @2022-01-15, @2022-04-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-trimestre-neuf-mois" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "ft9m-01": versement_nul_neuf_mois(entity_ref("urn:fr:apl:case:ft9m")) { origin case_input; }
+    }
+    evaluate truth(droit_maintenu_sans_demande(entity_ref("urn:fr:apl:case:ft9m")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-trimestre-nouvelle-demande" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "ftnd-01": delai_neuf_mois_expire(entity_ref("urn:fr:apl:case:ftnd")) { origin case_input; }
+        assert "ftnd-02": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:ftnd")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DeposerNouvelleDemande, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-trimestre-alignement" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "ftal-01": echeance_trimestre_rsa(entity_ref("urn:fr:apl:case:ftal"), @2022-03-31) { origin case_input; }
+    }
+    evaluate truth(echeance_trimestre_apl(entity_ref("urn:fr:apl:case:ftal"), @2022-03-31));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

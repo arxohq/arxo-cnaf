@@ -1,0 +1,32 @@
+// (а) граница: документ NON_EXECUTABLE: INEXACT_DIVISION — (а)-граница: двенадцатая часть суммы транш L0 «le total étant divisé par douze» десятично непредставима, текст политики округления не называет, а прочтение D-82 (ArrondiCentimeHalfUp) L0 не покрывает — DECISIONS D-82 «Не покрыто: L0 фойе и приобретения»; наш ответ — отказ INEXACT_DIVISION по замыслу (§58), их число — округление денежного типа Catala (D. 832-26 2-й абзац через D. 842-6)
+// Файл отложен: в [tests] не входит, ждёт квалификации либо закрепления акта.
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_al_accession_propriete.catala_fr, scope Exemple1.
+// ИХ ОЖИДАНИЕ: mensualité_minimale = 267.90.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-al_accession_propriete-exemple1-mensualit-minimale" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "al_accession_propriete-exemple1-01": secteur_accession_allocations(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1")) { origin case_input; }
+        assert "al_accession_propriete-exemple1-02": aide_demandee(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), ALF) { origin case_input; }
+        assert "al_accession_propriete-exemple1-03": ressources_du_menage(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), 17500 EUR) { origin case_input; }
+        assert "al_accession_propriete-exemple1-04": zone_du_logement(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), ZONE_II) { origin case_input; }
+        assert "al_accession_propriete-exemple1-05": mensualite_declaree(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), 450 EUR) { origin case_input; }
+        assert "al_accession_propriete-exemple1-06": personnes_a_charge(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), 2) { origin case_input; }
+        assert "al_accession_propriete-exemple1-07": situation_familiale(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), COUPLE) { origin case_input; }
+        assert "al_accession_propriete-exemple1-08": territoire(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), OUTRE_MER) { origin case_input; }
+        assert "al_accession_propriete-exemple1-09": type_travaux(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), PAS_DE_TRAVAUX) { origin case_input; }
+        assert "al_accession_propriete-exemple1-10": mode_propriete(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "al_accession_propriete-exemple1-11": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), false) { origin case_input; }
+        assert "al_accession_propriete-exemple1-12": vintage_certificat(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), CERTIFICAT_DEPUIS_01_10_2015) { origin case_input; }
+        assert "al_accession_propriete-exemple1-13": base_plancher_ressources(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), COEFFICIENT_MENSUALITE) { origin case_input; }
+    }
+    evaluate truth(mensualite_minimale_al(entity_ref("urn:fr:apl:case:al_accession_propriete-exemple1"), 267.9 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

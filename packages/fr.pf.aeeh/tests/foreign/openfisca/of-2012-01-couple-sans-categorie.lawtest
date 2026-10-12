@@ -1,0 +1,27 @@
+// OpenFisca AEEH case 2 (tests/formulas/aeeh.yaml, period 2012-01):
+// couple, one 9-year-old disabled child, no handicap level. Their BMAF
+// 395.04, their expectation 395.04 x 0.32 (base only). Mapping: no level
+// = sans_complement + sans_mpi. Their case -> our answer -> class:
+// REPORT.md (OpenFisca, 2).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-of-2012-01-couple-sans-categorie" {
+    given {
+        context { decision_time @2012-01-15T12:00:00Z; knowledge_time @2012-01-15T12:00:00Z; legal_time @2012-01-15; timezone "Europe/Paris"; }
+        assert "of1201b-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-couple-nc"), entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant-nc")) { origin case_input; }
+        assert "of1201b-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant-nc")) { origin adjudicated; }
+        assert "of1201b-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant-nc"), 395.04 EUR) { origin case_input; }
+        assert "of1201b-04": sans_complement(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant-nc")) { origin case_input; }
+        assert "of1201b-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant-nc")) { origin case_input; }
+    }
+    evaluate truth(aeeh_montant_base(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant-nc"), 126.4128 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_total(entity_ref("urn:fr:pf-aeeh:foreign:of-2012-01-enfant-nc"), 126.4128 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,27 @@
+// Recovery bridge: a notified overpayment of 100.00 within two
+// years, no suspensive appeal, is recoverable (L. 262-46 ;
+// R. 262-92/92-1) and therefore follows CSS D. 553-1/2/4/5
+// (D. 262-94-2). The D. 553 modalities themselves are owned by the
+// payment-core finish group and arrive external
+// (B-RSA-D553-MODALITES); this case proves the bridge head fires on
+// the 05-recouvrement output.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-recouvrement-suit-d553" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "d553-01": indu_montant(entity_ref("urn:fr:rsa:case:recouvrement-suit-d553"), 100.00 EUR) { origin case_input; }
+        assert "d553-02": prescription_cours(entity_ref("urn:fr:rsa:case:recouvrement-suit-d553"), 1) { origin case_input; }
+        assert "d553-03": notification_indu(entity_ref("urn:fr:rsa:case:recouvrement-suit-d553")) { origin case_input; }
+    }
+    evaluate truth(indu_recouvrable(entity_ref("urn:fr:rsa:case:recouvrement-suit-d553"), 100.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recouvrement_suit_d553(entity_ref("urn:fr:rsa:case:recouvrement-suit-d553")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

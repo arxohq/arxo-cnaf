@@ -1,0 +1,21 @@
+// D553-4 perfect tie silence (PC-R05-01): A and B same date 2022-01-10, same amount 50 EUR; no order, no allocation for the tied pair (NEITHER); complete ledger.
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-d5534-egalite-parfaite-neither" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "d5534-ep1": indu_constate_le(entity_ref("urn:fr:pv:case:indu-a"), entity_ref("urn:fr:pv:case:alloc"), @2022-01-10, 50.00 EUR) { origin case_input; }
+        assert "d5534-ep2": indu_constate_le(entity_ref("urn:fr:pv:case:indu-b"), entity_ref("urn:fr:pv:case:alloc"), @2022-01-10, 50.00 EUR) { origin case_input; }
+        assert "d5534-ep3": indu_solde_restant(entity_ref("urn:fr:pv:case:indu-a"), entity_ref("urn:fr:pv:case:alloc"), 50.00 EUR) { origin case_input; }
+        assert "d5534-ep4": indu_solde_restant(entity_ref("urn:fr:pv:case:indu-b"), entity_ref("urn:fr:pv:case:alloc"), 50.00 EUR) { origin case_input; }
+        assert "d5534-ep5": indus_multiples(entity_ref("urn:fr:pv:case:alloc")) { origin case_input; }
+        assert "d5534-ep6": retenue_unique_indus_multiples(entity_ref("urn:fr:pv:case:alloc")) { origin case_input; }
+        assert "d5534-ep7": registre_indus_complet(entity_ref("urn:fr:pv:case:alloc")) { origin case_input; }
+        assert "d5534-ep8": prelevement_mensuel(entity_ref("urn:fr:pv:case:alloc"), 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(retenue_affectee_indu(entity_ref("urn:fr:pv:case:indu-a"), entity_ref("urn:fr:pv:case:alloc")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

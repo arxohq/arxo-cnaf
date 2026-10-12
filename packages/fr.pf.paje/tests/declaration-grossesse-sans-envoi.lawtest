@@ -1,0 +1,21 @@
+// D. 532-1, performance control (FULL RETURN 03, R02-01 + RETURN04,
+// R03-01): a conforming medical document exists and the fourteen-week
+// window is established (2025-01-06–2025-04-14), but no both-destination
+// sending is established — the declaration does not count as made.
+// Control — declaration-grossesse-effectuee-conforme.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-declaration-sans-envoi" {
+    given {
+        context { decision_time @2025-03-15T12:00:00Z; knowledge_time @2025-03-15T12:00:00Z; legal_time @2025-03-15; timezone "Europe/Paris"; }
+        assert "decl-se-01": document_medical_conforme(entity_ref("urn:fr:paje:case:decl-se"), entity_ref("urn:fr:paje:enfant:decl-se")) { origin adjudicated; }
+        assert "decl-se-02": debut_grossesse(entity_ref("urn:fr:paje:case:decl-se"), entity_ref("urn:fr:paje:enfant:decl-se"), @2025-01-06) { origin adjudicated; }
+        assert "decl-se-03": date_limite_declaration(entity_ref("urn:fr:paje:case:decl-se"), entity_ref("urn:fr:paje:enfant:decl-se"), @2025-04-14) { origin adjudicated; }
+    }
+    evaluate truth(declaration_grossesse_effectuee(entity_ref("urn:fr:paje:case:decl-se"), entity_ref("urn:fr:paje:enfant:decl-se")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

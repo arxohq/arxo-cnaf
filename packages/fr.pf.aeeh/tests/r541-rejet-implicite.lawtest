@@ -1,0 +1,32 @@
+// R. 541-6, silence (DateRejetImplicite/RejetImplicite): filing on
+// 2024-01-10 sets the exclusive +4-month threshold at 2024-05-10; the
+// head is that threshold, not the event date. Silence still kept on
+// 2024-05-11 is a rejection, while appreciation exactly on the
+// threshold date is not («plus de quatre mois»).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-rejet-implicite" {
+    given {
+        context { deadline_policy AEEH_MOIS_CIVIL; decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "r541-ri-01": demande_aeeh_deposee(entity_ref("urn:fr:pf-aeeh:case:enfant-ri"), @2024-01-10) { origin case_input; }
+        assert "r541-ri-02": date_appreciation(entity_ref("urn:fr:pf-aeeh:case:enfant-ri"), @2024-05-11) { origin case_input; }
+        assert "r541-ri-03": sans_decision_cdaph(entity_ref("urn:fr:pf-aeeh:case:enfant-ri")) { origin case_input; }
+        assert "r541-ri-04": demande_aeeh_deposee(entity_ref("urn:fr:pf-aeeh:case:enfant-ri-limite"), @2024-01-10) { origin case_input; }
+        assert "r541-ri-05": date_appreciation(entity_ref("urn:fr:pf-aeeh:case:enfant-ri-limite"), @2024-05-10) { origin case_input; }
+        assert "r541-ri-06": sans_decision_cdaph(entity_ref("urn:fr:pf-aeeh:case:enfant-ri-limite")) { origin case_input; }
+    }
+    evaluate truth(date_rejet_implicite(entity_ref("urn:fr:pf-aeeh:case:enfant-ri"), @2024-05-10));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_implicite(entity_ref("urn:fr:pf-aeeh:case:enfant-ri")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_implicite(entity_ref("urn:fr:pf-aeeh:case:enfant-ri-limite")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

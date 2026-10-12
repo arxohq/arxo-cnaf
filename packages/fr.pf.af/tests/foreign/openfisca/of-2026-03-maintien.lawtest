@@ -1,0 +1,55 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// OpenFisca AF 2026-03 maintien: born 2012-02-28, the 14th birthday
+// (2026-02-28) predates 01.03.2026, so 14 is kept (decree 2026-138
+// art. 2). Eldest of three, included by the three-or-more rule:
+// 0.16 x 400 = 64.00.
+// Their case -> our answer -> class: REPORT.md (OpenFisca, 5).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-of-2026-03-maintien" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "of2603m-01": territoire(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), METROPOLE) { origin case_input; }
+        assert "of2603m-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), 3) { origin case_input; }
+        assert "of2603m-03": ressources_menage(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), 30000 EUR) { origin case_input; }
+        assert "of2603m-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), 55950 EUR) { origin case_input; }
+        assert "of2603m-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), 78300 EUR) { origin case_input; }
+        assert "of2603m-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), 5595 EUR) { origin case_input; }
+        assert "of2603m-05": bmaf_retenu(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), 400.00 EUR) { origin case_input; }
+        assert "of2603m-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), 1) { origin case_input; }
+        assert "of2603m-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), 0) { origin case_input; }
+        assert "of2603m-08": forfait_total_menage(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), 0 EUR) { origin case_input; }
+        assert "of2603m-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), 0) { origin case_input; }
+        assert "of2603m-10": foyer_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien")) { origin case_input; }
+        assert "of2603m-11": mois_droit(@2026-03-01) { origin case_input; }
+        assert "of2603m-12": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e1")) { origin case_input; }
+        assert "of2603m-13": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e2")) { origin case_input; }
+        assert "of2603m-14": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien"), entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e3")) { origin case_input; }
+        assert "of2603m-15": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e1")) { origin case_input; }
+        assert "of2603m-16": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e2")) { origin case_input; }
+        assert "of2603m-17": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e3")) { origin case_input; }
+        assert "of2603m-18": date_naissance(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e1"), @2012-02-28) { origin case_input; }
+        assert "of2603m-19": date_naissance(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e2"), @2014-01-01) { origin case_input; }
+        assert "of2603m-20": date_naissance(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e3"), @2016-01-01) { origin case_input; }
+        assert "of2603m-21": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e1")) { origin case_input; }
+        assert "of2603m-22": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e2")) { origin case_input; }
+        assert "of2603m-23": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e3")) { origin case_input; }
+        assert "of2603m-24": garde(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e1"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "of2603m-25": garde(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e2"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "of2603m-26": garde(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e3"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+    }
+    evaluate truth(majoration_eligible(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:foreign:of-2026-maintien-e1"), 64.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

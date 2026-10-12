@@ -1,0 +1,35 @@
+// Reform formula, home employee, one child: cap 15 EUR x 130 h, 50%
+// of contributions (200 -> 100.00) under the 500 EUR arrete cap;
+// part b = 650 x (1 - 3000 x 0.1238 / 10.38) = 417.42805;
+// total 517.43. Reference cost and caps are stated case facts.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-formule-domicile" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "formule-dom-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), entity_ref("urn:fr:pf-cmg:child:dom"), EMPLOYE_DOMICILE) { origin case_input; }
+        assert "formule-dom-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:formule-domicile")) { origin case_input; }
+        assert "formule-dom-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), entity_ref("urn:fr:pf-cmg:child:dom")) { origin case_input; }
+        assert "formule-dom-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:dom"), 2) { origin case_input; }
+        assert "formule-dom-05": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), 1) { origin case_input; }
+        assert "formule-dom-06": facteur_smic(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), 1.0) { origin case_input; }
+        assert "formule-dom-07": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), entity_ref("urn:fr:pf-cmg:child:dom"), 600 EUR) { origin case_input; }
+        assert "formule-dom-08": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), entity_ref("urn:fr:pf-cmg:child:dom"), 50 EUR) { origin case_input; }
+        assert "formule-dom-09": heures_remunerees(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), entity_ref("urn:fr:pf-cmg:child:dom"), 130.0) { origin case_input; }
+        assert "formule-dom-10": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), entity_ref("urn:fr:pf-cmg:child:dom"), 200 EUR) { origin case_input; }
+        assert "formule-dom-11": plafond_cotisations_domicile(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), 500 EUR) { origin case_input; }
+        assert "formule-dom-12": cout_reference_retenu(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), entity_ref("urn:fr:pf-cmg:child:dom"), 10.38 EUR) { origin case_input; }
+        assert "formule-dom-13": montant_forfaitaire_isole(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), 700 EUR) { origin case_input; }
+        assert "formule-dom-14": forfait_logement(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), 100 EUR) { origin case_input; }
+        assert "formule-dom-15": revenu_mensuel_brut(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), 3000 EUR) { origin case_input; }
+    }
+    // The rate itself is not asserted: bare Decimal literals are not
+    // exactly expressible in scenario form (D-11); the total below
+    // discriminates the rate.
+    evaluate truth(montant_cmg_du(entity_ref("urn:fr:pf-cmg:case:formule-domicile"), entity_ref("urn:fr:pf-cmg:child:dom"), 517.43 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

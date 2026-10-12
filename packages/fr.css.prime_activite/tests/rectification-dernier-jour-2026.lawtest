@@ -1,0 +1,32 @@
+// Rectification on the last window day (receipt 05-20, request
+// 06-09 = receipt+20, inclusive) of a date-certain notice, with
+// explicit director rejection within a month: P2 interruption
+// holds and D7bis is ACTIVE (R. 847-1-1 I.2.a, III;
+// PA-FE09-03/04/05).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-rectification-dernier-jour-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-25T12:00:00Z; knowledge_time @2026-06-25T12:00:00Z; legal_time @2026-06-25; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_recupere(entity_ref("urn:fr:ppa:case:rectification-dernier-jour-2026"), 300.00 EUR) { origin case_input; }
+        assert "ppa-02": constat_indu(entity_ref("urn:fr:ppa:case:rectification-dernier-jour-2026"), @2026-05-18) { origin case_input; }
+        assert "ppa-03": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:rectification-dernier-jour-2026")) { origin case_input; }
+        assert "ppa-04": notification_recouvrement(entity_ref("urn:fr:ppa:case:rectification-dernier-jour-2026"), @2026-05-19) { origin case_input; }
+        assert "ppa-05": reception_notification(entity_ref("urn:fr:ppa:case:rectification-dernier-jour-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-06": demande_rectification(entity_ref("urn:fr:ppa:case:rectification-dernier-jour-2026"), @2026-06-09) { origin case_input; }
+        assert "ppa-07": decision_rectification_rejet(entity_ref("urn:fr:ppa:case:rectification-dernier-jour-2026"), @2026-06-20) { origin case_input; }
+        assert "ppa-08": directeur_de(entity_ref("urn:fr:ppa:org:directeur"), entity_ref("urn:fr:ppa:org:caisse")) { origin case_input; }
+        assert "ppa-09": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:rectification-dernier-jour-2026")) { origin case_input; }
+        assert "ppa-10": decision_rectification_rejet_directeur(entity_ref("urn:fr:ppa:case:rectification-dernier-jour-2026"), @2026-06-20, entity_ref("urn:fr:ppa:org:directeur")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NotifierIndu, ACTIVE);
+    expect position(NotifierRejetRectification, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(interruption_delai_cra(entity_ref("urn:fr:ppa:case:rectification-dernier-jour-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

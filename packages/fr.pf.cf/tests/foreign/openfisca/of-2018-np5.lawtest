@@ -1,0 +1,42 @@
+// OpenFisca Non Passant 5 (2018-01): three children, N-2 30000 +
+// 25000 = 55000 above the 36000 ceiling (and far above any twelve
+// monthly amounts). Their cf = 0; ours: no right, no differential,
+// no conclusion. Class (c) shape.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-of-2018-np5" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2018-01-15T12:00:00Z; knowledge_time @2018-01-15T12:00:00Z; legal_time @2018-01-15; timezone "Europe/Paris"; }
+        assert "on5-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), entity_ref("urn:fr:pf-cf:foreign:of-2018-np5-e1")) { origin case_input; }
+        assert "on5-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), entity_ref("urn:fr:pf-cf:foreign:of-2018-np5-e2")) { origin case_input; }
+        assert "on5-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), entity_ref("urn:fr:pf-cf:foreign:of-2018-np5-e3")) { origin case_input; }
+        assert "on5-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5-e1")) { origin case_input; }
+        assert "on5-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5-e2")) { origin case_input; }
+        assert "on5-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5-e3")) { origin case_input; }
+        assert "on5-07": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5-e1"), @2005-06-01) { origin case_input; }
+        assert "on5-08": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5-e2"), @2007-06-01) { origin case_input; }
+        assert "on5-09": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5-e3"), @2010-06-01) { origin case_input; }
+        assert "on5-10": mois_droit(@2018-01-01) { origin case_input; }
+        assert "on5-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), 3) { origin case_input; }
+        assert "on5-12": ressources_menage(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), 55000 EUR) { origin case_input; }
+        assert "on5-13": plafond_base_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), 20000 EUR) { origin case_input; }
+        assert "on5-13a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), 5000 EUR) { origin case_input; }
+        assert "on5-13b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), 6000 EUR) { origin case_input; }
+        assert "on5-13c": plafond_base_majore(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), 10000 EUR) { origin case_input; }
+        assert "on5-13d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), 2500 EUR) { origin case_input; }
+        assert "on5-13e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), 3000 EUR) { origin case_input; }
+        assert "on5-14": foyer_du_cas(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5")) { origin case_input; }
+        assert "on5-15": bmaf_retenu(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), 320.00 EUR) { origin case_input; }
+    }
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_differentiel_du(entity_ref("urn:fr:pf-cf:foreign:of-2018-np5"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

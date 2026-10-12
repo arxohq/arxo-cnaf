@@ -1,0 +1,28 @@
+// (б) их дефект против текста: наше 135.67943, их 129.65, разница 6.02943 — (б) следствие строки equivalence_loyer_minimale того же дела: редакция ст. 31 арретэ ARRETE_ED2022_01 (in_force [2022-01-01, 2022-07-01), apl/01-sources.law:228) с одной таблицей для обоих абзацев D. 832-26 (apl/sources/fr-apl/arrete-2022-01.txt:119); их L0/E0 — вторая таблица b) редакции с 01.07.2022 (arrete-2022-07.txt:123-124). Реплика их чтения нашей же цепочкой D. 832-24 (K = 0,6 и E = 350 — у обоих РАВНО): K × (E − E0) = 0,6 × (350 − 124,64) = 135,216; − минорация ст. 28 5 € = 130,216; шаг взносов D. 823-16 (0,5 %: 0,65108; 129,56492 → 129 €; + 0,65108) = 129,65108 → их 129,65. Наше по тексту: 0,6 × (350 − 115,19) = 140,886 − 5 = 135,886 → 135 + 0,67943 = 135,67943
+// Файл отложен: в [tests] не входит, ждёт квалификации либо закрепления акта.
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_apl_logement_foyer.catala_fr, scope CasTest5.
+// ИХ ОЖИДАНИЕ: montant = 129.65.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-apl_logement_foyer-castest5-montant" {
+    given {
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "apl_logement_foyer-castest5-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest5")) { origin case_input; }
+        assert "apl_logement_foyer-castest5-02": aide_demandee(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest5"), APL) { origin case_input; }
+        assert "apl_logement_foyer-castest5-03": territoire(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest5"), METROPOLE) { origin case_input; }
+        assert "apl_logement_foyer-castest5-04": type_logement_foyer(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest5"), JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE) { origin case_input; }
+        assert "apl_logement_foyer-castest5-05": redevance(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest5"), 350 EUR) { origin case_input; }
+        assert "apl_logement_foyer-castest5-06": ressources_du_menage(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest5"), 7500 EUR) { origin case_input; }
+        assert "apl_logement_foyer-castest5-07": personnes_a_charge(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest5"), 0) { origin case_input; }
+        assert "apl_logement_foyer-castest5-08": situation_familiale(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest5"), PERSONNE_SEULE) { origin case_input; }
+        assert "apl_logement_foyer-castest5-09": zone_du_logement(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest5"), ZONE_I) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest5"), 129.65 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

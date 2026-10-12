@@ -1,0 +1,22 @@
+// Above the L. 531-2 ceiling (35842 € > 35841.00 €): no base right at any
+// rate — the 83.30 € award is NEITHER.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-base-partiel-plafond-depasse" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "base-pd-01": enfant_en_charge(entity_ref("urn:fr:paje:case:base-pd"), entity_ref("urn:fr:paje:enfant:base-pd")) { origin case_input; }
+        assert "base-pd-02": condition_age_base(entity_ref("urn:fr:paje:enfant:base-pd")) { origin adjudicated; }
+        assert "base-pd-03": cohorte_enfant(entity_ref("urn:fr:paje:enfant:base-pd"), NE_APARTIR_AVRIL_2018) { origin adjudicated; }
+        assert "base-pd-04": ressources_annuelles(entity_ref("urn:fr:paje:case:base-pd"), 35842 EUR) { origin case_input; }
+        assert "base-pd-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:base-pd"), 30000 EUR) { origin case_input; }
+        assert "base-pd-06": bmaf_applicable(entity_ref("urn:fr:paje:case:base-pd"), 400.00 EUR) { origin case_input; }
+        assert "base-pd-07": mois_eligible_base(entity_ref("urn:fr:paje:case:base-pd"), entity_ref("urn:fr:paje:enfant:base-pd"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(base_attribuee(entity_ref("urn:fr:paje:case:base-pd"), entity_ref("urn:fr:paje:enfant:base-pd"), 83.30 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

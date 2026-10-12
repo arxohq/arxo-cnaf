@@ -1,0 +1,23 @@
+// Pending appeal against recovery: recovery suspended (L.845-3 al. 2);
+// the recovered amount is affirmatively false while the stay lasts
+// (PA-R4-10; was NEITHER, incoherent with the Belnap-join FALSE on
+// a present contrary used since the M-repair).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-indu-sursis" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_constate(entity_ref("urn:fr:ppa:case:indu-sursis"), 200.00 EUR) { origin case_input; }
+        assert "ppa-02": recours_suspensif(entity_ref("urn:fr:ppa:case:indu-sursis")) { origin case_input; }
+    }
+    evaluate truth(recouvrement_suspendu(entity_ref("urn:fr:ppa:case:indu-sursis")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(indu_recupere(entity_ref("urn:fr:ppa:case:indu-sursis"), 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

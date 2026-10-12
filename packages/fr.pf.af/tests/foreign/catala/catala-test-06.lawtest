@@ -1,0 +1,40 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Catala AF Test6 (2020-05-01, Guadeloupe, resources 78 830):
+// a 10-year-old plus a child born 2020-09-25 (after the current
+// date), both counted by their engine. Fund count 2 (B-PFAF-COMPTAGE;
+// the unborn opens no right upstream): band 2 mirror, 64.00.
+// Their case -> our answer -> class: REPORT.md (Catala, 6).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-catala-test-06" {
+    given {
+        context { decision_time @2020-05-01T12:00:00Z; knowledge_time @2020-05-01T12:00:00Z; legal_time @2020-05-01; timezone "Europe/Paris"; }
+        assert "ct06-01": territoire(entity_ref("urn:fr:pf-af:foreign:catala-06"), GUADELOUPE) { origin case_input; }
+        assert "ct06-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:foreign:catala-06"), 2) { origin case_input; }
+        assert "ct06-03": ressources_menage(entity_ref("urn:fr:pf-af:foreign:catala-06"), 78830 EUR) { origin case_input; }
+        assert "ct06-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:foreign:catala-06"), 55950 EUR) { origin case_input; }
+        assert "ct06-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:foreign:catala-06"), 78300 EUR) { origin case_input; }
+        assert "ct06-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:foreign:catala-06"), 5595 EUR) { origin case_input; }
+        assert "ct06-05": bmaf_retenu(entity_ref("urn:fr:pf-af:foreign:catala-06"), 400.00 EUR) { origin case_input; }
+        assert "ct06-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:foreign:catala-06"), 0) { origin case_input; }
+        assert "ct06-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:foreign:catala-06"), 0) { origin case_input; }
+        assert "ct06-08": forfait_total_menage(entity_ref("urn:fr:pf-af:foreign:catala-06"), 0 EUR) { origin case_input; }
+        assert "ct06-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:foreign:catala-06"), 0) { origin case_input; }
+        assert "ct06-10": foyer_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-06")) { origin case_input; }
+        assert "ct06-11": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:catala-06"), entity_ref("urn:fr:pf-af:foreign:catala-06-e1")) { origin case_input; }
+        assert "ct06-12": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-06-e1")) { origin case_input; }
+        assert "ct06-13": date_naissance(entity_ref("urn:fr:pf-af:foreign:catala-06-e1"), @2009-11-10) { origin case_input; }
+        assert "ct06-14": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-06-e1")) { origin case_input; }
+        assert "ct06-15": garde(entity_ref("urn:fr:pf-af:foreign:catala-06-e1"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+    }
+    evaluate truth(montant_mensuel_af_dom(entity_ref("urn:fr:pf-af:foreign:catala-06"), 64.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

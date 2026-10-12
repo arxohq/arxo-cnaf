@@ -1,0 +1,52 @@
+// Couple, September 2024, no flat-rate input at all: everything is BUILT from the pinned
+// texts. Base 635.71 (decree 2024-396 art. 1) x 1.5 (R.262-1, second person) = 953.565;
+// housing flat-rate for two persons 16 % (R.262-9) = 152.5704, the 200.00 aid received is
+// capped at it (R.262-10); declared resources 167.00 a month (100 + 67, two earners).
+// Intermediate amount per reference month: 953.565 - 167.00 - 152.5704 = 633.9946, the
+// three equal months average to the same figure (R.262-7 I), allowance = amount due
+// (L.262-2 al. 2). Same facts as OpenFisca case rsa.yaml #20, whose float32 code gives 633.99.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-decret-couple-trimestre" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2024-09-15T12:00:00Z; knowledge_time @2024-09-15T12:00:00Z; legal_time @2024-09-15; timezone "Europe/Paris"; }
+        assert "mfdct-01": fr.minima.ressources::foyer_du_cas(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre")) { origin case_input; }
+        assert "mfdct-02": fr.minima.ressources::mois_demande(@2024-09-01) { origin case_input; }
+        assert "mfdct-03": fr.minima.ressources::mois_reference(@2024-06-01, @2024-07-01, @2024-08-01) { origin case_input; }
+        assert "mfdct-04": fr.minima.ressources::nb_personnes_forfait(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), 2) { origin case_input; }
+        assert "mfdct-05": fr.minima.ressources::logement(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), AUTRE) { origin case_input; }
+        assert "mfdct-06": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), 2) { origin case_input; }
+        assert "mfdct-07": mois_droit(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-09-01) { origin case_input; }
+        assert "mfdct-08": residence_stable(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre")) { origin case_input; }
+        assert "mfdct-09": sejour_travail_condition(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre")) { origin case_input; }
+        assert "mfdct-10": conjoint_enfants_comptes(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre")) { origin case_input; }
+        assert "mfdct-11": age_charge_condition(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre")) { origin case_input; }
+        assert "mfdct-12": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-06-01, 167.00 EUR) { origin case_input; }
+        assert "mfdct-13": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-06-01, 0 EUR) { origin case_input; }
+        assert "mfdct-14": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-06-01, 200.00 EUR) { origin case_input; }
+        assert "mfdct-15": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-07-01, 167.00 EUR) { origin case_input; }
+        assert "mfdct-16": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-07-01, 0 EUR) { origin case_input; }
+        assert "mfdct-17": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-07-01, 200.00 EUR) { origin case_input; }
+        assert "mfdct-18": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-08-01, 167.00 EUR) { origin case_input; }
+        assert "mfdct-19": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-08-01, 0 EUR) { origin case_input; }
+        assert "mfdct-20": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-08-01, 200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(fr.minima.ressources::mf_mois(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-06-01, 953.565 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fr.minima.ressources::plafond_forfait_logement(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), 152.5704 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fr.minima.ressources::montant_du_trimestre(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), 633.9946 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(allocation_mensuelle(entity_ref("urn:fr:rsa:case:mf-decret-couple-trimestre"), @2024-09-01, 633.9946 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

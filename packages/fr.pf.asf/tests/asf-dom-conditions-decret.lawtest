@@ -1,0 +1,42 @@
+// Decree conditions in the DOM after the D76 territory split:
+// D. 755-7 applicability needs department residence with provenance
+// (Guadeloupe department case: holds; Saint-Martin collectivity-only
+// case: silent; no-evidence control: silent), while D. 755-8 rate
+// parity is generic Title V parity on collectivity residence (holds
+// in both residence worlds, silent only without residence).
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-dom-conditions-decret" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "adc-01": residence_dom(entity_ref("urn:fr:pf-asf:case:dom-conditions-dept")) { origin case_input; }
+        assert "adc-02": residence_departement_dom(entity_ref("urn:fr:pf-asf:case:dom-conditions-dept")) { origin case_input; }
+        assert "adc-03": residence_dom(entity_ref("urn:fr:pf-asf:case:dom-conditions-sm")) { origin case_input; }
+    }
+    evaluate truth(asf_metro_applicable_dom(entity_ref("urn:fr:pf-asf:case:dom-conditions-dept")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_taux_parite_dom(entity_ref("urn:fr:pf-asf:case:dom-conditions-dept")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_metro_applicable_dom(entity_ref("urn:fr:pf-asf:case:dom-conditions-sm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_taux_parite_dom(entity_ref("urn:fr:pf-asf:case:dom-conditions-sm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_metro_applicable_dom(entity_ref("urn:fr:pf-asf:case:dom-conditions-out")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_taux_parite_dom(entity_ref("urn:fr:pf-asf:case:dom-conditions-out")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

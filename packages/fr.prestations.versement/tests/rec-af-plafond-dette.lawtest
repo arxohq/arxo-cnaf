@@ -1,0 +1,22 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-rec-af-plafond-dette" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "brut": fr.pf.af::af_montant_du(entity_ref("urn:fr:pv:case:allocataire"), 192.00 EUR) { origin case_input; }
+        assert "indu": fr.pf.core::indu_constate(entity_ref("urn:fr:pv:case:allocataire"), 10.00 EUR) { origin case_input; }
+        assert "report": rsa_indu_reporte_sur_pf(entity_ref("urn:fr:pv:case:allocataire"), 0 EUR) { origin case_input; }
+        assert "pa": pa_indu_reporte_sur_pf(entity_ref("urn:fr:pv:case:allocataire"), 0 EUR) { origin case_input; }
+        // D-42: the stated scale rate 0.25 is gone (contract (b), PC-R07-39): the levy
+        // arrives as the Money amount the fund applies; same case, 0.25 x AF echeance net of CRDS
+        // 191.04 = 47.76 EUR. Carry pairs carry their lawful-carry gate (PC-R07-36).
+        assert "levy": prelevement_mensuel_declare(entity_ref("urn:fr:pv:case:allocataire"), 47.76 EUR) { origin case_input; }
+        assert "levy-rsa-licite": report_rsa_sur_pf_licite(entity_ref("urn:fr:pv:case:allocataire")) { origin case_input; }
+        assert "levy-pa-licite": report_pa_sur_pf_licite(entity_ref("urn:fr:pv:case:allocataire")) { origin case_input; }
+    }
+    evaluate truth(net_verse_af(entity_ref("urn:fr:pv:case:allocataire"), 181.04 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

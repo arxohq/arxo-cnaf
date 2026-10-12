@@ -1,0 +1,32 @@
+// Свой сценарий: дел этих секторов на заморских территориях нет ни у Catala, ни
+// у OpenFisca. Факт ресурсов не подан намеренно — этому шагу он не нужен, а с ним
+// сработал бы расчёт E0 либо L0, чей отказ поразил бы весь документ.
+//
+// ШАГ: плафон мензуальности (ст. 33, винтаж «с 01/10/19», зона II, состав C+2) —
+// 379,15 €. Статья 33 не менялась с 1 июля 2022 года, и строка значений у неё
+// одна на четыре закреплённые редакции; сценарий показывает, что месяц права
+// 2024 года в её покрытие входит.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-accession-al-plafond-2024" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "outremer-accession-al-plafond-2024-01": secteur_accession_allocations(entity_ref("urn:fr:apl:case:om-acc-2024")) { origin case_input; }
+        assert "outremer-accession-al-plafond-2024-02": aide_demandee(entity_ref("urn:fr:apl:case:om-acc-2024"), ALF) { origin case_input; }
+        assert "outremer-accession-al-plafond-2024-03": zone_du_logement(entity_ref("urn:fr:apl:case:om-acc-2024"), ZONE_II) { origin case_input; }
+        assert "outremer-accession-al-plafond-2024-04": situation_familiale(entity_ref("urn:fr:apl:case:om-acc-2024"), COUPLE) { origin case_input; }
+        assert "outremer-accession-al-plafond-2024-05": personnes_a_charge(entity_ref("urn:fr:apl:case:om-acc-2024"), 2) { origin case_input; }
+        assert "outremer-accession-al-plafond-2024-06": vintage_certificat(entity_ref("urn:fr:apl:case:om-acc-2024"), CERTIFICAT_DEPUIS_01_10_2019) { origin case_input; }
+        assert "outremer-accession-al-plafond-2024-07": mode_propriete(entity_ref("urn:fr:apl:case:om-acc-2024"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "outremer-accession-al-plafond-2024-08": territoire(entity_ref("urn:fr:apl:case:om-acc-2024"), OUTRE_MER) { origin case_input; }
+        assert "outremer-accession-al-plafond-2024-09": mensualite_declaree(entity_ref("urn:fr:apl:case:om-acc-2024"), 500 EUR) { origin case_input; }
+        assert "outremer-accession-al-plafond-2024-10": base_plancher_ressources(entity_ref("urn:fr:apl:case:om-acc-2024"), COEFFICIENT_MENSUALITE) { origin case_input; }
+        assert "outremer-accession-al-plafond-2024-11": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:om-acc-2024"), false) { origin case_input; }
+    }
+    evaluate truth(plafond_mensualite_al(entity_ref("urn:fr:apl:case:om-acc-2024"), 379.15 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

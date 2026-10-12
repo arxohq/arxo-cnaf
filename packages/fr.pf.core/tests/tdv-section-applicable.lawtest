@@ -1,0 +1,15 @@
+// Section scope: ARS claim under examination - the lifestyle section applies (R. 553-3).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-section-applicable" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-section-applicable-01": prestation_soumise_section(entity_ref("urn:fr:pf:case:examine")) { origin case_input; }
+    }
+    evaluate truth(section_train_vie_applicable(entity_ref("urn:fr:pf:case:examine")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

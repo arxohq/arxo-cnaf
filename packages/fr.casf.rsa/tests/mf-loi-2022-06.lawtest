@@ -1,0 +1,21 @@
+// The window opens on 1 July 2022: June 2022 still rests on decree 2022-699 (575.52), the
+// reading selected adds no second value (598.54 is not derived).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-loi-2022-06" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; interpretation MfJuillet2022ArrondiCentime; }
+        assert "mfl-06-01": mois_droit(entity_ref("urn:fr:rsa:case:mf-loi-2022-06"), @2022-06-01) { origin case_input; }
+        assert "mfl-06-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-loi-2022-06"), 1) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-loi-2022-06"), 575.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-loi-2022-06"), 598.54 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

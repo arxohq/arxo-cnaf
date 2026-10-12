@@ -1,0 +1,384 @@
+// Claim filing and instruction (D.262-26/27/28/29/30).
+//
+// DEONTIC MAP:
+// - D.262-26 "peut être déposée" is five claimant liberties, one per
+//   venue, each with its article condition (board decision, delegation,
+//   France Travail empowerment); the 2024-07-01 Pôle emploi rename is
+//   read and immaterial to the norms (single rules spanning the whole
+//   window, predecessor fragments cited);
+// - D.262-27 al.1 is the France Travail board liberty to take on
+//   instruction; al.2 (modalities fixed by convention) gates the
+//   institutional empowerment ft_habilite_instruire, which enables the
+//   D.262-26 e) venue; the convention's conclusion itself is an
+//   inter-institutional act arriving established;
+// - D.262-28 gratuitous instruction is two prohibitions (body, department
+//   services) on charging, each bound to the service/body that received
+//   the filing (« auprès desquels elles ont été déposées »); an
+//   instructor that did not receive the filing owes nothing;
+// - D.262-29 joint quality engagement is two mirror duties (body side,
+//   president side) toward the claimant;
+// - D.262-30 delegation scope is the president's duty to fix the
+//   territorial scope in the delegation.
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+// `use self` is hand-maintained in nochecks authoring (no `law fix
+// imports` until the locks free). Fragment names join the block via the
+// deferred `law fix imports fr.casf.rsa` run after regenerating sources.
+use self::{
+    CASF_D262_26,
+    CASF_D262_26_ED2025_01,
+    CASF_D262_26_ED2025_06,
+    CASF_D262_26_ED2026_06,
+    CASF_D262_26_PRE202407,
+    CASF_D262_26_PRE202407_ED2021_03,
+    CASF_D262_26_PRE202407_ED2021_04,
+    CASF_D262_26_PRE202407_ED2023_01,
+    CASF_D262_26_PRE202407_ED2024_01,
+    CASF_D262_27,
+    CASF_D262_27_ED2025_01,
+    CASF_D262_27_ED2025_06,
+    CASF_D262_27_ED2026_06,
+    CASF_D262_27_PRE202407,
+    CASF_D262_27_PRE202407_ED2021_03,
+    CASF_D262_27_PRE202407_ED2021_04,
+    CASF_D262_27_PRE202407_ED2023_01,
+    CASF_D262_27_PRE202407_ED2024_01,
+    CASF_D262_28,
+    CASF_D262_28_ED2021_03,
+    CASF_D262_28_ED2021_04,
+    CASF_D262_28_ED2023_01,
+    CASF_D262_28_ED2024_01,
+    CASF_D262_28_ED2024_07,
+    CASF_D262_28_ED2025_01,
+    CASF_D262_28_ED2025_06,
+    CASF_D262_28_ED2026_06,
+    CASF_D262_29,
+    CASF_D262_29_ED2021_03,
+    CASF_D262_29_ED2021_04,
+    CASF_D262_29_ED2023_01,
+    CASF_D262_29_ED2024_01,
+    CASF_D262_29_ED2024_07,
+    CASF_D262_29_ED2025_01,
+    CASF_D262_29_ED2025_06,
+    CASF_D262_29_ED2026_06,
+    CASF_D262_30,
+    CASF_D262_30_ED2021_03,
+    CASF_D262_30_ED2021_04,
+    CASF_D262_30_ED2023_01,
+    CASF_D262_30_ED2024_01,
+    CASF_D262_30_ED2024_07,
+    CASF_D262_30_ED2025_01,
+    CASF_D262_30_ED2025_06,
+    CASF_D262_30_ED2026_06,
+    Departement,
+    Organisme,
+    convention_modalites_ft,
+    decider_instruction_ft,
+    decision_ca_instruire,
+    delegation_instruction,
+    demande_deposee_aupres,
+    demande_deposee_aupres_dept,
+    demande_rsa_deposee,
+    departement_competent,
+    depot_demande_association,
+    depot_demande_ccas,
+    depot_demande_ft,
+    depot_demande_organisme,
+    depot_demande_services,
+    engagement_qualite_defini,
+    est_association_deleguee,
+    est_ccas,
+    est_france_travail,
+    est_organisme_service,
+    exiger_frais_instruction,
+    exiger_frais_instruction_dept,
+    ft_habilite_instruire,
+    instruction_effectuee,
+    instruction_effectuee_dept,
+    organisme_competent,
+    ressort_delegation_fixe,
+};
+
+@source(
+    CASF_D262_26_PRE202407,
+    CASF_D262_26_PRE202407_ED2021_03,
+    CASF_D262_26_PRE202407_ED2021_04,
+    CASF_D262_26_PRE202407_ED2023_01,
+    CASF_D262_26_PRE202407_ED2024_01,
+    CASF_D262_26,
+    CASF_D262_26_ED2025_01,
+    CASF_D262_26_ED2025_06,
+    CASF_D262_26_ED2026_06)
+rule DepotDemandeCCAS(p: fr.minima.ressources::Personne, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "dépôt au CCAS ou CIAS qui a décidé de se charger de l'instruction (D. 262-26 a))";
+    label en unofficial "filing at the CCAS or CIAS that decided to take on instruction (D. 262-26 a))";
+    when demande_rsa_deposee(p)
+        and est_ccas(o)
+        and decision_ca_instruire(o)
+        and organisme_competent(o, p);
+    then liberty DeposerDemandeCCAS {
+        holder p;
+        action depot_demande_ccas(p, o);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_26_PRE202407,
+    CASF_D262_26_PRE202407_ED2021_03,
+    CASF_D262_26_PRE202407_ED2021_04,
+    CASF_D262_26_PRE202407_ED2023_01,
+    CASF_D262_26_PRE202407_ED2024_01,
+    CASF_D262_26,
+    CASF_D262_26_ED2025_01,
+    CASF_D262_26_ED2025_06,
+    CASF_D262_26_ED2026_06)
+rule DepotDemandeServices(p: fr.minima.ressources::Personne, d: Departement) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "dépôt aux services du département (D. 262-26 b))";
+    label en unofficial "filing at department services (D. 262-26 b))";
+    when demande_rsa_deposee(p)
+        and departement_competent(d, p);
+    then liberty DeposerDemandeServices {
+        holder p;
+        action depot_demande_services(p, d);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_26_PRE202407,
+    CASF_D262_26_PRE202407_ED2021_03,
+    CASF_D262_26_PRE202407_ED2021_04,
+    CASF_D262_26_PRE202407_ED2023_01,
+    CASF_D262_26_PRE202407_ED2024_01,
+    CASF_D262_26,
+    CASF_D262_26_ED2025_01,
+    CASF_D262_26_ED2025_06,
+    CASF_D262_26_ED2026_06)
+rule DepotDemandeAssociation(p: fr.minima.ressources::Personne, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "dépôt à l'association déléguée par le président (D. 262-26 c))";
+    label en unofficial "filing at the association delegated by the president (D. 262-26 c))";
+    when demande_rsa_deposee(p)
+        and est_association_deleguee(o)
+        and delegation_instruction(o)
+        and organisme_competent(o, p);
+    then liberty DeposerDemandeAssociation {
+        holder p;
+        action depot_demande_association(p, o);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_26_PRE202407,
+    CASF_D262_26_PRE202407_ED2021_03,
+    CASF_D262_26_PRE202407_ED2021_04,
+    CASF_D262_26_PRE202407_ED2023_01,
+    CASF_D262_26_PRE202407_ED2024_01,
+    CASF_D262_26,
+    CASF_D262_26_ED2025_01,
+    CASF_D262_26_ED2025_06,
+    CASF_D262_26_ED2026_06)
+rule DepotDemandeOrganisme(p: fr.minima.ressources::Personne, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "dépôt à l'organisme chargé du service du RSA (D. 262-26 d))";
+    label en unofficial "filing at the RSA service body (D. 262-26 d))";
+    when demande_rsa_deposee(p)
+        and est_organisme_service(o)
+        and organisme_competent(o, p);
+    then liberty DeposerDemandeOrganisme {
+        holder p;
+        action depot_demande_organisme(p, o);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_26_PRE202407,
+    CASF_D262_26_PRE202407_ED2021_03,
+    CASF_D262_26_PRE202407_ED2021_04,
+    CASF_D262_26_PRE202407_ED2023_01,
+    CASF_D262_26_PRE202407_ED2024_01,
+    CASF_D262_26,
+    CASF_D262_26_ED2025_01,
+    CASF_D262_26_ED2025_06,
+    CASF_D262_26_ED2026_06)
+rule DepotDemandeFT(p: fr.minima.ressources::Personne, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "dépôt à France Travail chargé de l'instruction (D. 262-26 e) via D. 262-27)";
+    label en unofficial "filing at the instructing France Travail (D. 262-26 e) via D. 262-27)";
+    when demande_rsa_deposee(p)
+        and ft_habilite_instruire(o)
+        and organisme_competent(o, p);
+    then liberty DeposerDemandeFT {
+        holder p;
+        action depot_demande_ft(p, o);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_27_PRE202407,
+    CASF_D262_27_PRE202407_ED2021_03,
+    CASF_D262_27_PRE202407_ED2021_04,
+    CASF_D262_27_PRE202407_ED2023_01,
+    CASF_D262_27_PRE202407_ED2024_01,
+    CASF_D262_27,
+    CASF_D262_27_ED2025_01,
+    CASF_D262_27_ED2025_06,
+    CASF_D262_27_ED2026_06)
+rule DeciderInstructionFTRule(o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le conseil d'administration de France Travail peut décider de se charger de l'instruction (D. 262-27 al. 1)";
+    label en unofficial "the France Travail board may decide to take on instruction (D. 262-27 al. 1)";
+    when est_france_travail(o);
+    then liberty DeciderInstructionFT {
+        holder o;
+        action decider_instruction_ft(o);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_27_PRE202407,
+    CASF_D262_27_PRE202407_ED2021_03,
+    CASF_D262_27_PRE202407_ED2021_04,
+    CASF_D262_27_PRE202407_ED2023_01,
+    CASF_D262_27_PRE202407_ED2024_01,
+    CASF_D262_27,
+    CASF_D262_27_ED2025_01,
+    CASF_D262_27_ED2025_06,
+    CASF_D262_27_ED2026_06)
+rule FTHabiliteInstruire(o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "France Travail habilité : décision du conseil d'administration et convention de modalités avec la CNAF et la CCMSA (D. 262-27)";
+    label en unofficial "France Travail empowered: board decision and modalities convention with CNAF and CCMSA (D. 262-27)";
+    when est_france_travail(o)
+        and decision_ca_instruire(o)
+        and convention_modalites_ft(o);
+    then ft_habilite_instruire(o);
+}
+
+@source(
+    CASF_D262_28,
+    CASF_D262_28_ED2021_03,
+    CASF_D262_28_ED2021_04,
+    CASF_D262_28_ED2023_01,
+    CASF_D262_28_ED2024_01,
+    CASF_D262_28_ED2024_07,
+    CASF_D262_28_ED2025_01,
+    CASF_D262_28_ED2025_06,
+    CASF_D262_28_ED2026_06)
+rule GratuiteInstruction(o: Organisme, p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "instruction gratuite : interdiction de faire payer l'instruction (D. 262-28)";
+    label en unofficial "free instruction: charging for instruction prohibited (D. 262-28)";
+    when instruction_effectuee(o, p)
+        and demande_deposee_aupres(o, p);
+    then prohibition InstruireGratuitement {
+        bearer o;
+        beneficiary p;
+        action exiger_frais_instruction(o, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_28,
+    CASF_D262_28_ED2021_03,
+    CASF_D262_28_ED2021_04,
+    CASF_D262_28_ED2023_01,
+    CASF_D262_28_ED2024_01,
+    CASF_D262_28_ED2024_07,
+    CASF_D262_28_ED2025_01,
+    CASF_D262_28_ED2025_06,
+    CASF_D262_28_ED2026_06)
+rule GratuiteInstructionDept(d: Departement, p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "instruction gratuite des services du département : interdiction de faire payer (D. 262-28)";
+    label en unofficial "free instruction by department services: charging prohibited (D. 262-28)";
+    when instruction_effectuee_dept(d, p)
+        and demande_deposee_aupres_dept(d, p);
+    then prohibition InstruireGratuitementDept {
+        bearer d;
+        beneficiary p;
+        action exiger_frais_instruction_dept(d, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_29,
+    CASF_D262_29_ED2021_03,
+    CASF_D262_29_ED2021_04,
+    CASF_D262_29_ED2023_01,
+    CASF_D262_29_ED2024_01,
+    CASF_D262_29_ED2024_07,
+    CASF_D262_29_ED2025_01,
+    CASF_D262_29_ED2025_06,
+    CASF_D262_29_ED2026_06)
+rule EngagementQualiteOrganisme(o: Organisme, d: Departement, p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'organisme définit en commun avec le président l'engagement de qualité de l'instruction, vers le demandeur (D. 262-29, côté organisme)";
+    label en unofficial "the body jointly defines the instruction quality commitment with the president, toward the claimant (D. 262-29, body side)";
+    when organisme_competent(o, p)
+        and departement_competent(d, p);
+    then duty DefinirEngagementQualiteOrganisme {
+        bearer o;
+        beneficiary p;
+        maintain engagement_qualite_defini(o, d) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_29,
+    CASF_D262_29_ED2021_03,
+    CASF_D262_29_ED2021_04,
+    CASF_D262_29_ED2023_01,
+    CASF_D262_29_ED2024_01,
+    CASF_D262_29_ED2024_07,
+    CASF_D262_29_ED2025_01,
+    CASF_D262_29_ED2025_06,
+    CASF_D262_29_ED2026_06)
+rule EngagementQualitePresident(o: Organisme, d: Departement, p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le président définit en commun avec l'organisme l'engagement de qualité de l'instruction, vers le demandeur (D. 262-29, côté président)";
+    label en unofficial "the president jointly defines the instruction quality commitment with the body, toward the claimant (D. 262-29, president side)";
+    when organisme_competent(o, p)
+        and departement_competent(d, p);
+    then duty DefinirEngagementQualitePresident {
+        bearer d;
+        beneficiary p;
+        maintain engagement_qualite_defini(o, d) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_30,
+    CASF_D262_30_ED2021_03,
+    CASF_D262_30_ED2021_04,
+    CASF_D262_30_ED2023_01,
+    CASF_D262_30_ED2024_01,
+    CASF_D262_30_ED2024_07,
+    CASF_D262_30_ED2025_01,
+    CASF_D262_30_ED2025_06,
+    CASF_D262_30_ED2026_06)
+rule FixerRessortDelegationRule(o: Organisme, d: Departement, p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le président fixe le ressort territorial dans la délégation d'instruction (D. 262-30)";
+    label en unofficial "the president fixes the territorial scope in the instruction delegation (D. 262-30)";
+    when delegation_instruction(o)
+        and organisme_competent(o, p)
+        and departement_competent(d, p);
+    then duty FixerRessortDelegation {
+        bearer d;
+        beneficiary o;
+        maintain ressort_delegation_fixe(o, d) during [@2021-01-01, infinity);
+    };
+}

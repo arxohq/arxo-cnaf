@@ -1,0 +1,26 @@
+// Young self-employed worker with a year mismatch: RNE entry, 24
+// months of activity, 2023 turnover 30000.00, but the retained MF
+// figure is the 2022 one (600.00). The text fixes the reference at
+// the MF "en vigueur au 1er janvier de l'année de réalisation du
+// chiffre d'affaires considéré", so the 2022 figure cannot serve a
+// 2023 turnover and the deeming does not open. Control pair of
+// jeune-tns-2023: it proves the year binding executes.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-jeune-tns-annees-decalees" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "jeun-01": jeune_18_25(entity_ref("urn:fr:rsa:case:jeune-tns-annees-decalees")) { origin case_input; }
+        assert "jeun-02": tns_non_agricole(entity_ref("urn:fr:rsa:case:jeune-tns-annees-decalees")) { origin case_input; }
+        assert "jeun-03": tns_immatriculation_rne(entity_ref("urn:fr:rsa:case:jeune-tns-annees-decalees")) { origin case_input; }
+        assert "jeun-04": tns_duree_activite_mois(entity_ref("urn:fr:rsa:case:jeune-tns-annees-decalees"), 24) { origin case_input; }
+        assert "jeun-05": tns_chiffre_affaires(entity_ref("urn:fr:rsa:case:jeune-tns-annees-decalees"), 2023, 30000.00 EUR) { origin case_input; }
+        assert "jeun-06": mf_reference_ca(entity_ref("urn:fr:rsa:case:jeune-tns-annees-decalees"), 2022, 600.00 EUR) { origin case_input; }
+    }
+    evaluate truth(condition_heures_jeune(entity_ref("urn:fr:rsa:case:jeune-tns-annees-decalees")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

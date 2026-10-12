@@ -1,0 +1,21 @@
+// Pension 120 above the 112.52 single rate: no differential (0 EUR probe, NEITHER).
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-differentiel-pension-elevee" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "odp-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:differentiel-pension-elevee"), entity_ref("urn:fr:pf-asf:case:differentiel-pension-elevee-e1")) { origin case_input; }
+        assert "odp-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:differentiel-pension-elevee-e1")) { origin case_input; }
+        assert "odp-03": motif_asf(entity_ref("urn:fr:pf-asf:case:differentiel-pension-elevee-e1"), PENSION_PARTIELLE) { origin case_input; }
+        assert "odp-04": manquement_debiteur(entity_ref("urn:fr:pf-asf:case:differentiel-pension-elevee-e1"), @2021-03-01) { origin case_input; }
+        assert "odp-05": mois_ouverture_asf(@2021-04-01) { origin case_input; }
+        assert "odp-06": pension_recue(entity_ref("urn:fr:pf-asf:case:differentiel-pension-elevee-e1"), 120.00 EUR) { origin case_input; }
+        assert "odp-07": bmaf_retenu(entity_ref("urn:fr:pf-asf:case:differentiel-pension-elevee"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(asf_differentiel_du(entity_ref("urn:fr:pf-asf:case:differentiel-pension-elevee-e1"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,27 @@
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+// Generated witness scenarios of the question catalog (DECISION-0190):
+// the world fulfils the rule premises, the query asks its conclusion.
+// Built by corpus/tools/questions_catalog/build_catalog.py from the package CLIR;
+// hand edits — only together with the catalog.
+
+// 
+// D-42: witness world completed by hand - frais_mesure_a_charge (08, FraisMesureDelegueUnique)
+// requires the serving body, the single-benefit inventory and the explicit negatives "not several
+// benefits" and "not DOM" (bare not over case facts, SPEC 69; L. 552-6 al. 2). Card and test id unchanged.
+test "CATALOG-FRAISMESUREORGANISME" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": delegue_percoit(entity_ref("urn:law:catalog:fraismesureorganisme:v1")) { origin case_input; }
+        assert "cat-1": organisme_debiteur_pf(entity_ref("urn:law:catalog:fraismesureorganisme:v0"), entity_ref("urn:law:catalog:fraismesureorganisme:v1")) { origin case_input; }
+        assert "cat-2": organisme_verse_prestation_delegue(entity_ref("urn:law:catalog:fraismesureorganisme:v0"), entity_ref("urn:law:catalog:fraismesureorganisme:v1")) { origin case_input; }
+        assert "cat-3": prestation_delegue_unique(entity_ref("urn:law:catalog:fraismesureorganisme:v1")) { origin case_input; }
+        assert "cat-4": not plusieurs_prestations_delegue(entity_ref("urn:law:catalog:fraismesureorganisme:v1")) { origin case_input; }
+        assert "cat-5": not beneficiaire_dom_l7554(entity_ref("urn:law:catalog:fraismesureorganisme:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(SupporterFraisMesure, ACTIVE);
+}

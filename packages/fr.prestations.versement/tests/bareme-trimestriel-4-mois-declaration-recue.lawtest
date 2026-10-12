@@ -1,0 +1,16 @@
+// Quarterly right after four months where the declaration has been received: no deemed 1 096 without the non-receipt fact (D. 553-1 III, PC-R02-01).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-trimestriel-4-mois-declaration-recue" {
+    given {
+        context { decision_time @2022-10-15T12:00:00Z; knowledge_time @2022-10-15T12:00:00Z; legal_time @2022-10-15; timezone "Europe/Paris"; }
+        assert "t-ouv": droit_trimestriel_ouvert(entity_ref("urn:fr:pv:case:trimestriel-exp-decl")) { origin case_input; }
+        assert "t-exp": delai_4_mois_expire(entity_ref("urn:fr:pv:case:trimestriel-exp-decl")) { origin case_input; }
+        assert "t-inc": ressources_trimestrielles_inconnues(entity_ref("urn:fr:pv:case:trimestriel-exp-decl")) { origin case_input; }
+    }
+    evaluate truth(revenu_pondere(entity_ref("urn:fr:pv:case:trimestriel-exp-decl"), 1096.00 EUR));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

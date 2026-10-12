@@ -1,0 +1,17 @@
+// Same refusal but no prior notice of the facts and the planned
+// sanction: no suspension without the R.262-69-1 procedure.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-suspension-sans-procedure" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "suspnp-01": manquement(entity_ref("urn:fr:rsa:case:suspension-sans-procedure"), REFUS_CONTRAT) { origin case_input; }
+        assert "suspnp-02": tenu_obligations_262_28(entity_ref("urn:fr:rsa:case:suspension-sans-procedure")) { origin case_input; }
+    }
+    evaluate truth(sanction_suspension(entity_ref("urn:fr:rsa:case:suspension-sans-procedure"), REFUS_CONTRAT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

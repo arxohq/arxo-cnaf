@@ -1,0 +1,86 @@
+// Request and signals (16): CAF/MSA routing, the filing duty, the 2023
+// DPE duty with its pre-2023 pair, and annual-document suspension.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-caisse-caf" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcai-01": residence_france(entity_ref("urn:fr:apl:case:fcai")) { origin case_input; }
+        assert "fcai-02": regime_agricole(entity_ref("urn:fr:apl:case:fcai"), false) { origin case_input; }
+    }
+    evaluate truth(caisse_competente(entity_ref("urn:fr:apl:case:fcai"), CAF));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-caisse-msa" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcms-01": residence_france(entity_ref("urn:fr:apl:case:fcms")) { origin case_input; }
+        assert "fcms-02": regime_agricole(entity_ref("urn:fr:apl:case:fcms"), true) { origin case_input; }
+    }
+    evaluate truth(caisse_competente(entity_ref("urn:fr:apl:case:fcms"), MSA));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-pieces" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdpj-01": aide_demandee(entity_ref("urn:fr:apl:case:fdpj"), ALF) { origin case_input; }
+        assert "fdpj-02": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fdpj")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(JoindrePiecesJustificatives, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-dpe-2024" {
+    given {
+        context { decision_time @2024-02-15T12:00:00Z; knowledge_time @2024-02-15T12:00:00Z; legal_time @2024-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdpe-01": bailleur_du_menage(entity_ref("urn:fr:apl:bail:fdpe"), entity_ref("urn:fr:apl:case:fdpe")) { origin case_input; }
+        assert "fdpe-02": demande_dpe_organisme(entity_ref("urn:fr:apl:case:fdpe")) { origin case_input; }
+        assert "fdpe-03": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fdpe")) { origin case_input; }
+        // D-42: R. 823-2 puts the DPE on "le bailleur"; the model (16 DevoirPresenterDPE)
+        // D-42: keys the duty on the third-party role BAILLEUR, as the sibling suites do;
+        // D-42: the case omitted it.
+        assert "fdpe-04": role_tiers(entity_ref("urn:fr:apl:bail:fdpe"), BAILLEUR) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PresenterDPE, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-dpe-2022" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdp2-01": bailleur_du_menage(entity_ref("urn:fr:apl:bail:fdp2"), entity_ref("urn:fr:apl:case:fdp2")) { origin case_input; }
+        assert "fdp2-02": demande_dpe_organisme(entity_ref("urn:fr:apl:case:fdp2")) { origin case_input; }
+        assert "fdp2-03": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fdp2")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(PresenterDPE, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-suspension-pieces" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fspp-01": defaut_pieces_annuelles(entity_ref("urn:fr:apl:case:fspp")) { origin case_input; }
+    }
+    evaluate truth(suspension_paiement_pieces(entity_ref("urn:fr:apl:case:fspp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

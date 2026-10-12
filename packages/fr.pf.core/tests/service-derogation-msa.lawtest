@@ -1,0 +1,20 @@
+// MSA derogation: allocataire under agricultural rules - service falls on the MSA (R. 514-1 1).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-service-derogation-msa" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "service-derogation-msa-01": parent_charge(entity_ref("urn:fr:pf:case:agricole"), entity_ref("urn:fr:pf:case:enfant-agricole")) { origin case_input; }
+        assert "service-derogation-msa-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:agricole"), entity_ref("urn:fr:pf:case:enfant-agricole")) { origin adjudicated; }
+        assert "service-derogation-msa-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-agricole")) { origin case_input; }
+        assert "service-derogation-msa-04": reside_france_stable(entity_ref("urn:fr:pf:case:agricole")) { origin case_input; }
+        assert "service-derogation-msa-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-agricole")) { origin case_input; }
+        assert "service-derogation-msa-06": releve_professions_agricoles(entity_ref("urn:fr:pf:case:agricole")) { origin case_input; }
+    }
+    evaluate truth(service_msa(entity_ref("urn:fr:pf:case:agricole")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

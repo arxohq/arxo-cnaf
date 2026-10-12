@@ -1,0 +1,21 @@
+// D-29(c), F-CH6-ASF-DEFAUT-DOUBLE-MORT: double default March 2022, opening April 2022, request filed: the double rate row in force (0.375 x 400.00 = 150.00) is due; before the fix the opener ended where the amount began.
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-defaut-double-montant-pre-2022" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2022-05-15T12:00:00Z; knowledge_time @2022-05-15T12:00:00Z; legal_time @2022-05-15; timezone "Europe/Paris"; }
+        assert "odp-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-pre-2022"), entity_ref("urn:fr:pf-asf:case:defaut-double-montant-pre-2022-e1")) { origin case_input; }
+        assert "odp-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-pre-2022-e1")) { origin case_input; }
+        assert "odp-03": motif_asf(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-pre-2022-e1"), DEFAUT_DOUBLE) { origin case_input; }
+        assert "odp-04": demande_asf(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-pre-2022-e1")) { origin case_input; }
+        assert "odp-05": manquement_debiteur(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-pre-2022-e1"), @2022-03-01) { origin case_input; }
+        assert "odp-06": mois_ouverture_asf(@2022-04-01) { origin case_input; }
+        assert "odp-07": bmaf_retenu(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-pre-2022"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(asf_montant_du(entity_ref("urn:fr:pf-asf:case:defaut-double-montant-pre-2022-e1"), 150.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

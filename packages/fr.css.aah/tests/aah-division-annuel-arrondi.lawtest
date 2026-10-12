@@ -1,0 +1,147 @@
+// D-82/D-83 (решение владельца, 08.10.2026): douzième D. 821-2 al. 3 (R. 821-4, годовой трек) под прочтением
+// DouziemeTiersArrondiCentime — неточное или длиннее двух знаков частное округляется до сантима HALF_UP (практика
+// CNAF, не текст). Ожидания — независимая реплика на дробях (fractions.Fraction, HALF_UP) по закреплённым числам:
+//   div-a1 сумма декрета 2024-397 ст. 1 (sources/montant/decret-2024-397-art1.txt) 1 016,05; плафон 12 x 1016,05 =
+//          12192,60; (12192,60 − 5000,00) / 12 = 35963/60 = 599,38333… -> 599,38;
+//   div-a2 M = 1000,00 (дело), r = 5000,10: 6999,90 / 12 = 583,325 ровно -> 583,33 (HALF_UP вверх; HALF_EVEN дал бы 583,32);
+//   div-a3 r = 5000,00: 7000 / 12 = 583,3333… -> 583,33;
+//   div-a4 r = 6000,00: 6000 / 12 = 500 ровно -> 500,00 (где частное в сантимах, значение то же, что без чтения);
+//   div-a5 один ребёнок: плафон 12000 + 6000 = 18000; (18000 − 7000) / 12 = 916,6666… -> 916,67;
+//   div-a6 прежние правила (30.09.2023), одинокий: M = 950,00, плафон 11400, r = 4000: 7400 / 12 = 616,6666… -> 616,67;
+//   div-a7 прежние правила, пара: плафон 12 x 1000 x 1,81 = 21720; r1 + r2 = 14000: 7720 / 12 = 643,3333… -> 643,33.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-division-annuel-decret-2024" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-a1-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-a1")) { origin adjudicated; }
+        assert "div-a1-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-a1")) { origin case_input; }
+        assert "div-a1-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-a1")) { origin case_input; }
+        assert "div-a1-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-a1")) { origin case_input; }
+        assert "div-a1-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-a1")) { origin case_input; }
+        assert "div-a1-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-a1")) { origin case_input; }
+        assert "div-a1-07": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-a1"), 5000.00 EUR) { origin case_input; }
+        assert "div-a1-08": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-a1"), 599.38 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-annuel-demi-centime" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-a2-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-a2")) { origin adjudicated; }
+        assert "div-a2-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-a2")) { origin case_input; }
+        assert "div-a2-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-a2")) { origin case_input; }
+        assert "div-a2-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-a2")) { origin case_input; }
+        assert "div-a2-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-a2")) { origin case_input; }
+        assert "div-a2-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-a2")) { origin case_input; }
+        assert "div-a2-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-a2-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-a2"), 5000.10 EUR) { origin case_input; }
+        assert "div-a2-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-a2"), 583.33 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-annuel-inexact" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-a3-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-a3")) { origin adjudicated; }
+        assert "div-a3-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-a3")) { origin case_input; }
+        assert "div-a3-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-a3")) { origin case_input; }
+        assert "div-a3-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-a3")) { origin case_input; }
+        assert "div-a3-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-a3")) { origin case_input; }
+        assert "div-a3-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-a3")) { origin case_input; }
+        assert "div-a3-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-a3-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-a3"), 5000.00 EUR) { origin case_input; }
+        assert "div-a3-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-a3"), 583.33 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-annuel-exact-inchange" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-a4-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-a4")) { origin adjudicated; }
+        assert "div-a4-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-a4")) { origin case_input; }
+        assert "div-a4-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-a4")) { origin case_input; }
+        assert "div-a4-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-a4")) { origin case_input; }
+        assert "div-a4-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-a4")) { origin case_input; }
+        assert "div-a4-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-a4")) { origin case_input; }
+        assert "div-a4-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-a4-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-a4"), 6000.00 EUR) { origin case_input; }
+        assert "div-a4-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-a4"), 500.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-annuel-enfant" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-a5-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-a5")) { origin adjudicated; }
+        assert "div-a5-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-a5")) { origin case_input; }
+        assert "div-a5-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-a5")) { origin case_input; }
+        assert "div-a5-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-a5")) { origin case_input; }
+        assert "div-a5-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-a5")) { origin case_input; }
+        assert "div-a5-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-a5")) { origin case_input; }
+        assert "div-a5-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-a5-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-a5"), 7000.00 EUR) { origin case_input; }
+        assert "div-a5-09": enfants_charge(1) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-a5"), 916.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-annuel-ancien-seul" {
+    given {
+        context { decision_time @2023-09-30T12:00:00Z; knowledge_time @2023-09-30T12:00:00Z; legal_time @2023-09-30; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-a6-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-a6")) { origin adjudicated; }
+        assert "div-a6-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-a6")) { origin case_input; }
+        assert "div-a6-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-a6")) { origin case_input; }
+        assert "div-a6-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-a6")) { origin case_input; }
+        assert "div-a6-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-a6")) { origin case_input; }
+        assert "div-a6-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-a6")) { origin case_input; }
+        assert "div-a6-07": montant_mensuel_retenu(950.00 EUR) { origin case_input; }
+        assert "div-a6-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-a6"), 4000.00 EUR) { origin case_input; }
+        assert "div-a6-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_ancien(entity_ref("urn:fr:css-aah:case:div-a6"), 616.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-annuel-ancien-couple" {
+    given {
+        context { decision_time @2023-09-30T12:00:00Z; knowledge_time @2023-09-30T12:00:00Z; legal_time @2023-09-30; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-a7-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-a7")) { origin adjudicated; }
+        assert "div-a7-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-a7")) { origin case_input; }
+        assert "div-a7-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-a7")) { origin case_input; }
+        assert "div-a7-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-a7")) { origin case_input; }
+        assert "div-a7-05": en_couple(entity_ref("urn:fr:css-aah:case:div-a7")) { origin case_input; }
+        assert "div-a7-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-a7")) { origin case_input; }
+        assert "div-a7-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-a7-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-a7"), 9000.00 EUR) { origin case_input; }
+        assert "div-a7-09": ressources_conjoint_retenues(entity_ref("urn:fr:css-aah:case:div-a7"), 5000.00 EUR) { origin case_input; }
+        assert "div-a7-10": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_ancien(entity_ref("urn:fr:css-aah:case:div-a7"), 643.33 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

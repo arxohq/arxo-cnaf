@@ -1,0 +1,113 @@
+// Continuation and the fourth-month control (R523-3, R523-3-1, R523-3-2, D523-2).
+//
+// READINGS. Once the opening is confirmed, payment continues for every
+// later assessed month (the month after the opening month onwards,
+// R523-3). The fourth-month control is exigible at the fund-stated
+// control month, no earlier than three months after the opening month
+// (R523-3-2 title mechanics, D523-2 hors-etat control). The quarterly
+// cadence of the fund's control (R523-3-1) is an adopted DSS reading:
+// the control duty below runs on CONTROLE_TRIMESTRIEL, the title serves
+// one month per quarter (B-PFASF-TRIMESTRE, blind probe PFASF-B-08).
+
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+use self::{
+    CSS_D523_2,
+    CSS_D523_2_ED2019_12,
+    CSS_D523_2_ED2021_12,
+    CSS_D523_2_ED2022_11,
+    CSS_R523_3,
+    CSS_R523_3_1,
+    CSS_R523_3_1_ED2014_04,
+    CSS_R523_3_1_ED2015_04,
+    CSS_R523_3_1_ED2016_04,
+    CSS_R523_3_1_ED2017_04,
+    CSS_R523_3_1_ED2018_04,
+    CSS_R523_3_1_ED2018_07,
+    CSS_R523_3_1_ED2018_07_27,
+    CSS_R523_3_1_ED2019_12,
+    CSS_R523_3_1_ED2021_12,
+    CSS_R523_3_1_ED2022_11,
+    CSS_R523_3_2,
+    CSS_R523_3_2_ED2019_12,
+    CSS_R523_3_2_ED2021_12,
+    CSS_R523_3_2_ED2022_11,
+    CSS_R523_3_ED2018_04,
+    CSS_R523_3_ED2018_07,
+    CSS_R523_3_ED2018_07_27,
+    CSS_R523_3_ED2019_12,
+    CSS_R523_3_ED2021_12,
+    CSS_R523_3_ED2022_11,
+    asf_controle_confirme,
+    asf_maintien_mois,
+    asf_ouverture_confirmee,
+    mois_controle_4m,
+    mois_droit_asf,
+    mois_ouverture_asf,
+};
+
+// Term policy for the quarterly control: deadlines arrive per case,
+// months are not rolled.
+deadline policy CONTROLE_TRIMESTRIEL {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+@source(
+    CSS_R523_3,
+    CSS_R523_3_ED2018_04,
+    CSS_R523_3_ED2018_07,
+    CSS_R523_3_ED2018_07_27,
+    CSS_R523_3_ED2019_12,
+    CSS_R523_3_ED2021_12,
+    CSS_R523_3_ED2022_11)
+rule MaintienApresCarence(e: fr.pf.core::Enfant, m0: Date, m: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ouverture confirmee, mois apprecie apres le mois d'ouverture: versement maintenu (R. 523-3)";
+    label en unofficial "opening confirmed, assessed month after the opening month: payment continued (R. 523-3)";
+    when asf_ouverture_confirmee(e)
+        and mois_ouverture_asf(m0) and mois_droit_asf(m)
+        and m >= add_calendar_period(m0, 1 calendar_month);
+    then asf_maintien_mois(e, m);
+}
+
+@source(
+    CSS_D523_2,
+    CSS_D523_2_ED2019_12,
+    CSS_D523_2_ED2021_12,
+    CSS_D523_2_ED2022_11,
+    CSS_R523_3,
+    CSS_R523_3_1,
+    CSS_R523_3_1_ED2014_04,
+    CSS_R523_3_1_ED2015_04,
+    CSS_R523_3_1_ED2016_04,
+    CSS_R523_3_1_ED2017_04,
+    CSS_R523_3_1_ED2018_04,
+    CSS_R523_3_1_ED2018_07,
+    CSS_R523_3_1_ED2018_07_27,
+    CSS_R523_3_1_ED2019_12,
+    CSS_R523_3_1_ED2021_12,
+    CSS_R523_3_1_ED2022_11,
+    CSS_R523_3_2,
+    CSS_R523_3_2_ED2019_12,
+    CSS_R523_3_2_ED2021_12,
+    CSS_R523_3_2_ED2022_11,
+    CSS_R523_3_ED2018_04,
+    CSS_R523_3_ED2018_07,
+    CSS_R523_3_ED2018_07_27,
+    CSS_R523_3_ED2019_12,
+    CSS_R523_3_ED2021_12,
+    CSS_R523_3_ED2022_11)
+rule ControleQuatriemeMois(e: fr.pf.core::Enfant, m0: Date, t: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ouverture confirmee, mois de controle au plus tot trois mois apres l'ouverture: controle exigible (R. 523-3-2, D. 523-2)";
+    label en unofficial "opening confirmed, control month no earlier than three months after opening: control due (R. 523-3-2, D. 523-2)";
+    when asf_ouverture_confirmee(e)
+        and mois_ouverture_asf(m0) and mois_controle_4m(t)
+        and t >= add_calendar_period(m0, 3 calendar_month);
+    then asf_controle_confirme(e);
+}

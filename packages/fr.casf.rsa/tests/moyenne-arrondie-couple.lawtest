@@ -1,0 +1,40 @@
+// Reading fr.minima.ressources::MoyenneArrondieCentime in the RSA world (B-RSA-MOYENNE-INEXACTE).
+// Couple, month of right January 2025 (old regime), reference October/November/December 2024:
+// declared 167.00 + 167.00 + 0.00 = 334.00 for the household, 334/3 does not divide evenly.
+// The reading rounds the average to the centime (111.33, HALF_UP, fund practice). The base is
+// built (decree 2024-396: 635.71 x 1.5 = 953.565), the housing aid 200.00 is capped at the
+// forfait logement (16 % of 953.565 = 152.5704, R. 262-10): the amount due and the
+// allowance are 953.565 - 111.33 - 152.5704 = 689.6646, rounded by the reading to 689.66.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-moy-cpl-rsa" {
+    given {
+        context { decision_time @2025-01-15T12:00:00Z; knowledge_time @2025-01-15T12:00:00Z; legal_time @2025-01-15; timezone "Europe/Paris"; deadline_policy RSA_MOIS; interpretation fr.minima.ressources::MoyenneArrondieCentime; }
+        assert "moy-cpl-01": fr.minima.ressources::foyer_du_cas(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple")) { origin case_input; }
+        assert "moy-cpl-02": fr.minima.ressources::mois_demande(@2025-01-01) { origin case_input; }
+        assert "moy-cpl-03": fr.minima.ressources::mois_reference(@2024-10-01, @2024-11-01, @2024-12-01) { origin case_input; }
+        assert "moy-cpl-04": fr.minima.ressources::nb_personnes_forfait(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), 2) { origin case_input; }
+        assert "moy-cpl-05": fr.minima.ressources::logement(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), AUTRE) { origin case_input; }
+        assert "moy-cpl-06": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), 2) { origin case_input; }
+        assert "moy-cpl-07": mois_droit(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2025-01-01) { origin case_input; }
+        assert "moy-cpl-08": residence_stable(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple")) { origin case_input; }
+        assert "moy-cpl-09": sejour_travail_condition(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple")) { origin case_input; }
+        assert "moy-cpl-10": conjoint_enfants_comptes(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple")) { origin case_input; }
+        assert "moy-cpl-11": age_charge_condition(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple")) { origin case_input; }
+        assert "moy-cpl-12": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2024-10-01, 167.00 EUR) { origin case_input; }
+        assert "moy-cpl-13": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2024-10-01, 0 EUR) { origin case_input; }
+        assert "moy-cpl-14": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2024-10-01, 200.00 EUR) { origin case_input; }
+        assert "moy-cpl-15": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2024-11-01, 167.00 EUR) { origin case_input; }
+        assert "moy-cpl-16": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "moy-cpl-17": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2024-11-01, 200.00 EUR) { origin case_input; }
+        assert "moy-cpl-18": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2024-12-01, 0.00 EUR) { origin case_input; }
+        assert "moy-cpl-19": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2024-12-01, 0 EUR) { origin case_input; }
+        assert "moy-cpl-20": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2024-12-01, 200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(allocation_mensuelle(entity_ref("urn:fr:rsa:case:moyenne-arrondie-couple"), @2025-01-01, 689.66 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

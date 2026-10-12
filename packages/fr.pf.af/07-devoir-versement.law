@@ -1,0 +1,86 @@
+// Steering: fund duty to pay family benefits (L521-1/L521-2, R521-3 split).
+// Rule binders live in the rule header (package style, see 02-allocataire-partage.law).
+// Only the fund bears a duty: in a split each parent receives half directly
+// from the fund (R521-3), so no inter-parent duty exists. Service-bound parts
+// carry no duty (B-PFAF-ASE-MIXTE).
+
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+use self::{
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_L521_2,
+    CSS_L521_2_ED2022_01,
+    CSS_L521_2_ED2026_03,
+    CSS_L521_2_PRE2021,
+    CSS_L521_2_PRE2021_ED2015_07,
+    CSS_L521_2_PRE2021_ED2015_10,
+    CSS_R521_3,
+    CSS_R521_3_ED2008_04,
+    CSS_R521_3_ED2014_12,
+    CSS_R521_3_ED2015_03,
+    CSS_R521_3_ED2015_07,
+    CSS_R521_3_ED2015_10,
+    CSS_R521_3_ED2021_09,
+    CSS_R521_3_ED2022_01,
+    CSS_R521_3_ED2026_03,
+    af_verse,
+    famille_percoit,
+    montant_parent_partage,
+    partage_actif,
+};
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_L521_2,
+    CSS_L521_2_ED2022_01,
+    CSS_L521_2_ED2026_03,
+    CSS_L521_2_PRE2021,
+    CSS_L521_2_PRE2021_ED2015_07,
+    CSS_L521_2_PRE2021_ED2015_10)
+rule DevoirVerserAF(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) strict {
+    label fr official "l'organisme débiteur paie au parent attributaire le montant mensuel perçu par la famille";
+    label en unofficial "the debtor fund pays the receiving parent the monthly amount the family gets";
+    when famille_percoit(p, montant) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerAllocationsFamilialesDues {
+        bearer o;
+        beneficiary p;
+        maintain af_verse(p, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_L521_2,
+    CSS_L521_2_ED2022_01,
+    CSS_L521_2_ED2026_03,
+    CSS_R521_3,
+    CSS_R521_3_ED2008_04,
+    CSS_R521_3_ED2014_12,
+    CSS_R521_3_ED2015_03,
+    CSS_R521_3_ED2015_07,
+    CSS_R521_3_ED2015_10,
+    CSS_R521_3_ED2021_09,
+    CSS_R521_3_ED2022_01,
+    CSS_R521_3_ED2026_03,
+    CSS_L521_2_PRE2021,
+    CSS_L521_2_PRE2021_ED2015_07,
+    CSS_L521_2_PRE2021_ED2015_10)
+rule DevoirVerserPart(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) strict {
+    label fr official "en cas de partage, l'organisme paie à chaque parent sa moitié";
+    label en unofficial "under a split, the fund pays each parent their half";
+    when montant_parent_partage(p, montant) and partage_actif(p) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerPartParentaleDue {
+        bearer o;
+        beneficiary p;
+        maintain af_verse(p, montant) during [@2021-01-01, infinity);
+    };
+}

@@ -1,0 +1,16 @@
+// Active recovery duty (D2): a 300.00 undue payment recorded with
+// the paying-body link — RecouvrerInduAjpa is ACTIVE.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-devoir-recouvrement-actif" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-dr-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-dr"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-dr-02": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-dr")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(RecouvrerInduAjpa, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

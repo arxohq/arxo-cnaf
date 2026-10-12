@@ -1,0 +1,53 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Catala AF Test10 (2020-04-20, Metropole, resources 30 000):
+// a 17-year-old plus a 7-year-old in shared custody with shared
+// allowances. The sharing status (joint request) puts each parent
+// at the R. 521-3 average (1 + 0.5)/2 = 0.75 of the 128.00 total:
+// 96.00. Their case -> our answer -> class: REPORT.md (Catala, 10).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-catala-test-10" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2020-04-20T12:00:00Z; knowledge_time @2020-04-20T12:00:00Z; legal_time @2020-04-20; timezone "Europe/Paris"; }
+        assert "ct10-01": territoire(entity_ref("urn:fr:pf-af:parent:catala-10"), METROPOLE) { origin case_input; }
+        assert "ct10-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:parent:catala-10"), 2) { origin case_input; }
+        assert "ct10-03": ressources_menage(entity_ref("urn:fr:pf-af:parent:catala-10"), 30000 EUR) { origin case_input; }
+        assert "ct10-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:parent:catala-10"), 55950 EUR) { origin case_input; }
+        assert "ct10-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:parent:catala-10"), 78300 EUR) { origin case_input; }
+        assert "ct10-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:parent:catala-10"), 5595 EUR) { origin case_input; }
+        assert "ct10-05": bmaf_retenu(entity_ref("urn:fr:pf-af:parent:catala-10"), 400.00 EUR) { origin case_input; }
+        assert "ct10-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:parent:catala-10"), 0) { origin case_input; }
+        assert "ct10-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:parent:catala-10"), 0) { origin case_input; }
+        assert "ct10-08": forfait_total_menage(entity_ref("urn:fr:pf-af:parent:catala-10"), 0 EUR) { origin case_input; }
+        assert "ct10-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:parent:catala-10"), 0) { origin case_input; }
+        assert "ct10-10": foyer_du_cas(entity_ref("urn:fr:pf-af:parent:catala-10")) { origin case_input; }
+        assert "ct10-11": mois_droit(@2020-04-20) { origin case_input; }
+        assert "ct10-12": demande_conjointe_partage(entity_ref("urn:fr:pf-af:parent:catala-10"), entity_ref("urn:fr:pf-af:parent:catala-10-bis")) { origin case_input; }
+        assert "ct10-13": enfants_propres(entity_ref("urn:fr:pf-af:parent:catala-10"), 1) { origin case_input; }
+        assert "ct10-14": enfants_alternes(1) { origin case_input; }
+        assert "ct10-15": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:parent:catala-10"), entity_ref("urn:fr:pf-af:foreign:catala-10-e0")) { origin case_input; }
+        assert "ct10-16": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:parent:catala-10"), entity_ref("urn:fr:pf-af:foreign:catala-10-e1")) { origin case_input; }
+        assert "ct10-17": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-10-e0")) { origin case_input; }
+        assert "ct10-18": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-10-e1")) { origin case_input; }
+        assert "ct10-19": date_naissance(entity_ref("urn:fr:pf-af:foreign:catala-10-e0"), @2003-02-22) { origin case_input; }
+        assert "ct10-20": date_naissance(entity_ref("urn:fr:pf-af:foreign:catala-10-e1"), @2013-09-30) { origin case_input; }
+        assert "ct10-21": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-10-e0")) { origin case_input; }
+        assert "ct10-22": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-10-e1")) { origin case_input; }
+        assert "ct10-23": garde(entity_ref("urn:fr:pf-af:foreign:catala-10-e0"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "ct10-24": garde(entity_ref("urn:fr:pf-af:foreign:catala-10-e1"), RESIDENCE_ALTERNEE_PARTAGE) { origin case_input; }
+    }
+    evaluate truth(partage_actif(entity_ref("urn:fr:pf-af:parent:catala-10")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_parent_partage(entity_ref("urn:fr:pf-af:parent:catala-10"), 96.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

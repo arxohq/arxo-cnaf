@@ -1,0 +1,17 @@
+// No direct recovery while referred: prefet seized for 3000 EUR, no termination notified - direct action barred for those sums (L. 581-10 al. 3, PC-R07-20).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-interdiction-directe" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-interdiction-directe-01": saisine_prefet(entity_ref("urn:fr:pf:case:creance-int")) { origin case_input; }
+        assert "creance-interdiction-directe-02": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:creance-int")) { origin case_input; }
+        assert "creance-interdiction-directe-03": sommes_objet_demande_recouvrement(entity_ref("urn:fr:pf:case:creance-int"), 3000 EUR) { origin case_input; }
+        assert "creance-interdiction-directe-04": not cessation_procedure_recouvrement_notifiee(entity_ref("urn:fr:pf:case:creance-int")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PoursuivreRecouvrementDirect, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

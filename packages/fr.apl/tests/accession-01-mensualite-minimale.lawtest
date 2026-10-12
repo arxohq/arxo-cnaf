@@ -1,0 +1,33 @@
+// Дело Catala «Exemple1» (сектор приобретения, APL).
+//
+// ШАГ: L0 по ветви 1° D. 832-15 — две транши ст. 23 арретэ (20,80 % до границы
+// 5 600,85 € × N и 41,60 % на остаток) при N = 3,0, делённые на двенадцать.
+//
+// Catala утверждает 332,76 €; наш точный итог — 332,7558 €. Текст округления L0
+// не велит, поэтому их число есть наш итог, округлённый до цента.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-accession-01-mensualite-minimale" {
+    given {
+        context { decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "accession-01-mensualite-minimale-01": secteur_accession(entity_ref("urn:fr:apl:case:accession-01")) { origin case_input; }
+        assert "accession-01-mensualite-minimale-02": aide_demandee(entity_ref("urn:fr:apl:case:accession-01"), APL) { origin case_input; }
+        assert "accession-01-mensualite-minimale-03": zone_du_logement(entity_ref("urn:fr:apl:case:accession-01"), ZONE_II) { origin case_input; }
+        assert "accession-01-mensualite-minimale-04": situation_familiale(entity_ref("urn:fr:apl:case:accession-01"), COUPLE) { origin case_input; }
+        assert "accession-01-mensualite-minimale-05": personnes_a_charge(entity_ref("urn:fr:apl:case:accession-01"), 2) { origin case_input; }
+        assert "accession-01-mensualite-minimale-06": sous_cas_mensualite(entity_ref("urn:fr:apl:case:accession-01"), PRET_APRES_30_09_2017) { origin case_input; }
+        assert "accession-01-mensualite-minimale-07": finalite_operation(entity_ref("urn:fr:apl:case:accession-01"), LOGEMENT_NEUF) { origin case_input; }
+        assert "accession-01-mensualite-minimale-08": type_travaux(entity_ref("urn:fr:apl:case:accession-01"), PAS_DE_TRAVAUX) { origin case_input; }
+        assert "accession-01-mensualite-minimale-09": mode_propriete(entity_ref("urn:fr:apl:case:accession-01"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "accession-01-mensualite-minimale-10": mensualite_declaree(entity_ref("urn:fr:apl:case:accession-01"), 650 EUR) { origin case_input; }
+        assert "accession-01-mensualite-minimale-11": ressources_du_menage(entity_ref("urn:fr:apl:case:accession-01"), 18000 EUR) { origin case_input; }
+        assert "accession-01-mensualite-minimale-12": vintage_pret_depense_nette(entity_ref("urn:fr:apl:case:accession-01"), PRET_DEPUIS_OCTOBRE_1998) { origin case_input; }
+        assert "accession-01-mensualite-minimale-13": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:accession-01"), false) { origin case_input; }
+    }
+    evaluate truth(mensualite_minimale(entity_ref("urn:fr:apl:case:accession-01"), 332.7558 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

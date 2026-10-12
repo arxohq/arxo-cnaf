@@ -1,0 +1,95 @@
+// Right dates (14): opening after conditions, opening in the request
+// month, same-month extinction, next-month death extinction, the five
+// newlywed years, and the move opening.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-date-ouverture" {
+    given {
+        context { decision_time @2022-03-20T12:00:00Z; knowledge_time @2022-03-20T12:00:00Z; legal_time @2022-03-20; timezone "Europe/Paris"; deadline_policy APL_MOIS_CIVIL; interpretation PpPlancherFinal; }
+        assert "fdat-01": date_conditions_reunies(entity_ref("urn:fr:apl:case:fdat"), @2022-03-15) { origin case_input; }
+        assert "fdat-02": date_demande(entity_ref("urn:fr:apl:case:fdat"), @2022-03-20) { origin case_input; }
+        // D-42: R. 823-11 derogates from R. 823-10 (temporary housing by an organisme,
+        // D-42: insalubrity/peril rehousing); the model (14 Ouverture*) asks for the
+        // D-42: findings that the case is outside both, omitted by the case.
+        assert "fdat-h1": hors_hebergement_temporaire_823_11(entity_ref("urn:fr:apl:case:fdat")) { origin case_input; }
+        // D-42: same R. 823-11 finding (insalubrity/peril).
+        assert "fdat-h2": hors_insalubrite_peril_823_11(entity_ref("urn:fr:apl:case:fdat")) { origin case_input; }
+    }
+    evaluate truth(droit_commence_le(entity_ref("urn:fr:apl:case:fdat"), @2022-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-date-mois-demande" {
+    given {
+        context { decision_time @2022-03-20T12:00:00Z; knowledge_time @2022-03-20T12:00:00Z; legal_time @2022-03-20; timezone "Europe/Paris"; deadline_policy APL_MOIS_CIVIL; interpretation PpPlancherFinal; }
+        assert "fdmd-01": date_conditions_reunies(entity_ref("urn:fr:apl:case:fdmd"), @2022-01-10) { origin case_input; }
+        assert "fdmd-02": date_demande(entity_ref("urn:fr:apl:case:fdmd"), @2022-03-20) { origin case_input; }
+        // D-42: R. 823-11 derogates from R. 823-10 (temporary housing by an organisme,
+        // D-42: insalubrity/peril rehousing); the model (14 Ouverture*) asks for the
+        // D-42: findings that the case is outside both, omitted by the case.
+        assert "fdmd-h1": hors_hebergement_temporaire_823_11(entity_ref("urn:fr:apl:case:fdmd")) { origin case_input; }
+        // D-42: same R. 823-11 finding (insalubrity/peril).
+        assert "fdmd-h2": hors_insalubrite_peril_823_11(entity_ref("urn:fr:apl:case:fdmd")) { origin case_input; }
+    }
+    evaluate truth(droit_commence_le(entity_ref("urn:fr:apl:case:fdmd"), @2022-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-date-extinction" {
+    given {
+        context { decision_time @2022-05-20T12:00:00Z; knowledge_time @2022-05-20T12:00:00Z; legal_time @2022-05-20; timezone "Europe/Paris"; deadline_policy APL_MOIS_CIVIL; interpretation PpPlancherFinal; }
+        assert "fdex-01": date_fin_conditions(entity_ref("urn:fr:apl:case:fdex"), @2022-05-10) { origin case_input; }
+    }
+    evaluate truth(droit_prend_fin_le(entity_ref("urn:fr:apl:case:fdex"), @2022-05-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-date-deces" {
+    given {
+        context { decision_time @2022-05-20T12:00:00Z; knowledge_time @2022-05-20T12:00:00Z; legal_time @2022-05-20; timezone "Europe/Paris"; deadline_policy APL_MOIS_CIVIL; interpretation PpPlancherFinal; }
+        assert "fddc-01": date_deces_beneficiaire(entity_ref("urn:fr:apl:case:fddc"), @2022-05-10) { origin case_input; }
+    }
+    evaluate truth(droit_prend_fin_le(entity_ref("urn:fr:apl:case:fddc"), @2022-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-date-maries" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; deadline_policy APL_MOIS_CIVIL; interpretation PpPlancherFinal; }
+        assert "fdma-01": menage_nouveaux_maries(entity_ref("urn:fr:apl:case:fdma")) { origin case_input; }
+        assert "fdma-02": date_mariage(entity_ref("urn:fr:apl:case:fdma"), @2020-06-12) { origin case_input; }
+    }
+    evaluate truth(droit_alf_maries_prend_fin_le(entity_ref("urn:fr:apl:case:fdma"), @2025-06-12));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-date-demenagement" {
+    given {
+        context { decision_time @2022-04-20T12:00:00Z; knowledge_time @2022-04-20T12:00:00Z; legal_time @2022-04-20; timezone "Europe/Paris"; deadline_policy APL_MOIS_CIVIL; interpretation PpPlancherFinal; }
+        assert "fddm-01": cas_demenagement_convention(entity_ref("urn:fr:apl:case:fddm")) { origin case_input; }
+        assert "fddm-02": date_conditions_reunies(entity_ref("urn:fr:apl:case:fddm"), @2022-04-15) { origin case_input; }
+    }
+    evaluate truth(droit_commence_le(entity_ref("urn:fr:apl:case:fddm"), @2022-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

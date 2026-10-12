@@ -1,0 +1,17 @@
+// L. 531-8-1, 2021 wording: levy 500 EUR reduced by the 200 EUR
+// supplement amount — the minoré levy of 300 EUR is built.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-prelevement-minore" {
+    given {
+        context { decision_time @2024-05-20T12:00:00Z; knowledge_time @2024-05-20T12:00:00Z; legal_time @2024-05-10; timezone "Europe/Paris"; }
+        assert "pm-01": prelevement_cesu_base(entity_ref("urn:fr:pf-cmg:case:pm"), 500 EUR) { origin case_input; }
+        assert "pm-02": cmg_imputable_l5318(entity_ref("urn:fr:pf-cmg:case:pm"), entity_ref("urn:fr:pf-cmg:child:pm"), 200 EUR) { origin case_input; }
+    }
+    evaluate truth(prelevement_cesu_minore(entity_ref("urn:fr:pf-cmg:case:pm"), entity_ref("urn:fr:pf-cmg:child:pm"), 300 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

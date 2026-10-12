@@ -1,0 +1,19 @@
+// No care assessment: the organ never assessed effective permanent care - the allocataire question needs judgment (L. 513-1 channel).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-allocataire-sans-charge" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "allocataire-sans-charge-01": parent_charge(entity_ref("urn:fr:pf:case:allocataire-nok"), entity_ref("urn:fr:pf:case:enfant-allocataire-nok")) { origin case_input; }
+        assert "allocataire-sans-charge-02": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-allocataire-nok")) { origin case_input; }
+        assert "allocataire-sans-charge-03": reside_france_stable(entity_ref("urn:fr:pf:case:allocataire-nok")) { origin case_input; }
+        assert "allocataire-sans-charge-04": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-allocataire-nok")) { origin case_input; }
+    }
+    evaluate truth(allocataire(entity_ref("urn:fr:pf:case:allocataire-nok")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == REQUIRES_JUDGMENT;
+    expect judgment_request(charge_effective_permanente, Organisme);
+}

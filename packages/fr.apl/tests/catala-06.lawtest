@@ -1,0 +1,31 @@
+// Exemple6: пара без иждивенцев, зона II, наём 436 €, ресурсы 19 500 € — выплаты нет
+// 
+// ИСТОЧНИК ОЖИДАНИЯ: Catala, CatalaLang/catala-examples@ebe5e7c2, aides_logement/tests/; их значение — 0 €.
+// НАШ ИСХОД: итог расчёта отрицателен (-110.55064525 €), и D. 823-16 говорит
+// не «ноль», а «il n'est pas procédé à son versement» — поэтому пакет
+// заключает непроизводство выплаты, а не нулевую сумму.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-catala-06" {
+    given {
+        context { decision_time @2022-05-02T12:00:00Z; knowledge_time @2022-05-02T12:00:00Z; legal_time @2022-05-02; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "catala-06-01": secteur_locatif(entity_ref("urn:fr:apl:case:catala-06")) { origin case_input; }
+        assert "catala-06-02": zone_du_logement(entity_ref("urn:fr:apl:case:catala-06"), ZONE_II) { origin case_input; }
+        assert "catala-06-03": aide_demandee(entity_ref("urn:fr:apl:case:catala-06"), APL) { origin case_input; }
+        assert "catala-06-04": situation_familiale(entity_ref("urn:fr:apl:case:catala-06"), COUPLE) { origin case_input; }
+        assert "catala-06-05": personnes_a_charge(entity_ref("urn:fr:apl:case:catala-06"), 0) { origin case_input; }
+        assert "catala-06-06": loyer_principal(entity_ref("urn:fr:apl:case:catala-06"), 436 EUR) { origin case_input; }
+        assert "catala-06-07": ressources_du_menage(entity_ref("urn:fr:apl:case:catala-06"), 19500 EUR) { origin case_input; }
+        assert "catala-06-08": mode_location(entity_ref("urn:fr:apl:case:catala-06"), LOCATION_SEULE) { origin case_input; }
+        assert "catala-06-09": forme_logement(entity_ref("urn:fr:apl:case:catala-06"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "catala-06-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:catala-06"), 0 EUR) { origin case_input; }
+        assert "catala-06-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:catala-06"), false) { origin case_input; }
+        assert "catala-06-12": territoire(entity_ref("urn:fr:apl:case:catala-06"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_non_versee(entity_ref("urn:fr:apl:case:catala-06")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

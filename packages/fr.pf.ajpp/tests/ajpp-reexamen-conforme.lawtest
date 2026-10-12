@@ -1,0 +1,19 @@
+// Re-exam deadline within the window: the doctor set ten months,
+// inside 6..12 (pre-2026 ceiling). Right established first.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reexamen-conforme" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-reex-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-reex")) { origin adjudicated; }
+        assert "ajpp-reex-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-reex")) { origin adjudicated; }
+        assert "ajpp-reex-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-reex"), entity_ref("urn:fr:pf-ajpp:case:enfant-reex")) { origin case_input; }
+        assert "ajpp-reex-04": echeance_reexamen(entity_ref("urn:fr:pf-ajpp:case:enfant-reex"), 10) { origin adjudicated; }
+    }
+    evaluate truth(reexamen_conforme(entity_ref("urn:fr:pf-ajpp:case:enfant-reex")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

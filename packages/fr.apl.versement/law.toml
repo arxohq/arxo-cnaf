@@ -1,0 +1,42 @@
+[package]
+name = "fr.apl.versement"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:apl:versement"
+
+[features]
+semanticLayer = "L0"
+
+[dependencies]
+"fr.apl" = "0.1.0"
+
+[metadata]
+act = "fr-apl-versement"
+title = "Фактическая выплата жилищного пособия: удержание CRDS и округление вниз по руководству министерства 2021 года"
+primarySource = "GUIDE_MINISTERE_2021"
+jurisdiction = "FR"
+instrument = "guidance"
+sourceFidelity = "pinned_official_bytes"
+legalStatus = "guidance"
+issuer = "Ministère de la Transition écologique; нормативная база CRDS — ordonnance n° 96-50"
+verifiedAgainstSource = true
+
+[[tests]]
+family = "fr.apl.versement#authored"
+regression = false
+suites = [
+    "tests/01-base-bridge.lawtest",
+    "tests/02-retenue-crds.lawtest",
+    "tests/03-arrondi-euro.lawtest",
+    "tests/04-resultat-officiel.lawtest",
+    "tests/05-cas-8-audit.lawtest",
+    "tests/06-cas-10-audit.lawtest",
+    "tests/07-rls-non-nulle.lawtest",
+    "tests/08-saint-pierre.lawtest",
+    "tests/09-decision-non-versement.lawtest",
+    "tests/10-guide-expire.lawtest",
+]
+world = ["fr.apl.versement", "fr.apl"]
+
+[authoring]
+local_imports = "explicit"

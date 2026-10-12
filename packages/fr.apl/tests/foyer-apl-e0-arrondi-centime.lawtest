@@ -1,0 +1,71 @@
+// Фойе APL (дело OpenFisca «Cas 9 AL Reforme 2019»): E0 «le total étant divisé par douze» под прочтением D-82
+//
+// РЕШЕНИЕ ВЛАДЕЛЬЦА D-82 (08.10.2026): неточное деление без политики в тексте
+// округляется до сантима по HALF_UP; это прочтение §152 по практике CNAF, не
+// текст (27-lecture-arrondi-centime.law). D. 832-26 велит «le total étant
+// divisé par douze» и округления не называет: без выбора прочтения E0 — отказ
+// INEXACT_DIVISION (второй тест), с выбором — деление с округлением.
+//
+// ОЖИДАНИЯ — из независимой реплики на дробях (Fraction, HALF_UP), параметры
+// только закреплённые (барем 2021-01): конвенционированное фойе, одинокое лицо,
+// 0 иждивенцев, зона III, R = 9 100 €, redevance 612,60 €, N = 1,4:
+//   E = min(612,60, плафон ст. 27 = 385,78) = 385,78;
+//   Σ транш с границами × N = 1 673,37296; + форфейт 45,57 × N = 63,798 → 1 737,17096;
+//   E0 = 1 737,17096 / 12 = 144,76424666… → до сантима HALF_UP 144,76 (шаг D-82);
+//   K = 0,95 − ⌈(9 100 − r·N)/(cm·N)⌉ до сотых = 0,55;
+//   Af = 0,55 × (385,78 − 144,76) = 132,561; минорация −5 → 127,561;
+//   абатмент чистого расхода не нужен (E − 127,561 выше минимума);
+//   взносы 0,5 % = 0,637805; ⌊127,561 − 0,637805⌋ = 126; 126 + 0,637805 = 126,637805
+//   (aide_mensuelle); удержание CRDS: 126,637805 × 0,995 = 126,004615975.
+// Справка (реплика, не вывод пакета): при точном E0 по тексту итог был бы
+// 126,00460436 (разница 0,000012 из-за сантимного E0). Их код: 128,26 —
+// класс (б), расхождение из K (без округления у них) и шага взносов.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-foyer-apl-e0-arrondi-centime" {
+    given {
+        context { decision_time @2021-01-15T12:00:00Z; knowledge_time @2021-01-15T12:00:00Z; legal_time @2021-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "foyer-apl-e0-arrondi-a-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-e0-d82")) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-a-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-e0-d82"), APL) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-a-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-e0-d82"), ZONE_III) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-a-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-e0-d82"), PERSONNE_SEULE) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-a-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-e0-d82"), 0) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-a-06": type_logement_foyer(entity_ref("urn:fr:apl:case:foyer-e0-d82"), GENERAL) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-a-07": redevance(entity_ref("urn:fr:apl:case:foyer-e0-d82"), 612.60 EUR) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-a-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-e0-d82"), 9100.00 EUR) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-a-09": territoire(entity_ref("urn:fr:apl:case:foyer-e0-d82"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(equivalence_loyer_minimale(entity_ref("urn:fr:apl:case:foyer-e0-d82"), 144.76 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:foyer-e0-d82"), 126.637805 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_nette_precompte_crds(entity_ref("urn:fr:apl:case:foyer-e0-d82"), 126.004615975 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Контроль: то же дело без выбора D-82 — прежний отказ, число не выводится.
+test "urn:query:fr-apl-foyer-apl-e0-sans-lecture" {
+    given {
+        context { decision_time @2021-01-15T12:00:00Z; knowledge_time @2021-01-15T12:00:00Z; legal_time @2021-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "foyer-apl-e0-arrondi-b-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-e0-d82")) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-b-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-e0-d82"), APL) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-b-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-e0-d82"), ZONE_III) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-b-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-e0-d82"), PERSONNE_SEULE) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-b-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-e0-d82"), 0) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-b-06": type_logement_foyer(entity_ref("urn:fr:apl:case:foyer-e0-d82"), GENERAL) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-b-07": redevance(entity_ref("urn:fr:apl:case:foyer-e0-d82"), 612.60 EUR) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-b-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-e0-d82"), 9100.00 EUR) { origin case_input; }
+        assert "foyer-apl-e0-arrondi-b-09": territoire(entity_ref("urn:fr:apl:case:foyer-e0-d82"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:foyer-e0-d82"), 126.637805 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}

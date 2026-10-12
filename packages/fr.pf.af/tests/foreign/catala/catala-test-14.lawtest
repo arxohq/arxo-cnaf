@@ -1,0 +1,42 @@
+// Catala AF Test14 (2022-05-01, Guadeloupe, resources 64 033): a
+// 17-year-old plus a 20-year-old in shared custody with a single
+// designated allocataire. Read as two single-child households, each
+// the eldest of its own: 58.80 each under the retained base
+// (1 000.00 EUR stated assumption). The 20-year-old's opened right
+// is asserted although upstream (L. 512-3, REQ-PFAF-02) would deny
+// it at that age and earnings: (c), see REPORT.md (Catala, 14).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-catala-test-14" {
+    given {
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; }
+        assert "ct14-01": territoire(entity_ref("urn:fr:pf-af:parent:catala-14-a"), GUADELOUPE) { origin case_input; }
+        assert "ct14-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:parent:catala-14-a"), 1) { origin case_input; }
+        assert "ct14-03": base_dom_retenue(entity_ref("urn:fr:pf-af:parent:catala-14-a"), 1000.00 EUR) { origin case_input; }
+        assert "ct14-04": forfait_total_menage(entity_ref("urn:fr:pf-af:parent:catala-14-a"), 0 EUR) { origin case_input; }
+        assert "ct14-05": foyer_du_cas(entity_ref("urn:fr:pf-af:parent:catala-14-a")) { origin case_input; }
+        assert "ct14-06": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:parent:catala-14-a"), entity_ref("urn:fr:pf-af:foreign:catala-14-e0")) { origin case_input; }
+        assert "ct14-07": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-14-e0")) { origin case_input; }
+        assert "ct14-08": date_naissance(entity_ref("urn:fr:pf-af:foreign:catala-14-e0"), @2004-12-22) { origin case_input; }
+        assert "ct14-09": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-14-e0")) { origin case_input; }
+        assert "ct14-10": territoire(entity_ref("urn:fr:pf-af:parent:catala-14-b"), GUADELOUPE) { origin case_input; }
+        assert "ct14-11": nb_enfants_charge(entity_ref("urn:fr:pf-af:parent:catala-14-b"), 1) { origin case_input; }
+        assert "ct14-12": base_dom_retenue(entity_ref("urn:fr:pf-af:parent:catala-14-b"), 1000.00 EUR) { origin case_input; }
+        assert "ct14-13": forfait_total_menage(entity_ref("urn:fr:pf-af:parent:catala-14-b"), 0 EUR) { origin case_input; }
+        assert "ct14-14": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:parent:catala-14-b"), entity_ref("urn:fr:pf-af:foreign:catala-14-e1")) { origin case_input; }
+        assert "ct14-15": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-14-e1")) { origin case_input; }
+        assert "ct14-16": date_naissance(entity_ref("urn:fr:pf-af:foreign:catala-14-e1"), @2001-12-05) { origin case_input; }
+        assert "ct14-17": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-14-e1")) { origin case_input; }
+        assert "ct14-18": garde(entity_ref("urn:fr:pf-af:foreign:catala-14-e1"), RESIDENCE_ALTERNEE_ALLOCATAIRE_UNIQUE) { origin case_input; }
+    }
+    evaluate truth(montant_mensuel_af_dom(entity_ref("urn:fr:pf-af:parent:catala-14-a"), 58.80 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af_dom(entity_ref("urn:fr:pf-af:parent:catala-14-b"), 58.80 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

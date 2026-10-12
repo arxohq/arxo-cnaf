@@ -1,0 +1,15 @@
+// BMAF base exclusion: CMG claimed - outside the monthly bases (L. 551-1, L. 531-5).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-bmaf-exclusion-cmg-ajpp" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "bmaf-exclusion-cmg-ajpp-01": prestation_demandee(entity_ref("urn:fr:pf:case:bmaf-cmg"), CMG) { origin case_input; }
+    }
+    evaluate truth(base_bmaf_classee(entity_ref("urn:fr:pf:case:bmaf-cmg"), false));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

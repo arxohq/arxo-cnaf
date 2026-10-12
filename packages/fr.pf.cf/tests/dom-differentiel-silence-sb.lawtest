@@ -1,0 +1,45 @@
+// Department differential stays silent in Saint-Barthélemy: the overrun
+// 1199.40 is strictly below twelve theoretical DOM monthly amounts
+// (12 x 99.96 = 1199.52, base 240), so the 0.01 differential WOULD open for
+// a department household (see dom-differentiel), but R. 755-3 inherits the
+// department-only R. 755-1 scope through its explicit condition, and no
+// department fact exists here. Title V scope itself holds.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-differentiel-silence-sb" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "dfs-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb-e1")) { origin case_input; }
+        assert "dfs-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb-e1")) { origin case_input; }
+        assert "dfs-03": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb-e1"), @2017-03-15) { origin case_input; }
+        assert "dfs-04": mois_droit(@2021-09-01) { origin case_input; }
+        assert "dfs-05": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), 1) { origin case_input; }
+        assert "dfs-06": ressources_menage(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), 26199.40 EUR) { origin case_input; }
+        assert "dfs-07": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), 20000 EUR) { origin case_input; }
+        assert "dfs-07a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), 5000 EUR) { origin case_input; }
+        assert "dfs-07b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), 6000 EUR) { origin case_input; }
+        assert "dfs-07c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), 10000 EUR) { origin case_input; }
+        assert "dfs-07d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), 2500 EUR) { origin case_input; }
+        assert "dfs-07e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), 3000 EUR) { origin case_input; }
+        assert "dfs-08": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb")) { origin case_input; }
+        assert "dfs-09": territoire(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), SAINT_BARTHELEMY) { origin case_input; }
+        assert "dfs-10": cadre_cf_dom_remplie(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb")) { origin case_input; }
+        assert "dfs-11": presence_jeune_dom(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb")) { origin case_input; }
+        assert "dfs-12": base_dom_retenue(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), 240.00 EUR) { origin case_input; }
+    }
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_droit_ouvert(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_differentiel_du(entity_ref("urn:fr:pf-cf:case:dom-differentiel-silence-sb"), 0.01 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

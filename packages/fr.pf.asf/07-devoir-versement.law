@@ -1,0 +1,203 @@
+// Fund payment and quarterly-control duties (L523-1, L523-3, R523-6, R523-8, R523-3-1, R523-3-2).
+//
+// The debtor fund pays the due amount (base or differential) no later
+// than the per-case payment deadline and performs the quarterly control
+// no later than the per-case control deadline (R523-3-1, adopted DSS
+// cadence).
+//
+// CADENCE (D-29(e), F-CH6-01). R. 523-6 concerns the DIFFERENTIAL ASF only
+// (L. 581-2): it is due for each month and PAID QUARTERLY. It is not a
+// monthly-payment norm. The deadline of the differential duty is therefore
+// the per-case quarterly payment date; the monthly cadence of the ordinary
+// (base-rate) allowance has no source among the 16 scoped articles (general
+// payment rules, L. 552-1 / R. 552-x, are outside this package):
+// B-PFASF-PAIEMENT-MENSUEL-GENERAL. The case-input deadline policy keeps
+// its legacy name PAIEMENT_MENSUEL (test fixtures); only the per-case date
+// differs. Only the fund bears duties. The
+// maintain windows open at the D-01 coverage floor.
+
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+use self::{
+    CSS_D523_2,
+    CSS_D523_2_ED2019_12,
+    CSS_D523_2_ED2021_12,
+    CSS_D523_2_ED2022_11,
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_L523_3,
+    CSS_L523_3_ED1999_11,
+    CSS_L523_3_ED2011_12,
+    CSS_L523_3_ED2014_04,
+    CSS_L523_3_ED2015_04,
+    CSS_L523_3_ED2016_04,
+    CSS_L523_3_ED2017_04,
+    CSS_L523_3_ED2018_04,
+    CSS_L523_3_ED2018_07,
+    CSS_L523_3_ED2018_07_27,
+    CSS_L523_3_ED2019_12,
+    CSS_L523_3_ED2021_12,
+    CSS_L523_3_ED2022_11,
+    CSS_R523_3_1,
+    CSS_R523_3_1_ED2014_04,
+    CSS_R523_3_1_ED2015_04,
+    CSS_R523_3_1_ED2016_04,
+    CSS_R523_3_1_ED2017_04,
+    CSS_R523_3_1_ED2018_04,
+    CSS_R523_3_1_ED2018_07,
+    CSS_R523_3_1_ED2018_07_27,
+    CSS_R523_3_1_ED2019_12,
+    CSS_R523_3_1_ED2021_12,
+    CSS_R523_3_1_ED2022_11,
+    CSS_R523_3_2,
+    CSS_R523_3_2_ED2019_12,
+    CSS_R523_3_2_ED2021_12,
+    CSS_R523_3_2_ED2022_11,
+    CSS_R523_6,
+    CSS_R523_6_ED1999_11,
+    CSS_R523_6_ED2011_12,
+    CSS_R523_6_ED2014_04,
+    CSS_R523_6_ED2015_04,
+    CSS_R523_6_ED2016_04,
+    CSS_R523_6_ED2017_04,
+    CSS_R523_6_ED2018_04,
+    CSS_R523_6_ED2018_07,
+    CSS_R523_6_ED2018_07_27,
+    CSS_R523_6_ED2019_12,
+    CSS_R523_6_ED2021_12,
+    CSS_R523_6_ED2022_11,
+    asf_controle_confirme,
+    asf_differentiel_du,
+    asf_montant_du,
+    asf_verse,
+    controle_effectue,
+    date_limite_controle,
+    date_limite_versement,
+};
+
+// Term policy for payments (legacy name; base: monthly cadence assumed,
+// differential: quarterly, R. 523-6): the deadline arrives per case as
+// date_limite_versement and bounds the maintain window, which opens at
+// the D-01 coverage floor.
+deadline policy PAIEMENT_MENSUEL {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+@source(
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_R523_6,
+    CSS_R523_6_ED1999_11,
+    CSS_R523_6_ED2011_12,
+    CSS_R523_6_ED2014_04,
+    CSS_R523_6_ED2015_04,
+    CSS_R523_6_ED2016_04,
+    CSS_R523_6_ED2017_04,
+    CSS_R523_6_ED2018_04,
+    CSS_R523_6_ED2018_07,
+    CSS_R523_6_ED2018_07_27,
+    CSS_R523_6_ED2019_12,
+    CSS_R523_6_ED2021_12,
+    CSS_R523_6_ED2022_11)
+rule DevoirVerserAsf(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money, limite: Date) strict {
+    label fr official "l'organisme debiteur paie le montant d'allocation du au plus tard a la date limite de versement (cadence mensuelle supposee, hors R. 523-6)";
+    label en unofficial "the debtor fund pays the allowance amount due no later than the payment deadline (monthly cadence assumed, outside R. 523-6)";
+    when asf_montant_du(e, montant) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and date_limite_versement(limite);
+    then duty PayerAsfDu {
+        bearer o;
+        beneficiary p;
+        maintain asf_verse(p, e, montant) during [@2021-01-01, limite];
+    };
+}
+
+@source(
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_L523_3,
+    CSS_L523_3_ED1999_11,
+    CSS_L523_3_ED2011_12,
+    CSS_L523_3_ED2014_04,
+    CSS_L523_3_ED2015_04,
+    CSS_L523_3_ED2016_04,
+    CSS_L523_3_ED2017_04,
+    CSS_L523_3_ED2018_04,
+    CSS_L523_3_ED2018_07,
+    CSS_L523_3_ED2018_07_27,
+    CSS_L523_3_ED2019_12,
+    CSS_L523_3_ED2021_12,
+    CSS_L523_3_ED2022_11,
+    CSS_R523_6,
+    CSS_R523_6_ED1999_11,
+    CSS_R523_6_ED2011_12,
+    CSS_R523_6_ED2014_04,
+    CSS_R523_6_ED2015_04,
+    CSS_R523_6_ED2016_04,
+    CSS_R523_6_ED2017_04,
+    CSS_R523_6_ED2018_04,
+    CSS_R523_6_ED2018_07,
+    CSS_R523_6_ED2018_07_27,
+    CSS_R523_6_ED2019_12,
+    CSS_R523_6_ED2021_12,
+    CSS_R523_6_ED2022_11)
+rule DevoirVerserAsfDifferentiel(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money, limite: Date) strict {
+    label fr official "l'organisme debiteur paie le differentiel du, du au titre de chaque mois et verse trimestriellement, au plus tard a la date limite de versement (R. 523-6, L. 581-2)";
+    label en unofficial "the debtor fund pays the differential, due for each month and paid quarterly, no later than the payment deadline (R. 523-6, L. 581-2)";
+    when asf_differentiel_du(e, montant) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and date_limite_versement(limite);
+    then duty PayerAsfDifferentielDu {
+        bearer o;
+        beneficiary p;
+        maintain asf_verse(p, e, montant) during [@2021-01-01, limite];
+    };
+}
+
+@source(
+    CSS_D523_2,
+    CSS_D523_2_ED2019_12,
+    CSS_D523_2_ED2021_12,
+    CSS_D523_2_ED2022_11,
+    CSS_R523_3_1,
+    CSS_R523_3_1_ED2014_04,
+    CSS_R523_3_1_ED2015_04,
+    CSS_R523_3_1_ED2016_04,
+    CSS_R523_3_1_ED2017_04,
+    CSS_R523_3_1_ED2018_04,
+    CSS_R523_3_1_ED2018_07,
+    CSS_R523_3_1_ED2018_07_27,
+    CSS_R523_3_1_ED2019_12,
+    CSS_R523_3_1_ED2021_12,
+    CSS_R523_3_1_ED2022_11,
+    CSS_R523_3_2,
+    CSS_R523_3_2_ED2019_12,
+    CSS_R523_3_2_ED2021_12,
+    CSS_R523_3_2_ED2022_11)
+rule DevoirControleTrimestriel(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, limite: Date) strict {
+    label fr official "l'organisme debiteur effectue le controle trimestriel au plus tard a la date limite de controle";
+    label en unofficial "the debtor fund performs the quarterly control no later than the control deadline";
+    when asf_controle_confirme(e) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::organisme_debiteur_pf(o, p)
+        and date_limite_controle(limite);
+    then duty ControlerTrimestre {
+        bearer o;
+        beneficiary p;
+        maintain controle_effectue(e) during [@2021-01-01, limite];
+    };
+}

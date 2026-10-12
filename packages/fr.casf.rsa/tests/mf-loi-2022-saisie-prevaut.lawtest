@@ -1,0 +1,22 @@
+// A base supplied for the case wins over the built one inside the window as well:
+// 600.00 is kept, 598.54 is not derived (reading selected).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-loi-2022-saisie-prevaut" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2022-09-15T12:00:00Z; knowledge_time @2022-09-15T12:00:00Z; legal_time @2022-09-15; timezone "Europe/Paris"; interpretation MfJuillet2022ArrondiCentime; }
+        assert "mfl-sp-01": mf_base(entity_ref("urn:fr:rsa:case:mf-loi-2022-saisie-prevaut"), 600.00 EUR) { origin case_input; }
+        assert "mfl-sp-02": mois_droit(entity_ref("urn:fr:rsa:case:mf-loi-2022-saisie-prevaut"), @2022-09-01) { origin case_input; }
+        assert "mfl-sp-03": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-loi-2022-saisie-prevaut"), 1) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-loi-2022-saisie-prevaut"), 600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-loi-2022-saisie-prevaut"), 598.54 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

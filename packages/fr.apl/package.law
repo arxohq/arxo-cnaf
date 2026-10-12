@@ -1,0 +1,665 @@
+// Разделяемая поверхность пакета: типы, факты дела и предикаты, которые
+// таблицы барема A3 наполняют строками (`emit`).
+//
+// Карта модулей:
+//   01-sources.law            — источники, редакции, фрагменты (порождается)
+//   02-calcul-locatif.law     — D. 823-16, D. 823-17 и глава III арретэ: расчёт
+//   03-ouverture-droit.law    — L. 822-2, L. 822-9: открытие права, каналы §47.3
+//   04-calcul-foyer.law       — D. 832-24..27 и D. 842-15..17: сектор logement-foyer
+//   05-calcul-accession.law   — D. 832-10..18: сектор приобретения жилья, APL
+//   06-calcul-accession-al.law — D. 842-6..12: тот же сектор, аллокации
+//   07-outre-mer.law           — ст. 46 и 47: изъятия заморских территорий
+//   08-ressources.law          — R. 822-2…18: computed resources feed the
+//                                retained-resources fact (D-APL-RES-LIEN)
+//   09-devoir-versement.law    — deontic layer: duty to pay, tiers payant,
+//                                recipient duties, L. 822-3 exclusion (D1, D2)
+//   bareme-*.lawtable.json    — сам барем; таблицы понижаются в тот же CLIR
+//
+// ГРАНИЦА ОБЪЁМА. Пакет исполняет РАСЧЁТ месячного пособия в секторе найма на
+// материковой Франции. Вне объёма: сектор приобретения жилья (L. 831-1),
+// logement-foyer, заморские территории, а также ПОЛНОЕ вычисление ресурсов
+// домохозяйства (D. 823-17 4° отсылает к разделу 2 главы II). Ресурсы приходят
+// фактом дела; вертикальный срез R. 822-2…18 (модуль 08) питает тот же факт
+// удержания рядом с плоским вводом (D-APL-RES-LIEN). Округление до верхней
+// сотни евро — шаг этого пакета, потому что предписано самой D. 823-17.
+// Деонтический слой (модуль 09): обязанность органа выплатить причитающееся,
+// выплата наймодателю, обязанности получателя, исключение L. 822-3.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+import fr.tax.income_for_apl version "0.1.0";
+
+use self::{
+    ARR_ART07_ED2021_10,
+    ARR_ART07_ED2022_01,
+    ARR_ART07_ED2025_10,
+    ARR_ART08_ED2021_10,
+    ARR_ART08_ED2022_01,
+    ARR_ART08_ED2025_10,
+    ARR_ART14_ED2021_10,
+    ARR_ART14_ED2022_01,
+    ARR_ART14_ED2025_10,
+    ARR_ART18_ED2019_10,
+    ARR_ART18_ED2020_01,
+    ARR_ART18_ED2020_10,
+    ARR_ART18_ED2021_01,
+    ARR_ART18_ED2021_10,
+    ARR_ART18_ED2022_01,
+    ARR_ART18_ED2022_07,
+    ARR_ART18_ED2023_01,
+    ARR_ART18_ED2023_10,
+    ARR_ART18_ED2024_01,
+    ARR_ART18_ED2024_10,
+    ARR_ART18_ED2025_01,
+    ARR_ART18_ED2025_10,
+    ARR_ART25_ED2019_10,
+    ARR_ART25_ED2020_01,
+    ARR_ART25_ED2020_10,
+    ARR_ART25_ED2021_01,
+    ARR_ART25_ED2021_10,
+    ARR_ART25_ED2022_01,
+    ARR_ART25_ED2022_07,
+    ARR_ART25_ED2023_01,
+    ARR_ART25_ED2023_10,
+    ARR_ART25_ED2024_01,
+    ARR_ART25_ED2024_10,
+    ARR_ART25_ED2025_01,
+    ARR_ART25_ED2025_10,
+    ARR_ART33_ED2020_01,
+    ARR_ART33_ED2020_10,
+    ARR_ART33_ED2021_01,
+    ARR_ART33_ED2021_10,
+    ARR_ART33_ED2022_01,
+    ARR_ART33_ED2022_07,
+    ARR_ART33_ED2023_01,
+    ARR_ART33_ED2023_10,
+    ARR_ART33_ED2024_01,
+    ARR_ART33_ED2024_10,
+    ARR_ART33_ED2025_01,
+    ARR_ART33_ED2025_10,
+    ARR_ART46_ED2023_01,
+    ARR_ART46_ED2025_10,
+    CCH_D823_16,
+    CCH_D823_16_ED2019_12,
+    CCH_D823_16_ED2020_01,
+    CCH_D823_16_ED2021_01,
+    CCH_D823_16_ED2023_04,
+    CCH_D823_16_ED2023_09,
+    CCH_D823_16_ED2023_12,
+    CCH_D823_16_ED2026_07,
+    CCH_D823_17,
+    CCH_D823_17_ED2019_12,
+    CCH_D823_17_ED2020_01,
+    CCH_D823_17_ED2021_01,
+    CCH_D823_17_ED2023_04,
+    CCH_D823_17_ED2023_09,
+    CCH_D823_17_ED2023_12,
+    CCH_D823_17_ED2026_07,
+    CCH_D823_18,
+    CCH_D823_18_ED2019_12,
+    CCH_D823_18_ED2020_01,
+    CCH_D823_18_ED2021_01,
+    CCH_D823_18_ED2023_04,
+    CCH_D823_18_ED2023_09,
+    CCH_D823_18_ED2023_12,
+    CCH_D823_18_ED2026_07,
+    CCH_D823_9,
+    CCH_D823_9_ED2019_12,
+    CCH_D823_9_ED2020_01,
+    CCH_D823_9_ED2021_01,
+    CCH_D823_9_ED2023_04,
+    CCH_D823_9_ED2023_09,
+    CCH_D823_9_ED2023_12,
+    CCH_D823_9_ED2026_07,
+    CCH_D832_10,
+    CCH_D832_10_ED2019_12,
+    CCH_D832_10_ED2020_01,
+    CCH_D832_10_ED2021_01,
+    CCH_D832_10_ED2023_04,
+    CCH_D832_10_ED2023_09,
+    CCH_D832_10_ED2023_12,
+    CCH_D832_10_ED2026_07,
+    CCH_D832_12,
+    CCH_D832_12_ED2019_12,
+    CCH_D832_12_ED2020_01,
+    CCH_D832_12_ED2021_01,
+    CCH_D832_12_ED2023_04,
+    CCH_D832_12_ED2023_09,
+    CCH_D832_12_ED2023_12,
+    CCH_D832_12_ED2026_07,
+    CCH_D832_15,
+    CCH_D832_15_ED2019_12,
+    CCH_D832_15_ED2020_01,
+    CCH_D832_15_ED2021_01,
+    CCH_D832_15_ED2023_04,
+    CCH_D832_15_ED2023_09,
+    CCH_D832_15_ED2023_12,
+    CCH_D832_15_ED2026_07,
+    CCH_D832_16,
+    CCH_D832_16_ED2019_12,
+    CCH_D832_16_ED2020_01,
+    CCH_D832_16_ED2021_01,
+    CCH_D832_16_ED2023_04,
+    CCH_D832_16_ED2023_09,
+    CCH_D832_16_ED2023_12,
+    CCH_D832_16_ED2026_07,
+    CCH_D832_18,
+    CCH_D832_18_ED2019_12,
+    CCH_D832_18_ED2020_01,
+    CCH_D832_18_ED2021_01,
+    CCH_D832_18_ED2023_04,
+    CCH_D832_18_ED2023_09,
+    CCH_D832_18_ED2023_12,
+    CCH_D832_18_ED2026_07,
+    CCH_D832_25,
+    CCH_D832_25_ED2019_12,
+    CCH_D832_25_ED2020_01,
+    CCH_D832_25_ED2021_01,
+    CCH_D832_25_ED2023_04,
+    CCH_D832_25_ED2023_09,
+    CCH_D832_25_ED2023_12,
+    CCH_D832_25_ED2026_07,
+    CCH_D842_10,
+    CCH_D842_10_ED2019_12,
+    CCH_D842_10_ED2020_01,
+    CCH_D842_10_ED2021_01,
+    CCH_D842_10_ED2023_04,
+    CCH_D842_10_ED2023_09,
+    CCH_D842_10_ED2023_12,
+    CCH_D842_10_ED2026_07,
+    CCH_D842_12,
+    CCH_D842_12_ED2019_12,
+    CCH_D842_12_ED2020_01,
+    CCH_D842_12_ED2021_01,
+    CCH_D842_12_ED2023_04,
+    CCH_D842_12_ED2023_09,
+    CCH_D842_12_ED2023_12,
+    CCH_D842_12_ED2026_07,
+    CCH_D842_15,
+    CCH_D842_15_ED2019_12,
+    CCH_D842_15_ED2020_01,
+    CCH_D842_15_ED2021_01,
+    CCH_D842_15_ED2023_04,
+    CCH_D842_15_ED2023_09,
+    CCH_D842_15_ED2023_12,
+    CCH_D842_15_ED2026_07,
+    CCH_D842_16,
+    CCH_D842_16_ED2019_12,
+    CCH_D842_16_ED2020_01,
+    CCH_D842_16_ED2021_01,
+    CCH_D842_16_ED2023_04,
+    CCH_D842_16_ED2023_09,
+    CCH_D842_16_ED2023_12,
+    CCH_D842_16_ED2026_07,
+    CCH_D842_6,
+    CCH_D842_6_ED2019_12,
+    CCH_D842_6_ED2020_01,
+    CCH_D842_6_ED2021_01,
+    CCH_D842_6_ED2023_04,
+    CCH_D842_6_ED2023_09,
+    CCH_D842_6_ED2023_12,
+    CCH_D842_6_ED2026_07,
+    CCH_L442_2_1,
+    CCH_L442_2_1_ED2019_12,
+    CCH_L442_2_1_ED2020_01,
+    CCH_L442_2_1_ED2021_01,
+    CCH_L442_2_1_ED2023_04,
+    CCH_L442_2_1_ED2023_09,
+    CCH_L442_2_1_ED2023_12,
+    CCH_L442_2_1_ED2026_07,
+    CCH_L821_1,
+    CCH_L821_1_ED2019_12,
+    CCH_L821_1_ED2020_01,
+    CCH_L821_1_ED2021_01,
+    CCH_L821_1_ED2023_04,
+    CCH_L821_1_ED2023_09,
+    CCH_L821_1_ED2023_12,
+    CCH_L821_1_ED2026_07,
+    CCH_R832_22,
+    CCH_R832_22_ED2019_12,
+    CCH_R832_22_ED2020_01,
+    CCH_R832_22_ED2021_01,
+    CCH_R832_22_ED2023_04,
+    CCH_R832_22_ED2023_09,
+    CCH_R832_22_ED2023_12,
+    CCH_R832_22_ED2026_07,
+};
+
+@source(ARR_ART07_ED2021_10, ARR_ART07_ED2022_01, ARR_ART07_ED2025_10)
+pub enum Zone {
+    label fr official "zone géographique du logement";
+    label ru unofficial "географическая зона жилья (I, II, III)";
+    ZONE_I, ZONE_II, ZONE_III
+}
+
+@source(CCH_L821_1, CCH_L821_1_ED2019_12, CCH_L821_1_ED2020_01,
+        CCH_L821_1_ED2021_01, CCH_L821_1_ED2023_04, CCH_L821_1_ED2023_09,
+        CCH_L821_1_ED2023_12, CCH_L821_1_ED2026_07)
+pub enum TypeAide {
+    label fr official "aides personnelles au logement";
+    label ru unofficial "виды персональных жилищных пособий";
+    APL, ALF, ALS
+}
+
+@source(ARR_ART14_ED2021_10, ARR_ART14_ED2022_01, ARR_ART14_ED2025_10)
+pub enum SituationFamiliale {
+    label fr official "situation familiale retenue par le barème: personne seule ou couple";
+    label ru unofficial "состав домохозяйства по барему: одинокое лицо или пара";
+    PERSONNE_SEULE, COUPLE
+}
+
+@source(CCH_D823_18, CCH_D823_18_ED2019_12, CCH_D823_18_ED2020_01,
+        CCH_D823_18_ED2021_01, CCH_D823_18_ED2023_04, CCH_D823_18_ED2023_09,
+        CCH_D823_18_ED2023_12, CCH_D823_18_ED2026_07)
+pub enum ModeLocation {
+    label fr official "location seule ou colocation au sens de l'article D. 823-18";
+    label ru unofficial "наём в одиночку или колокация (ст. D. 823-18)";
+    LOCATION_SEULE, COLOCATION
+}
+
+// Три члена — ровно те случаи, которые различает ст. 8 арретэ: обычное жильё,
+// комната и комната пожилого либо взрослого с инвалидностью, размещённого за
+// плату у частных лиц. Логическим флагом это не выражается: у комнаты в
+// зависимости от размещения РАЗНЫЙ плафон, а у обычного жилья его нет вовсе.
+@source(ARR_ART08_ED2021_10, ARR_ART08_ED2022_01, ARR_ART08_ED2025_10)
+pub enum FormeLogement {
+    label fr official "forme du logement occupé au sens de l'article 8 de l'arrêté";
+    label ru unofficial "форма занимаемого жилья по ст. 8 приказа";
+    LOGEMENT_ORDINAIRE, CHAMBRE, CHAMBRE_HEBERGEMENT_ONEREUX
+}
+
+// Две ветви D. 832-25: общий случай (1°) и фойе молодых работников с
+// социальными резиденциями (2°). Различие не логический флаг: у ветвей РАЗНЫЕ
+// таблицы долей N, разные множители cm, разный потолок коэффициента K и разный
+// минимум чистого расхода. Условие конвенционирования (после 30.09.1990 и
+// после 31.12.1994) в модель не введено — оно приходит этим фактом дела.
+@source(CCH_D832_25, CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01,
+        CCH_D832_25_ED2021_01, CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09,
+        CCH_D832_25_ED2023_12, CCH_D832_25_ED2026_07)
+pub enum TypeLogementFoyer {
+    label fr official "logement-foyer relevant du 1° ou du 2° de l'article D. 832-25";
+    label ru unofficial "logement-foyer по 1° либо 2° ст. D. 832-25";
+    GENERAL, JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE
+}
+
+// Четыре категории D. 842-16, для каждой арретэ называет свою эквивалентность
+// найма L: перечень закрыт самой статьёй.
+@source(CCH_D842_16, CCH_D842_16_ED2019_12, CCH_D842_16_ED2020_01,
+        CCH_D842_16_ED2021_01, CCH_D842_16_ED2023_04, CCH_D842_16_ED2023_09,
+        CCH_D842_16_ED2023_12, CCH_D842_16_ED2026_07)
+pub enum CategorieEquivalenceLoyer {
+    label fr official "catégories de personnes résidant dans un logement-foyer au sens de l'article D. 842-16";
+    label ru unofficial "категории проживающих в logement-foyer (ст. D. 842-16)";
+    ETUDIANT_CHAMBRE, ETUDIANT_CHAMBRE_REHABILITEE, PERSONNES_AGEES, AUTRES_PERSONNES
+}
+
+// Подслучай ст. 18 арретэ выбирается ДАТОЙ ПОДПИСАНИЯ ЗАЙМА — это факт дела, а
+// не месяц права, поэтому ось редакций здесь не при чём и винтаж приходит
+// перечислением. Перенесены два последних подслучая из восемнадцати; остальные
+// в барем не перенесены, и на таком деле плафон не подставится (см. барем).
+@source(ARR_ART18_ED2019_10, ARR_ART18_ED2020_01, ARR_ART18_ED2020_10,
+        ARR_ART18_ED2021_01, ARR_ART18_ED2021_10, ARR_ART18_ED2022_01,
+        ARR_ART18_ED2023_01, ARR_ART18_ED2023_10, ARR_ART18_ED2024_01,
+        ARR_ART18_ED2024_10, ARR_ART18_ED2025_01, ARR_ART18_ED2025_10,
+        ARR_ART18_ED2022_07)
+pub enum SousCasMensualitePlafond {
+    label fr official "sous-cas de l'article 18 de l'arrêté selon la date de signature du contrat de prêt";
+    label ru unofficial "подслучай ст. 18 приказа по дате подписания займа";
+    PRET_APRES_30_09_2017, PRET_APRES_30_09_2019
+}
+
+// Три колонки плафонов ст. 18: a) новое, b) расширенное либо приобретённое и
+// улучшенное, c) улучшенное собственником-жильцом. Колонка c) есть ТОЛЬКО у
+// франковых подслучаев 1°–3°, поэтому у перенесённых винтажей плафона для неё
+// нет вовсе — и правило её не производит, а не выдумывает.
+@source(ARR_ART18_ED2019_10, ARR_ART18_ED2020_01, ARR_ART18_ED2020_10,
+        ARR_ART18_ED2021_01, ARR_ART18_ED2021_10, ARR_ART18_ED2022_01,
+        ARR_ART18_ED2023_01, ARR_ART18_ED2023_10, ARR_ART18_ED2024_01,
+        ARR_ART18_ED2024_10, ARR_ART18_ED2025_01, ARR_ART18_ED2025_10,
+        ARR_ART18_ED2022_07)
+pub enum FinaliteOperation {
+    label fr official "finalité de l'opération au sens de l'article 18 de l'arrêté";
+    label ru unofficial "назначение операции по ст. 18 приказа";
+    LOGEMENT_NEUF, LOGEMENT_ACQUIS_AMELIORE, LOGEMENT_AMELIORE_PAR_OCCUPANT
+}
+
+// D. 832-15 различает две ветви расчёта L0 по тому, была ли операция связана с
+// приобретением: 1° — построенные, расширенные, приобретённые и улучшенные;
+// 2° — СУЩЕСТВУЮЩИЕ улучшенные, занимаемые собственником. Признак работ и есть
+// этот водораздел, и он независим от колонки плафона.
+@source(CCH_D832_15, CCH_D832_15_ED2019_12, CCH_D832_15_ED2020_01,
+        CCH_D832_15_ED2021_01, CCH_D832_15_ED2023_04, CCH_D832_15_ED2023_09,
+        CCH_D832_15_ED2023_12, CCH_D832_15_ED2026_07)
+pub enum TypeTravaux {
+    label fr official "nature des travaux au sens de l'article D. 832-15";
+    label ru unofficial "характер работ по ст. D. 832-15";
+    PAS_DE_TRAVAUX, TRAVAUX_POUR_ACQUISITION, TRAVAUX_SUR_LOGEMENT_DEJA_ACQUIS
+}
+
+@source(CCH_D832_16, CCH_D832_16_ED2019_12, CCH_D832_16_ED2020_01,
+        CCH_D832_16_ED2021_01, CCH_D832_16_ED2023_04, CCH_D832_16_ED2023_09,
+        CCH_D832_16_ED2023_12, CCH_D832_16_ED2026_07)
+pub enum ModePropriete {
+    label fr official "le demandeur est propriétaire unique ou copropriétaire au sens de l'article D. 832-16";
+    label ru unofficial "заявитель — единственный собственник либо сособственник (ст. D. 832-16)";
+    PROPRIETAIRE_UNIQUE, COPROPRIETAIRE
+}
+
+@source(ARR_ART25_ED2019_10, ARR_ART25_ED2020_01, ARR_ART25_ED2020_10,
+        ARR_ART25_ED2021_01, ARR_ART25_ED2021_10, ARR_ART25_ED2022_01,
+        ARR_ART25_ED2022_07, ARR_ART25_ED2023_01, ARR_ART25_ED2023_10,
+        ARR_ART25_ED2024_01, ARR_ART25_ED2024_10, ARR_ART25_ED2025_01,
+        ARR_ART25_ED2025_10)
+pub enum VintagePretDepenseNette {
+    label fr official "date de souscription du prêt au sens du 2° de l'article 25 de l'arrêté";
+    label ru unofficial "дата оформления займа по 2° ст. 25 приказа";
+    PRET_AVANT_OCTOBRE_1998, PRET_DEPUIS_OCTOBRE_1998
+}
+
+// Плафон аллокаций сектора приобретения выбирается ДАТОЙ «сертификата с датой»
+// (`certificat daté` ст. D. 842-7) — это другой факт, чем дата подписания займа
+// у ст. 18, и перечисление поэтому своё. Из двадцати одного винтажа ст. 33
+// перенесены два последних.
+@source(ARR_ART33_ED2020_01, ARR_ART33_ED2020_10, ARR_ART33_ED2021_01,
+        ARR_ART33_ED2021_10, ARR_ART33_ED2022_01, ARR_ART33_ED2022_07,
+        ARR_ART33_ED2023_01, ARR_ART33_ED2023_10, ARR_ART33_ED2024_01,
+        ARR_ART33_ED2024_10, ARR_ART33_ED2025_01, ARR_ART33_ED2025_10)
+pub enum VintageCertificatDate {
+    label fr official "vintage du tableau de l'article 33 selon la date du certificat daté";
+    label ru unofficial "винтаж таблицы ст. 33 по дате сертификата";
+    CERTIFICAT_DEPUIS_01_10_2015, CERTIFICAT_DEPUIS_01_10_2017,
+    CERTIFICAT_DEPUIS_01_10_2019
+}
+
+// D. 842-12 знает ДВЕ базы пола ресурсов, и выбор между ними зависит от того, по
+// какому пункту R. 842-5 назначена аллокация: 1° — коэффициент на заявленную
+// мензуальность, 2° — фиксированная сумма. Основание назначения в модель не
+// вводится, признак приходит фактом дела.
+@source(CCH_D842_12, CCH_D842_12_ED2019_12, CCH_D842_12_ED2020_01,
+        CCH_D842_12_ED2021_01, CCH_D842_12_ED2023_04, CCH_D842_12_ED2023_09,
+        CCH_D842_12_ED2023_12, CCH_D842_12_ED2026_07)
+pub enum BasePlancherRessources {
+    label fr official "base du plancher de ressources: coefficient sur la mensualité déclarée ou montant forfaitaire";
+    label ru unofficial "база пола ресурсов: коэффициент на мензуальность либо форфейт";
+    COEFFICIENT_MENSUALITE, MONTANT_FORFAITAIRE
+}
+
+// Заморские территории не имеют своих формул: ст. 46 и 47 арретэ ЗАМЕНЯЮТ
+// отдельные значения глав III, VI и VII. Поэтому территория — вторая ось барема
+// рядом с месяцем права, и она приходит фактом дела: ось `legal_time` её
+// выразить не может. Три члена — ровно те группы, которые различает сам арретэ:
+// метрополия, семь территорий ст. 46 и Сен-Пьер-и-Микелон ст. 47.
+@source(ARR_ART46_ED2023_01, ARR_ART46_ED2025_10)
+pub enum Territoire {
+    label fr official "territoire d'application: métropole, outre-mer de l'article 46 ou Saint-Pierre-et-Miquelon";
+    label ru unofficial "территория применения: метрополия, заморские территории ст. 46 либо Сен-Пьер-и-Микелон";
+    METROPOLE, OUTRE_MER, SAINT_PIERRE_ET_MIQUELON
+}
+
+pub entity Menage {
+    label fr official "ménage demandeur d'une aide personnelle au logement";
+    label ru unofficial "домохозяйство, претендующее на жилищное пособие";
+}
+
+// --- факты дела -----------------------------------------------------------
+
+relation mois_de_droit(m: Menage, mois: Date) kind empirical {
+    key(m);
+    label fr official "mois au titre duquel l'aide est due";
+    label ru unofficial "месяц, за который причитается пособие (ось редакции барема)";
+}
+
+@source(CCH_D823_9, CCH_D823_9_ED2019_12, CCH_D823_9_ED2020_01,
+        CCH_D823_9_ED2021_01, CCH_D823_9_ED2023_04, CCH_D823_9_ED2023_09,
+        CCH_D823_9_ED2023_12, CCH_D823_9_ED2026_07)
+pub relation secteur_locatif(m: Menage) kind empirical {
+    label fr official "ménage locataire ou sous-locataire au sens du 1° de l'article D. 823-9";
+    label ru unofficial "домохозяйство занимает жильё по найму (1° ст. D. 823-9)";
+}
+
+pub relation zone_du_logement(m: Menage, zone: Zone) kind empirical {
+    key(m);
+    label fr official "zone géographique du logement occupé";
+    label ru unofficial "зона, в которой расположено жильё";
+}
+
+pub relation aide_demandee(m: Menage, type_aide: TypeAide) kind empirical {
+    key(m);
+    label fr official "aide personnelle au logement dont le ménage bénéficie";
+    label ru unofficial "вид пособия, которое получает домохозяйство";
+}
+
+pub relation situation_familiale(m: Menage, situation: SituationFamiliale) kind empirical {
+    key(m);
+    label fr official "situation familiale du ménage";
+    label ru unofficial "состав домохозяйства: одинокое лицо либо пара";
+}
+
+pub relation personnes_a_charge(m: Menage, pac: Integer) kind empirical {
+    key(m);
+    label fr official "nombre de personnes à charge";
+    label ru unofficial "число лиц на иждивении";
+}
+
+pub relation loyer_principal(m: Menage, loyer: Money) kind empirical {
+    key(m);
+    label fr official "loyer principal acquitté";
+    label ru unofficial "основная плата за наём";
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+        CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07)
+pub relation ressources_du_menage(m: Menage, ressources: Money) kind empirical {
+    key(m);
+    label fr official "ressources du ménage appréciées selon la section 2 du chapitre II";
+    label ru unofficial "ресурсы домохозяйства: вычисляются отдельным актом и приходят фактом дела";
+}
+
+@source(CCH_D823_18, CCH_D823_18_ED2019_12, CCH_D823_18_ED2020_01,
+        CCH_D823_18_ED2021_01, CCH_D823_18_ED2023_04, CCH_D823_18_ED2023_09,
+        CCH_D823_18_ED2023_12, CCH_D823_18_ED2026_07)
+pub relation mode_location(m: Menage, mode: ModeLocation) kind empirical {
+    key(m);
+    label fr official "le logement est loué seul ou en colocation";
+    label ru unofficial "жильё занято в одиночку либо в колокации";
+}
+
+@source(ARR_ART08_ED2021_10, ARR_ART08_ED2022_01, ARR_ART08_ED2025_10)
+pub relation forme_logement(m: Menage, forme: FormeLogement) kind empirical {
+    key(m);
+    label fr official "forme du logement occupé: logement ordinaire, chambre ou chambre d'une personne hébergée à titre onéreux";
+    label ru unofficial "форма занимаемого жилья: обычное жильё, комната либо комната размещённого за плату";
+}
+
+@source(ARR_ART46_ED2023_01, ARR_ART46_ED2025_10)
+pub relation territoire(m: Menage, territoire: Territoire) kind empirical {
+    key(m);
+    label fr official "territoire dans lequel le logement est situé, au sens des articles 46 et 47 de l'arrêté";
+    label ru unofficial "территория расположения жилья по ст. 46 и 47 приказа";
+}
+
+@source(CCH_D842_6, CCH_D842_6_ED2019_12, CCH_D842_6_ED2020_01,
+        CCH_D842_6_ED2021_01, CCH_D842_6_ED2023_04, CCH_D842_6_ED2023_09,
+        CCH_D842_6_ED2023_12, CCH_D842_6_ED2026_07)
+pub relation secteur_accession_allocations(m: Menage) kind empirical {
+    label fr official "ménage mentionné à l'article R. 842-5: accession à la propriété relevant des allocations de logement";
+    label ru unofficial "домохозяйство ст. R. 842-5: приобретение жилья по линии аллокаций";
+}
+
+@source(ARR_ART33_ED2020_01, ARR_ART33_ED2020_10, ARR_ART33_ED2021_01,
+        ARR_ART33_ED2021_10, ARR_ART33_ED2022_01, ARR_ART33_ED2022_07,
+        ARR_ART33_ED2023_01, ARR_ART33_ED2023_10, ARR_ART33_ED2024_01,
+        ARR_ART33_ED2024_10, ARR_ART33_ED2025_01, ARR_ART33_ED2025_10)
+pub relation vintage_certificat(m: Menage, vintage: VintageCertificatDate) kind empirical {
+    key(m);
+    label fr official "vintage de l'article 33 déterminé par la date du certificat daté";
+    label ru unofficial "винтаж ст. 33 по дате сертификата";
+}
+
+// D. 842-10 1° делит учтённые платежи на ЧИСЛО сособственников-содолжников.
+// Счётчик объявлен `Decimal`, а не `Integer`, потому что делить на него
+// приходится деньги: перечень делимых §58 закрыт и пары `Money / Integer` в нём
+// нет. Тот же приём, что у «divisé par douze» — двенадцать там тоже `12.0`.
+@source(CCH_D842_10, CCH_D842_10_ED2019_12, CCH_D842_10_ED2020_01,
+        CCH_D842_10_ED2021_01, CCH_D842_10_ED2023_04, CCH_D842_10_ED2023_09,
+        CCH_D842_10_ED2023_12, CCH_D842_10_ED2026_07)
+pub relation nombre_coproprietaires(m: Menage, nombre: Decimal) kind empirical {
+    key(m);
+    label fr official "nombre de copropriétaires cotitulaires du prêt ouvrant droit à l'allocation de logement";
+    label ru unofficial "число сособственников-содолжников по займу";
+}
+
+@source(CCH_D842_12, CCH_D842_12_ED2019_12, CCH_D842_12_ED2020_01,
+        CCH_D842_12_ED2021_01, CCH_D842_12_ED2023_04, CCH_D842_12_ED2023_09,
+        CCH_D842_12_ED2023_12, CCH_D842_12_ED2026_07)
+pub relation base_plancher_ressources(m: Menage, base: BasePlancherRessources) kind empirical {
+    key(m);
+    label fr official "base applicable au plancher de ressources de l'article D. 842-12";
+    label ru unofficial "применимая база пола ресурсов ст. D. 842-12";
+}
+
+@source(CCH_D832_10, CCH_D832_10_ED2019_12, CCH_D832_10_ED2020_01,
+        CCH_D832_10_ED2021_01, CCH_D832_10_ED2023_04, CCH_D832_10_ED2023_09,
+        CCH_D832_10_ED2023_12, CCH_D832_10_ED2026_07)
+pub relation secteur_accession(m: Menage) kind empirical {
+    label fr official "propriétaire bénéficiant d'un prêt ouvrant droit à l'APL ou titulaire d'un contrat de location-accession";
+    label ru unofficial "собственник с займом, дающим право на APL, либо приобретатель по договору location-accession";
+}
+
+@source(ARR_ART18_ED2019_10, ARR_ART18_ED2020_01, ARR_ART18_ED2020_10,
+        ARR_ART18_ED2021_01, ARR_ART18_ED2021_10, ARR_ART18_ED2022_01,
+        ARR_ART18_ED2023_01, ARR_ART18_ED2023_10, ARR_ART18_ED2024_01,
+        ARR_ART18_ED2024_10, ARR_ART18_ED2025_01, ARR_ART18_ED2025_10,
+        ARR_ART18_ED2022_07)
+pub relation sous_cas_mensualite(m: Menage, sous_cas: SousCasMensualitePlafond) kind empirical {
+    key(m);
+    label fr official "sous-cas de l'article 18 déterminé par la date de signature du contrat de prêt";
+    label ru unofficial "подслучай ст. 18 по дате подписания займа";
+}
+
+@source(ARR_ART18_ED2019_10, ARR_ART18_ED2020_01, ARR_ART18_ED2020_10,
+        ARR_ART18_ED2021_01, ARR_ART18_ED2021_10, ARR_ART18_ED2022_01,
+        ARR_ART18_ED2023_01, ARR_ART18_ED2023_10, ARR_ART18_ED2024_01,
+        ARR_ART18_ED2024_10, ARR_ART18_ED2025_01, ARR_ART18_ED2025_10,
+        ARR_ART18_ED2022_07)
+pub relation finalite_operation(m: Menage, finalite: FinaliteOperation) kind empirical {
+    key(m);
+    label fr official "finalité de l'opération: logement neuf, acquis et amélioré, ou amélioré par son propriétaire occupant";
+    label ru unofficial "назначение операции: новое жильё, приобретённое и улучшенное либо улучшенное собственником-жильцом";
+}
+
+@source(CCH_D832_15, CCH_D832_15_ED2019_12, CCH_D832_15_ED2020_01,
+        CCH_D832_15_ED2021_01, CCH_D832_15_ED2023_04, CCH_D832_15_ED2023_09,
+        CCH_D832_15_ED2023_12, CCH_D832_15_ED2026_07)
+pub relation type_travaux(m: Menage, travaux: TypeTravaux) kind empirical {
+    key(m);
+    label fr official "nature des travaux au sens de l'article D. 832-15";
+    label ru unofficial "характер работ по ст. D. 832-15";
+}
+
+@source(CCH_D832_16, CCH_D832_16_ED2019_12, CCH_D832_16_ED2020_01,
+        CCH_D832_16_ED2021_01, CCH_D832_16_ED2023_04, CCH_D832_16_ED2023_09,
+        CCH_D832_16_ED2023_12, CCH_D832_16_ED2026_07)
+pub relation mode_propriete(m: Menage, mode: ModePropriete) kind empirical {
+    key(m);
+    label fr official "propriétaire unique ou copropriétaire";
+    label ru unofficial "единственный собственник либо сособственник";
+}
+
+// Слагаемые мензуальности названы D. 832-12 (проценты, амортизация, страховки),
+// но считаются по кредитным сертификатам, а не этим актом: величина приходит
+// фактом дела, и статья объявлена границей с причиной.
+@source(CCH_D832_12, CCH_D832_12_ED2019_12, CCH_D832_12_ED2020_01,
+        CCH_D832_12_ED2021_01, CCH_D832_12_ED2023_04, CCH_D832_12_ED2023_09,
+        CCH_D832_12_ED2023_12, CCH_D832_12_ED2026_07)
+pub relation mensualite_declaree(m: Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "mensualité déclarée figurant sur le certificat daté des organismes prêteurs";
+    label ru unofficial "заявленная мензуальность по сертификату заимодавца";
+}
+
+@source(ARR_ART25_ED2019_10, ARR_ART25_ED2020_01, ARR_ART25_ED2020_10,
+        ARR_ART25_ED2021_01, ARR_ART25_ED2021_10, ARR_ART25_ED2022_01,
+        ARR_ART25_ED2022_07, ARR_ART25_ED2023_01, ARR_ART25_ED2023_10,
+        ARR_ART25_ED2024_01, ARR_ART25_ED2024_10, ARR_ART25_ED2025_01,
+        ARR_ART25_ED2025_10)
+pub relation vintage_pret_depense_nette(m: Menage, vintage: VintagePretDepenseNette) kind empirical {
+    key(m);
+    label fr official "le prêt a été souscrit avant ou à compter du 1er octobre 1998";
+    label ru unofficial "заём оформлен до либо с 1 октября 1998 года";
+}
+
+@source(CCH_D832_18, CCH_D832_18_ED2019_12, CCH_D832_18_ED2020_01,
+        CCH_D832_18_ED2021_01, CCH_D832_18_ED2023_04, CCH_D832_18_ED2023_09,
+        CCH_D832_18_ED2023_12, CCH_D832_18_ED2026_07)
+pub relation situation_r822_11_13_17(m: Menage, situation: Boolean) kind empirical {
+    key(m);
+    label fr official "le ménage se trouve dans l'une des situations mentionnées aux articles R. 822-11 et R. 822-13 à R. 822-17";
+    label ru unofficial "домохозяйство в одной из ситуаций R. 822-11 и R. 822-13…R. 822-17 (снимает пол ресурсов)";
+}
+
+@source(CCH_R832_22, CCH_R832_22_ED2019_12, CCH_R832_22_ED2020_01,
+        CCH_R832_22_ED2021_01, CCH_R832_22_ED2023_04, CCH_R832_22_ED2023_09,
+        CCH_R832_22_ED2023_12, CCH_R832_22_ED2026_07)
+pub relation secteur_logement_foyer(m: Menage) kind empirical {
+    label fr official "ménage résidant dans un logement-foyer mentionné au 3° de l'article D. 823-9";
+    label ru unofficial "домохозяйство проживает в logement-foyer (3° ст. D. 823-9)";
+}
+
+@source(CCH_D832_25, CCH_D832_25_ED2019_12, CCH_D832_25_ED2020_01,
+        CCH_D832_25_ED2021_01, CCH_D832_25_ED2023_04, CCH_D832_25_ED2023_09,
+        CCH_D832_25_ED2023_12, CCH_D832_25_ED2026_07)
+pub relation type_logement_foyer(m: Menage, type_foyer: TypeLogementFoyer) kind empirical {
+    key(m);
+    label fr official "le logement-foyer relève du 1° ou du 2° de l'article D. 832-25";
+    label ru unofficial "фойе относится к 1° либо к 2° ст. D. 832-25";
+}
+
+@source(CCH_D842_16, CCH_D842_16_ED2019_12, CCH_D842_16_ED2020_01,
+        CCH_D842_16_ED2021_01, CCH_D842_16_ED2023_04, CCH_D842_16_ED2023_09,
+        CCH_D842_16_ED2023_12, CCH_D842_16_ED2026_07)
+pub relation categorie_equivalence_loyer(m: Menage, categorie: CategorieEquivalenceLoyer) kind empirical {
+    key(m);
+    label fr official "catégorie de personnes à laquelle appartient le résident au sens de l'article D. 842-16";
+    label ru unofficial "категория проживающего по ст. D. 842-16";
+}
+
+@source(CCH_D842_15, CCH_D842_15_ED2019_12, CCH_D842_15_ED2020_01,
+        CCH_D842_15_ED2021_01, CCH_D842_15_ED2023_04, CCH_D842_15_ED2023_09,
+        CCH_D842_15_ED2023_12, CCH_D842_15_ED2026_07)
+pub relation redevance(m: Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "redevance supportée par le résident du logement-foyer";
+    label ru unofficial "плата (redevance), которую несёт проживающий в фойе";
+}
+
+@source(CCH_L442_2_1, CCH_L442_2_1_ED2019_12, CCH_L442_2_1_ED2020_01,
+        CCH_L442_2_1_ED2021_01, CCH_L442_2_1_ED2023_04, CCH_L442_2_1_ED2023_09,
+        CCH_L442_2_1_ED2023_12, CCH_L442_2_1_ED2026_07)
+pub relation reduction_loyer_solidarite(m: Menage, rls: Money) kind empirical {
+    key(m);
+    label fr official "montant de la réduction de loyer de solidarité dont bénéficie le locataire";
+    label ru unofficial "размер RLS: вычисляется другим актом и приходит фактом дела";
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+pub relation beneficiaire_aah_ou_aeeh(m: Menage, beneficiaire: Boolean) kind empirical {
+    key(m);
+    label fr official "le demandeur ou son conjoint bénéficie de l'AAH ou de l'AEEH";
+    label ru unofficial "заявитель или его супруг получает AAH либо AEEH (снимает дегрессивность)";
+}
+
+// --- барем A3 ------------------------------------------------------------
+//
+// Значения барема живут в `bareme/*.lawparam.json` и читаются ГОЛЫМ ИМЕНЕМ
+// из функций модуля 02: `context.legalTime` — месяц, за который пособие
+// причитается, и он выбирает версию статьи арретэ. Таблицы решений A3 для
+// этого не годятся: `mode: rules` требует факта `<id таблицы>/input`, не
+// адресуемого ни из `.law`, ни из `.lawtest`, а `mode: function` не
+// вызывается из правила (LDC-E2105). Оба отказа измерены — см. комментарий
+// в tools/build_bareme.py.

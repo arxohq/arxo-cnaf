@@ -1,0 +1,16 @@
+// Three-year limit met: two recorded years for the illness —
+// within the D. 544-1 limit.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-duree-limite-ok" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-dur-01": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-dur"), MALADIE, 2) { origin case_input; }
+    }
+    evaluate truth(ajpp_duree_dans_limite(entity_ref("urn:fr:pf-ajpp:case:enfant-dur"), MALADIE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

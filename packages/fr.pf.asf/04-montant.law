@@ -1,0 +1,257 @@
+// Monthly amounts by rate and the partial-pension differential (L523-3, R523-7).
+//
+// FIXES (D-29(c)). (1) F-CH6-ASF-PENSION-DOUBLE: the 4 ground (partial
+// pension) is paid ONLY as the differential (L. 523-1 I 4: "une allocation
+// de soutien familial differentielle est versee"); the former full single-
+// rate MontantSimplePension rule paid the base amount next to it and is
+// removed. (2) F-CH6-ASF-DEFAUT-DOUBLE-MORT: the double-default amount was
+// effective only from 2022-11 while its opener ended there; the amount now
+// spans the whole coverage window and the time row of TauxAsfDoubleOrphelin
+// selects 0.375 or 0.5625 (see 02-conditions EligibleDefautDoubleApres2022).
+//
+// READINGS. The single rate pays the 1, 3 and 4 grounds, the double
+// rate the orphan-of-both ground; the pre-2022 double default (5)
+// paid the double rate with the same effect in the 2021 window. The
+// engine selects the R523-7 row in force at legal_time (0.2813 simple
+// and 0.375 double from 2018-04-01 to 2022-11-01, then 0.422 and
+// 0.5625; the own-package pre-2022 pin stands in the @source lists,
+// D-15). The 4 differential is standalone: it computes from the
+// maintenance facts alone, with no opened right and no request needed
+// (adopted reading, blind probe PFASF-B-02). The 15 EUR non-payment
+// floor (D523-3) operates on the household total, which the engine
+// cannot fold: small differentials below it are a documented
+// divergence, never a source (B-PFASF-SEUIL).
+
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+use self::{
+    CSS_D523_3,
+    CSS_D523_3_ED2018_07_27,
+    CSS_D523_3_ED2019_12,
+    CSS_D523_3_ED2021_12,
+    CSS_D523_3_ED2022_11,
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_L523_3,
+    CSS_L523_3_ED1999_11,
+    CSS_L523_3_ED2011_12,
+    CSS_L523_3_ED2014_04,
+    CSS_L523_3_ED2015_04,
+    CSS_L523_3_ED2016_04,
+    CSS_L523_3_ED2017_04,
+    CSS_L523_3_ED2018_04,
+    CSS_L523_3_ED2018_07,
+    CSS_L523_3_ED2018_07_27,
+    CSS_L523_3_ED2019_12,
+    CSS_L523_3_ED2021_12,
+    CSS_L523_3_ED2022_11,
+    CSS_R523_1,
+    CSS_R523_1_ED2018_04,
+    CSS_R523_1_ED2018_07,
+    CSS_R523_1_ED2018_07_27,
+    CSS_R523_1_ED2019_12,
+    CSS_R523_1_ED2021_12,
+    CSS_R523_1_ED2022_11,
+    CSS_R523_7,
+    CSS_R523_7_PRE2015,
+    CSS_R523_7_PRE2016,
+    CSS_R523_7_PRE2017,
+    CSS_R523_7_PRE2018,
+    CSS_R523_7_PRE2022,
+    CSS_R523_7_PRE2022_ED2018_07,
+    CSS_R523_7_PRE2022_ED2018_07_27,
+    CSS_R523_7_PRE2022_ED2019_12,
+    CSS_R523_7_PRE2022_ED2021_12,
+    MotifAsf,
+    asf_differentiel_du,
+    asf_enfant_eligible,
+    asf_montant_du,
+    bmaf_retenu,
+    manquement_debiteur,
+    mois_ouverture_asf,
+    motif_asf,
+    pension_recue,
+};
+
+@source(
+    CSS_L523_3,
+    CSS_L523_3_ED1999_11,
+    CSS_L523_3_ED2011_12,
+    CSS_L523_3_ED2014_04,
+    CSS_L523_3_ED2015_04,
+    CSS_L523_3_ED2016_04,
+    CSS_L523_3_ED2017_04,
+    CSS_L523_3_ED2018_04,
+    CSS_L523_3_ED2018_07,
+    CSS_L523_3_ED2018_07_27,
+    CSS_L523_3_ED2019_12,
+    CSS_L523_3_ED2021_12,
+    CSS_L523_3_ED2022_11,
+    CSS_R523_7,
+    CSS_R523_7_PRE2015,
+    CSS_R523_7_PRE2016,
+    CSS_R523_7_PRE2017,
+    CSS_R523_7_PRE2018,
+    CSS_R523_7_PRE2022,
+    CSS_R523_7_PRE2022_ED2018_07,
+    CSS_R523_7_PRE2022_ED2018_07_27,
+    CSS_R523_7_PRE2022_ED2019_12,
+    CSS_R523_7_PRE2022_ED2021_12)
+rule MontantSimpleOrphelin(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "orphelin d'un parent eligible: taux simple de la base mensuelle (L. 523-3, R. 523-7)";
+    label en unofficial "eligible orphan of one parent: single rate of the monthly base (L. 523-3, R. 523-7)";
+    when asf_enfant_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and motif_asf(e, ORPHELIN_UN_PARENT) and bmaf_retenu(p, bmaf);
+    then asf_montant_du(e, round(TauxAsfSimple * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L523_3,
+    CSS_L523_3_ED1999_11,
+    CSS_L523_3_ED2011_12,
+    CSS_L523_3_ED2014_04,
+    CSS_L523_3_ED2015_04,
+    CSS_L523_3_ED2016_04,
+    CSS_L523_3_ED2017_04,
+    CSS_L523_3_ED2018_04,
+    CSS_L523_3_ED2018_07,
+    CSS_L523_3_ED2018_07_27,
+    CSS_L523_3_ED2019_12,
+    CSS_L523_3_ED2021_12,
+    CSS_L523_3_ED2022_11,
+    CSS_R523_7,
+    CSS_R523_7_PRE2015,
+    CSS_R523_7_PRE2016,
+    CSS_R523_7_PRE2017,
+    CSS_R523_7_PRE2018,
+    CSS_R523_7_PRE2022,
+    CSS_R523_7_PRE2022_ED2018_07,
+    CSS_R523_7_PRE2022_ED2018_07_27,
+    CSS_R523_7_PRE2022_ED2019_12,
+    CSS_R523_7_PRE2022_ED2021_12)
+rule MontantSimpleDefaut(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "defaillance eligible: taux simple de la base mensuelle (L. 523-3, R. 523-7)";
+    label en unofficial "eligible default: single rate of the monthly base (L. 523-3, R. 523-7)";
+    when asf_enfant_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and motif_asf(e, DEFAUT_SIMPLE) and bmaf_retenu(p, bmaf);
+    then asf_montant_du(e, round(TauxAsfSimple * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L523_3,
+    CSS_L523_3_ED1999_11,
+    CSS_L523_3_ED2011_12,
+    CSS_L523_3_ED2014_04,
+    CSS_L523_3_ED2015_04,
+    CSS_L523_3_ED2016_04,
+    CSS_L523_3_ED2017_04,
+    CSS_L523_3_ED2018_04,
+    CSS_L523_3_ED2018_07,
+    CSS_L523_3_ED2018_07_27,
+    CSS_L523_3_ED2019_12,
+    CSS_L523_3_ED2021_12,
+    CSS_L523_3_ED2022_11,
+    CSS_R523_7,
+    CSS_R523_7_PRE2015,
+    CSS_R523_7_PRE2016,
+    CSS_R523_7_PRE2017,
+    CSS_R523_7_PRE2018,
+    CSS_R523_7_PRE2022,
+    CSS_R523_7_PRE2022_ED2018_07,
+    CSS_R523_7_PRE2022_ED2018_07_27,
+    CSS_R523_7_PRE2022_ED2019_12,
+    CSS_R523_7_PRE2022_ED2021_12)
+rule MontantDoubleDeuxParents(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "orphelin des deux parents eligible: taux double de la base mensuelle (L. 523-3, R. 523-7)";
+    label en unofficial "eligible orphan of both parents: double rate of the monthly base (L. 523-3, R. 523-7)";
+    when asf_enfant_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and motif_asf(e, ORPHELIN_DEUX_PARENTS) and bmaf_retenu(p, bmaf);
+    then asf_montant_du(e, round(TauxAsfDoubleOrphelin * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L523_3,
+    CSS_L523_3_ED1999_11,
+    CSS_L523_3_ED2011_12,
+    CSS_L523_3_ED2014_04,
+    CSS_L523_3_ED2015_04,
+    CSS_L523_3_ED2016_04,
+    CSS_L523_3_ED2017_04,
+    CSS_L523_3_ED2018_04,
+    CSS_L523_3_ED2018_07,
+    CSS_L523_3_ED2018_07_27,
+    CSS_L523_3_ED2019_12,
+    CSS_L523_3_ED2021_12,
+    CSS_L523_3_ED2022_11,
+    CSS_R523_7,
+    CSS_R523_7_PRE2015,
+    CSS_R523_7_PRE2016,
+    CSS_R523_7_PRE2017,
+    CSS_R523_7_PRE2018,
+    CSS_R523_7_PRE2022,
+    CSS_R523_7_PRE2022_ED2018_07,
+    CSS_R523_7_PRE2022_ED2018_07_27,
+    CSS_R523_7_PRE2022_ED2019_12,
+    CSS_R523_7_PRE2022_ED2021_12)
+rule MontantDoubleDefaut2022(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "defaillance des deux debiteurs: taux double de la base mensuelle en vigueur, 37,5 % avant novembre 2022 puis 56,25 % (L. 523-1 5° avant 2022-11, 3° ensuite; R. 523-7)";
+    label en unofficial "double debtor default: double rate of the monthly base in force, 37.5% before November 2022 then 56.25% (L. 523-1 5th before 2022-11, 3rd after; R. 523-7)";
+    when asf_enfant_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and motif_asf(e, DEFAUT_DOUBLE) and bmaf_retenu(p, bmaf);
+    then asf_montant_du(e, round(TauxAsfDoubleOrphelin * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_D523_3,
+    CSS_D523_3_ED2018_07_27,
+    CSS_D523_3_ED2019_12,
+    CSS_D523_3_ED2021_12,
+    CSS_D523_3_ED2022_11,
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_L523_3,
+    CSS_L523_3_ED1999_11,
+    CSS_L523_3_ED2011_12,
+    CSS_L523_3_ED2014_04,
+    CSS_L523_3_ED2015_04,
+    CSS_L523_3_ED2016_04,
+    CSS_L523_3_ED2017_04,
+    CSS_L523_3_ED2018_04,
+    CSS_L523_3_ED2018_07,
+    CSS_L523_3_ED2018_07_27,
+    CSS_L523_3_ED2019_12,
+    CSS_L523_3_ED2021_12,
+    CSS_L523_3_ED2022_11,
+    CSS_R523_1,
+    CSS_R523_1_ED2018_04,
+    CSS_R523_1_ED2018_07,
+    CSS_R523_1_ED2018_07_27,
+    CSS_R523_1_ED2019_12,
+    CSS_R523_1_ED2021_12,
+    CSS_R523_1_ED2022_11)
+rule DifferentielPartiel(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, pension: Money, manq: Date, m0: Date, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "pension sous le taux simple, delai purge: differentiel brut, voie autonome sans droit ouvert ni demande (L. 523-1 4°)";
+    label en unofficial "pension below the single rate, period served: gross differential, standalone track with no open right or request (L. 523-1 4°)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and motif_asf(e, PENSION_PARTIELLE)
+        and manquement_debiteur(e, manq) and mois_ouverture_asf(m0)
+        and m0 >= add_calendar_period(manq, 1 calendar_month)
+        and pension_recue(e, pension) and bmaf_retenu(p, bmaf)
+        and pension < TauxAsfSimple * bmaf;
+    then asf_differentiel_du(e, TauxAsfSimple * bmaf - pension);
+}

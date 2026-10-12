@@ -1,0 +1,22 @@
+// Prime naissance, inputs → value: pregnancy, resources of 20000 € ≤ ceiling
+// of 35841.00 € (= 119.47% × 30000), case BMAF of 400.00 € →
+// 400 × 2.2975 = 919.00 €. BMAF and base ceiling are case facts (series —
+// fr.pf.core, wave 1, neighbouring package).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-naissance-montant" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "naissance-montant-01": attente_naissance(entity_ref("urn:fr:paje:case:naissance-montant"), entity_ref("urn:fr:paje:enfant:naissance-montant")) { origin case_input; }
+        assert "naissance-montant-02": ressources_annuelles(entity_ref("urn:fr:paje:case:naissance-montant"), 20000 EUR) { origin case_input; }
+        assert "naissance-montant-03": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:naissance-montant"), 30000 EUR) { origin case_input; }
+        assert "naissance-montant-04": bmaf_applicable(entity_ref("urn:fr:paje:case:naissance-montant"), 400.00 EUR) { origin case_input; }
+        assert "naissance-montant-05": date_examen_situation(entity_ref("urn:fr:paje:case:naissance-montant"), entity_ref("urn:fr:paje:enfant:naissance-montant"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prime_attribuee(entity_ref("urn:fr:paje:case:naissance-montant"), entity_ref("urn:fr:paje:enfant:naissance-montant"), 919.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

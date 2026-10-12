@@ -1,0 +1,17 @@
+// 2021 couple half-day rate: 5.315 % of the retained BMAF 400.00 —
+// 21.26, the carer outside L. 5421-1 (D. 544-6 2020).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-demi-couple-2021" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ajpp-dc-01": bmaf_retenue_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-dc"), 400.00 EUR) { origin case_input; }
+        assert "ajpp-dc-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ajpp:case:parent-dc"), entity_ref("urn:fr:pf-ajpp:case:enfant-dc")) { origin case_input; }
+    }
+    evaluate truth(taux_demi_journee_2021(entity_ref("urn:fr:pf-ajpp:case:enfant-dc"), 21.26 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

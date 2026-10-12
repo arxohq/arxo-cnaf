@@ -1,0 +1,17 @@
+// Deontics, without pregnancy (no attente_naissance): nothing to declare —
+// no DeclarerGrossesseEnDelai position. Control — devoir-declarer-actif.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-devoir-declarer-sans-grossesse" {
+    given {
+        context { decision_time @2025-03-15T12:00:00Z; knowledge_time @2025-03-15T12:00:00Z; legal_time @2025-03-15; timezone "Europe/Paris"; }
+        assert "devoir-nodecl-01": debut_grossesse(entity_ref("urn:fr:paje:case:devoir-nodecl"), entity_ref("urn:fr:paje:enfant:devoir-nodecl"), @2025-01-06) { origin adjudicated; }
+        assert "devoir-nodecl-02": date_limite_declaration(entity_ref("urn:fr:paje:case:devoir-nodecl"), entity_ref("urn:fr:paje:enfant:devoir-nodecl"), @2025-04-14) { origin adjudicated; }
+        assert "devoir-nodecl-03": organisme_debiteur(entity_ref("urn:fr:paje:org:caisse"), entity_ref("urn:fr:paje:case:devoir-nodecl")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(DeclarerGrossesseEnDelai, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

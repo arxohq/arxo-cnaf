@@ -1,0 +1,19 @@
+// Active payment duty (D1): right open, March 2024 total 600.00
+// computed, debtor-body link established — VerserAjpaDue is ACTIVE.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-devoir-versement-actif" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-dv-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-dv"), entity_ref("urn:fr:css:ajpa:case:aide-dv")) { origin case_input; }
+        assert "ajpa-dv-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-dv")) { origin adjudicated; }
+        assert "ajpa-dv-03": jours_ajpa_mois(entity_ref("urn:fr:css:ajpa:case:aidant-dv"), entity_ref("urn:fr:css:ajpa:case:aide-dv"), @2024-03-01, 10) { origin case_input; }
+        assert "ajpa-dv-04": montant_journalier_retenu(entity_ref("urn:fr:css:ajpa:case:aidant-dv"), 60.00 EUR) { origin case_input; }
+        assert "ajpa-dv-05": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-dv")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(VerserAjpaDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

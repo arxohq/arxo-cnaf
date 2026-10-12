@@ -1,0 +1,31 @@
+// РАСХОДИТСЯ_(б): наше 0.0161, их 0.02, разница -0.0039; их файл 0.0161 ≠ их код — их код отдаёт ставку, округлённую до двух знаков (0,02); их же файл ожидает 0,0161 = наше число ст. 46 для восьми иждивенцев — округление их вывода, не барема
+// Файл отложен: в [tests] не входит, ждёт квалификации либо закрепления акта.
+// ИСТОЧНИК: OpenFisca-France, openfisca/openfisca-france@b2ab9943, tests/formulas/tests_formulas_aides_logement.yaml.
+// ИХ КОД: aide_logement_taux_famille = 0.02; их файл: 0.0161.
+// Факты сняты с их же прогона (зона, ресурсы, состав семьи, наём). все три вида пособия у них нулевые — вид принят по конвенции жилья
+// Файл порождён corpus/tools/foreign/openfisca_tests.py по tools/foreign-map.json.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-aide-logement-taux-famille" {
+    given {
+        context { decision_time @2023-10-15T12:00:00Z; knowledge_time @2023-10-15T12:00:00Z; legal_time @2023-10-15; timezone "Europe/Paris"; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-01": secteur_locatif(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10")) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-02": aide_demandee(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), ALF) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-03": zone_du_logement(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), ZONE_II) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-04": situation_familiale(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), PERSONNE_SEULE) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-05": personnes_a_charge(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), 8) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-06": ressources_du_menage(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), 0.00 EUR) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-07": loyer_principal(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), 0.00 EUR) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-08": mode_location(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), LOCATION_SEULE) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-09": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), 0.00 EUR) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-10": territoire(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), OUTRE_MER) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-11": forme_logement(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10-12": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), false) { origin case_input; }
+    }
+    evaluate truth(taux_composition_familiale(entity_ref("urn:fr:apl:case:of-aides-logements-saint-barth-lemy-rel-ve-du-bar-m-2023-10"), 0.02));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

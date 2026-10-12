@@ -1,0 +1,20 @@
+// DOM attribution absent outside L. 751-1 (pair): the AJPP right
+// is open and the claimant is in charge, but no residence in a
+// listed collectivity is established — no L. 755-33 attribution.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-attribution-dom-hors-l751" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-adh-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-adh")) { origin adjudicated; }
+        assert "ajpp-adh-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-adh")) { origin adjudicated; }
+        assert "ajpp-adh-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-adh"), entity_ref("urn:fr:pf-ajpp:case:enfant-adh")) { origin case_input; }
+        assert "ajpp-adh-04": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ajpp:case:parent-adh"), entity_ref("urn:fr:pf-ajpp:case:enfant-adh")) { origin case_input; }
+    }
+    evaluate truth(ajpp_attribution_l751(entity_ref("urn:fr:pf-ajpp:case:parent-adh"), entity_ref("urn:fr:pf-ajpp:case:enfant-adh")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

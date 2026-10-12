@@ -1,0 +1,181 @@
+// Uncoupling from the spouse income (01.10.2023): double calculation and
+// irreversible switch (decree 2022-1694 art. 2, decree 2023-360 art. 2).
+//
+// «A partir de cette date, les bénéficiaires ... continuent à percevoir
+// cette allocation selon les modalités résultant de l'ensemble des
+// dispositions en vigueur au 30 septembre 2023 si le montant d'allocation
+// à percevoir au titre des droits du mois d'octobre 2023, tel qu'il
+// résulte de l'ensemble des dispositions applicables au 30 septembre
+// 2023, est plus élevé que le montant ... calculé en application des
+// dispositions réglementaires [nouvelles]. Ces personnes continuent
+// ensuite à bénéficier de l'allocation ... selon les modalités [au
+// 30.09.2023], y compris en cas de renouvellement de leurs droits, tant
+// que le montant ... calculé selon ces modalités est plus élevé que le
+// montant calculé au titre de la même période en application des
+// dispositions en vigueur à la date à laquelle leurs droits sont
+// calculés. Cette règle cesse toutefois, définitivement, de leur être
+// applicable dès que le montant calculé suivant les dispositions en
+// vigueur ... est supérieur ou égal ...» (decree 2022-1694, art. 2).
+//
+// The ESAT cap (D. 821-5, both wordings) applies to the chosen figure in
+// 05-cumul-esat.law; without ESAT facts the choice passes through here.
+//
+// NAMED READINGS §152 (SensRenouvellement, exactly_one): the decree keeps
+// maintenance «y compris en cas de renouvellement» but is silent on a
+// reopening after the earlier right lapsed ("jusqu'à expiration du droit"
+// question). MaintienTantQue (literal, continuous): any later award to a
+// 01.10.2023 beneficiary, even after a gap, keeps the comparison.
+// RenouvellementStrict: maintenance needs an unbroken right; a new claim
+// after lapse restarts under the current rules only. The dependency
+// scenario (tests/aah-lecture-*.lawtest) pays the former figure under the
+// first reading and the current figure under the second.
+
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+use self::{
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01,
+    JORF_D1694_ART2,
+    JORF_D3360_ART2,
+    Personne,
+    aah_maintien_ancien_calcul,
+    aah_montant_ancien,
+    aah_montant_du,
+    aah_montant_nouveau,
+    aah_montant_rupture,
+    beneficiaire_au_1er_octobre_2023,
+    maintien_eteint,
+    renouvellement_apres_rupture,
+    sans_esat,
+};
+
+// --- Maintenance while the former figure stays higher ---------------------
+
+@source(JORF_D1694_ART2, JORF_D3360_ART2)
+rule MaintienApplique(p: Personne, a: Money, n: Money) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "maintien des modalités au 30.09.2023 tant que leur montant dépasse le montant nouveau, extinction définitive sinon";
+    label en unofficial "maintenance of the 30.09.2023 rules while their amount exceeds the current amount, definitively extinguished otherwise";
+    when beneficiaire_au_1er_octobre_2023(p) and aah_montant_ancien(p, a) and aah_montant_nouveau(p, n) and a > n and not_known(maintien_eteint(p)) and not_known(renouvellement_apres_rupture(p));
+    then aah_maintien_ancien_calcul(p);
+}
+
+// --- Pass-through without ESAT facts --------------------------------------
+
+@source(
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01)
+rule MontantDuAncienDirect(p: Personne, a: Money) strict {
+    effective [@2021-01-01, @2023-10-01);
+    label fr official "avant le 01.10.2023, hors ESAT: le montant ancien est dû";
+    label en unofficial "before 01.10.2023, outside sheltered work: the former amount is due";
+    when aah_montant_ancien(p, a) and sans_esat(p);
+    then aah_montant_du(p, a);
+}
+
+@source(JORF_D1694_ART2, JORF_D3360_ART2)
+rule MontantDuMaintienSansEsat(p: Personne, a: Money) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "maintien actif, hors ESAT: le montant ancien est dû";
+    label en unofficial "maintenance active, outside sheltered work: the former amount is due";
+    when aah_maintien_ancien_calcul(p) and aah_montant_ancien(p, a) and sans_esat(p);
+    then aah_montant_du(p, a);
+}
+
+@source(
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23)
+rule MontantDuNouveauSansEsat(p: Personne, n: Money) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "sans maintien, hors ESAT: le montant nouveau est dû";
+    label en unofficial "without maintenance, outside sheltered work: the current amount is due";
+    when aah_montant_nouveau(p, n) and sans_esat(p) and not_known(aah_maintien_ancien_calcul(p));
+    then aah_montant_du(p, n);
+}
+
+// --- Gap-tolerant renewal (gated: member of MaintienTantQue only) ----------
+//
+// The gap derivation carries its OWN head (aah_montant_rupture): sharing
+// the maintien head would make every downstream query statically depend
+// on the SensRenouvellement group (§156) and demand INTERPRETATION_REQUIRED
+// even far from any gap. The mainstream current figure stays available as
+// a reading-independent control.
+
+@source(JORF_D1694_ART2)
+rule RenouvellementRuptureMontant(p: Personne, a: Money, n: Money) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "renouvellement après rupture, hors ESAT: l'ancien montant reste dû (lecture littérale)";
+    label en unofficial "renewal after a lapse, outside sheltered work: the former amount remains due (literal reading)";
+    when beneficiaire_au_1er_octobre_2023(p) and renouvellement_apres_rupture(p) and aah_montant_ancien(p, a) and aah_montant_nouveau(p, n) and a > n and not_known(maintien_eteint(p)) and sans_esat(p);
+    then aah_montant_rupture(p, a);
+}
+
+// --- Named readings §152: renewal after a lapse ----------------------------
+
+pub interpretation MaintienTantQue of JORF_D1694_ART2 {
+    status disputed;
+    effective [@2023-10-01, infinity);
+    include RenouvellementRuptureMontant;
+}
+
+pub interpretation RenouvellementStrict of JORF_D1694_ART2 {
+    status disputed;
+    effective [@2023-10-01, infinity);
+}
+
+interpretation_group SensRenouvellement {
+    alternatives MaintienTantQue, RenouvellementStrict;
+    selection exactly_one;
+}

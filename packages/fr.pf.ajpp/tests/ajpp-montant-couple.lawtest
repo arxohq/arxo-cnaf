@@ -1,0 +1,29 @@
+// Monthly total at the retained daily rate: 10 days at 60.00 in
+// March 2024 = 600.00. The rate is a decree figure (B-PFAJPP-D544).
+// F05-01: envelope history qualifies the amount (100 cumulative days,
+// 1 recorded year); monthly conformity via the decree 22 path.
+// The first query pins the qualified envelope head itself.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-montant-couple" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-mt-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-mt")) { origin adjudicated; }
+        assert "ajpp-mt-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-mt")) { origin adjudicated; }
+        assert "ajpp-mt-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-mt"), entity_ref("urn:fr:pf-ajpp:case:enfant-mt")) { origin case_input; }
+        assert "ajpp-mt-04": jours_ajpp_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mt"), @2024-03-01, 10) { origin case_input; }
+        assert "ajpp-mt-05": montant_journalier_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-mt"), 60.00 EUR) { origin case_input; }
+        assert "ajpp-mt-06": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-mt"), 100) { origin case_input; }
+        assert "ajpp-mt-07": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-mt"), MALADIE, 1) { origin case_input; }
+    }
+    evaluate truth(enveloppe_ajpp_qualifiee(entity_ref("urn:fr:pf-ajpp:case:enfant-mt")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mt"), @2024-03-01, 600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

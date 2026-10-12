@@ -1,0 +1,1745 @@
+// Opening of the right: regulatory conditions (R. 842-1..5),
+// revision (R. 843-2), periodic re-examination (D. 846-1) and the
+// 24-month radiation delay (D. 846-3).
+//
+// «est considérée comme résidant en France de manière stable et
+// effective la personne qui y réside de façon permanente ou qui
+// accomplit hors de France un ou plusieurs séjours dont la durée de
+// date à date ou la durée totale par année civile n'excède pas trois
+// mois» (R. 842-1): a stay over three months (insertion stays
+// excluded) or an annual total over three months defeats residence;
+// both are literal heads. Residence is derived on two branches
+// (PA-R4-04): permanent residence, or a complete classified stay
+// history with no excess; excess needs a positively classified
+// non-insertion stay. Durations arrive as retained whole months
+// (date-to-date encoding); the annual total arrives net of insertion
+// stays (L. 262-34/35, PPAE).
+// «Les conditions ... doivent être remplies par le bénéficiaire ...
+// et son conjoint ...» (R. 842-2): monthly retained facts per slot;
+// new wording (decree 2025-185) assigns each slot its months (month
+// of right, M-4..M-2, or both); old wording requires L. 842-1 +
+// 2°/4° each month of the preceding quarter and the month of right,
+// 1°/3°/5° excepted (their old timing is source-silent:
+// B-PPA-R8422-135-TIMING-OLD). The NOTA keys the wording on the
+// demande/réexamen date, not the decision date: general provisions
+// from 2025-03-01, MSA provisions from the ministerial-order date
+// (retained input, source cap 2025-09-01). Both wordings stay
+// effective past 2025-03-01 and are selected by the gate relations
+// dispositions_nouvelles/anciennes_2025 (PA-M4 repair); the general
+// gates require a positive general-scheme classification, an unknown
+// caisse stays undetermined (PA-R4-03).
+// «Le foyer ... est composé» (R. 842-3): spouse membership, child
+// membership via PF entitlement or via under-25 + effective care
+// (organ judgment, pf-core precedent) + kinship past 17, and never
+// a PA beneficiary or spouse in the civil year of right (PA-R4-05:
+// positive non-benefit fact; arrival classified from dates, before
+// vs after 17 derived, unknown stays undetermined).
+// «Lorsqu'il n'est pas tenu compte ... du conjoint, concubin ou
+// partenaire lié par un pacte civil de solidarité parce qu'il ne
+// remplit pas une ou plusieurs des conditions ... L. 842-1 et
+// L. 842-2, ses ressources ... sont prises en compte, et ses revenus
+// professionnels sont assimilés à des revenus de remplacement»
+// (R. 842-4, PA-FE-01): three partner alternatives, each carrying
+// both consequences; the professional income is the same partner's
+// monthly stream (revenus_pro_conjoint), other household resources
+// untouched. Qualification stays a retained L. 842-1/2-failure fact:
+// the monthly R. 842-2 II grid covers only 2°/4°/5° for the partner,
+// while the source failure spans L. 842-1 + full L. 842-2.
+// «La durée maximale ... est de douze mois ... dans un délai de six
+// mois ... réduite à due proportion ... prolongée jusqu'à ce que le
+// plus jeune enfant ... ait atteint l'âge de trois ans» (R. 842-5):
+// 12-month duration, 6-month request delay, pro-rata reduction on
+// the retained lateness months, end date on timely requests;
+// end under a reduced duration needs variable month arithmetic
+// (B-PPA-MAJOREE-FIN-REDUITE).
+// «La révision ... est réalisée ... quand l'une des conditions
+// mentionnées à l'article L. 842-7 est remplie ou lorsque le
+// bénéficiaire et son conjoint ... interrompent la vie commune»
+// (R. 843-2, new wording; old wording: L. 842-7 only): effect the
+// first day of the event month (month-start date convention). Same
+// NOTA gates as R. 842-2, keyed on the event month as the operative
+// date of a hors-réexamen revision (recorded reading, PA-M4).
+// «il est procédé au réexamen périodique ... au lendemain d'une
+// période de trois mois civils ainsi que lorsqu'un droit au RSA ...
+// est ouvert. Le bénéficiaire ... doit déclarer les ressources de
+// son foyer» (D. 846-1): re-examination triggers + recipient duty
+// to declare (D3, bearer the payee).
+// «est fixé à vingt-quatre mois» (D. 846-3): radiation delay from
+// the retained last-payment date; convergence with the retained
+// elapsed fact of 04-recouvrement is deferred.
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_D846_1_ED2021_01_01,
+    CSS_D846_1_ED2021_03_25,
+    CSS_D846_1_ED2021_06_01,
+    CSS_D846_1_ED2022_03_21,
+    CSS_D846_1_ED2023_12_31,
+    CSS_D846_1_ED2024_01_01,
+    CSS_D846_1_ED2024_07_01,
+    CSS_D846_1_ED2025_01_01,
+    CSS_D846_1_ED2025_02_28,
+    CSS_D846_1_ED2025_03_31,
+    CSS_D846_1_ED2026_04_01,
+    CSS_D846_1_ED2026_06_27,
+    CSS_D846_3_ED2021_01_01,
+    CSS_D846_3_ED2021_03_25,
+    CSS_D846_3_ED2021_06_01,
+    CSS_D846_3_ED2022_03_21,
+    CSS_D846_3_ED2023_12_31,
+    CSS_D846_3_ED2024_01_01,
+    CSS_D846_3_ED2024_07_01,
+    CSS_D846_3_ED2025_01_01,
+    CSS_D846_3_ED2025_02_28,
+    CSS_D846_3_ED2025_03_31,
+    CSS_D846_3_ED2026_04_01,
+    CSS_D846_3_ED2026_06_27,
+    CSS_R842_1_ED2021_01_01,
+    CSS_R842_1_ED2021_03_25,
+    CSS_R842_1_ED2021_06_01,
+    CSS_R842_1_ED2022_03_21,
+    CSS_R842_1_ED2023_12_31,
+    CSS_R842_1_ED2024_01_01,
+    CSS_R842_1_ED2024_07_01,
+    CSS_R842_1_ED2025_01_01,
+    CSS_R842_1_ED2025_02_28,
+    CSS_R842_1_ED2025_03_31,
+    CSS_R842_1_ED2026_04_01,
+    CSS_R842_1_ED2026_06_27,
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R842_3_ED2021_01_01,
+    CSS_R842_3_ED2021_03_25,
+    CSS_R842_3_ED2021_06_01,
+    CSS_R842_3_ED2022_03_21,
+    CSS_R842_3_ED2023_12_31,
+    CSS_R842_3_ED2024_01_01,
+    CSS_R842_3_ED2024_07_01,
+    CSS_R842_3_ED2025_01_01,
+    CSS_R842_3_ED2025_02_28,
+    CSS_R842_3_ED2025_03_31,
+    CSS_R842_3_ED2026_04_01,
+    CSS_R842_3_ED2026_06_27,
+    CSS_R842_4_ED2021_01_01,
+    CSS_R842_4_ED2021_03_25,
+    CSS_R842_4_ED2021_06_01,
+    CSS_R842_4_ED2022_03_21,
+    CSS_R842_4_ED2023_12_31,
+    CSS_R842_4_ED2024_01_01,
+    CSS_R842_4_ED2024_07_01,
+    CSS_R842_4_ED2025_01_01,
+    CSS_R842_4_ED2025_02_28,
+    CSS_R842_4_ED2025_03_31,
+    CSS_R842_4_ED2026_04_01,
+    CSS_R842_4_ED2026_06_27,
+    CSS_R842_5_ED2021_01_01,
+    CSS_R842_5_ED2021_03_25,
+    CSS_R842_5_ED2021_06_01,
+    CSS_R842_5_ED2022_03_21,
+    CSS_R842_5_ED2023_12_31,
+    CSS_R842_5_ED2024_01_01,
+    CSS_R842_5_ED2024_07_01,
+    CSS_R842_5_ED2025_01_01,
+    CSS_R842_5_ED2025_02_28,
+    CSS_R842_5_ED2025_03_31,
+    CSS_R842_5_ED2026_04_01,
+    CSS_R842_5_ED2026_06_27,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27,
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01,
+    Demandeur,
+    Enfant,
+    Organisme,
+    mois_revue,
+    organisme_serviteur,
+    revenus_pro_conjoint,
+};
+
+pub entity Enfant {
+    label fr official "enfant ou personne à charge du foyer (R. 842-3 3°)";
+    label en unofficial "child or dependent of the household (R. 842-3 3°)";
+}
+
+pub enum RoleFoyer {
+    label fr official "bénéficiaire ou conjoint au sens de R. 842-2";
+    label en unofficial "beneficiary or spouse within the meaning of R. 842-2";
+    BENEFICIAIRE, CONJOINT
+}
+
+pub enum SlotCondition {
+    label fr official "condition L. 842-1 / L. 842-2 1°..5° suivie au mois (R. 842-2)";
+    label en unofficial "L. 842-1 / L. 842-2 1°..5° condition tracked by month (R. 842-2)";
+    COND_L8421, COND_L8422_1, COND_L8422_2, COND_L8422_3, COND_L8422_4, COND_L8422_5
+}
+
+pub relation sejour_duree(d: Demandeur, sejour: Integer, duree_mois: Integer) kind empirical {
+    key(d, sejour);
+    label fr official "séjour hors de France n° indexé, durée de date à date en mois entiers (R. 842-1; fait retenu)";
+    label en unofficial "indexed stay outside France, date-to-date duration in whole months (R. 842-1; retained fact)";
+}
+
+pub relation sejour_insertion(d: Demandeur, sejour: Integer) kind empirical {
+    key(d, sejour);
+    label fr official "séjour exclu du calcul: contrats L. 262-34/35 CASF ou PPAE L. 5411-6-1 (R. 842-1; fait retenu)";
+    label en unofficial "stay excluded from the computation: L. 262-34/35 contracts or PPAE (R. 842-1; retained fact)";
+}
+
+pub relation duree_totale_etrangere_annee(d: Demandeur, annee: Integer, total_mois: Integer) kind empirical {
+    key(d, annee);
+    label fr official "durée totale hors de France par année civile, nette des séjours d'insertion (R. 842-1; fait retenu)";
+    label en unofficial "total time outside France per calendar year, net of insertion stays (R. 842-1; retained fact)";
+}
+
+pub relation sejour_hors_insertion(d: Demandeur, sejour: Integer) kind empirical {
+    key(d, sejour);
+    label fr official "séjour hors insertion: ni contrats L. 262-34/35 CASF ni PPAE L. 5411-6-1 (R. 842-1; fait retenu)";
+    label en unofficial "non-insertion stay: neither L. 262-34/35 contracts nor PPAE (R. 842-1; retained fact)";
+}
+
+pub relation residence_permanente_france(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "réside en France de façon permanente (R. 842-1; fait retenu)";
+    label en unofficial "resides in France permanently (R. 842-1; retained fact)";
+}
+
+pub relation historique_sejours_complet(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "historique des séjours hors de France complet et classé, total annuel net établi (R. 842-1; fait retenu)";
+    label en unofficial "complete and classified history of stays outside France, net annual total established (R. 842-1; retained fact)";
+}
+
+pub relation sejour_excessif(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "séjour de plus de trois mois hors insertion (R. 842-1)";
+    label en unofficial "stay over three months outside insertion (R. 842-1)";
+}
+
+pub relation total_etranger_excessif(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "total annuel hors de France de plus de trois mois (R. 842-1)";
+    label en unofficial "annual total outside France over three months (R. 842-1)";
+}
+
+pub relation residence_r842_1(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "résidence stable et effective au sens de R. 842-1";
+    label en unofficial "stable and effective residence within the meaning of R. 842-1";
+}
+
+@source(
+    CSS_R842_1_ED2021_01_01,
+    CSS_R842_1_ED2021_03_25,
+    CSS_R842_1_ED2021_06_01,
+    CSS_R842_1_ED2022_03_21,
+    CSS_R842_1_ED2023_12_31,
+    CSS_R842_1_ED2024_01_01,
+    CSS_R842_1_ED2024_07_01,
+    CSS_R842_1_ED2025_01_01,
+    CSS_R842_1_ED2025_02_28,
+    CSS_R842_1_ED2025_03_31,
+    CSS_R842_1_ED2026_04_01,
+    CSS_R842_1_ED2026_06_27)
+rule SejourExcessif(d: Demandeur, s: Integer, m: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "séjour de plus de trois mois hors insertion (R. 842-1)";
+    label en unofficial "stay over three months outside insertion (R. 842-1)";
+    when sejour_duree(d, s, m) and m > 3 and sejour_hors_insertion(d, s)
+        and not_known(sejour_insertion(d, s));
+    then sejour_excessif(d);
+}
+
+@source(
+    CSS_R842_1_ED2021_01_01,
+    CSS_R842_1_ED2021_03_25,
+    CSS_R842_1_ED2021_06_01,
+    CSS_R842_1_ED2022_03_21,
+    CSS_R842_1_ED2023_12_31,
+    CSS_R842_1_ED2024_01_01,
+    CSS_R842_1_ED2024_07_01,
+    CSS_R842_1_ED2025_01_01,
+    CSS_R842_1_ED2025_02_28,
+    CSS_R842_1_ED2025_03_31,
+    CSS_R842_1_ED2026_04_01,
+    CSS_R842_1_ED2026_06_27)
+rule TotalEtrangerExcessif(d: Demandeur, a: Integer, t: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total annuel hors de France de plus de trois mois (R. 842-1)";
+    label en unofficial "annual total outside France over three months (R. 842-1)";
+    when duree_totale_etrangere_annee(d, a, t) and t > 3;
+    then total_etranger_excessif(d);
+}
+
+@source(
+    CSS_R842_1_ED2021_01_01,
+    CSS_R842_1_ED2021_03_25,
+    CSS_R842_1_ED2021_06_01,
+    CSS_R842_1_ED2022_03_21,
+    CSS_R842_1_ED2023_12_31,
+    CSS_R842_1_ED2024_01_01,
+    CSS_R842_1_ED2024_07_01,
+    CSS_R842_1_ED2025_01_01,
+    CSS_R842_1_ED2025_02_28,
+    CSS_R842_1_ED2025_03_31,
+    CSS_R842_1_ED2026_04_01,
+    CSS_R842_1_ED2026_06_27)
+rule ResidencePermanenteR8421(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "résidence stable et effective: résidence permanente (R. 842-1)";
+    label en unofficial "stable and effective residence: permanent residence (R. 842-1)";
+    when residence_permanente_france(d);
+    then residence_r842_1(d);
+}
+
+@source(
+    CSS_R842_1_ED2021_01_01,
+    CSS_R842_1_ED2021_03_25,
+    CSS_R842_1_ED2021_06_01,
+    CSS_R842_1_ED2022_03_21,
+    CSS_R842_1_ED2023_12_31,
+    CSS_R842_1_ED2024_01_01,
+    CSS_R842_1_ED2024_07_01,
+    CSS_R842_1_ED2025_01_01,
+    CSS_R842_1_ED2025_02_28,
+    CSS_R842_1_ED2025_03_31,
+    CSS_R842_1_ED2026_04_01,
+    CSS_R842_1_ED2026_06_27)
+rule ResidenceSansDepassementR8421(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "résidence stable et effective: historique complet sans dépassement (R. 842-1)";
+    label en unofficial "stable and effective residence: complete history without excess (R. 842-1)";
+    when historique_sejours_complet(d)
+        and not_known(sejour_excessif(d)) and not_known(total_etranger_excessif(d));
+    then residence_r842_1(d);
+}
+
+pub relation condition_mensuelle(d: Demandeur, mois: Date, rf: RoleFoyer, slot: SlotCondition) kind empirical {
+    key(d, mois, rf, slot);
+    label fr official "condition remplie au mois civil: rôle et rubrique (R. 842-2; fait retenu)";
+    label en unofficial "condition met in the civil month: role and slot (R. 842-2; retained fact)";
+}
+
+pub relation mois_du_droit(d: Demandeur, mois: Date) kind empirical {
+    key(d);
+    label fr official "mois du droit (R. 842-2; fait retenu)";
+    label en unofficial "month of right (R. 842-2; retained fact)";
+}
+
+pub relation conjoint_present(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "conjoint, concubin ou partenaire au foyer (R. 842-2/3; fait retenu)";
+    label en unofficial "spouse, partner at the household (R. 842-2/3; retained fact)";
+}
+
+pub relation sans_conjoint(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "ni conjoint, concubin ni partenaire au foyer (R. 842-2/3; fait retenu)";
+    label en unofficial "no spouse or partner at the household (R. 842-2/3; retained fact)";
+}
+
+pub relation conditions_beneficiaire_ok(d: Demandeur, revue: Date) kind institutional {
+    key(d, revue);
+    label fr official "conditions du bénéficiaire remplies aux mois requis (R. 842-2 I)";
+    label en unofficial "beneficiary conditions met in the required months (R. 842-2 I)";
+}
+
+pub relation conditions_conjoint_ok(d: Demandeur, revue: Date) kind institutional {
+    key(d, revue);
+    label fr official "conditions du conjoint remplies aux mois requis (R. 842-2 II)";
+    label en unofficial "spouse conditions met in the required months (R. 842-2 II)";
+}
+
+pub relation conditions_temporelles_ok(d: Demandeur, revue: Date) kind institutional {
+    key(d, revue);
+    label fr official "conditions remplies aux mois requis, foyer avec ou sans conjoint (R. 842-2)";
+    label en unofficial "conditions met in the required months, household with or without spouse (R. 842-2)";
+}
+
+pub relation allocataire_msa(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "allocataire d'une caisse de MSA au sens de la NOTA du décret 2025-185 (R. 842-2/843-2/845-1/2; fait retenu)";
+    label en unofficial "MSA fund claimant within the meaning of decree 2025-185 NOTA (R. 842-2/843-2/845-1/2; retained fact)";
+}
+
+pub relation arrete_msa_application(date: Date) kind empirical {
+    key();
+    label fr official "date d'application MSA fixée par arrêté ministériel, au plus tard le 2025-09-01 (NOTA 2025-185; fait retenu)";
+    label en unofficial "MSA application date set by ministerial order, no later than 2025-09-01 (NOTA 2025-185; retained fact)";
+}
+
+pub relation regime_general(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "relevé du régime général, hors MSA (NOTA 2025-185; fait retenu)";
+    label en unofficial "general-scheme claimant, outside MSA (NOTA 2025-185; retained fact)";
+}
+
+pub relation dispositions_nouvelles_2025(d: Demandeur, date: Date) kind institutional {
+    key(d, date);
+    label fr official "demande/réexamen soumis aux dispositions nouvelles du décret 2025-185 (NOTA R. 842-2/843-2/845-1/2)";
+    label en unofficial "request/review under the new 2025-185 provisions (NOTA R. 842-2/843-2/845-1/2)";
+}
+
+pub relation dispositions_anciennes_2025(d: Demandeur, date: Date) kind institutional {
+    key(d, date);
+    label fr official "demande/réexamen soumis aux dispositions antérieures au décret 2025-185 (NOTA R. 842-2/843-2/845-1/2)";
+    label en unofficial "request/review under the pre-2025-185 provisions (NOTA R. 842-2/843-2/845-1/2)";
+}
+
+// D-42: the NOTA of decree 2025-185 keys the wording on «les demandes
+// ou réexamens périodiques effectués à compter du 1er mars 2025»;
+// the R. 843-2 revision «prend effet à compter du premier jour du mois
+// civil au cours duquel s'est produit l'évènement». The gate date is
+// therefore the claim/review month (mois_revue, R. 843-1 I) or, for an
+// R. 843-2 revision, the event month; date_porte_nota binds it so the
+// gate rules stay range-restricted without requiring a review month
+// for an out-of-review revision.
+pub relation date_porte_nota(d: Demandeur, date: Date) kind institutional {
+    key(d, date);
+    label fr official "date de demande, de réexamen ou d'évènement de révision soumise à la porte NOTA 2025-185 (R. 842-2/843-2)";
+    label en unofficial "claim, review or revision-event date subject to the NOTA 2025-185 gate (R. 842-2/843-2)";
+}
+
+@source(
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27)
+rule DatePorteRevue(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "mois de demande ou de réexamen (R. 843-1 I; NOTA 2025-185)";
+    label en unofficial "claim or review month (R. 843-1 I; NOTA 2025-185)";
+    when mois_revue(d, date);
+    then date_porte_nota(d, date);
+}
+
+@source(
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27)
+rule DatePorteEvenementL8427(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "mois de l'évènement L. 842-7 (R. 843-2; NOTA 2025-185)";
+    label en unofficial "L. 842-7 event month (R. 843-2; NOTA 2025-185)";
+    when mois_evenement_l8427(d, date);
+    then date_porte_nota(d, date);
+}
+
+@source(
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27)
+rule DatePorteSeparation(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "mois de l'interruption de la vie commune (R. 843-2; NOTA 2025-185)";
+    label en unofficial "couple-separation month (R. 843-2; NOTA 2025-185)";
+    when mois_separation(d, date);
+    then date_porte_nota(d, date);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27)
+rule PorteNouvelleGenerale(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "régime général: dispositions nouvelles à compter du 2025-03-01 (NOTA 2025-185)";
+    label en unofficial "general scheme: new provisions from 2025-03-01 (NOTA 2025-185)";
+    when date_porte_nota(d, date) and date >= @2025-03-01 and regime_general(d)
+        and not_known(allocataire_msa(d));
+    then dispositions_nouvelles_2025(d, date);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27)
+rule PorteNouvelleMSAArrete(d: Demandeur, date: Date, arrete: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "MSA: dispositions nouvelles à compter de la date de l'arrêté (NOTA 2025-185)";
+    label en unofficial "MSA: new provisions from the order date (NOTA 2025-185)";
+    when allocataire_msa(d) and arrete_msa_application(arrete) and date_porte_nota(d, date) and date >= arrete;
+    then dispositions_nouvelles_2025(d, date);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27)
+rule PorteNouvelleMSAPlafond(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "MSA, arrêté inconnu: dispositions nouvelles à compter du 2025-09-01 (plafond NOTA 2025-185)";
+    label en unofficial "MSA, order unknown: new provisions from 2025-09-01 (NOTA 2025-185 cap)";
+    when allocataire_msa(d) and date_porte_nota(d, date) and date >= @2025-09-01;
+    then dispositions_nouvelles_2025(d, date);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27,
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01)
+rule PorteAncienneGenerale(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "régime général: dispositions antérieures avant le 2025-03-01 (NOTA 2025-185)";
+    label en unofficial "general scheme: prior provisions before 2025-03-01 (NOTA 2025-185)";
+    when date_porte_nota(d, date) and date < @2025-03-01 and regime_general(d)
+        and not_known(allocataire_msa(d));
+    then dispositions_anciennes_2025(d, date);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27,
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01)
+rule PorteAncienneMSAArrete(d: Demandeur, date: Date, arrete: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "MSA: dispositions antérieures avant la date de l'arrêté (NOTA 2025-185)";
+    label en unofficial "MSA: prior provisions before the order date (NOTA 2025-185)";
+    when allocataire_msa(d) and arrete_msa_application(arrete) and date_porte_nota(d, date) and date < arrete;
+    then dispositions_anciennes_2025(d, date);
+}
+
+// D-42: affirmative contraries of the NOTA gates. The NOTA assigns
+// each dated claim/review to exactly one wording («s'appliquent aux
+// demandes ou réexamens périodiques effectués à compter du 1er mars
+// 2025»; for MSA «à compter d'une date fixée par un arrêté»): a date
+// on one side of a known boundary refutes the other wording. The MSA
+// cap («au plus tard le 1er septembre 2025») is left one-sided.
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27,
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01)
+rule PorteNouvelleRefuteeGenerale(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "régime général avant le 2025-03-01: pas de dispositions nouvelles (NOTA 2025-185)";
+    label en unofficial "general scheme before 2025-03-01: no new provisions (NOTA 2025-185)";
+    when date_porte_nota(d, date) and date < @2025-03-01 and regime_general(d)
+        and not_known(allocataire_msa(d));
+    then not dispositions_nouvelles_2025(d, date);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27,
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01)
+rule PorteAncienneRefuteeGenerale(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "régime général à compter du 2025-03-01: pas de dispositions antérieures (NOTA 2025-185)";
+    label en unofficial "general scheme from 2025-03-01: no prior provisions (NOTA 2025-185)";
+    when date_porte_nota(d, date) and date >= @2025-03-01 and regime_general(d)
+        and not_known(allocataire_msa(d));
+    then not dispositions_anciennes_2025(d, date);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27,
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01)
+rule PorteNouvelleRefuteeMSAArrete(d: Demandeur, date: Date, arrete: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "MSA avant la date de l'arrêté: pas de dispositions nouvelles (NOTA 2025-185)";
+    label en unofficial "MSA before the order date: no new provisions (NOTA 2025-185)";
+    when allocataire_msa(d) and arrete_msa_application(arrete)
+        and date_porte_nota(d, date) and date < arrete;
+    then not dispositions_nouvelles_2025(d, date);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27,
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01)
+rule PorteAncienneRefuteeMSAArrete(d: Demandeur, date: Date, arrete: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "MSA à compter de la date de l'arrêté: pas de dispositions antérieures (NOTA 2025-185)";
+    label en unofficial "MSA from the order date: no prior provisions (NOTA 2025-185)";
+    when allocataire_msa(d) and arrete_msa_application(arrete)
+        and date_porte_nota(d, date) and date >= arrete;
+    then not dispositions_anciennes_2025(d, date);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27)
+rule TimingBeneficiaireNouveau(d: Demandeur, revue: Date, m1: Date, m2: Date, m3: Date, md: Date) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "I: 1°/2° au mois du droit, 3°/5° M-4..M-2, L. 842-1/4° aux deux (R. 842-2; porte NOTA)";
+    label en unofficial "I: 1°/2° month of right, 3°/5° M-4..M-2, L. 842-1/4° both (R. 842-2; NOTA gate)";
+    when mois_revue(d, revue) and mois_du_droit(d, md)
+        and dispositions_nouvelles_2025(d, revue)
+        and revue == add_calendar_period(m1, 4 calendar_month)
+        and m2 == add_calendar_period(m1, 1 calendar_month)
+        and m3 == add_calendar_period(m1, 2 calendar_month)
+        and condition_mensuelle(d, md, BENEFICIAIRE, COND_L8422_1)
+        and condition_mensuelle(d, md, BENEFICIAIRE, COND_L8422_2)
+        and condition_mensuelle(d, m1, BENEFICIAIRE, COND_L8422_3)
+        and condition_mensuelle(d, m2, BENEFICIAIRE, COND_L8422_3)
+        and condition_mensuelle(d, m3, BENEFICIAIRE, COND_L8422_3)
+        and condition_mensuelle(d, m1, BENEFICIAIRE, COND_L8422_5)
+        and condition_mensuelle(d, m2, BENEFICIAIRE, COND_L8422_5)
+        and condition_mensuelle(d, m3, BENEFICIAIRE, COND_L8422_5)
+        and condition_mensuelle(d, m1, BENEFICIAIRE, COND_L8421)
+        and condition_mensuelle(d, m2, BENEFICIAIRE, COND_L8421)
+        and condition_mensuelle(d, m3, BENEFICIAIRE, COND_L8421)
+        and condition_mensuelle(d, md, BENEFICIAIRE, COND_L8421)
+        and condition_mensuelle(d, m1, BENEFICIAIRE, COND_L8422_4)
+        and condition_mensuelle(d, m2, BENEFICIAIRE, COND_L8422_4)
+        and condition_mensuelle(d, m3, BENEFICIAIRE, COND_L8422_4)
+        and condition_mensuelle(d, md, BENEFICIAIRE, COND_L8422_4);
+    then conditions_beneficiaire_ok(d, revue);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27)
+rule TimingConjointNouveau(d: Demandeur, revue: Date, m1: Date, m2: Date, m3: Date, md: Date) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "II: 2° au mois du droit, 5° M-4..M-2, 4° aux deux (R. 842-2; porte NOTA)";
+    label en unofficial "II: 2° month of right, 5° M-4..M-2, 4° both (R. 842-2; NOTA gate)";
+    when mois_revue(d, revue) and mois_du_droit(d, md) and conjoint_present(d)
+        and dispositions_nouvelles_2025(d, revue)
+        and revue == add_calendar_period(m1, 4 calendar_month)
+        and m2 == add_calendar_period(m1, 1 calendar_month)
+        and m3 == add_calendar_period(m1, 2 calendar_month)
+        and condition_mensuelle(d, md, CONJOINT, COND_L8422_2)
+        and condition_mensuelle(d, m1, CONJOINT, COND_L8422_5)
+        and condition_mensuelle(d, m2, CONJOINT, COND_L8422_5)
+        and condition_mensuelle(d, m3, CONJOINT, COND_L8422_5)
+        and condition_mensuelle(d, m1, CONJOINT, COND_L8422_4)
+        and condition_mensuelle(d, m2, CONJOINT, COND_L8422_4)
+        and condition_mensuelle(d, m3, CONJOINT, COND_L8422_4)
+        and condition_mensuelle(d, md, CONJOINT, COND_L8422_4);
+    then conditions_conjoint_ok(d, revue);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27)
+rule TimingGlobalNouveauAvecConjoint(d: Demandeur, revue: Date) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "foyer avec conjoint: branches I et II (R. 842-2; porte NOTA)";
+    label en unofficial "household with spouse: branches I and II (R. 842-2; NOTA gate)";
+    when conditions_beneficiaire_ok(d, revue) and conditions_conjoint_ok(d, revue)
+        and dispositions_nouvelles_2025(d, revue);
+    then conditions_temporelles_ok(d, revue);
+}
+
+@source(
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27)
+rule TimingGlobalNouveauSansConjoint(d: Demandeur, revue: Date) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "foyer sans conjoint: branche I seule (R. 842-2; porte NOTA)";
+    label en unofficial "household without spouse: branch I alone (R. 842-2; NOTA gate)";
+    when conditions_beneficiaire_ok(d, revue) and sans_conjoint(d)
+        and not_known(conjoint_present(d))
+        and dispositions_nouvelles_2025(d, revue);
+    then conditions_temporelles_ok(d, revue);
+}
+
+@source(
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27)
+rule TimingBeneficiaireAncien(d: Demandeur, revue: Date, m1: Date, m2: Date, m3: Date, md: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien: L. 842-1 + 2°/4° chaque mois du trimestre et mois du droit (R. 842-2; porte NOTA)";
+    label en unofficial "old: L. 842-1 + 2°/4° each quarter month and month of right (R. 842-2; NOTA gate)";
+    when mois_revue(d, revue) and mois_du_droit(d, md)
+        and dispositions_anciennes_2025(d, revue)
+        and revue == add_calendar_period(m1, 3 calendar_month)
+        and m2 == add_calendar_period(m1, 1 calendar_month)
+        and m3 == add_calendar_period(m1, 2 calendar_month)
+        and condition_mensuelle(d, m1, BENEFICIAIRE, COND_L8421)
+        and condition_mensuelle(d, m2, BENEFICIAIRE, COND_L8421)
+        and condition_mensuelle(d, m3, BENEFICIAIRE, COND_L8421)
+        and condition_mensuelle(d, md, BENEFICIAIRE, COND_L8421)
+        and condition_mensuelle(d, m1, BENEFICIAIRE, COND_L8422_2)
+        and condition_mensuelle(d, m2, BENEFICIAIRE, COND_L8422_2)
+        and condition_mensuelle(d, m3, BENEFICIAIRE, COND_L8422_2)
+        and condition_mensuelle(d, md, BENEFICIAIRE, COND_L8422_2)
+        and condition_mensuelle(d, m1, BENEFICIAIRE, COND_L8422_4)
+        and condition_mensuelle(d, m2, BENEFICIAIRE, COND_L8422_4)
+        and condition_mensuelle(d, m3, BENEFICIAIRE, COND_L8422_4)
+        and condition_mensuelle(d, md, BENEFICIAIRE, COND_L8422_4);
+    then conditions_beneficiaire_ok(d, revue);
+}
+
+@source(
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27)
+rule TimingConjointAncien(d: Demandeur, revue: Date, m1: Date, m2: Date, m3: Date, md: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, conjoint: L. 842-1 + 2°/4° chaque mois du trimestre et mois du droit (R. 842-2; porte NOTA)";
+    label en unofficial "old, spouse: L. 842-1 + 2°/4° each quarter month and month of right (R. 842-2; NOTA gate)";
+    when mois_revue(d, revue) and mois_du_droit(d, md) and conjoint_present(d)
+        and dispositions_anciennes_2025(d, revue)
+        and revue == add_calendar_period(m1, 3 calendar_month)
+        and m2 == add_calendar_period(m1, 1 calendar_month)
+        and m3 == add_calendar_period(m1, 2 calendar_month)
+        and condition_mensuelle(d, m1, CONJOINT, COND_L8421)
+        and condition_mensuelle(d, m2, CONJOINT, COND_L8421)
+        and condition_mensuelle(d, m3, CONJOINT, COND_L8421)
+        and condition_mensuelle(d, md, CONJOINT, COND_L8421)
+        and condition_mensuelle(d, m1, CONJOINT, COND_L8422_2)
+        and condition_mensuelle(d, m2, CONJOINT, COND_L8422_2)
+        and condition_mensuelle(d, m3, CONJOINT, COND_L8422_2)
+        and condition_mensuelle(d, md, CONJOINT, COND_L8422_2)
+        and condition_mensuelle(d, m1, CONJOINT, COND_L8422_4)
+        and condition_mensuelle(d, m2, CONJOINT, COND_L8422_4)
+        and condition_mensuelle(d, m3, CONJOINT, COND_L8422_4)
+        and condition_mensuelle(d, md, CONJOINT, COND_L8422_4);
+    then conditions_conjoint_ok(d, revue);
+}
+
+@source(
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27)
+rule TimingGlobalAncienAvecConjoint(d: Demandeur, revue: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, foyer avec conjoint (R. 842-2; porte NOTA)";
+    label en unofficial "old, household with spouse (R. 842-2; NOTA gate)";
+    when conditions_beneficiaire_ok(d, revue) and conditions_conjoint_ok(d, revue)
+        and dispositions_anciennes_2025(d, revue);
+    then conditions_temporelles_ok(d, revue);
+}
+
+@source(
+    CSS_R842_2_PRE2025_ED2021_01_01,
+    CSS_R842_2_PRE2025_ED2021_03_25,
+    CSS_R842_2_PRE2025_ED2021_06_01,
+    CSS_R842_2_PRE2025_ED2022_03_21,
+    CSS_R842_2_PRE2025_ED2023_12_31,
+    CSS_R842_2_PRE2025_ED2024_01_01,
+    CSS_R842_2_PRE2025_ED2024_07_01,
+    CSS_R842_2_PRE2025_ED2025_01_01,
+    CSS_R842_2_ED2025_02_28,
+    CSS_R842_2_ED2025_03_31,
+    CSS_R842_2_ED2026_04_01,
+    CSS_R842_2_ED2026_06_27)
+rule TimingGlobalAncienSansConjoint(d: Demandeur, revue: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, foyer sans conjoint (R. 842-2; porte NOTA)";
+    label en unofficial "old, household without spouse (R. 842-2; NOTA gate)";
+    when conditions_beneficiaire_ok(d, revue) and sans_conjoint(d)
+        and not_known(conjoint_present(d))
+        and dispositions_anciennes_2025(d, revue);
+    then conditions_temporelles_ok(d, revue);
+}
+
+pub relation enfant_ou_charge(d: Demandeur, e: Enfant) kind empirical {
+    key(d, e);
+    label fr official "enfant ou personne à la charge du bénéficiaire, candidat membre (R. 842-3 3°; fait retenu)";
+    label en unofficial "child or person supported by the beneficiary, membership candidate (R. 842-3 3°; retained fact)";
+}
+
+pub relation ouvre_droit_pf(e: Enfant) kind empirical {
+    key(e);
+    label fr official "enfant ouvrant droit aux prestations familiales (R. 842-3 a); fait retenu)";
+    label en unofficial "child giving entitlement to family benefits (R. 842-3 a); retained fact)";
+}
+
+pub relation naissance(e: Enfant, date: Date) kind empirical {
+    key(e);
+    label fr official "naissance de l'enfant (R. 842-3/5; fait retenu)";
+    label en unofficial "birth of the child (R. 842-3/5; retained fact)";
+}
+
+pub relation arrivee_foyer(e: Enfant, date: Date) kind empirical {
+    key(e);
+    label fr official "arrivée de l'enfant au foyer (R. 842-3 a); fait retenu)";
+    label en unofficial "arrival of the child at the household (R. 842-3 a); retained fact)";
+}
+
+pub relation lien_parente_4e_degre(e: Enfant, d: Demandeur) kind empirical {
+    key(e, d);
+    label fr official "lien de parenté avec le bénéficiaire ou son conjoint jusqu'au quatrième degré (R. 842-3 a); fait retenu)";
+    label en unofficial "kinship with the beneficiary or spouse up to the fourth degree (R. 842-3 a); retained fact)";
+}
+
+pub relation enfant_beneficiaire_pa_annee_droit(e: Enfant) kind empirical {
+    key(e);
+    label fr official "a bénéficié de la prime au cours de l'année civile de droit, comme bénéficiaire ou conjoint (R. 842-3 b); fait retenu)";
+    label en unofficial "received the bonus during the civil year of right, as beneficiary or spouse (R. 842-3 b); retained fact)";
+}
+
+pub relation enfant_non_beneficiaire_pa_annee_droit(e: Enfant) kind empirical {
+    key(e);
+    label fr official "n'a pas bénéficié de la prime au cours de l'année civile de droit, ni comme bénéficiaire ni comme conjoint (R. 842-3 b); fait retenu)";
+    label en unofficial "did not receive the bonus during the civil year of right, neither as beneficiary nor as spouse (R. 842-3 b); retained fact)";
+}
+
+@source(
+    CSS_R842_3_ED2021_01_01,
+    CSS_R842_3_ED2021_03_25,
+    CSS_R842_3_ED2021_06_01,
+    CSS_R842_3_ED2022_03_21,
+    CSS_R842_3_ED2023_12_31,
+    CSS_R842_3_ED2024_01_01,
+    CSS_R842_3_ED2024_07_01,
+    CSS_R842_3_ED2025_01_01,
+    CSS_R842_3_ED2025_02_28,
+    CSS_R842_3_ED2025_03_31,
+    CSS_R842_3_ED2026_04_01,
+    CSS_R842_3_ED2026_06_27)
+pub external judgment relation charge_effective_permanente(d: Demandeur, e: Enfant) {
+    authority Organisme;
+    label fr official "le bénéficiaire assume la charge effective et permanente de l'enfant (R. 842-3 a); appréciation de l'organisme)";
+    label en unofficial "the beneficiary has effective and permanent care of the child (R. 842-3 a); organ assessment)";
+}
+
+pub relation enfant_membre_foyer(d: Demandeur, e: Enfant) kind institutional {
+    key(d, e);
+    label fr official "enfant membre du foyer au sens de R. 842-3";
+    label en unofficial "child member of the household within the meaning of R. 842-3";
+}
+
+pub relation conjoint_membre_foyer(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "conjoint membre du foyer (R. 842-3 2°)";
+    label en unofficial "spouse member of the household (R. 842-3 2°)";
+}
+
+pub relation arrivee_apres_17_ans(e: Enfant) kind institutional {
+    key(e);
+    label fr official "arrivée au foyer après le dix-septième anniversaire (R. 842-3 a))";
+    label en unofficial "arrival at the household after the seventeenth birthday (R. 842-3 a))";
+}
+
+pub relation arrivee_avant_17_ans(e: Enfant) kind institutional {
+    key(e);
+    label fr official "arrivée au foyer au plus tard au dix-septième anniversaire (R. 842-3 a))";
+    label en unofficial "arrival at the household no later than the seventeenth birthday (R. 842-3 a))";
+}
+
+@source(
+    CSS_R842_3_ED2021_01_01,
+    CSS_R842_3_ED2021_03_25,
+    CSS_R842_3_ED2021_06_01,
+    CSS_R842_3_ED2022_03_21,
+    CSS_R842_3_ED2023_12_31,
+    CSS_R842_3_ED2024_01_01,
+    CSS_R842_3_ED2024_07_01,
+    CSS_R842_3_ED2025_01_01,
+    CSS_R842_3_ED2025_02_28,
+    CSS_R842_3_ED2025_03_31,
+    CSS_R842_3_ED2026_04_01,
+    CSS_R842_3_ED2026_06_27)
+rule ConjointMembre(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "conjoint présent: membre du foyer (R. 842-3 2°)";
+    label en unofficial "spouse present: household member (R. 842-3 2°)";
+    when conjoint_present(d);
+    then conjoint_membre_foyer(d);
+}
+
+@source(
+    CSS_R842_3_ED2021_01_01,
+    CSS_R842_3_ED2021_03_25,
+    CSS_R842_3_ED2021_06_01,
+    CSS_R842_3_ED2022_03_21,
+    CSS_R842_3_ED2023_12_31,
+    CSS_R842_3_ED2024_01_01,
+    CSS_R842_3_ED2024_07_01,
+    CSS_R842_3_ED2025_01_01,
+    CSS_R842_3_ED2025_02_28,
+    CSS_R842_3_ED2025_03_31,
+    CSS_R842_3_ED2026_04_01,
+    CSS_R842_3_ED2026_06_27)
+rule EnfantMembrePF(d: Demandeur, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant ouvrant droit aux PF et non bénéficiaire: membre (R. 842-3 a)/b))";
+    label en unofficial "child with PF entitlement and no bonus: member (R. 842-3 a)/b))";
+    when enfant_ou_charge(d, e) and ouvre_droit_pf(e)
+        and enfant_non_beneficiaire_pa_annee_droit(e)
+        and not_known(enfant_beneficiaire_pa_annee_droit(e));
+    then enfant_membre_foyer(d, e);
+}
+
+@source(
+    CSS_R842_3_ED2021_01_01,
+    CSS_R842_3_ED2021_03_25,
+    CSS_R842_3_ED2021_06_01,
+    CSS_R842_3_ED2022_03_21,
+    CSS_R842_3_ED2023_12_31,
+    CSS_R842_3_ED2024_01_01,
+    CSS_R842_3_ED2024_07_01,
+    CSS_R842_3_ED2025_01_01,
+    CSS_R842_3_ED2025_02_28,
+    CSS_R842_3_ED2025_03_31,
+    CSS_R842_3_ED2026_04_01,
+    CSS_R842_3_ED2026_06_27)
+rule ArriveeApres17(d: Demandeur, e: Enfant, a: Date, n: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "arrivée au foyer après 17 ans révolus (R. 842-3 a))";
+    label en unofficial "arrival at the household after the 17th birthday (R. 842-3 a))";
+    when enfant_ou_charge(d, e) and arrivee_foyer(e, a) and naissance(e, n)
+        and a > add_calendar_period(n, 204 calendar_month);
+    then arrivee_apres_17_ans(e);
+}
+
+@source(
+    CSS_R842_3_ED2021_01_01,
+    CSS_R842_3_ED2021_03_25,
+    CSS_R842_3_ED2021_06_01,
+    CSS_R842_3_ED2022_03_21,
+    CSS_R842_3_ED2023_12_31,
+    CSS_R842_3_ED2024_01_01,
+    CSS_R842_3_ED2024_07_01,
+    CSS_R842_3_ED2025_01_01,
+    CSS_R842_3_ED2025_02_28,
+    CSS_R842_3_ED2025_03_31,
+    CSS_R842_3_ED2026_04_01,
+    CSS_R842_3_ED2026_06_27)
+rule ArriveeAvant17(d: Demandeur, e: Enfant, a: Date, n: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "arrivée au foyer au plus tard au 17 ans révolus (R. 842-3 a))";
+    label en unofficial "arrival at the household no later than the 17th birthday (R. 842-3 a))";
+    when enfant_ou_charge(d, e) and arrivee_foyer(e, a) and naissance(e, n)
+        and a <= add_calendar_period(n, 204 calendar_month);
+    then arrivee_avant_17_ans(e);
+}
+
+@source(
+    CSS_R842_3_ED2021_01_01,
+    CSS_R842_3_ED2021_03_25,
+    CSS_R842_3_ED2021_06_01,
+    CSS_R842_3_ED2022_03_21,
+    CSS_R842_3_ED2023_12_31,
+    CSS_R842_3_ED2024_01_01,
+    CSS_R842_3_ED2024_07_01,
+    CSS_R842_3_ED2025_01_01,
+    CSS_R842_3_ED2025_02_28,
+    CSS_R842_3_ED2025_03_31,
+    CSS_R842_3_ED2026_04_01,
+    CSS_R842_3_ED2026_06_27)
+rule EnfantMembreChargeAvant17(d: Demandeur, e: Enfant, n: Date, md: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "moins de 25 ans, charge effective, arrivée avant 17 ans, non bénéficiaire: membre (R. 842-3)";
+    label en unofficial "under 25, effective care, arrival before 17, no bonus: member (R. 842-3)";
+    when enfant_ou_charge(d, e) and naissance(e, n) and mois_du_droit(d, md)
+        and md < add_calendar_period(n, 300 calendar_month)
+        and charge_effective_permanente(d, e)
+        and arrivee_avant_17_ans(e)
+        and not_known(arrivee_apres_17_ans(e))
+        and enfant_non_beneficiaire_pa_annee_droit(e)
+        and not_known(enfant_beneficiaire_pa_annee_droit(e));
+    then enfant_membre_foyer(d, e);
+}
+
+@source(
+    CSS_R842_3_ED2021_01_01,
+    CSS_R842_3_ED2021_03_25,
+    CSS_R842_3_ED2021_06_01,
+    CSS_R842_3_ED2022_03_21,
+    CSS_R842_3_ED2023_12_31,
+    CSS_R842_3_ED2024_01_01,
+    CSS_R842_3_ED2024_07_01,
+    CSS_R842_3_ED2025_01_01,
+    CSS_R842_3_ED2025_02_28,
+    CSS_R842_3_ED2025_03_31,
+    CSS_R842_3_ED2026_04_01,
+    CSS_R842_3_ED2026_06_27)
+rule EnfantMembreChargeApres17(d: Demandeur, e: Enfant, n: Date, md: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "moins de 25 ans, charge effective, arrivée après 17 ans avec parenté, non bénéficiaire: membre (R. 842-3)";
+    label en unofficial "under 25, effective care, arrival after 17 with kinship, no bonus: member (R. 842-3)";
+    when enfant_ou_charge(d, e) and naissance(e, n) and mois_du_droit(d, md)
+        and md < add_calendar_period(n, 300 calendar_month)
+        and charge_effective_permanente(d, e)
+        and arrivee_apres_17_ans(e) and lien_parente_4e_degre(e, d)
+        and enfant_non_beneficiaire_pa_annee_droit(e)
+        and not_known(enfant_beneficiaire_pa_annee_droit(e));
+    then enfant_membre_foyer(d, e);
+}
+
+// D-42: «Ne pas bénéficier ou avoir bénéficié, au cours de l'année
+// civile de droit, de la prime d'activité» (R. 842-3 3° b)) is a
+// condition of every membership branch; a recorded benefit is the
+// affirmative contrary of membership.
+@source(
+    CSS_R842_3_ED2021_01_01,
+    CSS_R842_3_ED2021_03_25,
+    CSS_R842_3_ED2021_06_01,
+    CSS_R842_3_ED2022_03_21,
+    CSS_R842_3_ED2023_12_31,
+    CSS_R842_3_ED2024_01_01,
+    CSS_R842_3_ED2024_07_01,
+    CSS_R842_3_ED2025_01_01,
+    CSS_R842_3_ED2025_02_28,
+    CSS_R842_3_ED2025_03_31,
+    CSS_R842_3_ED2026_04_01,
+    CSS_R842_3_ED2026_06_27)
+rule EnfantNonMembreBeneficiaire(d: Demandeur, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant ayant bénéficié de la prime l'année civile de droit: non membre (R. 842-3 b))";
+    label en unofficial "child who received the bonus in the civil year of right: not a member (R. 842-3 b))";
+    when enfant_ou_charge(d, e) and enfant_beneficiaire_pa_annee_droit(e);
+    then not enfant_membre_foyer(d, e);
+}
+
+pub relation conjoint_non_retenu(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "conjoint (époux) ne remplissant pas une ou plusieurs des conditions L. 842-1/2, non retenu pour le foyer (R. 842-4; fait retenu)";
+    label en unofficial "spouse not meeting one or more L. 842-1/2 conditions, not counted for the household (R. 842-4; retained fact)";
+}
+
+pub relation concubin_non_retenu(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "concubin ne remplissant pas une ou plusieurs des conditions L. 842-1/2, non retenu pour le foyer (R. 842-4; fait retenu)";
+    label en unofficial "concubin not meeting one or more L. 842-1/2 conditions, not counted for the household (R. 842-4; retained fact)";
+}
+
+pub relation partenaire_pacs_non_retenu(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "partenaire lié par un pacte civil de solidarité ne remplissant pas une ou plusieurs des conditions L. 842-1/2, non retenu pour le foyer (R. 842-4; fait retenu)";
+    label en unofficial "PACS partner not meeting one or more L. 842-1/2 conditions, not counted for the household (R. 842-4; retained fact)";
+}
+
+pub relation ressources_conjoint_comptees(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "ressources du conjoint, concubin ou partenaire PACS non retenu prises en compte (R. 842-4)";
+    label en unofficial "non-counted spouse, concubin or PACS partner resources taken into account (R. 842-4)";
+}
+
+pub relation revenus_conjoint_assimiles_remplacement(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "revenus professionnels du conjoint, concubin ou partenaire PACS non retenu assimilés aux revenus de remplacement L. 842-4 2° (R. 842-4)";
+    label en unofficial "non-counted spouse, concubin or PACS partner professional income treated as L. 842-4 2° replacement income (R. 842-4)";
+}
+
+@source(
+    CSS_R842_4_ED2021_01_01,
+    CSS_R842_4_ED2021_03_25,
+    CSS_R842_4_ED2021_06_01,
+    CSS_R842_4_ED2022_03_21,
+    CSS_R842_4_ED2023_12_31,
+    CSS_R842_4_ED2024_01_01,
+    CSS_R842_4_ED2024_07_01,
+    CSS_R842_4_ED2025_01_01,
+    CSS_R842_4_ED2025_02_28,
+    CSS_R842_4_ED2025_03_31,
+    CSS_R842_4_ED2026_04_01,
+    CSS_R842_4_ED2026_06_27)
+rule ConjointNonRetenuRessources(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "conjoint non retenu: ses ressources prises en compte (R. 842-4)";
+    label en unofficial "non-counted spouse: resources taken into account (R. 842-4)";
+    when conjoint_non_retenu(d);
+    then ressources_conjoint_comptees(d);
+}
+
+@source(
+    CSS_R842_4_ED2021_01_01,
+    CSS_R842_4_ED2021_03_25,
+    CSS_R842_4_ED2021_06_01,
+    CSS_R842_4_ED2022_03_21,
+    CSS_R842_4_ED2023_12_31,
+    CSS_R842_4_ED2024_01_01,
+    CSS_R842_4_ED2024_07_01,
+    CSS_R842_4_ED2025_01_01,
+    CSS_R842_4_ED2025_02_28,
+    CSS_R842_4_ED2025_03_31,
+    CSS_R842_4_ED2026_04_01,
+    CSS_R842_4_ED2026_06_27)
+rule ConjointRevenusAssimiles(d: Demandeur, mois: Date, r: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "conjoint non retenu: ses revenus professionnels assimilés au remplacement (R. 842-4)";
+    label en unofficial "non-counted spouse: professional income treated as replacement (R. 842-4)";
+    when conjoint_non_retenu(d) and revenus_pro_conjoint(d, mois, r);
+    then revenus_conjoint_assimiles_remplacement(d, mois, r);
+}
+
+@source(
+    CSS_R842_4_ED2021_01_01,
+    CSS_R842_4_ED2021_03_25,
+    CSS_R842_4_ED2021_06_01,
+    CSS_R842_4_ED2022_03_21,
+    CSS_R842_4_ED2023_12_31,
+    CSS_R842_4_ED2024_01_01,
+    CSS_R842_4_ED2024_07_01,
+    CSS_R842_4_ED2025_01_01,
+    CSS_R842_4_ED2025_02_28,
+    CSS_R842_4_ED2025_03_31,
+    CSS_R842_4_ED2026_04_01,
+    CSS_R842_4_ED2026_06_27)
+rule ConcubinNonRetenuRessources(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "concubin non retenu: ses ressources prises en compte (R. 842-4)";
+    label en unofficial "non-counted concubin: resources taken into account (R. 842-4)";
+    when concubin_non_retenu(d);
+    then ressources_conjoint_comptees(d);
+}
+
+@source(
+    CSS_R842_4_ED2021_01_01,
+    CSS_R842_4_ED2021_03_25,
+    CSS_R842_4_ED2021_06_01,
+    CSS_R842_4_ED2022_03_21,
+    CSS_R842_4_ED2023_12_31,
+    CSS_R842_4_ED2024_01_01,
+    CSS_R842_4_ED2024_07_01,
+    CSS_R842_4_ED2025_01_01,
+    CSS_R842_4_ED2025_02_28,
+    CSS_R842_4_ED2025_03_31,
+    CSS_R842_4_ED2026_04_01,
+    CSS_R842_4_ED2026_06_27)
+rule ConcubinRevenusAssimiles(d: Demandeur, mois: Date, r: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "concubin non retenu: ses revenus professionnels assimilés au remplacement (R. 842-4)";
+    label en unofficial "non-counted concubin: professional income treated as replacement (R. 842-4)";
+    when concubin_non_retenu(d) and revenus_pro_conjoint(d, mois, r);
+    then revenus_conjoint_assimiles_remplacement(d, mois, r);
+}
+
+@source(
+    CSS_R842_4_ED2021_01_01,
+    CSS_R842_4_ED2021_03_25,
+    CSS_R842_4_ED2021_06_01,
+    CSS_R842_4_ED2022_03_21,
+    CSS_R842_4_ED2023_12_31,
+    CSS_R842_4_ED2024_01_01,
+    CSS_R842_4_ED2024_07_01,
+    CSS_R842_4_ED2025_01_01,
+    CSS_R842_4_ED2025_02_28,
+    CSS_R842_4_ED2025_03_31,
+    CSS_R842_4_ED2026_04_01,
+    CSS_R842_4_ED2026_06_27)
+rule PartenairePacsNonRetenuRessources(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "partenaire PACS non retenu: ses ressources prises en compte (R. 842-4)";
+    label en unofficial "non-counted PACS partner: resources taken into account (R. 842-4)";
+    when partenaire_pacs_non_retenu(d);
+    then ressources_conjoint_comptees(d);
+}
+
+@source(
+    CSS_R842_4_ED2021_01_01,
+    CSS_R842_4_ED2021_03_25,
+    CSS_R842_4_ED2021_06_01,
+    CSS_R842_4_ED2022_03_21,
+    CSS_R842_4_ED2023_12_31,
+    CSS_R842_4_ED2024_01_01,
+    CSS_R842_4_ED2024_07_01,
+    CSS_R842_4_ED2025_01_01,
+    CSS_R842_4_ED2025_02_28,
+    CSS_R842_4_ED2025_03_31,
+    CSS_R842_4_ED2026_04_01,
+    CSS_R842_4_ED2026_06_27)
+rule PartenairePacsRevenusAssimiles(d: Demandeur, mois: Date, r: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "partenaire PACS non retenu: ses revenus professionnels assimilés au remplacement (R. 842-4)";
+    label en unofficial "non-counted PACS partner: professional income treated as replacement (R. 842-4)";
+    when partenaire_pacs_non_retenu(d) and revenus_pro_conjoint(d, mois, r);
+    then revenus_conjoint_assimiles_remplacement(d, mois, r);
+}
+
+pub relation evenement_isolement(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "début de la charge du parent isolé, ou déclaration de grossesse (R. 842-5; fait retenu)";
+    label en unofficial "start of the isolated parent's care, or pregnancy declaration (R. 842-5; retained fact)";
+}
+
+pub relation demande_majoration(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "demande de majoration isolé (R. 842-5; fait retenu)";
+    label en unofficial "isolated-major amount request (R. 842-5; retained fact)";
+}
+
+pub relation mois_retard_demande(d: Demandeur, n: Integer) kind empirical {
+    key(d);
+    label fr official "mois de retard de la demande au-delà de six mois, en mois entiers (R. 842-5; fait retenu)";
+    label en unofficial "request lateness beyond six months, in whole months (R. 842-5; retained fact)";
+}
+
+pub relation plus_jeune_trois_ans(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "troisième anniversaire du plus jeune enfant à charge (R. 842-5; fait retenu: naissance + 36 mois)";
+    label en unofficial "third birthday of the youngest dependent child (R. 842-5; retained fact: birth + 36 months)";
+}
+
+pub relation isolement_sans_enfant(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "isolement sans enfant à charge au sens de R. 842-5 (fait retenu)";
+    label en unofficial "isolation without a dependent child within the meaning of R. 842-5 (retained fact)";
+}
+
+pub relation duree_majoration_mois(d: Demandeur, duree: Integer) kind institutional {
+    key(d);
+    label fr official "durée de la majoration isolé en mois (R. 842-5)";
+    label en unofficial "isolated-major amount duration in months (R. 842-5)";
+}
+
+pub relation fin_majoration(d: Demandeur, date: Date) kind institutional {
+    key(d);
+    label fr official "fin de la majoration isolé (R. 842-5)";
+    label en unofficial "end of the isolated-major amount (R. 842-5)";
+}
+
+@source(
+    CSS_R842_5_ED2021_01_01,
+    CSS_R842_5_ED2021_03_25,
+    CSS_R842_5_ED2021_06_01,
+    CSS_R842_5_ED2022_03_21,
+    CSS_R842_5_ED2023_12_31,
+    CSS_R842_5_ED2024_01_01,
+    CSS_R842_5_ED2024_07_01,
+    CSS_R842_5_ED2025_01_01,
+    CSS_R842_5_ED2025_02_28,
+    CSS_R842_5_ED2025_03_31,
+    CSS_R842_5_ED2026_04_01,
+    CSS_R842_5_ED2026_06_27)
+rule MajorationDureeBase(d: Demandeur, ev: Date, dm: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande dans les six mois: douze mois (R. 842-5)";
+    label en unofficial "request within six months: twelve months (R. 842-5)";
+    when evenement_isolement(d, ev) and demande_majoration(d, dm)
+        and dm <= add_calendar_period(ev, 6 calendar_month);
+    then duree_majoration_mois(d, 12);
+}
+
+@source(
+    CSS_R842_5_ED2021_01_01,
+    CSS_R842_5_ED2021_03_25,
+    CSS_R842_5_ED2021_06_01,
+    CSS_R842_5_ED2022_03_21,
+    CSS_R842_5_ED2023_12_31,
+    CSS_R842_5_ED2024_01_01,
+    CSS_R842_5_ED2024_07_01,
+    CSS_R842_5_ED2025_01_01,
+    CSS_R842_5_ED2025_02_28,
+    CSS_R842_5_ED2025_03_31,
+    CSS_R842_5_ED2026_04_01,
+    CSS_R842_5_ED2026_06_27)
+rule MajorationDureeReduite(d: Demandeur, ev: Date, dm: Date, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande tardive: douze mois moins le retard (R. 842-5)";
+    label en unofficial "late request: twelve months minus the lateness (R. 842-5)";
+    when evenement_isolement(d, ev) and demande_majoration(d, dm)
+        and dm > add_calendar_period(ev, 6 calendar_month)
+        and mois_retard_demande(d, n) and 12 - n >= 0;
+    then duree_majoration_mois(d, 12 - n);
+}
+
+@source(
+    CSS_R842_5_ED2021_01_01,
+    CSS_R842_5_ED2021_03_25,
+    CSS_R842_5_ED2021_06_01,
+    CSS_R842_5_ED2022_03_21,
+    CSS_R842_5_ED2023_12_31,
+    CSS_R842_5_ED2024_01_01,
+    CSS_R842_5_ED2024_07_01,
+    CSS_R842_5_ED2025_01_01,
+    CSS_R842_5_ED2025_02_28,
+    CSS_R842_5_ED2025_03_31,
+    CSS_R842_5_ED2026_04_01,
+    CSS_R842_5_ED2026_06_27)
+rule MajorationFinBase(d: Demandeur, ev: Date, bday: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée pleine, trois ans avant le terme: fin à douze mois (R. 842-5)";
+    label en unofficial "full duration, third birthday before the term: end at twelve months (R. 842-5)";
+    when evenement_isolement(d, ev) and duree_majoration_mois(d, 12)
+        and plus_jeune_trois_ans(d, bday)
+        and bday <= add_calendar_period(ev, 12 calendar_month);
+    then fin_majoration(d, add_calendar_period(ev, 12 calendar_month));
+}
+
+@source(
+    CSS_R842_5_ED2021_01_01,
+    CSS_R842_5_ED2021_03_25,
+    CSS_R842_5_ED2021_06_01,
+    CSS_R842_5_ED2022_03_21,
+    CSS_R842_5_ED2023_12_31,
+    CSS_R842_5_ED2024_01_01,
+    CSS_R842_5_ED2024_07_01,
+    CSS_R842_5_ED2025_01_01,
+    CSS_R842_5_ED2025_02_28,
+    CSS_R842_5_ED2025_03_31,
+    CSS_R842_5_ED2026_04_01,
+    CSS_R842_5_ED2026_06_27)
+rule MajorationFinProlongee(d: Demandeur, ev: Date, bday: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée pleine, trois ans après le terme: fin aux trois ans (R. 842-5)";
+    label en unofficial "full duration, third birthday after the term: end at three years (R. 842-5)";
+    when evenement_isolement(d, ev) and duree_majoration_mois(d, 12)
+        and plus_jeune_trois_ans(d, bday)
+        and bday > add_calendar_period(ev, 12 calendar_month);
+    then fin_majoration(d, bday);
+}
+
+@source(
+    CSS_R842_5_ED2021_01_01,
+    CSS_R842_5_ED2021_03_25,
+    CSS_R842_5_ED2021_06_01,
+    CSS_R842_5_ED2022_03_21,
+    CSS_R842_5_ED2023_12_31,
+    CSS_R842_5_ED2024_01_01,
+    CSS_R842_5_ED2024_07_01,
+    CSS_R842_5_ED2025_01_01,
+    CSS_R842_5_ED2025_02_28,
+    CSS_R842_5_ED2025_03_31,
+    CSS_R842_5_ED2026_04_01,
+    CSS_R842_5_ED2026_06_27)
+rule MajorationFinSansEnfant(d: Demandeur, ev: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée pleine sans enfant: fin à douze mois (R. 842-5)";
+    label en unofficial "full duration without a child: end at twelve months (R. 842-5)";
+    when evenement_isolement(d, ev) and duree_majoration_mois(d, 12)
+        and isolement_sans_enfant(d);
+    then fin_majoration(d, add_calendar_period(ev, 12 calendar_month));
+}
+
+pub relation mois_evenement_l8427(d: Demandeur, mois: Date) kind empirical {
+    key(d);
+    label fr official "mois civil où une condition L. 842-7 est remplie, au premier jour (R. 843-2; fait retenu)";
+    label en unofficial "civil month when an L. 842-7 condition is met, at the first day (R. 843-2; retained fact)";
+}
+
+pub relation mois_separation(d: Demandeur, mois: Date) kind empirical {
+    key(d);
+    label fr official "mois civil de l'interruption de la vie commune, au premier jour (R. 843-2; fait retenu)";
+    label en unofficial "civil month of the couple separation, at the first day (R. 843-2; retained fact)";
+}
+
+pub relation revision_prend_effet(d: Demandeur, mois: Date) kind institutional {
+    key(d);
+    label fr official "révision prenant effet au premier jour du mois de l'événement (R. 843-2)";
+    label en unofficial "revision taking effect on the first day of the event month (R. 843-2)";
+}
+
+@source(
+    CSS_R843_2_PRE2025_ED2021_01_01,
+    CSS_R843_2_PRE2025_ED2021_03_25,
+    CSS_R843_2_PRE2025_ED2021_06_01,
+    CSS_R843_2_PRE2025_ED2022_03_21,
+    CSS_R843_2_PRE2025_ED2023_12_31,
+    CSS_R843_2_PRE2025_ED2024_01_01,
+    CSS_R843_2_PRE2025_ED2024_07_01,
+    CSS_R843_2_PRE2025_ED2025_01_01,
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27)
+rule RevisionL8427Ancienne(d: Demandeur, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien: révision sur condition L. 842-7 (R. 843-2; porte NOTA)";
+    label en unofficial "old: revision on an L. 842-7 condition (R. 843-2; NOTA gate)";
+    when mois_evenement_l8427(d, mois) and dispositions_anciennes_2025(d, mois);
+    then revision_prend_effet(d, mois);
+}
+
+@source(
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27)
+rule RevisionL8427Nouvelle(d: Demandeur, mois: Date) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "révision sur condition L. 842-7 (R. 843-2; porte NOTA)";
+    label en unofficial "revision on an L. 842-7 condition (R. 843-2; NOTA gate)";
+    when mois_evenement_l8427(d, mois) and dispositions_nouvelles_2025(d, mois);
+    then revision_prend_effet(d, mois);
+}
+
+@source(
+    CSS_R843_2_ED2025_02_28,
+    CSS_R843_2_ED2025_03_31,
+    CSS_R843_2_ED2026_04_01,
+    CSS_R843_2_ED2026_06_27)
+rule RevisionSeparationNouvelle(d: Demandeur, mois: Date) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "révision sur interruption de la vie commune (R. 843-2; porte NOTA)";
+    label en unofficial "revision on couple separation (R. 843-2; NOTA gate)";
+    when mois_separation(d, mois) and dispositions_nouvelles_2025(d, mois);
+    then revision_prend_effet(d, mois);
+}
+
+pub relation reexamen_trimestriel_du(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "réexamen trimestriel dû au lendemain de trois mois civils (D. 846-1; fait retenu)";
+    label en unofficial "quarterly re-examination due after three civil months (D. 846-1; retained fact)";
+}
+
+pub relation ouverture_rsa(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "ouverture d'un droit au RSA (CASF L. 262-1; D. 846-1; fait retenu)";
+    label en unofficial "opening of an RSA right (CASF L. 262-1; D. 846-1; retained fact)";
+}
+
+pub relation ressources_foyer_declarees(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "ressources du foyer déclarées au réexamen (D. 846-1; fait retenu)";
+    label en unofficial "household resources declared at re-examination (D. 846-1; retained fact)";
+}
+
+pub relation reexamen_du(d: Demandeur, date: Date) kind institutional {
+    key(d, date);
+    label fr official "réexamen périodique dû (D. 846-1)";
+    label en unofficial "periodic re-examination due (D. 846-1)";
+}
+
+@source(
+    CSS_D846_1_ED2021_01_01,
+    CSS_D846_1_ED2021_03_25,
+    CSS_D846_1_ED2021_06_01,
+    CSS_D846_1_ED2022_03_21,
+    CSS_D846_1_ED2023_12_31,
+    CSS_D846_1_ED2024_01_01,
+    CSS_D846_1_ED2024_07_01,
+    CSS_D846_1_ED2025_01_01,
+    CSS_D846_1_ED2025_02_28,
+    CSS_D846_1_ED2025_03_31,
+    CSS_D846_1_ED2026_04_01,
+    CSS_D846_1_ED2026_06_27)
+rule ReexamenTrimestriel(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "réexamen au lendemain de trois mois civils (D. 846-1)";
+    label en unofficial "re-examination after three civil months (D. 846-1)";
+    when reexamen_trimestriel_du(d, date);
+    then reexamen_du(d, date);
+}
+
+@source(
+    CSS_D846_1_ED2021_01_01,
+    CSS_D846_1_ED2021_03_25,
+    CSS_D846_1_ED2021_06_01,
+    CSS_D846_1_ED2022_03_21,
+    CSS_D846_1_ED2023_12_31,
+    CSS_D846_1_ED2024_01_01,
+    CSS_D846_1_ED2024_07_01,
+    CSS_D846_1_ED2025_01_01,
+    CSS_D846_1_ED2025_02_28,
+    CSS_D846_1_ED2025_03_31,
+    CSS_D846_1_ED2026_04_01,
+    CSS_D846_1_ED2026_06_27)
+rule ReexamenOuvertureRSA(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "réexamen à l'ouverture d'un droit au RSA (D. 846-1)";
+    label en unofficial "re-examination on RSA right opening (D. 846-1)";
+    when ouverture_rsa(d, date);
+    then reexamen_du(d, date);
+}
+
+@source(
+    CSS_D846_1_ED2021_01_01,
+    CSS_D846_1_ED2021_03_25,
+    CSS_D846_1_ED2021_06_01,
+    CSS_D846_1_ED2022_03_21,
+    CSS_D846_1_ED2023_12_31,
+    CSS_D846_1_ED2024_01_01,
+    CSS_D846_1_ED2024_07_01,
+    CSS_D846_1_ED2025_01_01,
+    CSS_D846_1_ED2025_02_28,
+    CSS_D846_1_ED2025_03_31,
+    CSS_D846_1_ED2026_04_01,
+    CSS_D846_1_ED2026_06_27)
+rule DevoirDeclarerRessourcesReexamen(d: Demandeur, o: Organisme, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "D3: le bénéficiaire déclare les ressources du foyer au réexamen (D. 846-1)";
+    label en unofficial "D3: the payee declares household resources at re-examination (D. 846-1)";
+    when reexamen_du(d, date) and organisme_serviteur(o, d);
+    then duty DeclarerRessourcesReexamen {
+        bearer d;
+        beneficiary o;
+        maintain ressources_foyer_declarees(d, date) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation dernier_versement(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "dernier versement de la prime (D. 846-3; fait retenu)";
+    label en unofficial "last payment of the bonus (D. 846-3; retained fact)";
+}
+
+pub relation date_observation(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "date d'observation du délai de radiation (D. 846-3; fait retenu)";
+    label en unofficial "observation date of the radiation delay (D. 846-3; retained fact)";
+}
+
+pub relation delai_radiation_24m_ecoule(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "délai de vingt-quatre mois sans versement écoulé (D. 846-3)";
+    label en unofficial "twenty-four month no-payment delay elapsed (D. 846-3)";
+}
+
+@source(
+    CSS_D846_3_ED2021_01_01,
+    CSS_D846_3_ED2021_03_25,
+    CSS_D846_3_ED2021_06_01,
+    CSS_D846_3_ED2022_03_21,
+    CSS_D846_3_ED2023_12_31,
+    CSS_D846_3_ED2024_01_01,
+    CSS_D846_3_ED2024_07_01,
+    CSS_D846_3_ED2025_01_01,
+    CSS_D846_3_ED2025_02_28,
+    CSS_D846_3_ED2025_03_31,
+    CSS_D846_3_ED2026_04_01,
+    CSS_D846_3_ED2026_06_27)
+rule DelaiRadiationEcoule(d: Demandeur, v: Date, now: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "vingt-quatre mois sans versement écoulés (D. 846-3)";
+    label en unofficial "twenty-four months without payment elapsed (D. 846-3)";
+    when dernier_versement(d, v) and date_observation(d, now)
+        and now >= add_calendar_period(v, 24 calendar_month);
+    then delai_radiation_24m_ecoule(d);
+}

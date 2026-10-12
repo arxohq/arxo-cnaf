@@ -1,0 +1,26 @@
+// R. 541-1 al. 4, recognized prise en charge (PriseEnChargeReconnue):
+// home care granted under health insurance on a favourable commission
+// decision is recognized; without any funder link the second child stays
+// silent.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-prise-en-charge" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-pec-01": service_soins_domicile(entity_ref("urn:fr:pf-aeeh:case:enfant-pec")) { origin case_input; }
+        assert "r541-pec-02": prise_en_charge_par(entity_ref("urn:fr:pf-aeeh:case:enfant-pec"), ASSURANCE_MALADIE) { origin case_input; }
+        assert "r541-pec-03": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-pec")) { origin adjudicated; }
+        assert "r541-pec-04": service_soins_domicile(entity_ref("urn:fr:pf-aeeh:case:enfant-pec-sans")) { origin case_input; }
+        assert "r541-pec-05": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-pec-sans")) { origin adjudicated; }
+    }
+    evaluate truth(prise_en_charge_reconnue(entity_ref("urn:fr:pf-aeeh:case:enfant-pec")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(prise_en_charge_reconnue(entity_ref("urn:fr:pf-aeeh:case:enfant-pec-sans")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

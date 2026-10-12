@@ -1,0 +1,33 @@
+// (а) граница: у нас вывода нет — (а)-граница: у подслучаев ст. 18 после 30.09.2017 колонки c) «amélioré par l'occupant» нет (05-calcul-accession.law:457-460) — плафон правило не производит, а не выдумывает; их 399,20 — их выбор колонки b)
+// Файл отложен: в [tests] не входит, ждёт квалификации либо закрепления акта.
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_apl_accession_propriete.catala_fr, scope Exemple4.
+// ИХ ОЖИДАНИЕ: mensualité_éligible = 399.20.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-apl_accession_propriete-exemple4-mensualit-ligible" {
+    given {
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "apl_accession_propriete-exemple4-01": secteur_accession(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4")) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-02": aide_demandee(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), APL) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-03": ressources_du_menage(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), 19000 EUR) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-04": zone_du_logement(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), ZONE_III) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-05": mensualite_declaree(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), 495 EUR) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-06": territoire(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), METROPOLE) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-07": personnes_a_charge(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), 2) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-08": situation_familiale(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), COUPLE) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-09": type_travaux(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), TRAVAUX_SUR_LOGEMENT_DEJA_ACQUIS) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-10": finalite_operation(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), LOGEMENT_AMELIORE_PAR_OCCUPANT) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-11": mode_propriete(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-12": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), false) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-13": sous_cas_mensualite(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), PRET_APRES_30_09_2019) { origin case_input; }
+        assert "apl_accession_propriete-exemple4-14": vintage_pret_depense_nette(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), PRET_DEPUIS_OCTOBRE_1998) { origin case_input; }
+    }
+    evaluate truth(mensualite_eligible(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple4"), 399.2 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

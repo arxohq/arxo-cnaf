@@ -1,0 +1,15 @@
+// No ledger: multiples asserted without dated amounts - single levy holds, no ordering or allocation (D. 553-4 al. 3, PC-R04-03 unknown control).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-indus-sans-registre" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "indus-sans-registre-01": indus_multiples(entity_ref("urn:fr:pv:case:multi-inconnu")) { origin case_input; }
+    }
+    evaluate truth(retenue_unique_indus_multiples(entity_ref("urn:fr:pv:case:multi-inconnu")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

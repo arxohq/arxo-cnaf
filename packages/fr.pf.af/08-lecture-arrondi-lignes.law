@@ -1,0 +1,482 @@
+// D-83 (решение владельца, 08.10.2026): прочтение §152 «суммы AF округляются до
+// сантима HALF_UP ПО СТРОКАМ таблицы DSS, итог — сумма округлённых строк».
+// Основание. Статьи декретов D. 521-1, D. 521-2, R. 521-4, D. 755-5 задают
+// проценты BMAF и об округлении молчат. Ежегодная инструкция DSS —
+// административный текст, не декрет — округление называет: «Ces montants sont
+// arrondis au centième d'euro le plus proche ; il en est de même lorsqu'il
+// s'agit du service d'une allocation différentielle» (DSS/2B/2026/46,
+// revalorisation/sources/dss-2026-46.txt:135; шапка приложения :175 —
+// «Arrondis au centième d'euro le plus proche») — и печатает округлённые
+// строки. Чего инструкция НЕ говорит: как округлять ровно полсантима (HALF_UP —
+// наш выбор) и округлять ли итог семьи или каждую строку (она печатает строки).
+// Поэтому это прочтение (status disputed), а не норма пакета: обязательные
+// статьи молчат, правило половины не названо. Граница B-PFAF-ARRONDI
+// снимается его выбором.
+//
+// СТРОКИ ТАБЛИЦЫ (каждая — % BMAF × BMAF, до сантима HALF_UP):
+//   1. база AF по полосе — строка «N enfants» таблицы I.1: доля семьи
+//      32 % + 41 % × (N − 2) (полоса 2 — 16 % + 20,5 %, полоса 3 — 8 % +
+//      10,25 %) × BMAF, округлённая ОДИН раз на семью. Не сумма округлённых
+//      ставок по рангам: DSS/SD2B/2017/97 (revalorisation/sources/dss-2017-97.txt:147)
+//      печатает «4 enfants 114 % 464,94», а 130,51 + 2 × 167,21 = 464,93;
+//      DSS/2B/2026/46 (dss-2026-46.txt:194) — «114 % 545,1» против
+//      153,01 + 2 × 196,05 = 545,11. Для N ≥ 6 таблица печатает только строку
+//      «Par enfant supp»; прочтение держит ту же долю семьи (вопрос открыт —
+//      docs/status, раздел D-83);
+//   2. надбавка за возраст — строка таблицы I.2 (16 % / 8 % / 4 %); у ребёнка в
+//      résidence alternée «le montant servi … est réduit de moitié» (R. 521-4
+//      al. 2) — строка ПОЛОВИННОЙ ставки: половина точного произведения, частное
+//      до сантима HALF_UP (D-82). Для полос 1 и 2 это напечатанная строка
+//      таблицы (8 % и 4 %): DSS/SD2B/2023/41 (dss-2023-41.txt:217) — «16 % 71,35
+//      … 8 % 35,67», тогда как половина округлённой строки 71,35 дала бы 35,68,
+//      которой таблица не печатает;
+//   3. forfait — строка таблицы I.3 (20,234 % / 10,117 % / 5,059 %);
+//   4. ДОМ, один ребёнок — строки таблицы I.4 (5,88 %; 3,69 %; 5,67 %);
+//   5. complément dégressif D. 521-1 II и D. 521-2 II — «douzième de la
+//      différence» над округлёнными строками, частное до сантима HALF_UP (D-82).
+// Итог (MontantDu, DomMontantDu) — сумма округлённых строк; его прежнее
+// round(…) под прочтением ничего не меняет.
+//
+// НЕ ЗАТРОНУТО: доля родителя R. 521-3 при garde alternée (5/6,
+// 02-allocataire-partage.law, MontantParent) — D-82 называет её непокрытой,
+// D-83 объём не расширяет; плафоны D. 521-3 (входы-суммы, D-81).
+//
+// КАК УСТРОЕН ВЫБОР (образец — fr.apl::ArrondiCentimeHalfUp, 27-…). Правила
+// ArrondiLignesMetropole / ArrondiLignesDom выводят маркер arrondi_lignes_dss(p)
+// только под выбранным прочтением (правило с непустой принадлежностью активно
+// лишь при выборе, §152). Базовые правила тех же мест (03, 04, 05, 06) несут
+// охранное условие not_known(arrondi_lignes_dss(p)): без выбора они работают как
+// прежде (точное произведение; неточный douzième — отказ INEXACT_DIVISION), под
+// выбором молчат, и то же место считает правило этого файла. Две активные
+// головы одного ключа не встречаются. Группы выбора у прочтения нет (§155):
+// выбор приходит из дела — `interpretation ArrondiLignesDss;` в context.
+
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+use self::{
+    BandeRessources,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03,
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03,
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03,
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03,
+    CSS_L755_12,
+    CSS_L755_12_ED2015_03,
+    CSS_L755_12_ED2015_07,
+    CSS_L755_12_ED2015_10,
+    CSS_L755_12_ED2021_09,
+    CSS_L755_12_ED2022_01,
+    CSS_L755_12_ED2026_03,
+    CSS_R521_4,
+    CSS_R521_4_ED2008_04,
+    CSS_R521_4_ED2014_12,
+    CSS_R521_4_ED2015_03,
+    CSS_R521_4_ED2015_07,
+    CSS_R521_4_ED2015_10,
+    CSS_R521_4_ED2021_09,
+    CSS_R521_4_ED2022_01,
+    CSS_R521_4_ED2026_03,
+    ModeGarde,
+    Territoire,
+    af_droit_ouvert,
+    bande_ressources,
+    base_af_montant,
+    base_dom_retenue,
+    bmaf_retenu,
+    complement_degressif,
+    complement_forfait,
+    date_naissance,
+    forfait_ouvert,
+    garde,
+    majoration_eligible,
+    mois_droit,
+    montant_forfait,
+    montant_majoration,
+    montant_mensuel_af,
+    montant_mensuel_af_dom,
+    nb_enfants_charge,
+    nb_majorations_demi,
+    nb_majorations_pleines,
+    nest_pas_aine,
+    plafond1_applicable,
+    plafond2_applicable,
+    ressources_retenues,
+    taux_forfait,
+    taux_majo,
+    taux_rang2,
+    taux_rang3plus,
+    territoire,
+};
+
+relation arrondi_lignes_dss(p: fr.pf.core::Personne) kind institutional {
+    label fr official "lecture retenue : les montants des allocations familiales sont arrondis au centime par ligne du barème publié (pratique DSS/CNAF)";
+    label en unofficial "selected reading: family-benefit amounts are rounded to the centime per row of the published scale (DSS/CNAF practice)";
+    label ru unofficial "D-83, практика DSS/CNAF: таблицы инструкций печатают округлённые строки — суммы AF округляются до сантима по строкам";
+}
+
+// Строка таблицы DSS: процент BMAF × база, до сантима HALF_UP.
+function ligne_dss(taux: Decimal, base: Money) -> Money =
+    round(taux * base, 2, "HALF_UP");
+
+// Строка «N enfants» таблицы I.1: доля семьи, округлённая один раз.
+function ligne_base_af(n: Integer, t2: Decimal, t3: Decimal, bmaf: Money) -> Money =
+    round(base_af_montant(n, t2, t3, bmaf), 2, "HALF_UP");
+
+// Надбавка за возраст половинная (R. 521-4 al. 2): строка половинной ставки —
+// половина точного произведения до сантима, D-82.
+function demi_ligne(taux: Decimal, bmaf: Money) -> Money =
+    div_round(taux * bmaf, 2.0, 2, "HALF_UP");
+
+// «Douzième de la différence» (D. 521-1 II, D. 521-2 II) до сантима, D-82.
+function douzieme_arrondi(plafond: Money, montant: Money, ressources: Money) -> Money =
+    div_round(plafond + 12.0 * montant - ressources, 12.0, 2, "HALF_UP");
+
+// --- Маркер выбора ---
+
+@source(
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule ArrondiLignesMetropole(p: fr.pf.core::Personne, bmaf: Money) strict {
+    label fr official "pratique de l'organisme payeur : chaque montant du barème (pourcentage de la base mensuelle) est arrondi au centime le plus proche, le total étant la somme des montants arrondis";
+    label en unofficial "payer practice: each scale amount (percentage of the monthly base) is rounded to the nearest centime, the total being the sum of the rounded amounts";
+    label ru unofficial "D-83, практика DSS/CNAF: таблицы инструкций печатают округлённые строки — строка % BMAF до сантима HALF_UP, итог — сумма строк";
+    when bmaf_retenu(p, bmaf);
+    then arrondi_lignes_dss(p);
+}
+
+@source(
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03)
+rule ArrondiLignesDom(p: fr.pf.core::Personne, base: Money) strict {
+    label fr official "pratique de l'organisme payeur : les montants servis pour un seul enfant dans les départements d'outre-mer sont arrondis au centime le plus proche";
+    label en unofficial "payer practice: amounts paid for a single child in the overseas departments are rounded to the nearest centime";
+    label ru unofficial "D-83, практика DSS/CNAF: строки таблицы I.4 (один ребёнок в ДОМ) печатаются округлёнными до сантима";
+    when base_dom_retenue(p, base);
+    then arrondi_lignes_dss(p);
+}
+
+// --- 1, 2: месячная сумма AF по строкам (вместо MontantMensuel) ---
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule MontantMensuelLignes(p: fr.pf.core::Personne, n: Integer, kp: Integer, kd: Integer, b: BandeRessources, bmaf: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "mensuel brut: taux du rang par la base, majorations à taux plein et demi-taux comprises";
+    label en unofficial "gross monthly as the sum of rounded scale rows: family row for the number of children plus full- and half-rate supplement rows";
+    label ru unofficial "D-83, практика DSS/CNAF: таблицы инструкций печатают округлённые строки — строка «N enfants» плюс строки надбавок (полной и половинной)";
+    when af_droit_ouvert(p) and nb_enfants_charge(p, n) and n >= 2
+        and nb_majorations_pleines(p, kp) and nb_majorations_demi(p, kd)
+        and bande_ressources(p, b) and bmaf_retenu(p, bmaf);
+    then montant_mensuel_af(p, ligne_base_af(n, taux_rang2(b), taux_rang3plus(b), bmaf)
+        + ligne_dss(taux_majo(b), bmaf) * kp + demi_ligne(taux_majo(b), bmaf) * kd);
+}
+
+// --- 5: complément dégressif (вместо ComplementPlafond1/2) ---
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule ComplementPlafond1Arrondi(p: fr.pf.core::Personne, r: Money, p1: Money, m: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "Ce complément dégressif est égal, pour chaque mois, au douzième de la différence entre, d'une part, ce plafond de ressources majoré de la somme définie à l'alinéa précédent et, d'autre part, le montant des ressources";
+    label en unofficial "tapering top-up crossing the I ceiling: twelfth of (ceiling + 12 rounded monthlies - resources), rounded to the centime";
+    label ru unofficial "D-82/D-83: douzième D. 521-1 II над округлёнными строками, частное до сантима HALF_UP (полоса 2)";
+    when bande_ressources(p, BANDE_2) and ressources_retenues(p, r)
+        and plafond1_applicable(p, p1) and montant_mensuel_af(p, m)
+        and r - p1 < 12.0 * m;
+    then complement_degressif(p, douzieme_arrondi(p1, m, r));
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule ComplementPlafond2Arrondi(p: fr.pf.core::Personne, r: Money, p2: Money, m: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "Ce complément dégressif est égal, pour chaque mois, au douzième de la différence entre, d'une part, ce plafond de ressources majoré de la somme définie à l'alinéa précédent et, d'autre part, le montant des ressources";
+    label en unofficial "tapering top-up crossing the II ceiling: twelfth of (ceiling + 12 rounded monthlies - resources), rounded to the centime";
+    label ru unofficial "D-82/D-83: douzième D. 521-1 II над округлёнными строками, частное до сантима HALF_UP (полоса 3)";
+    when bande_ressources(p, BANDE_3) and ressources_retenues(p, r)
+        and plafond2_applicable(p, p2) and montant_mensuel_af(p, m)
+        and r - p2 < 12.0 * m;
+    then complement_degressif(p, douzieme_arrondi(p2, m, r));
+}
+
+// --- 2: надбавка за возраст по ребёнку (вместо MajorationMontantPlein/Moitié) ---
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule MajorationMontantPleinLigne(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, b: BandeRessources, bmaf: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "montant de la majoration: taux de la tranche par la base (D. 521-1, I)";
+    label en unofficial "supplement amount: the rounded scale row (band rate times the base)";
+    label ru unofficial "D-83, практика DSS/CNAF: таблицы инструкций печатают округлённые строки — надбавка за возраст есть строка таблицы I.2";
+    when majoration_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, b) and bmaf_retenu(p, bmaf)
+        and garde(e, CHARGE_EFFECTIVE_PERMANENTE);
+    then montant_majoration(e, ligne_dss(taux_majo(b), bmaf));
+}
+
+@source(
+    CSS_R521_4,
+    CSS_R521_4_ED2008_04,
+    CSS_R521_4_ED2014_12,
+    CSS_R521_4_ED2015_03,
+    CSS_R521_4_ED2015_07,
+    CSS_R521_4_ED2015_10,
+    CSS_R521_4_ED2021_09,
+    CSS_R521_4_ED2022_01,
+    CSS_R521_4_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule MajorationMontantMoitieLigne(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, b: BandeRessources, bmaf: Money) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "Lorsque le ou les enfants ouvrant droit à ladite majoration sont en résidence alternée, le montant servi au titre de cette majoration est réduit de moitié";
+    label en unofficial "shared custody: the half-rate supplement row (half of the exact product, rounded to the centime)";
+    label ru unofficial "D-82/D-83: строка половинной ставки надбавки (R. 521-4 al. 2) — половина точного произведения до сантима HALF_UP";
+    when majoration_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, b) and bmaf_retenu(p, bmaf)
+        and garde(e, RESIDENCE_ALTERNEE_PARTAGE);
+    then montant_majoration(e, demi_ligne(taux_majo(b), bmaf));
+}
+
+// --- 3, 5: forfait (вместо ForfaitMontant, ForfaitComplementP1/P2) ---
+
+@source(
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitMontantLigne(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, b: BandeRessources, bmaf: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "montant du forfait: taux de la tranche par la base (D. 521-2, I)";
+    label en unofficial "lump-sum amount: the rounded scale row (band rate times the base)";
+    label ru unofficial "D-83, практика DSS/CNAF: таблицы инструкций печатают округлённые строки — forfait есть строка таблицы I.3";
+    when forfait_ouvert(e) and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, b) and bmaf_retenu(p, bmaf);
+    then montant_forfait(e, ligne_dss(taux_forfait(b), bmaf));
+}
+
+@source(
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitComplementP1Arrondi(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, r: Money, p1: Money, f: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "complément dégressif du forfait au franchissement du plafond du I (D. 521-2, II)";
+    label en unofficial "forfait tapering top-up crossing the I ceiling, twelfth rounded to the centime";
+    label ru unofficial "D-82/D-83: douzième D. 521-2 II над строкой forfait, частное до сантима HALF_UP (полоса 2)";
+    when montant_forfait(e, f) and f > 0 EUR and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, BANDE_2)
+        and ressources_retenues(p, r) and plafond1_applicable(p, p1)
+        and r - p1 < 12.0 * f;
+    then complement_forfait(e, douzieme_arrondi(p1, f, r));
+}
+
+@source(
+    CSS_D521_2,
+    CSS_D521_2_ED2015_10,
+    CSS_D521_2_ED2021_09,
+    CSS_D521_2_ED2022_01,
+    CSS_D521_2_ED2026_03)
+rule ForfaitComplementP2Arrondi(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, r: Money, p2: Money, f: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "complément dégressif du forfait au franchissement du plafond du II (D. 521-2, II)";
+    label en unofficial "forfait tapering top-up crossing the II ceiling, twelfth rounded to the centime";
+    label ru unofficial "D-82/D-83: douzième D. 521-2 II над строкой forfait, частное до сантима HALF_UP (полоса 3)";
+    when montant_forfait(e, f) and f > 0 EUR and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, BANDE_3)
+        and ressources_retenues(p, r) and plafond2_applicable(p, p2)
+        and r - p2 < 12.0 * f;
+    then complement_forfait(e, douzieme_arrondi(p2, f, r));
+}
+
+// --- 4: ДОМ, один ребёнок (вместо DomMontantUnique, DomMajoOnze/Seize) ---
+
+@source(
+    CSS_L755_12,
+    CSS_L755_12_ED2015_03,
+    CSS_L755_12_ED2015_07,
+    CSS_L755_12_ED2015_10,
+    CSS_L755_12_ED2021_09,
+    CSS_L755_12_ED2022_01,
+    CSS_L755_12_ED2026_03,
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03)
+rule DomMontantUniqueLigne(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, t: Territoire, base: Money) strict {
+    effective [@1998-12-30, infinity);
+    label fr official "enfant unique dans les DOM: 5,88 p. 100 de la base L. 755-3";
+    label en unofficial "single child in the DOM: the rounded 5.88% scale row";
+    label ru unofficial "D-83, практика DSS/CNAF: таблицы инструкций печатают округлённые строки — строка 5,88 % таблицы I.4";
+    when af_droit_ouvert(p) and territoire(p, t) and t != METROPOLE
+        and t != MAYOTTE and t != AUTRE
+        and nb_enfants_charge(p, 1) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::enfant_ouvre_droit(e) and base_dom_retenue(p, base);
+    then montant_mensuel_af_dom(p, ligne_dss(TauxDomEnfantUnique, base));
+}
+
+@source(
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03)
+rule DomMajoOnzeLigne(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date, base: Money) strict {
+    effective [@1998-12-30, infinity);
+    label fr official "enfant unique non aîné de onze ans: 3,69 p. 100 de la base L. 755-3";
+    label en unofficial "non-eldest single child aged eleven: the rounded 3.69% scale row";
+    label ru unofficial "D-83, практика DSS/CNAF: таблицы инструкций печатают округлённые строки — строка 3,69 % таблицы I.4";
+    when nb_enfants_charge(p, 1) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::enfant_ouvre_droit(e) and date_naissance(e, naissance)
+        and nest_pas_aine(e) and mois_droit(mois)
+        and mois >= add_calendar_period(naissance, 11 calendar_year)
+        and mois < add_calendar_period(naissance, 16 calendar_year)
+        and base_dom_retenue(p, base);
+    then montant_majoration(e, ligne_dss(TauxDomMajorationOnzeAns, base));
+}
+
+@source(
+    CSS_D755_5,
+    CSS_D755_5_ED2007_05,
+    CSS_D755_5_ED2008_04,
+    CSS_D755_5_ED2014_12,
+    CSS_D755_5_ED2015_03,
+    CSS_D755_5_ED2015_07,
+    CSS_D755_5_ED2015_10,
+    CSS_D755_5_ED2021_09,
+    CSS_D755_5_ED2022_01,
+    CSS_D755_5_ED2026_03)
+rule DomMajoSeizeLigne(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date, base: Money) strict {
+    effective [@1998-12-30, infinity);
+    label fr official "enfant unique non aîné de seize ans: 5,67 p. 100 de la base L. 755-3";
+    label en unofficial "non-eldest single child aged sixteen: the rounded 5.67% scale row";
+    label ru unofficial "D-83, практика DSS/CNAF: таблицы инструкций печатают округлённые строки — строка 5,67 % таблицы I.4";
+    when nb_enfants_charge(p, 1) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::enfant_ouvre_droit(e) and date_naissance(e, naissance)
+        and nest_pas_aine(e) and mois_droit(mois)
+        and mois >= add_calendar_period(naissance, 16 calendar_year)
+        and base_dom_retenue(p, base);
+    then montant_majoration(e, ligne_dss(TauxDomMajorationSeizeAns, base));
+}
+
+pub interpretation ArrondiLignesDss {
+    status disputed;
+    label fr official "lecture : les montants des allocations familiales sont arrondis au centime (demi supérieur) par ligne du barème publié, le total étant la somme des lignes arrondies — les articles des décrets ne fixent aucun arrondi ; l'instruction annuelle de la DSS arrondit les montants publiés au centième d'euro le plus proche";
+    label en unofficial "reading: family-benefit amounts are rounded to the centime (half up) per row of the published scale, the total being the sum of the rounded rows - the decree articles state no rounding; the yearly DSS instruction rounds published amounts to the nearest cent";
+    label ru unofficial "D-83: статьи декретов об округлении молчат, ежегодная инструкция DSS округляет публикуемые суммы до ближайшего сантима — суммы AF до сантима HALF_UP по строкам, итог — сумма строк; douzième — до сантима (D-82)";
+    include ArrondiLignesMetropole;
+    include ArrondiLignesDom;
+    include MontantMensuelLignes;
+    include ComplementPlafond1Arrondi;
+    include ComplementPlafond2Arrondi;
+    include MajorationMontantPleinLigne;
+    include MajorationMontantMoitieLigne;
+    include ForfaitMontantLigne;
+    include ForfaitComplementP1Arrondi;
+    include ForfaitComplementP2Arrondi;
+    include DomMontantUniqueLigne;
+    include DomMajoOnzeLigne;
+    include DomMajoSeizeLigne;
+}

@@ -1,0 +1,18 @@
+// Singleton affirmative (PC-R05-09, PC-R07-01 interface): delegate receives, single benefit attested, multiple explicitly denied, metro; cost duty on serving body.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-delegue-unique-positif" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "du-01": delegue_percoit(entity_ref("urn:fr:pf:case:delegue-unique")) { origin case_input; }
+        assert "du-02": organisme_verse_prestation_delegue(entity_ref("urn:fr:pf:case:caf"), entity_ref("urn:fr:pf:case:delegue-unique")) { origin case_input; }
+        assert "du-03": prestation_delegue_unique(entity_ref("urn:fr:pf:case:delegue-unique")) { origin case_input; }
+        assert "du-04": not plusieurs_prestations_delegue(entity_ref("urn:fr:pf:case:delegue-unique")) { origin case_input; }
+        assert "du-05": not beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:delegue-unique")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SupporterFraisMesure, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

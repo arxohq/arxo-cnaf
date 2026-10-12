@@ -1,0 +1,21 @@
+// Earlier judgment does not defeat the title: full L. 582-2 chain, title delivered 2026-05-20, enforceable contribution judgment on 2026-01-15 (before the title) - title stands (L. 582-2 « postérieure », PC-R08-03).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-titre-jugement-anterieur" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "creance-titre-jugement-anterieur-01": demande_conjointe_parents_separes(entity_ref("urn:fr:pf:case:creance-jugant")) { origin case_input; }
+        assert "creance-titre-jugement-anterieur-02": attestation_absence_creance(entity_ref("urn:fr:pf:case:creance-jugant")) { origin case_input; }
+        assert "creance-titre-jugement-anterieur-03": attestation_absence_demarche(entity_ref("urn:fr:pf:case:creance-jugant")) { origin case_input; }
+        assert "creance-titre-jugement-anterieur-04": contribution_seuil_atteint(entity_ref("urn:fr:pf:case:creance-jugant")) { origin case_input; }
+        assert "creance-titre-jugement-anterieur-05": infos_contribution_precisees(entity_ref("urn:fr:pf:case:creance-jugant")) { origin case_input; }
+        assert "creance-titre-jugement-anterieur-06": titre_executoire_delivre_le(entity_ref("urn:fr:pf:case:creance-jugant"), @2026-05-20) { origin case_input; }
+        assert "creance-titre-jugement-anterieur-07": decision_executoire_contribution(entity_ref("urn:fr:pf:case:creance-jugant"), @2026-01-15) { origin case_input; }
+    }
+    evaluate truth(titre_executoire_delivre(entity_ref("urn:fr:pf:case:creance-jugant")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

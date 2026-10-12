@@ -1,0 +1,86 @@
+// Arrears (18): good-faith maintenance in the 2021-2023 window, the
+// decided suspension outside good faith, CCAPEX maintenance from
+// 29.07.2023, the landlord signalling duty, and L. 824-3 resumption on
+// consumer-code L. 722-10 admissibility.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-impaye-bonne-foi" {
+    given {
+        context { decision_time @2022-05-15T12:00:00Z; knowledge_time @2022-05-15T12:00:00Z; legal_time @2022-05-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fimp-01": impaye_depense_logement(entity_ref("urn:fr:apl:case:fimp")) { origin case_input; }
+        assert "fimp-02": bonne_foi_impaye(entity_ref("urn:fr:apl:case:fimp")) { origin case_input; }
+    }
+    evaluate truth(versement_maintenu_impaye(entity_ref("urn:fr:apl:case:fimp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-impaye-suspension-decidee" {
+    given {
+        context { decision_time @2022-05-15T12:00:00Z; knowledge_time @2022-05-15T12:00:00Z; legal_time @2022-05-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fisu-01": impaye_depense_logement(entity_ref("urn:fr:apl:case:fisu")) { origin case_input; }
+        assert "fisu-02": decision_maintien_organisme(entity_ref("urn:fr:apl:case:fisu"), false) { origin case_input; }
+    }
+    evaluate truth(versement_suspendu_impaye(entity_ref("urn:fr:apl:case:fisu")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-impaye-ccapex-favorable" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fica-01": decision_ccapex(entity_ref("urn:fr:apl:case:fica"), true) { origin case_input; }
+    }
+    evaluate truth(versement_maintenu_impaye(entity_ref("urn:fr:apl:case:fica")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-signaler-impaye" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fsig-01": impaye_depense_logement(entity_ref("urn:fr:apl:case:fsig")) { origin case_input; }
+        assert "fsig-02": bailleur_du_menage(entity_ref("urn:fr:apl:bail:fsig"), entity_ref("urn:fr:apl:case:fsig")) { origin case_input; }
+        assert "fsig-03": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fsig")) { origin case_input; }
+        // D-42: the duty is borne by "le bailleur"; the model keys landlord duties on the
+        // D-42: third-party role BAILLEUR (role_tiers), as the sibling suites do; the case
+        // D-42: omitted it.
+        assert "fsig-04": role_tiers(entity_ref("urn:fr:apl:bail:fsig"), BAILLEUR) { origin case_input; }
+        // D-42: L. 824-1 binds "le bailleur ... aupres duquel l'aide personnelle est versee";
+        // D-42: the model derives destinataire_aide (17); the case did not say the aid is
+        // D-42: paid to the landlord. Built minimally: ALS paid to the landlord on request
+        // D-42: (L. 842-1 third-party payment, 17 DestAllocationBailleurALS).
+        assert "fsig-05": aide_demandee(entity_ref("urn:fr:apl:case:fsig"), ALS) { origin case_input; }
+        // D-42: same: the landlord asked for third-party payment.
+        assert "fsig-06": demande_versement_tiers(entity_ref("urn:fr:apl:bail:fsig"), entity_ref("urn:fr:apl:case:fsig")) { origin case_input; }
+        // D-42: same: third-party payment of ALS to the landlord requires a decent dwelling.
+        assert "fsig-07": logement_decent(entity_ref("urn:fr:apl:case:fsig")) { origin adjudicated; }
+    }
+    evaluate positions();
+    expect position(BailleurSignalerImpaye, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-impaye-retablissement-l722" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fret-01": decision_recevabilite_l722_10(entity_ref("urn:fr:apl:case:fret")) { origin case_input; }
+        assert "fret-02": versement_suspendu_en_place(entity_ref("urn:fr:apl:case:fret")) { origin case_input; }
+    }
+    evaluate truth(versement_retabli_l824_3(entity_ref("urn:fr:apl:case:fret")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

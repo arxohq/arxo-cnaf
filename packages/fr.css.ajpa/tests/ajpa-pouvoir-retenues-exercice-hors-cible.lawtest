@@ -1,0 +1,26 @@
+// Exercise outside the recorded target (P1): full branch grounds
+// with upcoming RSA instalments as the recorded target, but the
+// body's withholding act names the activity premium —
+// ajpa_retenue_prestations on the premium is NEITHER (the exercise
+// must name the recorded eligible target; a fifth, unlisted target
+// class cannot even be asserted — the enum exhausts the source list).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-pouvoir-retenues-exercice-hors-cible" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-prh-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-prh"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-prh-02": indu_non_recupere_allocations(entity_ref("urn:fr:css:ajpa:case:aidant-prh"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-prh-03": indu_non_conteste(entity_ref("urn:fr:css:ajpa:case:aidant-prh"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-prh-04": indu_sans_option_remboursement(entity_ref("urn:fr:css:ajpa:case:aidant-prh"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-prh-05": retenue_cible_prestations(entity_ref("urn:fr:css:ajpa:case:aidant-prh"), 300.00 EUR, RSA) { origin case_input; }
+        assert "ajpa-prh-06": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-prh")) { origin case_input; }
+        assert "ajpa-prh-07": retenue_prestations_exercee(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-prh"), 300.00 EUR, PRIME_ACTIVITE) { origin case_input; }
+    }
+    evaluate truth(ajpa_retenue_prestations(entity_ref("urn:fr:css:ajpa:case:aidant-prh"), 300.00 EUR, PRIME_ACTIVITE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

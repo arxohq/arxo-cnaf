@@ -1,0 +1,31 @@
+// Active duties: due quarterly amount 286.067, serving fund set, right
+// open, job-seeking payee. Positions VerserPrimeDue and InformerRecours
+// ACTIVE; power ControleDirecteur exercisable; accompaniment right holds.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-devoirs-actif" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": age_plus_dix_huit(entity_ref("urn:fr:ppa:case:devoirs-actif")) { origin case_input; }
+        assert "ppa-02": residence_stable(entity_ref("urn:fr:ppa:case:devoirs-actif")) { origin case_input; }
+        assert "ppa-03": revenus_professionnels(entity_ref("urn:fr:ppa:case:devoirs-actif")) { origin case_input; }
+        assert "ppa-04": sejour_travail_ok(entity_ref("urn:fr:ppa:case:devoirs-actif")) { origin case_input; }
+        assert "ppa-05": conjoint_conditions_ok(entity_ref("urn:fr:ppa:case:devoirs-actif")) { origin case_input; }
+        assert "ppa-11": sans_exclusion_statutaire(entity_ref("urn:fr:ppa:case:devoirs-actif")) { origin case_input; }
+        assert "ppa-06": demande_deposee(entity_ref("urn:fr:ppa:case:devoirs-actif"), @2026-06-01) { origin case_input; }
+        assert "ppa-07": prime_due_trimestre(entity_ref("urn:fr:ppa:case:devoirs-actif"), 286.067 EUR) { origin case_input; }
+        assert "ppa-08": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:devoirs-actif")) { origin case_input; }
+        assert "ppa-09": directeur_de(entity_ref("urn:fr:ppa:org:directeur"), entity_ref("urn:fr:ppa:org:caisse")) { origin case_input; }
+        assert "ppa-10": demandeur_emploi(entity_ref("urn:fr:ppa:case:devoirs-actif")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(VerserPrimeDue, ACTIVE);
+    expect position(InformerRecours, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droit_accompagnement(entity_ref("urn:fr:ppa:case:devoirs-actif")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

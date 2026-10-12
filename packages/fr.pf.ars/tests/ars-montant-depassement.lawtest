@@ -1,0 +1,29 @@
+// Under-eleven band at 31 December 2021 (born 2014-06-01):
+// 0.8972 x 400.00 = 358.88 on the stated base.
+// D-29(b), F-CH6-ARS-SANS-PLAFOND: resources 30000 exceed the ceiling, so no
+// right is open and the per-child base amount is NOT due (before the fix it
+// was paid regardless of resources).
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-montant-depassement" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "amx-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:montant-depassement"), entity_ref("urn:fr:pf-ars:case:montant-depassement-e1")) { origin case_input; }
+        assert "amx-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:montant-depassement-e1")) { origin case_input; }
+        assert "amx-03": date_naissance(entity_ref("urn:fr:pf-ars:case:montant-depassement-e1"), @2014-06-01) { origin case_input; }
+        assert "amx-04": seuil_six_ans(@2022-02-01) { origin case_input; }
+        assert "amx-05": seuil_dix_huit_ans(@2021-09-15) { origin case_input; }
+        assert "amx-06": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:montant-depassement-e1")) { origin case_input; }
+        assert "amx-07": date_reference_taux(@2021-12-31) { origin case_input; }
+        assert "amx-08": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:montant-depassement"), 400.00 EUR) { origin case_input; }
+        assert "amx-rg1": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:montant-depassement"), 1) { origin case_input; }
+        assert "amx-rg2": ressources_menage(entity_ref("urn:fr:pf-ars:case:montant-depassement"), 30000 EUR) { origin case_input; }
+        assert "amx-rg3": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:montant-depassement"), 10000 EUR) { origin case_input; }
+    }
+    evaluate truth(ars_montant_du(entity_ref("urn:fr:pf-ars:case:montant-depassement-e1"), 358.88 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

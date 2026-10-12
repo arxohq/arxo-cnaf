@@ -1,0 +1,57 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) снят — до первой
+// ревалоризации (01.01.2016) плафоны строятся из сумм самого D. 521-3 (правила
+// Plafond1Nominal/Plafond2Nominal); ожидания не меняются.
+// OpenFisca AF 2015-09: three children (2010, 2011, 2012 in shared
+// custody). No income in the foreign input. Joint-request sharing
+// status (mapping note in REPORT.md, OpenFisca 1): household
+// coefficient (2 + 0.5)/3 over the 292.00 band-1 base.
+// Their case -> our answer -> class: REPORT.md (OpenFisca, 1).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-of-2015-09" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2015-09-15T12:00:00Z; knowledge_time @2015-09-15T12:00:00Z; legal_time @2015-09-15; timezone "Europe/Paris"; }
+        assert "of1509-01": territoire(entity_ref("urn:fr:pf-af:parent:of-2015-09"), METROPOLE) { origin case_input; }
+        assert "of1509-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:parent:of-2015-09"), 3) { origin case_input; }
+        assert "of1509-03": ressources_menage(entity_ref("urn:fr:pf-af:parent:of-2015-09"), 0 EUR) { origin case_input; }
+        assert "of1509-05": bmaf_retenu(entity_ref("urn:fr:pf-af:parent:of-2015-09"), 400.00 EUR) { origin case_input; }
+        assert "of1509-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:parent:of-2015-09"), 0) { origin case_input; }
+        assert "of1509-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:parent:of-2015-09"), 0) { origin case_input; }
+        assert "of1509-08": forfait_total_menage(entity_ref("urn:fr:pf-af:parent:of-2015-09"), 0 EUR) { origin case_input; }
+        assert "of1509-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:parent:of-2015-09"), 0) { origin case_input; }
+        assert "of1509-10": foyer_du_cas(entity_ref("urn:fr:pf-af:parent:of-2015-09")) { origin case_input; }
+        assert "of1509-11": mois_droit(@2015-09-01) { origin case_input; }
+        assert "of1509-12": demande_conjointe_partage(entity_ref("urn:fr:pf-af:parent:of-2015-09"), entity_ref("urn:fr:pf-af:parent:of-2015-09-bis")) { origin case_input; }
+        assert "of1509-13": enfants_propres(entity_ref("urn:fr:pf-af:parent:of-2015-09"), 2) { origin case_input; }
+        assert "of1509-14": enfants_alternes(1) { origin case_input; }
+        assert "of1509-15": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:parent:of-2015-09"), entity_ref("urn:fr:pf-af:foreign:of-2015-09-e1")) { origin case_input; }
+        assert "of1509-16": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:parent:of-2015-09"), entity_ref("urn:fr:pf-af:foreign:of-2015-09-e2")) { origin case_input; }
+        assert "of1509-17": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:parent:of-2015-09"), entity_ref("urn:fr:pf-af:foreign:of-2015-09-e3")) { origin case_input; }
+        assert "of1509-18": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e1")) { origin case_input; }
+        assert "of1509-19": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e2")) { origin case_input; }
+        assert "of1509-20": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e3")) { origin case_input; }
+        assert "of1509-21": date_naissance(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e1"), @2010-01-01) { origin case_input; }
+        assert "of1509-22": date_naissance(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e2"), @2011-01-01) { origin case_input; }
+        assert "of1509-23": date_naissance(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e3"), @2012-01-01) { origin case_input; }
+        assert "of1509-24": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e1")) { origin case_input; }
+        assert "of1509-25": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e2")) { origin case_input; }
+        assert "of1509-26": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e3")) { origin case_input; }
+        assert "of1509-27": garde(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e1"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "of1509-28": garde(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e2"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "of1509-29": garde(entity_ref("urn:fr:pf-af:foreign:of-2015-09-e3"), RESIDENCE_ALTERNEE_PARTAGE) { origin case_input; }
+    }
+    evaluate truth(partage_actif(entity_ref("urn:fr:pf-af:parent:of-2015-09")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af(entity_ref("urn:fr:pf-af:parent:of-2015-09"), 292.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    // Coefficient (2 + 0.5)/3 = 5/6 has no exact Decimal form: the head
+    // computation refuses with NONEXACT_NARROWING (no silent rounding,
+    // SPEC section 48). The cent rounding rule is outside the 14-article scope
+    // (B-PFAF-ARRONDI): this step is omitted, see REPORT.md (OpenFisca, 1).
+}

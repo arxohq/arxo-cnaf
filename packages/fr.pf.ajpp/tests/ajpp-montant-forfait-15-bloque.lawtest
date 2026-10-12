@@ -1,0 +1,32 @@
+// F05-01 flat-day block: 15 asserted flat days against the pinned
+// decree 22 (D. 544-8). The envelope qualifies (44 cumulative days,
+// 1 recorded year), so the flat-day conformance alone blocks the
+// amount: no 15 × 60.00 = 900.00 output. The 900 query stays NEITHER.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-montant-forfait-15-bloque" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-mqf15-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-mqf15")) { origin adjudicated; }
+        assert "ajpp-mqf15-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-mqf15")) { origin adjudicated; }
+        assert "ajpp-mqf15-03": demandeur_emploi_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-mqf15")) { origin case_input; }
+        assert "ajpp-mqf15-04": jours_forfaitaires(entity_ref("urn:fr:pf-ajpp:case:enfant-mqf15"), @2024-03-01, 15) { origin case_input; }
+        assert "ajpp-mqf15-05": montant_journalier_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-mqf15"), 60.00 EUR) { origin case_input; }
+        assert "ajpp-mqf15-06": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-mqf15"), 44) { origin case_input; }
+        assert "ajpp-mqf15-07": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-mqf15"), MALADIE, 1) { origin case_input; }
+    }
+    evaluate truth(forfait_22_conforme(entity_ref("urn:fr:pf-ajpp:case:enfant-mqf15"), @2024-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(enveloppe_ajpp_qualifiee(entity_ref("urn:fr:pf-ajpp:case:enfant-mqf15")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mqf15"), @2024-03-01, 900.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

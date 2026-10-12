@@ -1,0 +1,24 @@
+// Deontics D3, satisfied duty (RETURN04, R03-01): pregnancy in progress
+// with established dates and a debtor fund; the declaration was sent in
+// time (2025-03-10, window 2025-01-06–2025-04-14) to both bodies with a
+// conforming prescribed medical document — the derived performance holds,
+// so the DeclarerGrossesseEnDelai position is SATISFIED. In-time pair —
+// devoir-declarer-envoi-tardif (late conforming send, UNDETERMINED).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-devoir-declarer-satisfait" {
+    given {
+        context { decision_time @2025-03-15T12:00:00Z; knowledge_time @2025-03-15T12:00:00Z; legal_time @2025-03-15; timezone "Europe/Paris"; }
+        assert "devoir-sat-01": attente_naissance(entity_ref("urn:fr:paje:case:devoir-sat"), entity_ref("urn:fr:paje:enfant:devoir-sat")) { origin case_input; }
+        assert "devoir-sat-02": debut_grossesse(entity_ref("urn:fr:paje:case:devoir-sat"), entity_ref("urn:fr:paje:enfant:devoir-sat"), @2025-01-06) { origin adjudicated; }
+        assert "devoir-sat-03": date_limite_declaration(entity_ref("urn:fr:paje:case:devoir-sat"), entity_ref("urn:fr:paje:enfant:devoir-sat"), @2025-04-14) { origin adjudicated; }
+        assert "devoir-sat-04": organisme_debiteur(entity_ref("urn:fr:paje:org:caisse"), entity_ref("urn:fr:paje:case:devoir-sat")) { origin case_input; }
+        assert "devoir-sat-05": declaration_grossesse_adressee(entity_ref("urn:fr:paje:case:devoir-sat"), entity_ref("urn:fr:paje:enfant:devoir-sat"), @2025-03-10) { origin adjudicated; }
+        assert "devoir-sat-06": document_medical_conforme(entity_ref("urn:fr:paje:case:devoir-sat"), entity_ref("urn:fr:paje:enfant:devoir-sat")) { origin adjudicated; }
+    }
+    evaluate positions();
+    expect position(DeclarerGrossesseEnDelai, SATISFIED);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,320 @@
+// Allocataire: L. 513-1 (charge effective et permanente - organ judgment
+// channel section 47.3), L. 512-1 (residence, personal-entitlement non-overlap, detaches),
+// L. 512-2 (full entitlement of foreigners - regularite fact; title lists
+// D. 512-1/2 out of scope, boundary B-PFCORE-DATES-MOIS), L. 512-4 (adoption),
+// L. 512-5 (non-overlap with foreign benefits -> differentielle),
+// L. 512-6 (DOM/metropole: entitlement through the metropolitan spouse).
+//
+// DEONTIC MAP:
+// - L. 513-1 "sont dues" - institutional status allocataire; the fund
+//   duty to pay - module 08 (DevoirPayerPrestations). Assessor of
+//   "charge effective et permanente" - the organ: external judgment.
+// - L. 512-1 para. 2 (detaches) - entitlement defeater, not a prohibition.
+// - L. 512-5/6 "ne peuvent se cumuler" - no-overlap prohibition (prohibition
+//   of the "cumuler" action), implemented as differentielle.
+// - L. 512-4 "a la condition que" - filter conditions, case facts.
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_L512_1,
+    CSS_L512_1_CSS_ED2021_05,
+    CSS_L512_1_CSS_ED2021_11,
+    CSS_L512_1_CSS_ED2021_12,
+    CSS_L512_1_CSS_ED2022_01,
+    CSS_L512_1_CSS_ED2022_02,
+    CSS_L512_1_CSS_ED2022_03,
+    CSS_L512_1_CSS_ED2022_09,
+    CSS_L512_1_CSS_ED2023_07,
+    CSS_L512_1_CSS_ED2024_01,
+    CSS_L512_1_CSS_ED2025_02,
+    CSS_L512_1_CSS_ED2025_09,
+    CSS_L512_1_CSS_ED2025_12,
+    CSS_L512_1_CSS_ED2026_01,
+    CSS_L512_1_CSS_ED2026_04,
+    CSS_L512_1_CSS_ED2026_06,
+    CSS_L512_2,
+    CSS_L512_2_CSS_ED2021_11,
+    CSS_L512_2_CSS_ED2021_12,
+    CSS_L512_2_CSS_ED2022_01,
+    CSS_L512_2_CSS_ED2022_02,
+    CSS_L512_2_CSS_ED2022_03,
+    CSS_L512_2_CSS_ED2022_09,
+    CSS_L512_2_CSS_ED2023_07,
+    CSS_L512_2_CSS_ED2024_01,
+    CSS_L512_2_CSS_ED2025_02,
+    CSS_L512_2_CSS_ED2025_09,
+    CSS_L512_2_CSS_ED2025_12,
+    CSS_L512_2_CSS_ED2026_01,
+    CSS_L512_2_CSS_ED2026_04,
+    CSS_L512_2_CSS_ED2026_06,
+    CSS_L512_4,
+    CSS_L512_4_CSS_ED2021_05,
+    CSS_L512_4_CSS_ED2021_11,
+    CSS_L512_4_CSS_ED2021_12,
+    CSS_L512_4_CSS_ED2022_01,
+    CSS_L512_4_CSS_ED2022_02,
+    CSS_L512_4_CSS_ED2022_03,
+    CSS_L512_4_CSS_ED2022_09,
+    CSS_L512_4_CSS_ED2023_07,
+    CSS_L512_4_CSS_ED2024_01,
+    CSS_L512_4_CSS_ED2025_02,
+    CSS_L512_4_CSS_ED2025_09,
+    CSS_L512_4_CSS_ED2025_12,
+    CSS_L512_4_CSS_ED2026_01,
+    CSS_L512_4_CSS_ED2026_04,
+    CSS_L512_4_CSS_ED2026_06,
+    CSS_L512_5,
+    CSS_L512_5_CSS_ED2021_05,
+    CSS_L512_5_CSS_ED2021_11,
+    CSS_L512_5_CSS_ED2021_12,
+    CSS_L512_5_CSS_ED2022_01,
+    CSS_L512_5_CSS_ED2022_02,
+    CSS_L512_5_CSS_ED2022_03,
+    CSS_L512_5_CSS_ED2022_09,
+    CSS_L512_5_CSS_ED2023_07,
+    CSS_L512_5_CSS_ED2024_01,
+    CSS_L512_5_CSS_ED2025_02,
+    CSS_L512_5_CSS_ED2025_09,
+    CSS_L512_5_CSS_ED2025_12,
+    CSS_L512_5_CSS_ED2026_01,
+    CSS_L512_5_CSS_ED2026_04,
+    CSS_L512_5_CSS_ED2026_06,
+    CSS_L512_6,
+    CSS_L512_6_CSS_ED2021_05,
+    CSS_L512_6_CSS_ED2021_11,
+    CSS_L512_6_CSS_ED2021_12,
+    CSS_L512_6_CSS_ED2022_01,
+    CSS_L512_6_CSS_ED2022_02,
+    CSS_L512_6_CSS_ED2022_03,
+    CSS_L512_6_CSS_ED2022_09,
+    CSS_L512_6_CSS_ED2023_07,
+    CSS_L512_6_CSS_ED2024_01,
+    CSS_L512_6_CSS_ED2025_02,
+    CSS_L512_6_CSS_ED2025_09,
+    CSS_L512_6_CSS_ED2025_12,
+    CSS_L512_6_CSS_ED2026_01,
+    CSS_L512_6_CSS_ED2026_04,
+    CSS_L512_6_CSS_ED2026_06,
+    CSS_L513_1,
+    CSS_L513_1_CSS_ED2021_05,
+    CSS_L513_1_CSS_ED2021_11,
+    CSS_L513_1_CSS_ED2021_12,
+    CSS_L513_1_CSS_ED2022_01,
+    CSS_L513_1_CSS_ED2022_02,
+    CSS_L513_1_CSS_ED2022_03,
+    CSS_L513_1_CSS_ED2022_09,
+    CSS_L513_1_CSS_ED2023_07,
+    CSS_L513_1_CSS_ED2024_01,
+    CSS_L513_1_CSS_ED2025_02,
+    CSS_L513_1_CSS_ED2025_09,
+    CSS_L513_1_CSS_ED2025_12,
+    CSS_L513_1_CSS_ED2026_01,
+    CSS_L513_1_CSS_ED2026_04,
+    CSS_L513_1_CSS_ED2026_06,
+    Enfant,
+    Personne,
+    allocataire,
+    enfant_ouvre_droit,
+    parent_charge,
+};
+
+@source(CSS_L513_1, CSS_L513_1_CSS_ED2021_05, CSS_L513_1_CSS_ED2021_11, CSS_L513_1_CSS_ED2021_12,
+        CSS_L513_1_CSS_ED2022_01, CSS_L513_1_CSS_ED2022_02, CSS_L513_1_CSS_ED2022_03,
+        CSS_L513_1_CSS_ED2022_09, CSS_L513_1_CSS_ED2023_07, CSS_L513_1_CSS_ED2024_01,
+        CSS_L513_1_CSS_ED2025_02, CSS_L513_1_CSS_ED2025_09, CSS_L513_1_CSS_ED2025_12,
+        CSS_L513_1_CSS_ED2026_01, CSS_L513_1_CSS_ED2026_04, CSS_L513_1_CSS_ED2026_06)
+external judgment relation charge_effective_permanente(p: Personne, e: Enfant) {
+    authority Organisme;
+    label fr official "la personne assume la charge effective et permanente de l'enfant";
+    label en unofficial "person has effective and permanent care of the child (organ assessment)";
+}
+
+relation reside_france_stable(p: Personne) kind empirical {
+    label fr official "la personne réside en France au sens de l'article L. 111-2-3";
+    label en unofficial "person resides in France within the meaning of article L. 111-2-3";
+}
+
+relation enfant_reside_france(e: Enfant) kind empirical {
+    label fr official "l'enfant réside en France";
+    label en unofficial "child resides in France";
+}
+
+relation detache_temporaire_exempte(p: Personne) kind empirical {
+    label fr official "travailleur détaché temporairement, exempté d'affiliation (L. 512-1 al. 2)";
+    label en unofficial "temporarily seconded worker exempt from affiliation (L. 512-1 para. 2)";
+}
+
+relation sejour_regulier_etabli(p: Personne) kind empirical {
+    label fr official "régularité du séjour établie par l'un des titres et justifications exigés (L. 512-2; listes D. 512-1/2 — hors champ)";
+    label en unofficial "lawful stay evidenced by the required title (L. 512-2; D. 512-1/2 lists - out of scope)";
+}
+
+relation beneficiaire_plein_droit_etranger(p: Personne) kind institutional {
+    key(p);
+    label fr official "l'étranger en séjour régulier bénéficie de plein droit des prestations (L. 512-2)";
+    label en unofficial "foreigner in lawful stay receives benefits as of right (L. 512-2)";
+}
+
+relation adoption_decision_francaise(e: Enfant) kind empirical {
+    label fr official "enfant adopté par décision de la juridiction française ou confié en vue d'adoption par l'ASE ou un organisme autorisé (L. 512-4 1°)";
+    label en unofficial "child adopted by decision of a French court or placed for adoption by ASE/an authorized body (L. 512-4 1)";
+}
+
+relation adoption_decision_etrangere_agrement(e: Enfant) kind empirical {
+    label fr official "enfant confié ou adopté par décision étrangère, autorisé à entrer à ce titre, agrément CASF du postulant (L. 512-4 2°)";
+    label en unofficial "child placed/adopted by foreign decision, entry authorized, applicant agreement (L. 512-4 2)";
+}
+
+relation adoption_conforme(e: Enfant) kind institutional {
+    key(e);
+    label fr official "condition d'adoption remplie pour le versement (L. 512-4)";
+    label en unofficial "adoption condition for payment met (L. 512-4)";
+}
+
+relation montant_prestations_fr(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant des prestations du régime français pour la famille";
+    label en unofficial "amount of French-scheme benefits for the family";
+}
+
+relation montant_prestations_etrangeres(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant des prestations versées en application d'un traité, d'une législation étrangère ou par une organisation internationale (L. 512-5)";
+    label en unofficial "amount of benefits paid under a treaty, foreign legislation or by an international organization (L. 512-5)";
+}
+
+relation allocation_differentielle(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "allocation différentielle due: différence entre prestations françaises et étrangères (L. 512-5)";
+    label en unofficial "differential allowance: difference between French and foreign benefits (L. 512-5)";
+}
+
+relation conjoint_metropole_avec_enfants(p: Personne) kind empirical {
+    label fr official "le conjoint ou concubin réside en France métropolitaine avec les enfants, l'autre dans un DOM (L. 512-6)";
+    label en unofficial "spouse/partner lives in metropolitan France with the children, the other in a DOM (L. 512-6)";
+}
+
+relation droit_metropolitain_ouvert(p: Personne) kind institutional {
+    key(p);
+    label fr official "droit aux prestations du régime métropolitain ouvert du chef du conjoint métropolitain (L. 512-6 al. 1)";
+    label en unofficial "entitlement to metropolitan-scheme benefits opened through the metropolitan spouse (L. 512-6 para. 1)";
+}
+
+function difference_positive(fr: Money, etr: Money) -> Money =
+    fr - etr;
+
+@source(CSS_L513_1, CSS_L513_1_CSS_ED2021_05, CSS_L513_1_CSS_ED2021_11, CSS_L513_1_CSS_ED2021_12,
+        CSS_L513_1_CSS_ED2022_01, CSS_L513_1_CSS_ED2022_02, CSS_L513_1_CSS_ED2022_03,
+        CSS_L513_1_CSS_ED2022_09, CSS_L513_1_CSS_ED2023_07, CSS_L513_1_CSS_ED2024_01,
+        CSS_L513_1_CSS_ED2025_02, CSS_L513_1_CSS_ED2025_09, CSS_L513_1_CSS_ED2025_12,
+        CSS_L513_1_CSS_ED2026_01, CSS_L513_1_CSS_ED2026_04, CSS_L513_1_CSS_ED2026_06, CSS_L512_1,
+        CSS_L512_1_CSS_ED2021_05, CSS_L512_1_CSS_ED2021_11, CSS_L512_1_CSS_ED2021_12,
+        CSS_L512_1_CSS_ED2022_01, CSS_L512_1_CSS_ED2022_02, CSS_L512_1_CSS_ED2022_03,
+        CSS_L512_1_CSS_ED2022_09, CSS_L512_1_CSS_ED2023_07, CSS_L512_1_CSS_ED2024_01,
+        CSS_L512_1_CSS_ED2025_02, CSS_L512_1_CSS_ED2025_09, CSS_L512_1_CSS_ED2025_12,
+        CSS_L512_1_CSS_ED2026_01, CSS_L512_1_CSS_ED2026_04, CSS_L512_1_CSS_ED2026_06)
+rule AllocataireChargeEffective(p: Personne, e: Enfant) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "Les prestations sont dues à la personne qui assume la charge effective et permanente de l'enfant, résidant en France avec un enfant résidant en France";
+    label en unofficial "Benefits are due to the person with effective permanent care, residing in France with a child residing in France";
+    when parent_charge(p, e) and charge_effective_permanente(p, e)
+        and enfant_ouvre_droit(e) and reside_france_stable(p)
+        and enfant_reside_france(e);
+    then allocataire(p);
+}
+
+@source(CSS_L512_1, CSS_L512_1_CSS_ED2021_05, CSS_L512_1_CSS_ED2021_11, CSS_L512_1_CSS_ED2021_12,
+        CSS_L512_1_CSS_ED2022_01, CSS_L512_1_CSS_ED2022_02, CSS_L512_1_CSS_ED2022_03,
+        CSS_L512_1_CSS_ED2022_09, CSS_L512_1_CSS_ED2023_07, CSS_L512_1_CSS_ED2024_01,
+        CSS_L512_1_CSS_ED2025_02, CSS_L512_1_CSS_ED2025_09, CSS_L512_1_CSS_ED2025_12,
+        CSS_L512_1_CSS_ED2026_01, CSS_L512_1_CSS_ED2026_04, CSS_L512_1_CSS_ED2026_06)
+rule ExclusionDetache(p: Personne) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "travailleurs détachés temporairement exemptés d'affiliation: le premier alinéa ne s'applique pas";
+    label en unofficial "temporarily seconded workers outside affiliation: the first paragraph does not apply - status removed";
+    when detache_temporaire_exempte(p);
+    defeat allocataire(p);
+}
+
+@source(CSS_L512_2, CSS_L512_2_CSS_ED2021_11, CSS_L512_2_CSS_ED2021_12, CSS_L512_2_CSS_ED2022_01,
+        CSS_L512_2_CSS_ED2022_02, CSS_L512_2_CSS_ED2022_03, CSS_L512_2_CSS_ED2022_09,
+        CSS_L512_2_CSS_ED2023_07, CSS_L512_2_CSS_ED2024_01, CSS_L512_2_CSS_ED2025_02,
+        CSS_L512_2_CSS_ED2025_09, CSS_L512_2_CSS_ED2025_12, CSS_L512_2_CSS_ED2026_01,
+        CSS_L512_2_CSS_ED2026_04, CSS_L512_2_CSS_ED2026_06)
+rule EtrangerPleinDroit(p: Personne) strict {
+    effective [@2021-05-01, infinity);
+    label fr official "Bénéficient de plein droit des prestations les étrangers en séjour régulier (conditions L. 512-2)";
+    label en unofficial "Foreigners in lawful stay receive benefits as of right (L. 512-2 conditions)";
+    when sejour_regulier_etabli(p) and reside_france_stable(p);
+    then beneficiaire_plein_droit_etranger(p);
+}
+
+@source(CSS_L512_4, CSS_L512_4_CSS_ED2021_05, CSS_L512_4_CSS_ED2021_11, CSS_L512_4_CSS_ED2021_12,
+        CSS_L512_4_CSS_ED2022_01, CSS_L512_4_CSS_ED2022_02, CSS_L512_4_CSS_ED2022_03,
+        CSS_L512_4_CSS_ED2022_09, CSS_L512_4_CSS_ED2023_07, CSS_L512_4_CSS_ED2024_01,
+        CSS_L512_4_CSS_ED2025_02, CSS_L512_4_CSS_ED2025_09, CSS_L512_4_CSS_ED2025_12,
+        CSS_L512_4_CSS_ED2026_01, CSS_L512_4_CSS_ED2026_04, CSS_L512_4_CSS_ED2026_06)
+rule AdoptionConformeFrancaise(e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Adoption par décision française ou confié en vue d'adoption par l'ASE: condition remplie";
+    label en unofficial "Adoption by French decision or ASE placement: condition met";
+    when adoption_decision_francaise(e);
+    then adoption_conforme(e);
+}
+
+@source(CSS_L512_4, CSS_L512_4_CSS_ED2021_05, CSS_L512_4_CSS_ED2021_11, CSS_L512_4_CSS_ED2021_12,
+        CSS_L512_4_CSS_ED2022_01, CSS_L512_4_CSS_ED2022_02, CSS_L512_4_CSS_ED2022_03,
+        CSS_L512_4_CSS_ED2022_09, CSS_L512_4_CSS_ED2023_07, CSS_L512_4_CSS_ED2024_01,
+        CSS_L512_4_CSS_ED2025_02, CSS_L512_4_CSS_ED2025_09, CSS_L512_4_CSS_ED2025_12,
+        CSS_L512_4_CSS_ED2026_01, CSS_L512_4_CSS_ED2026_04, CSS_L512_4_CSS_ED2026_06)
+rule AdoptionConformeEtrangere(e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Décision étrangère avec entrée autorisée et agrément: condition remplie";
+    label en unofficial "Foreign decision with authorized entry and agreement: condition met";
+    when adoption_decision_etrangere_agrement(e);
+    then adoption_conforme(e);
+}
+
+@source(CSS_L512_5, CSS_L512_5_CSS_ED2021_05, CSS_L512_5_CSS_ED2021_11, CSS_L512_5_CSS_ED2021_12,
+        CSS_L512_5_CSS_ED2022_01, CSS_L512_5_CSS_ED2022_02, CSS_L512_5_CSS_ED2022_03,
+        CSS_L512_5_CSS_ED2022_09, CSS_L512_5_CSS_ED2023_07, CSS_L512_5_CSS_ED2024_01,
+        CSS_L512_5_CSS_ED2025_02, CSS_L512_5_CSS_ED2025_09, CSS_L512_5_CSS_ED2025_12,
+        CSS_L512_5_CSS_ED2026_01, CSS_L512_5_CSS_ED2026_04, CSS_L512_5_CSS_ED2026_06)
+rule DifferentielleEtranger(p: Personne, fr: Money, etr: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Prestations étrangères inférieures aux françaises: seule une allocation différentielle est versée";
+    label en unofficial "Foreign benefits below French benefits: only a differential allowance is paid";
+    when montant_prestations_fr(p, fr) and montant_prestations_etrangeres(p, etr)
+        and fr > etr;
+    then allocation_differentielle(p, difference_positive(fr, etr));
+}
+
+@source(CSS_L512_6, CSS_L512_6_CSS_ED2021_05, CSS_L512_6_CSS_ED2021_11, CSS_L512_6_CSS_ED2021_12,
+        CSS_L512_6_CSS_ED2022_01, CSS_L512_6_CSS_ED2022_02, CSS_L512_6_CSS_ED2022_03,
+        CSS_L512_6_CSS_ED2022_09, CSS_L512_6_CSS_ED2023_07, CSS_L512_6_CSS_ED2024_01,
+        CSS_L512_6_CSS_ED2025_02, CSS_L512_6_CSS_ED2025_09, CSS_L512_6_CSS_ED2025_12,
+        CSS_L512_6_CSS_ED2026_01, CSS_L512_6_CSS_ED2026_04, CSS_L512_6_CSS_ED2026_06)
+rule DroitMetropolitain(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Un membre du couple réside outre-mer: le droit métropolitain est ouvert du chef du conjoint résidant en métropole avec les enfants";
+    label en unofficial "One of the couple lives overseas: metropolitan entitlement opened through the spouse living in metropolitan France with the children";
+    when conjoint_metropole_avec_enfants(p);
+    then droit_metropolitain_ouvert(p);
+}
+
+@source(CSS_L512_6, CSS_L512_6_CSS_ED2021_05, CSS_L512_6_CSS_ED2021_11, CSS_L512_6_CSS_ED2021_12,
+        CSS_L512_6_CSS_ED2022_01, CSS_L512_6_CSS_ED2022_02, CSS_L512_6_CSS_ED2022_03,
+        CSS_L512_6_CSS_ED2022_09, CSS_L512_6_CSS_ED2023_07, CSS_L512_6_CSS_ED2024_01,
+        CSS_L512_6_CSS_ED2025_02, CSS_L512_6_CSS_ED2025_09, CSS_L512_6_CSS_ED2025_12,
+        CSS_L512_6_CSS_ED2026_01, CSS_L512_6_CSS_ED2026_04, CSS_L512_6_CSS_ED2026_06)
+rule DifferentielleOutreMer(p: Personne, fr: Money, etr: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Pas de cumul métropole/outre-mer: seule une allocation différentielle est éventuellement versée";
+    label en unofficial "No metropole/overseas overlap: only a differential allowance may be paid";
+    when conjoint_metropole_avec_enfants(p) and montant_prestations_fr(p, fr)
+        and montant_prestations_etrangeres(p, etr) and fr > etr;
+    then allocation_differentielle(p, difference_positive(fr, etr));
+}

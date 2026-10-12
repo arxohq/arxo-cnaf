@@ -1,0 +1,41 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// ASE with judge-kept family payment: one of two children placed,
+// the judge maintains payment to the participating family. The power
+// is ACTIVE; the maintained family receives the monthly total
+// (128.00 here: band 1, BMAF 400.00 EUR stated assumption).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-partage-ase-juge" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "ase-01": territoire(entity_ref("urn:fr:pf-af:parent:mere-ase"), METROPOLE) { origin case_input; }
+        assert "ase-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:parent:mere-ase"), 2) { origin case_input; }
+        assert "ase-03": ressources_menage(entity_ref("urn:fr:pf-af:parent:mere-ase"), 30000 EUR) { origin case_input; }
+        assert "ase-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:parent:mere-ase"), 55950 EUR) { origin case_input; }
+        assert "ase-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:parent:mere-ase"), 78300 EUR) { origin case_input; }
+        assert "ase-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:parent:mere-ase"), 5595 EUR) { origin case_input; }
+        assert "ase-05": bmaf_retenu(entity_ref("urn:fr:pf-af:parent:mere-ase"), 400.00 EUR) { origin case_input; }
+        assert "ase-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:parent:mere-ase"), 0) { origin case_input; }
+        assert "ase-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:parent:mere-ase"), 0) { origin case_input; }
+        assert "ase-08": forfait_total_menage(entity_ref("urn:fr:pf-af:parent:mere-ase"), 0 EUR) { origin case_input; }
+        assert "ase-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:parent:mere-ase"), 1) { origin case_input; }
+        assert "ase-10": foyer_du_cas(entity_ref("urn:fr:pf-af:parent:mere-ase")) { origin case_input; }
+        assert "ase-11": enfant_confie_ase(entity_ref("urn:fr:pf-af:child:confie")) { origin case_input; }
+        assert "ase-12": juge_saisi(entity_ref("urn:fr:pf-af:juge:tgi"), entity_ref("urn:fr:pf-af:child:confie")) { origin case_input; }
+        assert "ase-13": famille_participe_prise_en_charge(entity_ref("urn:fr:pf-af:child:confie")) { origin case_input; }
+        assert "ase-14": juge_maintien_famille(entity_ref("urn:fr:pf-af:child:confie")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(MaintenirVersementFamille, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(famille_percoit(entity_ref("urn:fr:pf-af:parent:mere-ase"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,15 @@
+// Pacs assimilation: partners with 20 000 and 15 000 EUR - total resources 35 000 EUR (R. 553-2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-ressources-pacs" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ressources-pacs-01": ressources_pacs(entity_ref("urn:fr:pf:case:pacse"), 20000.00 EUR, 15000.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ressources_totales(entity_ref("urn:fr:pf:case:pacse"), 35000.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

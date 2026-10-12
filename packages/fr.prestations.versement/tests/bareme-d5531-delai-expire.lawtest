@@ -1,0 +1,18 @@
+// D553-1 four-month clock expired (PC-R05-02): quarterly right, declaration not received, quarterly unknown; depart 2022-01-15, appreciation 2022-05-15 (at +4 months); deemed 1 096 EUR (pre-2023).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-d5531-delai-expire" {
+    given {
+        context { decision_time @2022-05-15T12:00:00Z; knowledge_time @2022-05-15T12:00:00Z; legal_time @2022-05-15; timezone "Europe/Paris"; deadline_policy BAREME_DELAI_MOIS; }
+        assert "d5531-x1": droit_trimestriel_ouvert(entity_ref("urn:fr:pv:case:trimestriel")) { origin case_input; }
+        assert "d5531-x2": ressources_trimestrielles_inconnues(entity_ref("urn:fr:pv:case:trimestriel")) { origin case_input; }
+        assert "d5531-x3": declaration_montant_revenus_non_recue(entity_ref("urn:fr:pv:case:trimestriel")) { origin case_input; }
+        assert "d5531-x4": delai_4_mois_depart_le(entity_ref("urn:fr:pv:case:trimestriel"), @2022-01-15) { origin case_input; }
+        assert "d5531-x5": date_appreciation_revenus(entity_ref("urn:fr:pv:case:trimestriel"), @2022-05-15) { origin case_input; }
+    }
+    evaluate truth(revenu_pondere(entity_ref("urn:fr:pv:case:trimestriel"), 1096.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

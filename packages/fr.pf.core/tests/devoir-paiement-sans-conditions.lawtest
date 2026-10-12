@@ -1,0 +1,20 @@
+// No duty where no benefit is due: allocataire with a debtor fund but opening conditions explicitly unmet for the month - nothing due, no settlement duty (R. 552-2 I, R. 553-1, PC-R07-07).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-paiement-sans-conditions" {
+    given {
+        context { decision_time @2026-04-15T12:00:00Z; knowledge_time @2026-04-15T12:00:00Z; legal_time @2026-04-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "devoir-paiement-sans-conditions-01": parent_charge(entity_ref("urn:fr:pf:case:sans-cond"), entity_ref("urn:fr:pf:case:enfant-sans-cond")) { origin case_input; }
+        assert "devoir-paiement-sans-conditions-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:sans-cond"), entity_ref("urn:fr:pf:case:enfant-sans-cond")) { origin adjudicated; }
+        assert "devoir-paiement-sans-conditions-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-sans-cond")) { origin case_input; }
+        assert "devoir-paiement-sans-conditions-04": reside_france_stable(entity_ref("urn:fr:pf:case:sans-cond")) { origin case_input; }
+        assert "devoir-paiement-sans-conditions-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-sans-cond")) { origin case_input; }
+        assert "devoir-paiement-sans-conditions-06": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:sans-cond")) { origin case_input; }
+        assert "devoir-paiement-sans-conditions-07": not conditions_reunies_mois(entity_ref("urn:fr:pf:case:sans-cond"), @2026-03-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserPrestationsDues, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

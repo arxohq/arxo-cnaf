@@ -1,0 +1,16 @@
+// No residence, no right: leave taken but the stay/residence
+// condition not established — the head stays silent.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-droit-sans-residence" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-dsr-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-dsr"), entity_ref("urn:fr:css:ajpa:case:aide-dsr")) { origin case_input; }
+    }
+    evaluate truth(ajpa_droit_ouvert(entity_ref("urn:fr:css:ajpa:case:aidant-dsr"), entity_ref("urn:fr:css:ajpa:case:aide-dsr")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,22 @@
+// No contribution transmission after a later judgment: full transmission chain, then an enforceable judgment suppressing or modifying the contribution - title without effect, no communication duty (L. 582-2, L. 583-5, PC-R07-27, PC-R08-03).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-transmettre-jugement-posterieur" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "creance-transmettre-jugement-posterieur-01": demande_conjointe_parents_separes(entity_ref("urn:fr:pf:case:creance-trjug")) { origin case_input; }
+        assert "creance-transmettre-jugement-posterieur-02": attestation_absence_creance(entity_ref("urn:fr:pf:case:creance-trjug")) { origin case_input; }
+        assert "creance-transmettre-jugement-posterieur-03": attestation_absence_demarche(entity_ref("urn:fr:pf:case:creance-trjug")) { origin case_input; }
+        assert "creance-transmettre-jugement-posterieur-04": contribution_seuil_atteint(entity_ref("urn:fr:pf:case:creance-trjug")) { origin case_input; }
+        assert "creance-transmettre-jugement-posterieur-05": infos_contribution_precisees(entity_ref("urn:fr:pf:case:creance-trjug")) { origin case_input; }
+        assert "creance-transmettre-jugement-posterieur-06": titre_organisme_residence_allocataire(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:creance-trjug")) { origin case_input; }
+        assert "creance-transmettre-jugement-posterieur-07": accord_parents_contribution_montant(entity_ref("urn:fr:pf:case:creance-trjug"), 350 EUR) { origin case_input; }
+        assert "creance-transmettre-jugement-posterieur-08": titre_executoire_delivre_le(entity_ref("urn:fr:pf:case:creance-trjug"), @2026-01-15) { origin case_input; }
+        assert "creance-transmettre-jugement-posterieur-09": decision_executoire_contribution(entity_ref("urn:fr:pf:case:creance-trjug"), @2026-05-20) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(TransmettreContributionFisc, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

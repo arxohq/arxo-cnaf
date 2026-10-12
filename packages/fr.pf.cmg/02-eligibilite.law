@@ -1,0 +1,334 @@
+// Eligibility: activity condition (L. 531-5, I + D. 531-19 + R. 531-5/6),
+// age gates (L. 531-5, IV + D. 531-18-1 + D. 531-20/21) and the opening of
+// the L. 531-5 right.
+//
+// Pitfall §5.3: bare parameter names only inside `function`s; rule heads
+// have none. Each rule carries only the fragments of its wordings.
+
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+use self::{
+    CSS_D531_18_1_ED2025_09,
+    CSS_D531_19_ED2012_06,
+    CSS_D531_19_ED2026_07,
+    CSS_D531_20_ED2020_01,
+    CSS_L531_5_ED2020_01,
+    CSS_L531_5_ED2025_09,
+    CSS_L531_5_ED2025_12,
+    CSS_R531_5_ED2014_04,
+    CSS_R531_6_ED2025_06,
+    ModeGarde,
+    activite_requise_remplie,
+    age3_taux_plein_prolonge,
+    age_base_ans,
+    age_eligible,
+    age_revolu_ans,
+    age_taux_reduit,
+    date_naissance,
+    dispense_activite,
+    droit_cmg_ouvert,
+    exerce_activite,
+    inscrit_demandeur_emploi,
+    mode_garde,
+    mois_droit,
+    parent_isole,
+    situation_assimilee,
+    situation_naissance_supplementaire,
+};
+
+// --- L. 531-5, I al. 5 + R. 531-5: activity in the assessed month -------
+//
+// «Le complément ... est versé à la condition que le ménage ou la
+// personne seule exerce une activité professionnelle.» R. 531-5 sets the
+// assessment month (preceding month, else opening month): the case fact
+// exerce_activite is already assessed there.
+
+@source(CSS_L531_5_ED2020_01, CSS_R531_5_ED2014_04)
+rule ActiviteExercee(m: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "activité professionnelle exercée au mois apprécié (ancien droit)";
+    label en unofficial "professional activity in the assessed month (old law)";
+    when exerce_activite(m);
+    then activite_requise_remplie(m);
+}
+
+@source(CSS_L531_5_ED2025_09, CSS_L531_5_ED2025_12, CSS_R531_5_ED2014_04)
+rule ActiviteExerceeReforme(m: fr.pf.core::Personne) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "activité professionnelle exercée au mois apprécié (réforme)";
+    label en unofficial "professional activity in the assessed month (reform)";
+    when exerce_activite(m);
+    then activite_requise_remplie(m);
+}
+
+// --- D. 531-19: assimilated situations ------------------------------------
+//
+// Daily allowances (sickness, maternity, paternity, adoption rest, work
+// accident, replacement allowance), compensated unemployment, paid
+// vocational training. The 2026 wording adds supplementary birth
+// allowances — separate input, separate window.
+
+@source(CSS_D531_19_ED2012_06)
+rule ActiviteAssimilee(m: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, @2026-07-01);
+    label fr official "situation assimilée à une activité professionnelle (D. 531-19 éd. 2012)";
+    label en unofficial "situation treated as professional activity (D. 531-19 2012 wording)";
+    when situation_assimilee(m);
+    then activite_requise_remplie(m);
+}
+
+@source(CSS_D531_19_ED2012_06, CSS_D531_19_ED2026_07)
+rule ActiviteAssimileeReforme(m: fr.pf.core::Personne) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "situation assimilée à une activité professionnelle (réforme)";
+    label en unofficial "situation treated as professional activity (reform)";
+    when situation_assimilee(m);
+    then activite_requise_remplie(m);
+}
+
+@source(CSS_D531_19_ED2026_07)
+rule ActiviteNaissanceSupplementaire(m: fr.pf.core::Personne) strict {
+    effective [@2026-07-01, infinity);
+    label fr official "indemnités supplémentaires de naissance assimilées (D. 531-19 éd. 2026)";
+    label en unofficial "supplementary birth allowances treated as activity (D. 531-19 2026 wording)";
+    when situation_naissance_supplementaire(m);
+    then activite_requise_remplie(m);
+}
+
+// --- L. 531-5, I al. 7-11: waivers ----------------------------------------
+//
+// Studies, civic service, AAH/unemployment benefits, RSA in a
+// professional-insertion path (conditions set by decree in Conseil
+// d'Etat — the fund establishes dispense_activite).
+
+@source(CSS_L531_5_ED2020_01)
+rule ActiviteDispensee(m: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "dispense de la condition d'activité (ancien droit)";
+    label en unofficial "activity-condition waiver (old law)";
+    when dispense_activite(m);
+    then activite_requise_remplie(m);
+}
+
+@source(CSS_L531_5_ED2025_09, CSS_L531_5_ED2025_12)
+rule ActiviteDispenseeReforme(m: fr.pf.core::Personne) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "dispense de la condition d'activité (réforme)";
+    label en unofficial "activity-condition waiver (reform)";
+    when dispense_activite(m);
+    then activite_requise_remplie(m);
+}
+
+// --- R. 531-6 new wording: France Travail registration ----------------------
+//
+// From 13.06.2025 (decree 2025-514) the RSA-insertion path needs only the
+// L. 5411-1 job-seeker registration; conditions are then deemed met for
+// twelve months. The twelve-month clock is fund mechanics; the rule
+// opens the condition.
+
+@source(CSS_R531_6_ED2025_06)
+rule ActiviteInsertionRSA(m: fr.pf.core::Personne) strict {
+    effective [@2025-06-13, infinity);
+    label fr official "bénéficiaire RSA inscrit demandeur d'emploi: condition réputée remplie (R. 531-6 éd. 2025)";
+    label en unofficial "RSA recipient registered as job-seeker: condition deemed met (R. 531-6 2025 wording)";
+    when inscrit_demandeur_emploi(m);
+    then activite_requise_remplie(m);
+}
+
+// --- Age gates ---------------------------------------------------------------
+//
+// Reform (D. 531-18-1 new): under six; twelve for isolated parents.
+// Old law: full rate until the D. 531-1 base age (fund fact, neighbour
+// fr.pf.paje — B-CMG-AGE-BASE), half rate until six (old D. 531-20).
+
+@source(CSS_D531_18_1_ED2025_09, CSS_L531_5_ED2025_09, CSS_L531_5_ED2025_12)
+rule AgeEligibleReforme(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "âge inférieur à six ans: éligible (réforme)";
+    label en unofficial "age under six: eligible (reform)";
+    when fr.pf.core::parent_charge(m, e) and age_revolu_ans(e, n) and n < AgeLimite6;
+    then age_eligible(m, e);
+}
+
+@source(CSS_D531_18_1_ED2025_09, CSS_L531_5_ED2025_09, CSS_L531_5_ED2025_12)
+rule AgeEligibleParentIsole(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "parent isolé: éligible jusqu'à douze ans (D. 531-18-1)";
+    label en unofficial "isolated parent: eligible until twelve (D. 531-18-1)";
+    when fr.pf.core::parent_charge(m, e) and age_revolu_ans(e, n) and n < AgeLimiteIsole12 and parent_isole(m);
+    then age_eligible(m, e);
+}
+
+@source(CSS_D531_20_ED2020_01, CSS_L531_5_ED2020_01)
+rule AgeEligibleAncienTauxPlein(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer, base: Integer) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "âge inférieur à l'âge de base D. 531-1: taux plein (ancien droit)";
+    label en unofficial "age below the D. 531-1 base age: full rate (old law)";
+    when fr.pf.core::parent_charge(m, e) and age_revolu_ans(e, n) and age_base_ans(e, base) and n < base;
+    then age_eligible(m, e);
+}
+
+@source(CSS_D531_20_ED2020_01, CSS_L531_5_ED2020_01)
+rule AgeTauxReduitAncien(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer, base: Integer) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "âge au-delà de l’âge de base D. 531-1 et inférieur à six ans: montant réduit (ancien droit)";
+    label en unofficial "age between the D. 531-1 base and six: reduced amount (old law)";
+    when fr.pf.core::parent_charge(m, e) and age_revolu_ans(e, n) and age_base_ans(e, base) and n > base and n < AgeLimite6;
+    then age_taux_reduit(m, e);
+}
+
+
+// L. 531-5 IV: after a third birthday between 1 January and 31 August,
+// the full amount continues through 31 August of that year. The five rows
+// cover the old-law window 2021-01 through 2025-08; birth date and month
+// of right remain explicit case facts.
+
+@source(CSS_L531_5_ED2020_01)
+rule AgeTroisAnsPleinJusquaAout2021(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "troisième anniversaire en 2021 de janvier à août : plein tarif jusqu'au 31 août";
+    label en unofficial "January–August 2021 third birthday: full rate through 31 August";
+    when fr.pf.core::parent_charge(m, e) and age_revolu_ans(e, 3)
+        and date_naissance(e, naissance) and mois_droit(mois)
+        and add_calendar_period(naissance, 3 calendar_year) >= @2021-01-01
+        and add_calendar_period(naissance, 3 calendar_year) < @2021-09-01
+        and mois >= add_calendar_period(naissance, 3 calendar_year) and mois < @2021-09-01;
+    then age3_taux_plein_prolonge(m, e);
+}
+
+@source(CSS_L531_5_ED2020_01)
+rule AgeTroisAnsPleinJusquaAout2022(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "troisième anniversaire en 2022 de janvier à août : plein tarif jusqu'au 31 août";
+    label en unofficial "January–August 2022 third birthday: full rate through 31 August";
+    when fr.pf.core::parent_charge(m, e) and age_revolu_ans(e, 3)
+        and date_naissance(e, naissance) and mois_droit(mois)
+        and add_calendar_period(naissance, 3 calendar_year) >= @2022-01-01
+        and add_calendar_period(naissance, 3 calendar_year) < @2022-09-01
+        and mois >= add_calendar_period(naissance, 3 calendar_year) and mois < @2022-09-01;
+    then age3_taux_plein_prolonge(m, e);
+}
+
+@source(CSS_L531_5_ED2020_01)
+rule AgeTroisAnsPleinJusquaAout2023(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "troisième anniversaire en 2023 de janvier à août : plein tarif jusqu'au 31 août";
+    label en unofficial "January–August 2023 third birthday: full rate through 31 August";
+    when fr.pf.core::parent_charge(m, e) and age_revolu_ans(e, 3)
+        and date_naissance(e, naissance) and mois_droit(mois)
+        and add_calendar_period(naissance, 3 calendar_year) >= @2023-01-01
+        and add_calendar_period(naissance, 3 calendar_year) < @2023-09-01
+        and mois >= add_calendar_period(naissance, 3 calendar_year) and mois < @2023-09-01;
+    then age3_taux_plein_prolonge(m, e);
+}
+
+@source(CSS_L531_5_ED2020_01)
+rule AgeTroisAnsPleinJusquaAout2024(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "troisième anniversaire en 2024 de janvier à août : plein tarif jusqu'au 31 août";
+    label en unofficial "January–August 2024 third birthday: full rate through 31 August";
+    when fr.pf.core::parent_charge(m, e) and age_revolu_ans(e, 3)
+        and date_naissance(e, naissance) and mois_droit(mois)
+        and add_calendar_period(naissance, 3 calendar_year) >= @2024-01-01
+        and add_calendar_period(naissance, 3 calendar_year) < @2024-09-01
+        and mois >= add_calendar_period(naissance, 3 calendar_year) and mois < @2024-09-01;
+    then age3_taux_plein_prolonge(m, e);
+}
+
+@source(CSS_L531_5_ED2020_01)
+rule AgeTroisAnsPleinJusquaAout2025(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "troisième anniversaire en 2025 de janvier à août : plein tarif jusqu'au 31 août";
+    label en unofficial "January–August 2025 third birthday: full rate through 31 August";
+    when fr.pf.core::parent_charge(m, e) and age_revolu_ans(e, 3)
+        and date_naissance(e, naissance) and mois_droit(mois)
+        and add_calendar_period(naissance, 3 calendar_year) >= @2025-01-01
+        and add_calendar_period(naissance, 3 calendar_year) < @2025-09-01
+        and mois >= add_calendar_period(naissance, 3 calendar_year) and mois < @2025-09-01;
+    then age3_taux_plein_prolonge(m, e);
+}
+
+@source(CSS_L531_5_ED2020_01, CSS_D531_20_ED2020_01)
+rule AgeTroisAnsReduitApresDate(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "troisième anniversaire atteint : demi-tarif hors prolongation jusqu'à fin août";
+    label en unofficial "third birthday reached: half rate outside the extension through August";
+    when fr.pf.core::parent_charge(m, e) and age_revolu_ans(e, 3)
+        and date_naissance(e, naissance) and mois_droit(mois)
+        and mois >= add_calendar_period(naissance, 3 calendar_year)
+        and not_known(age3_taux_plein_prolonge(m, e));
+    then age_taux_reduit(m, e);
+}
+
+@source(CSS_L531_5_ED2020_01)
+rule AgeEligibleAncienPleinProlonge(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "après troisième anniversaire de janvier à août : droit au plein tarif jusqu'à septembre";
+    label en unofficial "after January–August third birthday: full-rate eligibility through August";
+    when age3_taux_plein_prolonge(m, e);
+    then age_eligible(m, e);
+}
+
+@source(CSS_D531_20_ED2020_01, CSS_L531_5_ED2020_01)
+rule AgeEligibleAncienReduit(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer, base: Integer) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "âge entre base D. 531-1 et six ans: éligible à taux réduit (ancien droit)";
+    label en unofficial "age between the D. 531-1 base and six: eligible at reduced rate (old law)";
+    when age_taux_reduit(m, e) and age_revolu_ans(e, n) and age_base_ans(e, base);
+    then age_eligible(m, e);
+}
+
+// --- Right opening (L. 531-5, I) ----------------------------------------------
+//
+// Direct employment of a childminder or a home employee, activity
+// condition met, age met, child in the fund's care (upstream premise).
+
+@source(CSS_L531_5_ED2020_01)
+rule DroitOuvertAncienAssmat(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "emploi d'une assistante maternelle, activité et âge: droit ouvert (ancien droit)";
+    label en unofficial "childminder employment, activity and age: right open (old law)";
+    when mode_garde(p, e, ASSISTANT_MATERNEL)
+        and activite_requise_remplie(p)
+        and age_eligible(p, e)
+        and fr.pf.core::parent_charge(p, e);
+    then droit_cmg_ouvert(p, e);
+}
+
+@source(CSS_L531_5_ED2020_01)
+rule DroitOuvertAncienDomicile(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "emploi à domicile, activité et âge: droit ouvert (ancien droit)";
+    label en unofficial "home employment, activity and age: right open (old law)";
+    when mode_garde(p, e, EMPLOYE_DOMICILE)
+        and activite_requise_remplie(p)
+        and age_eligible(p, e)
+        and fr.pf.core::parent_charge(p, e);
+    then droit_cmg_ouvert(p, e);
+}
+
+@source(CSS_L531_5_ED2025_09, CSS_L531_5_ED2025_12)
+rule DroitOuvertReformeAssmat(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "emploi d'une assistante maternelle, activité et âge: droit ouvert (réforme)";
+    label en unofficial "childminder employment, activity and age: right open (reform)";
+    when mode_garde(p, e, ASSISTANT_MATERNEL)
+        and activite_requise_remplie(p)
+        and age_eligible(p, e)
+        and fr.pf.core::parent_charge(p, e);
+    then droit_cmg_ouvert(p, e);
+}
+
+@source(CSS_L531_5_ED2025_09, CSS_L531_5_ED2025_12)
+rule DroitOuvertReformeDomicile(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "emploi à domicile, activité et âge: droit ouvert (réforme)";
+    label en unofficial "home employment, activity and age: right open (reform)";
+    when mode_garde(p, e, EMPLOYE_DOMICILE)
+        and activite_requise_remplie(p)
+        and age_eligible(p, e)
+        and fr.pf.core::parent_charge(p, e);
+    then droit_cmg_ouvert(p, e);
+}

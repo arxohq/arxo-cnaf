@@ -1,0 +1,22 @@
+// Monthly pieces duty across consecutive months (D3): leave and
+// debtor-body link recorded, March and April both concerned — the
+// TransmettreAttestationConge position is ACTIVE (per-month firing;
+// positions are not separately addressable per month, so the
+// month separation itself is proven by the sans-mois and
+// mois-manquant pairs).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-pieces-mois-consecutifs" {
+    given {
+        context { decision_time @2024-04-15T12:00:00Z; knowledge_time @2024-04-15T12:00:00Z; legal_time @2024-04-15; timezone "Europe/Paris"; }
+        assert "ajpp-dmc-01": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-dmc"), entity_ref("urn:fr:pf-ajpp:case:enfant-dmc")) { origin case_input; }
+        assert "ajpp-dmc-02": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-dmc")) { origin case_input; }
+        assert "ajpp-dmc-03": mois_concerne_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-dmc"), @2024-03-01) { origin case_input; }
+        assert "ajpp-dmc-04": mois_concerne_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-dmc"), @2024-04-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreAttestationConge, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

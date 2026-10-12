@@ -1,0 +1,30 @@
+// БАРЕМ С 1 ОКТЯБРЯ 2026 ГОДА, вторая половина пары: те же входы, но месяц
+// права — сентябрь 2026 года. Действует ещё редакция 2025 года (плафон
+// 333,14 €, форфейт 60,59 €, пол участия 39,56 €), поэтому итог — ровно
+// 265,33096125 €, как у frontiere-bareme-2026-septembre. Сценарий фиксирует,
+// что закрытая редакция ARRETE_ED2025_10 продолжает служить свой месяц.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-bareme-2026-septembre" {
+    given {
+        context { decision_time @2026-09-15T12:00:00Z; knowledge_time @2026-09-15T12:00:00Z; legal_time @2026-09-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frontiere-bareme-2026-septembre-01": secteur_locatif(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre")) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-02": zone_du_logement(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), ZONE_I) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-03": aide_demandee(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), APL) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-04": situation_familiale(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), PERSONNE_SEULE) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-05": personnes_a_charge(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), 0) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-06": loyer_principal(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), 400 EUR) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-07": ressources_du_menage(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), 7800 EUR) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-08": mode_location(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), LOCATION_SEULE) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-09": forme_logement(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), 0 EUR) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), false) { origin case_input; }
+        assert "frontiere-bareme-2026-septembre-12": territoire(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:frontiere-bareme-2026-septembre"), 265.33096125 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

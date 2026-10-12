@@ -1,0 +1,18 @@
+// Monthly pieces duty, public agents (D7 active): public-agent
+// leave, debtor-body link and the concerned month recorded — the
+// TransmettreAttestationAgentPublic position is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-pieces-agent-public" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-dpa-01": agent_public_conge(entity_ref("urn:fr:pf-ajpp:case:parent-dpa"), entity_ref("urn:fr:pf-ajpp:case:enfant-dpa")) { origin case_input; }
+        assert "ajpp-dpa-02": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-dpa")) { origin case_input; }
+        assert "ajpp-dpa-03": mois_concerne_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-dpa"), @2024-03-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreAttestationAgentPublic, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

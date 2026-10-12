@@ -1,0 +1,26 @@
+// Вторая половина находки о двух ритмах переоценки (см. `*-deux-rythmes-forfait`).
+//
+// ШАГ: форфейт R0 в ноябре 2024 года — ещё 8 574 €, январское значение, хотя
+// форфейты расходов того же месяца уже октябрьские. Если бы статья 46 была
+// закреплена только январскими состояниями, этот месяц права остался бы без
+// значения вовсе, а при закреплении «по годам» дал бы НЕВЕРНЫЙ форфейт расходов.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-locatif-deux-rythmes-r0" {
+    given {
+        context { decision_time @2024-11-15T12:00:00Z; knowledge_time @2024-11-15T12:00:00Z; legal_time @2024-11-15; timezone "Europe/Paris"; }
+        assert "outremer-locatif-deux-rythmes-r0-01": secteur_locatif(entity_ref("urn:fr:apl:case:om-loc-nov2024")) { origin case_input; }
+        assert "outremer-locatif-deux-rythmes-r0-02": aide_demandee(entity_ref("urn:fr:apl:case:om-loc-nov2024"), APL) { origin case_input; }
+        assert "outremer-locatif-deux-rythmes-r0-03": zone_du_logement(entity_ref("urn:fr:apl:case:om-loc-nov2024"), ZONE_II) { origin case_input; }
+        assert "outremer-locatif-deux-rythmes-r0-04": situation_familiale(entity_ref("urn:fr:apl:case:om-loc-nov2024"), COUPLE) { origin case_input; }
+        assert "outremer-locatif-deux-rythmes-r0-05": personnes_a_charge(entity_ref("urn:fr:apl:case:om-loc-nov2024"), 1) { origin case_input; }
+        assert "outremer-locatif-deux-rythmes-r0-06": mode_location(entity_ref("urn:fr:apl:case:om-loc-nov2024"), LOCATION_SEULE) { origin case_input; }
+        assert "outremer-locatif-deux-rythmes-r0-07": territoire(entity_ref("urn:fr:apl:case:om-loc-nov2024"), OUTRE_MER) { origin case_input; }
+    }
+    evaluate truth(abattement_r0(entity_ref("urn:fr:apl:case:om-loc-nov2024"), 8574 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

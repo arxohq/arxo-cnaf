@@ -1,0 +1,105 @@
+// Opening-date confirmation (R523-1, R523-2, D523-1, D523-2).
+//
+// READINGS. The tracks route on the default fact itself: a child with
+// a stated debtor default confirms the opening through the carence
+// check (opening month at least the month after the default month,
+// R523-1, D523-1 monthly opening); an eligible orphan with no default
+// confirms through the hors-etat opening (L523-1 1/2, D523-2,
+// no carence). The request upkeep for hors-etat (R523-2) is folded
+// into demande_asf at the eligibility stage.
+
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+use self::{
+    CSS_D523_1,
+    CSS_D523_1_ED2019_12,
+    CSS_D523_1_ED2021_12,
+    CSS_D523_1_ED2022_11,
+    CSS_D523_2,
+    CSS_D523_2_ED2019_12,
+    CSS_D523_2_ED2021_12,
+    CSS_D523_2_ED2022_11,
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_R523_1,
+    CSS_R523_1_ED2018_04,
+    CSS_R523_1_ED2018_07,
+    CSS_R523_1_ED2018_07_27,
+    CSS_R523_1_ED2019_12,
+    CSS_R523_1_ED2021_12,
+    CSS_R523_1_ED2022_11,
+    MotifAsf,
+    asf_enfant_eligible,
+    asf_ouverture_confirmee,
+    manquement_debiteur,
+    mois_ouverture_asf,
+    motif_asf,
+};
+
+@source(
+    CSS_D523_1,
+    CSS_D523_1_ED2019_12,
+    CSS_D523_1_ED2021_12,
+    CSS_D523_1_ED2022_11,
+    CSS_R523_1,
+    CSS_R523_1_ED2018_04,
+    CSS_R523_1_ED2018_07,
+    CSS_R523_1_ED2018_07_27,
+    CSS_R523_1_ED2019_12,
+    CSS_R523_1_ED2021_12,
+    CSS_R523_1_ED2022_11)
+rule OuvertureApresCarence(e: fr.pf.core::Enfant, manq: Date, m0: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "eligible avec defaillance, mois d'ouverture au plus tot le mois suivant la defaillance: ouverture confirmee (R. 523-1, D. 523-1)";
+    label en unofficial "eligible with default, opening month no earlier than the month after default: opening confirmed (R. 523-1, D. 523-1)";
+    when asf_enfant_eligible(e)
+        and manquement_debiteur(e, manq) and mois_ouverture_asf(m0)
+        and m0 >= add_calendar_period(manq, 1 calendar_month);
+    then asf_ouverture_confirmee(e);
+}
+
+@source(
+    CSS_D523_2,
+    CSS_D523_2_ED2019_12,
+    CSS_D523_2_ED2021_12,
+    CSS_D523_2_ED2022_11,
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV)
+rule OuvertureHorsEtatOrphelinUn(e: fr.pf.core::Enfant, m0: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "orphelin d'un parent eligible, mois d'ouverture constate: ouverture confirmee sans carence (L. 523-1 1°, D. 523-2)";
+    label en unofficial "eligible orphan of one parent, opening month stated: opening confirmed without carence (L. 523-1 1°, D. 523-2)";
+    when asf_enfant_eligible(e)
+        and motif_asf(e, ORPHELIN_UN_PARENT) and mois_ouverture_asf(m0);
+    then asf_ouverture_confirmee(e);
+}
+
+@source(
+    CSS_D523_2,
+    CSS_D523_2_ED2019_12,
+    CSS_D523_2_ED2021_12,
+    CSS_D523_2_ED2022_11,
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV)
+rule OuvertureHorsEtatOrphelinDeux(e: fr.pf.core::Enfant, m0: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "orphelin des deux parents eligible, mois d'ouverture constate: ouverture confirmee sans carence (L. 523-1 2°, D. 523-2)";
+    label en unofficial "eligible orphan of both parents, opening month stated: opening confirmed without carence (L. 523-1 2°, D. 523-2)";
+    when asf_enfant_eligible(e)
+        and motif_asf(e, ORPHELIN_DEUX_PARENTS) and mois_ouverture_asf(m0);
+    then asf_ouverture_confirmee(e);
+}

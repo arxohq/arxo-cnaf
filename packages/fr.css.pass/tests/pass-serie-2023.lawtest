@@ -1,0 +1,19 @@
+// PASS 2023: valeur mensuelle 3666 € (arrêté du 2022-12-09, SPRS2236037A; sources/pass/arrete-2022-12-09-art1.txt);
+// годовое значение строится 12 × 3666 = 43992 €. Дата дела ни при чём: ключ — год.
+language "law.core" version "0.2";
+package fr.css.pass version "0.1.0";
+namespace "urn:fr:corpus:clir:pass";
+
+test "urn:query:fr-pass-serie-2023" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+    }
+    evaluate truth(pass_mensuel_arrete(2023, 3666 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(pass_annuel_arrete(2023, 43992 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

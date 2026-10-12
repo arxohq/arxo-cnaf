@@ -1,0 +1,368 @@
+// Package dictionary: daily carer allowance (AJPA, wave 3).
+// The rules of `02-droit.law` derive the computation-level right from the
+// carer leave (L. 3142-16 travail, out of scope) and the residence
+// conditions (L. 512-1/512-2, established fact); `03-duree-plafonds.law`
+// carries the monthly maximum (2025+), the 66-day career cap (2021-2025)
+// and the renewable duration ceiling (2025+); `04-montants.law` the monthly
+// totals at the retained daily rate (single majoration to 2023-07,
+// modulation for split/part-time leave); `05-non-cumul.law` the ten
+// non-cumulation items with the part-time sick exception;
+// `06-devoir-versement.law` the fund payment duty;
+// `07-devoirs-recouvrement-recours.law` the undue-payment recovery duty,
+// the two statutory withholding powers (L. 168-13, P1/P2) and the
+// prior-recourse information duty.
+//
+// KEY DISCIPLINE (engine-bound): every keyed premise arrives with its key
+// bound (per-carer, per-aided, per-month keys); free-key generation runs
+// only in the latest edition, so no rule generates over a keyed relation
+// with a free key (fr.pf.aeeh evidence: pre-2021 silence). The carer link
+// conge_proche_aidant carries no key (multi-aided sharing).
+//
+// DEONTIC MAP OVER PINNED TEXTS ONLY (bytes of 01-sources.law; outside
+// them — boundary, not conjecture).
+//
+//   D1. Duty of the fund to pay. «Une allocation journalière du proche
+//   aidant est versée» (L. 168-8) to carers with an open right; service and
+//   control sit with the family-benefit bodies for the CNSA (L. 168-11).
+//   Trigger: open right + computed month total + debtor link. Performance:
+//   the recorded payment fact. Window [@2021-01-01, ∞).
+//   D2. Duty to recover undue payments. «Tout paiement indu ... est
+//   récupéré sur les allocations à venir ou par remboursement intégral»
+//   (L. 168-13). Trigger: recorded undue payment.
+//   P1. Power to recover by withholding. «A défaut, et sous réserve que
+//   l'assuré ne conteste pas le caractère indu et n'opte pas pour le
+//   remboursement en un ou plusieurs versements ..., l'organisme payeur
+//   peut procéder à la récupération de l'indu par retenues sur les
+//   échéances à venir dues au titre des prestations familiales, de la
+//   prime d'activité, du RSA ou des aides au logement» (L. 168-13):
+//   holder the paying body, conditions the «A défaut» branch plus the
+//   two recorded reserves plus the recorded target class (four
+//   statutory groups, `CibleRetenuePrestations`), effect the
+//   withholding on that recorded target.
+//   P2. Subsidiary withholding power. «Lorsque l'indu notifié ne peut
+//   être récupéré sur les prestations mentionnées au premier alinéa ...,
+//   la récupération peut être opérée, sous les réserves indiquées au
+//   même premier alinéa, et si l'assuré n'opte pas pour le remboursement
+//   en un seul versement, par retenue sur les prestations mentionnées à
+//   l'avant-dernier alinéa de l'article L. 553-2» (L. 168-13): holder
+//   the paying body, conditions the recorded non-recoverability plus
+//   the block-1 reserves plus the separately recorded single-payment
+//   non-option. Only the execution detail is external: the decree
+//   deadline figure, the L. 553-2 deduction rules and the L. 133-4-1
+//   procedure (B-PFAJPA-D168).
+//   D3. Duty to inform of claim/appeal steps. «Le bénéficiaire ... est
+//   informé, par tout moyen, des modalités de réclamation et de recours»
+//   (L. 168-14). Trigger: open right + debtor link. Performance: the
+//   recorded information fact.
+//   No recipient duties («doit», «est tenu») in scope; no sanctions in
+//   scope. Prescription (L. 168-12 via L. 553-1) and control/fraud
+//   applicability (L. 168-15) are procedure references, not modelled.
+//
+// LAYER BOUNDARIES (omission records, not norms):
+// B-PFAJPA-AVANT2021: the 2019 L168-8 extended channel (L. 544-8 persons,
+// public agents on carer leave, removed 2020-12-16) and the 2019 L168-11
+// service text predate coverage (2021-01-01): unpinned, unmodelled.
+// B-PFAJPA-D168: daily SMIC euro figure (L. 168-9), monthly max days,
+// duration ceiling, renewal terms, recovery instalment mechanics (D. 168-x,
+// R. 168-x, arretes, inventory PENDING_WAVE, unassigned) — case inputs
+// with provenance (DSS_PENDING).
+// B-PFAJPA-L3142: carer-leave grant itself, split/part-time conversion,
+// 66-day... (L. 3142-16/19/20 travail, external) — the leave arrives as a
+// case fact; the L. 3142-19 duration bound on renewal is not checked.
+// B-PFAJPA-PRESCRIPTION: limitation periods (L. 168-12 via L. 553-1,
+// external) — not modelled.
+// B-PFAJPA-FRAUDE: control/fraud applicability (L. 168-15, external
+// articles) — not modelled.
+// B-PFAJPA-ARRONDI: no cent-rounding rule in scope; Money keeps exact
+// Decimal products, no silent rounding (fr.pf.aeeh evidence).
+// B-PFAJPA-OF: no OpenFisca AJPA model or parameters upstream: DSS/CNAF
+// texts and blind reading are the basis (REPORT), never regressions.
+//
+// INPUT CONTRACT (engine has no absence test): exactly one taux input
+// (normal / majoré / modulé) per carer-month; exactly one of
+// {jours_ajpa_mois} per carer-aided-month; for non-cumul exactly one of
+// {one motif fact, the part-time pair, neither} per beneficiary (run the
+// motif tests one motif per world); for the recovery powers one branch
+// world per debt (reserves recorded or omitted per world, no negation;
+// P2's single-payment non-option is a separate recorded fact, never
+// inferred from the instalment non-option; P1 one target per debt per
+// world — the enum exhausts the four statutory groups, no fifth target
+// is assertable, and an exercise names the recorded target class).
+//
+// Scenarios: tests/ajpa-*.lawtest (families fr.css.ajpa#droit,
+// #duree-plafonds, #montants, #non-cumul, #devoirs in law.toml):
+// inputs→value; boundary pairs (2023-07 majoration end, 2025 monthly max,
+// 66-day career window, 2019/2025 lists, part-time exception).
+
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+import fr.pf.core version "0.1.0";
+
+// Member names are unique across the two lists. A member's StableId is
+// `{namespace}#{Member}` (§38, errata E-0065), so a name shared by the 2019
+// and 2025 enums would denote ONE identity owned by two enums: the guard
+// `motif != NAISSANCE_SUPPLEMENTAIRE` of NonCumul2025Commun then fails with
+// TYPE_ERROR "ambiguous enum member" in both evaluators (10.10.2026). The
+// 2019 list carries the `_2019` suffix; the 2025 list keeps the plain names.
+pub enum MotifNonCumulAjpa2019 {
+    label fr official "cause de non-cumul 2019-2025 (L. 168-10, fait établi)";
+    label en unofficial "non-cumulation ground 2019-2025 (L. 168-10, established fact)";
+    MATERNITE_PATERNITE_ADOPTION_2019,
+    INTERRUPTION_ACTIVITE_2019,
+    MALADIE_AT_2019,
+    CHOMAGE_2019,
+    PREPARE_2019,
+    AEEH_COMPLEMENT_MAJO_2019,
+    AAH_2019,
+    AJPP_2019,
+    ACCOMPAGNEMENT_FIN_VIE_2019,
+    PCH_ELEMENT_2019
+}
+
+pub enum MotifNonCumulAjpa2025 {
+    label fr official "cause de non-cumul depuis 2026 (L. 168-10 2025, fait établi)";
+    label en unofficial "non-cumulation ground from 2026 (L. 168-10 2025, established fact)";
+    NAISSANCE_SUPPLEMENTAIRE,
+    INTERRUPTION_ACTIVITE,
+    MALADIE_AT,
+    CHOMAGE,
+    PREPARE,
+    AEEH_COMPLEMENT_MAJO,
+    AAH,
+    AJPP,
+    ACCOMPAGNEMENT_FIN_VIE,
+    PCH_ELEMENT
+}
+
+pub enum CibleRetenuePrestations {
+    label fr official "prestation cible des retenues P1 : prestations familiales L. 511-1, prime d'activité L. 841-1, RSA L. 262-1 CASF, aides au logement L. 821-1 CCH (L. 168-13)";
+    label en unofficial "P1 withholding target class: family benefits, activity premium, RSA, housing aid (L. 168-13)";
+    PRESTATIONS_FAMILIALES,
+    PRIME_ACTIVITE,
+    RSA,
+    AIDES_LOGEMENT
+}
+
+pub relation conge_proche_aidant(p: fr.pf.core::Personne, a: fr.pf.core::Personne) kind empirical {
+    label fr official "congé de proche aidant L. 3142-16 travail pris pour la personne aidée (hors champ, fait du dossier)";
+    label en unofficial "L. 3142-16 labour-code carer leave taken for the aided person (out of scope, case fact)";
+}
+
+pub relation residence_stable_france(p: fr.pf.core::Personne) kind empirical {
+    label fr official "régularité de séjour et stabilité de résidence en France L. 512-1 et L. 512-2 al. 1-2 (fait établi)";
+    label en unofficial "lawful stay and stable residence in France, L. 512-1 and L. 512-2 paras. 1-2 (established fact)";
+}
+
+pub relation jours_ajpa_mois(p: fr.pf.core::Personne, a: fr.pf.core::Personne, mois: Date, jours: Integer) kind empirical {
+    key(p, a, mois);
+    label fr official "allocations journalières du mois civil, constatées par l'organisme (L. 168-9, fait établi)";
+    label en unofficial "daily allowances of the calendar month, recorded by the body (L. 168-9, established fact)";
+}
+
+pub relation montant_journalier_retenu(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant journalier retenu, décret revalorisé SMIC (L. 168-9, montant non épinglé, fait du dossier)";
+    label en unofficial "retained daily rate, SMIC-revalorised decree figure (L. 168-9, unpinned amount, case fact)";
+}
+
+pub relation montant_journalier_majore_retenu(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant journalier majoré personne isolée retenu, avant 2023-07 (L. 168-9 2019/2022, montant non épinglé, fait du dossier)";
+    label en unofficial "retained increased single-carer daily rate, before 2023-07 (L. 168-9 2019/2022, unpinned amount, case fact)";
+}
+
+pub relation montant_journalier_module_retenu(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant journalier modulé retenu, congé fractionné ou temps partiel (L. 168-9, décret — hors champ, fait du dossier)";
+    label en unofficial "retained modulated daily rate, split or part-time leave (L. 168-9, decree - out of scope, case fact)";
+}
+
+pub relation plafond_mensuel_retenu(p: fr.pf.core::Personne, max: Integer) kind empirical {
+    key(p);
+    label fr official "nombre maximal mensuel retenu pour le mois (L. 168-9 2025, décret — hors champ, fait du dossier)";
+    label en unofficial "monthly maximum retained for the month (L. 168-9 2025, decree - out of scope, case fact)";
+}
+
+pub relation jours_ajpa_carriere(p: fr.pf.core::Personne, jours: Integer) kind empirical {
+    key(p);
+    label fr official "allocations journalières versées pour l'ensemble de la carrière, constatées par l'organisme (L. 168-9 2023, fait établi)";
+    label en unofficial "daily allowances paid over the whole career, recorded by the body (L. 168-9 2023, established fact)";
+}
+
+pub relation jours_ajpa_verses(p: fr.pf.core::Personne, jours: Integer) kind empirical {
+    key(p);
+    label fr official "allocations journalières versées dans la durée maximale en cours, constatées par l'organisme (L. 168-9 2025, fait établi)";
+    label en unofficial "daily allowances paid within the running maximum duration, recorded by the body (L. 168-9 2025, established fact)";
+}
+
+pub relation duree_max_retenue(p: fr.pf.core::Personne, max: Integer) kind empirical {
+    key(p);
+    label fr official "durée maximale retenue (L. 168-9 2025, décret — hors champ, fait du dossier)";
+    label en unofficial "retained maximum duration (L. 168-9 2025, decree - out of scope, case fact)";
+}
+
+pub relation conge_autre_aide(p: fr.pf.core::Personne, a: fr.pf.core::Personne) kind empirical {
+    label fr official "congé de proche aidant ouvert au titre d'une autre personne aidée (L. 168-9 2025 renouvellement, fait du dossier)";
+    label en unofficial "carer leave opened for another aided person (L. 168-9 2025 renewal, case fact)";
+}
+
+pub relation motif_non_cumul_2019(p: fr.pf.core::Personne, motif: MotifNonCumulAjpa2019) kind empirical {
+    label fr official "cause de non-cumul 2019 constatée pour le bénéficiaire (L. 168-10 2019, fait du dossier)";
+    label en unofficial "2019 non-cumulation ground recorded for the beneficiary (L. 168-10 2019, case fact)";
+}
+
+pub relation motif_non_cumul_2025(p: fr.pf.core::Personne, motif: MotifNonCumulAjpa2025) kind empirical {
+    label fr official "cause de non-cumul 2025 constatée pour le bénéficiaire (L. 168-10 2025, fait du dossier)";
+    label en unofficial "2025 non-cumulation ground recorded for the beneficiary (L. 168-10 2025, case fact)";
+}
+
+pub relation percoit_maladie_temps_partiel(p: fr.pf.core::Personne) kind empirical {
+    label fr official "indemnisation maladie au titre de l'activité à temps partiel (L. 168-10 exception, fait du dossier)";
+    label en unofficial "sick-leave payment for part-time work (L. 168-10 exception, case fact)";
+}
+
+pub relation jours_ajpa_partiels(p: fr.pf.core::Personne) kind empirical {
+    label fr official "allocation non servie pour la totalité des jours (L. 168-10 exception, fait du dossier)";
+    label en unofficial "allowance not paid for all the days (L. 168-10 exception, case fact)";
+}
+
+pub relation scope_2026_aide(a: fr.pf.core::Personne) kind empirical {
+    label fr official "personne aidée née ou adoptée à compter du 1er janvier 2026, ou naissance censée intervenir à compter de cette date (NOTA L. 168-10 2025, fait du dossier)";
+    label en unofficial "aided person born or adopted from 1 January 2026, or birth deemed to occur from that date (L. 168-10 2025 NOTA, case fact)";
+}
+
+pub relation employe_par_aide(p: fr.pf.core::Personne, a: fr.pf.core::Personne) kind empirical {
+    label fr official "proche aidant employé par la personne aidée, L. 232-7 ou L. 245-12 CASF al. 2 (L. 168-10, fait du dossier)";
+    label en unofficial "carer employed by the aided person, CASF L. 232-7 or L. 245-12 para. 2 (L. 168-10, case fact)";
+}
+
+pub relation indu_ajpa(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "paiement indu d'allocation journalière du proche aidant, constaté par l'organisme (L. 168-13, fait établi)";
+    label en unofficial "undue daily carer allowance payment, recorded by the body (L. 168-13, established fact)";
+}
+
+pub relation indu_non_recupere_allocations(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu non récupéré sur les allocations à venir ni par remboursement intégral opté, «A défaut» (L. 168-13, fait établi)";
+    label en unofficial "undue payment not recovered on future allocations nor by opted lump-sum repayment, 'A défaut' branch (L. 168-13, established fact)";
+}
+
+pub relation indu_non_conteste(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "l'assuré ne conteste pas le caractère indu (L. 168-13, fait établi)";
+    label en unofficial "the insured does not dispute the undue character (L. 168-13, established fact)";
+}
+
+pub relation indu_sans_option_remboursement(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "l'assuré n'opte pas pour le remboursement en un ou plusieurs versements dans le délai fixé par décret (L. 168-13, fait établi)";
+    label en unofficial "the insured does not opt for repayment in one or more instalments within the decree deadline (L. 168-13, established fact)";
+}
+
+pub relation indu_sans_option_versement_unique(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "l'assuré n'opte pas pour le remboursement en un seul versement (L. 168-13, fait établi)";
+    label en unofficial "the insured does not opt for repayment in a single payment (L. 168-13, established fact)";
+}
+
+pub relation indu_notifie_non_recuperable(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "l'indu notifié ne peut être récupéré sur les prestations mentionnées au premier alinéa (L. 168-13, fait établi)";
+    label en unofficial "the notified undue payment cannot be recovered on the benefits named in the first paragraph (L. 168-13, established fact)";
+}
+
+pub relation retenue_cible_prestations(p: fr.pf.core::Personne, montant: Money, cible: CibleRetenuePrestations) kind empirical {
+    label fr official "échéances à venir dues au titre de la prestation cible, constatées par l'organisme (L. 168-13, fait du dossier)";
+    label en unofficial "future instalments due under the target benefit, recorded by the body (L. 168-13, case fact)";
+}
+
+pub relation retenue_prestations_exercee(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money, cible: CibleRetenuePrestations) kind empirical {
+    key(o, p);
+    label fr official "l'organisme payeur procède à la récupération de l'indu par retenues sur les échéances à venir dues au titre de la prestation cible (L. 168-13, exercice du pouvoir)";
+    label en unofficial "the paying body proceeds to recover the undue payment by withholding on future instalments due under the target benefit (L. 168-13, exercise of the power)";
+}
+
+pub relation retenue_l5532_exercee(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(o, p);
+    label fr official "la récupération est opérée par retenue sur les prestations de l'avant-dernier alinéa de l'article L. 553-2 (L. 168-13, exercice du pouvoir)";
+    label en unofficial "recovery is operated by withholding on the benefits of the penultimate paragraph of article L. 553-2 (L. 168-13, exercise of the power)";
+}
+
+pub relation ajpa_droit_ouvert(p: fr.pf.core::Personne, a: fr.pf.core::Personne) kind institutional {
+    key(p, a);
+    label fr official "droit à l'AJPA au niveau calcul (congé + résidence L. 168-8)";
+    label en unofficial "AJPA entitlement at computation level (leave + residence L. 168-8)";
+}
+
+pub relation mensuel_dans_limite(p: fr.pf.core::Personne, a: fr.pf.core::Personne, mois: Date) kind institutional {
+    key(p, a, mois);
+    label fr official "jours du mois dans le maximum mensuel (L. 168-9 2025)";
+    label en unofficial "month days within the monthly maximum (L. 168-9 2025)";
+}
+
+pub relation ajpa_dans_limite_carriere(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "compteur carrière dans la limite des soixante-six jours (L. 168-9 2023)";
+    label en unofficial "career count within the sixty-six-day ceiling (L. 168-9 2023)";
+}
+
+pub relation ajpa_dans_duree_max(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "compteur dans la durée maximale retenue (L. 168-9 2025)";
+    label en unofficial "count within the retained maximum duration (L. 168-9 2025)";
+}
+
+pub relation renouvellement_accorde(p: fr.pf.core::Personne, a: fr.pf.core::Personne) kind institutional {
+    key(p, a);
+    label fr official "durée maximale renouvelée au titre d'une autre personne aidée (L. 168-9 2025)";
+    label en unofficial "maximum duration renewed for another aided person (L. 168-9 2025)";
+}
+
+pub relation ajpa_montant_mois(p: fr.pf.core::Personne, a: fr.pf.core::Personne, mois: Date, montant: Money) kind institutional {
+    key(p, a, mois);
+    label fr official "total mensuel dû : taux journalier retenu par jours du mois (L. 168-9, L. 168-8)";
+    label en unofficial "monthly total due: retained daily rate times month days (L. 168-9, L. 168-8)";
+}
+
+pub relation activite_partielle_cumulee(p: fr.pf.core::Personne) kind institutional {
+    label fr official "cumul en cours de droit avec la maladie à temps partiel (L. 168-10 exception)";
+    label en unofficial "in-right cumulation with part-time sick leave (L. 168-10 exception)";
+}
+
+pub relation ajpa_cumul_refuse(p: fr.pf.core::Personne) kind institutional {
+    label fr official "cumul refusé : prestation concurrente (L. 168-10)";
+    label en unofficial "cumulation refused: concurrent benefit (L. 168-10)";
+}
+
+pub relation ajpa_verse(p: fr.pf.core::Personne, a: fr.pf.core::Personne, mois: Date, montant: Money) kind institutional {
+    key(p, a, mois);
+    label fr official "allocation journalière du proche aidant versée pour le mois (L. 168-8, L. 168-11, exécution)";
+    label en unofficial "daily carer allowance paid for the month (L. 168-8, L. 168-11, performance)";
+}
+
+pub relation ajpa_indu_recupere(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "paiement indu récupéré (L. 168-13, exécution)";
+    label en unofficial "undue payment recovered (L. 168-13, performance)";
+}
+
+pub relation ajpa_retenue_prestations(p: fr.pf.core::Personne, montant: Money, cible: CibleRetenuePrestations) kind institutional {
+    key(p);
+    label fr official "récupération de l'indu par retenues sur les échéances à venir de la prestation cible, opérée (L. 168-13, effet)";
+    label en unofficial "recovery of the undue payment by withholding on future instalments of the target benefit, effected (L. 168-13, effect)";
+}
+
+pub relation ajpa_retenue_l5532(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "récupération de l'indu par retenue L. 553-2, opérée (L. 168-13, effet)";
+    label en unofficial "recovery of the undue payment by L. 553-2 withholding, effected (L. 168-13, effect)";
+}
+
+pub relation ajpa_recours_informe(p: fr.pf.core::Personne, a: fr.pf.core::Personne) kind institutional {
+    key(p, a);
+    label fr official "bénéficiaire informé des modalités de réclamation et de recours (L. 168-14, exécution)";
+    label en unofficial "beneficiary informed of the claim and appeal steps (L. 168-14, performance)";
+}

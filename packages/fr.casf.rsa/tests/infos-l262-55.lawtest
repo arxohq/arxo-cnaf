@@ -1,0 +1,22 @@
+// L. 262-55 information, body side: the service body transmits the
+// in-sample person's information to the statistical services
+// ("informations relatives aux personnes physiques destinées à la
+// constitution d'échantillons statistiquement représentatifs",
+// L. 262-55 via D. 262-98). The out-of-sample control is
+// infos-l262-55-hors-echantillon.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-infos-l262-55" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "inf-01": est_organisme_service(entity_ref("urn:fr:rsa:org:caf")) { origin case_input; }
+        assert "inf-02": est_service_statistique(entity_ref("urn:fr:rsa:org:drees")) { origin case_input; }
+        assert "inf-03": organisme_competent(entity_ref("urn:fr:rsa:org:caf"), entity_ref("urn:fr:rsa:case:infos-l262-55")) { origin case_input; }
+        assert "inf-04": echantillon_l262_55(entity_ref("urn:fr:rsa:case:infos-l262-55")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreInfosL262_55Organisme, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

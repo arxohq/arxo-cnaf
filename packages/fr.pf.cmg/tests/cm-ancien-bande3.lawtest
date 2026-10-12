@@ -1,0 +1,38 @@
+// Old scale, band 3: resources 50 000 above the c-ceiling
+// (39 184 + 6 482 = 45 666 from stated nominal components); maximum 43.14% of the
+// 400.00 BMAF = 172.56; 85% of 650.00 cut to 172.56; part a 150.00;
+// total 322.56.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-ancien-bande3" {
+    given {
+        context { decision_time @2024-06-20T12:00:00Z; knowledge_time @2024-06-20T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "ancien-b3-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), entity_ref("urn:fr:pf-cmg:child:b3"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "ancien-b3-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:ancien-bande3")) { origin case_input; }
+        assert "ancien-b3-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), entity_ref("urn:fr:pf-cmg:child:b3")) { origin case_input; }
+        assert "ancien-b3-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:b3"), 2) { origin case_input; }
+        assert "ancien-b3-05": age_base_ans(entity_ref("urn:fr:pf-cmg:child:b3"), 3) { origin case_input; }
+        assert "ancien-b3-06": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), 1) { origin case_input; }
+        assert "ancien-b3-07-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), 17633 EUR) { origin case_input; }
+        assert "ancien-b3-07-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), 2917 EUR) { origin case_input; }
+        assert "ancien-b3-07-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), 39184 EUR) { origin case_input; }
+        assert "ancien-b3-07-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), 6482 EUR) { origin case_input; }
+        assert "ancien-b3-08": ressources_annuelles(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), 50000 EUR) { origin case_input; }
+        assert "ancien-b3-09": bmaf_retenu(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), 400.00 EUR) { origin case_input; }
+        assert "ancien-b3-10": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), entity_ref("urn:fr:pf-cmg:child:b3"), 600 EUR) { origin case_input; }
+        assert "ancien-b3-11": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), entity_ref("urn:fr:pf-cmg:child:b3"), 50 EUR) { origin case_input; }
+        assert "ancien-b3-12": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), entity_ref("urn:fr:pf-cmg:child:b3"), 150 EUR) { origin case_input; }
+        assert "ancien-b3-13": smic_horaire_retenu(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), 12 EUR) { origin case_input; }
+        assert "ancien-b3-14": jours_remuneres(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), entity_ref("urn:fr:pf-cmg:child:b3"), 20.0) { origin case_input; }
+    }
+    evaluate truth(plafond2_applicable(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), 45666 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_cmg_du(entity_ref("urn:fr:pf-cmg:case:ancien-bande3"), entity_ref("urn:fr:pf-cmg:child:b3"), 322.56 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,27 @@
+// Household/period missing: ten items stated but no foyer-periode attestation - no evaluation (R. 553-3-1 II 1°, PC-R04-04).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-depenses-hors-foyer-periode" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-hors-foyer-01": valeur_locative_batie(entity_ref("urn:fr:pf:case:hors-foyer"), 5000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-hors-foyer-02": valeur_locative_non_batie(entity_ref("urn:fr:pf:case:hors-foyer"), 0 EUR, 1.0) { origin case_input; }
+        assert "tdv-hors-foyer-03": depenses_travaux(entity_ref("urn:fr:pf:case:hors-foyer"), 2000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-hors-foyer-04": depenses_domestiques(entity_ref("urn:fr:pf:case:hors-foyer"), 0 EUR, 1.0) { origin case_input; }
+        assert "tdv-hors-foyer-05": valeur_venale_vehicules(entity_ref("urn:fr:pf:case:hors-foyer"), 12000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-hors-foyer-06": depenses_equipement(entity_ref("urn:fr:pf:case:hors-foyer"), 1500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-hors-foyer-07": valeur_venale_art(entity_ref("urn:fr:pf:case:hors-foyer"), 0 EUR, 1.0) { origin case_input; }
+        assert "tdv-hors-foyer-08": depenses_loisirs(entity_ref("urn:fr:pf:case:hors-foyer"), 1000.00 EUR, 0.5) { origin case_input; }
+        assert "tdv-hors-foyer-09": depenses_clubs(entity_ref("urn:fr:pf:case:hors-foyer"), 500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-hors-foyer-10": capitaux_fin_periode(entity_ref("urn:fr:pf:case:hors-foyer"), 10000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-hors-foyer-11": prestation_soumise_section(entity_ref("urn:fr:pf:case:hors-foyer")) { origin case_input; }
+        assert "tdv-hors-foyer-12": vehicules_date_disposition(entity_ref("urn:fr:pf:case:hors-foyer"), @2026-02-15) { origin case_input; }
+        assert "tdv-hors-foyer-13": art_date_disposition(entity_ref("urn:fr:pf:case:hors-foyer"), @2026-02-20) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_train_vie(entity_ref("urn:fr:pf:case:hors-foyer"), 12600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

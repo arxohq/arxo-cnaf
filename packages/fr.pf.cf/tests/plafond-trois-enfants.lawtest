@@ -1,0 +1,25 @@
+// Plain ceiling, three children, recorded household, neither
+// two-earner nor lone: 20000 + 0.25*20000*2 + 0.30*20000*1 = 36000 (tiered by rank, D-36).
+// The closures derive the explicit negatives from foyer_du_cas.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-plafond-trois-enfants" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "pl3-01": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:plafond-trois-enfants"), 20000 EUR) { origin case_input; }
+        assert "pl3-01a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:plafond-trois-enfants"), 5000 EUR) { origin case_input; }
+        assert "pl3-01b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:plafond-trois-enfants"), 6000 EUR) { origin case_input; }
+        assert "pl3-01c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:plafond-trois-enfants"), 10000 EUR) { origin case_input; }
+        assert "pl3-01d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:plafond-trois-enfants"), 2500 EUR) { origin case_input; }
+        assert "pl3-01e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:plafond-trois-enfants"), 3000 EUR) { origin case_input; }
+        assert "pl3-02": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:plafond-trois-enfants"), 3) { origin case_input; }
+        assert "pl3-03": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:plafond-trois-enfants")) { origin case_input; }
+    }
+    evaluate truth(plafond_cf_applicable(entity_ref("urn:fr:pf-cf:case:plafond-trois-enfants"), 36000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

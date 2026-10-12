@@ -1,0 +1,22 @@
+// No retroactivity without the finding: late certificate, no beyond-control finding - no retroactive payment (L. 552-4 al. 2).
+// D-42 BOUNDARY (judgment channel, SPEC 47.3): "delay beyond the person's control" is the evaluative
+// element retard_independant_volonte, an external judgment relation with authority Organisme. The case
+// carries no assessment at all, so the answer cannot be COMPUTED: truth stays NEITHER (no retroactive
+// payment is established) and the organ's assessment is requested, as in allocataire-sans-charge
+// (B-PFCORE-JUGEMENT-CHARGE). The former "evaluation_status == COMPUTED" contradicted that design.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-retroactif-sans-motifs" {
+    given {
+        context { decision_time @2026-10-01T12:00:00Z; knowledge_time @2026-10-01T12:00:00Z; legal_time @2026-10-01; timezone "Europe/Paris"; }
+        assert "retroactif-sans-motifs-01": certificat_inscription_le(entity_ref("urn:fr:pf:case:retard-sec"), entity_ref("urn:fr:pf:case:enfant-retard-sec"), @2026-09-20) { origin case_input; }
+        assert "retroactif-sans-motifs-02": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-retard-sec")) { origin case_input; }
+    }
+    evaluate truth(versement_retroactif_possible(entity_ref("urn:fr:pf:case:retard-sec"), entity_ref("urn:fr:pf:case:enfant-retard-sec")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == REQUIRES_JUDGMENT;
+    expect judgment_request(retard_independant_volonte, Organisme);
+}

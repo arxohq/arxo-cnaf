@@ -1,0 +1,22 @@
+// Active withholding power (P1): a 300.00 undue payment on the
+// «A défaut» branch, both reserves recorded, upcoming family-benefit
+// instalments recorded as the target, paying-body link established —
+// RecouvrerParRetenues is ACTIVE.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-pouvoir-retenues-actif" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-pr1-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-pr1"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pr1-02": indu_non_recupere_allocations(entity_ref("urn:fr:css:ajpa:case:aidant-pr1"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pr1-03": indu_non_conteste(entity_ref("urn:fr:css:ajpa:case:aidant-pr1"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pr1-04": indu_sans_option_remboursement(entity_ref("urn:fr:css:ajpa:case:aidant-pr1"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pr1-05": retenue_cible_prestations(entity_ref("urn:fr:css:ajpa:case:aidant-pr1"), 300.00 EUR, PRESTATIONS_FAMILIALES) { origin case_input; }
+        assert "ajpa-pr1-06": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-pr1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(RecouvrerParRetenues, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

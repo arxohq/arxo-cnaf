@@ -1,0 +1,19 @@
+// 2022-2024 renewal derogation: renewal requested, control silent
+// through the second month — the opinion is deemed unfavourable
+// (R. 544-3 II 1°).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-silence-renouvellement-2023" {
+    given {
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; }
+        assert "ajpp-sr3-01": demande_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-sr3")) { origin case_input; }
+        assert "ajpp-sr3-02": demande_recue_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-sr3"), 10) { origin case_input; }
+        assert "ajpp-sr3-03": silence_observe_jusqu_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-sr3"), 12) { origin case_input; }
+    }
+    evaluate truth(avis_silence_repute_defavorable(entity_ref("urn:fr:pf-ajpp:case:enfant-sr3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

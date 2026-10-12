@@ -1,0 +1,14 @@
+// No schooling charge: no parent in charge - neither the DASEN nor the delegate is competent (D. 552-6 al. 1, PC-R04-02 missing-component control).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-dasen-autorite-sans-charge" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+    }
+    evaluate truth(dasen_autorite_competente(entity_ref("urn:fr:pf:case:enfant-sans-charge")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

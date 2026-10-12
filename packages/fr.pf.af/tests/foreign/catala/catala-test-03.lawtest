@@ -1,0 +1,36 @@
+// Catala AF Test3 (2020-05-01, Guyane, resources 63 540): one
+// 13-year-old. DOM single-child amount, no modulation and no
+// top-up (L. 755-12 disapplies the last four L. 521-1 alinas):
+// 5.88% of the retained base (1 000.00 EUR stated assumption).
+// Their case -> our answer -> class: REPORT.md (Catala, 3).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-catala-test-03" {
+    given {
+        context { decision_time @2020-05-01T12:00:00Z; knowledge_time @2020-05-01T12:00:00Z; legal_time @2020-05-01; timezone "Europe/Paris"; }
+        assert "ct03-01": territoire(entity_ref("urn:fr:pf-af:foreign:catala-03"), GUYANE) { origin case_input; }
+        assert "ct03-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:foreign:catala-03"), 1) { origin case_input; }
+        assert "ct03-03": ressources_menage(entity_ref("urn:fr:pf-af:foreign:catala-03"), 63540 EUR) { origin case_input; }
+        assert "ct03-04": base_dom_retenue(entity_ref("urn:fr:pf-af:foreign:catala-03"), 1000.00 EUR) { origin case_input; }
+        assert "ct03-05": forfait_total_menage(entity_ref("urn:fr:pf-af:foreign:catala-03"), 0 EUR) { origin case_input; }
+        assert "ct03-06": foyer_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-03")) { origin case_input; }
+        assert "ct03-07": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:catala-03"), entity_ref("urn:fr:pf-af:foreign:catala-03-e1")) { origin case_input; }
+        assert "ct03-08": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-03-e1")) { origin case_input; }
+        assert "ct03-09": date_naissance(entity_ref("urn:fr:pf-af:foreign:catala-03-e1"), @2007-01-01) { origin case_input; }
+        assert "ct03-10": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-03-e1")) { origin case_input; }
+    }
+    evaluate truth(af_droit_ouvert(entity_ref("urn:fr:pf-af:foreign:catala-03")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af_dom(entity_ref("urn:fr:pf-af:foreign:catala-03"), 58.80 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:foreign:catala-03"), 58.80 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

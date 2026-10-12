@@ -1,0 +1,40 @@
+// Mixed cumulation under the caps: childminder aid 601.12 plus
+// structure aid 425.00 = 1 026.12 under the 690.28 + 834.12 caps —
+// the L. 531-5 total stands.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-cumul-plafond" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "cumul-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:cumul"), entity_ref("urn:fr:pf-cmg:child:cumul-am"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "cumul-02": mode_garde(entity_ref("urn:fr:pf-cmg:case:cumul"), entity_ref("urn:fr:pf-cmg:child:cumul-st"), STRUCTURE) { origin case_input; }
+        assert "cumul-03": exerce_activite(entity_ref("urn:fr:pf-cmg:case:cumul")) { origin case_input; }
+        assert "cumul-04": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:cumul"), entity_ref("urn:fr:pf-cmg:child:cumul-am")) { origin case_input; }
+        assert "cumul-05": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:cumul"), entity_ref("urn:fr:pf-cmg:child:cumul-st")) { origin case_input; }
+        assert "cumul-06": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:cumul-am"), 2) { origin case_input; }
+        assert "cumul-07": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:cumul-st"), 2) { origin case_input; }
+        assert "cumul-08": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:cumul"), 1) { origin case_input; }
+        assert "cumul-09": facteur_smic(entity_ref("urn:fr:pf-cmg:case:cumul"), 1.0) { origin case_input; }
+        assert "cumul-10-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:cumul"), 17633 EUR) { origin case_input; }
+        assert "cumul-10-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:cumul"), 2917 EUR) { origin case_input; }
+        assert "cumul-10-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:cumul"), 39184 EUR) { origin case_input; }
+        assert "cumul-10-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:cumul"), 6482 EUR) { origin case_input; }
+        assert "cumul-11": ressources_annuelles(entity_ref("urn:fr:pf-cmg:case:cumul"), 15000 EUR) { origin case_input; }
+        assert "cumul-12": bmaf_retenu(entity_ref("urn:fr:pf-cmg:case:cumul"), 400.00 EUR) { origin case_input; }
+        assert "cumul-13": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:cumul"), entity_ref("urn:fr:pf-cmg:child:cumul-am"), 600 EUR) { origin case_input; }
+        assert "cumul-14": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:cumul"), entity_ref("urn:fr:pf-cmg:child:cumul-am"), 50 EUR) { origin case_input; }
+        assert "cumul-15": heures_remunerees(entity_ref("urn:fr:pf-cmg:case:cumul"), entity_ref("urn:fr:pf-cmg:child:cumul-am"), 130.0) { origin case_input; }
+        assert "cumul-16": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:cumul"), entity_ref("urn:fr:pf-cmg:child:cumul-am"), 200 EUR) { origin case_input; }
+        assert "cumul-17": cout_reference_retenu(entity_ref("urn:fr:pf-cmg:case:cumul"), entity_ref("urn:fr:pf-cmg:child:cumul-am"), 4.85 EUR) { origin case_input; }
+        assert "cumul-18": montant_forfaitaire_isole(entity_ref("urn:fr:pf-cmg:case:cumul"), 700 EUR) { origin case_input; }
+        assert "cumul-19": forfait_logement(entity_ref("urn:fr:pf-cmg:case:cumul"), 100 EUR) { origin case_input; }
+        assert "cumul-20": revenu_mensuel_brut(entity_ref("urn:fr:pf-cmg:case:cumul"), 3000 EUR) { origin case_input; }
+        assert "cumul-21": depense_engagee(entity_ref("urn:fr:pf-cmg:case:cumul"), entity_ref("urn:fr:pf-cmg:child:cumul-st"), 500 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_cumul_total(entity_ref("urn:fr:pf-cmg:case:cumul"), 1026.12 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

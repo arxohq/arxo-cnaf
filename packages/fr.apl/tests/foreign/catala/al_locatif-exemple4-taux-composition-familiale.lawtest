@@ -1,0 +1,29 @@
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_al_locatif.catala_fr, scope Exemple4.
+// ИХ ОЖИДАНИЕ: taux_composition_familiale = 0.0238.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-al_locatif-exemple4-taux-composition-familiale" {
+    given {
+        context { decision_time @2023-04-01T12:00:00Z; knowledge_time @2023-04-01T12:00:00Z; legal_time @2023-04-01; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "al_locatif-exemple4-01": secteur_locatif(entity_ref("urn:fr:apl:case:al_locatif-exemple4")) { origin case_input; }
+        assert "al_locatif-exemple4-02": aide_demandee(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), ALF) { origin case_input; }
+        assert "al_locatif-exemple4-03": loyer_principal(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), 500 EUR) { origin case_input; }
+        assert "al_locatif-exemple4-04": ressources_du_menage(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), 12500 EUR) { origin case_input; }
+        assert "al_locatif-exemple4-05": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), false) { origin case_input; }
+        assert "al_locatif-exemple4-06": personnes_a_charge(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), 2) { origin case_input; }
+        assert "al_locatif-exemple4-07": situation_familiale(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), PERSONNE_SEULE) { origin case_input; }
+        assert "al_locatif-exemple4-08": zone_du_logement(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), ZONE_II) { origin case_input; }
+        assert "al_locatif-exemple4-09": territoire(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), SAINT_PIERRE_ET_MIQUELON) { origin case_input; }
+        assert "al_locatif-exemple4-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), 0 EUR) { origin case_input; }
+        assert "al_locatif-exemple4-11": mode_location(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), LOCATION_SEULE) { origin case_input; }
+        assert "al_locatif-exemple4-12": forme_logement(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), LOGEMENT_ORDINAIRE) { origin case_input; }
+    }
+    evaluate truth(taux_composition_familiale(entity_ref("urn:fr:apl:case:al_locatif-exemple4"), 0.0238));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

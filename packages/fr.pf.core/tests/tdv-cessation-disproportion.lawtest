@@ -1,0 +1,17 @@
+// Ceased disproportion: no-entitlement evaluation but the marked disproportion is established to have ceased - grant not refused (R. 553-3-6).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-cessation-disproportion" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-cessation-disproportion-01": evaluation_sans_droit(entity_ref("urn:fr:pf:case:cessation")) { origin case_input; }
+        assert "tdv-cessation-disproportion-02": disproportion_cessee_etablie(entity_ref("urn:fr:pf:case:cessation")) { origin case_input; }
+        assert "tdv-cessation-disproportion-03": prestation_soumise_section(entity_ref("urn:fr:pf:case:cessation")) { origin case_input; }
+    }
+    evaluate truth(attribution_non_refusee_cessation(entity_ref("urn:fr:pf:case:cessation")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

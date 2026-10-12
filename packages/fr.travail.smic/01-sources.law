@@ -1,0 +1,737 @@
+// Провенанс §194: одиннадцать актов о relèvement du SMIC — девять актов 2020–2024
+// годов (ряд 2021–2025: декреты 2020-1598, 2021-1741, 2022-1608, 2023-1216,
+// 2024-951 и arrêtés 27.09.2021, 19.04.2022, 29.07.2022, 26.04.2023 — из
+// глобального дампа LEGI DILA) и два 2026 года (декрет 2025-1228, arrêté
+// 22.05.2026 — из суточных архивов JORF DILA). Блок фрагментов ниже
+// порождается corpus/laws/fr/smic/tools/sync_smic_fragments.py из
+// закреплённых байтов sources/fr-smic/legi/**/*.xml (учёт
+// sources/fr-smic/articles.json). Руками не править.
+//
+// Окно пакета: [2021-01-01, ∞). Отдельного акта 2025 года нет: ставка декрета
+// 2024-951 (с 01.11.2024) действует до 01.01.2026; дамп LEGI кончается
+// 13.07.2025 (см. README, границы).
+
+language "law.core" version "0.2";
+package fr.travail.smic version "0.1.0";
+namespace "urn:fr:corpus:clir:smic";
+
+@id("urn:fr:source:decret-2025-1228")
+source DECRET_2025_1228 {
+    kind decree;
+    jurisdiction FR;
+    number "2025-1228";
+    label fr official "Décret n° 2025-1228 du 17 décembre 2025 portant relèvement du salaire minimum de croissance";
+    label ru unofficial "Декрет № 2025-1228 от 17 декабря 2025 года о повышении минимальной зарплаты (SMIC): с 01.01.2026 — 12,02 €/ч (метрополия+), 9,33 €/ч (Майотта), минимум garanti 4,25 €";
+}
+
+@id("urn:fr:source:arrete-2026-05-22")
+source ARRETE_2026_05_22 {
+    kind order;
+    jurisdiction FR;
+    number "TRST2612929A";
+    label fr official "Arrêté du 22 mai 2026 relatif au relèvement du salaire minimum de croissance";
+    label ru unofficial "Приказ от 22 мая 2026 года о повышении SMIC: с 01.06.2026 — 12,31 €/ч (метрополия+), 9,56 €/ч (Майотта), минимум garanti 4,35 €";
+}
+
+@id("urn:fr:source:decret-2025-1228:2026-01-01:fr")
+edition DEC20251228_ED2026 of DECRET_2025_1228 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2026-01-01, @2026-06-01);
+    label fr official "Décret n° 2025-1228, champ retenu du paquet, état applicable à compter du 1er janvier 2026";
+    label ru unofficial "Декрет 2025-1228: состояние закреплённого охвата с 1 января 2026 года";
+}
+
+@id("urn:fr:source:arrete-2026-05-22:2026-06-01:fr")
+edition ARR20260522_ED2026 of ARRETE_2026_05_22 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2026-06-01, infinity);
+    label fr official "Arrêté du 22 mai 2026, champ retenu du paquet, état applicable à compter du 1er juin 2026";
+    label ru unofficial "Приказ 22.05.2026: состояние закреплённого охвата с 1 июня 2026 года";
+}
+
+@id("urn:fr:source:decret-2020-1598")
+source DECRET_2020_1598 {
+    kind decree;
+    jurisdiction FR;
+    number "2020-1598";
+    label fr official "Décret n° 2020-1598 du 16 décembre 2020 portant relèvement du salaire minimum de croissance";
+    label ru unofficial "Декрет № 2020-1598 от 16 декабря 2020 года о повышении минимальной зарплаты (SMIC): с 01.01.2021 — 10,25 €/ч (метрополия+), 7,74 €/ч (Майотта), минимум garanti 3,65 €";
+}
+
+@id("urn:fr:source:arrete-2021-09-27")
+source ARRETE_2021_09_27 {
+    kind order;
+    jurisdiction FR;
+    number "MTRT2127992A";
+    label fr official "Arrêté du 27 septembre 2021 relatif au relèvement du salaire minimum de croissance";
+    label ru unofficial "Приказ от 27 сентября 2021 года о повышении SMIC на 2,20 % (внеочередное повышение по индексу цен): с 01.10.2021 — 10,48 €/ч (метрополия+), 7,91 €/ч (Майотта), минимум garanti 3,73 €";
+}
+
+@id("urn:fr:source:decret-2021-1741")
+source DECRET_2021_1741 {
+    kind decree;
+    jurisdiction FR;
+    number "2021-1741";
+    label fr official "Décret n° 2021-1741 du 22 décembre 2021 portant relèvement du salaire minimum de croissance";
+    label ru unofficial "Декрет № 2021-1741 от 22 декабря 2021 года о повышении минимальной зарплаты (SMIC): с 01.01.2022 — 10,57 €/ч (метрополия+), 7,98 €/ч (Майотта), минимум garanti 3,76 €";
+}
+
+@id("urn:fr:source:arrete-2022-04-19")
+source ARRETE_2022_04_19 {
+    kind order;
+    jurisdiction FR;
+    number "MTRT2211753A";
+    label fr official "Arrêté du 19 avril 2022 relatif au relèvement du salaire minimum de croissance";
+    label ru unofficial "Приказ от 19 апреля 2022 года о повышении SMIC на 2,65 % (внеочередное повышение по индексу цен): с 01.05.2022 — 10,85 €/ч (метрополия+), 8,19 €/ч (Майотта), минимум garanti 3,86 €";
+}
+
+@id("urn:fr:source:arrete-2022-07-29")
+source ARRETE_2022_07_29 {
+    kind order;
+    jurisdiction FR;
+    number "MTRT2220967A";
+    label fr official "Arrêté du 29 juillet 2022 relatif au relèvement du salaire minimum de croissance";
+    label ru unofficial "Приказ от 29 июля 2022 года о повышении SMIC на 2,01 % (внеочередное повышение по индексу цен): с 01.08.2022 — 11,07 €/ч (метрополия+), 8,35 €/ч (Майотта), минимум garanti 3,94 €";
+}
+
+@id("urn:fr:source:decret-2022-1608")
+source DECRET_2022_1608 {
+    kind decree;
+    jurisdiction FR;
+    number "2022-1608";
+    label fr official "Décret n° 2022-1608 du 22 décembre 2022 portant relèvement du salaire minimum de croissance";
+    label ru unofficial "Декрет № 2022-1608 от 22 декабря 2022 года о повышении минимальной зарплаты (SMIC): с 01.01.2023 — 11,27 €/ч (метрополия+), 8,51 €/ч (Майотта), минимум garanti 4,01 €";
+}
+
+@id("urn:fr:source:arrete-2023-04-26")
+source ARRETE_2023_04_26 {
+    kind order;
+    jurisdiction FR;
+    number "MTRT2310513A";
+    label fr official "Arrêté du 26 avril 2023 relatif au relèvement du salaire minimum de croissance";
+    label ru unofficial "Приказ от 26 апреля 2023 года о повышении SMIC на 2,22 % (внеочередное повышение по индексу цен): с 01.05.2023 — 11,52 €/ч (метрополия+), 8,70 €/ч (Майотта), минимум garanti 4,10 €";
+}
+
+@id("urn:fr:source:decret-2023-1216")
+source DECRET_2023_1216 {
+    kind decree;
+    jurisdiction FR;
+    number "2023-1216";
+    label fr official "Décret n° 2023-1216 du 20 décembre 2023 portant relèvement du salaire minimum de croissance";
+    label ru unofficial "Декрет № 2023-1216 от 20 декабря 2023 года о повышении минимальной зарплаты (SMIC): с 01.01.2024 — 11,65 €/ч (метрополия+), 8,80 €/ч (Майотта), минимум garanti 4,15 €";
+}
+
+@id("urn:fr:source:decret-2024-951")
+source DECRET_2024_951 {
+    kind decree;
+    jurisdiction FR;
+    number "2024-951";
+    label fr official "Décret n° 2024-951 du 23 octobre 2024 portant relèvement du salaire minimum de croissance";
+    label ru unofficial "Декрет № 2024-951 от 23 октября 2024 года о повышении минимальной зарплаты (SMIC): с 01.11.2024 — 11,88 €/ч (метрополия+), 8,98 €/ч (Майотта), минимум garanti 4,22 €; ставка действует весь 2025 год (отдельного акта о повышении в 2025 году в закреплённых байтах нет)";
+}
+
+@id("urn:fr:source:decret-2020-1598:2021-01-01:fr")
+edition DEC20201598_ED2021 of DECRET_2020_1598 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2021-01-01, @2021-10-01);
+    label fr official "Décret n° 2020-1598, champ retenu du paquet, état applicable à compter du 1er janvier 2021";
+    label ru unofficial "Декрет 2020-1598: состояние закреплённого охвата с 1 января 2021 года";
+}
+
+@id("urn:fr:source:arrete-2021-09-27:2021-10-01:fr")
+edition ARR20210927_ED2021 of ARRETE_2021_09_27 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2021-10-01, @2022-01-01);
+    label fr official "Arrêté du 27 septembre 2021, champ retenu du paquet, état applicable à compter du 1er octobre 2021";
+    label ru unofficial "Приказ 27.09.2021: состояние закреплённого охвата с 1 октября 2021 года";
+}
+
+@id("urn:fr:source:decret-2021-1741:2022-01-01:fr")
+edition DEC20211741_ED2022 of DECRET_2021_1741 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2022-01-01, @2022-05-01);
+    label fr official "Décret n° 2021-1741, champ retenu du paquet, état applicable à compter du 1er janvier 2022";
+    label ru unofficial "Декрет 2021-1741: состояние закреплённого охвата с 1 января 2022 года";
+}
+
+@id("urn:fr:source:arrete-2022-04-19:2022-05-01:fr")
+edition ARR20220419_ED2022 of ARRETE_2022_04_19 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2022-05-01, @2022-08-01);
+    label fr official "Arrêté du 19 avril 2022, champ retenu du paquet, état applicable à compter du 1er mai 2022";
+    label ru unofficial "Приказ 19.04.2022: состояние закреплённого охвата с 1 мая 2022 года";
+}
+
+@id("urn:fr:source:arrete-2022-07-29:2022-08-01:fr")
+edition ARR20220729_ED2022 of ARRETE_2022_07_29 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2022-08-01, @2023-01-01);
+    label fr official "Arrêté du 29 juillet 2022, champ retenu du paquet, état applicable à compter du 1er août 2022";
+    label ru unofficial "Приказ 29.07.2022: состояние закреплённого охвата с 1 августа 2022 года";
+}
+
+@id("urn:fr:source:decret-2022-1608:2023-01-01:fr")
+edition DEC20221608_ED2023 of DECRET_2022_1608 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2023-01-01, @2023-05-01);
+    label fr official "Décret n° 2022-1608, champ retenu du paquet, état applicable à compter du 1er janvier 2023";
+    label ru unofficial "Декрет 2022-1608: состояние закреплённого охвата с 1 января 2023 года";
+}
+
+@id("urn:fr:source:arrete-2023-04-26:2023-05-01:fr")
+edition ARR20230426_ED2023 of ARRETE_2023_04_26 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2023-05-01, @2024-01-01);
+    label fr official "Arrêté du 26 avril 2023, champ retenu du paquet, état applicable à compter du 1er mai 2023";
+    label ru unofficial "Приказ 26.04.2023: состояние закреплённого охвата с 1 мая 2023 года";
+}
+
+@id("urn:fr:source:decret-2023-1216:2024-01-01:fr")
+edition DEC20231216_ED2024 of DECRET_2023_1216 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2024-01-01, @2024-11-01);
+    label fr official "Décret n° 2023-1216, champ retenu du paquet, état applicable à compter du 1er janvier 2024";
+    label ru unofficial "Декрет 2023-1216: состояние закреплённого охвата с 1 января 2024 года";
+}
+
+@id("urn:fr:source:decret-2024-951:2024-11-01:fr")
+edition DEC20240951_ED2024 of DECRET_2024_951 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2024-11-01, @2026-01-01);
+    label fr official "Décret n° 2024-951, champ retenu du paquet, état applicable à compter du 1er novembre 2024";
+    label ru unofficial "Декрет 2024-951: состояние закреплённого охвата с 1 ноября 2024 года";
+}
+
+// BEGIN GENERATED FR-SMIC FRAGMENTS
+
+publication DEC20201598_ED2021_TEXT of DEC20201598_ED2021 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:c4f341a333999111caa238fca5bc019c319ba4b1e0b003c0021f29d204f1ab11";
+    local_path "sources/fr-smic/decret-2020-1598.txt";
+}
+
+publication ARR20210927_ED2021_TEXT of ARR20210927_ED2021 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:0f1712c13c49026ae5e6524e1d6edfcd2595a61bbf6bf854579b837aa902aee0";
+    local_path "sources/fr-smic/arrete-2021-09.txt";
+}
+
+publication DEC20211741_ED2022_TEXT of DEC20211741_ED2022 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:b7cf0c14465e4534863961ab2ed61923272a668c44137dd036b9bd79f3badfa6";
+    local_path "sources/fr-smic/decret-2021-1741.txt";
+}
+
+publication ARR20220419_ED2022_TEXT of ARR20220419_ED2022 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:18ca7c9dce5a1e3d03157b3939c383e336289f1888a57167c627128721f2e389";
+    local_path "sources/fr-smic/arrete-2022-04.txt";
+}
+
+publication ARR20220729_ED2022_TEXT of ARR20220729_ED2022 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:9fa8f1db11d64c93e7e0d1fba63a641537561040abeee49d0e349c50778c8c3b";
+    local_path "sources/fr-smic/arrete-2022-07.txt";
+}
+
+publication DEC20221608_ED2023_TEXT of DEC20221608_ED2023 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:8fc242a116bd6e701a175fd40a8380a36fb6263ec5619780e27c3830e2e21ccd";
+    local_path "sources/fr-smic/decret-2022-1608.txt";
+}
+
+publication ARR20230426_ED2023_TEXT of ARR20230426_ED2023 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:a66bd62d78770b22083861abe2f1be6e0c819d763e87ffcc082267d91d418547";
+    local_path "sources/fr-smic/arrete-2023-04.txt";
+}
+
+publication DEC20231216_ED2024_TEXT of DEC20231216_ED2024 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:ddbc149c5def5774ec0f7d0b036fcc6662d0e394ccb06083b7b9e8119a98fcdd";
+    local_path "sources/fr-smic/decret-2023-1216.txt";
+}
+
+publication DEC20240951_ED2024_TEXT of DEC20240951_ED2024 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:cf063fe01a569704c6e650becdc0ddd37fc60953f1fb6ea2e3507eb556d31bd9";
+    local_path "sources/fr-smic/decret-2024-951.txt";
+}
+
+publication DEC20251228_ED2026_TEXT of DEC20251228_ED2026 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/JORF/JORF_20251218-215251.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:f88376d5742a1b908ae3f3ed2cf5956a715f261120b71d5e48ebd138449d3582";
+    local_path "sources/fr-smic/decret-2025-1228.txt";
+}
+
+publication ARR20260522_ED2026_TEXT of ARR20260522_ED2026 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/JORF/JORF_20260524-210930.tar.gz";
+    retrieved_at @2026-10-05T00:00:00Z;
+    content_hash "sha256:e1aa418b3cb25744fb230737e043b3bd732daef0ac2b786263c3e655ea0b4e3c";
+    local_path "sources/fr-smic/arrete-2026-05.txt";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20201598_ART1")
+pub fragment DEC20201598_ART1 in DEC20201598_ED2021 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+A compter du 1er janvier 2021, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 10,25 € l'heure ;2° A Mayotte, son montant est fixé à 7,74 € l'heure.
+""";
+    content_hash "sha256:c433cba41d7ab0615e360be9c1eeb49265abff555a7763ed0ba5c96279af3907";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20201598_ART2")
+pub fragment DEC20201598_ART2 in DEC20201598_ED2021 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+A compter du 1er janvier 2021, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 3,65 € en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:1512821121002b1d1f1a47c7570980568bfc311223a6ff8a5a310150c4fed5d2";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20201598_ART3")
+pub fragment DEC20201598_ART3 in DEC20201598_ED2021 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+Pour l'application de l'article L. 3231-4 du code du travail, l'indice de référence est l'indice des prix à la consommation hors tabac, des ménages du premier quintile de la distribution des niveaux de vie du mois de novembre 2020 publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:9a8000745689489a61ef8237b10759712dcae3bfaa026bffe4dc0b8f4236cba0";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20201598_ART4")
+pub fragment DEC20201598_ART4 in DEC20201598_ED2021 {
+    kind article;
+    locator "article/4";
+    text fr official """Article 4
+Le Premier ministre, le ministre de l'économie, des finances et de la relance, la ministre du travail, de l'emploi et de l'insertion, le ministre des outre-mer et le ministre de l'agriculture et de l'alimentation sont responsables, chacun en ce qui le concerne, de l'application du présent décret, qui sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:cf0d720e01c8fbe23539cc5290ad59b8978ae0a950b6f5615bfb73c6a4853f15";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20210927_ART1")
+pub fragment ARR20210927_ART1 in ARR20210927_ED2021 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+Conformément aux dispositions des articles L. 3231-5 et L. 3423-1 du code du travail et compte tenu du niveau de l'indice mensuel des prix à la consommation qui atteint 105,60 pour le mois d'août 2021, le taux du salaire minimum de croissance, tel qu'il résulte du décret n° 2020-1598 du 16 décembre 2020 portant relèvement du salaire minimum de croissance, est majoré de 2,20 p. 100 pour prendre effet au 1er octobre 2021.
+""";
+    content_hash "sha256:cfb2cbee5a16232fbd8abdb61a0383997a7661bb07364d15e9afd9e5848c7da3";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20210927_ART2")
+pub fragment ARR20210927_ART2 in ARR20210927_ED2021 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+En conséquence, à compter du 1er octobre 2021, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 10,48 € l'heure.2° A Mayotte, son montant est fixé à 7,91 € l'heure.
+""";
+    content_hash "sha256:fad4741716bada01e7dde4e2e284807ca7c39d4e72e8cfc2d1228d592037e542";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20210927_ART3")
+pub fragment ARR20210927_ART3 in ARR20210927_ED2021 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+A compter du 1er octobre 2021, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 3,73 € en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:76ae4e5bb4127f3057f21812201962c916736240ec073a5c6fb2e47dc05b9ada";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20210927_ART4")
+pub fragment ARR20210927_ART4 in ARR20210927_ED2021 {
+    kind article;
+    locator "article/4";
+    text fr official """Article 4
+Le présent arrêté sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:f0b38a95d391c8c0ece5451c68e19a042fd4c40ca73b0b75e2dff2e861961940";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20211741_ART1")
+pub fragment DEC20211741_ART1 in DEC20211741_ED2022 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+A compter du 1er janvier 2022, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 10,57 euros l'heure.2° A Mayotte, son montant est fixé à 7,98 euros l'heure.
+""";
+    content_hash "sha256:56398498c83f7b95586492666d93979dc3fac86ad56a7cf752bb31e9d732e9f3";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20211741_ART2")
+pub fragment DEC20211741_ART2 in DEC20211741_ED2022 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+A compter du 1er janvier 2022, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 3,76 euros en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:13db1a4895d446c441145cf9a31d54e1d600c50831f2ccdf88f8735a8abee641";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20211741_ART3")
+pub fragment DEC20211741_ART3 in DEC20211741_ED2022 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+Pour l'application de l'article L. 3231-4 du code du travail, l'indice de référence est l'indice des prix à la consommation hors tabac, des ménages du premier quintile de la distribution des niveaux de vie du mois de novembre 2021 publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:2c249cb25ee939fa89370a20f77642d06480e6c0ad7f1e8231a5c58a1ae46df9";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20211741_ART4")
+pub fragment DEC20211741_ART4 in DEC20211741_ED2022 {
+    kind article;
+    locator "article/4";
+    text fr official """Article 4
+Le Premier ministre, le ministre de l'économie et des finances et de la relance, la ministre du travail, de l'emploi et de l'insertion, le ministre des outre-mer et le ministre de l'agriculture et de l'alimentation sont responsables, chacun en ce qui le concerne, de l'application du présent décret, qui sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:3d501eaaaea3509489a4e79fe2c6b240ea26636bda7a6492a4e73f434f1ae5b1";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20220419_ART1")
+pub fragment ARR20220419_ART1 in ARR20220419_ED2022 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+Conformément aux dispositions des articles L. 3231-5 et L. 3423-1 du code du travail et compte tenu du niveau de l'indice mensuel des prix à la consommation qui atteint 109,37 pour le mois de mars 2022, le taux du salaire minimum de croissance, tel qu'il résulte du décret n° 2021-1741 du 22 décembre 2021 portant relèvement du salaire minimum de croissance, est majoré de 2,65 % pour prendre effet au 1er mai 2022.
+""";
+    content_hash "sha256:8df05f9f1572b4ddb68428200236d7bfafbbd35d785656d133f4a874500ef769";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20220419_ART2")
+pub fragment ARR20220419_ART2 in ARR20220419_ED2022 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+En conséquence, à compter du 1er mai 2022, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 10,85 € l'heure ;2° A Mayotte, son montant est fixé à 8,19 € l'heure.
+""";
+    content_hash "sha256:f11f2ffabc194ca2a50c70b6297b9e7082c92499c8e4ef04a967310fe2f85a0d";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20220419_ART3")
+pub fragment ARR20220419_ART3 in ARR20220419_ED2022 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+A compter du 1er mai 2022, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 3,86 € en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:b7dc4498dfe3eff7c6d6fe43708e882fdc50cb33facb760ebeb482c6ff829aba";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20220419_ART4")
+pub fragment ARR20220419_ART4 in ARR20220419_ED2022 {
+    kind article;
+    locator "article/4";
+    text fr official """Article 4
+Le présent arrêté sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:f0b38a95d391c8c0ece5451c68e19a042fd4c40ca73b0b75e2dff2e861961940";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20220729_ART1")
+pub fragment ARR20220729_ART1 in ARR20220729_ED2022 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+Conformément aux dispositions des articles L. 3231-5 et L. 3423-1 du code du travail et compte tenu du niveau de l'indice mensuel des prix à la consommation qui atteint 111,57 pour le mois de juin 2022, le taux du salaire minimum de croissance, tel qu'il résulte de l'arrêté du 19 avril 2022 portant relèvement du salaire minimum de croissance, est majoré de 2,01 p. 100 pour prendre effet au 1er août 2022.
+""";
+    content_hash "sha256:fe93629879a6587373673052953aacefa0647dc7d44a989f2df1b6b5e2101d53";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20220729_ART2")
+pub fragment ARR20220729_ART2 in ARR20220729_ED2022 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+En conséquence, à compter du 1er août 2022, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 11,07 € l'heure ;2° A Mayotte, son montant est fixé à 8,35 € l'heure.
+""";
+    content_hash "sha256:b45334348e589a3654c614116f31ebdd14cea43183ebe480a4e435f03c84e830";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20220729_ART3")
+pub fragment ARR20220729_ART3 in ARR20220729_ED2022 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+A compter du 1er août 2022, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 3,94 € en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:c64ef8ad3d874b268b3f39c08a0ed4a8e3d99c5042ba6f84e05c7af754962c2b";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20220729_ART4")
+pub fragment ARR20220729_ART4 in ARR20220729_ED2022 {
+    kind article;
+    locator "article/4";
+    text fr official """Article 4
+Le présent arrêté sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:f0b38a95d391c8c0ece5451c68e19a042fd4c40ca73b0b75e2dff2e861961940";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20221608_ART1")
+pub fragment DEC20221608_ART1 in DEC20221608_ED2023 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+A compter du 1er janvier 2023, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 11,27 euros l'heure ;2° A Mayotte, son montant est fixé à 8,51 euros l'heure.
+""";
+    content_hash "sha256:31939ae865adb87300dbaa50d5afcd09243d896aa3bf9a428a194ff6ab3d140b";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20221608_ART2")
+pub fragment DEC20221608_ART2 in DEC20221608_ED2023 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+A compter du 1er janvier 2023, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 4,01 euros en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:ed30489ecb0715a9643f554224b575a88ce117622bd1561b73f8aaca201d689b";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20221608_ART3")
+pub fragment DEC20221608_ART3 in DEC20221608_ED2023 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+Pour l'application de l'article L. 3231-4 du code du travail, l'indice de référence est l'indice des prix à la consommation hors tabac, des ménages du premier quintile de la distribution des niveaux de vie du mois de novembre 2022 publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:5e584db0be0a1c2b8ba95233e57be4cf12cf055109ed18857737a13a56b15b42";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20221608_ART4")
+pub fragment DEC20221608_ART4 in DEC20221608_ED2023 {
+    kind article;
+    locator "article/4";
+    text fr official """Article 4
+La Première ministre, le ministre de l'économie et des finances et de la souveraineté industrielle et numérique, le ministre de l'intérieur et des outre-mer, le ministre du travail, du plein emploi et de l'insertion et le ministre de l'agriculture et de la souveraineté alimentaire sont responsables, chacun en ce qui le concerne, de l'application du présent décret, qui sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:c84546138a81e444d1ec24eb9217d83e043c8f6b8eabf126e40914af4f7a03c0";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20230426_ART1")
+pub fragment ARR20230426_ART1 in ARR20230426_ED2023 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+Conformément aux dispositions des articles L. 3231-5 et L. 3423-1 du code du travail et compte tenu du niveau de l'indice mensuel des prix à la consommation qui atteint 116,07 pour le mois de mars 2023, le taux du salaire minimum de croissance, tel qu'il résulte du décret n° 2022-1608 du 22 décembre 2022 portant relèvement du salaire minimum de croissance, est majoré de 2,22 % pour prendre effet au 1er mai 2023.
+""";
+    content_hash "sha256:d1f9e89858ed5e1f72c09471b14abbd35b71512743f1876531436c74f5b8ffbd";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20230426_ART2")
+pub fragment ARR20230426_ART2 in ARR20230426_ED2023 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+En conséquence, à compter du 1er mai 2023, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 11,52 € l'heure ;2° A Mayotte, son montant est fixé à 8,70 € l'heure.
+""";
+    content_hash "sha256:8714c46d9e5b8b7eaf377d86170a49fc04e757f8ca62bdcf3708bf0ede816cb7";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20230426_ART3")
+pub fragment ARR20230426_ART3 in ARR20230426_ED2023 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+A compter du 1er mai 2023, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 4,10 € en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:533307de3eb2f7e72b326f15ad83557d74c56e8376420017b17eff9cbdbf5df0";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20230426_ART4")
+pub fragment ARR20230426_ART4 in ARR20230426_ED2023 {
+    kind article;
+    locator "article/4";
+    text fr official """Article 4
+Le présent arrêté sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:f0b38a95d391c8c0ece5451c68e19a042fd4c40ca73b0b75e2dff2e861961940";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20231216_ART1")
+pub fragment DEC20231216_ART1 in DEC20231216_ED2024 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+A compter du 1er janvier 2024, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 11,65 euros l'heure ;2° A Mayotte, son montant est fixé à 8,80 euros l'heure.
+""";
+    content_hash "sha256:47b119164c736b51af4c43146354026fa325bca74a8b241201a7d599765b0ded";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20231216_ART2")
+pub fragment DEC20231216_ART2 in DEC20231216_ED2024 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+A compter du 1er janvier 2024, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 4,15 euros en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:d4bfaa0d57bb8fb5277634662b2e1a260fff57b314ef7aa695eab2ae5513318a";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20231216_ART3")
+pub fragment DEC20231216_ART3 in DEC20231216_ED2024 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+Pour l'application de l'article L. 3231-4 du code du travail, l'indice de référence est l'indice des prix à la consommation hors tabac des ménages du premier quintile de la distribution des niveaux de vie du mois de novembre 2023 publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:1bc4ad16180293fda410e4ac4dd1dcd371c00e40915061faa5f0c5c3898b8a90";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20231216_ART4")
+pub fragment DEC20231216_ART4 in DEC20231216_ED2024 {
+    kind article;
+    locator "article/4";
+    text fr official """Article 4
+La Première ministre, le ministre de l'économie, des finances et de la souveraineté industrielle et numérique, le ministre de l'intérieur et des outre-mer, le ministre du travail, du plein emploi et de l'insertion et le ministre de l'agriculture et de la souveraineté alimentaire sont responsables, chacun en ce qui le concerne, de l'application du présent décret, qui sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:de96e0b7b1b1f680701da4396c0ce27e27ce6f3775f5833c7998687c0fc8df89";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20240951_ART1")
+pub fragment DEC20240951_ART1 in DEC20240951_ED2024 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+A compter du 1er novembre 2024, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 11,88 euros l'heure ;2° A Mayotte, son montant est fixé à 8,98 euros l'heure.
+""";
+    content_hash "sha256:e255df2b3592ef3ac3ef689ae812c48cc6a0b0d0ede77fc61c9dfef6172abe70";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20240951_ART2")
+pub fragment DEC20240951_ART2 in DEC20240951_ED2024 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+A compter du 1er novembre 2024, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 4,22 euros en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:1fd146bd9140752509d02a6ce30c28b3a593d6cb912279f25a6187a714944205";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20240951_ART3")
+pub fragment DEC20240951_ART3 in DEC20240951_ED2024 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+Le Premier ministre, le ministre de l'économie, des finances et de l'industrie, la ministre de l'agriculture, de la souveraineté alimentaire et de la forêt, la ministre du travail et de l'emploi, le ministre auprès du Premier ministre, chargé des outre-mer, et le ministre auprès du Premier ministre, chargé du budget et des comptes publics, sont responsables, chacun en ce qui le concerne, de l'application du présent décret, qui sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:9f2960eaf719b9a6cd19134b8ac029dcaaa45e33fbc6db4bd59fe6b93a828327";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20251228_ART1")
+pub fragment DEC20251228_ART1 in DEC20251228_ED2026 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+A compter du 1er janvier 2026, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 12,02 euros l'heure ;2° A Mayotte, son montant est fixé à 9,33 euros l'heure.
+""";
+    content_hash "sha256:b515050543d2cbe47484d8ba0d31386627899a723f1dca6a0912eb045337ffa8";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20251228_ART2")
+pub fragment DEC20251228_ART2 in DEC20251228_ED2026 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+A compter du 1er janvier 2026, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 4,25 euros en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:c1b48c2de59a2bf69ebb15c0862e18f2ebc7093eb91b4bf95bbf6e2fd30770b6";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20251228_ART3")
+pub fragment DEC20251228_ART3 in DEC20251228_ED2026 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+Pour l'application de l'article L. 3231-4 du code du travail, l'indice de référence est l'indice des prix à la consommation hors tabac, des ménages du premier quintile de la distribution des niveaux de vie du mois de novembre 2025 publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:8624ad60bdeb6dff029133710040b243f47b70e7fede65d7b5b20d06e3b81842";
+}
+
+@id("urn:fr:corpus:clir:smic#DEC20251228_ART4")
+pub fragment DEC20251228_ART4 in DEC20251228_ED2026 {
+    kind article;
+    locator "article/4";
+    text fr official """Article 4
+Le Premier ministre, le ministre du travail et des solidarités, le ministre de l'économie, des finances et de la souveraineté industrielle, énergétique et numérique, la ministre de l'agriculture, de l'agro-alimentaire et de la souveraineté alimentaire et la ministre des outre-mer sont responsables, chacun en ce qui le concerne, de l'application du présent décret, qui sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:26cce8048a42bcdf4aaabfad605055d9f7da04f3a4b48da49fd770a2c28ba59c";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20260522_ART1")
+pub fragment ARR20260522_ART1 in ARR20260522_ED2026 {
+    kind article;
+    locator "article/1";
+    text fr official """Article 1
+A compter du 1er juin 2026, pour les catégories de travailleurs mentionnés à l'article L. 2211-1 du code du travail, le montant du salaire minimum de croissance est relevé dans les conditions ci-après :1° En métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon, son montant est porté à 12,31 € l'heure ;2° A Mayotte, son montant est fixé à 9,56 € l'heure.
+""";
+    content_hash "sha256:5de34c860eb608b35122541c3a5faecb8ccf716f60052314f031a76a252e4c77";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20260522_ART2")
+pub fragment ARR20260522_ART2 in ARR20260522_ED2026 {
+    kind article;
+    locator "article/2";
+    text fr official """Article 2
+A compter du 1er juin 2026, le montant du minimum garanti prévu à l'article L. 3231-12 du code du travail est fixé à 4,35 € en métropole, dans les collectivités régies par l'article 73 de la Constitution, à Saint-Barthélemy, à Saint-Martin et à Saint-Pierre-et-Miquelon.
+""";
+    content_hash "sha256:cee323a3cc59a4cd4e6826b123552b19635e48ddf1df0ab921ad16216e4b6959";
+}
+
+@id("urn:fr:corpus:clir:smic#ARR20260522_ART3")
+pub fragment ARR20260522_ART3 in ARR20260522_ED2026 {
+    kind article;
+    locator "article/3";
+    text fr official """Article 3
+Le présent arrêté sera publié au Journal officiel de la République française.
+""";
+    content_hash "sha256:3842b261ba5703c59df6cc25d3424cac6eef57a1fa68091644de1eeea32b7821";
+}
+
+// END GENERATED FR-SMIC FRAGMENTS

@@ -1,0 +1,17 @@
+// Back in compliance after a four-month suspension: only the last
+// three months are repaid (L.262-37, VI).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-reverses-3-mois" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-09-15T12:00:00Z; knowledge_time @2025-09-15T12:00:00Z; legal_time @2025-09-15; timezone "Europe/Paris"; }
+        assert "rev3-01": mise_en_conformite(entity_ref("urn:fr:rsa:case:reverses-3-mois")) { origin case_input; }
+        assert "rev3-02": suspension_duree_mois(entity_ref("urn:fr:rsa:case:reverses-3-mois"), 4) { origin case_input; }
+    }
+    evaluate truth(sommes_reverses_3mois(entity_ref("urn:fr:rsa:case:reverses-3-mois"), 3));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

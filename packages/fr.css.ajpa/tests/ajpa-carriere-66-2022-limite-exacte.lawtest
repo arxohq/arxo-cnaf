@@ -1,0 +1,19 @@
+// 66-day career cap exactly at the limit in the 2022 edition: 66
+// days recorded in 2022 — within the ceiling (CSS_ED2022_01 carries
+// the 2022 wording LEGIARTI000044628262 with the career sentence).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-carriere-66-2022-limite-exacte" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "ajpa-c22-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-c22"), entity_ref("urn:fr:css:ajpa:case:aide-c22")) { origin case_input; }
+        assert "ajpa-c22-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-c22")) { origin adjudicated; }
+        assert "ajpa-c22-03": jours_ajpa_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-c22"), 66) { origin case_input; }
+    }
+    evaluate truth(ajpa_dans_limite_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-c22")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,35 @@
+// Reform formula, AEEH child: one dependent child opening the L. 541-1
+// benefit takes the next-lower rate (two-children 0.0516 instead of
+// 0.0619); part b = 650 x (1 - 3000 x 0.0516 / 4.85) = 442.53625;
+// total 642.54.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-formule-aeeh" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "formule-aeeh-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), entity_ref("urn:fr:pf-cmg:child:aeeh"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "formule-aeeh-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:formule-aeeh")) { origin case_input; }
+        assert "formule-aeeh-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), entity_ref("urn:fr:pf-cmg:child:aeeh")) { origin case_input; }
+        assert "formule-aeeh-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:aeeh"), 2) { origin case_input; }
+        assert "formule-aeeh-05": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), 1) { origin case_input; }
+        assert "formule-aeeh-06": enfant_aeeh(entity_ref("urn:fr:pf-cmg:child:aeeh")) { origin case_input; }
+        assert "formule-aeeh-07": facteur_smic(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), 1.0) { origin case_input; }
+        assert "formule-aeeh-08": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), entity_ref("urn:fr:pf-cmg:child:aeeh"), 600 EUR) { origin case_input; }
+        assert "formule-aeeh-09": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), entity_ref("urn:fr:pf-cmg:child:aeeh"), 50 EUR) { origin case_input; }
+        assert "formule-aeeh-10": heures_remunerees(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), entity_ref("urn:fr:pf-cmg:child:aeeh"), 130.0) { origin case_input; }
+        assert "formule-aeeh-11": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), entity_ref("urn:fr:pf-cmg:child:aeeh"), 200 EUR) { origin case_input; }
+        assert "formule-aeeh-12": cout_reference_retenu(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), entity_ref("urn:fr:pf-cmg:child:aeeh"), 4.85 EUR) { origin case_input; }
+        assert "formule-aeeh-13": montant_forfaitaire_isole(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), 700 EUR) { origin case_input; }
+        assert "formule-aeeh-14": forfait_logement(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), 100 EUR) { origin case_input; }
+        assert "formule-aeeh-15": revenu_mensuel_brut(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), 3000 EUR) { origin case_input; }
+    }
+    // The rate itself is not asserted: bare Decimal literals are not
+    // exactly expressible in scenario form (D-11); the total below
+    // discriminates the rate.
+    evaluate truth(montant_cmg_du(entity_ref("urn:fr:pf-cmg:case:formule-aeeh"), entity_ref("urn:fr:pf-cmg:child:aeeh"), 642.54 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

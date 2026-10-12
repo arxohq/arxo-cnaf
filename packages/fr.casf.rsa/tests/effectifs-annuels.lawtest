@@ -1,0 +1,19 @@
+// Annual headcounts, current wording: the national fund transmits
+// the 31 December headcounts and characteristics before the end of
+// the third quarter (D. 262-97 in force). Legal time inside the
+// [year end, year end + 9 months] duty window.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-effectifs-annuels" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-04-15T12:00:00Z; knowledge_time @2025-04-15T12:00:00Z; legal_time @2025-04-15; timezone "Europe/Paris"; }
+        assert "ann-01": est_caisse_nationale(entity_ref("urn:fr:rsa:org:cnaf")) { origin case_input; }
+        assert "ann-02": est_service_statistique(entity_ref("urn:fr:rsa:org:drees")) { origin case_input; }
+        assert "ann-03": annee_donnees_fin(entity_ref("urn:fr:rsa:dept:nord"), @2024-12-31) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreEffectifsAnnuels, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

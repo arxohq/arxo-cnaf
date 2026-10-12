@@ -1,0 +1,16 @@
+// Employed by the aided person (CASF L. 232-7 / L. 245-12 para. 2):
+// the allowance is not due — refusal recorded on the beneficiary.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-exclusion-salarie-aidant" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-es-01": employe_par_aide(entity_ref("urn:fr:css:ajpa:case:aidant-es"), entity_ref("urn:fr:css:ajpa:case:aide-es")) { origin case_input; }
+    }
+    evaluate truth(ajpa_cumul_refuse(entity_ref("urn:fr:css:ajpa:case:aidant-es")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

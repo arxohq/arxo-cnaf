@@ -1,0 +1,34 @@
+// F05-01 monthly overflow: 23 March days against the 22 maximum.
+// The envelope qualifies (100 cumulative days, 1 recorded year), so the
+// monthly gate alone blocks the amount: no 23 × 60.00 = 1380.00 output
+// (source monthly count cannot exceed 22, maximum 1320.00). The 1380
+// query stays NEITHER — no unqualified amount is constructed.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-montant-mensuel-depassement" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-mqmd-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd")) { origin adjudicated; }
+        assert "ajpp-mqmd-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd")) { origin adjudicated; }
+        assert "ajpp-mqmd-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-mqmd"), entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd")) { origin case_input; }
+        assert "ajpp-mqmd-04": jours_ajpp_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd"), @2024-03-01, 23) { origin case_input; }
+        assert "ajpp-mqmd-05": plafond_mensuel_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd"), 22) { origin case_input; }
+        assert "ajpp-mqmd-06": montant_journalier_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd"), 60.00 EUR) { origin case_input; }
+        assert "ajpp-mqmd-07": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd"), 100) { origin case_input; }
+        assert "ajpp-mqmd-08": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd"), MALADIE, 1) { origin case_input; }
+    }
+    evaluate truth(mensuel_dans_limite(entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd"), @2024-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(enveloppe_ajpp_qualifiee(entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mqmd"), @2024-03-01, 1380.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

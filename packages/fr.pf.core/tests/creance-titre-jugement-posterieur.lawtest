@@ -1,0 +1,21 @@
+// Title deprived of effect by a later judgment: full L. 582-2 chain, title delivered 2026-01-15, enforceable judgment suppressing or modifying the contribution on 2026-05-20 - title without effect (L. 582-2, PC-R08-03).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-titre-jugement-posterieur" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "creance-titre-jugement-posterieur-01": demande_conjointe_parents_separes(entity_ref("urn:fr:pf:case:creance-jugpost")) { origin case_input; }
+        assert "creance-titre-jugement-posterieur-02": attestation_absence_creance(entity_ref("urn:fr:pf:case:creance-jugpost")) { origin case_input; }
+        assert "creance-titre-jugement-posterieur-03": attestation_absence_demarche(entity_ref("urn:fr:pf:case:creance-jugpost")) { origin case_input; }
+        assert "creance-titre-jugement-posterieur-04": contribution_seuil_atteint(entity_ref("urn:fr:pf:case:creance-jugpost")) { origin case_input; }
+        assert "creance-titre-jugement-posterieur-05": infos_contribution_precisees(entity_ref("urn:fr:pf:case:creance-jugpost")) { origin case_input; }
+        assert "creance-titre-jugement-posterieur-06": titre_executoire_delivre_le(entity_ref("urn:fr:pf:case:creance-jugpost"), @2026-01-15) { origin case_input; }
+        assert "creance-titre-jugement-posterieur-07": decision_executoire_contribution(entity_ref("urn:fr:pf:case:creance-jugpost"), @2026-05-20) { origin case_input; }
+    }
+    evaluate truth(titre_executoire_delivre(entity_ref("urn:fr:pf:case:creance-jugpost")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,79 @@
+// Death extension (R. 541-1 al. 5 in fine + R. 541-4 V).
+//
+// DEONTIC MAP: computation only — the prolongation end date and the
+// monthly prolongation amount are institutional derivations; payment
+// stays D1. Both wordings enter with decree 2022-85 (2022-01-31):
+// the R. 541-1 death sentence and R. 541-4 section V exist in no pinned
+// predecessor, hence effective [@2022-01-31, infinity) and no PRE2022
+// anchors. The end date is general (R. 541-4 V); the amount branches
+// («ce versement», R. 541-1 al. 5) conclude only for the L. 541-1 para. 4
+// leave/suspension periods paid annually in one go
+// (periodes_conges_internat): no branch concludes on month amounts
+// alone. No max() term exists for Money: the «death month, or the
+// previous month if higher» rule is two disjoint comparison branches
+// (pf-af forfait-complement pattern).
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+use self::{
+    CSS_R541_1,
+    CSS_R541_1_ED2026_04,
+    CSS_R541_4,
+    CSS_R541_4_PRE2026,
+    date_fin_prolongation_deces,
+    deces_enfant,
+    montant_mois_deces,
+    montant_mois_precedent,
+    montant_prolongation_deces,
+    periodes_conges_internat,
+};
+
+deadline policy AEEH_PROLONGATION {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+@source(
+    CSS_R541_1,
+    CSS_R541_1_ED2026_04,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule DateFinProlongationDeces(e: fr.pf.core::Enfant, deces: Date) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "versement jusqu'au dernier jour du troisième mois civil suivant le décès (R. 541-1 al. 5, R. 541-4 V)";
+    label en unofficial "payment until the last day of the third civil month after death (R. 541-1 para. 5, R. 541-4 V)";
+    when deces_enfant(e, deces);
+    then date_fin_prolongation_deces(e, month_end_of(add_calendar_period(deces, 3 calendar_month)));
+}
+
+@source(
+    CSS_R541_1,
+    CSS_R541_1_ED2026_04,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule MontantProlongationMoisDeces(e: fr.pf.core::Enfant, mois_deces: Money, mois_precedent: Money) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "prolongation au montant du mois de décès, périodes L. 541-1 al. 4 (R. 541-1 al. 5)";
+    label en unofficial "prolongation at the death-month amount, L. 541-1 para. 4 periods (R. 541-1 para. 5)";
+    when montant_mois_deces(e, mois_deces) and montant_mois_precedent(e, mois_precedent)
+        and mois_deces >= mois_precedent and periodes_conges_internat(e);
+    then montant_prolongation_deces(e, mois_deces);
+}
+
+@source(
+    CSS_R541_1,
+    CSS_R541_1_ED2026_04,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule MontantProlongationMoisPrecedent(e: fr.pf.core::Enfant, mois_deces: Money, mois_precedent: Money) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "prolongation au montant du mois précédent, supérieur au mois de décès, périodes L. 541-1 al. 4 (R. 541-1 al. 5)";
+    label en unofficial "prolongation at the previous-month amount, higher than the death month, L. 541-1 para. 4 periods (R. 541-1 para. 5)";
+    when montant_mois_deces(e, mois_deces) and montant_mois_precedent(e, mois_precedent)
+        and mois_precedent > mois_deces and periodes_conges_internat(e);
+    then montant_prolongation_deces(e, mois_precedent);
+}

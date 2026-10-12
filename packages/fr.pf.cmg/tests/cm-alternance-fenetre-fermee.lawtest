@@ -1,0 +1,20 @@
+// Shared residence before December 2025: the same alternance setup
+// opens no allocataire quality while the D. 531-18-2 window is closed.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-alternance-fenetre-fermee" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "altff-01": residence_alternee_effective(entity_ref("urn:fr:pf-cmg:child:altff")) { origin case_input; }
+        assert "altff-02": demande_cmg_parent(entity_ref("urn:fr:pf-cmg:parent:pere-altff"), entity_ref("urn:fr:pf-cmg:child:altff")) { origin case_input; }
+        assert "altff-03": demande_cmg_parent(entity_ref("urn:fr:pf-cmg:parent:mere-altff"), entity_ref("urn:fr:pf-cmg:child:altff")) { origin case_input; }
+        assert "altff-04": eligible_af_partage(entity_ref("urn:fr:pf-cmg:parent:pere-altff")) { origin case_input; }
+        assert "altff-05": choix_partage_af(entity_ref("urn:fr:pf-cmg:parent:pere-altff"), entity_ref("urn:fr:pf-cmg:parent:mere-altff")) { origin case_input; }
+    }
+    evaluate truth(parent_allocataire_alternance(entity_ref("urn:fr:pf-cmg:parent:pere-altff"), entity_ref("urn:fr:pf-cmg:child:altff")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

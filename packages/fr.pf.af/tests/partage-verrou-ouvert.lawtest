@@ -1,0 +1,17 @@
+// One-year lock open: arrangements chosen 2022-06-01 can be
+// challenged in June 2023 (choice + one year reached, VERROU_UN_AN).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-partage-verrou-ouvert" {
+    given {
+        context { deadline_policy VERROU_UN_AN; decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "verr-01": date_choix_modalite(entity_ref("urn:fr:pf-af:parent:pere-v"), @2022-06-01) { origin case_input; }
+        assert "verr-02": mois_droit(@2023-06-01) { origin case_input; }
+    }
+    evaluate truth(changement_modalite_possible(entity_ref("urn:fr:pf-af:parent:pere-v")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

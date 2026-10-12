@@ -1,0 +1,25 @@
+// Part-time month at the computed rate: 12.5 days not worked at
+// the formula rate 56.28 — 703.50 (D. 544-6).
+// F05-01: envelope history qualifies the amount (80 days, 1 year);
+// no monthly gate for part-time (B-PFAJPP-DEMI-PLAFOND).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-temps-partiel-calcule" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-tp-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-tp")) { origin adjudicated; }
+        assert "ajpp-tp-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-tp")) { origin adjudicated; }
+        assert "ajpp-tp-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-tp"), entity_ref("urn:fr:pf-ajpp:case:enfant-tp")) { origin case_input; }
+        assert "ajpp-tp-04": jours_non_travailles_temps_partiel(entity_ref("urn:fr:pf-ajpp:case:enfant-tp"), @2024-03-01, 12.5) { origin case_input; }
+        assert "ajpp-tp-05": smic_horaire_net_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-tp"), 8.00 EUR) { origin case_input; }
+        assert "ajpp-tp-06": taux_crds_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-tp"), 0.005) { origin case_input; }
+        assert "ajpp-tp-07": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-tp"), 80) { origin case_input; }
+        assert "ajpp-tp-08": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-tp"), MALADIE, 1) { origin case_input; }
+    }
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-tp"), @2024-03-01, 703.50 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

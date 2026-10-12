@@ -1,0 +1,16 @@
+// ASF advance kept by the creditor: advance on an unpaid claim, maintien applies - not recovered from the debtor, kept by the creditor parent (L. 552-7 phr. 3, PC-R07-30 creditor identity).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-asf-avance-acquise" {
+    given {
+        context { decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "asf-avance-acquise-01": asf_avance_creance(entity_ref("urn:fr:pf:case:creancier"), entity_ref("urn:fr:pf:case:enfant-decede")) { origin case_input; }
+        assert "asf-avance-acquise-02": maintien_applicable(entity_ref("urn:fr:pf:case:enfant-decede")) { origin case_input; }
+    }
+    evaluate truth(asf_avance_non_recouvree(entity_ref("urn:fr:pf:case:creancier"), entity_ref("urn:fr:pf:case:enfant-decede")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

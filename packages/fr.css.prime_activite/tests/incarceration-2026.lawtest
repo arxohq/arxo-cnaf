@@ -1,0 +1,26 @@
+// Imprisonment past the second review, qualifying household (spouse,
+// PACS partner, concubin or dependent): no suspension (al. 1 is
+// no-family only), rights of others re-examined without the payee at
+// the end of the period (R. 846-8 al. 2; PA-R6-01: exact statutory
+// union, not generic co-residence).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-incarceration-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": incarceration_en_cours(entity_ref("urn:fr:ppa:case:incarceration-2026")) { origin case_input; }
+        assert "ppa-02": deuxieme_reexamen_depasse(entity_ref("urn:fr:ppa:case:incarceration-2026")) { origin case_input; }
+        assert "ppa-03": foyer_avec_conjoint_pacs_concubin_ou_charge(entity_ref("urn:fr:ppa:case:incarceration-2026")) { origin case_input; }
+        assert "ppa-04": sans_majo_isolee_avec_enfant(entity_ref("urn:fr:ppa:case:incarceration-2026")) { origin case_input; }
+    }
+    evaluate truth(prime_suspendue_incarceration(entity_ref("urn:fr:ppa:case:incarceration-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droits_reexamines_sans_beneficiaire(entity_ref("urn:fr:ppa:case:incarceration-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

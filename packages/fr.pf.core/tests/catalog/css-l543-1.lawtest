@@ -1,0 +1,18 @@
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+// Generated witness scenarios of the question catalog (DECISION-0190):
+// the world fulfils the rule premises, the query asks its conclusion.
+// Built by corpus/tools/questions_catalog/build_catalog.py from the package CLIR;
+// hand edits — only together with the catalog.
+
+// 
+test "CATALOG-ARSSCOLARITE" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": inscription_scolaire(entity_ref("urn:law:catalog:arsscolarite:v0")) { origin case_input; }
+    }
+    evaluate truth(ars_condition_scolarite(entity_ref("urn:law:catalog:arsscolarite:v0")));
+    expect truth_status == TRUE_ONLY;
+}

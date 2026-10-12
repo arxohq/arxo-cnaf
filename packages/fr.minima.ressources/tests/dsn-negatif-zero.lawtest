@@ -1,0 +1,35 @@
+// Negative DSN month is zeroed (R.262-7, III 1°): pro amounts
+// 600.00, -300.00, 600.00 average to (600 + 0 + 600) / 3 = 400.00.
+// MF 600.00, no other blocks: intermediate 200.00 each, due 200.00.
+// (The engine keeps Money division exact: only divisible totals.)
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-dsn-negatif-zero" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "dsnneg-01": foyer_du_cas(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero")) { origin case_input; }
+        assert "dsnneg-02": mois_demande(@2025-06-01) { origin case_input; }
+        assert "dsnneg-03": mois_reference(@2025-02-01, @2025-03-01, @2025-04-01) { origin case_input; }
+        assert "dsnneg-04": mf_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-02-01, 600.00 EUR) { origin case_input; }
+        assert "dsnneg-05": mf_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-03-01, 600.00 EUR) { origin case_input; }
+        assert "dsnneg-06": mf_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-04-01, 600.00 EUR) { origin case_input; }
+        assert "dsnneg-07": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-02-01, 600.00 EUR) { origin case_input; }
+        assert "dsnneg-08": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-03-01, -300.00 EUR) { origin case_input; }
+        assert "dsnneg-09": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-04-01, 600.00 EUR) { origin case_input; }
+        assert "dsnneg-10": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "dsnneg-11": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "dsnneg-12": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-04-01, 0 EUR) { origin case_input; }
+        assert "dsnneg-13": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "dsnneg-14": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "dsnneg-15": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-04-01, 0 EUR) { origin case_input; }
+        assert "dsnneg-16": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "dsnneg-17": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "dsnneg-18": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), @2025-04-01, 0 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_du_trimestre(entity_ref("urn:fr:minima-ressources:case:dsn-negatif-zero"), 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

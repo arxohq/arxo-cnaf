@@ -1,0 +1,342 @@
+// PreParE non-cumul rules (L. 532-2 I-V): 2026 text plus the 2018
+// predecessor. D72 transfer from income-PF: the existing public owner
+// (this package) is kept; the 2026 rules gate on the NOTA
+// birth/adoption cohort (children born or adopted from 01.01.2026,
+// plus children born before whose birth was expected from that date),
+// the predecessor rules on the pre-2026 cohort; the predecessor rules
+// stay effective past 2025-12-31 for that cohort (PC-A06: the 2026 text
+// is cohort-gated, so the 2018 text continues to govern earlier
+// children). No blanket current-window retroactivity: each cohort fires
+// only under its own text. I, III, IV and V are word-identical across
+// the two versions (verified on pinned bytes). II differs in two
+// sub-items only: 2026 adds the congé supplémentaire de naissance to
+// 1° and L. 623-2 to 2° (verified: dump XML LEGIARTI000037062512
+// against the 2026 pin LEGIARTI000053279235). The shared 09a input
+// percoit_indemnite_concurrente covers the 2018-listed items for both
+// cohorts; the two 2026-only items have dedicated relations here, and
+// the predecessor II rule covers pre-2026 children (it also fills
+// pre-2025-12-31 evaluations the 09a 2026 rule cannot reach).
+// Post-2025 overlap on the shared 09a head cumul_prepare_indemnite_
+// refuse is consistent: same conclusion from either text. Input
+// contract: the caller maps congé supplémentaire de naissance and
+// L. 623-2 indemnities to the dedicated relations only, never to
+// percoit_indemnite_concurrente (recorded as B-PFCORE-L5322-II-MAP).
+//
+// DEONTIC MAP: non-cumul ("n'est pas cumulable") = institutional
+// refusal statuses, symmetric with the 09a non-cumul block; permitted
+// cumuls (III mid-right, IV, V) = institutional admission statuses.
+// No personal duties; the L. 531-4 VI option mechanics belong to
+// fr.pf.paje and arrive as input facts.
+
+// D-42 (12.10.2026): ANCHORING OF THE PREDECESSOR RULES (E-0095, SPEC 92.3).
+// A node is heard only while one of its dating anchors sits in an edition in
+// force on legal_time; anchored to the 2018 fragments alone (last edition
+// CSS_ED2025_09) the six *Prev rules were excluded at every date from
+// 2025-12-31 (EDITION_NOT_APPLICABLE), and the survival stated above never
+// executed: cumul-*-prev-2026 read NEITHER. The 2018 text keeps governing the
+// pre-2026 cohort because of the NOTA of the 2026 article (cohort gate), so
+// the *Prev rules now also anchor the 2026 L. 532-2 fragments, as the 2026
+// rules do; the cohort guard cohorte_avant_2026 still selects the text, and
+// no 2018 rule fires for a 2026-cohort child.
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_L532_2,
+    CSS_L532_2_CSS_ED2026_01,
+    CSS_L532_2_CSS_ED2026_04,
+    CSS_L532_2_CSS_ED2026_06,
+    CSS_L532_2_PREV,
+    CSS_L532_2_PREV_CSS_ED2021_05,
+    CSS_L532_2_PREV_CSS_ED2021_11,
+    CSS_L532_2_PREV_CSS_ED2021_12,
+    CSS_L532_2_PREV_CSS_ED2022_01,
+    CSS_L532_2_PREV_CSS_ED2022_02,
+    CSS_L532_2_PREV_CSS_ED2022_03,
+    CSS_L532_2_PREV_CSS_ED2022_09,
+    CSS_L532_2_PREV_CSS_ED2023_07,
+    CSS_L532_2_PREV_CSS_ED2024_01,
+    CSS_L532_2_PREV_CSS_ED2025_02,
+    CSS_L532_2_PREV_CSS_ED2025_09,
+    Enfant,
+    Personne,
+    cumul_prepare_indemnite_refuse,
+    demande_complement_familial,
+    percoit_indemnite_concurrente,
+};
+
+relation beneficie_prepare(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "bénéficie de la PreParE au titre de l'enfant, tout taux (L. 532-2 I/IV)";
+    label en unofficial "receives PreParE for the child, any rate (L. 532-2 I/IV)";
+}
+
+relation beneficie_prepare_taux_plein(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "bénéficie de la PreParE à taux plein au titre de l'enfant (L. 532-2 V)";
+    label en unofficial "receives full-rate PreParE for the child (L. 532-2 V)";
+}
+
+relation beneficie_prepare_taux_partiel(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "bénéficie de la PreParE à taux partiel au titre de l'enfant (L. 532-2 III)";
+    label en unofficial "receives partial-rate PreParE for the child (L. 532-2 III)";
+}
+
+relation cohorte_2026(e: Enfant) kind empirical {
+    label fr official "enfant né ou adopté à compter du 01.01.2026, ou né avant mais attendu à compter de cette date (NOTA L. 532-2)";
+    label en unofficial "child born or adopted from 01.01.2026, or born before but due from that date (L. 532-2 NOTA)";
+}
+
+relation cohorte_avant_2026(e: Enfant) kind empirical {
+    label fr official "enfant né ou adopté avant le 01.01.2026 hors cohorte NOTA (L. 532-2 réd. 2018)";
+    label en unofficial "child born or adopted before 01.01.2026 outside the NOTA cohort (L. 532-2 2018 text)";
+}
+
+relation indemnites_concurrentes_1_5(p: Personne) kind empirical {
+    label fr official "perçoit des indemnisations ou allocations 1° à 5° du II (L. 532-2 III)";
+    label en unofficial "receives II 1 to 5 indemnities or allowances (L. 532-2 III)";
+}
+
+relation indemnites_temps_partiel_1_4(p: Personne) kind empirical {
+    label fr official "perçoit des indemnisations 1° à 4° au titre d'une activité à temps partiel (L. 532-2 III)";
+    label en unofficial "receives 1 to 4 indemnities for part-time work (L. 532-2 III)";
+}
+
+relation prepare_ouverture(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "ouverture du droit PreParE au titre de l'enfant (L. 532-2 III/IV)";
+    label en unofficial "PreParE right opening for the child (L. 532-2 III/IV)";
+}
+
+relation prepare_en_cours(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "droit PreParE en cours de versement au titre de l'enfant (L. 532-2 III)";
+    label en unofficial "PreParE right being paid for the child (L. 532-2 III)";
+}
+
+relation un_seul_enfant_charge(p: Personne) kind empirical {
+    label fr official "n'a qu'un seul enfant à charge (L. 532-2 IV)";
+    label en unofficial "has only one dependent child (L. 532-2 IV)";
+}
+
+relation indemnites_1_3(p: Personne) kind empirical {
+    label fr official "perçoit des indemnisations 1° à 3° du II (L. 532-2 IV/V)";
+    label en unofficial "receives II 1 to 3 indemnities (L. 532-2 IV/V)";
+}
+
+relation fin_indemnites_mois(p: Personne) kind empirical {
+    label fr official "les indemnisations 1° à 3° cessent au cours du mois (L. 532-2 V)";
+    label en unofficial "1 to 3 indemnities ending during the month (L. 532-2 V)";
+}
+
+relation option_l5314_vi(p: Personne) kind empirical {
+    label fr official "usage de l'option du VI de L. 531-4 (mécanique: fr.pf.paje — L. 532-2 V)";
+    label en unofficial "L. 531-4 VI option taken (mechanics: fr.pf.paje - L. 532-2 V)";
+}
+
+relation percoit_conge_supplementaire_naissance(p: Personne) kind empirical {
+    label fr official "perçoit l'indemnisation du congé supplémentaire de naissance, 1° du II réd. 2026 uniquement (L. 532-2 II)";
+    label en unofficial "receives the supplementary birth-leave indemnity, 2026 II 1 only (L. 532-2 II)";
+}
+
+relation percoit_indemnite_l623_2(p: Personne) kind empirical {
+    label fr official "perçoit l'indemnité prévue à l'article L. 623-2, 2° du II réd. 2026 uniquement (L. 532-2 II)";
+    label en unofficial "receives the L. 623-2 indemnity, 2026 II 2 only (L. 532-2 II)";
+}
+
+relation cumul_prepare_cf_refuse(p: Personne, e: Enfant) kind institutional {
+    key(p, e);
+    label fr official "la PreParE n'est pas cumulable avec le complément familial (L. 532-2 I)";
+    label en unofficial "PreParE cannot be combined with the family complement (L. 532-2 I)";
+}
+
+relation cumul_prepare_partiel_ouverture_refuse(p: Personne, e: Enfant) kind institutional {
+    key(p, e);
+    label fr official "PreParE à taux partiel non cumulable à l'ouverture avec les 1° à 5° (L. 532-2 III)";
+    label en unofficial "partial-rate PreParE not combinable at opening with 1 to 5 (L. 532-2 III)";
+}
+
+relation cumul_prepare_partiel_encours_admis(p: Personne, e: Enfant) kind institutional {
+    key(p, e);
+    label fr official "PreParE à taux partiel cumulable en cours de droit avec les 1° à 4° du temps partiel (L. 532-2 III)";
+    label en unofficial "partial-rate PreParE combinable mid-right with part-time 1 to 4 (L. 532-2 III)";
+}
+
+relation cumul_prepare_enfant_unique_admis(p: Personne, e: Enfant) kind institutional {
+    key(p, e);
+    label fr official "PreParE cumulable le mois d'ouverture avec les 1° à 3° à enfant unique (L. 532-2 IV)";
+    label en unofficial "PreParE combinable in the opening month with 1 to 3 for a single child (L. 532-2 IV)";
+}
+
+relation cumul_prepare_option_admis(p: Personne, e: Enfant) kind institutional {
+    key(p, e);
+    label fr official "PreParE à taux plein cumulable le mois de fin des indemnisations sous option L. 531-4 VI (L. 532-2 V)";
+    label en unofficial "full-rate PreParE combinable in the indemnity-ending month under the L. 531-4 VI option (L. 532-2 V)";
+}
+
+@source(CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule NonCumulPrepareCf2026(p: Personne, e: Enfant) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "Cohorte 2026: la PreParE n'est pas cumulable avec le complément familial";
+    label en unofficial "2026 cohort: PreParE cannot be combined with the family complement";
+    when beneficie_prepare(p, e) and demande_complement_familial(p) and cohorte_2026(e);
+    then cumul_prepare_cf_refuse(p, e);
+}
+
+@source(CSS_L532_2_PREV, CSS_L532_2_PREV_CSS_ED2021_05, CSS_L532_2_PREV_CSS_ED2021_11,
+        CSS_L532_2_PREV_CSS_ED2021_12, CSS_L532_2_PREV_CSS_ED2022_01,
+        CSS_L532_2_PREV_CSS_ED2022_02, CSS_L532_2_PREV_CSS_ED2022_03,
+        CSS_L532_2_PREV_CSS_ED2022_09, CSS_L532_2_PREV_CSS_ED2023_07,
+        CSS_L532_2_PREV_CSS_ED2024_01, CSS_L532_2_PREV_CSS_ED2025_02,
+        CSS_L532_2_PREV_CSS_ED2025_09,
+        CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule NonCumulPrepareCfPrev(p: Personne, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Cohorte antérieure: la PreParE n'est pas cumulable avec le complément familial (réd. 2018)";
+    label en unofficial "Earlier cohort: PreParE cannot be combined with the family complement (2018 text)";
+    when beneficie_prepare(p, e) and demande_complement_familial(p) and cohorte_avant_2026(e);
+    then cumul_prepare_cf_refuse(p, e);
+}
+
+@source(CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule NonCumulPreparePartielOuverture2026(p: Personne, e: Enfant) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "Cohorte 2026: partiel non cumulable à l'ouverture avec les 1° à 5°";
+    label en unofficial "2026 cohort: partial rate not combinable at opening with 1 to 5";
+    when beneficie_prepare_taux_partiel(p, e) and prepare_ouverture(p, e)
+        and indemnites_concurrentes_1_5(p) and cohorte_2026(e);
+    then cumul_prepare_partiel_ouverture_refuse(p, e);
+}
+
+@source(CSS_L532_2_PREV, CSS_L532_2_PREV_CSS_ED2021_05, CSS_L532_2_PREV_CSS_ED2021_11,
+        CSS_L532_2_PREV_CSS_ED2021_12, CSS_L532_2_PREV_CSS_ED2022_01,
+        CSS_L532_2_PREV_CSS_ED2022_02, CSS_L532_2_PREV_CSS_ED2022_03,
+        CSS_L532_2_PREV_CSS_ED2022_09, CSS_L532_2_PREV_CSS_ED2023_07,
+        CSS_L532_2_PREV_CSS_ED2024_01, CSS_L532_2_PREV_CSS_ED2025_02,
+        CSS_L532_2_PREV_CSS_ED2025_09,
+        CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule NonCumulPreparePartielOuverturePrev(p: Personne, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Cohorte antérieure: partiel non cumulable à l'ouverture avec les 1° à 5° (réd. 2018)";
+    label en unofficial "Earlier cohort: partial rate not combinable at opening with 1 to 5 (2018 text)";
+    when beneficie_prepare_taux_partiel(p, e) and prepare_ouverture(p, e)
+        and indemnites_concurrentes_1_5(p) and cohorte_avant_2026(e);
+    then cumul_prepare_partiel_ouverture_refuse(p, e);
+}
+
+@source(CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule CumulPreparePartielEncours2026(p: Personne, e: Enfant) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "Cohorte 2026: partiel cumulable en cours de droit avec les 1° à 4° du temps partiel";
+    label en unofficial "2026 cohort: partial rate combinable mid-right with part-time 1 to 4";
+    when beneficie_prepare_taux_partiel(p, e) and prepare_en_cours(p, e)
+        and indemnites_temps_partiel_1_4(p) and cohorte_2026(e);
+    then cumul_prepare_partiel_encours_admis(p, e);
+}
+
+@source(CSS_L532_2_PREV, CSS_L532_2_PREV_CSS_ED2021_05, CSS_L532_2_PREV_CSS_ED2021_11,
+        CSS_L532_2_PREV_CSS_ED2021_12, CSS_L532_2_PREV_CSS_ED2022_01,
+        CSS_L532_2_PREV_CSS_ED2022_02, CSS_L532_2_PREV_CSS_ED2022_03,
+        CSS_L532_2_PREV_CSS_ED2022_09, CSS_L532_2_PREV_CSS_ED2023_07,
+        CSS_L532_2_PREV_CSS_ED2024_01, CSS_L532_2_PREV_CSS_ED2025_02,
+        CSS_L532_2_PREV_CSS_ED2025_09,
+        CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule CumulPreparePartielEncoursPrev(p: Personne, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Cohorte antérieure: partiel cumulable en cours avec les 1° à 4° du temps partiel (réd. 2018)";
+    label en unofficial "Earlier cohort: partial rate combinable mid-right with part-time 1 to 4 (2018 text)";
+    when beneficie_prepare_taux_partiel(p, e) and prepare_en_cours(p, e)
+        and indemnites_temps_partiel_1_4(p) and cohorte_avant_2026(e);
+    then cumul_prepare_partiel_encours_admis(p, e);
+}
+
+@source(CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule CumulPrepareEnfantUnique2026(p: Personne, e: Enfant) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "Cohorte 2026: cumul le mois d'ouverture avec les 1° à 3° à enfant unique";
+    label en unofficial "2026 cohort: combination in the opening month with 1 to 3 for a single child";
+    when beneficie_prepare(p, e) and un_seul_enfant_charge(p) and indemnites_1_3(p)
+        and prepare_ouverture(p, e) and cohorte_2026(e);
+    then cumul_prepare_enfant_unique_admis(p, e);
+}
+
+@source(CSS_L532_2_PREV, CSS_L532_2_PREV_CSS_ED2021_05, CSS_L532_2_PREV_CSS_ED2021_11,
+        CSS_L532_2_PREV_CSS_ED2021_12, CSS_L532_2_PREV_CSS_ED2022_01,
+        CSS_L532_2_PREV_CSS_ED2022_02, CSS_L532_2_PREV_CSS_ED2022_03,
+        CSS_L532_2_PREV_CSS_ED2022_09, CSS_L532_2_PREV_CSS_ED2023_07,
+        CSS_L532_2_PREV_CSS_ED2024_01, CSS_L532_2_PREV_CSS_ED2025_02,
+        CSS_L532_2_PREV_CSS_ED2025_09,
+        CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule CumulPrepareEnfantUniquePrev(p: Personne, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Cohorte antérieure: cumul le mois d'ouverture avec les 1° à 3° à enfant unique (réd. 2018)";
+    label en unofficial "Earlier cohort: combination in the opening month with 1 to 3 for a single child (2018 text)";
+    when beneficie_prepare(p, e) and un_seul_enfant_charge(p) and indemnites_1_3(p)
+        and prepare_ouverture(p, e) and cohorte_avant_2026(e);
+    then cumul_prepare_enfant_unique_admis(p, e);
+}
+
+@source(CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule CumulPrepareOption2026(p: Personne, e: Enfant) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "Cohorte 2026: taux plein cumulable le mois de fin des indemnisations sous option L. 531-4 VI";
+    label en unofficial "2026 cohort: full rate combinable in the indemnity-ending month under the L. 531-4 VI option";
+    when beneficie_prepare_taux_plein(p, e) and fin_indemnites_mois(p)
+        and option_l5314_vi(p) and cohorte_2026(e);
+    then cumul_prepare_option_admis(p, e);
+}
+
+@source(CSS_L532_2_PREV, CSS_L532_2_PREV_CSS_ED2021_05, CSS_L532_2_PREV_CSS_ED2021_11,
+        CSS_L532_2_PREV_CSS_ED2021_12, CSS_L532_2_PREV_CSS_ED2022_01,
+        CSS_L532_2_PREV_CSS_ED2022_02, CSS_L532_2_PREV_CSS_ED2022_03,
+        CSS_L532_2_PREV_CSS_ED2022_09, CSS_L532_2_PREV_CSS_ED2023_07,
+        CSS_L532_2_PREV_CSS_ED2024_01, CSS_L532_2_PREV_CSS_ED2025_02,
+        CSS_L532_2_PREV_CSS_ED2025_09,
+        CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule CumulPrepareOptionPrev(p: Personne, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Cohorte antérieure: taux plein cumulable le mois de fin des indemnisations sous option (réd. 2018)";
+    label en unofficial "Earlier cohort: full rate combinable in the indemnity-ending month under the option (2018 text)";
+    when beneficie_prepare_taux_plein(p, e) and fin_indemnites_mois(p)
+        and option_l5314_vi(p) and cohorte_avant_2026(e);
+    then cumul_prepare_option_admis(p, e);
+}
+
+@source(CSS_L532_2_PREV, CSS_L532_2_PREV_CSS_ED2021_05, CSS_L532_2_PREV_CSS_ED2021_11,
+        CSS_L532_2_PREV_CSS_ED2021_12, CSS_L532_2_PREV_CSS_ED2022_01,
+        CSS_L532_2_PREV_CSS_ED2022_02, CSS_L532_2_PREV_CSS_ED2022_03,
+        CSS_L532_2_PREV_CSS_ED2022_09, CSS_L532_2_PREV_CSS_ED2023_07,
+        CSS_L532_2_PREV_CSS_ED2024_01, CSS_L532_2_PREV_CSS_ED2025_02,
+        CSS_L532_2_PREV_CSS_ED2025_09,
+        CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule NonCumulPrepareIndemnitesPrev(p: Personne, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Cohorte antérieure: taux plein non cumulable avec les indemnisations du II réd. 2018 (hors congé supplémentaire de naissance et L. 623-2)";
+    label en unofficial "Earlier cohort: full rate not combined with 2018 II payments (no supplementary birth leave, no L. 623-2)";
+    when beneficie_prepare_taux_plein(p, e) and percoit_indemnite_concurrente(p)
+        and cohorte_avant_2026(e);
+    then cumul_prepare_indemnite_refuse(p);
+}
+
+@source(CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule NonCumulPrepareCongeSuppNaissance2026(p: Personne, e: Enfant) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "Cohorte 2026: taux plein non cumulable avec l'indemnisation du congé supplémentaire de naissance (II 1° réd. 2026)";
+    label en unofficial "2026 cohort: full rate not combined with the supplementary birth-leave indemnity (2026 II 1)";
+    when beneficie_prepare_taux_plein(p, e) and percoit_conge_supplementaire_naissance(p)
+        and cohorte_2026(e);
+    then cumul_prepare_indemnite_refuse(p);
+}
+
+@source(CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule NonCumulPrepareL62322026(p: Personne, e: Enfant) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "Cohorte 2026: taux plein non cumulable avec l'indemnité L. 623-2 (II 2° réd. 2026)";
+    label en unofficial "2026 cohort: full rate not combined with the L. 623-2 indemnity (2026 II 2)";
+    when beneficie_prepare_taux_plein(p, e) and percoit_indemnite_l623_2(p)
+        and cohorte_2026(e);
+    then cumul_prepare_indemnite_refuse(p);
+}

@@ -1,0 +1,26 @@
+// D. 532-1, derived performance (FULL RETURN 03, R02-01/02 + RETURN04,
+// R03-01): the declaration sent 2025-03-10 to both bodies, within the
+// fourteen-week window (start 2025-01-06, deadline 2025-04-14), attested
+// by the conforming prescribed medical document — the declaration counts
+// as made. First scenario: inputs only, the rule builds the performance.
+// Controls — declaration-grossesse-sans-envoi,
+// declaration-grossesse-sans-document-conforme,
+// declaration-grossesse-effectuee-tardive,
+// declaration-grossesse-effectuee-avant-debut.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-declaration-effectuee-conforme" {
+    given {
+        context { decision_time @2025-03-15T12:00:00Z; knowledge_time @2025-03-15T12:00:00Z; legal_time @2025-03-15; timezone "Europe/Paris"; }
+        assert "decl-eff-01": declaration_grossesse_adressee(entity_ref("urn:fr:paje:case:decl-eff"), entity_ref("urn:fr:paje:enfant:decl-eff"), @2025-03-10) { origin adjudicated; }
+        assert "decl-eff-02": document_medical_conforme(entity_ref("urn:fr:paje:case:decl-eff"), entity_ref("urn:fr:paje:enfant:decl-eff")) { origin adjudicated; }
+        assert "decl-eff-03": debut_grossesse(entity_ref("urn:fr:paje:case:decl-eff"), entity_ref("urn:fr:paje:enfant:decl-eff"), @2025-01-06) { origin adjudicated; }
+        assert "decl-eff-04": date_limite_declaration(entity_ref("urn:fr:paje:case:decl-eff"), entity_ref("urn:fr:paje:enfant:decl-eff"), @2025-04-14) { origin adjudicated; }
+    }
+    evaluate truth(declaration_grossesse_effectuee(entity_ref("urn:fr:paje:case:decl-eff"), entity_ref("urn:fr:paje:enfant:decl-eff")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,30 @@
+// Base allowance without supplement: couple, one disabled child, CDAPH
+// decision established, no category granted. BMAF 400.00 stated
+// (B-PFAEEH-BMAF-EURO): base 0.32 x 400.00 = 128.00, supplement 0,
+// MPI 0, total 128.00.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-base-sans-complement" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "aeeh-base-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:couple-un-enfant"), entity_ref("urn:fr:pf-aeeh:case:enfant-1")) { origin case_input; }
+        assert "aeeh-base-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-1")) { origin adjudicated; }
+        assert "aeeh-base-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-1"), 400.00 EUR) { origin case_input; }
+        assert "aeeh-base-04": sans_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-1")) { origin case_input; }
+        assert "aeeh-base-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-1")) { origin case_input; }
+    }
+    evaluate truth(aeeh_droit_calcule(entity_ref("urn:fr:pf-aeeh:case:enfant-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_base(entity_ref("urn:fr:pf-aeeh:case:enfant-1"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_total(entity_ref("urn:fr:pf-aeeh:case:enfant-1"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

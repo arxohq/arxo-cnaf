@@ -1,0 +1,29 @@
+// Forfaits: APL 68.95 retained; BMAF 200 -> CF majoré 83.30,
+// ASF 1+1 children 105.00 (R. 844-4).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-forfaits-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": apl_foyer(entity_ref("urn:fr:ppa:case:forfaits-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-02": forfait_logement_r844_3(entity_ref("urn:fr:ppa:case:forfaits-2026"), @2026-06-01, 68.95 EUR) { origin case_input; }
+        assert "ppa-03": cf_majore_foyer(entity_ref("urn:fr:ppa:case:forfaits-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-04": bmaf_retenue(@2026-06-01, 200.00 EUR) { origin case_input; }
+        assert "ppa-05": nb_enfants_asf(entity_ref("urn:fr:ppa:case:forfaits-2026"), @2026-06-01, 1, 1) { origin case_input; }
+        assert "ppa-06": nb_enfants_asf(entity_ref("urn:fr:ppa:case:forfaits-2026"), @2026-06-01, 2, 1) { origin case_input; }
+    }
+    evaluate truth(forfait_apl(entity_ref("urn:fr:ppa:case:forfaits-2026"), @2026-06-01, 68.95 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_cf_majore(entity_ref("urn:fr:ppa:case:forfaits-2026"), @2026-06-01, 83.30 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_asf(entity_ref("urn:fr:ppa:case:forfaits-2026"), @2026-06-01, 105.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

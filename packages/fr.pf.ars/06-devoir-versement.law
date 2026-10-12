@@ -1,0 +1,134 @@
+// Fund payment duties (L543-1, L543-2, L543-3, R543-7).
+//
+// Single payment no later than 31 October of the year (R543-7): the
+// deadline arrives per case as date_limite_versement and bounds the
+// maintain window, which opens at the D-01 coverage floor. Only the
+// fund bears a duty, for base and differential amounts alike,
+// whatever the payment channel (household or CDC pecule).
+
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+use self::{
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02,
+    CSS_L543_2,
+    CSS_L543_2_ED2002_08,
+    CSS_L543_2_ED2004_01,
+    CSS_L543_2_ED2008_08,
+    CSS_L543_2_ED2012_06,
+    CSS_L543_2_ED2013_06,
+    CSS_L543_2_ED2014_08,
+    CSS_L543_2_ED2016_03,
+    CSS_L543_2_ED2016_10,
+    CSS_L543_2_ED2019_01,
+    CSS_L543_2_ED2022_01,
+    CSS_L543_2_ED2022_02,
+    CSS_L543_3,
+    CSS_L543_3_PRE2022,
+    CSS_L543_3_PRE2022_ED2016_10,
+    CSS_L543_3_PRE2022_ED2019_01,
+    CSS_L543_3_PRE2022_ED2022_01,
+    CSS_R543_7,
+    CSS_R543_7_ED1990_09,
+    CSS_R543_7_ED1999_06,
+    CSS_R543_7_ED2001_12,
+    CSS_R543_7_ED2002_08,
+    CSS_R543_7_ED2004_01,
+    CSS_R543_7_ED2008_08,
+    CSS_R543_7_ED2012_06,
+    CSS_R543_7_ED2013_06,
+    CSS_R543_7_ED2014_08,
+    CSS_R543_7_ED2016_03,
+    CSS_R543_7_ED2016_10,
+    CSS_R543_7_ED2019_01,
+    CSS_R543_7_ED2022_01,
+    CSS_R543_7_ED2022_02,
+    ars_differentiel_du,
+    ars_montant_du,
+    ars_verse,
+    date_limite_versement,
+};
+
+@source(
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02,
+    CSS_L543_3,
+    CSS_L543_3_PRE2022,
+    CSS_L543_3_PRE2022_ED2016_10,
+    CSS_L543_3_PRE2022_ED2019_01,
+    CSS_L543_3_PRE2022_ED2022_01,
+    CSS_R543_7,
+    CSS_R543_7_ED1990_09,
+    CSS_R543_7_ED1999_06,
+    CSS_R543_7_ED2001_12,
+    CSS_R543_7_ED2002_08,
+    CSS_R543_7_ED2004_01,
+    CSS_R543_7_ED2008_08,
+    CSS_R543_7_ED2012_06,
+    CSS_R543_7_ED2013_06,
+    CSS_R543_7_ED2014_08,
+    CSS_R543_7_ED2016_03,
+    CSS_R543_7_ED2016_10,
+    CSS_R543_7_ED2019_01,
+    CSS_R543_7_ED2022_01,
+    CSS_R543_7_ED2022_02)
+rule DevoirVerserArs(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money, limite: Date) strict {
+    label fr official "l'organisme débiteur paie le montant d'allocation dû au plus tard à la date limite";
+    label en unofficial "the debtor fund pays the allowance amount due no later than the deadline";
+    when ars_montant_du(e, montant) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and date_limite_versement(limite);
+    then duty PayerArsDu {
+        bearer o;
+        beneficiary p;
+        maintain ars_verse(p, e, montant) during [@2021-01-01, limite];
+    };
+}
+
+@source(
+    CSS_L543_2,
+    CSS_L543_2_ED2002_08,
+    CSS_L543_2_ED2004_01,
+    CSS_L543_2_ED2008_08,
+    CSS_L543_2_ED2012_06,
+    CSS_L543_2_ED2013_06,
+    CSS_L543_2_ED2014_08,
+    CSS_L543_2_ED2016_03,
+    CSS_L543_2_ED2016_10,
+    CSS_L543_2_ED2019_01,
+    CSS_L543_2_ED2022_01,
+    CSS_L543_2_ED2022_02,
+    CSS_L543_3,
+    CSS_L543_3_PRE2022,
+    CSS_L543_3_PRE2022_ED2016_10,
+    CSS_L543_3_PRE2022_ED2019_01,
+    CSS_L543_3_PRE2022_ED2022_01,
+    CSS_R543_7,
+    CSS_R543_7_ED1990_09,
+    CSS_R543_7_ED1999_06,
+    CSS_R543_7_ED2001_12,
+    CSS_R543_7_ED2002_08,
+    CSS_R543_7_ED2004_01,
+    CSS_R543_7_ED2008_08,
+    CSS_R543_7_ED2012_06,
+    CSS_R543_7_ED2013_06,
+    CSS_R543_7_ED2014_08,
+    CSS_R543_7_ED2016_03,
+    CSS_R543_7_ED2016_10,
+    CSS_R543_7_ED2019_01,
+    CSS_R543_7_ED2022_01,
+    CSS_R543_7_ED2022_02)
+rule DevoirVerserArsDifferentiel(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money, limite: Date) strict {
+    label fr official "l'organisme débiteur paie le différentiel dû au plus tard à la date limite";
+    label en unofficial "the debtor fund pays the differential due no later than the deadline";
+    when ars_differentiel_du(e, montant) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and date_limite_versement(limite);
+    then duty PayerArsDifferentielDu {
+        bearer o;
+        beneficiary p;
+        maintain ars_verse(p, e, montant) during [@2021-01-01, limite];
+    };
+}

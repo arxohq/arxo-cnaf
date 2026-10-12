@@ -1,0 +1,35 @@
+// Reform formula, childminder, one child: cost 650.00 under the 8 EUR
+// x 130 h cap, 85%-band... here part a is full contributions 200.00;
+// part b = 650 x (1 - 3000 x 0.0619 / 4.85) = 401.12345; total 601.12.
+// Reference cost 4.85 and factor 1.0 are stated case facts (DSS_PENDING,
+// B-CMG-COUT-REFERENCE); the assertions bear on the formula wiring.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-formule-assmat" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "formule-am-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), entity_ref("urn:fr:pf-cmg:child:am"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "formule-am-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:formule-assmat")) { origin case_input; }
+        assert "formule-am-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), entity_ref("urn:fr:pf-cmg:child:am")) { origin case_input; }
+        assert "formule-am-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:am"), 2) { origin case_input; }
+        assert "formule-am-05": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), 1) { origin case_input; }
+        assert "formule-am-06": facteur_smic(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), 1.0) { origin case_input; }
+        assert "formule-am-07": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), entity_ref("urn:fr:pf-cmg:child:am"), 600 EUR) { origin case_input; }
+        assert "formule-am-08": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), entity_ref("urn:fr:pf-cmg:child:am"), 50 EUR) { origin case_input; }
+        assert "formule-am-09": heures_remunerees(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), entity_ref("urn:fr:pf-cmg:child:am"), 130.0) { origin case_input; }
+        assert "formule-am-10": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), entity_ref("urn:fr:pf-cmg:child:am"), 200 EUR) { origin case_input; }
+        assert "formule-am-11": cout_reference_retenu(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), entity_ref("urn:fr:pf-cmg:child:am"), 4.85 EUR) { origin case_input; }
+        assert "formule-am-12": montant_forfaitaire_isole(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), 700 EUR) { origin case_input; }
+        assert "formule-am-13": forfait_logement(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), 100 EUR) { origin case_input; }
+        assert "formule-am-14": revenu_mensuel_brut(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), 3000 EUR) { origin case_input; }
+    }
+    // The rate itself is not asserted: bare Decimal literals are not
+    // exactly expressible in scenario form (D-11); the total below
+    // discriminates the rate.
+    evaluate truth(montant_cmg_du(entity_ref("urn:fr:pf-cmg:case:formule-assmat"), entity_ref("urn:fr:pf-cmg:child:am"), 601.12 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

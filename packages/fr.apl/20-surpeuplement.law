@@ -1,0 +1,362 @@
+// Overcrowding (R. 844-1/2/3): the two-year exceptional grant when the
+// area condition fails at request time, birth/care maintenance with the
+// same renewable extension, prefect designation on refusal, and the
+// one-month household-change declaration duty.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_R844_1,
+    CCH_R844_1_ED2019_12,
+    CCH_R844_1_ED2020_01,
+    CCH_R844_1_ED2021_01,
+    CCH_R844_1_ED2023_04,
+    CCH_R844_1_ED2023_09,
+    CCH_R844_1_ED2023_12,
+    CCH_R844_1_ED2026_07,
+    CCH_R844_2,
+    CCH_R844_2_ED2019_12,
+    CCH_R844_2_ED2020_01,
+    CCH_R844_2_ED2021_01,
+    CCH_R844_2_ED2023_04,
+    CCH_R844_2_ED2023_09,
+    CCH_R844_2_ED2023_12,
+    CCH_R844_2_ED2026_07,
+    CCH_R844_3,
+    CCH_R844_3_ED2019_12,
+    CCH_R844_3_ED2020_01,
+    CCH_R844_3_ED2021_01,
+    CCH_R844_3_ED2023_04,
+    CCH_R844_3_ED2023_09,
+    CCH_R844_3_ED2023_12,
+    CCH_R844_3_ED2026_07,
+    Menage,
+    Organisme,
+    date_appreciation,
+    organisme_debiteur,
+};
+
+deadline policy APL_PEUPLMENT_MOIS {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+pub entity Prefet {
+    label fr official "prefet du departement";
+    label en unofficial "department prefect";
+}
+
+pub entity ConseilAdministration {
+    label fr official "conseil d'administration de l'organisme payeur";
+    label en unofficial "paying-body board";
+}
+
+pub relation conseil_organisme(ca: ConseilAdministration, o: Organisme) kind empirical {
+    label fr official "conseil d'administration de l'organisme (fait de dossier)";
+    label en unofficial "body board (case fact)";
+}
+
+pub relation prefet_competent(p: Prefet, m: Menage) kind empirical {
+    label fr official "prefet competent pour le dossier (fait de dossier)";
+    label en unofficial "prefect competent for the case (case fact)";
+}
+
+pub relation surface_non_respectee_demande(m: Menage) kind empirical {
+    label fr official "superficie R. 822-25 non respectee au moment de la demande (constat)";
+    label en unofficial "R. 822-25 area unmet at request time (finding)";
+}
+
+pub relation derogation_peuplement_accordee(m: Menage) kind empirical {
+    label fr official "derogation de peuplement accordee a titre exceptionnel (execution)";
+    label en unofficial "overcrowding derogation exceptionally granted (performance)";
+}
+
+pub relation conseil_informe_derogation_peuplement(m: Menage) kind empirical {
+    label fr official "conseil d'administration informe de la derogation de peuplement (execution R. 844-1)";
+    label en unofficial "board told of the overcrowding derogation (R. 844-1 performance)";
+}
+
+pub relation prefet_informe_derogation_peuplement(m: Menage) kind empirical {
+    label fr official "prefet informe de la derogation de peuplement (execution R. 844-1)";
+    label en unofficial "prefect told of the overcrowding derogation (R. 844-1 performance)";
+}
+
+pub relation logement_hors_logement_foyer(m: Menage) kind empirical {
+    label fr official "logement etabli hors logement-foyer a la demande (constat positif R. 844-1)";
+    label en unofficial "dwelling established outside a hostel at request time (positive R. 844-1 finding)";
+}
+
+@source(CCH_R844_1, CCH_R844_1_ED2019_12, CCH_R844_1_ED2020_01,
+        CCH_R844_1_ED2021_01, CCH_R844_1_ED2023_04, CCH_R844_1_ED2023_09,
+        CCH_R844_1_ED2023_12, CCH_R844_1_ED2026_07)
+rule DerogationPeuplementDeuxAns(m: Menage, o: Organisme) defeasible {
+    label fr official "hors foyers, superficie en defaut : allocation accordee une fois deux ans a titre exceptionnel";
+    label en unofficial "outside hostels, area failed: allocation granted once two years exceptionally";
+    when surface_non_respectee_demande(m) and logement_hors_logement_foyer(m)
+        and organisme_debiteur(o, m)
+        and not_known(derogation_peuplement_accordee(m));
+    then liberty AccorderDerogationPeuplement {
+        holder o;
+        action derogation_peuplement_accordee(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R844_1, CCH_R844_1_ED2019_12, CCH_R844_1_ED2020_01,
+        CCH_R844_1_ED2021_01, CCH_R844_1_ED2023_04, CCH_R844_1_ED2023_09,
+        CCH_R844_1_ED2023_12, CCH_R844_1_ED2026_07)
+rule DevoirInformerConseilDerogation(m: Menage, o: Organisme, ca: ConseilAdministration) strict {
+    label fr official "R. 844-1 : le conseil d'administration est informe de la derogation";
+    label en unofficial "R. 844-1: the board is told of the derogation";
+    when derogation_peuplement_accordee(m) and organisme_debiteur(o, m)
+        and conseil_organisme(ca, o);
+    then duty InformerConseilDerogation {
+        bearer o;
+        beneficiary ca;
+        maintain conseil_informe_derogation_peuplement(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R844_1, CCH_R844_1_ED2019_12, CCH_R844_1_ED2020_01,
+        CCH_R844_1_ED2021_01, CCH_R844_1_ED2023_04, CCH_R844_1_ED2023_09,
+        CCH_R844_1_ED2023_12, CCH_R844_1_ED2026_07)
+rule DevoirInformerPrefetDerogation(m: Menage, o: Organisme, p: Prefet) strict {
+    label fr official "R. 844-1 : le prefet est informe de la derogation";
+    label en unofficial "R. 844-1: the prefect is told of the derogation";
+    when derogation_peuplement_accordee(m) and organisme_debiteur(o, m)
+        and prefet_competent(p, m);
+    then duty InformerPrefetDerogation {
+        bearer o;
+        beneficiary p;
+        maintain prefet_informe_derogation_peuplement(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation derogation_peuplement_accordee_le(m: Menage, d: Date) kind empirical {
+    label fr official "date d'effet de la derogation de peuplement (dossier)";
+    label en unofficial "overcrowding-derogation start date (case file)";
+}
+
+pub relation derogation_peuplement_expire_le(m: Menage, d: Date) kind institutional {
+    label fr official "echeance des deux ans de derogation de peuplement";
+    label en unofficial "two-year overcrowding-derogation expiry";
+}
+
+pub relation decision_conseil_prorogation(m: Menage) kind empirical {
+    label fr official "decision de prorogation du conseil d'administration (fait)";
+    label en unofficial "board extension decision (fact)";
+}
+
+pub relation enquete_sociale_prorogation(m: Menage) kind empirical {
+    label fr official "enquete sociale prealable a la prorogation (fait)";
+    label en unofficial "social inquiry before extension (fact)";
+}
+
+pub relation attestation_prefet_motivee(m: Menage) kind empirical {
+    label fr official "attestation motivee du prefet sur l'impossibilite de reloger (fait)";
+    label en unofficial "motivated prefect certificate on rehousing impossibility (fact)";
+}
+
+pub relation derogation_peuplement_prorogee_le(m: Menage, d: Date) kind institutional {
+    label fr official "echeance de la derogation de peuplement prorogee";
+    label en unofficial "extended overcrowding-derogation expiry";
+}
+
+pub relation refus_derogation_peuplement(m: Menage) kind empirical {
+    label fr official "refus de derogation de peuplement (fait)";
+    label en unofficial "overcrowding-derogation refusal (fact)";
+}
+
+pub relation organisme_relogement_designe(m: Menage) kind empirical {
+    label fr official "organisme de relogement designe par le prefet (execution)";
+    label en unofficial "rehousing body designated by the prefect (performance)";
+}
+
+@source(CCH_R844_1, CCH_R844_1_ED2019_12, CCH_R844_1_ED2020_01,
+        CCH_R844_1_ED2021_01, CCH_R844_1_ED2023_04, CCH_R844_1_ED2023_09,
+        CCH_R844_1_ED2023_12, CCH_R844_1_ED2026_07)
+rule FenetreDerogationPeuplement(m: Menage, debut: Date) strict {
+    label fr official "derogation de peuplement : fenetre de deux ans";
+    label en unofficial "overcrowding derogation: two-year window";
+    when derogation_peuplement_accordee(m) and derogation_peuplement_accordee_le(m, debut);
+    then derogation_peuplement_expire_le(m, add_calendar_period(debut, 2 calendar_year));
+}
+
+@source(CCH_R844_1, CCH_R844_1_ED2019_12, CCH_R844_1_ED2020_01,
+        CCH_R844_1_ED2021_01, CCH_R844_1_ED2023_04, CCH_R844_1_ED2023_09,
+        CCH_R844_1_ED2023_12, CCH_R844_1_ED2026_07)
+rule ProrogationDerogationPeuplement(m: Menage, echeance: Date) strict {
+    label fr official "prorogation du conseil apres enquete et attestation : deux ans de plus";
+    label en unofficial "board extension after inquiry and certificate: two more years";
+    when derogation_peuplement_expire_le(m, echeance) and decision_conseil_prorogation(m)
+        and enquete_sociale_prorogation(m) and attestation_prefet_motivee(m);
+    then derogation_peuplement_prorogee_le(m, add_calendar_period(echeance, 2 calendar_year));
+}
+
+@source(CCH_R844_1, CCH_R844_1_ED2019_12, CCH_R844_1_ED2020_01,
+        CCH_R844_1_ED2021_01, CCH_R844_1_ED2023_04, CCH_R844_1_ED2023_09,
+        CCH_R844_1_ED2023_12, CCH_R844_1_ED2026_07, CCH_R844_2,
+        CCH_R844_2_ED2019_12, CCH_R844_2_ED2020_01, CCH_R844_2_ED2021_01,
+        CCH_R844_2_ED2023_04, CCH_R844_2_ED2023_09, CCH_R844_2_ED2023_12,
+        CCH_R844_2_ED2026_07)
+rule DevoirDesignerRelogement(m: Menage, p: Prefet) strict {
+    label fr official "refus de derogation : le prefet designe un organisme de relogement";
+    label en unofficial "derogation refused: the prefect designates a rehousing body";
+    when refus_derogation_peuplement(m) and prefet_competent(p, m);
+    then duty DesignerOrganismeRelogement {
+        bearer p;
+        beneficiary m;
+        maintain organisme_relogement_designe(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation surpeuplement_naissance_prise_en_charge(m: Menage, d: Date) kind empirical {
+    label fr official "surpeuplement par naissance ou prise en charge, date du fait (constat)";
+    label en unofficial "overcrowding from birth or care, event date (finding)";
+}
+
+pub relation allocation_maintenue_surpeuplement(m: Menage) kind institutional {
+    label fr official "allocations maintenues deux ans par derogation R. 844-2";
+    label en unofficial "allocations kept two years by derogation under R. 844-2";
+}
+
+pub relation maintien_surpeuplement_expire_le(m: Menage, d: Date) kind institutional {
+    label fr official "echeance des deux ans de maintien pour surpeuplement";
+    label en unofficial "two-year overcrowding-maintenance expiry";
+}
+
+@source(CCH_R844_2, CCH_R844_2_ED2019_12, CCH_R844_2_ED2020_01,
+        CCH_R844_2_ED2021_01, CCH_R844_2_ED2023_04, CCH_R844_2_ED2023_09,
+        CCH_R844_2_ED2023_12, CCH_R844_2_ED2026_07)
+rule MaintienNaissanceSurpeuplement(m: Menage, fait: Date, appreciation: Date) strict {
+    label fr official "surpeuplement par naissance ou prise en charge : maintien deux ans depuis le fait";
+    label en unofficial "birth-or-care overcrowding: two-year maintenance from the event";
+    when surpeuplement_naissance_prise_en_charge(m, fait) and date_appreciation(m, appreciation)
+        and appreciation >= fait
+        and appreciation < add_calendar_period(fait, 2 calendar_year);
+    then allocation_maintenue_surpeuplement(m);
+}
+
+@source(CCH_R844_2, CCH_R844_2_ED2019_12, CCH_R844_2_ED2020_01,
+        CCH_R844_2_ED2021_01, CCH_R844_2_ED2023_04, CCH_R844_2_ED2023_09,
+        CCH_R844_2_ED2023_12, CCH_R844_2_ED2026_07)
+rule FenetreMaintienSurpeuplement(m: Menage, fait: Date) strict {
+    label fr official "maintien surpeuplement : fenetre de deux ans depuis le fait";
+    label en unofficial "overcrowding maintenance: two-year window from the event";
+    when surpeuplement_naissance_prise_en_charge(m, fait);
+    then maintien_surpeuplement_expire_le(m, add_calendar_period(fait, 2 calendar_year));
+}
+
+pub relation decision_organisme_prorogation_8442(m: Menage) kind empirical {
+    label fr official "decision de prorogation de l'organisme payeur R. 844-2 (fait)";
+    label en unofficial "paying-body extension decision under R. 844-2 (fact)";
+}
+
+pub relation maintien_surpeuplement_proroge_le(m: Menage, d: Date) kind institutional {
+    label fr official "echeance du maintien surpeuplement proroge";
+    label en unofficial "extended overcrowding-maintenance expiry";
+}
+
+@source(CCH_R844_2, CCH_R844_2_ED2019_12, CCH_R844_2_ED2020_01,
+        CCH_R844_2_ED2021_01, CCH_R844_2_ED2023_04, CCH_R844_2_ED2023_09,
+        CCH_R844_2_ED2023_12, CCH_R844_2_ED2026_07, CCH_R844_1,
+        CCH_R844_1_ED2019_12, CCH_R844_1_ED2020_01, CCH_R844_1_ED2021_01,
+        CCH_R844_1_ED2023_04, CCH_R844_1_ED2023_09, CCH_R844_1_ED2023_12,
+        CCH_R844_1_ED2026_07)
+rule ProrogationMaintienSurpeuplement(m: Menage, echeance: Date) strict {
+    label fr official "prorogation R. 844-1 al. 1 : deux ans renouvelables de plus";
+    label en unofficial "R. 844-1 al. 1 extension: two more renewable years";
+    when maintien_surpeuplement_expire_le(m, echeance) and decision_organisme_prorogation_8442(m)
+        and enquete_sociale_prorogation(m) and attestation_prefet_motivee(m);
+    then maintien_surpeuplement_proroge_le(m, add_calendar_period(echeance, 2 calendar_year));
+}
+
+@source(CCH_R844_2, CCH_R844_2_ED2019_12, CCH_R844_2_ED2020_01,
+        CCH_R844_2_ED2021_01, CCH_R844_2_ED2023_04, CCH_R844_2_ED2023_09,
+        CCH_R844_2_ED2023_12, CCH_R844_2_ED2026_07, CCH_R844_1,
+        CCH_R844_1_ED2019_12, CCH_R844_1_ED2020_01, CCH_R844_1_ED2021_01,
+        CCH_R844_1_ED2023_04, CCH_R844_1_ED2023_09, CCH_R844_1_ED2023_12,
+        CCH_R844_1_ED2026_07)
+rule MaintienSurpeuplementProrogeEffet(m: Menage, echeance: Date, appreciation: Date) strict {
+    label fr official "maintien proroge : allocation maintenue pendant les deux ans de prorogation";
+    label en unofficial "extended maintenance: allocation kept during the two extension years";
+    when maintien_surpeuplement_expire_le(m, echeance) and decision_organisme_prorogation_8442(m)
+        and enquete_sociale_prorogation(m) and attestation_prefet_motivee(m)
+        and date_appreciation(m, appreciation) and appreciation >= echeance
+        and appreciation < add_calendar_period(echeance, 2 calendar_year);
+    then allocation_maintenue_surpeuplement(m);
+}
+
+pub relation changement_peuplement_le(m: Menage, d: Date) kind empirical {
+    label fr official "date du changement dans la composition du menage ou le peuplement (dossier)";
+    label en unofficial "household-composition or crowding change date (case file)";
+}
+
+pub relation declaration_due_avant_peuplement(m: Menage, d: Date) kind institutional {
+    label fr official "declaration de changement due avant un mois R. 844-3";
+    label en unofficial "change declaration due within one month under R. 844-3";
+}
+
+pub relation changement_peuplement_declare(m: Menage) kind empirical {
+    label fr official "changement de peuplement declare a l'organisme (execution)";
+    label en unofficial "crowding change declared to the body (performance)";
+}
+
+pub relation changement_peuplement_declare_le(m: Menage, d: Date) kind empirical {
+    label fr official "changement de peuplement declare a l'organisme, date (execution datee)";
+    label en unofficial "crowding change declared to the body, dated (dated performance)";
+}
+
+pub relation declaration_peuplement_dans_delai(m: Menage) kind institutional {
+    label fr official "declaration du changement de peuplement dans le mois (conformite au delai R. 844-3)";
+    label en unofficial "crowding-change declaration within the month (R. 844-3 timeliness)";
+}
+
+@source(CCH_R844_3, CCH_R844_3_ED2019_12, CCH_R844_3_ED2020_01,
+        CCH_R844_3_ED2021_01, CCH_R844_3_ED2023_04, CCH_R844_3_ED2023_09,
+        CCH_R844_3_ED2023_12, CCH_R844_3_ED2026_07)
+rule DeclarationDuePeuplement(m: Menage, changement: Date) strict {
+    label fr official "changement : declaration due dans le mois";
+    label en unofficial "change: declaration due within the month";
+    when changement_peuplement_le(m, changement);
+    then declaration_due_avant_peuplement(m, add_calendar_period(changement, 1 calendar_month));
+}
+
+@source(CCH_R844_3, CCH_R844_3_ED2019_12, CCH_R844_3_ED2020_01,
+        CCH_R844_3_ED2021_01, CCH_R844_3_ED2023_04, CCH_R844_3_ED2023_09,
+        CCH_R844_3_ED2023_12, CCH_R844_3_ED2026_07)
+rule DevoirDeclarerChangementPeuplement(m: Menage, o: Organisme, changement: Date) strict {
+    label fr official "tout changement de peuplement est declare a l'organisme";
+    label en unofficial "every crowding change is declared to the body";
+    when changement_peuplement_le(m, changement) and organisme_debiteur(o, m);
+    then duty DeclarerChangementPeuplement {
+        bearer m;
+        beneficiary o;
+        maintain changement_peuplement_declare(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R844_3, CCH_R844_3_ED2019_12, CCH_R844_3_ED2020_01,
+        CCH_R844_3_ED2021_01, CCH_R844_3_ED2023_04, CCH_R844_3_ED2023_09,
+        CCH_R844_3_ED2023_12, CCH_R844_3_ED2026_07)
+rule DeclarationPeuplementDateeVautExecution(m: Menage, d: Date) strict {
+    label fr official "declaration datee : l'execution de l'obligation de declarer est etablie";
+    label en unofficial "dated declaration: the declaration-duty performance is established";
+    when changement_peuplement_declare_le(m, d);
+    then changement_peuplement_declare(m);
+}
+
+@source(CCH_R844_3, CCH_R844_3_ED2019_12, CCH_R844_3_ED2020_01,
+        CCH_R844_3_ED2021_01, CCH_R844_3_ED2023_04, CCH_R844_3_ED2023_09,
+        CCH_R844_3_ED2023_12, CCH_R844_3_ED2026_07)
+rule DeclarationPeuplementDansDelai(m: Menage, fait: Date, echeance: Date) strict {
+    label fr official "declaration datee au plus tard a l'echeance d'un mois : dans le delai";
+    label en unofficial "declaration dated no later than the one-month deadline: timely";
+    when changement_peuplement_declare_le(m, fait)
+        and declaration_due_avant_peuplement(m, echeance) and fait <= echeance;
+    then declaration_peuplement_dans_delai(m);
+}

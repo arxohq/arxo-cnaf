@@ -1,0 +1,49 @@
+# Манифест §10 — маркер корня пакета (DECISION-0033). Нормативны заголовки §22
+# в самих .law; манифест обязан с ними совпадать (LDC-E1109, lawc check).
+[package]
+name = "fr.travail.smic"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:smic"
+
+# Пакет explicit (DECISION-0386, SPEC §23.2): после правок .law —
+# `law fix imports <пакет>`; блоки `use self::{…}` руками не вести.
+[authoring]
+local_imports = "explicit"
+
+# Каталожная метадата (DECISION-0051; docs/PACKAGE-METADATA.ru.md). НЕ семантика.
+[metadata]
+act = "fr-smic"
+title = "SMIC : relèvement du salaire minimum de croissance (série CNAF)"
+primarySource = "FR_JORF_SMIC"
+
+jurisdiction = "FR"
+instrument = "mixed"
+sourceFidelity = "pinned_official_bytes"
+
+issuer = "Premier ministre / Ministère du travail"
+legalStatus = "in_force"
+verifiedAgainstSource = true
+
+[[tests]]
+family = "fr.travail.smic#smic-2026"
+regression = true
+suites = [
+    "tests/smic-window1-metropole.lawtest",
+    "tests/smic-window1-mayotte.lawtest",
+    "tests/smic-window2-metropole.lawtest",
+    "tests/smic-window2-mayotte.lawtest",
+    "tests/smic-boundary-2026-01-01.lawtest",
+    "tests/smic-boundary-2026-06-01.lawtest",
+]
+world = ["fr.travail.smic"]
+
+[[tests]]
+family = "fr.travail.smic#smic-serie-2021-2025"
+regression = true
+suites = [
+    "tests/smic-serie-mensuelle-2021-2025.lawtest",
+    "tests/smic-serie-veilles-2021-2025.lawtest",
+    "tests/smic-construit-conforme-arretes.lawtest",
+]
+world = ["fr.travail.smic"]

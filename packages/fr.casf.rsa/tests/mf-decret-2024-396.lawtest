@@ -1,0 +1,18 @@
+// Single person, no case base: the household flat-rate is BUILT from the pinned
+// decree 2024-396 art. 1 (635,71 euros, 1 April 2024)
+// (DECISION-0452: constructed, not supplied).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-decret-2024-396" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "mfd396-01": mois_droit(entity_ref("urn:fr:rsa:case:mf-decret-2024-396"), @2024-06-01) { origin case_input; }
+        assert "mfd396-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-decret-2024-396"), 1) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-decret-2024-396"), 635.71 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

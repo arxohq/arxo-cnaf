@@ -1,0 +1,22 @@
+// D-83: PASS, предъявленный делом (pass_annuel 30 000), вытесняет число arrêté 2016 (38 616): порог
+// 13,6 % x 30 000 = 4 080, доход 5 000 его достигает (по arrêté порог 5 251,776 — доход его не достигал бы).
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-pass-fourni-prevaut" {
+    given {
+        context { decision_time @2018-06-15T12:00:00Z; knowledge_time @2018-06-15T12:00:00Z; legal_time @2018-06-15; timezone "Europe/Paris"; }
+        assert "pfp-01": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:pass-fourni-prevaut"), 5000 EUR) { origin case_input; }
+        assert "pfp-02": annee_reference_ressources(entity_ref("urn:fr:pf-cf:case:pass-fourni-prevaut"), 2016) { origin case_input; }
+        assert "pfp-03": pass_annuel(30000 EUR) { origin case_input; }
+    }
+    evaluate truth(pass_reference(entity_ref("urn:fr:pf-cf:case:pass-fourni-prevaut"), 30000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:pass-fourni-prevaut")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

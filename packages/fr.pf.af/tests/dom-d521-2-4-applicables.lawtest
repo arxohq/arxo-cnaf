@@ -1,0 +1,60 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// D. 521-3/D. 521-4 effective in Guadeloupe (D. 755-5-1): three
+// children, resources 80 000 EUR. Nominal ceilings x factor 1.0:
+// I = 55 950 + 3 x 5 595 = 72 735, II = 78 300 + 3 x 5 595 = 95 085,
+// so band 2 (the band conclusion premises on the D. 521-4 retained
+// resources, which stay module-local and are proven transitively).
+// The D. 755-5-1 applicability statuses fire alongside.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-dom-d521-2-4-applicables" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "d521a-01": territoire(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), GUADELOUPE) { origin case_input; }
+        assert "d521a-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 3) { origin case_input; }
+        assert "d521a-03": ressources_menage(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 80000 EUR) { origin case_input; }
+        assert "d521a-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 55950 EUR) { origin case_input; }
+        assert "d521a-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 78300 EUR) { origin case_input; }
+        assert "d521a-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 5595 EUR) { origin case_input; }
+        assert "d521a-05": bmaf_retenu(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 400.00 EUR) { origin case_input; }
+        assert "d521a-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 0) { origin case_input; }
+        assert "d521a-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 0) { origin case_input; }
+        assert "d521a-08": forfait_total_menage(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 0 EUR) { origin case_input; }
+        assert "d521a-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 0) { origin case_input; }
+        assert "d521a-10": foyer_du_cas(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables")) { origin case_input; }
+    }
+    evaluate truth(af_droit_ouvert(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond1_applicable(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 72735 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond2_applicable(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), 95085 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:dom-d521-2-4-applicables"), BANDE_2));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(d521_2_applicable_dom(GUADELOUPE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(d521_3_applicable_dom(GUADELOUPE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(d521_4_applicable_dom(GUADELOUPE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

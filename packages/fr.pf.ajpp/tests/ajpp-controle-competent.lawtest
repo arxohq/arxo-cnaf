@@ -1,0 +1,16 @@
+// Competent medical-control service: the service covering the
+// child's health costs (R. 544-2).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-controle-competent" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-cc-01": organisme_prise_en_charge_sante(entity_ref("urn:fr:pf-ajpp:case:enfant-cc"), entity_ref("urn:fr:pf-ajpp:org:cpam")) { origin case_input; }
+    }
+    evaluate truth(controle_medical_competent(entity_ref("urn:fr:pf-ajpp:case:enfant-cc"), entity_ref("urn:fr:pf-ajpp:org:cpam")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

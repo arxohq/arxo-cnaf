@@ -1,0 +1,1638 @@
+// Recovery and appeals: D. 553 applicability (D. 847-1),
+// abandonment threshold (D. 847-2), seizure deductions (D. 847-3),
+// verification mention (R. 847-1), recovery procedure (R. 847-1-1),
+// prior appeal (R. 847-2), decision mentions (R. 847-3).
+//
+// «Les dispositions des articles D. 553-1, D. 553-2, D. 553-4 et
+// D. 553-5 sont applicables au recouvrement des indus» (D. 847-1):
+// applicability flag on recoverable undue payments; D. 553 mechanics
+// are PENDING_WAVE with SEC-PF-GEN, rates with versement — no silent
+// duplication, bridge request in the line journal.
+// «sont autorisés ... à ne pas procéder au recouvrement ... lorsque
+// le montant des indus ... est inférieur à ... 0,68 % du plafond
+// mentionné à l'article L. 241-3, arrondie à l'euro supérieur»
+// (D. 847-2): power P3 to abandon (holder the serving organism),
+// threshold built with CEILING rounding from the retained L. 241-3
+// ceiling (OUT_OF_SCOPE bridge); effect distinct from exercise.
+// «Pour la mise en œuvre de la saisie ... prévue à l'article
+// L. 845-5, les prélèvements mensuels ... sont déterminés selon ...
+// D. 553-1 et D. 553-2» (D. 847-3, from 2021-06-01): monthly
+// seizure-deduction flag, gated on the retained seizure
+// implementation premise (PA-M3); D. 553 mechanics stay with the
+// owning package.
+// «font mention de la possibilité de procéder aux vérifications»
+// (R. 847-1): duty D6 on the request channel, bearer the organism.
+// «L'action en recouvrement ... s'ouvre par l'envoi ... par le
+// directeur ... par tout moyen conférant date certaine à sa
+// réception, d'une notification» (R. 847-1-1 I): duty D7 to notify,
+// held by the director of the serving organism (PA-FE09-04); the
+// four content items (1° nature/date/montant/motif; 2° a) 20-day
+// rectification modalities, b) deduction recovery unless single
+// payment, c) voies/délais) arrive as retained content facts, and
+// the date-certain means as a retained method fact (PA-FE09-03);
+// completeness as an institutional conjunction the duty maintains
+// (PA-M6).
+// «présentée dans le délai mentionné au a du 2° du I interrompt le
+// délai de saisine» (III): power P2, 20-day window from retained
+// reception (receipt <= request <= receipt+20 days, PA-R3-01),
+// gated on the retained date-certain method (PA-FE09-03);
+// effect the CRA-deadline interruption (the interruption
+// end feeds the retained CRA-deadline marker, R. 142-1 OUT_OF_SCOPE).
+// «Le délai ... est fixé à un mois» (II 1°, only the timely I.2.a
+// request, PA-R3-02): implicit rejection from the retained
+// observation date plus an affirmative no-decision file status
+// (PA-R4-08), gated on the retained date-certain method
+// (PA-FE09-03). «deux mois suivant
+// l'expiration du délai [d'un mois]» (II 2°): recovery three months
+// after the undecided timely request (same method gate); a dated
+// explicit decision within the month (PA-FE11-01), an out-of-window
+// request or a pre-maturity observation refutes the II heads
+// (PA-FE10-02). «statue ... avant l'expiration du
+// délai [d'un mois], la nouvelle notification ... : 1° ... le motif
+// ...; 2° ... récupérer ... au terme du délai [R. 142-1] ...;
+// 3° ... voies et délais» (III al. 2): duty D7bis on the dated
+// explicit rejection after a timely twenty-day request (PA-R2-01,
+// receipt-bounded, PA-R3-01), gated on the retained date-certain
+// method (PA-FE09-03) and on the rejection being the director's
+// own decision (PA-FE09-05; the follow-up sending stays passive),
+// same completeness shape as D7. «présentée
+// postérieurement au délai ... et avant l'expiration du délai de
+// saisine» (IV, 20-day reading recorded in the line journal):
+// written late requests are deemed prior appeals; oral late
+// requests give the beneficiary (D8 bearer, PA-M1) 20 days from the
+// oral request to produce supporting documents (production on or
+// after the request, PA-R3 sweep) — timely production
+// is deemed a prior appeal, default is rejection (PA-M2); the
+// express rejection refutes examination of that same request
+// (PA-FE09-06), and timely production refutes the oral rejection in
+// return (PA-FE10-01). Late classification runs from a receipt anchored
+// by the retained date-certain method (PA-FE09-03). Late
+// requests past the CRA deadline are inadmissible (retained
+// CRA-deadline marker, R. 142-1 OUT_OF_SCOPE).
+// «peut ... former un recours préalable devant la commission de
+// recours amiable ... dans le délai prévu à l'article R. 142-1»,
+// «par une association régulièrement constituée depuis cinq ans au
+// moins pour œuvrer dans les domaines de l'insertion
+// professionnelle ... accompagné d'un écrit ... donnant mandat»
+// (four cumulative premises, PA-M7), «Vaut rejet ... R. 142-6»,
+// «déférer au tribunal administratif ... R. 421-1 CJA», «les
+// directeurs ... représentent l'Etat» (R. 847-2): receivability
+// (direct + association paths), implicit CRA rejection, TA opening
+// (implicit/explicit), State representation; R. 142/R. 421-1
+// deadlines retained (OUT_OF_SCOPE).
+// «Les décisions ... mentionnent les voies et délais de recours
+// ... ainsi que les modalités du recours préalable» (R. 847-3):
+// duty D9 on individual decisions.
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_D847_1_ED2021_01_01,
+    CSS_D847_1_ED2021_03_25,
+    CSS_D847_1_ED2021_06_01,
+    CSS_D847_1_ED2022_03_21,
+    CSS_D847_1_ED2023_12_31,
+    CSS_D847_1_ED2024_01_01,
+    CSS_D847_1_ED2024_07_01,
+    CSS_D847_1_ED2025_01_01,
+    CSS_D847_1_ED2025_02_28,
+    CSS_D847_1_ED2025_03_31,
+    CSS_D847_1_ED2026_04_01,
+    CSS_D847_1_ED2026_06_27,
+    CSS_D847_2_ED2021_01_01,
+    CSS_D847_2_ED2021_03_25,
+    CSS_D847_2_ED2021_06_01,
+    CSS_D847_2_ED2022_03_21,
+    CSS_D847_2_ED2023_12_31,
+    CSS_D847_2_ED2024_01_01,
+    CSS_D847_2_ED2024_07_01,
+    CSS_D847_2_ED2025_01_01,
+    CSS_D847_2_ED2025_02_28,
+    CSS_D847_2_ED2025_03_31,
+    CSS_D847_2_ED2026_04_01,
+    CSS_D847_2_ED2026_06_27,
+    CSS_D847_3_ED2021_06_01,
+    CSS_D847_3_ED2022_03_21,
+    CSS_D847_3_ED2023_12_31,
+    CSS_D847_3_ED2024_01_01,
+    CSS_D847_3_ED2024_07_01,
+    CSS_D847_3_ED2025_01_01,
+    CSS_D847_3_ED2025_02_28,
+    CSS_D847_3_ED2025_03_31,
+    CSS_D847_3_ED2026_04_01,
+    CSS_D847_3_ED2026_06_27,
+    CSS_R847_1_ED2021_01_01,
+    CSS_R847_1_ED2021_03_25,
+    CSS_R847_1_ED2021_06_01,
+    CSS_R847_1_ED2022_03_21,
+    CSS_R847_1_ED2023_12_31,
+    CSS_R847_1_ED2024_01_01,
+    CSS_R847_1_ED2024_07_01,
+    CSS_R847_1_ED2025_01_01,
+    CSS_R847_1_ED2025_02_28,
+    CSS_R847_1_ED2025_03_31,
+    CSS_R847_1_ED2026_04_01,
+    CSS_R847_1_ED2026_06_27,
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27,
+    CSS_R847_2_ED2021_01_01,
+    CSS_R847_2_ED2021_03_25,
+    CSS_R847_2_ED2021_06_01,
+    CSS_R847_2_ED2022_03_21,
+    CSS_R847_2_ED2023_12_31,
+    CSS_R847_2_ED2024_01_01,
+    CSS_R847_2_ED2024_07_01,
+    CSS_R847_2_ED2025_01_01,
+    CSS_R847_2_ED2025_02_28,
+    CSS_R847_2_ED2025_03_31,
+    CSS_R847_2_ED2026_04_01,
+    CSS_R847_2_ED2026_06_27,
+    CSS_R847_3_ED2021_01_01,
+    CSS_R847_3_ED2021_03_25,
+    CSS_R847_3_ED2021_06_01,
+    CSS_R847_3_ED2022_03_21,
+    CSS_R847_3_ED2023_12_31,
+    CSS_R847_3_ED2024_01_01,
+    CSS_R847_3_ED2024_07_01,
+    CSS_R847_3_ED2025_01_01,
+    CSS_R847_3_ED2025_02_28,
+    CSS_R847_3_ED2025_03_31,
+    CSS_R847_3_ED2026_04_01,
+    CSS_R847_3_ED2026_06_27,
+    Demandeur,
+    Directeur,
+    Organisme,
+    demande_valide,
+    directeur_de,
+    indu_recupere,
+    organisme_serviteur,
+};
+
+pub relation recouvrement_d553_applicable(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "D. 553-1/2/4/5 applicables au recouvrement de l'indu (D. 847-1)";
+    label en unofficial "D. 553-1/2/4/5 applying to the undue-payment recovery (D. 847-1)";
+}
+
+@source(
+    CSS_D847_1_ED2021_01_01,
+    CSS_D847_1_ED2021_03_25,
+    CSS_D847_1_ED2021_06_01,
+    CSS_D847_1_ED2022_03_21,
+    CSS_D847_1_ED2023_12_31,
+    CSS_D847_1_ED2024_01_01,
+    CSS_D847_1_ED2024_07_01,
+    CSS_D847_1_ED2025_01_01,
+    CSS_D847_1_ED2025_02_28,
+    CSS_D847_1_ED2025_03_31,
+    CSS_D847_1_ED2026_04_01,
+    CSS_D847_1_ED2026_06_27)
+rule RecouvrementD553(d: Demandeur, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "indu recouvrable: D. 553-1/2/4/5 applicables (D. 847-1)";
+    label en unofficial "recoverable undue payment: D. 553 applies (D. 847-1)";
+    when indu_recupere(d, m);
+    then recouvrement_d553_applicable(d);
+}
+
+pub relation plafond_l241_3_applicable(montant: Money) kind empirical {
+    key();
+    label fr official "plafond L. 241-3 applicable au recouvrement (D. 847-2; fait retenu, hors périmètre)";
+    label en unofficial "L. 241-3 ceiling for the recovery (D. 847-2; retained fact, out of scope)";
+}
+
+pub relation seuil_abandon_recouvrement(montant: Money) kind institutional {
+    key();
+    label fr official "seuil d'abandon: 0,68 % du plafond, euro supérieur (D. 847-2)";
+    label en unofficial "abandonment threshold: 0.68% of the ceiling, rounded up (D. 847-2)";
+}
+
+pub relation abandon_recouvrement_prononce(o: Organisme, d: Demandeur) kind empirical {
+    key(o, d);
+    label fr official "abandon du recouvrement prononcé (D. 847-2; fait retenu)";
+    label en unofficial "recovery abandonment pronounced (D. 847-2; retained fact)";
+}
+
+pub relation abandon_prend_effet(o: Organisme, d: Demandeur) kind institutional {
+    key(o, d);
+    label fr official "l'abandon du recouvrement prend effet (D. 847-2)";
+    label en unofficial "the recovery abandonment takes effect (D. 847-2)";
+}
+
+@source(
+    CSS_D847_2_ED2021_01_01,
+    CSS_D847_2_ED2021_03_25,
+    CSS_D847_2_ED2021_06_01,
+    CSS_D847_2_ED2022_03_21,
+    CSS_D847_2_ED2023_12_31,
+    CSS_D847_2_ED2024_01_01,
+    CSS_D847_2_ED2024_07_01,
+    CSS_D847_2_ED2025_01_01,
+    CSS_D847_2_ED2025_02_28,
+    CSS_D847_2_ED2025_03_31,
+    CSS_D847_2_ED2026_04_01,
+    CSS_D847_2_ED2026_06_27)
+rule SeuilAbandon(p: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "0,68 % du plafond L. 241-3, euro supérieur (D. 847-2)";
+    label en unofficial "0.68% of the L. 241-3 ceiling, rounded up (D. 847-2)";
+    when plafond_l241_3_applicable(p);
+    then seuil_abandon_recouvrement(round(p * 0.0068, 0, "CEILING"));
+}
+
+@source(
+    CSS_D847_2_ED2021_01_01,
+    CSS_D847_2_ED2021_03_25,
+    CSS_D847_2_ED2021_06_01,
+    CSS_D847_2_ED2022_03_21,
+    CSS_D847_2_ED2023_12_31,
+    CSS_D847_2_ED2024_01_01,
+    CSS_D847_2_ED2024_07_01,
+    CSS_D847_2_ED2025_01_01,
+    CSS_D847_2_ED2025_02_28,
+    CSS_D847_2_ED2025_03_31,
+    CSS_D847_2_ED2026_04_01,
+    CSS_D847_2_ED2026_06_27)
+rule PouvoirAbandonner(o: Organisme, d: Demandeur, m: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "P3: abandon sous le seuil (D. 847-2)";
+    label en unofficial "P3: abandonment under the threshold (D. 847-2)";
+    when organisme_serviteur(o, d) and indu_recupere(d, m)
+        and seuil_abandon_recouvrement(s) and m < s;
+    then power AbandonRecouvrement {
+        holder o;
+        exercise abandon_recouvrement_prononce(o, d);
+        // D-42: the comparison m < s stays in the creating rule body;
+        // valid_when executes only a literal conjunction (§127, E-0190),
+        // a comparison there left the effect unmaterialised.
+        valid_when (organisme_serviteur(o, d) and indu_recupere(d, m)
+            and seuil_abandon_recouvrement(s));
+        effect abandon_prend_effet(o, d);
+        window [@2021-01-01, infinity);
+    };
+}
+
+pub relation saisie_prime_mise_en_oeuvre(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "mise en œuvre de la saisie de la prime prévue à L. 845-5 (D. 847-3; fait retenu)";
+    label en unofficial "seizure of the bonus under L. 845-5 being implemented (D. 847-3; retained fact)";
+}
+
+pub relation prelevements_saisie_mensuels(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "prélèvements mensuels en cas de saisie, D. 553-1/2 (D. 847-3)";
+    label en unofficial "monthly seizure deductions under D. 553-1/2 (D. 847-3)";
+}
+
+@source(
+    CSS_D847_3_ED2021_06_01,
+    CSS_D847_3_ED2022_03_21,
+    CSS_D847_3_ED2023_12_31,
+    CSS_D847_3_ED2024_01_01,
+    CSS_D847_3_ED2024_07_01,
+    CSS_D847_3_ED2025_01_01,
+    CSS_D847_3_ED2025_02_28,
+    CSS_D847_3_ED2025_03_31,
+    CSS_D847_3_ED2026_04_01,
+    CSS_D847_3_ED2026_06_27)
+rule PrelevementsSaisie(d: Demandeur, m: Money) strict {
+    effective [@2021-06-01, infinity);
+    label fr official "saisie mise en œuvre: prélèvements mensuels D. 553-1/2 (D. 847-3)";
+    label en unofficial "seizure implemented: monthly D. 553-1/2 deductions (D. 847-3)";
+    when indu_recupere(d, m) and saisie_prime_mise_en_oeuvre(d);
+    then prelevements_saisie_mensuels(d);
+}
+
+pub relation mention_verification_possible(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "téléprocédure/formulaire mentionnant les vérifications (R. 847-1; fait retenu)";
+    label en unofficial "channel mentioning verifications (R. 847-1; retained fact)";
+}
+
+@source(
+    CSS_R847_1_ED2021_01_01,
+    CSS_R847_1_ED2021_03_25,
+    CSS_R847_1_ED2021_06_01,
+    CSS_R847_1_ED2022_03_21,
+    CSS_R847_1_ED2023_12_31,
+    CSS_R847_1_ED2024_01_01,
+    CSS_R847_1_ED2024_07_01,
+    CSS_R847_1_ED2025_01_01,
+    CSS_R847_1_ED2025_02_28,
+    CSS_R847_1_ED2025_03_31,
+    CSS_R847_1_ED2026_04_01,
+    CSS_R847_1_ED2026_06_27)
+rule DevoirMentionnerVerification(d: Demandeur, o: Organisme, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "D6: mention des vérifications sur la demande (R. 847-1)";
+    label en unofficial "D6: verification mention on the request (R. 847-1)";
+    when demande_valide(d, date) and organisme_serviteur(o, d);
+    then duty MentionnerVerification {
+        bearer o;
+        beneficiary d;
+        maintain mention_verification_possible(d) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation constat_indu(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "indu constaté, index de la notification (R. 847-1-1 I; fait retenu)";
+    label en unofficial "undue payment established, notification index (R. 847-1-1 I; retained fact)";
+}
+
+pub relation notification_recouvrement(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "notification de l'indu envoyée (R. 847-1-1 I; fait retenu)";
+    label en unofficial "undue-payment notification sent (R. 847-1-1 I; retained fact)";
+}
+
+pub relation notification_moyen_date_certaine(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "notification envoyée par un moyen conférant date certaine à sa réception (R. 847-1-1 I; fait retenu)";
+    label en unofficial "notification sent by a means conferring date-certain receipt (R. 847-1-1 I; retained fact)";
+}
+
+pub relation notification_contenu_base(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "notification précisant nature, date, montant, motif (R. 847-1-1 I 1°; fait retenu)";
+    label en unofficial "notification stating nature, date, amount, reason (R. 847-1-1 I 1°; retained fact)";
+}
+
+pub relation notification_modalites_rectification(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "notification indiquant les modalités de rectification à vingt jours (R. 847-1-1 I 2° a); fait retenu)";
+    label en unofficial "notification stating the twenty-day rectification process (R. 847-1-1 I 2° a); retained fact)";
+}
+
+pub relation notification_possibilite_recouvrement(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "notification indiquant retenues après le délai R. 847-2 al. 1 sauf paiement unique, sans préjudice des recours (R. 847-1-1 I 2° b); fait retenu)";
+    label en unofficial "notification stating deduction recovery unless single payment, appeals preserved (R. 847-1-1 I 2° b); retained fact)";
+}
+
+pub relation notification_voies_recours(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "notification indiquant les voies et délais de recours (R. 847-1-1 I 2° c); fait retenu)";
+    label en unofficial "notification stating appeal routes and deadlines (R. 847-1-1 I 2° c); retained fact)";
+}
+
+pub relation notification_recouvrement_complete(d: Demandeur, date: Date) kind institutional {
+    key(d, date);
+    label fr official "notification de l'indu complète: 1° + 2° a)/b)/c) (R. 847-1-1 I)";
+    label en unofficial "complete undue-payment notification: 1° + 2° a)/b)/c) (R. 847-1-1 I)";
+}
+
+pub relation reception_notification(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "réception de la notification par le bénéficiaire (R. 847-1-1 I 2° a); fait retenu)";
+    label en unofficial "receipt of the notification (R. 847-1-1 I 2° a); retained fact)";
+}
+
+pub relation demande_rectification(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "demande de rectification (R. 847-1-1 II/III/IV; fait retenu)";
+    label en unofficial "rectification request (R. 847-1-1 II/III/IV; retained fact)";
+}
+
+pub relation decision_rectification(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "décision de l'organisme sur la rectification, rejet ou accord (R. 847-1-1 II/III)";
+    label en unofficial "organ decision on rectification, rejection or grant (R. 847-1-1 II/III)";
+}
+
+pub relation decision_rectification_rejet(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "décision de rejet total ou partiel de la rectification (R. 847-1-1 III; fait retenu)";
+    label en unofficial "total or partial rejection of the rectification (R. 847-1-1 III; retained fact)";
+}
+
+pub relation decision_rectification_rejet_directeur(d: Demandeur, date: Date, c: Directeur) kind empirical {
+    key(d, date);
+    label fr official "rejet total ou partiel statué par le directeur de l'organisme (R. 847-1-1 III; fait retenu)";
+    label en unofficial "total or partial rejection decided by the director of the organism (R. 847-1-1 III; retained fact)";
+}
+
+pub relation decision_rectification_accordee(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "rectification accordée par l'organisme (R. 847-1-1 II/III; fait retenu)";
+    label en unofficial "rectification granted by the organ (R. 847-1-1 II/III; retained fact)";
+}
+
+pub relation decision_rectification_accordee_datee(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "rectification accordée par l'organisme, datée (R. 847-1-1 II/III; fait retenu)";
+    label en unofficial "rectification granted by the organ, dated (R. 847-1-1 II/III; retained fact)";
+}
+
+pub relation nouvelle_notification_rejet(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "nouvelle notification après rejet de la rectification, envoyée (R. 847-1-1 III; fait retenu)";
+    label en unofficial "new notification after rectification rejection, sent (R. 847-1-1 III; retained fact)";
+}
+
+pub relation nouvelle_notification_motif(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "nouvelle notification précisant le motif du rejet (R. 847-1-1 III 1°; fait retenu)";
+    label en unofficial "new notification stating the rejection reason (R. 847-1-1 III 1°; retained fact)";
+}
+
+pub relation nouvelle_notification_recouvrement(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "nouvelle notification indiquant retenues au terme du délai R. 142-1 sauf paiement unique, sans préjudice des recours (R. 847-1-1 III 2°; fait retenu)";
+    label en unofficial "new notification stating R. 142-1 recovery unless single payment, appeals preserved (R. 847-1-1 III 2°; retained fact)";
+}
+
+pub relation nouvelle_notification_voies(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "nouvelle notification indiquant les voies et délais de recours (R. 847-1-1 III 3°; fait retenu)";
+    label en unofficial "new notification stating appeal routes and deadlines (R. 847-1-1 III 3°; retained fact)";
+}
+
+pub relation nouvelle_notification_complete(d: Demandeur, date: Date) kind institutional {
+    key(d, date);
+    label fr official "nouvelle notification complète: envoi + 1°/2°/3° (R. 847-1-1 III)";
+    label en unofficial "complete new notification: sending + 1°/2°/3° (R. 847-1-1 III)";
+}
+
+pub relation date_observation_recours(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "date d'observation des délais de recours (R. 847-1-1/2; fait retenu)";
+    label en unofficial "appeal-deadline observation date (R. 847-1-1/2; retained fact)";
+}
+
+pub relation interruption_delai_cra(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "délai de recours CRA interrompu par la rectification (R. 847-1-1 III)";
+    label en unofficial "CRA appeal deadline interrupted by rectification (R. 847-1-1 III)";
+}
+
+pub relation rejet_implicite_rectification(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "rejet implicite à un mois sans décision (R. 847-1-1 II)";
+    label en unofficial "implicit rejection after one month (R. 847-1-1 II)";
+}
+
+pub relation recouvrement_apres_demande(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "recouvrement opérable deux mois après le délai de rejet implicite d'un mois (R. 847-1-1 II 2°)";
+    label en unofficial "recovery available two months after the one-month implicit-rejection delay (R. 847-1-1 II 2°)";
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule NotificationComplete(d: Demandeur, date: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "notification complète: envoi + 1° + 2° a)/b)/c) + moyen date certaine (R. 847-1-1 I)";
+    label en unofficial "complete notification: sending + 1° + 2° a)/b)/c) + date-certain means (R. 847-1-1 I)";
+    when notification_recouvrement(d, date) and notification_contenu_base(d, date)
+        and notification_modalites_rectification(d, date)
+        and notification_possibilite_recouvrement(d, date)
+        and notification_voies_recours(d, date)
+        and notification_moyen_date_certaine(d);
+    then notification_recouvrement_complete(d, date);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule DevoirNotifierIndu(d: Demandeur, o: Organisme, c: Directeur, m: Money, date: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "D7: notification préalable avec contenu, par le directeur (R. 847-1-1 I)";
+    label en unofficial "D7: prior notification with content, by the director (R. 847-1-1 I)";
+    when indu_recupere(d, m) and constat_indu(d, date) and organisme_serviteur(o, d)
+        and directeur_de(c, o);
+    then duty NotifierIndu {
+        bearer c;
+        beneficiary d;
+        maintain notification_recouvrement_complete(d, date) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule PouvoirRectification(d: Demandeur, idx: Date, rec: Date, dd: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "P2: rectification dans les vingt jours, interruption CRA (R. 847-1-1 III)";
+    label en unofficial "P2: rectification within twenty days, CRA interruption (R. 847-1-1 III)";
+    when notification_recouvrement(d, idx) and reception_notification(d, rec)
+        and demande_rectification(d, dd)
+        and notification_moyen_date_certaine(d)
+        and dd >= rec
+        and dd <= add_calendar_period(rec, 20 calendar_day);
+    then power DemandeRectification {
+        holder d;
+        exercise demande_rectification(d, dd);
+        // D-42: the twenty-day window (rec <= dd <= rec + 20 days) is
+        // enforced by the creating rule body; valid_when executes only a
+        // literal conjunction (§127, E-0190), comparisons there left the
+        // CRA interruption unmaterialised.
+        valid_when (notification_recouvrement(d, idx)
+            and reception_notification(d, rec)
+            and notification_moyen_date_certaine(d));
+        effect interruption_delai_cra(d);
+        window [@2021-03-25, infinity);
+    };
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule DecisionParRejet(d: Demandeur, date: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "rejet daté vaut décision sur la rectification (R. 847-1-1 II/III)";
+    label en unofficial "dated rejection counts as a decision on rectification (R. 847-1-1 II/III)";
+    when decision_rectification_rejet(d, date);
+    then decision_rectification(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule DecisionParAccord(d: Demandeur) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "rectification accordée vaut décision sur la rectification (R. 847-1-1 II/III)";
+    label en unofficial "granted rectification counts as a decision on rectification (R. 847-1-1 II/III)";
+    when decision_rectification_accordee(d);
+    then decision_rectification(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule DecisionParAccordDatee(d: Demandeur, date: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "rectification accordée datée vaut décision sur la rectification (R. 847-1-1 II/III)";
+    label en unofficial "dated granted rectification counts as a decision on rectification (R. 847-1-1 II/III)";
+    when decision_rectification_accordee_datee(d, date);
+    then decision_rectification(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule NouvelleNotificationComplete(d: Demandeur, date: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "nouvelle notification complète: envoi + 1°/2°/3° (R. 847-1-1 III)";
+    label en unofficial "complete new notification: sending + 1°/2°/3° (R. 847-1-1 III)";
+    when nouvelle_notification_rejet(d, date) and nouvelle_notification_motif(d, date)
+        and nouvelle_notification_recouvrement(d, date)
+        and nouvelle_notification_voies(d, date);
+    then nouvelle_notification_complete(d, date);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule DevoirNotifierRejetRectification(d: Demandeur, o: Organisme, c: Directeur, dd: Date, dec: Date, rec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "D7bis: nouvelle notification complète après rejet du directeur avant un mois (R. 847-1-1 III)";
+    label en unofficial "D7bis: complete new notification after the director's rejection within a month (R. 847-1-1 III)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd >= rec
+        and dd <= add_calendar_period(rec, 20 calendar_day)
+        and decision_rectification_rejet(d, dec)
+        and decision_rectification_rejet_directeur(d, dec, c)
+        and dec < add_calendar_period(dd, 1 calendar_month)
+        and organisme_serviteur(o, d)
+        and directeur_de(c, o);
+    then duty NotifierRejetRectification {
+        bearer o;
+        beneficiary d;
+        maintain nouvelle_notification_complete(d, dec) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RejetImpliciteRectification(d: Demandeur, dd: Date, rec: Date, now: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "sans décision à un mois sur la demande dans les vingt jours: rejet implicite (R. 847-1-1 II 1°)";
+    label en unofficial "no decision within a month on the twenty-day request: implicit rejection (R. 847-1-1 II 1°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd >= rec and dd <= add_calendar_period(rec, 20 calendar_day)
+        and absence_decision_rectification(d)
+        and not_known(decision_rectification(d))
+        and date_observation_recours(d, now)
+        and now >= add_calendar_period(dd, 1 calendar_month);
+    then rejet_implicite_rectification(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RecouvrementDeuxMois(d: Demandeur, dd: Date, rec: Date, now: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "sans décision sur la demande dans les vingt jours: recouvrement deux mois après le délai d'un mois (R. 847-1-1 II 2°)";
+    label en unofficial "no decision on the twenty-day request: recovery two months after the one-month delay (R. 847-1-1 II 2°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd >= rec and dd <= add_calendar_period(rec, 20 calendar_day)
+        and absence_decision_rectification(d)
+        and not_known(decision_rectification(d))
+        and date_observation_recours(d, now)
+        and now >= add_calendar_period(add_calendar_period(dd, 1 calendar_month), 2 calendar_month);
+    then recouvrement_apres_demande(d);
+}
+
+// PA-FE10-02: explicit source-grounded refutations of the II 1°/2°
+// heads. A failed positive body leaves NEITHER; each rule below
+// derives FALSE_ONLY from an affirmative contrary: a dated
+// explicit decision within the month on the timely request
+// (PA-FE11-01; II 1° «au terme duquel naît», III al. 2 «avant
+// l'expiration du délai» — undated or post-month decisions prove
+// nothing), a request outside the I.2.a twenty-day window (II
+// governs only «la demande de rectification mentionnée au a du 2°
+// du I»), or an observation before the II 2° maturity date («le
+// délai à l'issue duquel»). Scoped to the II route only: no claim
+// about independent recovery avenues.
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RejetImpliciteRefuteParRejetDate(d: Demandeur, dd: Date, rec: Date, dec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "rejet daté dans le mois sur la demande dans les vingt jours: pas de rejet implicite (R. 847-1-1 II 1°)";
+    label en unofficial "dated rejection within the month on the twenty-day request: no implicit rejection (R. 847-1-1 II 1°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd >= rec and dd <= add_calendar_period(rec, 20 calendar_day)
+        and decision_rectification_rejet(d, dec)
+        and dec >= dd
+        and dec < add_calendar_period(dd, 1 calendar_month);
+    then not rejet_implicite_rectification(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RecouvrementRefuteParRejetDate(d: Demandeur, dd: Date, rec: Date, dec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "rejet daté dans le mois sur la demande dans les vingt jours: pas de recouvrement II 2° (R. 847-1-1 II 2°)";
+    label en unofficial "dated rejection within the month on the twenty-day request: no II-2° recovery (R. 847-1-1 II 2°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd >= rec and dd <= add_calendar_period(rec, 20 calendar_day)
+        and decision_rectification_rejet(d, dec)
+        and dec >= dd
+        and dec < add_calendar_period(dd, 1 calendar_month);
+    then not recouvrement_apres_demande(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RejetImpliciteRefuteParAccordDate(d: Demandeur, dd: Date, rec: Date, dec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "accord daté dans le mois sur la demande dans les vingt jours: pas de rejet implicite (R. 847-1-1 II 1°)";
+    label en unofficial "dated grant within the month on the twenty-day request: no implicit rejection (R. 847-1-1 II 1°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd >= rec and dd <= add_calendar_period(rec, 20 calendar_day)
+        and decision_rectification_accordee_datee(d, dec)
+        and dec >= dd
+        and dec < add_calendar_period(dd, 1 calendar_month);
+    then not rejet_implicite_rectification(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RecouvrementRefuteParAccordDate(d: Demandeur, dd: Date, rec: Date, dec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "accord daté dans le mois sur la demande dans les vingt jours: pas de recouvrement II 2° (R. 847-1-1 II 2°)";
+    label en unofficial "dated grant within the month on the twenty-day request: no II-2° recovery (R. 847-1-1 II 2°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd >= rec and dd <= add_calendar_period(rec, 20 calendar_day)
+        and decision_rectification_accordee_datee(d, dec)
+        and dec >= dd
+        and dec < add_calendar_period(dd, 1 calendar_month);
+    then not recouvrement_apres_demande(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RejetImpliciteRefuteAvantReception(d: Demandeur, dd: Date, rec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "demande avant réception: pas de rejet implicite II (R. 847-1-1 II 1°)";
+    label en unofficial "pre-receipt request: no II implicit rejection (R. 847-1-1 II 1°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd < rec;
+    then not rejet_implicite_rectification(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RejetImpliciteRefuteHorsDelai(d: Demandeur, dd: Date, rec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "demande après vingt jours: pas de rejet implicite II (R. 847-1-1 II 1°)";
+    label en unofficial "post-twenty-day request: no II implicit rejection (R. 847-1-1 II 1°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd > add_calendar_period(rec, 20 calendar_day);
+    then not rejet_implicite_rectification(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RecouvrementRefuteAvantReception(d: Demandeur, dd: Date, rec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "demande avant réception: pas de recouvrement II 2° (R. 847-1-1 II 2°)";
+    label en unofficial "pre-receipt request: no II-2° recovery (R. 847-1-1 II 2°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd < rec;
+    then not recouvrement_apres_demande(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RecouvrementRefuteHorsDelai(d: Demandeur, dd: Date, rec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "demande après vingt jours: pas de recouvrement II 2° (R. 847-1-1 II 2°)";
+    label en unofficial "post-twenty-day request: no II-2° recovery (R. 847-1-1 II 2°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd > add_calendar_period(rec, 20 calendar_day);
+    then not recouvrement_apres_demande(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RecouvrementRefuteAvantEcheance(d: Demandeur, dd: Date, rec: Date, now: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "observation avant deux mois après le mois: pas de recouvrement II 2° (R. 847-1-1 II 2°)";
+    label en unofficial "observation before two months after the month: no II-2° recovery (R. 847-1-1 II 2°)";
+    when demande_rectification(d, dd) and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd >= rec and dd <= add_calendar_period(rec, 20 calendar_day)
+        and date_observation_recours(d, now)
+        and now < add_calendar_period(add_calendar_period(dd, 1 calendar_month), 2 calendar_month);
+    then not recouvrement_apres_demande(d);
+}
+
+pub relation demande_rectification_orale(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "demande de rectification formulée par oral (R. 847-1-1 IV 2°; fait retenu)";
+    label en unofficial "oral rectification request (R. 847-1-1 IV 2°; retained fact)";
+}
+
+pub relation demande_rectification_ecrite(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "demande de rectification formulée par écrit (R. 847-1-1 IV 1°; fait retenu)";
+    label en unofficial "written rectification request (R. 847-1-1 IV 1°; retained fact)";
+}
+
+pub relation demande_documents_rectification(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "SUPERSEDED (PA-M2): délai de production court depuis la demande orale elle-même; retrait demandé à root (R. 847-1-1 IV 2°)";
+    label en unofficial "SUPERSEDED (PA-M2): production delay runs from the oral request itself; removal requested to root (R. 847-1-1 IV 2°)";
+}
+
+pub relation documents_rectification_produits(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "documents rappelant la demande orale et la justifiant, produits par le bénéficiaire (R. 847-1-1 IV 2°; fait retenu)";
+    label en unofficial "documents recalling and evidencing the oral request, produced by the beneficiary (R. 847-1-1 IV 2°; retained fact)";
+}
+
+pub relation documents_rectification_transmis(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "pièces de la demande orale produites par le bénéficiaire (R. 847-1-1 IV 2°)";
+    label en unofficial "oral-request documents produced by the beneficiary (R. 847-1-1 IV 2°)";
+}
+
+pub relation pieces_orales_produites(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "pièces de la demande orale tardive produites dans les vingt jours (R. 847-1-1 IV 2°)";
+    label en unofficial "late oral-request documents produced within twenty days (R. 847-1-1 IV 2°)";
+}
+
+pub relation rejet_demande_orale(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "rejet de la demande orale tardive non documentée dans les vingt jours (R. 847-1-1 IV 2°)";
+    label en unofficial "rejection of the late oral request undocumented within twenty days (R. 847-1-1 IV 2°)";
+}
+
+pub relation examen_demande_possible(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "demande orale tardive documentée à temps, examinée comme recours préalable (R. 847-1-1 IV 2°)";
+    label en unofficial "late oral request timely documented, examined as a prior appeal (R. 847-1-1 IV 2°)";
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule DevoirTransmettrePieces(d: Demandeur, o: Organisme, dd: Date, rec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "D8: le bénéficiaire produit les pièces de sa demande orale tardive dans vingt jours (R. 847-1-1 IV 2°)";
+    label en unofficial "D8: the beneficiary produces the late oral-request documents within twenty days (R. 847-1-1 IV 2°)";
+    when demande_rectification_orale(d) and demande_rectification(d, dd)
+        and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd > add_calendar_period(rec, 20 calendar_day)
+        and delai_recours_cra_en_cours(d)
+        and not_known(delai_recours_cra_expire(d))
+        and organisme_serviteur(o, d);
+    then duty TransmettrePieces {
+        bearer d;
+        beneficiary o;
+        maintain pieces_orales_produites(d) during [@2021-03-25, infinity);
+    };
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule PiecesTransmisesSiProduites(d: Demandeur, prod: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "pièces produites valent pièces transmises (R. 847-1-1 IV 2°)";
+    label en unofficial "produced documents count as transmitted documents (R. 847-1-1 IV 2°)";
+    when documents_rectification_produits(d, prod);
+    then documents_rectification_transmis(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule PiecesOralesEnDelai(d: Demandeur, dd: Date, prod: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "pièces produites dans les vingt jours de la demande orale (R. 847-1-1 IV 2°)";
+    label en unofficial "documents produced within twenty days of the oral request (R. 847-1-1 IV 2°)";
+    when demande_rectification_orale(d) and demande_rectification(d, dd)
+        and documents_rectification_produits(d, prod)
+        and prod >= dd
+        and prod <= add_calendar_period(dd, 20 calendar_day);
+    then pieces_orales_produites(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule ExamenApresPieces(d: Demandeur, dd: Date, rec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "demande orale tardive documentée à temps: examen comme recours préalable (R. 847-1-1 IV 2°)";
+    label en unofficial "timely documented late oral request: examination as a prior appeal (R. 847-1-1 IV 2°)";
+    when demande_rectification_orale(d) and demande_rectification(d, dd)
+        and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd > add_calendar_period(rec, 20 calendar_day)
+        and delai_recours_cra_en_cours(d)
+        and not_known(delai_recours_cra_expire(d))
+        and pieces_orales_produites(d)
+        and not_known(rejet_demande_orale(d));
+    then examen_demande_possible(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RejetDefautProductionOrale(d: Demandeur, dd: Date, rec: Date, now: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "demande orale tardive non documentée dans les vingt jours: rejet (R. 847-1-1 IV 2°)";
+    label en unofficial "late oral request undocumented within twenty days: rejection (R. 847-1-1 IV 2°)";
+    when demande_rectification_orale(d) and demande_rectification(d, dd)
+        and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd > add_calendar_period(rec, 20 calendar_day)
+        and delai_recours_cra_en_cours(d)
+        and not_known(delai_recours_cra_expire(d))
+        and date_observation_recours(d, now)
+        and now >= add_calendar_period(dd, 20 calendar_day)
+        and pieces_orales_non_produites(d)
+        and not_known(pieces_orales_produites(d));
+    then rejet_demande_orale(d);
+}
+
+// PA-FE10-01: explicit source-grounded refutations of the IV 2°
+// same-request oral outcomes. «Le défaut de production de ces
+// documents dans le délai imparti entraîne le rejet de la demande»
+// refutes examination of that same request; «Si le bénéficiaire
+// produit ces documents dans le délai imparti, sa demande est
+// réputée être exercée dans les conditions du recours préalable»
+// refutes its rejection. Scoped to the same oral request in the
+// live CRA route: no claim about unrelated later-review routes.
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule ExamenRefuteParRejetOral(d: Demandeur, dd: Date, rec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "demande orale rejetée pour défaut de pièces: pas d'examen (R. 847-1-1 IV 2°)";
+    label en unofficial "oral request rejected for missing documents: no examination (R. 847-1-1 IV 2°)";
+    when demande_rectification_orale(d) and demande_rectification(d, dd)
+        and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd > add_calendar_period(rec, 20 calendar_day)
+        and delai_recours_cra_en_cours(d)
+        and not_known(delai_recours_cra_expire(d))
+        and rejet_demande_orale(d);
+    then not examen_demande_possible(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule RejetOralRefuteParProduction(d: Demandeur, dd: Date, rec: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "pièces produites à temps: pas de rejet de la demande orale (R. 847-1-1 IV 2°)";
+    label en unofficial "timely produced documents: no oral-request rejection (R. 847-1-1 IV 2°)";
+    when demande_rectification_orale(d) and demande_rectification(d, dd)
+        and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd > add_calendar_period(rec, 20 calendar_day)
+        and delai_recours_cra_en_cours(d)
+        and not_known(delai_recours_cra_expire(d))
+        and pieces_orales_produites(d);
+    then not rejet_demande_orale(d);
+}
+
+pub relation delai_recours_cra_expire(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "délai de recours préalable R. 142-1 expiré (R. 847-1-1 III/R. 847-2; fait retenu, hors périmètre)";
+    label en unofficial "R. 142-1 prior-appeal deadline expired (R. 847-1-1 III/R. 847-2; retained fact, out of scope)";
+}
+
+// PA-R4-01/08: affirmative open-window and no-event statuses. A missing
+// expiry/event fact never proves the window open or the event absent;
+// each head below requires its positive premise (the expiry guards are
+// kept so a present contrary still yields FALSE).
+
+pub relation delai_recours_cra_en_cours(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "délai de saisine CRA R. 142-1 non expiré (R. 847-1-1 IV/R. 847-2; fait retenu, hors périmètre)";
+    label en unofficial "R. 142-1 CRA filing deadline not expired (R. 847-1-1 IV/R. 847-2; retained fact, out of scope)";
+}
+
+pub relation delai_r421_1_en_cours(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "délai R. 421-1 CJA non expiré (R. 847-2; fait retenu, hors périmètre)";
+    label en unofficial "R. 421-1 CJA deadline not expired (R. 847-2; retained fact, out of scope)";
+}
+
+pub relation absence_decision_rectification(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "dossier complet: aucune décision sur la rectification à la date d'observation (R. 847-1-1 II; fait retenu)";
+    label en unofficial "complete file: no decision on rectification at the observation date (R. 847-1-1 II; retained fact)";
+}
+
+pub relation pieces_orales_non_produites(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "défaut constaté de production des pièces de la demande orale dans le délai (R. 847-1-1 IV 2°; fait retenu)";
+    label en unofficial "recorded failure to produce the oral-request documents in time (R. 847-1-1 IV 2°; retained fact)";
+}
+
+pub relation absence_decision_cra(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "dossier complet: aucune décision de la CRA au délai R. 142-6 (R. 847-2; fait retenu)";
+    label en unofficial "complete file: no CRA decision by the R. 142-6 deadline (R. 847-2; retained fact)";
+}
+
+pub relation demande_requalifiee_recours(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "demande tardive requalifiée en recours préalable (R. 847-1-1 III)";
+    label en unofficial "late request requalified as a prior appeal (R. 847-1-1 III)";
+}
+
+pub relation demande_irrecevable(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "demande irrecevable après le délai CRA (R. 847-1-1 III)";
+    label en unofficial "request inadmissible after the CRA deadline (R. 847-1-1 III)";
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule DemandeEcriteTardiveRequalifiee(d: Demandeur, rec: Date, dd: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "demande écrite tardive réputée recours préalable (R. 847-1-1 IV 1°)";
+    label en unofficial "late written request deemed a prior appeal (R. 847-1-1 IV 1°)";
+    when demande_rectification(d, dd) and demande_rectification_ecrite(d)
+        and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd > add_calendar_period(rec, 20 calendar_day)
+        and delai_recours_cra_en_cours(d)
+        and not_known(delai_recours_cra_expire(d));
+    then demande_requalifiee_recours(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule DemandeOraleTardiveRequalifiee(d: Demandeur, rec: Date, dd: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "demande orale tardive documentée à temps réputée recours préalable (R. 847-1-1 IV 2°)";
+    label en unofficial "timely documented late oral request deemed a prior appeal (R. 847-1-1 IV 2°)";
+    when demande_rectification(d, dd) and demande_rectification_orale(d)
+        and reception_notification(d, rec)
+        and notification_moyen_date_certaine(d)
+        and dd > add_calendar_period(rec, 20 calendar_day)
+        and delai_recours_cra_en_cours(d)
+        and not_known(delai_recours_cra_expire(d))
+        and pieces_orales_produites(d);
+    then demande_requalifiee_recours(d);
+}
+
+@source(
+    CSS_R847_1_1_ED2021_03_25,
+    CSS_R847_1_1_ED2021_06_01,
+    CSS_R847_1_1_ED2022_03_21,
+    CSS_R847_1_1_ED2023_12_31,
+    CSS_R847_1_1_ED2024_01_01,
+    CSS_R847_1_1_ED2024_07_01,
+    CSS_R847_1_1_ED2025_01_01,
+    CSS_R847_1_1_ED2025_02_28,
+    CSS_R847_1_1_ED2025_03_31,
+    CSS_R847_1_1_ED2026_04_01,
+    CSS_R847_1_1_ED2026_06_27)
+rule DemandeIrrecevable(d: Demandeur, dd: Date) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "après le délai de saisine CRA: irrecevable (R. 847-1-1 IV)";
+    label en unofficial "after the CRA filing deadline: inadmissible (R. 847-1-1 IV)";
+    when demande_rectification(d, dd) and delai_recours_cra_expire(d);
+    then demande_irrecevable(d);
+}
+
+pub relation decision_refus(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "refus total ou partiel de la demande (R. 847-2; fait retenu)";
+    label en unofficial "total or partial refusal (R. 847-2; retained fact)";
+}
+
+pub relation recours_cra_forme(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "recours préalable formé devant la CRA (R. 847-2; fait retenu)";
+    label en unofficial "prior appeal filed with the CRA (R. 847-2; retained fact)";
+}
+
+pub relation recours_cra_association(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "recours préalable par une association mandataire (R. 847-2; fait retenu)";
+    label en unofficial "prior appeal via a mandated association (R. 847-2; retained fact)";
+}
+
+pub relation association_anciennete_5_ans(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "association déclarée depuis au moins cinq ans (R. 847-2; fait retenu)";
+    label en unofficial "association registered for five years (R. 847-2; retained fact)";
+}
+
+pub relation mandat_association_ecrit(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "mandat écrit à l'association (R. 847-2; fait retenu)";
+    label en unofficial "written mandate to the association (R. 847-2; retained fact)";
+}
+
+pub relation association_regulierement_constituee(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "association régulièrement constituée (R. 847-2; fait retenu)";
+    label en unofficial "duly constituted association (R. 847-2; retained fact)";
+}
+
+pub relation association_objet_insertion_pro(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "association constituée pour œuvrer dans l'insertion professionnelle (R. 847-2; fait retenu)";
+    label en unofficial "association formed for professional-integration work (R. 847-2; retained fact)";
+}
+
+pub relation decision_cra(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "décision de la CRA (R. 847-2; fait retenu)";
+    label en unofficial "CRA decision (R. 847-2; retained fact)";
+}
+
+pub relation decision_cra_rejet(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "rejet explicite de la CRA (R. 847-2; fait retenu)";
+    label en unofficial "explicit CRA rejection (R. 847-2; retained fact)";
+}
+
+pub relation delai_r142_6_expire(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "délai R. 142-6 expiré sans décision (R. 847-2; fait retenu, hors périmètre)";
+    label en unofficial "R. 142-6 deadline expired (R. 847-2; retained fact, out of scope)";
+}
+
+pub relation delai_r421_1_expire(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "délai R. 421-1 CJA expiré (R. 847-2; fait retenu, hors périmètre)";
+    label en unofficial "R. 421-1 CJA deadline expired (R. 847-2; retained fact, out of scope)";
+}
+
+pub relation recours_prealaire_recevable(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "recours préalable recevable devant la CRA (R. 847-2)";
+    label en unofficial "prior appeal admissible before the CRA (R. 847-2)";
+}
+
+pub relation rejet_implicite_cra(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "rejet implicite de la CRA (R. 847-2)";
+    label en unofficial "implicit CRA rejection (R. 847-2)";
+}
+
+pub relation recours_ta_ouvert(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "recours au tribunal administratif ouvert (R. 847-2)";
+    label en unofficial "administrative-court appeal open (R. 847-2)";
+}
+
+pub relation represente_etat_ta(c: Directeur, d: Demandeur) kind institutional {
+    key(c, d);
+    label fr official "le directeur représente l'Etat devant le TA (R. 847-2)";
+    label en unofficial "the director represents the State before the court (R. 847-2)";
+}
+
+@source(
+    CSS_R847_2_ED2021_01_01,
+    CSS_R847_2_ED2021_03_25,
+    CSS_R847_2_ED2021_06_01,
+    CSS_R847_2_ED2022_03_21,
+    CSS_R847_2_ED2023_12_31,
+    CSS_R847_2_ED2024_01_01,
+    CSS_R847_2_ED2024_07_01,
+    CSS_R847_2_ED2025_01_01,
+    CSS_R847_2_ED2025_02_28,
+    CSS_R847_2_ED2025_03_31,
+    CSS_R847_2_ED2026_04_01,
+    CSS_R847_2_ED2026_06_27)
+rule RecoursCRARecevable(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "refus contesté dans le délai R. 142-1 (R. 847-2)";
+    label en unofficial "refusal challenged within the R. 142-1 deadline (R. 847-2)";
+    when decision_refus(d) and recours_cra_forme(d, date)
+        and delai_recours_cra_en_cours(d)
+        and not_known(delai_recours_cra_expire(d));
+    then recours_prealaire_recevable(d);
+}
+
+@source(
+    CSS_R847_2_ED2021_01_01,
+    CSS_R847_2_ED2021_03_25,
+    CSS_R847_2_ED2021_06_01,
+    CSS_R847_2_ED2022_03_21,
+    CSS_R847_2_ED2023_12_31,
+    CSS_R847_2_ED2024_01_01,
+    CSS_R847_2_ED2024_07_01,
+    CSS_R847_2_ED2025_01_01,
+    CSS_R847_2_ED2025_02_28,
+    CSS_R847_2_ED2025_03_31,
+    CSS_R847_2_ED2026_04_01,
+    CSS_R847_2_ED2026_06_27)
+rule RecoursCRAAssociation(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "recours par association régulière, cinq ans, insertion pro, mandatée (R. 847-2)";
+    label en unofficial "appeal via a duly constituted five-year integration mandated association (R. 847-2)";
+    when decision_refus(d) and recours_cra_association(d, date)
+        and association_regulierement_constituee(d)
+        and association_anciennete_5_ans(d) and association_objet_insertion_pro(d)
+        and mandat_association_ecrit(d)
+        and delai_recours_cra_en_cours(d)
+        and not_known(delai_recours_cra_expire(d));
+    then recours_prealaire_recevable(d);
+}
+
+// D-42: an expired R. 142-1 filing deadline is the affirmative
+// contrary of admissibility on either route (R. 847-2); the guard
+// not_known(delai_recours_cra_expire) alone only leaves NEITHER.
+@source(
+    CSS_R847_2_ED2021_01_01,
+    CSS_R847_2_ED2021_03_25,
+    CSS_R847_2_ED2021_06_01,
+    CSS_R847_2_ED2022_03_21,
+    CSS_R847_2_ED2023_12_31,
+    CSS_R847_2_ED2024_01_01,
+    CSS_R847_2_ED2024_07_01,
+    CSS_R847_2_ED2025_01_01,
+    CSS_R847_2_ED2025_02_28,
+    CSS_R847_2_ED2025_03_31,
+    CSS_R847_2_ED2026_04_01,
+    CSS_R847_2_ED2026_06_27)
+rule RecoursCRAIrrecevableDelai(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "recours formé après expiration du délai R. 142-1: irrecevable (R. 847-2)";
+    label en unofficial "appeal filed after the R. 142-1 deadline expired: inadmissible (R. 847-2)";
+    when decision_refus(d) and recours_cra_forme(d, date)
+        and delai_recours_cra_expire(d);
+    then not recours_prealaire_recevable(d);
+}
+
+@source(
+    CSS_R847_2_ED2021_01_01,
+    CSS_R847_2_ED2021_03_25,
+    CSS_R847_2_ED2021_06_01,
+    CSS_R847_2_ED2022_03_21,
+    CSS_R847_2_ED2023_12_31,
+    CSS_R847_2_ED2024_01_01,
+    CSS_R847_2_ED2024_07_01,
+    CSS_R847_2_ED2025_01_01,
+    CSS_R847_2_ED2025_02_28,
+    CSS_R847_2_ED2025_03_31,
+    CSS_R847_2_ED2026_04_01,
+    CSS_R847_2_ED2026_06_27)
+rule RecoursCRAAssociationIrrecevableDelai(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "recours associatif après expiration du délai R. 142-1: irrecevable (R. 847-2)";
+    label en unofficial "association appeal after the R. 142-1 deadline expired: inadmissible (R. 847-2)";
+    when decision_refus(d) and recours_cra_association(d, date)
+        and delai_recours_cra_expire(d);
+    then not recours_prealaire_recevable(d);
+}
+
+@source(
+    CSS_R847_2_ED2021_01_01,
+    CSS_R847_2_ED2021_03_25,
+    CSS_R847_2_ED2021_06_01,
+    CSS_R847_2_ED2022_03_21,
+    CSS_R847_2_ED2023_12_31,
+    CSS_R847_2_ED2024_01_01,
+    CSS_R847_2_ED2024_07_01,
+    CSS_R847_2_ED2025_01_01,
+    CSS_R847_2_ED2025_02_28,
+    CSS_R847_2_ED2025_03_31,
+    CSS_R847_2_ED2026_04_01,
+    CSS_R847_2_ED2026_06_27)
+rule RejetImpliciteCRA(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "sans décision au délai R. 142-6: rejet implicite (R. 847-2)";
+    label en unofficial "no decision by the R. 142-6 deadline: implicit rejection (R. 847-2)";
+    when recours_prealaire_recevable(d) and absence_decision_cra(d)
+        and not_known(decision_cra(d))
+        and delai_r142_6_expire(d);
+    then rejet_implicite_cra(d);
+}
+
+@source(
+    CSS_R847_2_ED2021_01_01,
+    CSS_R847_2_ED2021_03_25,
+    CSS_R847_2_ED2021_06_01,
+    CSS_R847_2_ED2022_03_21,
+    CSS_R847_2_ED2023_12_31,
+    CSS_R847_2_ED2024_01_01,
+    CSS_R847_2_ED2024_07_01,
+    CSS_R847_2_ED2025_01_01,
+    CSS_R847_2_ED2025_02_28,
+    CSS_R847_2_ED2025_03_31,
+    CSS_R847_2_ED2026_04_01,
+    CSS_R847_2_ED2026_06_27)
+rule RecoursTAImplicite(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "rejet implicite: TA dans le délai R. 421-1 (R. 847-2)";
+    label en unofficial "implicit rejection: court within R. 421-1 (R. 847-2)";
+    when rejet_implicite_cra(d) and delai_r421_1_en_cours(d)
+        and not_known(delai_r421_1_expire(d));
+    then recours_ta_ouvert(d);
+}
+
+@source(
+    CSS_R847_2_ED2021_01_01,
+    CSS_R847_2_ED2021_03_25,
+    CSS_R847_2_ED2021_06_01,
+    CSS_R847_2_ED2022_03_21,
+    CSS_R847_2_ED2023_12_31,
+    CSS_R847_2_ED2024_01_01,
+    CSS_R847_2_ED2024_07_01,
+    CSS_R847_2_ED2025_01_01,
+    CSS_R847_2_ED2025_02_28,
+    CSS_R847_2_ED2025_03_31,
+    CSS_R847_2_ED2026_04_01,
+    CSS_R847_2_ED2026_06_27)
+rule RecoursTAExplicite(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "rejet explicite: TA dans le délai R. 421-1 (R. 847-2)";
+    label en unofficial "explicit rejection: court within R. 421-1 (R. 847-2)";
+    when decision_cra_rejet(d) and delai_r421_1_en_cours(d)
+        and not_known(delai_r421_1_expire(d));
+    then recours_ta_ouvert(d);
+}
+
+@source(
+    CSS_R847_2_ED2021_01_01,
+    CSS_R847_2_ED2021_03_25,
+    CSS_R847_2_ED2021_06_01,
+    CSS_R847_2_ED2022_03_21,
+    CSS_R847_2_ED2023_12_31,
+    CSS_R847_2_ED2024_01_01,
+    CSS_R847_2_ED2024_07_01,
+    CSS_R847_2_ED2025_01_01,
+    CSS_R847_2_ED2025_02_28,
+    CSS_R847_2_ED2025_03_31,
+    CSS_R847_2_ED2026_04_01,
+    CSS_R847_2_ED2026_06_27)
+rule RepresentationEtatTA(c: Directeur, d: Demandeur, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le directeur représente l'Etat devant le TA (R. 847-2)";
+    label en unofficial "the director represents the State before the court (R. 847-2)";
+    when directeur_de(c, o) and organisme_serviteur(o, d) and recours_ta_ouvert(d);
+    then represente_etat_ta(c, d);
+}
+
+pub relation decision_individuelle(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "décision individuelle prise (R. 847-3; fait retenu)";
+    label en unofficial "individual decision taken (R. 847-3; retained fact)";
+}
+
+pub relation decisions_mentionnent_recours(d: Demandeur, date: Date) kind empirical {
+    key(d, date);
+    label fr official "décision mentionnant voies, délais et recours préalable (R. 847-3; fait retenu)";
+    label en unofficial "decision mentioning appeals and prior recourse (R. 847-3; retained fact)";
+}
+
+@source(
+    CSS_R847_3_ED2021_01_01,
+    CSS_R847_3_ED2021_03_25,
+    CSS_R847_3_ED2021_06_01,
+    CSS_R847_3_ED2022_03_21,
+    CSS_R847_3_ED2023_12_31,
+    CSS_R847_3_ED2024_01_01,
+    CSS_R847_3_ED2024_07_01,
+    CSS_R847_3_ED2025_01_01,
+    CSS_R847_3_ED2025_02_28,
+    CSS_R847_3_ED2025_03_31,
+    CSS_R847_3_ED2026_04_01,
+    CSS_R847_3_ED2026_06_27)
+rule DevoirMentionnerRecours(d: Demandeur, o: Organisme, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "D9: décisions mentionnant les recours (R. 847-3)";
+    label en unofficial "D9: decisions mentioning appeals (R. 847-3)";
+    when decision_individuelle(d, date) and organisme_serviteur(o, d);
+    then duty MentionnerRecours {
+        bearer o;
+        beneficiary d;
+        maintain decisions_mentionnent_recours(d, date) during [@2021-01-01, infinity);
+    };
+}

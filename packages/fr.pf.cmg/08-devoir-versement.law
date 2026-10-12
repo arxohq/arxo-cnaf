@@ -1,0 +1,193 @@
+// Deontic layer: fund duties to pay, tiers-payant variant, payment
+// deadline and the recovery power.
+//
+// D1. The duty triggers on the computed amount: direct aid (amount
+// alone, old law and reform: the expense justification of D. 531-21 VI
+// is scoped to the L. 531-6 aid paid for association/enterprise/EAJE
+// care, D-29(f) / F-CH6-03), structure aid (same split), differential (computed by
+// the L. 133-5-10 body, decree 2025-515 art. 3, V). The duty-holder is the
+// empirical debtor link; performance is cmg_verse. Tiers-payant
+// 09.2024–02.2025 (L. 531-6, direct payment to the association or
+// enterprise on family request plus agreement): same performance shape,
+// the recipient shift is recorded in the label (B-CMG-TIERS-PAYANT).
+// D2. No «ne sont pas dues» exceptions in scope (no defeaters).
+// Time limits: monthly payment within one month of the justification
+// receipt (D. 531-21, VI, reform) — the deadline is derived by the rule
+// (add_calendar_period, B-PFAF precedent); VersementTardif records
+// lateness. Pre-reform payment timing has no text: no deadline
+// position there.
+// Power: yearly control of specific hours, recovery of the undue
+// majoration (D. 531-22, I C).
+
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+use self::{
+    CSS_D531_21_ED2025_09,
+    CSS_D531_22_ED2025_09,
+    CSS_D531_23_ED2020_01,
+    CSS_D531_23_ED2021_09,
+    CSS_L531_5_ED2020_01,
+    CSS_L531_5_ED2025_09,
+    CSS_L531_5_ED2025_12,
+    CSS_L531_6_ED2020_01,
+    CSS_L531_6_ED2024_09,
+    CSS_L531_6_ED2025_01,
+    CSS_L531_6_ED2025_02,
+    CSS_L531_6_ED2025_09,
+    JORF_DECR2025_515_ART3,
+    cmg_verse,
+    controle_heures_defaillant,
+    date_limite_paiement,
+    date_versement_cmg,
+    heures_specifiques,
+    justification_depenses,
+    majoration_indue,
+    majoration_recouvree,
+    montant_cmg_du,
+    montant_differentiel,
+    montant_structure_du,
+    organisme_recouvrement,
+    recouvrement_majoration_action,
+    tiers_payant_accord,
+    tiers_payant_demande,
+    versement_tardif,
+};
+
+@source(CSS_L531_5_ED2020_01, CSS_L531_6_ED2020_01, CSS_L531_6_ED2024_09, CSS_L531_6_ED2025_01, CSS_L531_6_ED2025_02)
+rule DevoirVerserDirectAncien(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "l'organisme débiteur paie le complément direct dû (ancien droit)";
+    label en unofficial "the debtor body pays the direct supplement due (old law)";
+    when montant_cmg_du(p, e, montant) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerComplementDirectDu {
+        bearer o;
+        beneficiary p;
+        maintain cmg_verse(p, e, montant) during [@2021-01-01, @2025-09-01);
+    };
+}
+
+@source(CSS_L531_5_ED2025_09, CSS_L531_5_ED2025_12)
+rule DevoirVerserDirectReforme(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "l'organisme débiteur paie le complément direct dû (réforme, sans justification: D. 531-21 VI vise l'aide de l'art. L. 531-6)";
+    label en unofficial "the debtor body pays the direct supplement due (reform, no justification premise: D. 531-21 VI concerns the L. 531-6 aid)";
+    when montant_cmg_du(p, e, montant)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerComplementDirectJustifie {
+        bearer o;
+        beneficiary p;
+        maintain cmg_verse(p, e, montant) during [@2025-09-01, infinity);
+    };
+}
+
+@source(CSS_L531_6_ED2020_01, CSS_L531_6_ED2024_09, CSS_L531_6_ED2025_01, CSS_L531_6_ED2025_02, CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule DevoirVerserStructureAncien(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "l'organisme débiteur paie l'aide structure due (ancien droit)";
+    label en unofficial "the debtor body pays the structure aid due (old law)";
+    when montant_structure_du(p, e, montant) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerAideStructureDue {
+        bearer o;
+        beneficiary p;
+        maintain cmg_verse(p, e, montant) during [@2021-01-01, @2025-09-01);
+    };
+}
+
+@source(CSS_L531_6_ED2025_09, CSS_D531_21_ED2025_09)
+rule DevoirVerserStructureReforme(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money, justification: Date) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "l'organisme débiteur paie l'aide structure justifiée (réforme)";
+    label en unofficial "the debtor body pays the justified structure aid (reform)";
+    when montant_structure_du(p, e, montant)
+        and justification_depenses(p, e, justification)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerAideStructureJustifiee {
+        bearer o;
+        beneficiary p;
+        maintain cmg_verse(p, e, montant) during [@2025-09-01, infinity);
+    };
+}
+
+@source(CSS_L531_6_ED2024_09, CSS_L531_6_ED2025_01)
+rule DevoirVerserTiersPayant(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money, justification: Date) strict {
+    effective [@2024-09-01, @2025-02-28);
+    label fr official "versement direct à la structure à la demande de la famille avec accord (tiers payant; le fait d'exécution garde la même forme)";
+    label en unofficial "direct payment to the structure on family request with agreement (third-party payment; performance keeps the same shape)";
+    when montant_structure_du(p, e, montant)
+        and tiers_payant_demande(p, e) and tiers_payant_accord(p, e)
+        and justification_depenses(p, e, justification)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerStructureTiersPayant {
+        bearer o;
+        beneficiary p;
+        maintain cmg_verse(p, e, montant) during [@2024-09-01, @2025-02-28);
+    };
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule DevoirVerserDifferentiel(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "l'organisme L. 133-5-10 verse le différentiel calculé";
+    label en unofficial "the L. 133-5-10 body pays the computed differential";
+    when montant_differentiel(p, e, montant) and organisme_recouvrement(o, p);
+    then duty PayerDifferentielCalcule {
+        bearer o;
+        beneficiary p;
+        maintain cmg_verse(p, e, montant) during [@2025-09-01, infinity);
+    };
+}
+
+pub deadline policy CMG_MOIS_CALENDAIRE {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+@source(CSS_D531_21_ED2025_09)
+rule DateLimitePaiement(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, justification: Date) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "date limite: un mois après réception de la justification (D. 531-21, VI)";
+    label en unofficial "deadline: one month after the justification receipt (D. 531-21, VI)";
+    when justification_depenses(p, e, justification);
+    then date_limite_paiement(p, e, add_calendar_period(justification, 1 calendar_month));
+}
+
+@source(CSS_D531_21_ED2025_09)
+rule VersementTardifConstate(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money, verse: Date, limite: Date) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "versement après la date limite : tardif";
+    label en unofficial "payment after the deadline — late";
+    when cmg_verse(p, e, montant)
+        and date_versement_cmg(p, e, verse)
+        and date_limite_paiement(p, e, limite)
+        and verse > limite;
+    then versement_tardif(p, e);
+}
+
+@source(CSS_D531_22_ED2025_09)
+rule MajorationIndueConstatee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, h: Decimal) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "seuil de 25 heures non justifié au contrôle: majoration indue (D. 531-22, I C)";
+    label en unofficial "25-hour threshold unjustified at control: undue majoration (D. 531-22, I C)";
+    when heures_specifiques(p, e, h) and h >= SeuilSpecifiques25
+        and controle_heures_defaillant(p, e);
+    then majoration_indue(p, e);
+}
+
+@source(CSS_D531_22_ED2025_09)
+rule PouvoirRecouvrerMajoration(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "l'organisme recouvre la majoration indûment versée";
+    label en unofficial "the body recovers the unduly paid majoration";
+    when majoration_indue(p, e) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then power RecouvrerMajorationIndue {
+        holder o;
+        over p;
+        exercise recouvrement_majoration_action(o, p, e);
+        valid_when majoration_indue(p, e);
+        effect majoration_recouvree(p, e);
+    };
+}

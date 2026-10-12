@@ -1,0 +1,22 @@
+// Deontics D1B, active duty: awarded base allowance of 166.60 € +
+// debtor fund. VerserBaseDue position — ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-devoir-base-actif" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "devoir-base-01": enfant_en_charge(entity_ref("urn:fr:paje:case:devoir-base"), entity_ref("urn:fr:paje:enfant:devoir-base")) { origin case_input; }
+        assert "devoir-base-02": condition_age_base(entity_ref("urn:fr:paje:enfant:devoir-base")) { origin adjudicated; }
+        assert "devoir-base-03": cohorte_enfant(entity_ref("urn:fr:paje:enfant:devoir-base"), NE_APARTIR_AVRIL_2018) { origin adjudicated; }
+        assert "devoir-base-04": ressources_annuelles(entity_ref("urn:fr:paje:case:devoir-base"), 20000 EUR) { origin case_input; }
+        assert "devoir-base-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:devoir-base"), 30000 EUR) { origin case_input; }
+        assert "devoir-base-06": bmaf_applicable(entity_ref("urn:fr:paje:case:devoir-base"), 400.00 EUR) { origin case_input; }
+        assert "devoir-base-07": mois_eligible_base(entity_ref("urn:fr:paje:case:devoir-base"), entity_ref("urn:fr:paje:enfant:devoir-base"), @2025-07-01) { origin adjudicated; }
+        assert "devoir-base-08": organisme_debiteur(entity_ref("urn:fr:paje:org:caisse"), entity_ref("urn:fr:paje:case:devoir-base")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(VerserBaseDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

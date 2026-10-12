@@ -1,0 +1,41 @@
+// F05-01 renewal positive: first envelope spent (311), once-renewal
+// granted (new certificate + control agreement before the initial
+// term), second envelope at 10 days. The renewal branch qualifies
+// the envelope — no blanket first-envelope cap — and the 10-day
+// month at 60.00 pays 600.00.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-montant-renouvellement-qualifie" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-mqren-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren")) { origin adjudicated; }
+        assert "ajpp-mqren-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren")) { origin adjudicated; }
+        assert "ajpp-mqren-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-mqren"), entity_ref("urn:fr:pf-ajpp:case:enfant-mqren")) { origin case_input; }
+        assert "ajpp-mqren-04": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren"), 311) { origin case_input; }
+        assert "ajpp-mqren-05": nouveau_certificat(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren")) { origin adjudicated; }
+        assert "ajpp-mqren-06": accord_controle_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren")) { origin adjudicated; }
+        assert "ajpp-mqren-07": avant_terme_initial(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren")) { origin case_input; }
+        assert "ajpp-mqren-08": jours_ajpp_second_enveloppe(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren"), 10) { origin case_input; }
+        assert "ajpp-mqren-09": jours_ajpp_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren"), @2024-03-01, 10) { origin case_input; }
+        assert "ajpp-mqren-10": montant_journalier_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren"), 60.00 EUR) { origin case_input; }
+        assert "ajpp-mqren-11": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren"), MALADIE, 2) { origin case_input; }
+    }
+    evaluate truth(renouvellement_accorde(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_dans_limite(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(enveloppe_ajpp_qualifiee(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mqren"), @2024-03-01, 600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

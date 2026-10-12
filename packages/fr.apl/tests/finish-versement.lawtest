@@ -1,0 +1,121 @@
+// Third-party payment (17): APL landlord routing, ALF landlord routing on
+// decency, the 50.00 EUR excess with the deduction duty, the 10.00 EUR
+// allocation threshold, and L. 824-3 resumption to the landlord.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-dest-apl" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdst-01": cas_apl_l831_1(entity_ref("urn:fr:apl:case:fdst"), APL_LOCATIF_AIDE_ETAT_CONVENTIONNE) { origin case_input; }
+        assert "fdst-02": occupant_apl_r831_1(entity_ref("urn:fr:apl:case:fdst"), OCC_LOCATIF_CONVENTIONNE_2_3_4) { origin case_input; }
+        assert "fdst-03": aide_demandee(entity_ref("urn:fr:apl:case:fdst"), APL) { origin case_input; }
+        assert "fdst-04": secteur_locatif(entity_ref("urn:fr:apl:case:fdst")) { origin case_input; }
+        assert "fdst-05": bailleur_du_menage(entity_ref("urn:fr:apl:bail:fdst"), entity_ref("urn:fr:apl:case:fdst")) { origin case_input; }
+        assert "fdst-06": role_tiers(entity_ref("urn:fr:apl:bail:fdst"), BAILLEUR) { origin case_input; }
+    }
+    evaluate truth(destinataire_aide(entity_ref("urn:fr:apl:case:fdst"), entity_ref("urn:fr:apl:bail:fdst")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-dest-alf" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdsa-01": percoit_asf(entity_ref("urn:fr:apl:case:fdsa"), true) { origin case_input; }
+        assert "fdsa-02": aide_demandee(entity_ref("urn:fr:apl:case:fdsa"), ALF) { origin case_input; }
+        assert "fdsa-03": demande_versement_tiers(entity_ref("urn:fr:apl:bail:fdsa"), entity_ref("urn:fr:apl:case:fdsa")) { origin case_input; }
+        assert "fdsa-04": role_tiers(entity_ref("urn:fr:apl:bail:fdsa"), BAILLEUR) { origin case_input; }
+        assert "fdsa-05": logement_decent(entity_ref("urn:fr:apl:case:fdsa")) { origin adjudicated; }
+    }
+    evaluate truth(destinataire_aide(entity_ref("urn:fr:apl:case:fdsa"), entity_ref("urn:fr:apl:bail:fdsa")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-excedent-tiers" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fexc-01": aide_versee_tiers(entity_ref("urn:fr:apl:case:fexc"), entity_ref("urn:fr:apl:bail:fexc"), 300.00 EUR) { origin case_input; }
+        assert "fexc-02": loyer_principal(entity_ref("urn:fr:apl:case:fexc"), 200.00 EUR) { origin case_input; }
+        assert "fexc-03": charges_recuperables(entity_ref("urn:fr:apl:case:fexc"), 50.00 EUR) { origin case_input; }
+        assert "fexc-04": bailleur_du_menage(entity_ref("urn:fr:apl:bail:fexc"), entity_ref("urn:fr:apl:case:fexc")) { origin case_input; }
+    }
+    evaluate truth(excedent_aide_tiers(entity_ref("urn:fr:apl:case:fexc"), 50.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-deduire" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdec-01": cas_apl_l831_1(entity_ref("urn:fr:apl:case:fdec"), APL_LOCATIF_AIDE_ETAT_CONVENTIONNE) { origin case_input; }
+        assert "fdec-02": occupant_apl_r831_1(entity_ref("urn:fr:apl:case:fdec"), OCC_LOCATIF_CONVENTIONNE_2_3_4) { origin case_input; }
+        assert "fdec-03": aide_demandee(entity_ref("urn:fr:apl:case:fdec"), APL) { origin case_input; }
+        assert "fdec-04": secteur_locatif(entity_ref("urn:fr:apl:case:fdec")) { origin case_input; }
+        assert "fdec-05": bailleur_du_menage(entity_ref("urn:fr:apl:bail:fdec"), entity_ref("urn:fr:apl:case:fdec")) { origin case_input; }
+        assert "fdec-06": role_tiers(entity_ref("urn:fr:apl:bail:fdec"), BAILLEUR) { origin case_input; }
+        assert "fdec-07": aide_versee_tiers(entity_ref("urn:fr:apl:case:fdec"), entity_ref("urn:fr:apl:bail:fdec"), 150.00 EUR) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(BailleurDeduireAide, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-seuil-alf" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fseu-01": aide_demandee(entity_ref("urn:fr:apl:case:fseu"), ALF) { origin case_input; }
+        // D-42: L. 823-1 4° sets the payment threshold by requester quality (tenant,
+        // D-42: co-tenant, sub-tenant, buyer, hostel resident); the model derives
+        // D-42: qualite_demandeur (17) from these findings; case built as a plain tenant.
+        assert "fseu-02": secteur_locatif(entity_ref("urn:fr:apl:case:fseu")) { origin case_input; }
+        // D-42: L. 823-1 4° sets the payment threshold by requester quality (tenant,
+        // D-42: co-tenant, sub-tenant, buyer, hostel resident); the model derives
+        // D-42: qualite_demandeur (17) from these findings; case built as a plain tenant.
+        assert "fseu-03": mode_location(entity_ref("urn:fr:apl:case:fseu"), LOCATION_SEULE) { origin case_input; }
+        // D-42: L. 823-1 4° sets the payment threshold by requester quality (tenant,
+        // D-42: co-tenant, sub-tenant, buyer, hostel resident); the model derives
+        // D-42: qualite_demandeur (17) from these findings; case built as a plain tenant.
+        assert "fseu-04": non_sous_locataire_l8231(entity_ref("urn:fr:apl:case:fseu")) { origin case_input; }
+    }
+    // D-79: the threshold reaches the head through
+    // seuil_versement_allocation_logement(q), i.e. as the 10 EUR value of the
+    // pinned parameter (bareme/, from 2019-10-02). Blind expectation unchanged.
+    evaluate truth(seuil_versement_applicable(entity_ref("urn:fr:apl:case:fseu"), 10.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-reprise-bailleur" {
+    given {
+        context { decision_time @2024-02-15T12:00:00Z; knowledge_time @2024-02-15T12:00:00Z; legal_time @2024-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frep-01": decision_recevabilite_l722_10(entity_ref("urn:fr:apl:case:frep")) { origin case_input; }
+        assert "frep-02": versement_suspendu_en_place(entity_ref("urn:fr:apl:case:frep")) { origin case_input; }
+        assert "frep-03": percoit_asf(entity_ref("urn:fr:apl:case:frep"), true) { origin case_input; }
+        assert "frep-04": aide_demandee(entity_ref("urn:fr:apl:case:frep"), ALF) { origin case_input; }
+        assert "frep-05": bailleur_du_menage(entity_ref("urn:fr:apl:bail:frep"), entity_ref("urn:fr:apl:case:frep")) { origin case_input; }
+        assert "frep-06": role_tiers(entity_ref("urn:fr:apl:bail:frep"), BAILLEUR) { origin case_input; }
+        assert "frep-07": logement_decent(entity_ref("urn:fr:apl:case:frep")) { origin adjudicated; }
+        // D-42: L. 824-3 restores "les droits ... dont beneficiait le locataire"; for ALF
+        // D-42: to the landlord the model (17 RepriseBailleurALF) also needs the positive
+        // D-42: finding that third-party payment is not set aside (L. 842-2), omitted.
+        assert "frep-08": absence_refus_bailleur_tiers(entity_ref("urn:fr:apl:case:frep")) { origin case_input; }
+    }
+    evaluate truth(destinataire_aide(entity_ref("urn:fr:apl:case:frep"), entity_ref("urn:fr:apl:bail:frep")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

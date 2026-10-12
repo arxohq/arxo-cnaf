@@ -1,0 +1,39 @@
+// D-85: PASS года отсчёта 2021 строится из закреплённого arrêté du 2020-12-22 (SSAS2036535A; fr.css.pass: sources/pass/arrete-2020-12-22-art1.txt):
+// valeur mensuelle 3428 € x 12 = 41136 €. Порог R. 522-2 al. 3: 13,6 % x 41136 = 5594.496.
+// Доход 5594.50 достигает порога -> couple_biactif; на сантим меньше (5594.49) — нет (NEITHER). Дата дела — июнь 2023 (ресурсы N-2 по R. 532-1).
+// Порождено tools/build_pass_tests.py из закреплённых байтов fr.css.pass — руками не править.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-pass-2021-seuil" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "p21a-01": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:pass-2021-seuil"), 5594.50 EUR) { origin case_input; }
+        assert "p21a-02": annee_reference_ressources(entity_ref("urn:fr:pf-cf:case:pass-2021-seuil"), 2021) { origin case_input; }
+    }
+    evaluate truth(pass_reference(entity_ref("urn:fr:pf-cf:case:pass-2021-seuil"), 41136 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:pass-2021-seuil")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-pf-cf-pass-2021-sous-seuil" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "p21b-01": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:pass-2021-sous-seuil"), 5594.49 EUR) { origin case_input; }
+        assert "p21b-02": annee_reference_ressources(entity_ref("urn:fr:pf-cf:case:pass-2021-sous-seuil"), 2021) { origin case_input; }
+    }
+    evaluate truth(pass_reference(entity_ref("urn:fr:pf-cf:case:pass-2021-sous-seuil"), 41136 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:pass-2021-sous-seuil")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

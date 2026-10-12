@@ -1,0 +1,13 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-dossier-prime-2025-07" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "brut": fr.pf.paje::prime_attribuee(entity_ref("urn:fr:pv:case:dossier-menage"), entity_ref("urn:fr:pv:case:dossier-chloe"), 1000.00 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_net_crds_prime(entity_ref("urn:fr:pv:case:dossier-menage"), entity_ref("urn:fr:pv:case:dossier-chloe"), 995.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

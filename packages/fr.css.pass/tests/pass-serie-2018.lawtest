@@ -1,0 +1,19 @@
+// PASS 2018: valeur mensuelle 3311 € (arrêté du 2017-12-05, SSAS1733749A; sources/pass/arrete-2017-12-05-art1.txt);
+// годовое значение строится 12 × 3311 = 39732 €. Дата дела ни при чём: ключ — год.
+language "law.core" version "0.2";
+package fr.css.pass version "0.1.0";
+namespace "urn:fr:corpus:clir:pass";
+
+test "urn:query:fr-pass-serie-2018" {
+    given {
+        context { decision_time @2018-06-15T12:00:00Z; knowledge_time @2018-06-15T12:00:00Z; legal_time @2018-06-15; timezone "Europe/Paris"; }
+    }
+    evaluate truth(pass_mensuel_arrete(2018, 3311 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(pass_annuel_arrete(2018, 39732 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

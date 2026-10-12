@@ -1,0 +1,31 @@
+// Свой сценарий заморского найма: наёмных дел заморских территорий нет ни у
+// Catala, ни у OpenFisca. Факты скупые нарочно: шагу не нужны ни наём, ни ресурсы.
+//
+// ШАГ: ставка TF при восьми иждивенцах в 2021 году — 1,62 %. Заморская таблица
+// тех лет кончалась строкой «6 enfants ou 6 personnes et plus», то есть надбавки
+// сверх шести в ней не было вовсе.
+//
+// ВАЖНО: TF в перечень ст. 46 1° НЕ входит — предел шести к нему не применяется.
+// Того же результата таблица достигает СВОЕЙ ФОРМОЙ, и потому в бареме ранние
+// состояния несут ставку «при семи», равную ставке шести, и надбавку нулём. Это
+// пересказ строки «шесть и более», сказанный прямо в транскрипции.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-locatif-tf-huit-pac-2021" {
+    given {
+        context { decision_time @2021-11-15T12:00:00Z; knowledge_time @2021-11-15T12:00:00Z; legal_time @2021-11-15; timezone "Europe/Paris"; }
+        assert "outremer-locatif-tf-huit-pac-2021-01": secteur_locatif(entity_ref("urn:fr:apl:case:om-loc-8pac-2021")) { origin case_input; }
+        assert "outremer-locatif-tf-huit-pac-2021-02": aide_demandee(entity_ref("urn:fr:apl:case:om-loc-8pac-2021"), APL) { origin case_input; }
+        assert "outremer-locatif-tf-huit-pac-2021-03": zone_du_logement(entity_ref("urn:fr:apl:case:om-loc-8pac-2021"), ZONE_II) { origin case_input; }
+        assert "outremer-locatif-tf-huit-pac-2021-04": situation_familiale(entity_ref("urn:fr:apl:case:om-loc-8pac-2021"), COUPLE) { origin case_input; }
+        assert "outremer-locatif-tf-huit-pac-2021-05": personnes_a_charge(entity_ref("urn:fr:apl:case:om-loc-8pac-2021"), 8) { origin case_input; }
+        assert "outremer-locatif-tf-huit-pac-2021-06": mode_location(entity_ref("urn:fr:apl:case:om-loc-8pac-2021"), LOCATION_SEULE) { origin case_input; }
+        assert "outremer-locatif-tf-huit-pac-2021-07": territoire(entity_ref("urn:fr:apl:case:om-loc-8pac-2021"), OUTRE_MER) { origin case_input; }
+    }
+    evaluate truth(taux_composition_familiale(entity_ref("urn:fr:apl:case:om-loc-8pac-2021"), 0.0162));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

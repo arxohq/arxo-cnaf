@@ -1,0 +1,53 @@
+// New-regime quarter: claim June 2025, reference M-4…M-2 (Feb/Mar/Apr 2025).
+// No earned resources: MF 607.75 (stated decree assumption, B-RSA-MF-EURO).
+// Housing: single owner, MF(1) 607.75 -> forfait 72.93 (R.262-9, 1°), aid
+// 200.00 received in April capped at 72.93 (R.262-10). The flat-rate and
+// the capped aid join the monthly base (R.262-7, II 3°): each month
+// 607.75 - 72.93 = 534.82, quarterly amount 534.82.
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-trimestre-nouveau-moyen" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "trim-nouv-01": foyer_du_cas(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen")) { origin case_input; }
+        assert "trim-nouv-02": mois_demande(@2025-06-01) { origin case_input; }
+        assert "trim-nouv-03": mois_reference(@2025-02-01, @2025-03-01, @2025-04-01) { origin case_input; }
+        assert "trim-nouv-04": mf_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-02-01, 607.75 EUR) { origin case_input; }
+        assert "trim-nouv-05": mf_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-03-01, 607.75 EUR) { origin case_input; }
+        assert "trim-nouv-06": mf_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-04-01, 607.75 EUR) { origin case_input; }
+        assert "trim-nouv-07": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-08": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-09": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-04-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-10": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-11": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-12": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-04-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-13": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-14": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-15": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-04-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-16": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-17": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-18": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-04-01, 0 EUR) { origin case_input; }
+        assert "trim-nouv-19": nb_personnes_forfait(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), 1) { origin case_input; }
+        assert "trim-nouv-20": logement(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), PROPRIETAIRE_SANS_AIDE) { origin case_input; }
+        assert "trim-nouv-21": mf_composition(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), 1, 607.75 EUR) { origin case_input; }
+        assert "trim-nouv-22": aide_logement_percue(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-04-01, 200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(trimestre_reference(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-02-01, @2025-03-01, @2025-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_du_trimestre(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), 534.82 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_logement(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), 72.93 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_logement_retenue(entity_ref("urn:fr:minima-ressources:case:trimestre-nouveau-moyen"), @2025-04-01, 72.93 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

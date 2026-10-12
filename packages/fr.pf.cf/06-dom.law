@@ -1,0 +1,875 @@
+// DOM complement familial (L755-16/16-1, D755-6/6-1, R755-1..4).
+//
+// DEONTIC MAP: right-conferring rules (qualifying ages, small-family
+// ceilings, open right, amounts, differential) plus three fund payment
+// duties on the department track, plus the Title V broad track (statutory
+// scope and available base/increased amounts, no duties). No recipient
+// duties, powers, sanctions or deadlines in the 8-article scope:
+// assessment runs through R. 532-1/R. 532-3 upstream, recovery through
+// L. 553-2 (wave 5) — same finding as metropolitan CF. Duties are
+// norm-conclusions (positions to observe), everything else a literal head.
+// Evaluative channels: no organ judgment is named (channel 1 empty); the
+// fund establishes the DOM frame, the young-child presence, the Title V
+// frame and the stated figures (channel 2, case_input per package
+// precedent); persons, dates, counts and the department class are direct
+// case facts with provenance (channel 3).
+//
+// TERRITORY (D-76). R. 755-1 «dans les départements mentionnés à
+// l'article L. 751-1» is department-only: award and differential rules
+// require the provenance-bearing departement_l751_1(t) case fact besides
+// the six-value guard, and conclude nothing for Saint-Barthélemy or
+// Saint-Martin. L. 755-16/16-1 carry no local territorial phrase and sit
+// under Title V; D. 755-6/6-1 rates are generic. The broad track states
+// that Title V scope (six collectivities) and builds the two available
+// amounts from the retained Title V frame without asserting R. 755-1 ages,
+// ceilings, differential or duties for non-departments. The L. 751-1 list
+// itself stays unowned (B-PFCF-DOM-TERRITOIRE).
+//
+// LIAISON (no duplication). Households with three or more children reuse
+// the metropolitan R. 522-2/R. 522-4 machinery directly: the DOM award
+// and amount rules read plafond_cf_applicable/plafond_majore_applicable,
+// which already encode the tiered D-36 reading and the biactif/isole
+// increment. Only one- and two-child households need new ceiling rules,
+// because the metropolitan rules gate n >= 3. The biactif test
+// (couple_biactif) and lone-parent fact (parent_isole) are household
+// level and residence independent, so they are read, not redefined; the
+// metropolitan §70 closures cover the `not` premises here as well.
+//
+// CEILINGS (D-83). R. 755-2 and R. 755-4 renvoi to R. 522-2 and R. 522-4,
+// whose ceilings are the published DSS amounts (base, increments per child,
+// two-earner increment; the increased amount has its own published base and
+// increments): the DOM one- and two-child ceilings are built from the same
+// facts as the metropolitan ones (03-plafond.law), so there is one source
+// of figures. This closes Q-PFCF-1 for the DOM tracks as well: the
+// two-earner increment of the increased amount is the published
+// majoration_biactivite_majore.
+//
+// READINGS (adopted, recorded in lines/finish-dom-cf-owner.md):
+// - R755-1 pins the vague L755-16 age limbs: every counted child is over
+//   three (strict «plus de») and at least one is under five (strict
+//   «moins de»); the L531-1 al. 1 renvoi carries no further executable
+//   content once R755-1 governs.
+// - «Tous âgés de plus de trois ans» is universal over counted children:
+//   per-child cf_dom_enfant_ancien facts plus the count input contract
+//   (metro B-PFCF-COMPTAGE pattern); «au moins l'un de moins de cinq ans»
+//   is existential, established by the fund (presence_jeune_dom) under
+//   the same contract with the per-child jeune facts.
+// - L755-16-1 attributes the increased amount INSTEAD of the base amount
+//   (metro D-39(a)): base rules require r > plafond_majore, majore rules
+//   r <= plafond_majore.
+// - R755-3 conditions the differential explicitly on R755-1, so the DOM
+//   differential keeps the DOM frame/territory/young-child premises while
+//   staying standalone from the open base right (no cf_dom_droit_ouvert
+//   premise: the overrun household has none).
+// - L755-16 al. 3 (CPI indexation) and L755-16-1 al. 2 (rates by decree,
+//   substance in D755-6/6-1) carry no rule: despite with reason.
+// - Mayotte and AUTRE conclude nothing anywhere; Saint-Barthélemy and
+//   Saint-Martin conclude nothing on the R. 755-1 department track and
+//   carry Title V scope plus available amounts only (B-PFCF-DOM-TERRITOIRE,
+//   B-PFCF-DOM-TITRE-V). No SB/SM department fact and no R. 755-1 age gate
+//   are invented for the broad track.
+// - The retained Title V frame (cadre_cf_titre_v_remplie) qualifies the
+//   collectivity award where non-department regulatory detail is genuinely
+//   not pinned; available amounts are built from it, never «due», and bear
+//   no duty. Base/majore exclusivity is not asserted there (ceilings stay
+//   department-linked via R. 755-2/4).
+//
+// MONEY FORMS mirror 04-montant.law per track as retained package policy,
+// not source-prescribed: no pinned CF/DOM text names cent-rounding or
+// tie-breaking — D. 755-6 «Le montant … est fixé à 41,65 % …» and
+// D. 755-6-1 «Le taux … est égal à 62,48 % …» give rates only.
+// Base/majore round HALF_UP to the centime on both the department and the
+// Title V broad track (adopted reading, SOURCE_PENDING; metropolitan
+// precedent is not legal proof). The differential is exact (division
+// refuses inexact quotients). Tests use exact non-tie amounts (166.60,
+// 62.48, 133.28) and assert no tie-breaking, preserving non-tieability.
+// Money x Decimal and Money / Decimal only; one- and two-child ceilings
+// use literal counts, never Money x Integer.
+
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+use self::{
+    CSS_D755_6,
+    CSS_D755_6_1,
+    CSS_D755_6_1_ED2022_10,
+    CSS_D755_6_ED2022_10,
+    CSS_L755_16,
+    CSS_L755_16_1,
+    CSS_L755_16_1_ED2018_01,
+    CSS_L755_16_1_ED2018_04,
+    CSS_L755_16_1_ED2020_04,
+    CSS_L755_16_1_ED2022_10,
+    CSS_L755_16_ED2018_01,
+    CSS_L755_16_ED2018_04,
+    CSS_L755_16_ED2020_04,
+    CSS_L755_16_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_3,
+    CSS_R522_3_ED2014_04,
+    CSS_R522_3_ED2017_04,
+    CSS_R522_3_ED2018_01,
+    CSS_R522_3_ED2018_04,
+    CSS_R522_3_ED2020_04,
+    CSS_R522_3_ED2022_10,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04,
+    CSS_R755_1,
+    CSS_R755_1_ED2000_01,
+    CSS_R755_1_ED2003_12,
+    CSS_R755_1_ED2011_11,
+    CSS_R755_1_ED2014_01,
+    CSS_R755_1_ED2014_04,
+    CSS_R755_1_ED2017_04,
+    CSS_R755_1_ED2018_01,
+    CSS_R755_1_ED2018_04,
+    CSS_R755_1_ED2020_04,
+    CSS_R755_1_ED2022_10,
+    CSS_R755_2,
+    CSS_R755_2_ED2018_01,
+    CSS_R755_2_ED2018_04,
+    CSS_R755_2_ED2020_04,
+    CSS_R755_2_ED2022_10,
+    CSS_R755_3,
+    CSS_R755_3_ED2018_01,
+    CSS_R755_3_ED2018_04,
+    CSS_R755_3_ED2020_04,
+    CSS_R755_3_ED2022_10,
+    CSS_R755_4,
+    CSS_R755_4_ED2018_01,
+    CSS_R755_4_ED2018_04,
+    CSS_R755_4_ED2020_04,
+    CSS_R755_4_ED2022_10,
+    Territoire,
+    base_dom_retenue,
+    bmaf_retenu,
+    cadre_cf_dom_remplie,
+    cadre_cf_titre_v_remplie,
+    cf_dom_differentiel_du,
+    cf_dom_droit_ouvert,
+    cf_dom_enfant_ancien,
+    cf_dom_enfant_jeune,
+    cf_dom_majore_du,
+    cf_dom_montant_du,
+    cf_dom_plafond,
+    cf_dom_plafond_majore,
+    cf_titre_v_majore_disponible,
+    cf_titre_v_montant_disponible,
+    cf_titre_v_portee,
+    cf_verse,
+    couple_biactif,
+    date_naissance,
+    departement_l751_1,
+    foyer_du_cas,
+    majoration_biactivite,
+    majoration_biactivite_majore,
+    majoration_enfant_cf,
+    majoration_enfant_majore,
+    mois_droit,
+    nb_enfants_cf,
+    parent_isole,
+    plafond_base_cf,
+    plafond_base_majore,
+    plafond_cf_applicable,
+    plafond_majore_applicable,
+    presence_jeune_dom,
+    ressources_menage,
+    territoire,
+};
+
+@source(
+    CSS_R755_1,
+    CSS_R755_1_ED2000_01,
+    CSS_R755_1_ED2003_12,
+    CSS_R755_1_ED2011_11,
+    CSS_R755_1_ED2014_01,
+    CSS_R755_1_ED2014_04,
+    CSS_R755_1_ED2017_04,
+    CSS_R755_1_ED2018_01,
+    CSS_R755_1_ED2018_04,
+    CSS_R755_1_ED2020_04,
+    CSS_R755_1_ED2022_10)
+rule CfDomEnfantAncien(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant de plus de trois ans, strict: compte pour l'âge DOM (R. 755-1)";
+    label en unofficial "child strictly over three: counts for the DOM age (R. 755-1)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and date_naissance(e, naissance) and mois_droit(mois)
+        and mois > add_calendar_period(naissance, 3 calendar_year);
+    then cf_dom_enfant_ancien(e);
+}
+
+@source(
+    CSS_R755_1,
+    CSS_R755_1_ED2000_01,
+    CSS_R755_1_ED2003_12,
+    CSS_R755_1_ED2011_11,
+    CSS_R755_1_ED2014_01,
+    CSS_R755_1_ED2014_04,
+    CSS_R755_1_ED2017_04,
+    CSS_R755_1_ED2018_01,
+    CSS_R755_1_ED2018_04,
+    CSS_R755_1_ED2020_04,
+    CSS_R755_1_ED2022_10)
+rule CfDomEnfantJeune(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant de plus de trois ans et de moins de cinq ans, strict: le jeune DOM (R. 755-1)";
+    label en unofficial "child strictly over three and strictly under five: the young DOM child (R. 755-1)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and date_naissance(e, naissance) and mois_droit(mois)
+        and mois > add_calendar_period(naissance, 3 calendar_year)
+        and mois < add_calendar_period(naissance, 5 calendar_year);
+    then cf_dom_enfant_jeune(e);
+}
+
+@source(
+    CSS_R755_2,
+    CSS_R755_2_ED2018_01,
+    CSS_R755_2_ED2018_04,
+    CSS_R755_2_ED2020_04,
+    CSS_R755_2_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PlafondDomUnSansMajoration(p: fr.pf.core::Personne, base: Money, enfant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM, un enfant, ni biactif ni isolé: plafond de base publié plus la majoration de 25 % publiée (R. 755-2, R. 522-2 al. 1-2)";
+    label en unofficial "DOM, one child, neither two-earner nor lone: published base plus the published 25% increment (R. 755-2, R. 522-2 paras. 1-2)";
+    when plafond_base_cf(p, base) and majoration_enfant_cf(p, enfant) and nb_enfants_cf(p, 1)
+        and foyer_du_cas(p) and not couple_biactif(p) and not parent_isole(p);
+    then cf_dom_plafond(p, base + enfant);
+}
+
+@source(
+    CSS_R755_2,
+    CSS_R755_2_ED2018_01,
+    CSS_R755_2_ED2018_04,
+    CSS_R755_2_ED2020_04,
+    CSS_R755_2_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PlafondDomUnAvecBiactif(p: fr.pf.core::Personne, base: Money, enfant: Money, majoration: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM, un enfant, couple biactif: plafond de base publié plus la majoration de 25 % publiée et majoration publiée pour double activité ou isolement (R. 755-2, R. 522-2 al. 3)";
+    label en unofficial "DOM, one child, two-earner couple: published base plus the published 25% increment and the published two-earner or lone-parent increment (R. 755-2, R. 522-2 para. 3)";
+    when plafond_base_cf(p, base) and majoration_enfant_cf(p, enfant) and nb_enfants_cf(p, 1)
+        and couple_biactif(p) and majoration_biactivite(p, majoration);
+    then cf_dom_plafond(p, base + enfant + majoration);
+}
+
+@source(
+    CSS_R755_2,
+    CSS_R755_2_ED2018_01,
+    CSS_R755_2_ED2018_04,
+    CSS_R755_2_ED2020_04,
+    CSS_R755_2_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PlafondDomUnAvecIsole(p: fr.pf.core::Personne, base: Money, enfant: Money, majoration: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM, un enfant, parent isolé: plafond de base publié plus la majoration de 25 % publiée et majoration publiée pour double activité ou isolement (R. 755-2, R. 522-2 al. 3)";
+    label en unofficial "DOM, one child, lone parent: published base plus the published 25% increment and the published two-earner or lone-parent increment (R. 755-2, R. 522-2 para. 3)";
+    when plafond_base_cf(p, base) and majoration_enfant_cf(p, enfant) and nb_enfants_cf(p, 1)
+        and parent_isole(p) and majoration_biactivite(p, majoration);
+    then cf_dom_plafond(p, base + enfant + majoration);
+}
+
+@source(
+    CSS_R755_2,
+    CSS_R755_2_ED2018_01,
+    CSS_R755_2_ED2018_04,
+    CSS_R755_2_ED2020_04,
+    CSS_R755_2_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PlafondDomDeuxSansMajoration(p: fr.pf.core::Personne, base: Money, enfant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM, deux enfants, ni biactif ni isolé: plafond de base publié plus deux fois la majoration de 25 % publiée (R. 755-2, R. 522-2 al. 1-2)";
+    label en unofficial "DOM, two children, neither two-earner nor lone: published base plus twice the published 25% increment (R. 755-2, R. 522-2 paras. 1-2)";
+    when plafond_base_cf(p, base) and majoration_enfant_cf(p, enfant) and nb_enfants_cf(p, 2)
+        and foyer_du_cas(p) and not couple_biactif(p) and not parent_isole(p);
+    then cf_dom_plafond(p, base + enfant * 2.0);
+}
+
+@source(
+    CSS_R755_2,
+    CSS_R755_2_ED2018_01,
+    CSS_R755_2_ED2018_04,
+    CSS_R755_2_ED2020_04,
+    CSS_R755_2_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PlafondDomDeuxAvecBiactif(p: fr.pf.core::Personne, base: Money, enfant: Money, majoration: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM, deux enfants, couple biactif: plafond de base publié plus deux fois la majoration de 25 % publiée et majoration publiée pour double activité ou isolement (R. 755-2, R. 522-2 al. 3)";
+    label en unofficial "DOM, two children, two-earner couple: published base plus twice the published 25% increment and the published two-earner or lone-parent increment (R. 755-2, R. 522-2 para. 3)";
+    when plafond_base_cf(p, base) and majoration_enfant_cf(p, enfant) and nb_enfants_cf(p, 2)
+        and couple_biactif(p) and majoration_biactivite(p, majoration);
+    then cf_dom_plafond(p, base + enfant * 2.0 + majoration);
+}
+
+@source(
+    CSS_R755_2,
+    CSS_R755_2_ED2018_01,
+    CSS_R755_2_ED2018_04,
+    CSS_R755_2_ED2020_04,
+    CSS_R755_2_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PlafondDomDeuxAvecIsole(p: fr.pf.core::Personne, base: Money, enfant: Money, majoration: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM, deux enfants, parent isolé: plafond de base publié plus deux fois la majoration de 25 % publiée et majoration publiée pour double activité ou isolement (R. 755-2, R. 522-2 al. 3)";
+    label en unofficial "DOM, two children, lone parent: published base plus twice the published 25% increment and the published two-earner or lone-parent increment (R. 755-2, R. 522-2 para. 3)";
+    when plafond_base_cf(p, base) and majoration_enfant_cf(p, enfant) and nb_enfants_cf(p, 2)
+        and parent_isole(p) and majoration_biactivite(p, majoration);
+    then cf_dom_plafond(p, base + enfant * 2.0 + majoration);
+}
+
+@source(
+    CSS_R755_4,
+    CSS_R755_4_ED2018_01,
+    CSS_R755_4_ED2018_04,
+    CSS_R755_4_ED2020_04,
+    CSS_R755_4_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04)
+rule MajoreDomUnSansMajoration(p: fr.pf.core::Personne, base: Money, enfant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM majoré, un enfant, ni biactif ni isolé: plafond de base publié du montant majoré plus sa majoration de 25 % publiée (R. 755-4, R. 522-4)";
+    label en unofficial "DOM increased, one child, neither two-earner nor lone: published increased-amount base plus its published 25% increment (R. 755-4, R. 522-4)";
+    when plafond_base_majore(p, base) and majoration_enfant_majore(p, enfant) and nb_enfants_cf(p, 1)
+        and foyer_du_cas(p) and not couple_biactif(p) and not parent_isole(p);
+    then cf_dom_plafond_majore(p, base + enfant);
+}
+
+@source(
+    CSS_R755_4,
+    CSS_R755_4_ED2018_01,
+    CSS_R755_4_ED2018_04,
+    CSS_R755_4_ED2020_04,
+    CSS_R755_4_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04)
+rule MajoreDomUnAvecBiactif(p: fr.pf.core::Personne, base: Money, enfant: Money, majoration: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM majoré, un enfant, couple biactif: plafond de base publié du montant majoré plus sa majoration de 25 % publiée et majoration publiée pour double activité ou isolement (R. 755-4, R. 522-4, R. 522-2 al. 2-3)";
+    label en unofficial "DOM increased, one child, two-earner couple: published increased-amount base plus its published 25% increment and the published two-earner or lone-parent increment (R. 755-4, R. 522-4, R. 522-2 paras. 2-3)";
+    when plafond_base_majore(p, base) and majoration_enfant_majore(p, enfant) and nb_enfants_cf(p, 1)
+        and couple_biactif(p) and majoration_biactivite_majore(p, majoration);
+    then cf_dom_plafond_majore(p, base + enfant + majoration);
+}
+
+@source(
+    CSS_R755_4,
+    CSS_R755_4_ED2018_01,
+    CSS_R755_4_ED2018_04,
+    CSS_R755_4_ED2020_04,
+    CSS_R755_4_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04)
+rule MajoreDomUnAvecIsole(p: fr.pf.core::Personne, base: Money, enfant: Money, majoration: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM majoré, un enfant, parent isolé: plafond de base publié du montant majoré plus sa majoration de 25 % publiée et majoration publiée pour double activité ou isolement (R. 755-4, R. 522-4, R. 522-2 al. 2-3)";
+    label en unofficial "DOM increased, one child, lone parent: published increased-amount base plus its published 25% increment and the published two-earner or lone-parent increment (R. 755-4, R. 522-4, R. 522-2 paras. 2-3)";
+    when plafond_base_majore(p, base) and majoration_enfant_majore(p, enfant) and nb_enfants_cf(p, 1)
+        and parent_isole(p) and majoration_biactivite_majore(p, majoration);
+    then cf_dom_plafond_majore(p, base + enfant + majoration);
+}
+
+@source(
+    CSS_R755_4,
+    CSS_R755_4_ED2018_01,
+    CSS_R755_4_ED2018_04,
+    CSS_R755_4_ED2020_04,
+    CSS_R755_4_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04)
+rule MajoreDomDeuxSansMajoration(p: fr.pf.core::Personne, base: Money, enfant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM majoré, deux enfants, ni biactif ni isolé: plafond de base publié du montant majoré plus deux fois sa majoration de 25 % publiée (R. 755-4, R. 522-4)";
+    label en unofficial "DOM increased, two children, neither two-earner nor lone: published increased-amount base plus twice its published 25% increment (R. 755-4, R. 522-4)";
+    when plafond_base_majore(p, base) and majoration_enfant_majore(p, enfant) and nb_enfants_cf(p, 2)
+        and foyer_du_cas(p) and not couple_biactif(p) and not parent_isole(p);
+    then cf_dom_plafond_majore(p, base + enfant * 2.0);
+}
+
+@source(
+    CSS_R755_4,
+    CSS_R755_4_ED2018_01,
+    CSS_R755_4_ED2018_04,
+    CSS_R755_4_ED2020_04,
+    CSS_R755_4_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04)
+rule MajoreDomDeuxAvecBiactif(p: fr.pf.core::Personne, base: Money, enfant: Money, majoration: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM majoré, deux enfants, couple biactif: plafond de base publié du montant majoré plus deux fois sa majoration de 25 % publiée et majoration publiée pour double activité ou isolement (R. 755-4, R. 522-4, R. 522-2 al. 2-3)";
+    label en unofficial "DOM increased, two children, two-earner couple: published increased-amount base plus twice its published 25% increment and the published two-earner or lone-parent increment (R. 755-4, R. 522-4, R. 522-2 paras. 2-3)";
+    when plafond_base_majore(p, base) and majoration_enfant_majore(p, enfant) and nb_enfants_cf(p, 2)
+        and couple_biactif(p) and majoration_biactivite_majore(p, majoration);
+    then cf_dom_plafond_majore(p, base + enfant * 2.0 + majoration);
+}
+
+@source(
+    CSS_R755_4,
+    CSS_R755_4_ED2018_01,
+    CSS_R755_4_ED2018_04,
+    CSS_R755_4_ED2020_04,
+    CSS_R755_4_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04)
+rule MajoreDomDeuxAvecIsole(p: fr.pf.core::Personne, base: Money, enfant: Money, majoration: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM majoré, deux enfants, parent isolé: plafond de base publié du montant majoré plus deux fois sa majoration de 25 % publiée et majoration publiée pour double activité ou isolement (R. 755-4, R. 522-4, R. 522-2 al. 2-3)";
+    label en unofficial "DOM increased, two children, lone parent: published increased-amount base plus twice its published 25% increment and the published two-earner or lone-parent increment (R. 755-4, R. 522-4, R. 522-2 paras. 2-3)";
+    when plafond_base_majore(p, base) and majoration_enfant_majore(p, enfant) and nb_enfants_cf(p, 2)
+        and parent_isole(p) and majoration_biactivite_majore(p, majoration);
+    then cf_dom_plafond_majore(p, base + enfant * 2.0 + majoration);
+}
+
+@source(
+    CSS_L755_16,
+    CSS_L755_16_ED2018_01,
+    CSS_L755_16_ED2018_04,
+    CSS_L755_16_ED2020_04,
+    CSS_L755_16_ED2022_10,
+    CSS_R755_1,
+    CSS_R755_1_ED2000_01,
+    CSS_R755_1_ED2003_12,
+    CSS_R755_1_ED2011_11,
+    CSS_R755_1_ED2014_01,
+    CSS_R755_1_ED2014_04,
+    CSS_R755_1_ED2017_04,
+    CSS_R755_1_ED2018_01,
+    CSS_R755_1_ED2018_04,
+    CSS_R755_1_ED2020_04,
+    CSS_R755_1_ED2022_10,
+    CSS_R755_2,
+    CSS_R755_2_ED2018_01,
+    CSS_R755_2_ED2018_04,
+    CSS_R755_2_ED2020_04,
+    CSS_R755_2_ED2022_10)
+rule CfDomDroitOuvertPetit(p: fr.pf.core::Personne, r: Money, plafond: Money, t: Territoire) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM département, un ou deux enfants, ressources sous plafond: droit ouvert (L. 755-16, R. 755-1, R. 755-2)";
+    label en unofficial "DOM department, one or two children, resources within the ceiling: right open (L. 755-16, R. 755-1, R. 755-2)";
+    when territoire(p, t) and t != METROPOLE and t != MAYOTTE and t != AUTRE
+        and departement_l751_1(t)
+        and cadre_cf_dom_remplie(p) and presence_jeune_dom(p)
+        and ressources_menage(p, r) and cf_dom_plafond(p, plafond) and r <= plafond;
+    then cf_dom_droit_ouvert(p);
+}
+
+@source(
+    CSS_L755_16,
+    CSS_L755_16_ED2018_01,
+    CSS_L755_16_ED2018_04,
+    CSS_L755_16_ED2020_04,
+    CSS_L755_16_ED2022_10,
+    CSS_R755_1,
+    CSS_R755_1_ED2000_01,
+    CSS_R755_1_ED2003_12,
+    CSS_R755_1_ED2011_11,
+    CSS_R755_1_ED2014_01,
+    CSS_R755_1_ED2014_04,
+    CSS_R755_1_ED2017_04,
+    CSS_R755_1_ED2018_01,
+    CSS_R755_1_ED2018_04,
+    CSS_R755_1_ED2020_04,
+    CSS_R755_1_ED2022_10,
+    CSS_R755_2,
+    CSS_R755_2_ED2018_01,
+    CSS_R755_2_ED2018_04,
+    CSS_R755_2_ED2020_04,
+    CSS_R755_2_ED2022_10)
+rule CfDomDroitOuvertGrand(p: fr.pf.core::Personne, n: Integer, r: Money, plafond: Money, t: Territoire) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM département, trois enfants et plus, ressources sous plafond: droit ouvert, plafond métropolitain en liaison (L. 755-16, R. 755-1, R. 755-2)";
+    label en unofficial "DOM department, three or more children, resources within the ceiling: right open, metropolitan ceiling by liaison (L. 755-16, R. 755-1, R. 755-2)";
+    when territoire(p, t) and t != METROPOLE and t != MAYOTTE and t != AUTRE
+        and departement_l751_1(t)
+        and cadre_cf_dom_remplie(p) and presence_jeune_dom(p)
+        and nb_enfants_cf(p, n) and n >= 3
+        and ressources_menage(p, r) and plafond_cf_applicable(p, plafond) and r <= plafond;
+    then cf_dom_droit_ouvert(p);
+}
+
+@source(
+    CSS_D755_6,
+    CSS_D755_6_ED2022_10)
+rule CfDomMontantBasePetit(p: fr.pf.core::Personne, r: Money, plafond_majore: Money, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant DOM: 41,65 % de la base L. 755-3, hors ménage sous le plafond moitié (D. 755-6, L. 755-16-1)";
+    label en unofficial "DOM amount: 41.65% of the L. 755-3 base, excluding a household within the half ceiling (D. 755-6, L. 755-16-1)";
+    when cf_dom_droit_ouvert(p) and ressources_menage(p, r)
+        and cf_dom_plafond_majore(p, plafond_majore) and r > plafond_majore
+        and base_dom_retenue(p, base);
+    then cf_dom_montant_du(p, round(TauxCfDomBase * base, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_D755_6,
+    CSS_D755_6_ED2022_10)
+rule CfDomMontantBaseGrand(p: fr.pf.core::Personne, r: Money, plafond_majore: Money, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant DOM, trois enfants et plus: 41,65 % de la base L. 755-3, hors ménage sous le plafond moitié (D. 755-6, L. 755-16-1)";
+    label en unofficial "DOM amount, three or more children: 41.65% of the L. 755-3 base, excluding a household within the half ceiling (D. 755-6, L. 755-16-1)";
+    when cf_dom_droit_ouvert(p) and ressources_menage(p, r)
+        and plafond_majore_applicable(p, plafond_majore) and r > plafond_majore
+        and base_dom_retenue(p, base);
+    then cf_dom_montant_du(p, round(TauxCfDomBase * base, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L755_16_1,
+    CSS_L755_16_1_ED2018_01,
+    CSS_L755_16_1_ED2018_04,
+    CSS_L755_16_1_ED2020_04,
+    CSS_L755_16_1_ED2022_10,
+    CSS_D755_6_1,
+    CSS_D755_6_1_ED2022_10)
+rule CfDomMontantMajorePetit(p: fr.pf.core::Personne, r: Money, plafond_majore: Money, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ressources sous le plafond moitié DOM: montant majoré au taux en vigueur (L. 755-16-1, D. 755-6-1)";
+    label en unofficial "resources within the DOM half ceiling: increased amount at the rate in force (L. 755-16-1, D. 755-6-1)";
+    when cf_dom_droit_ouvert(p) and ressources_menage(p, r)
+        and cf_dom_plafond_majore(p, plafond_majore) and r <= plafond_majore
+        and bmaf_retenu(p, bmaf);
+    then cf_dom_majore_du(p, round(TauxCfDomMajore * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L755_16_1,
+    CSS_L755_16_1_ED2018_01,
+    CSS_L755_16_1_ED2018_04,
+    CSS_L755_16_1_ED2020_04,
+    CSS_L755_16_1_ED2022_10,
+    CSS_D755_6_1,
+    CSS_D755_6_1_ED2022_10)
+rule CfDomMontantMajoreGrand(p: fr.pf.core::Personne, r: Money, plafond_majore: Money, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM, trois enfants et plus, ressources sous le plafond moitié: montant majoré au taux en vigueur (L. 755-16-1, D. 755-6-1)";
+    label en unofficial "DOM, three or more children, resources within the half ceiling: increased amount at the rate in force (L. 755-16-1, D. 755-6-1)";
+    when cf_dom_droit_ouvert(p) and ressources_menage(p, r)
+        and plafond_majore_applicable(p, plafond_majore) and r <= plafond_majore
+        and bmaf_retenu(p, bmaf);
+    then cf_dom_majore_du(p, round(TauxCfDomMajore * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L755_16,
+    CSS_L755_16_ED2018_01,
+    CSS_L755_16_ED2018_04,
+    CSS_L755_16_ED2020_04,
+    CSS_L755_16_ED2022_10,
+    CSS_R755_3,
+    CSS_R755_3_ED2018_01,
+    CSS_R755_3_ED2018_04,
+    CSS_R755_3_ED2020_04,
+    CSS_R755_3_ED2022_10,
+    CSS_R522_3,
+    CSS_R522_3_ED2014_04,
+    CSS_R522_3_ED2017_04,
+    CSS_R522_3_ED2018_01,
+    CSS_R522_3_ED2018_04,
+    CSS_R522_3_ED2020_04,
+    CSS_R522_3_ED2022_10,
+    CSS_D755_6,
+    CSS_D755_6_ED2022_10)
+// Standalone track with the R755-1 frame: the overrun household has no open
+// base right, so cf_dom_droit_ouvert is not required; the R755-1
+// qualification arrives as the DOM frame, territory and young-child
+// premises (adopted reading, see the module header). The monthly reference
+// is the theoretical DOM base amount (TauxCfDomBase x L755-3 base).
+rule CfDomDifferentielPetit(p: fr.pf.core::Personne, r: Money, plafond: Money, base: Money, t: Territoire) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM département, dépassement inférieur à douze mensualités: différentiel au douzième de l'écart (L. 755-16 al. 4, R. 755-3)";
+    label en unofficial "DOM department, overrun under twelve monthly amounts: differential at one twelfth of the gap (L. 755-16 para. 4, R. 755-3)";
+    when territoire(p, t) and t != METROPOLE and t != MAYOTTE and t != AUTRE
+        and departement_l751_1(t)
+        and cadre_cf_dom_remplie(p) and presence_jeune_dom(p)
+        and cf_dom_plafond(p, plafond)
+        and ressources_menage(p, r) and base_dom_retenue(p, base)
+        and r > plafond and r - plafond < 12.0 * (TauxCfDomBase * base);
+    then cf_dom_differentiel_du(p, (plafond + 12.0 * (TauxCfDomBase * base) - r) / 12.0);
+}
+
+@source(
+    CSS_L755_16,
+    CSS_L755_16_ED2018_01,
+    CSS_L755_16_ED2018_04,
+    CSS_L755_16_ED2020_04,
+    CSS_L755_16_ED2022_10,
+    CSS_R755_3,
+    CSS_R755_3_ED2018_01,
+    CSS_R755_3_ED2018_04,
+    CSS_R755_3_ED2020_04,
+    CSS_R755_3_ED2022_10,
+    CSS_R522_3,
+    CSS_R522_3_ED2014_04,
+    CSS_R522_3_ED2017_04,
+    CSS_R522_3_ED2018_01,
+    CSS_R522_3_ED2018_04,
+    CSS_R522_3_ED2020_04,
+    CSS_R522_3_ED2022_10,
+    CSS_D755_6,
+    CSS_D755_6_ED2022_10)
+rule CfDomDifferentielGrand(p: fr.pf.core::Personne, n: Integer, r: Money, plafond: Money, base: Money, t: Territoire) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM département, trois enfants et plus, dépassement inférieur à douze mensualités: différentiel au douzième de l'écart (L. 755-16 al. 4, R. 755-3)";
+    label en unofficial "DOM department, three or more children, overrun under twelve monthly amounts: differential at one twelfth of the gap (L. 755-16 para. 4, R. 755-3)";
+    when territoire(p, t) and t != METROPOLE and t != MAYOTTE and t != AUTRE
+        and departement_l751_1(t)
+        and cadre_cf_dom_remplie(p) and presence_jeune_dom(p)
+        and nb_enfants_cf(p, n) and n >= 3
+        and plafond_cf_applicable(p, plafond)
+        and ressources_menage(p, r) and base_dom_retenue(p, base)
+        and r > plafond and r - plafond < 12.0 * (TauxCfDomBase * base);
+    then cf_dom_differentiel_du(p, (plafond + 12.0 * (TauxCfDomBase * base) - r) / 12.0);
+}
+
+@source(
+    CSS_L755_16,
+    CSS_L755_16_ED2018_01,
+    CSS_L755_16_ED2018_04,
+    CSS_L755_16_ED2020_04,
+    CSS_L755_16_ED2022_10,
+    CSS_L755_16_1,
+    CSS_L755_16_1_ED2018_01,
+    CSS_L755_16_1_ED2018_04,
+    CSS_L755_16_1_ED2020_04,
+    CSS_L755_16_1_ED2022_10)
+// Title V statutory scope (D-76): L. 755-16/16-1 carry no local
+// territorial phrase and sit under the Title V header naming the six
+// L. 751-1 collectivities; the six enum values spell that header. No
+// department fact and no R. 755-1 premise: scope only.
+rule CfTitreVPortee(p: fr.pf.core::Personne, t: Territoire) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "portée statutaire titre V : ménage dans une collectivité L. 751-1 (L. 755-16, L. 755-16-1)";
+    label en unofficial "Title V statutory scope: household in an L. 751-1 collectivity (L. 755-16, L. 755-16-1)";
+    when territoire(p, t) and t != METROPOLE and t != MAYOTTE and t != AUTRE;
+    then cf_titre_v_portee(p);
+}
+
+@source(
+    CSS_L755_16,
+    CSS_L755_16_ED2018_01,
+    CSS_L755_16_ED2018_04,
+    CSS_L755_16_ED2020_04,
+    CSS_L755_16_ED2022_10,
+    CSS_D755_6,
+    CSS_D755_6_ED2022_10)
+// Available base amount for a qualifying Title V collectivity household:
+// the generic D. 755-6 rate on the stated L. 755-3 base. The retained
+// Title V frame stands where non-department regulatory detail is not
+// pinned; no R. 755-1 age, ceiling or department premise is asserted, the
+// amount is available rather than due, and no duty reads it.
+rule CfTitreVMontantDisponible(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant titre V disponible : 41,65 % de la base L. 755-3, cadre titre V réuni (L. 755-16, D. 755-6)";
+    label en unofficial "Title V amount available: 41.65% of the L. 755-3 base, Title V frame met (L. 755-16, D. 755-6)";
+    when cf_titre_v_portee(p) and cadre_cf_titre_v_remplie(p)
+        and base_dom_retenue(p, base);
+    then cf_titre_v_montant_disponible(p, round(TauxCfDomBase * base, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L755_16_1,
+    CSS_L755_16_1_ED2018_01,
+    CSS_L755_16_1_ED2018_04,
+    CSS_L755_16_1_ED2020_04,
+    CSS_L755_16_1_ED2022_10,
+    CSS_D755_6_1,
+    CSS_D755_6_1_ED2022_10)
+// Available increased amount for a qualifying Title V collectivity
+// household: the generic D. 755-6-1 rate on stated BMAF, same retained
+// frame contract as the base track. No exclusivity against the base
+// available amount is asserted: the half-ceiling test stays
+// department-linked via R. 755-4.
+rule CfTitreVMajoreDisponible(p: fr.pf.core::Personne, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant majoré titre V disponible : taux en vigueur sur BMAF, cadre titre V réuni (L. 755-16-1, D. 755-6-1)";
+    label en unofficial "Title V increased amount available: rate in force on BMAF, Title V frame met (L. 755-16-1, D. 755-6-1)";
+    when cf_titre_v_portee(p) and cadre_cf_titre_v_remplie(p)
+        and bmaf_retenu(p, bmaf);
+    then cf_titre_v_majore_disponible(p, round(TauxCfDomMajore * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L755_16,
+    CSS_L755_16_ED2018_01,
+    CSS_L755_16_ED2018_04,
+    CSS_L755_16_ED2020_04,
+    CSS_L755_16_ED2022_10,
+    CSS_D755_6,
+    CSS_D755_6_ED2022_10)
+rule DevoirVerserCfDom(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) strict {
+    label fr official "l'organisme débiteur paie au ménage DOM le complément mensuel dû";
+    label en unofficial "the debtor fund pays the DOM household the monthly complement due";
+    when cf_dom_montant_du(p, montant) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerCfDomDu {
+        bearer o;
+        beneficiary p;
+        maintain cf_verse(p, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_L755_16_1,
+    CSS_L755_16_1_ED2018_01,
+    CSS_L755_16_1_ED2018_04,
+    CSS_L755_16_1_ED2020_04,
+    CSS_L755_16_1_ED2022_10,
+    CSS_D755_6_1,
+    CSS_D755_6_1_ED2022_10)
+rule DevoirVerserCfDomMajore(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) strict {
+    label fr official "l'organisme débiteur paie au ménage DOM le montant majoré dû";
+    label en unofficial "the debtor fund pays the DOM household the increased amount due";
+    when cf_dom_majore_du(p, montant) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerCfDomMajoreDu {
+        bearer o;
+        beneficiary p;
+        maintain cf_verse(p, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_L755_16,
+    CSS_L755_16_ED2018_01,
+    CSS_L755_16_ED2018_04,
+    CSS_L755_16_ED2020_04,
+    CSS_L755_16_ED2022_10,
+    CSS_R755_3,
+    CSS_R755_3_ED2018_01,
+    CSS_R755_3_ED2018_04,
+    CSS_R755_3_ED2020_04,
+    CSS_R755_3_ED2022_10)
+rule DevoirVerserCfDomDifferentiel(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) strict {
+    label fr official "l'organisme débiteur paie au ménage DOM le complément différentiel dû";
+    label en unofficial "the debtor fund pays the DOM household the differential top-up due";
+    when cf_dom_differentiel_du(p, montant) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerCfDomDifferentielDu {
+        bearer o;
+        beneficiary p;
+        maintain cf_verse(p, montant) during [@2021-01-01, infinity);
+    };
+}

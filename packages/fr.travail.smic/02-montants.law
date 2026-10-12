@@ -1,0 +1,72 @@
+// Часовые ставки SMIC и минимум garanti 2026 года — строят из закреплённых
+// статей (DECISION-0452): дело даёт территорию и дату, правило выводит сумму.
+// Ряд 2021–2025 — в `03-serie-2021-2025.law` (окна подряд до 2026-01-01; там
+// же построение ставок arrêté по проценту и проверка по опубликованной сумме).
+// Месячный SMIC (151,67 × часовой) не моделируется: ни один акт ряда не
+// называет месячную сумму, а 151,67 закреплён лишь параметром чужих норм (см. README).
+
+use self::{
+    Travailleur,
+    TerritoireSmic,
+    territoire_smic,
+    smic_horaire,
+    minimum_garanti,
+    DEC20251228_ART1,
+    DEC20251228_ART2,
+    ARR20260522_ART1,
+    ARR20260522_ART2,
+};
+
+@source(DEC20251228_ART1)
+rule SmicHoraireMetropole2026(t: Travailleur) strict {
+    effective [@2026-01-01, @2026-06-01);
+    label fr official "à compter du 1er janvier 2026, le SMIC est porté à 12,02 euros l'heure (1°)";
+    label ru unofficial "с 01.01.2026 SMIC — 12,02 €/ч (метрополия+, 1°)";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, 12.02 EUR);
+}
+
+@source(DEC20251228_ART1)
+rule SmicHoraireMayotte2026(t: Travailleur) strict {
+    effective [@2026-01-01, @2026-06-01);
+    label fr official "à compter du 1er janvier 2026, à Mayotte le SMIC est fixé à 9,33 euros l'heure (2°)";
+    label ru unofficial "с 01.01.2026 на Майотте SMIC — 9,33 €/ч (2°)";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, 9.33 EUR);
+}
+
+@source(DEC20251228_ART2)
+rule MinimumGaranti2026(t: Travailleur) strict {
+    effective [@2026-01-01, @2026-06-01);
+    label fr official "à compter du 1er janvier 2026, le minimum garanti est fixé à 4,25 euros";
+    label ru unofficial "с 01.01.2026 минимум garanti — 4,25 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 4.25 EUR);
+}
+
+@source(ARR20260522_ART1)
+rule SmicHoraireMetropole2026_06(t: Travailleur) strict {
+    effective [@2026-06-01, infinity);
+    label fr official "à compter du 1er juin 2026, le SMIC est porté à 12,31 euros l'heure (1°)";
+    label ru unofficial "с 01.06.2026 SMIC — 12,31 €/ч (метрополия+, 1°)";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, 12.31 EUR);
+}
+
+@source(ARR20260522_ART1)
+rule SmicHoraireMayotte2026_06(t: Travailleur) strict {
+    effective [@2026-06-01, infinity);
+    label fr official "à compter du 1er juin 2026, à Mayotte le SMIC est fixé à 9,56 euros l'heure (2°)";
+    label ru unofficial "с 01.06.2026 на Майотте SMIC — 9,56 €/ч (2°)";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, 9.56 EUR);
+}
+
+@source(ARR20260522_ART2)
+rule MinimumGaranti2026_06(t: Travailleur) strict {
+    effective [@2026-06-01, infinity);
+    label fr official "à compter du 1er juin 2026, le minimum garanti est fixé à 4,35 euros";
+    label ru unofficial "с 01.06.2026 минимум garanti — 4,35 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 4.35 EUR);
+}

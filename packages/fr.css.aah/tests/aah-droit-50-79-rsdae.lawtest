@@ -1,0 +1,24 @@
+// 50-79 % with RSDAE: commission decision at 60 % plus recognised RSDAE.
+// Right opens on the L. 821-2 track.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-droit-50-79-rsdae" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "droit5079-01": decision_cdaph_50_79(entity_ref("urn:fr:css-aah:case:seul-60")) { origin adjudicated; }
+        assert "droit5079-02": rsdae_reconnue(entity_ref("urn:fr:css-aah:case:seul-60")) { origin adjudicated; }
+        assert "droit5079-03": age_droit_depasse(entity_ref("urn:fr:css-aah:case:seul-60")) { origin case_input; }
+        assert "droit5079-04": residence_permanente(entity_ref("urn:fr:css-aah:case:seul-60")) { origin case_input; }
+        assert "droit5079-05": sejour_regulier(entity_ref("urn:fr:css-aah:case:seul-60")) { origin case_input; }
+    }
+    evaluate truth(aah_droit_50_79(entity_ref("urn:fr:css-aah:case:seul-60")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aah_droit_calcule(entity_ref("urn:fr:css-aah:case:seul-60")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

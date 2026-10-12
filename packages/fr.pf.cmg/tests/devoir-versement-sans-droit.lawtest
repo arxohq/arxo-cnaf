@@ -1,0 +1,21 @@
+// No right, no duty: without any age fact the age condition never
+// establishes, so no amount is due and no direct-payment duty arises.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-devoir-versement-sans-droit" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "devoir-sd-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:devoir-sans-droit"), entity_ref("urn:fr:pf-cmg:child:devsd"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "devoir-sd-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:devoir-sans-droit")) { origin case_input; }
+        assert "devoir-sd-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:devoir-sans-droit"), entity_ref("urn:fr:pf-cmg:child:devsd")) { origin case_input; }
+        assert "devoir-sd-04": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:devoir-sans-droit"), 1) { origin case_input; }
+        assert "devoir-sd-05": justification_depenses(entity_ref("urn:fr:pf-cmg:case:devoir-sans-droit"), entity_ref("urn:fr:pf-cmg:child:devsd"), @2025-10-18) { origin case_input; }
+        assert "devoir-sd-06": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-cmg:org:caisse-sd"), entity_ref("urn:fr:pf-cmg:case:devoir-sans-droit")) { origin case_input; }
+    }
+    evaluate truth(montant_cmg_du(entity_ref("urn:fr:pf-cmg:case:devoir-sans-droit"), entity_ref("urn:fr:pf-cmg:child:devsd"), 601.12 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

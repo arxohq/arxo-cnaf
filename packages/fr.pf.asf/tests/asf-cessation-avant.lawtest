@@ -1,0 +1,18 @@
+// Cessation June 2021, assessed May 2021: no cessation yet (NEITHER probe).
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-cessation-avant" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ocb-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:cessation-avant"), entity_ref("urn:fr:pf-asf:case:cessation-avant-e1")) { origin case_input; }
+        assert "ocb-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:cessation-avant-e1")) { origin case_input; }
+        assert "ocb-03": mois_cessation_couple(@2021-06-01) { origin case_input; }
+        assert "ocb-04": mois_droit_asf(@2021-05-01) { origin case_input; }
+    }
+    evaluate truth(asf_cessation_couple(entity_ref("urn:fr:pf-asf:case:cessation-avant"), entity_ref("urn:fr:pf-asf:case:cessation-avant-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

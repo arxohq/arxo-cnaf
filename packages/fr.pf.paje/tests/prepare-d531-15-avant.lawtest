@@ -1,0 +1,22 @@
+// D. 531-15 wording pair, before the 2026 reform: month of right 2026-03 —
+// the 2020 wording governs assimilation, full rate 386.48 €.
+// Pair — prepare-d531-15-apres (2026-09 → same amount).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-d531-15-avant" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "prepare-15a-01": arret_activite(entity_ref("urn:fr:paje:benef:prepare-15a"), entity_ref("urn:fr:paje:enfant:prepare-15a")) { origin adjudicated; }
+        assert "prepare-15a-02": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-15a"), entity_ref("urn:fr:paje:enfant:prepare-15a")) { origin adjudicated; }
+        assert "prepare-15a-03": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-15a")) { origin adjudicated; }
+        assert "prepare-15a-04": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-15a"), entity_ref("urn:fr:paje:case:prepare-15a")) { origin case_input; }
+        assert "prepare-15a-05": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-15a"), 400.00 EUR) { origin case_input; }
+        assert "prepare-15a-06": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-15a"), entity_ref("urn:fr:paje:enfant:prepare-15a"), @2026-03-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-15a"), entity_ref("urn:fr:paje:enfant:prepare-15a"), 386.48 EUR, @2026-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

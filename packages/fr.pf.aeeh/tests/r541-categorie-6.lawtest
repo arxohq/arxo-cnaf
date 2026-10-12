@@ -1,0 +1,34 @@
+// R. 541-2, 6° gates: no activity or full-time third person together
+// with permanent family supervision and care constraints. Cessation
+// alone, without the permanent constraints, meets 4° a) but stays
+// silent on 6° (open world: the missing premise is not false).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-categorie-6" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-c6-01": cessation_activite_totale(entity_ref("urn:fr:pf-aeeh:case:enfant-c6")) { origin adjudicated; }
+        assert "r541-c6-02": contraintes_permanentes(entity_ref("urn:fr:pf-aeeh:case:enfant-c6")) { origin adjudicated; }
+        assert "r541-c6-03": tierce_temps_plein(entity_ref("urn:fr:pf-aeeh:case:enfant-c6-tp")) { origin adjudicated; }
+        assert "r541-c6-04": contraintes_permanentes(entity_ref("urn:fr:pf-aeeh:case:enfant-c6-tp")) { origin adjudicated; }
+        assert "r541-c6-05": cessation_activite_totale(entity_ref("urn:fr:pf-aeeh:case:enfant-c6-seul")) { origin adjudicated; }
+    }
+    evaluate truth(categorie6_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c6")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie6_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c6-tp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie6_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c6-seul")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie4a_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c6-seul")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

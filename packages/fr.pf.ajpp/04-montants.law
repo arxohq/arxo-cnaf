@@ -1,0 +1,263 @@
+// Monthly cap, daily amounts, expense complement (L. 544-4/6/7).
+//
+// The monthly maximum (L. 544-4) and all euro figures (L. 544-6 daily rate,
+// L. 544-7 flat complement) are decree-set and unpinned: they arrive as
+// case inputs with provenance (B-PFAJPP-D544). The computation multiplies
+// the retained daily rate by the established month days. F05-01: every
+// monthly daily amount gates on the month conformity (mensuel_dans_limite
+// for daily paths, forfait_22_conforme for the flat path) plus the
+// qualified envelope (initial/renewal 310 + 3 years, or beyond-maximum
+// reopening). The 2023 single
+// majoration lives only in its six-month window. The expense complement
+// compares retained resources/ceiling and expenses/threshold. All keyed
+// premises arrive bound (per-child and per-month keys).
+
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+use self::{
+    CSS_L544_4_ED2020_09,
+    CSS_L544_4_ED2021_11,
+    CSS_L544_4_ED2022_01,
+    CSS_L544_4_ED2022_04,
+    CSS_L544_4_ED2022_07,
+    CSS_L544_4_ED2022_10,
+    CSS_L544_4_ED2023_01,
+    CSS_L544_4_ED2023_07,
+    CSS_L544_4_ED2024_02,
+    CSS_L544_4_ED2024_07,
+    CSS_L544_4_ED2025_12,
+    CSS_L544_4_ED2026_01,
+    CSS_L544_4_ED2026_06,
+    CSS_L544_8,
+    CSS_L544_8_ED2026_06,
+    CSS_L544_8_PRE2022_ED2020_09,
+    CSS_L544_8_PRE2022_ED2021_11,
+    CSS_L544_8_PRE2022_ED2022_01,
+    CSS_L544_8_PRE2022_ED2022_04,
+    CSS_L544_8_PRE2026,
+    CSS_L544_8_PRE2026_ED2022_10,
+    CSS_L544_8_PRE2026_ED2023_01,
+    CSS_L544_8_PRE2026_ED2023_07,
+    CSS_L544_8_PRE2026_ED2024_02,
+    CSS_L544_8_PRE2026_ED2024_07,
+    CSS_L544_8_PRE2026_ED2025_12,
+    CSS_L544_6,
+    CSS_L544_6_ED2024_02,
+    CSS_L544_6_ED2024_07,
+    CSS_L544_6_ED2025_12,
+    CSS_L544_6_ED2026_01,
+    CSS_L544_6_ED2026_06,
+    CSS_L544_6_PRE2023,
+    CSS_L544_6_PRE2023_07,
+    CSS_L544_6_PRE2023_ED2021_11,
+    CSS_L544_6_PRE2023_ED2022_01,
+    CSS_L544_6_PRE2023_ED2022_04,
+    CSS_L544_6_PRE2023_ED2022_07,
+    CSS_L544_6_PRE2023_ED2022_10,
+    CSS_L544_7_ED2020_09,
+    CSS_L544_7_ED2021_11,
+    CSS_L544_7_ED2022_01,
+    CSS_L544_7_ED2022_04,
+    CSS_L544_7_ED2022_07,
+    CSS_L544_7_ED2022_10,
+    CSS_L544_7_ED2023_01,
+    CSS_L544_7_ED2023_07,
+    CSS_L544_7_ED2024_02,
+    CSS_L544_7_ED2024_07,
+    CSS_L544_7_ED2025_12,
+    CSS_L544_7_ED2026_01,
+    CSS_L544_7_ED2026_06,
+    ajpp_droit_ouvert,
+    ajpp_montant_complement,
+    ajpp_montant_mois,
+    complement_frais_attribue,
+    demandeur_emploi_ajpp,
+    depenses_exposees,
+    enveloppe_ajpp_qualifiee,
+    forfait_22_conforme,
+    jours_ajpp_mois,
+    jours_forfaitaires,
+    mensuel_dans_limite,
+    montant_complement_retenu,
+    montant_journalier_majore_retenu,
+    montant_journalier_module_retenu,
+    montant_journalier_retenu,
+    plafond_mensuel_retenu,
+    plafond_ressources,
+    ressources_complement,
+    seuil_depenses,
+};
+
+function montant_mensuel_ajpp(taux: Money, jours: Integer) -> Money =
+    taux * jours;
+
+// --- L. 544-4: month days within the retained maximum --------------------
+
+@source(
+    CSS_L544_4_ED2020_09,
+    CSS_L544_4_ED2021_11,
+    CSS_L544_4_ED2022_01,
+    CSS_L544_4_ED2022_04,
+    CSS_L544_4_ED2022_07,
+    CSS_L544_4_ED2022_10,
+    CSS_L544_4_ED2023_01,
+    CSS_L544_4_ED2023_07,
+    CSS_L544_4_ED2024_02,
+    CSS_L544_4_ED2024_07,
+    CSS_L544_4_ED2025_12,
+    CSS_L544_4_ED2026_01,
+    CSS_L544_4_ED2026_06)
+rule MensuelDansLimite(e: fr.pf.core::Enfant, mois: Date, jours: Integer, max: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "jours du mois civil dans le maximum retenu";
+    label en unofficial "calendar-month days within the retained maximum";
+    when ajpp_droit_ouvert(e) and jours_ajpp_mois(e, mois, jours)
+        and plafond_mensuel_retenu(e, max) and jours <= max;
+    then mensuel_dans_limite(e, mois);
+}
+
+// --- L. 544-6: monthly total at the retained daily rate ------------------
+
+@source(
+    CSS_L544_6_PRE2023,
+    CSS_L544_6_PRE2023_ED2021_11,
+    CSS_L544_6_PRE2023_ED2022_01,
+    CSS_L544_6_PRE2023_ED2022_04,
+    CSS_L544_6_PRE2023_ED2022_07,
+    CSS_L544_6_PRE2023_ED2022_10,
+    CSS_L544_6_PRE2023_07,
+    CSS_L544_6,
+    CSS_L544_6_ED2024_02,
+    CSS_L544_6_ED2024_07,
+    CSS_L544_6_ED2025_12,
+    CSS_L544_6_ED2026_01,
+    CSS_L544_6_ED2026_06)
+rule MontantMensuelNormal(e: fr.pf.core::Enfant, mois: Date, jours: Integer, taux: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total mensuel : taux journalier retenu par jours du mois";
+    label en unofficial "monthly total: retained daily rate times month days";
+    when ajpp_droit_ouvert(e) and jours_ajpp_mois(e, mois, jours)
+        and montant_journalier_retenu(e, taux)
+        and mensuel_dans_limite(e, mois) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, montant_mensuel_ajpp(taux, jours));
+}
+
+// --- L. 544-6 (2023-01): increased single-person rate, six months --------
+
+@source(
+    CSS_L544_6_PRE2023_07)
+rule MontantMensuelMajore2023(e: fr.pf.core::Enfant, mois: Date, jours: Integer, taux: Money) strict {
+    effective [@2023-01-01, @2023-07-21);
+    label fr official "total mensuel au taux majoré personne seule (janvier-juillet 2023)";
+    label en unofficial "monthly total at the increased single-person rate (January-July 2023)";
+    when ajpp_droit_ouvert(e) and jours_ajpp_mois(e, mois, jours)
+        and montant_journalier_majore_retenu(e, taux)
+        and mensuel_dans_limite(e, mois) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, montant_mensuel_ajpp(taux, jours));
+}
+
+// --- L. 544-6: modulated rate (split or part-time leave) -----------------
+
+@source(
+    CSS_L544_6_PRE2023,
+    CSS_L544_6_PRE2023_ED2021_11,
+    CSS_L544_6_PRE2023_ED2022_01,
+    CSS_L544_6_PRE2023_ED2022_04,
+    CSS_L544_6_PRE2023_ED2022_07,
+    CSS_L544_6_PRE2023_ED2022_10,
+    CSS_L544_6_PRE2023_07,
+    CSS_L544_6,
+    CSS_L544_6_ED2024_02,
+    CSS_L544_6_ED2024_07,
+    CSS_L544_6_ED2025_12,
+    CSS_L544_6_ED2026_01,
+    CSS_L544_6_ED2026_06)
+rule MontantMensuelModule(e: fr.pf.core::Enfant, mois: Date, jours: Integer, taux: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total mensuel au taux modulé, congé fractionné ou temps partiel";
+    label en unofficial "monthly total at the modulated rate, split or part-time leave";
+    when ajpp_droit_ouvert(e) and jours_ajpp_mois(e, mois, jours)
+        and montant_journalier_module_retenu(e, taux)
+        and mensuel_dans_limite(e, mois) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, montant_mensuel_ajpp(taux, jours));
+}
+
+// --- L. 544-8, para. 2: job-seeker flat days -----------------------------
+
+@source(
+    CSS_L544_8_PRE2022_ED2020_09,
+    CSS_L544_8_PRE2022_ED2021_11,
+    CSS_L544_8_PRE2022_ED2022_01,
+    CSS_L544_8_PRE2022_ED2022_04,
+    CSS_L544_8_PRE2026,
+    CSS_L544_8_PRE2026_ED2022_10,
+    CSS_L544_8_PRE2026_ED2023_01,
+    CSS_L544_8_PRE2026_ED2023_07,
+    CSS_L544_8_PRE2026_ED2024_02,
+    CSS_L544_8_PRE2026_ED2024_07,
+    CSS_L544_8_PRE2026_ED2025_12,
+    CSS_L544_8,
+    CSS_L544_8_ED2026_06)
+rule MontantMensuelForfait(e: fr.pf.core::Enfant, mois: Date, jours: Integer, taux: Money, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total mensuel du demandeur d'emploi : taux retenu par jours forfaitaires";
+    label en unofficial "job-seeker monthly total: retained rate times flat days";
+    when ajpp_droit_ouvert(e) and demandeur_emploi_ajpp(p)
+        and jours_forfaitaires(e, mois, jours)
+        and montant_journalier_retenu(e, taux)
+        and forfait_22_conforme(e, mois) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, montant_mensuel_ajpp(taux, jours));
+}
+
+// --- L. 544-7: expense complement (resources and expenses) ---------------
+
+@source(
+    CSS_L544_7_ED2020_09,
+    CSS_L544_7_ED2021_11,
+    CSS_L544_7_ED2022_01,
+    CSS_L544_7_ED2022_04,
+    CSS_L544_7_ED2022_07,
+    CSS_L544_7_ED2022_10,
+    CSS_L544_7_ED2023_01,
+    CSS_L544_7_ED2023_07,
+    CSS_L544_7_ED2024_02,
+    CSS_L544_7_ED2024_07,
+    CSS_L544_7_ED2025_12,
+    CSS_L544_7_ED2026_01,
+    CSS_L544_7_ED2026_06)
+rule ComplementFrais(e: fr.pf.core::Enfant, res: Money, plaf: Money, dep: Money, seuil: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ressources sous plafond et dépenses au-delà du montant déterminé : complément pour frais";
+    label en unofficial "resources under the ceiling and expenses above the set amount: expense supplement";
+    when ajpp_droit_ouvert(e) and ressources_complement(e, res)
+        and plafond_ressources(e, plaf) and res <= plaf
+        and depenses_exposees(e, dep) and seuil_depenses(e, seuil)
+        and dep > seuil;
+    then complement_frais_attribue(e);
+}
+
+// --- L. 544-7: flat monthly complement passthrough -----------------------
+
+@source(
+    CSS_L544_7_ED2020_09,
+    CSS_L544_7_ED2021_11,
+    CSS_L544_7_ED2022_01,
+    CSS_L544_7_ED2022_04,
+    CSS_L544_7_ED2022_07,
+    CSS_L544_7_ED2022_10,
+    CSS_L544_7_ED2023_01,
+    CSS_L544_7_ED2023_07,
+    CSS_L544_7_ED2024_02,
+    CSS_L544_7_ED2024_07,
+    CSS_L544_7_ED2025_12,
+    CSS_L544_7_ED2026_01,
+    CSS_L544_7_ED2026_06)
+rule MontantComplement(e: fr.pf.core::Enfant, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "complément pour frais forfaitaire mensuel retenu";
+    label en unofficial "retained monthly flat expense supplement";
+    when complement_frais_attribue(e) and montant_complement_retenu(e, montant);
+    then ajpp_montant_complement(e, montant);
+}

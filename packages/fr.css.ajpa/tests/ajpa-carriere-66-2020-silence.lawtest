@@ -1,0 +1,20 @@
+// Pre-coverage silence: 60 days recorded in 2020 — the cap text is
+// pinned in CSS_ED2019_12 but package coverage starts 2021-01-01
+// (B-PFAJPA-AVANT2021: the 2019 L. 168-11 service text is unpinned),
+// so no rule derives the career status.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-carriere-66-2020-silence" {
+    given {
+        context { decision_time @2020-06-15T12:00:00Z; knowledge_time @2020-06-15T12:00:00Z; legal_time @2020-06-15; timezone "Europe/Paris"; }
+        assert "ajpa-c20-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-c20"), entity_ref("urn:fr:css:ajpa:case:aide-c20")) { origin case_input; }
+        assert "ajpa-c20-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-c20")) { origin adjudicated; }
+        assert "ajpa-c20-03": jours_ajpa_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-c20"), 60) { origin case_input; }
+    }
+    evaluate truth(ajpa_dans_limite_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-c20")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,66 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Disagreement without designation: each parent is an allocataire
+// (R. 521-2, 2°). One full-custody and one shared-custody child give
+// a household coefficient of (1 + 0.5)/2 = 0.75; each parent's share
+// of the 128.00 monthly total is 96.00. Household figures are
+// fund-established per receiving person (B-PFAF-COMPTAGE).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-partage-desaccord" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "partd-01": territoire(entity_ref("urn:fr:pf-af:parent:pere-d"), METROPOLE) { origin case_input; }
+        assert "partd-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:parent:pere-d"), 2) { origin case_input; }
+        assert "partd-03": ressources_menage(entity_ref("urn:fr:pf-af:parent:pere-d"), 30000 EUR) { origin case_input; }
+        assert "partd-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:parent:pere-d"), 55950 EUR) { origin case_input; }
+        assert "partd-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:parent:pere-d"), 78300 EUR) { origin case_input; }
+        assert "partd-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:parent:pere-d"), 5595 EUR) { origin case_input; }
+        assert "partd-05": bmaf_retenu(entity_ref("urn:fr:pf-af:parent:pere-d"), 400.00 EUR) { origin case_input; }
+        assert "partd-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:parent:pere-d"), 0) { origin case_input; }
+        assert "partd-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:parent:pere-d"), 0) { origin case_input; }
+        assert "partd-08": forfait_total_menage(entity_ref("urn:fr:pf-af:parent:pere-d"), 0 EUR) { origin case_input; }
+        assert "partd-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:parent:pere-d"), 0) { origin case_input; }
+        assert "partd-10": foyer_du_cas(entity_ref("urn:fr:pf-af:parent:pere-d")) { origin case_input; }
+        assert "partd-11": territoire(entity_ref("urn:fr:pf-af:parent:mere-d"), METROPOLE) { origin case_input; }
+        assert "partd-12": nb_enfants_charge(entity_ref("urn:fr:pf-af:parent:mere-d"), 2) { origin case_input; }
+        assert "partd-13": ressources_menage(entity_ref("urn:fr:pf-af:parent:mere-d"), 30000 EUR) { origin case_input; }
+        assert "partd-14": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:parent:mere-d"), 55950 EUR) { origin case_input; }
+        assert "partd-14b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:parent:mere-d"), 78300 EUR) { origin case_input; }
+        assert "partd-14c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:parent:mere-d"), 5595 EUR) { origin case_input; }
+        assert "partd-15": bmaf_retenu(entity_ref("urn:fr:pf-af:parent:mere-d"), 400.00 EUR) { origin case_input; }
+        assert "partd-16": nb_majorations_pleines(entity_ref("urn:fr:pf-af:parent:mere-d"), 0) { origin case_input; }
+        assert "partd-17": nb_majorations_demi(entity_ref("urn:fr:pf-af:parent:mere-d"), 0) { origin case_input; }
+        assert "partd-18": forfait_total_menage(entity_ref("urn:fr:pf-af:parent:mere-d"), 0 EUR) { origin case_input; }
+        assert "partd-19": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:parent:mere-d"), 0) { origin case_input; }
+        assert "partd-20": desaccord_designation(entity_ref("urn:fr:pf-af:parent:pere-d"), entity_ref("urn:fr:pf-af:parent:mere-d")) { origin case_input; }
+        assert "partd-21": enfants_propres(entity_ref("urn:fr:pf-af:parent:pere-d"), 1) { origin case_input; }
+        assert "partd-22": enfants_propres(entity_ref("urn:fr:pf-af:parent:mere-d"), 1) { origin case_input; }
+        assert "partd-23": enfants_alternes(1) { origin case_input; }
+    }
+    evaluate truth(partage_actif(entity_ref("urn:fr:pf-af:parent:pere-d")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(partage_actif(entity_ref("urn:fr:pf-af:parent:mere-d")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(coefficient_partage(entity_ref("urn:fr:pf-af:parent:pere-d"), 0.75));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_parent_partage(entity_ref("urn:fr:pf-af:parent:pere-d"), 96.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_parent_partage(entity_ref("urn:fr:pf-af:parent:mere-d"), 96.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

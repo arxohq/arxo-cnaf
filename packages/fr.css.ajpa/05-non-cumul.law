@@ -1,0 +1,119 @@
+// Non-cumulation (L. 168-10): 2019 list vs 2025 list, part-time exception.
+//
+// Ten concurrent benefits each refuse cumulation for the beneficiary, plus
+// the employed-by-the-aided-person exclusion (CASF L. 232-7 / L. 245-12
+// para. 2, recorded as a case fact). Two generations: the 2019 list (2021
+// to 2025-12-31) and the 2025 list (from 2025-12-31, within the NOTA birth
+// scope carried by the aided person). The part-time sick exception
+// («Toutefois», identical both versions) is a positive permission record
+// (pf-af `not`-on-institutional pattern): the input contract asserts one
+// motif XOR the part-time pair per world, never both, and permission is
+// the absence of refusal plus the explicit record — no negation, no
+// closure. The beneficiary head binds p; the NOTA scope links through the
+// keyless leave fact.
+
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+use self::{
+    CSS_L168_10,
+    CSS_L168_10_PRE2026,
+    CSS_L168_10_PRE2026_ED2020_12,
+    CSS_L168_10_PRE2026_ED2021_01,
+    CSS_L168_10_PRE2026_ED2022_01,
+    CSS_L168_10_PRE2026_ED2023_07,
+    CSS_L168_10_PRE2026_ED2025_01,
+    MotifNonCumulAjpa2019,
+    MotifNonCumulAjpa2025,
+    activite_partielle_cumulee,
+    ajpa_cumul_refuse,
+    conge_proche_aidant,
+    employe_par_aide,
+    jours_ajpa_partiels,
+    motif_non_cumul_2019,
+    motif_non_cumul_2025,
+    percoit_maladie_temps_partiel,
+    scope_2026_aide,
+};
+
+// --- L. 168-10 (2019): employed by the aided person, no allowance --------
+
+@source(
+    CSS_L168_10_PRE2026,
+    CSS_L168_10_PRE2026_ED2020_12,
+    CSS_L168_10_PRE2026_ED2021_01,
+    CSS_L168_10_PRE2026_ED2022_01,
+    CSS_L168_10_PRE2026_ED2023_07,
+    CSS_L168_10_PRE2026_ED2025_01,
+    CSS_L168_10)
+rule ExclusionSalarieAidant(p: fr.pf.core::Personne, a: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "aidant employé par la personne aidée : allocation non due";
+    label en unofficial "carer employed by the aided person: allowance not due";
+    when employe_par_aide(p, a);
+    then ajpa_cumul_refuse(p);
+}
+
+// --- L. 168-10 (2019): ten items refuse cumulation -----------------------
+
+@source(
+    CSS_L168_10_PRE2026_ED2021_01,
+    CSS_L168_10_PRE2026_ED2022_01,
+    CSS_L168_10_PRE2026_ED2023_07,
+    CSS_L168_10_PRE2026_ED2025_01)
+rule NonCumul2019(p: fr.pf.core::Personne, motif: MotifNonCumulAjpa2019) strict {
+    effective [@2021-01-01, @2025-12-31);
+    label fr official "2019 : prestation concurrente pour le même bénéficiaire, cumul refusé";
+    label en unofficial "2019: concurrent benefit for the same beneficiary, cumulation refused";
+    when motif_non_cumul_2019(p, motif);
+    then ajpa_cumul_refuse(p);
+}
+
+// --- L. 168-10 (2025): ten items, NOTA birth scope -----------------------
+
+@source(
+    CSS_L168_10)
+rule NonCumul2025(p: fr.pf.core::Personne, a: fr.pf.core::Personne, motif: MotifNonCumulAjpa2025) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "2025 : prestation concurrente, personne aidée du champ NOTA, cumul refusé";
+    label en unofficial "2025: concurrent benefit, NOTA-scope aided person, cumulation refused";
+    when motif_non_cumul_2025(p, motif) and conge_proche_aidant(p, a)
+        and scope_2026_aide(a);
+    then ajpa_cumul_refuse(p);
+}
+
+// D-36 (ajpa-blind-19): the NOTA scopes only the new wording (birth leave
+// supplement, item 1); the nine other items are in both wordings, so outside
+// the NOTA scope the old wording still refuses them after 2025-12-31.
+@source(
+    CSS_L168_10)
+rule NonCumul2025Commun(p: fr.pf.core::Personne, motif: MotifNonCumulAjpa2025) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "depuis 2026, prestation concurrente commune aux deux rédactions (4° chômage, etc.), cumul refusé hors comme dans le champ NOTA";
+    label en unofficial "from 2026, concurrent benefit common to both wordings (4th job-seeker etc.), cumulation refused inside and outside the NOTA scope";
+    when motif_non_cumul_2025(p, motif) and motif != NAISSANCE_SUPPLEMENTAIRE;
+    then ajpa_cumul_refuse(p);
+}
+
+// --- L. 168-10 exception: in-right part-time sick cumulation --------------
+
+@source(
+    CSS_L168_10_PRE2026_ED2021_01,
+    CSS_L168_10_PRE2026_ED2022_01,
+    CSS_L168_10_PRE2026_ED2023_07,
+    CSS_L168_10_PRE2026_ED2025_01,
+    CSS_L168_10)
+rule CumulPartielMaladie(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "exception : jours partiels et maladie à temps partiel, cumul en cours de droit";
+    label en unofficial "exception: partial days and part-time sick leave, in-right cumulation";
+    when percoit_maladie_temps_partiel(p) and jours_ajpa_partiels(p);
+    then activite_partielle_cumulee(p);
+}
+
+// Item 3 (sick/work-accident leave) refuses through the motif rules above
+// when the leave is full-time: the part-time pair (CumulPartielMaladie
+// permission record) permits cumulation instead, and the input contract
+// never asserts both for one world (no negation, no closure: permission is
+// the absence of refusal plus the explicit permission record).

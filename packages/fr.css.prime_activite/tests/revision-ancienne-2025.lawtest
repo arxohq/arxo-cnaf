@@ -1,0 +1,18 @@
+// Revision under the prior wording: L. 842-7 event in February
+// 2025 takes effect on the first day of the event month
+// (R. 843-2 ancien).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-revision-ancienne-2025" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-03-15T12:00:00Z; knowledge_time @2025-03-15T12:00:00Z; legal_time @2025-03-15; timezone "Europe/Paris"; }
+        assert "ppa-01": mois_evenement_l8427(entity_ref("urn:fr:ppa:case:revision-ancienne-2025"), @2025-02-01) { origin case_input; }
+        assert "ppa-02": regime_general(entity_ref("urn:fr:ppa:case:revision-ancienne-2025")) { origin case_input; }
+    }
+    evaluate truth(revision_prend_effet(entity_ref("urn:fr:ppa:case:revision-ancienne-2025"), @2025-02-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,16 @@
+// Art evidence publication (PC-R05-04/PC-R06-01): one art item with amount-bearing authoritative publication - justified (R. 553-3-1 II 2° c).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-preuve-publication" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-preuve-publication-01": prestation_soumise_section(entity_ref("urn:fr:pf:case:preuve-publication")) { origin case_input; }
+        assert "tdv-preuve-publication-02": art_bien_preuve_publication(entity_ref("urn:fr:pf:case:preuve-publication"), entity_ref("urn:fr:pf:case:art-1"), 19500.00 EUR) { origin case_input; }
+    }
+    evaluate truth(art_bien_justifie(entity_ref("urn:fr:pf:case:preuve-publication"), entity_ref("urn:fr:pf:case:art-1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

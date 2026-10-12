@@ -1,0 +1,54 @@
+// Housing aid flows into the quarterly base (new regime): review March
+// 2025, DSN pro 200.00 each month, no other blocks, MF 600.00. Single
+// owner-occupier without aid: flat-rate 72.00 (R.262-9, 1°). Aid 100.00
+// received in January is capped at the flat-rate (R.262-10). The flat-rate
+// joins every month of the base, the capped aid only January: base 272.00
+// each month; due 328.00.
+// (R.262-7, II 3°; R.262-9; R.262-10.)
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-base-aide-nouveau" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-03-15T12:00:00Z; knowledge_time @2025-03-15T12:00:00Z; legal_time @2025-03-15; timezone "Europe/Paris"; }
+        assert "baseaide-01": foyer_du_cas(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau")) { origin case_input; }
+        assert "baseaide-02": mois_demande(@2025-03-01) { origin case_input; }
+        assert "baseaide-03": mois_reference(@2024-11-01, @2024-12-01, @2025-01-01) { origin case_input; }
+        assert "baseaide-04": mf_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-11-01, 600.00 EUR) { origin case_input; }
+        assert "baseaide-05": mf_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-12-01, 600.00 EUR) { origin case_input; }
+        assert "baseaide-06": mf_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2025-01-01, 600.00 EUR) { origin case_input; }
+        assert "baseaide-07": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-11-01, 200.00 EUR) { origin case_input; }
+        assert "baseaide-08": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-12-01, 200.00 EUR) { origin case_input; }
+        assert "baseaide-09": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2025-01-01, 200.00 EUR) { origin case_input; }
+        assert "baseaide-10": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "baseaide-11": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-12-01, 0 EUR) { origin case_input; }
+        assert "baseaide-12": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2025-01-01, 0 EUR) { origin case_input; }
+        assert "baseaide-13": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "baseaide-14": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-12-01, 0 EUR) { origin case_input; }
+        assert "baseaide-15": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2025-01-01, 0 EUR) { origin case_input; }
+        assert "baseaide-16": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "baseaide-17": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-12-01, 0 EUR) { origin case_input; }
+        assert "baseaide-18": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2025-01-01, 0 EUR) { origin case_input; }
+        assert "baseaide-19": nb_personnes_forfait(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), 1) { origin case_input; }
+        assert "baseaide-20": logement(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), PROPRIETAIRE_SANS_AIDE) { origin case_input; }
+        assert "baseaide-21": mf_composition(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), 1, 600.00 EUR) { origin case_input; }
+        assert "baseaide-22": aide_logement_percue(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2025-01-01, 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(aide_logement_retenue(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2025-01-01, 72.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(base_ressources_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2025-01-01, 272.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(base_ressources_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), @2024-11-01, 272.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_du_trimestre(entity_ref("urn:fr:minima-ressources:case:base-aide-nouveau"), 328.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,26 @@
+// Active duty to pay: allocataire with a debtor fund and monthly benefits due from 2026-04-01 - the fund must settle them (L. 511-1 catalogue, R. 553-1, R. 552-2 I, PC-R07-07).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-paiement-actif" {
+    given {
+        context { decision_time @2026-04-15T12:00:00Z; knowledge_time @2026-04-15T12:00:00Z; legal_time @2026-04-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "devoir-paiement-actif-01": parent_charge(entity_ref("urn:fr:pf:case:paye"), entity_ref("urn:fr:pf:case:enfant-paye")) { origin case_input; }
+        assert "devoir-paiement-actif-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:paye"), entity_ref("urn:fr:pf:case:enfant-paye")) { origin adjudicated; }
+        assert "devoir-paiement-actif-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-paye")) { origin case_input; }
+        assert "devoir-paiement-actif-04": reside_france_stable(entity_ref("urn:fr:pf:case:paye")) { origin case_input; }
+        assert "devoir-paiement-actif-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-paye")) { origin case_input; }
+        assert "devoir-paiement-actif-06": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:paye")) { origin case_input; }
+        assert "devoir-paiement-actif-07": conditions_reunies_mois(entity_ref("urn:fr:pf:case:paye"), @2026-03-01) { origin case_input; }
+        assert "devoir-paiement-actif-08": not prepare_enfant_unique_ou_option(entity_ref("urn:fr:pf:case:paye")) { origin case_input; }
+        assert "devoir-paiement-actif-09": not prestation_cmg(entity_ref("urn:fr:pf:case:paye")) { origin case_input; }
+        assert "devoir-paiement-actif-10": not prestation_ajpp(entity_ref("urn:fr:pf:case:paye")) { origin case_input; }
+        assert "devoir-paiement-actif-11": not prestation_aeeh(entity_ref("urn:fr:pf:case:paye")) { origin case_input; }
+        assert "devoir-paiement-actif-12": not asf_cas3_soustrait_seul(entity_ref("urn:fr:pf:case:paye")) { origin case_input; }
+        assert "devoir-paiement-actif-13": not fixation_judiciaire_apres_recouvrement(entity_ref("urn:fr:pf:case:paye")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(VerserPrestationsDues, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,25 @@
+// Catala ouverture-droit structure (2020-05-01, Metropole).
+// BOUNDARY: opening the right per child (age, earnings) is L. 512-3
+// upstream (fr.pf.core, REQ-PFAF-02), not this package. The file pins
+// the input mapping their test implies: 2007/2003(400 EUR) open the
+// right, 2003(1 000 EUR) and 1999 do not. The two positive upstream
+// facts evaluate; the package derives nothing from earnings itself.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-catala-ouverture-droit" {
+    given {
+        context { decision_time @2020-05-01T12:00:00Z; knowledge_time @2020-05-01T12:00:00Z; legal_time @2020-05-01; timezone "Europe/Paris"; }
+        assert "cod-01": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:ouverture-e1")) { origin case_input; }
+        assert "cod-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:ouverture-e3")) { origin case_input; }
+    }
+    evaluate truth(fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:ouverture-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:ouverture-e3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

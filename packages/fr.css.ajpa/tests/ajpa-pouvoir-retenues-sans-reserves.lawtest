@@ -1,0 +1,21 @@
+// No withholding power without the reserves (P1 silent): the undue
+// payment sits on the «A défaut» branch with upcoming RSA instalments
+// recorded as the target, but neither non-contestation nor non-option
+// is recorded (contestation-or-option world), so no
+// RecouvrerParRetenues position, although the debtor link is stated.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-pouvoir-retenues-sans-reserves" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-prs-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-prs"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-prs-02": indu_non_recupere_allocations(entity_ref("urn:fr:css:ajpa:case:aidant-prs"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-prs-03": retenue_cible_prestations(entity_ref("urn:fr:css:ajpa:case:aidant-prs"), 300.00 EUR, RSA) { origin case_input; }
+        assert "ajpa-prs-04": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-prs")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(RecouvrerParRetenues, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

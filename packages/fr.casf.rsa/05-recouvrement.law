@@ -1,0 +1,360 @@
+// Recovery: prescription, procedure, appeals (L.262-45/46/47,
+// R.262-88/89/90/92/92-1/93/94).
+//
+// DEONTIC MAP: overpayments MUST be recovered by withholding from future
+// amounts (lump-sum on the claimant's option); appeals and remission
+// requests SUSPEND recovery; below 77 euros or time-barred, NO recovery;
+// fraud carries a 10 % indemnity (2024+). The R.262-92-1 notification
+// procedure runs from 2021-03-25 (B-RSA-RECOUVREMENT-PRE202103 for the
+// January-February 2021 sliver); the one-month/two-month release clocks
+// of R.262-92-1 II are fund-side time mechanics (README).
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+use self::{
+    CASF_L262_45,
+    CASF_L262_45_ED2021_03,
+    CASF_L262_45_ED2021_04,
+    CASF_L262_45_ED2023_01,
+    CASF_L262_45_ED2024_01,
+    CASF_L262_45_ED2024_07,
+    CASF_L262_45_ED2025_01,
+    CASF_L262_45_ED2025_06,
+    CASF_L262_45_ED2026_06,
+    CASF_L262_46,
+    CASF_L262_46_ED2024_07,
+    CASF_L262_46_ED2025_01,
+    CASF_L262_46_ED2025_06,
+    CASF_L262_46_ED2026_06,
+    CASF_L262_46_PRE2024,
+    CASF_L262_46_PRE2024_ED2021_03,
+    CASF_L262_46_PRE2024_ED2021_04,
+    CASF_L262_46_PRE2024_ED2023_01,
+    CASF_L262_47,
+    CASF_L262_47_ED2021_03,
+    CASF_L262_47_ED2023_01,
+    CASF_L262_47_ED2024_01,
+    CASF_L262_47_ED2025_01,
+    CASF_L262_47_ED2025_06,
+    CASF_L262_47_ED2026_06,
+    CASF_R262_88,
+    CASF_R262_88_ED2021_03,
+    CASF_R262_88_ED2023_01,
+    CASF_R262_88_ED2024_01,
+    CASF_R262_88_ED2025_01,
+    CASF_R262_88_ED2025_06,
+    CASF_R262_88_ED2026_06,
+    CASF_R262_89,
+    CASF_R262_89_ED2021_03,
+    CASF_R262_89_ED2023_01,
+    CASF_R262_89_ED2024_01,
+    CASF_R262_89_ED2025_01,
+    CASF_R262_89_ED2025_06,
+    CASF_R262_89_ED2026_06,
+    CASF_R262_90,
+    CASF_R262_90_ED2021_03,
+    CASF_R262_90_ED2023_01,
+    CASF_R262_90_ED2024_01,
+    CASF_R262_90_ED2025_01,
+    CASF_R262_90_ED2025_06,
+    CASF_R262_90_ED2026_06,
+    CASF_R262_92,
+    CASF_R262_92_1,
+    CASF_R262_92_1_ED2021_04,
+    CASF_R262_92_1_ED2023_01,
+    CASF_R262_92_1_ED2024_01,
+    CASF_R262_92_1_ED2024_07,
+    CASF_R262_92_1_ED2025_01,
+    CASF_R262_92_1_ED2025_06,
+    CASF_R262_92_1_ED2026_06,
+    CASF_R262_92_ED2021_03,
+    CASF_R262_92_ED2021_04,
+    CASF_R262_92_ED2023_01,
+    CASF_R262_92_ED2024_01,
+    CASF_R262_92_ED2024_07,
+    CASF_R262_92_ED2025_01,
+    CASF_R262_92_ED2025_06,
+    CASF_R262_92_ED2026_06,
+    CASF_R262_93,
+    CASF_R262_93_ED2021_03,
+    CASF_R262_93_ED2023_01,
+    CASF_R262_93_ED2024_01,
+    CASF_R262_93_ED2025_01,
+    CASF_R262_93_ED2025_06,
+    CASF_R262_93_ED2026_06,
+    CASF_R262_94,
+    CASF_R262_94_ED2021_03,
+    CASF_R262_94_ED2023_01,
+    CASF_R262_94_ED2024_01,
+    CASF_R262_94_ED2025_01,
+    CASF_R262_94_ED2025_06,
+    CASF_R262_94_ED2026_06,
+    indemnite_fraude,
+    indu_fraude,
+    indu_montant,
+    indu_non_recupere,
+    indu_recouvrable,
+    interruption_prescription,
+    notification_indu,
+    prescription_cours,
+    recours_suspensif,
+    recouvrement_retenues_echeoir,
+    remboursement_unique,
+    remise_president,
+};
+
+// --- Prescription, recovery, appeals ---
+@source(
+CASF_L262_46,
+CASF_L262_46_ED2024_07,
+CASF_L262_46_ED2025_01,
+CASF_L262_46_ED2025_06,
+CASF_L262_46_ED2026_06,
+CASF_L262_46_PRE2024,
+CASF_L262_46_PRE2024_ED2021_03,
+CASF_L262_46_PRE2024_ED2021_04,
+CASF_L262_46_PRE2024_ED2023_01,
+CASF_R262_92,
+CASF_R262_92_ED2021_03,
+CASF_R262_92_ED2021_04,
+CASF_R262_92_ED2023_01,
+CASF_R262_92_ED2024_01,
+CASF_R262_92_ED2024_07,
+CASF_R262_92_ED2025_01,
+CASF_R262_92_ED2025_06,
+CASF_R262_92_ED2026_06)
+rule InduSousSeuil(p: fr.minima.ressources::Personne, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "indu sous 77 € : pas de répétition (L. 262-46 ; R. 262-92)";
+    label en unofficial "overpayment below 77 euros: no recovery (L. 262-46; R. 262-92)";
+    when indu_montant(p, m)
+        and m < SeuilNonRecouvrement;
+    then indu_non_recupere(p);
+}
+
+
+@source(
+CASF_L262_45,
+CASF_L262_45_ED2021_03,
+CASF_L262_45_ED2021_04,
+CASF_L262_45_ED2023_01,
+CASF_L262_45_ED2024_01,
+CASF_L262_45_ED2024_07,
+CASF_L262_45_ED2025_01,
+CASF_L262_45_ED2025_06,
+CASF_L262_45_ED2026_06)
+rule InduPrescrit(p: fr.minima.ressources::Personne, m: Money, a: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "action de deux ans accomplie sans interruption ni fraude : prescrit (L. 262-45 al. 1-2)";
+    label en unofficial "two-year action completed with no interruption or fraud: time-barred (L. 262-45 al. 1-2)";
+    when indu_montant(p, m)
+        and prescription_cours(p, a)
+        and a >= 2
+        and not_known(interruption_prescription(p))
+        and not_known(indu_fraude(p));
+    then indu_non_recupere(p);
+}
+
+
+@source(
+CASF_L262_46,
+CASF_L262_46_ED2024_07,
+CASF_L262_46_ED2025_01,
+CASF_L262_46_ED2025_06,
+CASF_L262_46_ED2026_06,
+CASF_L262_46_PRE2024,
+CASF_L262_46_PRE2024_ED2021_03,
+CASF_L262_46_PRE2024_ED2021_04,
+CASF_L262_46_PRE2024_ED2023_01,
+CASF_R262_92_1,
+CASF_R262_92_1_ED2021_04,
+CASF_R262_92_1_ED2023_01,
+CASF_R262_92_1_ED2024_01,
+CASF_R262_92_1_ED2024_07,
+CASF_R262_92_1_ED2025_01,
+CASF_R262_92_1_ED2025_06,
+CASF_R262_92_1_ED2026_06)
+rule InduRecouvrableDelai(p: fr.minima.ressources::Personne, m: Money, a: Integer) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "indu notifié de 77 € ou plus, dans les deux ans, sans recours suspensif : recouvrable (L. 262-46 ; R. 262-92/92-1)";
+    label en unofficial "notified overpayment of 77 euros or more, within two years, no suspensive appeal: recoverable (L. 262-46; R. 262-92/92-1)";
+    when indu_montant(p, m)
+        and m >= SeuilNonRecouvrement
+        and prescription_cours(p, a)
+        and a < 2
+        and notification_indu(p)
+        and not_known(recours_suspensif(p));
+    then indu_recouvrable(p, m);
+}
+
+
+@source(
+CASF_L262_46,
+CASF_L262_46_ED2024_07,
+CASF_L262_46_ED2025_01,
+CASF_L262_46_ED2025_06,
+CASF_L262_46_ED2026_06,
+CASF_L262_46_PRE2024,
+CASF_L262_46_PRE2024_ED2021_03,
+CASF_L262_46_PRE2024_ED2021_04,
+CASF_L262_46_PRE2024_ED2023_01,
+CASF_R262_92_1,
+CASF_R262_92_1_ED2021_04,
+CASF_R262_92_1_ED2023_01,
+CASF_R262_92_1_ED2024_01,
+CASF_R262_92_1_ED2024_07,
+CASF_R262_92_1_ED2025_01,
+CASF_R262_92_1_ED2025_06,
+CASF_R262_92_1_ED2026_06)
+rule InduRecouvrableInterrompu(p: fr.minima.ressources::Personne, m: Money) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "prescription interrompue (civil ou recommandé) : recouvrable malgré le délai (L. 262-45 al. 2 ; L. 262-46 ; R. 262-92/92-1)";
+    label en unofficial "limitation interrupted (civil cause or registered letter): recoverable despite the delay (L. 262-45 al. 2; L. 262-46; R. 262-92/92-1)";
+    when indu_montant(p, m)
+        and m >= SeuilNonRecouvrement
+        and interruption_prescription(p)
+        and notification_indu(p)
+        and not_known(recours_suspensif(p));
+    then indu_recouvrable(p, m);
+}
+
+
+@source(
+CASF_L262_46,
+CASF_L262_46_ED2025_01,
+CASF_L262_46_ED2025_06,
+CASF_L262_46_ED2026_06,
+CASF_L262_46_PRE2024,
+CASF_L262_46_PRE2024_ED2021_03,
+CASF_L262_46_PRE2024_ED2023_01,
+CASF_R262_92_1,
+CASF_R262_92_1_ED2023_01,
+CASF_R262_92_1_ED2024_01,
+CASF_R262_92_1_ED2025_01,
+CASF_R262_92_1_ED2025_06,
+CASF_R262_92_1_ED2026_06)
+rule InduRecouvrableFraude(p: fr.minima.ressources::Personne, m: Money) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "fraude ou fausse déclaration : pas de prescription biennale, recouvrable (L. 262-45 al. 1 ; L. 262-46 ; R. 262-92/92-1)";
+    label en unofficial "fraud or false declaration: no two-year limit, recoverable (L. 262-45 al. 1; L. 262-46; R. 262-92/92-1)";
+    when indu_montant(p, m)
+        and m >= SeuilNonRecouvrement
+        and indu_fraude(p)
+        and notification_indu(p)
+        and not_known(recours_suspensif(p));
+    then indu_recouvrable(p, m);
+}
+
+
+@source(
+CASF_L262_46,
+CASF_L262_46_ED2025_01,
+CASF_L262_46_ED2025_06,
+CASF_L262_46_ED2026_06,
+CASF_L262_46_PRE2024,
+CASF_L262_46_PRE2024_ED2021_03,
+CASF_L262_46_PRE2024_ED2023_01,
+CASF_L262_47,
+CASF_L262_47_ED2021_03,
+CASF_L262_47_ED2023_01,
+CASF_L262_47_ED2024_01,
+CASF_L262_47_ED2025_01,
+CASF_L262_47_ED2025_06,
+CASF_L262_47_ED2026_06,
+CASF_R262_88,
+CASF_R262_88_ED2021_03,
+CASF_R262_88_ED2023_01,
+CASF_R262_88_ED2024_01,
+CASF_R262_88_ED2025_01,
+CASF_R262_88_ED2025_06,
+CASF_R262_88_ED2026_06,
+CASF_R262_89,
+CASF_R262_89_ED2021_03,
+CASF_R262_89_ED2023_01,
+CASF_R262_89_ED2024_01,
+CASF_R262_89_ED2025_01,
+CASF_R262_89_ED2025_06,
+CASF_R262_89_ED2026_06,
+CASF_R262_90,
+CASF_R262_90_ED2021_03,
+CASF_R262_90_ED2023_01,
+CASF_R262_90_ED2024_01,
+CASF_R262_90_ED2025_01,
+CASF_R262_90_ED2025_06,
+CASF_R262_90_ED2026_06)
+rule InduSuspendu(p: fr.minima.ressources::Personne, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "réclamation, remise ou recours en cours contre la récupération : caractère suspensif (L. 262-46 al. 2 ; L. 262-47 ; R. 262-88 à R. 262-90)";
+    label en unofficial "ongoing claim, remission or appeal against the recovery: suspensive (L. 262-46 al. 2; L. 262-47; R. 262-88 to R. 262-90)";
+    when indu_montant(p, m)
+        and recours_suspensif(p);
+    then indu_non_recupere(p);
+}
+
+
+@source(
+CASF_L262_46,
+CASF_L262_46_ED2025_01,
+CASF_L262_46_ED2025_06,
+CASF_L262_46_ED2026_06,
+CASF_L262_46_PRE2024,
+CASF_L262_46_PRE2024_ED2021_03,
+CASF_L262_46_PRE2024_ED2023_01)
+rule RemisePresident(p: fr.minima.ressources::Personne, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "remise ou réduction présidentielle (bonne foi, précarité, hors fraude) : créance éteinte à hauteur remise (L. 262-46)";
+    label en unofficial "presidential remission or reduction (good faith, hardship, fraud excluded): debt cleared as remitted (L. 262-46)";
+    when indu_montant(p, m)
+        and remise_president(p)
+        and not_known(indu_fraude(p));
+    then indu_non_recupere(p);
+}
+
+
+@source(
+CASF_L262_46,
+CASF_L262_46_ED2025_01,
+CASF_L262_46_ED2025_06,
+CASF_L262_46_ED2026_06)
+rule IndemniteFraude(p: fr.minima.ressources::Personne, m: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "fraude : indemnité de 10 % des sommes réclamées, recouvrée comme l'indu (L. 262-46 al. 1, depuis 2024-01-01)";
+    label en unofficial "fraud: 10 % indemnity on the sums claimed, recovered like the overpayment (L. 262-46 al. 1, from 2024-01-01)";
+    when indu_montant(p, m)
+        and indu_fraude(p);
+    then indemnite_fraude(p, m * 0.10);
+}
+
+
+@source(
+CASF_L262_46,
+CASF_L262_46_ED2025_01,
+CASF_L262_46_ED2025_06,
+CASF_L262_46_ED2026_06,
+CASF_L262_46_PRE2024,
+CASF_L262_46_PRE2024_ED2021_03,
+CASF_L262_46_PRE2024_ED2023_01,
+CASF_R262_93,
+CASF_R262_93_ED2021_03,
+CASF_R262_93_ED2023_01,
+CASF_R262_93_ED2024_01,
+CASF_R262_93_ED2025_01,
+CASF_R262_93_ED2025_06,
+CASF_R262_93_ED2026_06,
+CASF_R262_94,
+CASF_R262_94_ED2021_03,
+CASF_R262_94_ED2023_01,
+CASF_R262_94_ED2024_01,
+CASF_R262_94_ED2025_01,
+CASF_R262_94_ED2025_06,
+CASF_R262_94_ED2026_06)
+rule RecouvrementRetenues(p: fr.minima.ressources::Personne, m: Money) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "indu recouvrable sans option unique : retenues sur les montants à échoir (L. 262-46 al. 3 ; R. 262-93/94)";
+    label en unofficial "recoverable overpayment without a one-shot option: withholding from future amounts (L. 262-46 al. 3; R. 262-93/94)";
+    when indu_recouvrable(p, m)
+        and not_known(remboursement_unique(p));
+    then recouvrement_retenues_echeoir(p);
+}

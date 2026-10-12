@@ -1,0 +1,673 @@
+// Resources and household composition (R. 822-20/22, D. 822-0-1/0-2 with
+// L. 822-2 3, R. 823-4/5, L. 823-2): the student flat-rate trigger, the
+// wealth fictive income, the 2026 grant-eligibility refinement with its
+// exclusion defeater, dependent-person classification and custody rules.
+//
+// WINDOWS: R. 822-20/22 apply from January 2021, from May 2021 for APL
+// accession (decree 2020-1816 NOTA); each article below carries the split in
+// four sector rules. D. 822-0-1/0-2 apply to benefits due from 01.07.2026
+// (decree 2026-552 NOTA). The L. 822-2 3 exclusion applies subject to the
+// unpinned constitutional reservation (2026-901 DC, cons. 223): the defeater
+// below carries that caveat (boundary B-APL-L8222-RESERVE-CONST, narrowed).
+// D. 822-21 (annual indexation meta-norm) has no case rule: declared despite
+// (bareme-builder instruction; 2026 frozen by decree 2025-1401; amounts
+// unpinned). The student flat-rate AMOUNTS are unpinned (arrete-fixed):
+// only applicability and the grant-holder reduction derive here.
+// AGGREGATION LIMIT (recorded): person statuses derive per person, but the
+// language has no count construct, so the household dependent COUNT stays
+// the empirical personnes_a_charge input; the person-to-count link is
+// unwired (boundary B-APL-PAC-NON-AGREGE). Fictive wealth income derives
+// standalone; its summation into 08 resources is an owner follow-up.
+//
+// FRAGMENTS (predicted): R. 822-20/22 base + 7 _ED (split covered by
+// editions); D. 822-0-1/2 ED2026_07 ONLY (post-2019 articles, no base);
+// L. 822-2 ED2026_07 ONLY (the 3 exists in that edition alone); R. 823-4/5
+// and L. 823-2 base + 7 _ED.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_D822_0_1_ED2026_07,
+    CCH_D822_0_2_ED2026_07,
+    CCH_L822_2_ED2026_07,
+    CCH_L823_2,
+    CCH_L823_2_ED2019_12,
+    CCH_L823_2_ED2020_01,
+    CCH_L823_2_ED2021_01,
+    CCH_L823_2_ED2023_04,
+    CCH_L823_2_ED2023_09,
+    CCH_L823_2_ED2023_12,
+    CCH_L823_2_ED2026_07,
+    CCH_R822_20,
+    CCH_R822_20_ED2019_12,
+    CCH_R822_20_ED2020_01,
+    CCH_R822_20_ED2021_01,
+    CCH_R822_20_ED2023_04,
+    CCH_R822_20_ED2023_09,
+    CCH_R822_20_ED2023_12,
+    CCH_R822_20_ED2026_07,
+    CCH_R822_22,
+    CCH_R822_22_ED2019_12,
+    CCH_R822_22_ED2020_01,
+    CCH_R822_22_ED2021_01,
+    CCH_R822_22_ED2023_04,
+    CCH_R822_22_ED2023_09,
+    CCH_R822_22_ED2023_12,
+    CCH_R822_22_ED2026_07,
+    CCH_R823_4,
+    CCH_R823_4_ED2019_12,
+    CCH_R823_4_ED2020_01,
+    CCH_R823_4_ED2021_01,
+    CCH_R823_4_ED2023_04,
+    CCH_R823_4_ED2023_09,
+    CCH_R823_4_ED2023_12,
+    CCH_R823_4_ED2026_07,
+    CCH_R823_5,
+    CCH_R823_5_ED2019_12,
+    CCH_R823_5_ED2020_01,
+    CCH_R823_5_ED2021_01,
+    CCH_R823_5_ED2023_04,
+    CCH_R823_5_ED2023_09,
+    CCH_R823_5_ED2023_12,
+    CCH_R823_5_ED2026_07,
+    Menage,
+    Organisme,
+    TypeAide,
+    aide_demandee,
+    date_appreciation,
+    droit_ouvert,
+    organisme_debiteur,
+    secteur_accession,
+    secteur_accession_allocations,
+    secteur_locatif,
+    secteur_logement_foyer,
+};
+
+deadline policy APL_PAC_AGE {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+// --- Student flat-rate trigger (R. 822-20) -----------------------------------
+// Applicability only; the flat-rate amounts are unpinned (arrete-fixed).
+
+pub relation occupe_logement_locatif(m: Menage) kind empirical {
+    label fr official "occupe un logement a usage locatif a la date de la demande ou du reexamen (constat)";
+    label en unofficial "occupies a rental-use dwelling at request or re-exam date (finding)";
+}
+
+pub relation conditions_age_bourse(m: Menage) kind empirical {
+    label fr official "satisfait les conditions d'age d'une bourse sur criteres sociaux (constat)";
+    label en unofficial "meets the age conditions of a means-tested grant (finding)";
+}
+
+pub relation poursuit_etudes(m: Menage) kind empirical {
+    label fr official "poursuit des etudes (constat)";
+    label en unofficial "pursues studies (finding)";
+}
+
+pub relation titulaire_bourse_non_imposable(m: Menage) kind empirical {
+    label fr official "titulaire d'une bourse non assujettie a l'impot sur le revenu (constat)";
+    label en unofficial "holds a non-taxable higher-education grant (finding)";
+}
+
+pub relation forfait_etudiant_applicable(m: Menage) kind institutional {
+    label fr official "ressources reputees egales au montant forfaitaire etudiant";
+    label en unofficial "resources deemed equal to the student flat-rate amount";
+}
+
+pub relation forfait_etudiant_minore(m: Menage) kind institutional {
+    label fr official "montant forfaitaire etudiant minore (boursier non imposable)";
+    label en unofficial "student flat-rate amount reduced (non-taxable grant holder)";
+}
+
+@source(CCH_R822_20, CCH_R822_20_ED2019_12, CCH_R822_20_ED2020_01,
+        CCH_R822_20_ED2021_01, CCH_R822_20_ED2023_04, CCH_R822_20_ED2023_09,
+        CCH_R822_20_ED2023_12, CCH_R822_20_ED2026_07)
+rule ForfaitEtudiantLocatif(m: Menage) strict {
+    label fr official "forfait etudiant en secteur locatif des janvier 2021";
+    label en unofficial "student flat rate in the rental sector from January 2021";
+    effective [@2021-01-01, infinity);
+    when secteur_locatif(m) and occupe_logement_locatif(m)
+        and conditions_age_bourse(m) and poursuit_etudes(m);
+    then forfait_etudiant_applicable(m);
+}
+
+@source(CCH_R822_20, CCH_R822_20_ED2019_12, CCH_R822_20_ED2020_01,
+        CCH_R822_20_ED2021_01, CCH_R822_20_ED2023_04, CCH_R822_20_ED2023_09,
+        CCH_R822_20_ED2023_12, CCH_R822_20_ED2026_07)
+rule ForfaitEtudiantFoyer(m: Menage) strict {
+    label fr official "forfait etudiant en logement-foyer des janvier 2021";
+    label en unofficial "student flat rate in hostel dwellings from January 2021";
+    effective [@2021-01-01, infinity);
+    when secteur_logement_foyer(m) and occupe_logement_locatif(m)
+        and conditions_age_bourse(m) and poursuit_etudes(m);
+    then forfait_etudiant_applicable(m);
+}
+
+@source(CCH_R822_20, CCH_R822_20_ED2019_12, CCH_R822_20_ED2020_01,
+        CCH_R822_20_ED2021_01, CCH_R822_20_ED2023_04, CCH_R822_20_ED2023_09,
+        CCH_R822_20_ED2023_12, CCH_R822_20_ED2026_07)
+rule ForfaitEtudiantAccessionAllocations(m: Menage) strict {
+    label fr official "forfait etudiant en accession-allocations des janvier 2021";
+    label en unofficial "student flat rate in allocation accession from January 2021";
+    effective [@2021-01-01, infinity);
+    when secteur_accession_allocations(m) and occupe_logement_locatif(m)
+        and conditions_age_bourse(m) and poursuit_etudes(m);
+    then forfait_etudiant_applicable(m);
+}
+
+@source(CCH_R822_20, CCH_R822_20_ED2019_12, CCH_R822_20_ED2020_01,
+        CCH_R822_20_ED2021_01, CCH_R822_20_ED2023_04, CCH_R822_20_ED2023_09,
+        CCH_R822_20_ED2023_12, CCH_R822_20_ED2026_07)
+rule ForfaitEtudiantAccessionAPL(m: Menage) strict {
+    label fr official "forfait etudiant en accession APL a compter de mai 2021";
+    label en unofficial "student flat rate in APL accession from May 2021";
+    effective [@2021-05-01, infinity);
+    when secteur_accession(m) and aide_demandee(m, APL)
+        and occupe_logement_locatif(m) and conditions_age_bourse(m)
+        and poursuit_etudes(m);
+    then forfait_etudiant_applicable(m);
+}
+
+@source(CCH_R822_20, CCH_R822_20_ED2019_12, CCH_R822_20_ED2020_01,
+        CCH_R822_20_ED2021_01, CCH_R822_20_ED2023_04, CCH_R822_20_ED2023_09,
+        CCH_R822_20_ED2023_12, CCH_R822_20_ED2026_07)
+rule ForfaitEtudiantMinoreBoursier(m: Menage) strict {
+    label fr official "boursier non imposable : forfait minore";
+    label en unofficial "non-taxable grant holder: reduced flat rate";
+    when forfait_etudiant_applicable(m) and titulaire_bourse_non_imposable(m);
+    then forfait_etudiant_minore(m);
+}
+
+// --- Wealth fictive income (R. 822-22) ---------------------------------------
+// Above 30 000 EUR of non-exempt wealth, only wealth that produced no
+// retained income counts, as a fictive annual income (50 % / 80 % / 3 %).
+
+const SeuilPatrimoine: Money = 30000 EUR {
+    label fr official "seuil de prise en compte du patrimoine : 30 000 euros (art. R. 822-22)";
+    label en unofficial "wealth counting threshold: 30 000 euros (art. R. 822-22)";
+}
+
+pub relation valeur_patrimoine_total(m: Menage, v: Money) kind empirical {
+    label fr official "derniere valeur declaree ou connue du patrimoine a l'ouverture ou au renouvellement, residence et pro exclus (mesure)";
+    label en unofficial "latest declared or known wealth value at opening or renewal, home and business excluded (measured)";
+}
+
+pub relation patrimoine_sans_revenus_retenus(m: Menage) kind empirical {
+    label fr official "patrimoine sans revenus retenus sur la periode de reference R. 822-3 3 (constat)";
+    label en unofficial "wealth with no retained income over the R. 822-3 3 reference period (finding)";
+}
+
+pub relation vl_immeubles_batis(m: Menage, v: Money) kind empirical {
+    label fr official "derniere valeur locative declaree ou connue des immeubles batis sans revenus retenus (mesure)";
+    label en unofficial "latest declared or known rental value of buildings with no retained income (measured)";
+}
+
+pub relation vl_terrains_non_batis(m: Menage, v: Money) kind empirical {
+    label fr official "derniere valeur locative declaree ou connue des terrains non batis sans revenus retenus (mesure)";
+    label en unofficial "latest declared or known rental value of unbuilt land with no retained income (measured)";
+}
+
+pub relation capitaux_mobiliers_sans_revenus(m: Menage, v: Money) kind empirical {
+    label fr official "derniers capitaux mobiliers declares ou connus sans revenus retenus (mesure)";
+    label en unofficial "latest declared or known movable capital with no retained income (measured)";
+}
+
+pub relation revenu_fictif_patrimoine(m: Menage, r: Money) kind institutional {
+    label fr official "revenu annuel fictif du patrimoine pris en compte";
+    label en unofficial "counted fictive annual wealth income";
+}
+
+pub relation changement_substantiel_patrimoine(m: Menage) kind empirical {
+    label fr official "changement substantiel du patrimoine etabli (declencheur R. 822-22/23)";
+    label en unofficial "substantial wealth change established (R. 822-22/23 trigger)";
+}
+
+pub relation changements_patrimoniaux_declares(m: Menage) kind empirical {
+    label fr official "changements substantiels patrimoniaux portes au service instructeur (execution)";
+    label en unofficial "substantial wealth changes reported to the case office (performance)";
+}
+
+pub relation patrimoine_valeurs_dernieres_ouverture_renouvellement(m: Menage) kind empirical {
+    label fr official "les valeurs patrimoniales retenues sont les dernieres declarees ou connues a l'ouverture du droit ou au renouvellement (provenance R. 822-22)";
+    label en unofficial "retained wealth values are the latest declared or known at right opening or renewal (R. 822-22 provenance)";
+}
+
+@source(CCH_R822_22, CCH_R822_22_ED2019_12, CCH_R822_22_ED2020_01,
+        CCH_R822_22_ED2021_01, CCH_R822_22_ED2023_04, CCH_R822_22_ED2023_09,
+        CCH_R822_22_ED2023_12, CCH_R822_22_ED2026_07)
+rule FictifPatrimoineLocatif(m: Menage, total: Money, batis: Money, non_batis: Money, capitaux: Money) strict {
+    label fr official "fictif 50/80/3 en secteur locatif des janvier 2021";
+    label en unofficial "50/80/3 fictive income in the rental sector from January 2021";
+    effective [@2021-01-01, infinity);
+    when secteur_locatif(m) and valeur_patrimoine_total(m, total) and total > SeuilPatrimoine
+        and patrimoine_valeurs_dernieres_ouverture_renouvellement(m)
+        and patrimoine_sans_revenus_retenus(m) and vl_immeubles_batis(m, batis)
+        and vl_terrains_non_batis(m, non_batis) and capitaux_mobiliers_sans_revenus(m, capitaux);
+    then revenu_fictif_patrimoine(m, batis * 0.50 + non_batis * 0.80 + capitaux * 0.03);
+}
+
+@source(CCH_R822_22, CCH_R822_22_ED2019_12, CCH_R822_22_ED2020_01,
+        CCH_R822_22_ED2021_01, CCH_R822_22_ED2023_04, CCH_R822_22_ED2023_09,
+        CCH_R822_22_ED2023_12, CCH_R822_22_ED2026_07)
+rule FictifPatrimoineFoyer(m: Menage, total: Money, batis: Money, non_batis: Money, capitaux: Money) strict {
+    label fr official "fictif 50/80/3 en logement-foyer des janvier 2021";
+    label en unofficial "50/80/3 fictive income in hostel dwellings from January 2021";
+    effective [@2021-01-01, infinity);
+    when secteur_logement_foyer(m) and valeur_patrimoine_total(m, total) and total > SeuilPatrimoine
+        and patrimoine_valeurs_dernieres_ouverture_renouvellement(m)
+        and patrimoine_sans_revenus_retenus(m) and vl_immeubles_batis(m, batis)
+        and vl_terrains_non_batis(m, non_batis) and capitaux_mobiliers_sans_revenus(m, capitaux);
+    then revenu_fictif_patrimoine(m, batis * 0.50 + non_batis * 0.80 + capitaux * 0.03);
+}
+
+@source(CCH_R822_22, CCH_R822_22_ED2019_12, CCH_R822_22_ED2020_01,
+        CCH_R822_22_ED2021_01, CCH_R822_22_ED2023_04, CCH_R822_22_ED2023_09,
+        CCH_R822_22_ED2023_12, CCH_R822_22_ED2026_07)
+rule FictifPatrimoineAccessionAllocations(m: Menage, total: Money, batis: Money, non_batis: Money, capitaux: Money) strict {
+    label fr official "fictif 50/80/3 en accession-allocations des janvier 2021";
+    label en unofficial "50/80/3 fictive income in allocation accession from January 2021";
+    effective [@2021-01-01, infinity);
+    when secteur_accession_allocations(m) and valeur_patrimoine_total(m, total) and total > SeuilPatrimoine
+        and patrimoine_valeurs_dernieres_ouverture_renouvellement(m)
+        and patrimoine_sans_revenus_retenus(m) and vl_immeubles_batis(m, batis)
+        and vl_terrains_non_batis(m, non_batis) and capitaux_mobiliers_sans_revenus(m, capitaux);
+    then revenu_fictif_patrimoine(m, batis * 0.50 + non_batis * 0.80 + capitaux * 0.03);
+}
+
+@source(CCH_R822_22, CCH_R822_22_ED2019_12, CCH_R822_22_ED2020_01,
+        CCH_R822_22_ED2021_01, CCH_R822_22_ED2023_04, CCH_R822_22_ED2023_09,
+        CCH_R822_22_ED2023_12, CCH_R822_22_ED2026_07)
+rule FictifPatrimoineAccessionAPL(m: Menage, total: Money, batis: Money, non_batis: Money, capitaux: Money) strict {
+    label fr official "fictif 50/80/3 en accession APL a compter de mai 2021";
+    label en unofficial "50/80/3 fictive income in APL accession from May 2021";
+    effective [@2021-05-01, infinity);
+    when secteur_accession(m) and aide_demandee(m, APL)
+        and valeur_patrimoine_total(m, total) and total > SeuilPatrimoine
+        and patrimoine_valeurs_dernieres_ouverture_renouvellement(m)
+        and patrimoine_sans_revenus_retenus(m) and vl_immeubles_batis(m, batis)
+        and vl_terrains_non_batis(m, non_batis) and capitaux_mobiliers_sans_revenus(m, capitaux);
+    then revenu_fictif_patrimoine(m, batis * 0.50 + non_batis * 0.80 + capitaux * 0.03);
+}
+
+@source(CCH_R822_22, CCH_R822_22_ED2019_12, CCH_R822_22_ED2020_01,
+        CCH_R822_22_ED2021_01, CCH_R822_22_ED2023_04, CCH_R822_22_ED2023_09,
+        CCH_R822_22_ED2023_12, CCH_R822_22_ED2026_07)
+rule DevoirDeclarerPatrimoine(m: Menage, o: Organisme, total: Money) strict {
+    label fr official "l'allocataire porte les changements substantiels patrimoniaux au service instructeur";
+    label en unofficial "the recipient reports substantial wealth changes to the case office";
+    when changement_substantiel_patrimoine(m) and valeur_patrimoine_total(m, total)
+        and organisme_debiteur(o, m);
+    then duty DeclarerChangementsPatrimoine {
+        bearer m;
+        beneficiary o;
+        maintain changements_patrimoniaux_declares(m) during [@2021-01-01, infinity);
+    };
+}
+
+// --- Grant eligibility for L. 822-2 3 (D. 822-0-1/0-2, from 01.07.2026) ------
+// Only D. 821-1 education-code grants count; apprentices, vocational-training
+// holders and working students are deemed eligible. A foreign student visa
+// holder failing the qualifying conditions (agency finding) is out of the 3
+// class (defeater). Holding an excluded D. 822-0-1 aid is not the exclusion
+// trigger: it only fails to establish eligibility.
+
+pub relation titulaire_bourse_d821_1(m: Menage) kind empirical {
+    label fr official "titulaire d'une bourse D. 821-1 du code de l'education (constat)";
+    label en unofficial "holds a D. 821-1 education-code grant (finding)";
+}
+
+pub relation non_eligible_bourse_criteres_sociaux(m: Menage) kind empirical {
+    label fr official "defaut etabli des conditions d'eligibilite aux bourses sur criteres sociaux D. 821-1 (constat de l'organisme)";
+    label en unofficial "established failure of the D. 821-1 social-criteria grant qualifying conditions (agency finding)";
+}
+
+pub relation contrat_apprentissage_ou_pro(m: Menage) kind empirical {
+    label fr official "contrat d'apprentissage ou de professionnalisation L. 6221-1/L. 6325-1 (constat)";
+    label en unofficial "apprenticeship or vocational-training contract (finding)";
+}
+
+pub relation etudiant_salarie(m: Menage) kind empirical {
+    label fr official "etudiant exercant une activite professionnelle (constat)";
+    label en unofficial "student in paid work (finding)";
+}
+
+pub relation etranger_visa_etudiant_l422(m: Menage) kind empirical {
+    label fr official "etranger vise aux articles L. 422-1 a L. 422-7 CESEDA (constat)";
+    label en unofficial "foreigner under CESEDA L. 422-1 to L. 422-7 (finding)";
+}
+
+pub relation eligible_bourse_criteres_sociaux(m: Menage) kind institutional {
+    label fr official "eligible a une bourse sur criteres sociaux au sens du 3 L. 822-2";
+    label en unofficial "eligible for a means-tested grant under L. 822-2 3";
+}
+
+pub relation exclu_l8222_3degre(m: Menage) kind institutional {
+    label fr official "exclu de la classe 3 de l'article L. 822-2 (visa etudiant sans eligibilite)";
+    label en unofficial "out of the L. 822-2 3 class (student visa without eligibility)";
+}
+
+@source(CCH_D822_0_1_ED2026_07, CCH_L822_2_ED2026_07)
+rule EligibleBourseD8211(m: Menage) strict {
+    label fr official "seules les bourses D. 821-1 comptent pour le 3 (01.07.2026)";
+    label en unofficial "only D. 821-1 grants count for the 3 (01.07.2026)";
+    effective [@2026-07-01, infinity);
+    when titulaire_bourse_d821_1(m);
+    then eligible_bourse_criteres_sociaux(m);
+}
+
+@source(CCH_D822_0_2_ED2026_07, CCH_L822_2_ED2026_07)
+rule EligibleBourseApprenti(m: Menage) strict {
+    label fr official "apprentis et professionnalisation reputes eligibles (01.07.2026)";
+    label en unofficial "apprentices and vocational trainees deemed eligible (01.07.2026)";
+    effective [@2026-07-01, infinity);
+    when contrat_apprentissage_ou_pro(m);
+    then eligible_bourse_criteres_sociaux(m);
+}
+
+@source(CCH_D822_0_2_ED2026_07, CCH_L822_2_ED2026_07)
+rule EligibleBourseEtudiantSalarie(m: Menage) strict {
+    label fr official "etudiants salaries reputes eligibles (01.07.2026)";
+    label en unofficial "working students deemed eligible (01.07.2026)";
+    effective [@2026-07-01, infinity);
+    when etudiant_salarie(m);
+    then eligible_bourse_criteres_sociaux(m);
+}
+
+@source(CCH_D822_0_1_ED2026_07, CCH_L822_2_ED2026_07)
+rule ExcluVisaEtudiantSansBourse(m: Menage) strict {
+    label fr official "visa etudiant et defaut etabli d'eligibilite : hors classe 3 (01.07.2026)";
+    label en unofficial "student visa with established ineligibility: out of class 3 (01.07.2026)";
+    effective [@2026-07-01, infinity);
+    when etranger_visa_etudiant_l422(m) and non_eligible_bourse_criteres_sociaux(m);
+    then exclu_l8222_3degre(m);
+}
+
+@source(CCH_D822_0_1_ED2026_07, CCH_L822_2_ED2026_07)
+rule ExclusionL8222TroisiemeDegre(m: Menage) defeater {
+    label fr official "hors classe 3 L. 822-2 : le droit est ecarte (sous reserve constitutionnelle)";
+    label en unofficial "out of L. 822-2 class 3: the right is defeated (constitutional caveat)";
+    effective [@2026-07-01, infinity);
+    when exclu_l8222_3degre(m);
+    defeat droit_ouvert(m);
+}
+
+// --- Dependent persons (R. 823-4) --------------------------------------------
+// Person-level classification. The 2 b) age reference changed on 01.09.2023
+// (L. 161-17-2 to L. 351-1-5); both values are external, so the rule reads
+// one established finding and the cut is a recorded boundary
+// (B-APL-R8234-AGE-REF). The L. 815-9 ceiling is an external uniform input.
+
+pub entity PersonneACharge {
+    label fr official "personne presentee comme a charge du menage";
+    label en unofficial "person presented as the household's dependent";
+}
+
+pub relation membre_charge(m: Menage, p: PersonneACharge) kind empirical {
+    label fr official "la personne vit habituellement au foyer du menage (constat)";
+    label en unofficial "the person usually lives in the household (finding)";
+}
+
+pub relation personne_nee_le(p: PersonneACharge, d: Date) kind empirical {
+    label fr official "date de naissance de la personne (etat civil)";
+    label en unofficial "the person's birth date (civil records)";
+}
+
+pub relation enfant_l5123_l8232(p: PersonneACharge) kind empirical {
+    label fr official "enfant au sens des 1 et 2 de L. 512-3 CSS et de L. 823-2 (constat)";
+    label en unofficial "child under CSS L. 512-3 1-2 and L. 823-2 (finding)";
+}
+
+pub relation ascendant_charge_r8234(p: PersonneACharge) kind empirical {
+    label fr official "ascendant du beneficiaire ou de son conjoint (constat)";
+    label en unofficial "ascendant of the recipient or spouse (finding)";
+}
+
+pub relation parent_handicape_r8234(p: PersonneACharge) kind empirical {
+    label fr official "parent au 2e-3e degre handicape, 80 % ou RSDAE CDAPH (constat)";
+    label en unofficial "2nd-3rd degree disabled kin, 80 % or CDAPH RSDAE (finding)";
+}
+
+pub relation atteint_age_l351_8_1(p: PersonneACharge) kind empirical {
+    label fr official "au moins l'age du 1 de L. 351-8 CSS, ou 65 ans si ASPA (constat)";
+    label en unofficial "at least the L. 351-8 1 CSS age, or 65 with ASPA (finding)";
+}
+
+pub relation atteint_age_reference_2b(p: PersonneACharge) kind empirical {
+    label fr official "au moins l'age de reference du b) du 2, selon la date (constat)";
+    label en unofficial "at least the 2 b) reference age, per the date (finding)";
+}
+
+pub relation beneficiaire_retraite_2b(p: PersonneACharge) kind empirical {
+    label fr official "beneficiaire de L. 161-19, L. 351-8 ou L. 643-3 CSS (constat)";
+    label en unofficial "recipient under CSS L. 161-19, L. 351-8 or L. 643-3 (finding)";
+}
+
+pub relation ressources_personne_charge(p: PersonneACharge, r: Money) kind empirical {
+    label fr official "ressources de la personne etablies R. 822-3 a R. 822-6 (mesure)";
+    label en unofficial "the person's resources per R. 822-3 to R. 822-6 (measured)";
+}
+
+pub relation plafond_individuel_l8159(v: Money) kind empirical {
+    label fr official "plafond individuel L. 815-9 CSS au 31 decembre de l'annee de reference (uniforme)";
+    label en unofficial "individual CSS L. 815-9 ceiling at 31 December of the reference year (uniform)";
+}
+
+pub relation personne_a_charge_reconnue(p: PersonneACharge) kind institutional {
+    label fr official "personne reconnue a charge au sens de l'article R. 823-4";
+    label en unofficial "person recognised as a dependent under R. 823-4";
+}
+
+@source(CCH_R823_4, CCH_R823_4_ED2019_12, CCH_R823_4_ED2020_01,
+        CCH_R823_4_ED2021_01, CCH_R823_4_ED2023_04, CCH_R823_4_ED2023_09,
+        CCH_R823_4_ED2023_12, CCH_R823_4_ED2026_07)
+rule PacEnfantMoins21Ans(m: Menage, p: PersonneACharge, naissance: Date, appreciation: Date) strict {
+    label fr official "enfant de moins de vingt et un ans au foyer : personne a charge 1";
+    label en unofficial "child under twenty-one in the home: dependent 1";
+    when membre_charge(m, p) and personne_nee_le(p, naissance)
+        and date_appreciation(m, appreciation) and enfant_l5123_l8232(p)
+        and appreciation < add_calendar_period(naissance, 21 calendar_year);
+    then personne_a_charge_reconnue(p);
+}
+
+@source(CCH_R823_4, CCH_R823_4_ED2019_12, CCH_R823_4_ED2020_01,
+        CCH_R823_4_ED2021_01, CCH_R823_4_ED2023_04, CCH_R823_4_ED2023_09,
+        CCH_R823_4_ED2023_12, CCH_R823_4_ED2026_07)
+rule PacAscendantAge(m: Menage, p: PersonneACharge, ressources: Money, plafond: Money) strict {
+    label fr official "ascendant age aux ressources sous plafond x 1,25 : personne a charge 2 a)";
+    label en unofficial "aged ascendant with resources below ceiling x 1.25: dependent 2 a)";
+    when membre_charge(m, p) and ascendant_charge_r8234(p)
+        and ressources_personne_charge(p, ressources)
+        and plafond_individuel_l8159(plafond) and ressources <= plafond * 1.25
+        and atteint_age_l351_8_1(p);
+    then personne_a_charge_reconnue(p);
+}
+
+@source(CCH_R823_4, CCH_R823_4_ED2019_12, CCH_R823_4_ED2020_01,
+        CCH_R823_4_ED2021_01, CCH_R823_4_ED2023_04, CCH_R823_4_ED2023_09,
+        CCH_R823_4_ED2023_12, CCH_R823_4_ED2026_07)
+rule PacAscendantRetraite(m: Menage, p: PersonneACharge, ressources: Money, plafond: Money) strict {
+    label fr official "ascendant retraite a l'age de reference : personne a charge 2 b)";
+    label en unofficial "retired ascendant at the reference age: dependent 2 b)";
+    when membre_charge(m, p) and ascendant_charge_r8234(p)
+        and ressources_personne_charge(p, ressources)
+        and plafond_individuel_l8159(plafond) and ressources <= plafond * 1.25
+        and atteint_age_reference_2b(p) and beneficiaire_retraite_2b(p);
+    then personne_a_charge_reconnue(p);
+}
+
+@source(CCH_R823_4, CCH_R823_4_ED2019_12, CCH_R823_4_ED2020_01,
+        CCH_R823_4_ED2021_01, CCH_R823_4_ED2023_04, CCH_R823_4_ED2023_09,
+        CCH_R823_4_ED2023_12, CCH_R823_4_ED2026_07)
+rule PacProcheHandicape(m: Menage, p: PersonneACharge, ressources: Money, plafond: Money) strict {
+    label fr official "parent handicape aux ressources sous plafond x 1,25 : personne a charge 3";
+    label en unofficial "disabled kin with resources below ceiling x 1.25: dependent 3";
+    when membre_charge(m, p) and parent_handicape_r8234(p)
+        and ressources_personne_charge(p, ressources)
+        and plafond_individuel_l8159(plafond) and ressources <= plafond * 1.25;
+    then personne_a_charge_reconnue(p);
+}
+
+// --- Custody attachment and shared residence (L. 823-2, R. 823-5) -------------
+// Household-level markers on agency findings. L. 823-2 al. 3 sharing fires on
+// the joint request or on disagreement; the regulatory sharing split
+// modalities stay unpinned (boundary). The one-year lock derives from the
+// two dates and yields to a residence change before the deadline.
+
+pub relation charge_effective_constatee(m: Menage) kind empirical {
+    label fr official "charge effective et permanente de l'enfant constatee sans cumul chez l'autre parent (constat L. 823-2 al. 1)";
+    label en unofficial "child's effective and permanent charge established with no double claim (L. 823-2 al. 1 finding)";
+}
+
+pub relation residence_alternee_effective(m: Menage) kind empirical {
+    label fr official "residence alternee de l'enfant mise en oeuvre de maniere effective C. civ. 373-2-9 (constat)";
+    label en unofficial "child's shared residence effectively implemented, Civil code 373-2-9 (finding)";
+}
+
+pub relation demande_conjointe_partage_charge(m: Menage) kind empirical {
+    label fr official "demande conjointe des parents de partage de la charge de l'enfant (constat L. 823-2 al. 3)";
+    label en unofficial "parents' joint request to share the child's charge (L. 823-2 al. 3 finding)";
+}
+
+pub relation desaccord_designation_beneficiaire(m: Menage) kind empirical {
+    label fr official "desaccord des parents sur la designation du beneficiaire (constat L. 823-2 al. 3)";
+    label en unofficial "parents' disagreement on the recipient designation (L. 823-2 al. 3 finding)";
+}
+
+pub relation charge_enfant_partagee(m: Menage) kind institutional {
+    label fr official "charge d'au moins un enfant partagee entre les deux parents allocataires L. 823-2 al. 3 (resume existentiel ; le niveau individuel porte l'identite)";
+    label en unofficial "at least one child's charge shared between both recipient parents L. 823-2 al. 3 (existential summary; individual level carries identity)";
+}
+
+pub relation enfant_rattache(m: Menage) kind institutional {
+    label fr official "enfant rattache au menage a charge effective";
+    label en unofficial "child attached to the effectively-charged household";
+}
+
+@source(CCH_L823_2, CCH_L823_2_ED2019_12, CCH_L823_2_ED2020_01,
+        CCH_L823_2_ED2021_01, CCH_L823_2_ED2023_04, CCH_L823_2_ED2023_09,
+        CCH_L823_2_ED2023_12, CCH_L823_2_ED2026_07)
+rule RattachementChargeEffective(m: Menage) strict {
+    label fr official "charge effective : l'enfant est rattache a ce menage";
+    label en unofficial "effective charge: the child attaches to this household";
+    when charge_effective_constatee(m);
+    then enfant_rattache(m);
+}
+
+pub relation parent_designe_beneficiaire(m: Menage) kind empirical {
+    label fr official "parent designe beneficiaire en residence alternee (constat)";
+    label en unofficial "parent designated recipient under shared residence (finding)";
+}
+
+pub relation beneficiaire_alternee_designe(m: Menage) kind institutional {
+    label fr official "beneficiaire designe en residence alternee";
+    label en unofficial "designated recipient under shared residence";
+}
+
+@source(CCH_L823_2, CCH_L823_2_ED2019_12, CCH_L823_2_ED2020_01,
+        CCH_L823_2_ED2021_01, CCH_L823_2_ED2023_04, CCH_L823_2_ED2023_09,
+        CCH_L823_2_ED2023_12, CCH_L823_2_ED2026_07)
+rule AlterneeDesigne(m: Menage) strict {
+    label fr official "designation en residence alternee : beneficiaire retenu";
+    label en unofficial "shared-residence designation: recipient retained";
+    when parent_designe_beneficiaire(m);
+    then beneficiaire_alternee_designe(m);
+}
+
+@source(CCH_L823_2, CCH_L823_2_ED2019_12, CCH_L823_2_ED2020_01,
+        CCH_L823_2_ED2021_01, CCH_L823_2_ED2023_04, CCH_L823_2_ED2023_09,
+        CCH_L823_2_ED2023_12, CCH_L823_2_ED2026_07)
+rule PartageChargeDemandeConjointe(m: Menage) strict {
+    label fr official "L. 823-2 al. 3 : demande conjointe, charge partagee entre les parents allocataires";
+    label en unofficial "L. 823-2 al. 3: joint request, charge shared between recipient parents";
+    when residence_alternee_effective(m) and demande_conjointe_partage_charge(m);
+    then charge_enfant_partagee(m);
+}
+
+@source(CCH_L823_2, CCH_L823_2_ED2019_12, CCH_L823_2_ED2020_01,
+        CCH_L823_2_ED2021_01, CCH_L823_2_ED2023_04, CCH_L823_2_ED2023_09,
+        CCH_L823_2_ED2023_12, CCH_L823_2_ED2026_07)
+rule PartageChargeDesaccord(m: Menage) strict {
+    label fr official "L. 823-2 al. 3 : desaccord sur la designation, charge partagee entre les parents allocataires";
+    label en unofficial "L. 823-2 al. 3: disagreement on designation, charge shared between recipient parents";
+    when residence_alternee_effective(m) and desaccord_designation_beneficiaire(m);
+    then charge_enfant_partagee(m);
+}
+
+pub relation enfant_concerne_partage_charge(m: Menage, p: PersonneACharge) kind empirical {
+    label fr official "l'enfant p est celui dont la charge est partagee entre les parents allocataires (identification L. 823-2 al. 3)";
+    label en unofficial "child p is the one whose charge is shared between the recipient parents (L. 823-2 al. 3 identification)";
+}
+
+pub relation charge_enfant_partagee_enfant(m: Menage, p: PersonneACharge) kind institutional {
+    label fr official "charge de l'enfant p partagee entre les deux parents allocataires (L. 823-2 al. 3, niveau individuel)";
+    label en unofficial "child p's charge shared between both recipient parents (L. 823-2 al. 3, individual level)";
+}
+
+@source(CCH_L823_2, CCH_L823_2_ED2019_12, CCH_L823_2_ED2020_01,
+        CCH_L823_2_ED2021_01, CCH_L823_2_ED2023_04, CCH_L823_2_ED2023_09,
+        CCH_L823_2_ED2023_12, CCH_L823_2_ED2026_07)
+rule PartageChargeEnfantConjointe(m: Menage, p: PersonneACharge) strict {
+    label fr official "L. 823-2 al. 3 : demande conjointe, charge de l'enfant p partagee";
+    label en unofficial "L. 823-2 al. 3: joint request, child p's charge shared";
+    when residence_alternee_effective(m) and demande_conjointe_partage_charge(m)
+        and enfant_concerne_partage_charge(m, p);
+    then charge_enfant_partagee_enfant(m, p);
+}
+
+@source(CCH_L823_2, CCH_L823_2_ED2019_12, CCH_L823_2_ED2020_01,
+        CCH_L823_2_ED2021_01, CCH_L823_2_ED2023_04, CCH_L823_2_ED2023_09,
+        CCH_L823_2_ED2023_12, CCH_L823_2_ED2026_07)
+rule PartageChargeEnfantDesaccord(m: Menage, p: PersonneACharge) strict {
+    label fr official "L. 823-2 al. 3 : desaccord sur la designation, charge de l'enfant p partagee";
+    label en unofficial "L. 823-2 al. 3: disagreement on designation, child p's charge shared";
+    when residence_alternee_effective(m) and desaccord_designation_beneficiaire(m)
+        and enfant_concerne_partage_charge(m, p);
+    then charge_enfant_partagee_enfant(m, p);
+}
+
+pub relation designation_alterne_le(m: Menage, d: Date) kind empirical {
+    label fr official "date de la designation en residence alternee (dossier)";
+    label en unofficial "shared-residence designation date (case file)";
+}
+
+pub relation contestation_alterne_le(m: Menage, d: Date) kind empirical {
+    label fr official "date de la remise en cause de la designation (dossier)";
+    label en unofficial "designation challenge date (case file)";
+}
+
+pub relation remise_en_cause_irrecevable(m: Menage) kind institutional {
+    label fr official "remise en cause dans l'annee de la designation : irrecevable R. 823-5";
+    label en unofficial "challenge within a year of designation: inadmissible under R. 823-5";
+}
+
+pub relation modification_residence_enfant_avant_echeance(m: Menage) kind empirical {
+    label fr official "modalites de residence de l'enfant modifiees avant l'echeance d'un an (constat R. 823-5)";
+    label en unofficial "child's residence modalities changed before the one-year deadline (R. 823-5 finding)";
+}
+
+@source(CCH_R823_5, CCH_R823_5_ED2019_12, CCH_R823_5_ED2020_01,
+        CCH_R823_5_ED2021_01, CCH_R823_5_ED2023_04, CCH_R823_5_ED2023_09,
+        CCH_R823_5_ED2023_12, CCH_R823_5_ED2026_07)
+rule VerrouUnAnAlternee(m: Menage, designation: Date, contestation: Date) defeasible {
+    label fr official "pas de remise en cause dans l'annee de la designation";
+    label en unofficial "no challenge within a year of the designation";
+    when designation_alterne_le(m, designation) and contestation_alterne_le(m, contestation)
+        and contestation < add_calendar_period(designation, 1 calendar_year);
+    then remise_en_cause_irrecevable(m);
+}
+
+@source(CCH_R823_5, CCH_R823_5_ED2019_12, CCH_R823_5_ED2020_01,
+        CCH_R823_5_ED2021_01, CCH_R823_5_ED2023_04, CCH_R823_5_ED2023_09,
+        CCH_R823_5_ED2023_12, CCH_R823_5_ED2026_07)
+rule ExceptionModificationResidenceAvantEcheance(m: Menage) defeater {
+    label fr official "R. 823-5 : residence modifiee avant l'echeance, le verrou d'un an cede";
+    label en unofficial "R. 823-5: residence changed before the deadline, the one-year lock yields";
+    when modification_residence_enfant_avant_echeance(m);
+    defeat remise_en_cause_irrecevable(m);
+}

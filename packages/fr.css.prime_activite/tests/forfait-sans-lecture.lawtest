@@ -1,0 +1,37 @@
+// Без чтения: окно закона без суммы (число декрета отсутствует, округление текстами не задано), построенное
+// не выводится, число декрета окна остаётся нормой.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+// 2022-09-01 без чтения: суммы нет
+test "urn:query:fr-ppa-forfait-sans-lecture-loi" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "forfait-sans-lecture-loi-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-sans-lecture-loi"), @2022-09-01, SEUL) { origin case_input; }
+    }
+    evaluate truth(forfait_base_du_mois(@2022-09-01, 586.23 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2023-10-01 без чтения: число декрета есть, построенного нет
+test "urn:query:fr-ppa-forfait-sans-lecture-2023" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "forfait-sans-lecture-2023-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-sans-lecture-2023"), @2023-10-01, SEUL) { origin case_input; }
+    }
+    evaluate truth(forfait_base_du_mois(@2023-10-01, 595.25 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_base_construit(@2023-10-01, 595.25 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_base_conforme_publie(@2023-10-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,22 @@
+// Maintenance-debt attachment: 1° listed benefit (AF) for alimentary claim - the fund may attach (L. 553-4 I 1, PC-R03-03).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-recouvrement-saisie-alimentaire" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "recouvrement-saisie-alimentaire-01": parent_charge(entity_ref("urn:fr:pf:case:saisissable"), entity_ref("urn:fr:pf:case:enfant-saisissable")) { origin case_input; }
+        assert "recouvrement-saisie-alimentaire-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:saisissable"), entity_ref("urn:fr:pf:case:enfant-saisissable")) { origin adjudicated; }
+        assert "recouvrement-saisie-alimentaire-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-saisissable")) { origin case_input; }
+        assert "recouvrement-saisie-alimentaire-04": reside_france_stable(entity_ref("urn:fr:pf:case:saisissable")) { origin case_input; }
+        assert "recouvrement-saisie-alimentaire-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-saisissable")) { origin case_input; }
+        assert "recouvrement-saisie-alimentaire-06": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:saisissable")) { origin case_input; }
+        assert "recouvrement-saisie-alimentaire-07": saisie_alimentaire_possible(entity_ref("urn:fr:pf:case:saisissable")) { origin case_input; }
+        assert "recouvrement-saisie-alimentaire-08": creance_1degre_alimentaire_l581(entity_ref("urn:fr:pf:case:saisissable")) { origin case_input; }
+        assert "recouvrement-saisie-alimentaire-09": prestation_listee_1degre(entity_ref("urn:fr:pf:case:saisissable")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SaisieCas1Degre, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

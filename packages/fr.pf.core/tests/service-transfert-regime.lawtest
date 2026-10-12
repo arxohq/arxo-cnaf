@@ -1,0 +1,16 @@
+// Regime transfer: transferred allocataire - service stays with the original scheme (R. 552-1).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-service-transfert-regime" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "service-transfert-regime-01": transfert_regime(entity_ref("urn:fr:pf:case:transfere")) { origin case_input; }
+        assert "service-transfert-regime-02": transfert_non_regularise_atteste(entity_ref("urn:fr:pf:case:transfere")) { origin case_input; }
+    }
+    evaluate truth(service_incombe_regime_primitif(entity_ref("urn:fr:pf:case:transfere")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,19 @@
+// Non-tie formula output next to a tie (D75): shn 9.33 with CRDS
+// rate 0.005 gives (7*9.33)/(1-0.005) = 65.31/0.995 = 65.63819...
+// — safely off any half-cent tie, so with no tie flag the built
+// rate 65.64 is source-derived (every nearest-mode agrees).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-taux-proche-tie" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-tpt-01": smic_horaire_net_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-tpt"), 9.33 EUR) { origin case_input; }
+        assert "ajpp-tpt-02": taux_crds_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-tpt"), 0.005) { origin case_input; }
+    }
+    evaluate truth(taux_journalier_calcule(entity_ref("urn:fr:pf-ajpp:case:enfant-tpt"), 65.64 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,19 @@
+// Renewal for another aided person: leave open for a second aided
+// person while the right stands for the first — the duration renews
+// for the new pair.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-renouvellement-autre-aide" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-ra-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-ra"), entity_ref("urn:fr:css:ajpa:case:aide-ra")) { origin case_input; }
+        assert "ajpa-ra-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-ra")) { origin adjudicated; }
+        assert "ajpa-ra-03": conge_autre_aide(entity_ref("urn:fr:css:ajpa:case:aidant-ra"), entity_ref("urn:fr:css:ajpa:case:aide-ra")) { origin case_input; }
+    }
+    evaluate truth(renouvellement_accorde(entity_ref("urn:fr:css:ajpa:case:aidant-ra"), entity_ref("urn:fr:css:ajpa:case:aide-ra")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

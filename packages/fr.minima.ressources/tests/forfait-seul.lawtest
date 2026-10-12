@@ -1,0 +1,18 @@
+// Single owner-occupier without housing aid: MF 600.00 -> 12 % flat-rate
+// 72.00 (R.262-9, 1°).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-forfait-seul" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "forfseul-01": nb_personnes_forfait(entity_ref("urn:fr:minima-ressources:case:forfait-seul"), 1) { origin case_input; }
+        assert "forfseul-02": logement(entity_ref("urn:fr:minima-ressources:case:forfait-seul"), PROPRIETAIRE_SANS_AIDE) { origin case_input; }
+        assert "forfseul-03": mf_composition(entity_ref("urn:fr:minima-ressources:case:forfait-seul"), 1, 600.00 EUR) { origin case_input; }
+    }
+    evaluate truth(forfait_logement(entity_ref("urn:fr:minima-ressources:case:forfait-seul"), 72.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

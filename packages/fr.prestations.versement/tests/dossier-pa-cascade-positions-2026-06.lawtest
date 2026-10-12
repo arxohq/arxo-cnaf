@@ -1,0 +1,103 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+// CASCADE POSITIONS, June 2026 review: same joined case as
+// dossier-pa-cascade-2026-06 (logement 344.00 -> capped 72.00 ->
+// RSA allocation 372.00 -> paid 312.00 -> PA resources 612.00 ->
+// DERIVED due 167.55), plus the serving fund. The PA payment duty
+// fires through the real neighbour on the DERIVED quarter amount
+// (L. 843-1: prime_due_trimestre + organisme_serviteur), not on a
+// stated sum and not by commentary. ACTIVE, demonstrated.
+
+// D-42 (08.10.2026) CORRECTION of stages 3-4. The amount due of R. 262-7 I
+// (montant_du_trimestre 228.00 = 600.00 - 372.00 resources) IS the RSA paid
+// under L. 262-2; the stage-3 line "allocation = 600.00 - 228.00 = 372.00"
+// subtracted the resources twice. Neighbour fr.casf.rsa (AllocVersee) pays
+// the amount due itself: allocation 228.00/month (its own scenario
+// allocation-due-228 agrees). Recovery: levy 0.30 x 228.00 = 68.40, capped
+// by the debt 60.00 -> deduction 60.00; paid net 168.00/month. Stage 4 then
+// receives 300.00 + 168.00 = 468.00 < 600.00, so the forfait 600.00 is kept
+// (R. 842-3 floor); monthly prime = 600.00 + 179.55 + 0 - 600.00 = 179.55;
+// quarterly due 179.55. PA recovery: levy 0.20 x 179.55 = 35.91 < debt
+// 100.00 -> deduction 35.91; net 143.64.
+
+test "urn:query:fr-pv-dossier-pa-cascade-positions-2026-06" {
+    given {
+        context { deadline_policy fr.pf.cmg::CMG_MOIS_CALENDAIRE; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "c-01": fr.minima.ressources::foyer_du_cas(entity_ref("urn:fr:pv:case:cascade")) { origin case_input; }
+        assert "c-02": fr.minima.ressources::mois_demande(@2026-06-01) { origin case_input; }
+        assert "c-03": fr.minima.ressources::mois_reference(@2026-02-01, @2026-03-01, @2026-04-01) { origin case_input; }
+        assert "c-04": fr.minima.ressources::mf_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-02-01, 600.00 EUR) { origin case_input; }
+        assert "c-05": fr.minima.ressources::mf_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-03-01, 600.00 EUR) { origin case_input; }
+        assert "c-06": fr.minima.ressources::mf_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-04-01, 600.00 EUR) { origin case_input; }
+        assert "c-07": fr.minima.ressources::dsn_pro_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-02-01, 300.00 EUR) { origin case_input; }
+        assert "c-08": fr.minima.ressources::dsn_pro_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-03-01, 300.00 EUR) { origin case_input; }
+        assert "c-09": fr.minima.ressources::dsn_pro_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-04-01, 300.00 EUR) { origin case_input; }
+        assert "c-10": fr.minima.ressources::dsn_autre_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-02-01, 0 EUR) { origin case_input; }
+        assert "c-11": fr.minima.ressources::dsn_autre_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-03-01, 0 EUR) { origin case_input; }
+        assert "c-12": fr.minima.ressources::dsn_autre_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-04-01, 0 EUR) { origin case_input; }
+        assert "c-13": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-02-01, 0 EUR) { origin case_input; }
+        assert "c-14": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-03-01, 0 EUR) { origin case_input; }
+        assert "c-15": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-04-01, 0 EUR) { origin case_input; }
+        assert "c-16": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-02-01, 0 EUR) { origin case_input; }
+        assert "c-17": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-03-01, 0 EUR) { origin case_input; }
+        assert "c-18": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:pv:case:cascade"), @2026-04-01, 0 EUR) { origin case_input; }
+        assert "c-19": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:pv:case:cascade"), @2026-02-01, 344.00 EUR) { origin case_input; }
+        assert "c-20": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:pv:case:cascade"), @2026-03-01, 344.00 EUR) { origin case_input; }
+        assert "c-21": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:pv:case:cascade"), @2026-04-01, 344.00 EUR) { origin case_input; }
+        assert "c-22": fr.minima.ressources::nb_personnes_forfait(entity_ref("urn:fr:pv:case:cascade"), 1) { origin case_input; }
+        // D-42: the R. 262-9 housing flat-rate reads the minima input contract
+        // fr.minima.ressources::mf_composition (size 1), not fr.casf.rsa::mf_base; the
+        // header figure "MF composition 1 = 600.00" was never stated, so the
+        // 72.00 forfait (12 % x 600.00) and the whole RSA lane stayed NEITHER.
+        assert "c-22b": fr.minima.ressources::mf_composition(entity_ref("urn:fr:pv:case:cascade"), 1, 600.00 EUR) { origin case_input; }
+        assert "c-23": fr.casf.rsa::mf_base(entity_ref("urn:fr:pv:case:cascade"), 600.00 EUR) { origin case_input; }
+        assert "c-24": fr.casf.rsa::foyer_nb_personnes(entity_ref("urn:fr:pv:case:cascade"), 1) { origin case_input; }
+        assert "c-25": fr.casf.rsa::mois_droit(entity_ref("urn:fr:pv:case:cascade"), @2026-02-01) { origin case_input; }
+        assert "c-26": fr.casf.rsa::mois_droit(entity_ref("urn:fr:pv:case:cascade"), @2026-03-01) { origin case_input; }
+        assert "c-27": fr.casf.rsa::mois_droit(entity_ref("urn:fr:pv:case:cascade"), @2026-04-01) { origin case_input; }
+        assert "c-28": fr.casf.rsa::residence_stable(entity_ref("urn:fr:pv:case:cascade")) { origin case_input; }
+        assert "c-29": fr.casf.rsa::age_charge_condition(entity_ref("urn:fr:pv:case:cascade")) { origin case_input; }
+        assert "c-30": fr.casf.rsa::sejour_travail_condition(entity_ref("urn:fr:pv:case:cascade")) { origin case_input; }
+        assert "c-31": fr.casf.rsa::conjoint_enfants_comptes(entity_ref("urn:fr:pv:case:cascade")) { origin case_input; }
+        assert "c-32": fr.casf.rsa::indu_recouvrable(entity_ref("urn:fr:pv:case:cascade"), 60.00 EUR) { origin case_input; }
+        assert "c-33": pf_indu_reporte_sur_rsa(entity_ref("urn:fr:pv:case:cascade"), 0 EUR) { origin case_input; }
+        assert "c-34": pa_indu_reporte_sur_rsa(entity_ref("urn:fr:pv:case:cascade"), 0 EUR) { origin case_input; }
+        // D-42: the stated scale rate 0.30 is gone (contract (b), PC-R07-39): the levy
+        // arrives as the Money amount the fund applies; same case, 0.30 x RSA allocation
+        // 228.00 = 68.40 EUR (allocation corrected, see header). Carry pairs carry their lawful-carry gate (PC-R07-36).
+        assert "c-35": retenue_mensuelle_rsa_declaree(entity_ref("urn:fr:pv:case:cascade"), 68.40 EUR) { origin case_input; }
+        assert "c-35-pf-licite": report_pf_sur_rsa_licite(entity_ref("urn:fr:pv:case:cascade")) { origin case_input; }
+        assert "c-35-pa-licite": report_pa_sur_rsa_licite(entity_ref("urn:fr:pv:case:cascade")) { origin case_input; }
+        assert "c-36": fr.css.prime_activite::forfait_base_retenu(@2026-02-01, 600.00 EUR) { origin case_input; }
+        assert "c-37": fr.css.prime_activite::forfait_base_retenu(@2026-03-01, 600.00 EUR) { origin case_input; }
+        assert "c-38": fr.css.prime_activite::forfait_base_retenu(@2026-04-01, 600.00 EUR) { origin case_input; }
+        assert "c-39": fr.css.prime_activite::smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+        assert "c-40": fr.css.prime_activite::smic_horaire_retenu(@2026-03-01, 12.02 EUR) { origin case_input; }
+        assert "c-41": fr.css.prime_activite::smic_horaire_retenu(@2026-04-01, 12.02 EUR) { origin case_input; }
+        assert "c-42": fr.css.prime_activite::forme_foyer_retenue(entity_ref("urn:fr:pv:case:cascade-pa"), @2026-02-01, fr.css.prime_activite::SEUL) { origin case_input; }
+        assert "c-43": fr.css.prime_activite::forme_foyer_retenue(entity_ref("urn:fr:pv:case:cascade-pa"), @2026-03-01, fr.css.prime_activite::SEUL) { origin case_input; }
+        assert "c-44": fr.css.prime_activite::forme_foyer_retenue(entity_ref("urn:fr:pv:case:cascade-pa"), @2026-04-01, fr.css.prime_activite::SEUL) { origin case_input; }
+        assert "c-45": fr.css.prime_activite::revenus_pro_demandeur(entity_ref("urn:fr:pv:case:cascade-pa"), @2026-02-01, 300.00 EUR) { origin case_input; }
+        assert "c-46": fr.css.prime_activite::revenus_pro_demandeur(entity_ref("urn:fr:pv:case:cascade-pa"), @2026-03-01, 300.00 EUR) { origin case_input; }
+        assert "c-47": fr.css.prime_activite::revenus_pro_demandeur(entity_ref("urn:fr:pv:case:cascade-pa"), @2026-04-01, 300.00 EUR) { origin case_input; }
+        // D-42: resources restated 612.00 -> 468.00 (pro 300.00 + RSA paid net 168.00, see header).
+        assert "c-48": fr.css.prime_activite::revenus_mensuels_retenus(entity_ref("urn:fr:pv:case:cascade-pa"), @2026-02-01, 468.00 EUR) { origin case_input; }
+        assert "c-49": fr.css.prime_activite::revenus_mensuels_retenus(entity_ref("urn:fr:pv:case:cascade-pa"), @2026-03-01, 468.00 EUR) { origin case_input; }
+        assert "c-50": fr.css.prime_activite::revenus_mensuels_retenus(entity_ref("urn:fr:pv:case:cascade-pa"), @2026-04-01, 468.00 EUR) { origin case_input; }
+        assert "c-51": fr.css.prime_activite::mois_revue(entity_ref("urn:fr:pv:case:cascade-pa"), @2026-06-01) { origin case_input; }
+        assert "c-52": fr.css.prime_activite::minimum_paiement_retenu(@2026-06-01, 15.00 EUR) { origin case_input; }
+        assert "c-53": fr.css.prime_activite::indu_recupere(entity_ref("urn:fr:pv:case:cascade-pa"), 100.00 EUR) { origin case_input; }
+        assert "c-54": rsa_indu_reporte_sur_pa(entity_ref("urn:fr:pv:case:cascade-pa"), 0 EUR) { origin case_input; }
+        // D-42: the stated scale rate 0.20 is gone (contract (b), PC-R07-39): the levy
+        // arrives as the Money amount the fund applies; same case, 0.20 x PA quarterly amount due
+        // 179.55 = 35.91 EUR (prime corrected, see header). Carry pairs carry their lawful-carry gate (PC-R07-36).
+        assert "c-55": retenue_trimestrielle_pa_declaree(entity_ref("urn:fr:pv:case:cascade-pa"), 35.91 EUR) { origin case_input; }
+        assert "c-55-rsa-licite": report_rsa_sur_pa_licite(entity_ref("urn:fr:pv:case:cascade-pa")) { origin case_input; }
+        assert "c-56": fr.css.prime_activite::organisme_serviteur(entity_ref("urn:fr:pv:case:cascade-caisse"), entity_ref("urn:fr:pv:case:cascade-pa")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(fr.css.prime_activite::VerserPrimeDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

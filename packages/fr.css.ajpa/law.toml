@@ -1,0 +1,126 @@
+# Manifest §10 — package root marker (DECISION-0033). Headers §22 in the
+# .law files themselves are normative; the manifest must match them
+# (LDC-E1109, lawc check).
+[package]
+name = "fr.css.ajpa"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:css-ajpa"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after .law edits run
+# `law fix imports fr/ajpa`; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+# Catalogue metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-css-ajpa"
+title = "Allocation journalière du proche aidant (AJPA)"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française"
+verifiedAgainstSource = false
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Upstream premises: the debtor body is established by fr.pf.core. The
+# leave/residence channel, counters and motif facts are this package's own
+# established facts; no upstream AJPA filters exist (B-PFAJPA-TETE needs no
+# boundary: nothing parallel to stay silent).
+# Worlds below include both packages.
+[dependencies]
+"fr.pf.core" = "0.1.0"
+
+# Right (L168-8): carer leave + stable residence.
+[[tests]]
+family = "fr.css.ajpa#droit"
+regression = false
+suites = [
+    "tests/ajpa-droit-ouvert.lawtest",
+    "tests/ajpa-droit-sans-conge.lawtest",
+    "tests/ajpa-droit-sans-residence.lawtest",
+]
+world = ["fr.css.ajpa", "fr.pf.core"]
+
+# Duration ceilings and renewal (L168-9): 2025 monthly max, 66-day career
+# cap (2021-2025), renewable duration ceiling (2025+).
+[[tests]]
+family = "fr.css.ajpa#duree-plafonds"
+regression = false
+suites = [
+    "tests/ajpa-mensuel-2025-ok.lawtest",
+    "tests/ajpa-mensuel-2025-depassement.lawtest",
+    "tests/ajpa-carriere-66-ok.lawtest",
+    "tests/ajpa-carriere-66-depassement.lawtest",
+    "tests/ajpa-carriere-66-2021-ok.lawtest",
+    "tests/ajpa-carriere-66-2021-depassement.lawtest",
+    "tests/ajpa-carriere-66-2022-limite-exacte.lawtest",
+    "tests/ajpa-carriere-66-2025-absent.lawtest",
+    "tests/ajpa-carriere-66-2020-silence.lawtest",
+    "tests/ajpa-duree-max-ok.lawtest",
+    "tests/ajpa-renouvellement-autre-aide.lawtest",
+    "tests/ajpa-renouvellement-meme-aide.lawtest",
+]
+world = ["fr.css.ajpa", "fr.pf.core"]
+
+# Monthly totals (L168-9): retained daily rate, single majoration to
+# 2023-07, split/part-time modulation.
+[[tests]]
+family = "fr.css.ajpa#montants"
+regression = false
+suites = [
+    "tests/ajpa-montant-normal.lawtest",
+    "tests/ajpa-montant-majore-2022.lawtest",
+    "tests/ajpa-montant-majore-2025-absent.lawtest",
+    "tests/ajpa-montant-ajpa13-edition-2024.lawtest",
+    "tests/ajpa-montant-module.lawtest",
+]
+world = ["fr.css.ajpa", "fr.pf.core"]
+
+# Non-cumulation (L168-10): 2019 list vs 2025 list, employed-by-aided
+# exclusion, part-time sick exception.
+[[tests]]
+family = "fr.css.ajpa#non-cumul"
+regression = false
+suites = [
+    "tests/ajpa-noncumul-chomage-2019.lawtest",
+    "tests/ajpa-noncumul-ajpp-2019.lawtest",
+    "tests/ajpa-exclusion-salarie-aidant.lawtest",
+    "tests/ajpa-noncumul-naissance-2026.lawtest",
+    "tests/ajpa-noncumul-2025-sans-scope.lawtest",
+    "tests/ajpa-noncumul-2025-commun-sans-scope.lawtest",
+    "tests/ajpa-cumul-temps-partiel.lawtest",
+]
+world = ["fr.css.ajpa", "fr.pf.core"]
+
+# Fund duties and withholding powers: payment (D1), undue recovery (D2),
+# recourse information (D3), recovery by withholding (P1), subsidiary
+# L. 553-2 withholding (P2).
+[[tests]]
+family = "fr.css.ajpa#devoirs"
+regression = false
+suites = [
+    "tests/ajpa-devoir-versement-actif.lawtest",
+    "tests/ajpa-devoir-versement-sans-droit.lawtest",
+    "tests/ajpa-devoir-recouvrement-actif.lawtest",
+    "tests/ajpa-devoir-recours-actif.lawtest",
+    "tests/ajpa-devoir-recours-sans-debiteur.lawtest",
+    "tests/ajpa-pouvoir-retenues-actif.lawtest",
+    "tests/ajpa-pouvoir-retenues-sans-reserves.lawtest",
+    "tests/ajpa-pouvoir-retenues-effet.lawtest",
+    "tests/ajpa-pouvoir-retenues-sans-exercice.lawtest",
+    "tests/ajpa-pouvoir-retenues-exercice-invalide.lawtest",
+    "tests/ajpa-pouvoir-retenues-sans-cible.lawtest",
+    "tests/ajpa-pouvoir-retenues-exercice-hors-cible.lawtest",
+    "tests/ajpa-pouvoir-retenue-l5532-actif.lawtest",
+    "tests/ajpa-pouvoir-retenue-l5532-effet.lawtest",
+    "tests/ajpa-pouvoir-retenue-l5532-sans-fondement.lawtest",
+    "tests/ajpa-pouvoir-retenue-l5532-sans-option-unique.lawtest",
+    "tests/ajpa-pouvoir-retenue-l5532-sans-option-echelonnee.lawtest",
+]
+world = ["fr.css.ajpa", "fr.pf.core"]

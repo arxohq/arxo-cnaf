@@ -1,0 +1,28 @@
+// Rectification with no reception premise at all: timeliness
+// cannot be established, so P2 interruption and both II heads
+// stay undetermined (R. 847-1-1 I.2.a, II, III; unknown-premise
+// control for PA-R3-02).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-rectification-sans-reception-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-08-15T12:00:00Z; knowledge_time @2026-08-15T12:00:00Z; legal_time @2026-08-15; timezone "Europe/Paris"; }
+        assert "ppa-01": notification_recouvrement(entity_ref("urn:fr:ppa:case:rectification-sans-reception-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-02": demande_rectification(entity_ref("urn:fr:ppa:case:rectification-sans-reception-2026"), @2026-06-10) { origin case_input; }
+        assert "ppa-03": date_observation_recours(entity_ref("urn:fr:ppa:case:rectification-sans-reception-2026"), @2026-08-15) { origin case_input; }
+    }
+    evaluate truth(interruption_delai_cra(entity_ref("urn:fr:ppa:case:rectification-sans-reception-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_implicite_rectification(entity_ref("urn:fr:ppa:case:rectification-sans-reception-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recouvrement_apres_demande(entity_ref("urn:fr:ppa:case:rectification-sans-reception-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

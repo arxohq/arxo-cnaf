@@ -1,0 +1,39 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Agreed single allocataire: the designated parent is the unique
+// allocataire and receives the monthly total (128.00 here: band 1,
+// two children, BMAF 400.00 EUR stated assumption). Household figures
+// are fund-established per receiving person (B-PFAF-COMPTAGE).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-partage-designation" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "part-01": territoire(entity_ref("urn:fr:pf-af:parent:mere"), METROPOLE) { origin case_input; }
+        assert "part-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:parent:mere"), 2) { origin case_input; }
+        assert "part-03": ressources_menage(entity_ref("urn:fr:pf-af:parent:mere"), 30000 EUR) { origin case_input; }
+        assert "part-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:parent:mere"), 55950 EUR) { origin case_input; }
+        assert "part-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:parent:mere"), 78300 EUR) { origin case_input; }
+        assert "part-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:parent:mere"), 5595 EUR) { origin case_input; }
+        assert "part-05": bmaf_retenu(entity_ref("urn:fr:pf-af:parent:mere"), 400.00 EUR) { origin case_input; }
+        assert "part-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:parent:mere"), 0) { origin case_input; }
+        assert "part-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:parent:mere"), 0) { origin case_input; }
+        assert "part-08": forfait_total_menage(entity_ref("urn:fr:pf-af:parent:mere"), 0 EUR) { origin case_input; }
+        assert "part-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:parent:mere"), 0) { origin case_input; }
+        assert "part-10": foyer_du_cas(entity_ref("urn:fr:pf-af:parent:mere")) { origin case_input; }
+        assert "part-11": allocataire_unique_convenu(entity_ref("urn:fr:pf-af:parent:mere")) { origin case_input; }
+    }
+    evaluate truth(allocataire_unique_af(entity_ref("urn:fr:pf-af:parent:mere")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(famille_percoit(entity_ref("urn:fr:pf-af:parent:mere"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

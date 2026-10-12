@@ -1,0 +1,39 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// OpenFisca AF 2026-03 age-only fallback (14 in March 2026).
+// BOUNDARY: without a birthdate the 2012-03-01 regime side is
+// undecidable here (their engine approximates the new regime and
+// denies the supplement). The right itself opens (three children,
+// metropolitan France); the supplement question stays open.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-of-2026-03-fallback-14" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "of2603f-01": territoire(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), METROPOLE) { origin case_input; }
+        assert "of2603f-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), 3) { origin case_input; }
+        assert "of2603f-03": ressources_menage(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), 30000 EUR) { origin case_input; }
+        assert "of2603f-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), 55950 EUR) { origin case_input; }
+        assert "of2603f-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), 78300 EUR) { origin case_input; }
+        assert "of2603f-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), 5595 EUR) { origin case_input; }
+        assert "of2603f-05": bmaf_retenu(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), 400.00 EUR) { origin case_input; }
+        assert "of2603f-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), 0) { origin case_input; }
+        assert "of2603f-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), 0) { origin case_input; }
+        assert "of2603f-08": forfait_total_menage(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), 0 EUR) { origin case_input; }
+        assert "of2603f-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), 0) { origin case_input; }
+        assert "of2603f-10": foyer_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback")) { origin case_input; }
+    }
+    evaluate truth(af_droit_ouvert(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:foreign:of-2026-fallback"), BANDE_1));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,29 @@
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_apl_locatif.catala_fr, scope Exemple3.
+// ИХ ОЖИДАНИЕ: plafond_loyer_d823_16_2 = 425.80.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-apl_locatif-exemple3-plafond-loyer-d823-16-2" {
+    given {
+        context { decision_time @2022-01-18T12:00:00Z; knowledge_time @2022-01-18T12:00:00Z; legal_time @2022-01-18; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "apl_locatif-exemple3-01": secteur_locatif(entity_ref("urn:fr:apl:case:apl_locatif-exemple3")) { origin case_input; }
+        assert "apl_locatif-exemple3-02": aide_demandee(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), APL) { origin case_input; }
+        assert "apl_locatif-exemple3-03": loyer_principal(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), 408 EUR) { origin case_input; }
+        assert "apl_locatif-exemple3-04": zone_du_logement(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), ZONE_III) { origin case_input; }
+        assert "apl_locatif-exemple3-05": situation_familiale(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), PERSONNE_SEULE) { origin case_input; }
+        assert "apl_locatif-exemple3-06": personnes_a_charge(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), 3) { origin case_input; }
+        assert "apl_locatif-exemple3-07": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), 0 EUR) { origin case_input; }
+        assert "apl_locatif-exemple3-08": ressources_du_menage(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), 14300 EUR) { origin case_input; }
+        assert "apl_locatif-exemple3-09": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), false) { origin case_input; }
+        assert "apl_locatif-exemple3-10": territoire(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), METROPOLE) { origin case_input; }
+        assert "apl_locatif-exemple3-11": mode_location(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), LOCATION_SEULE) { origin case_input; }
+        assert "apl_locatif-exemple3-12": forme_logement(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), LOGEMENT_ORDINAIRE) { origin case_input; }
+    }
+    evaluate truth(plafond_loyer(entity_ref("urn:fr:apl:case:apl_locatif-exemple3"), 425.8 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

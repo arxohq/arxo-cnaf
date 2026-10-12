@@ -1,0 +1,22 @@
+// Increased amount (L. 531-4, VI, para. 2): final option, no activity,
+// three dependent children — 400 × 1.5793 = 631.72 €.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-majore" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-maj-01": arret_activite(entity_ref("urn:fr:paje:benef:prepare-maj"), entity_ref("urn:fr:paje:enfant:prepare-maj")) { origin adjudicated; }
+        assert "prepare-maj-02": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-maj"), entity_ref("urn:fr:paje:enfant:prepare-maj")) { origin adjudicated; }
+        assert "prepare-maj-03": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-maj")) { origin adjudicated; }
+        assert "prepare-maj-04": option_majoree(entity_ref("urn:fr:paje:benef:prepare-maj"), entity_ref("urn:fr:paje:enfant:prepare-maj")) { origin adjudicated; }
+        assert "prepare-maj-05": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-maj"), entity_ref("urn:fr:paje:case:prepare-maj")) { origin case_input; }
+        assert "prepare-maj-06": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-maj"), 400.00 EUR) { origin case_input; }
+        assert "prepare-maj-07": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-maj"), entity_ref("urn:fr:paje:enfant:prepare-maj"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-maj"), entity_ref("urn:fr:paje:enfant:prepare-maj"), 631.72 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

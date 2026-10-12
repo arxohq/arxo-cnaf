@@ -1,0 +1,129 @@
+// Limitation (L. 553-1): 2 years for the allocataire action and the fund
+// indu-recovery action; 5 years for manoeuvre frauduleuse / fausse declaration;
+// interruption while an indu-recovery procedure runs (L. 553-2, L. 821-5-1,
+// L. 845-3/844-3, L. 262-46 CASF, L. 823-9 CCH).
+//
+// DEONTIC MAP: limitation extinguishes the action - institutional status
+// action_prescrite; the article creates no must/must-not positions.
+// Interruption - defeater (limitation does not run while a procedure is open).
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_L553_1,
+    CSS_L553_1_CSS_ED2021_05,
+    CSS_L553_1_CSS_ED2021_11,
+    CSS_L553_1_CSS_ED2021_12,
+    CSS_L553_1_CSS_ED2022_01,
+    CSS_L553_1_CSS_ED2022_02,
+    CSS_L553_1_CSS_ED2022_03,
+    CSS_L553_1_CSS_ED2022_09,
+    CSS_L553_1_CSS_ED2023_07,
+    CSS_L553_1_CSS_ED2024_01,
+    CSS_L553_1_CSS_ED2025_02,
+    CSS_L553_1_CSS_ED2025_09,
+    CSS_L553_1_CSS_ED2025_12,
+    CSS_L553_1_CSS_ED2026_01,
+    CSS_L553_1_CSS_ED2026_04,
+    CSS_L553_1_CSS_ED2026_06,
+    Personne,
+    action_prescrite,
+};
+
+// Policy for add_calendar_period (section 86) - FORWARD only, "years" step;
+// month_end must be named for calendar_year.
+deadline policy PRESCRIPTION_ANNEES {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+relation creance_exigible_le(p: Personne, echeance: Date) kind empirical {
+    key(p);
+    label fr official "date d'exigibilité de la créance (paiement demandé ou indu notifié)";
+    label en unofficial "date the claim falls due (requested payment or notified indu)";
+}
+
+relation date_appreciation(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "date à laquelle la prescription est appréciée";
+    label en unofficial "date as of which limitation is assessed";
+}
+
+relation manoeuvre_frauduleuse(p: Personne, etablie: Boolean) kind empirical {
+    key(p);
+    label fr official "manoeuvre frauduleuse établie à l'encontre de la personne";
+    label en unofficial "fraudulent scheme established against the person (Boolean flag)";
+}
+
+relation fausse_declaration(p: Personne, etablie: Boolean) kind empirical {
+    key(p);
+    label fr official "fausse déclaration établie à l'encontre de la personne";
+    label en unofficial "false declaration established against the person (Boolean flag)";
+}
+
+relation procedure_recouvrement_indu_en_cours(p: Personne) kind empirical {
+    label fr official "procédure de recouvrement d'indu en cours (L. 553-2, L. 821-5-1, L. 845-3/844-3, L. 262-46 CASF, L. 823-9 CCH)";
+    label en unofficial "ongoing indu recovery procedure (L. 553-1 para. 3 list)";
+}
+
+@source(CSS_L553_1, CSS_L553_1_CSS_ED2021_05, CSS_L553_1_CSS_ED2021_11, CSS_L553_1_CSS_ED2021_12,
+        CSS_L553_1_CSS_ED2022_01, CSS_L553_1_CSS_ED2022_02, CSS_L553_1_CSS_ED2022_03,
+        CSS_L553_1_CSS_ED2022_09, CSS_L553_1_CSS_ED2023_07, CSS_L553_1_CSS_ED2024_01,
+        CSS_L553_1_CSS_ED2025_02, CSS_L553_1_CSS_ED2025_09, CSS_L553_1_CSS_ED2025_12,
+        CSS_L553_1_CSS_ED2026_01, CSS_L553_1_CSS_ED2026_04, CSS_L553_1_CSS_ED2026_06)
+rule PrescriptionDeuxAns(p: Personne, echeance: Date, date: Date) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "L'action pour le paiement et le recouvrement des indus se prescrit par deux ans";
+    label en unofficial "Actions for payment and indu recovery are time-barred after two years";
+    when creance_exigible_le(p, echeance) and date_appreciation(p, date)
+        and date >= add_calendar_period(echeance, 2 calendar_year)
+        and manoeuvre_frauduleuse(p, false) and fausse_declaration(p, false);
+    then action_prescrite(p);
+}
+
+@source(CSS_L553_1, CSS_L553_1_CSS_ED2021_05, CSS_L553_1_CSS_ED2021_11, CSS_L553_1_CSS_ED2021_12,
+        CSS_L553_1_CSS_ED2022_01, CSS_L553_1_CSS_ED2022_02, CSS_L553_1_CSS_ED2022_03,
+        CSS_L553_1_CSS_ED2022_09, CSS_L553_1_CSS_ED2023_07, CSS_L553_1_CSS_ED2024_01,
+        CSS_L553_1_CSS_ED2025_02, CSS_L553_1_CSS_ED2025_09, CSS_L553_1_CSS_ED2025_12,
+        CSS_L553_1_CSS_ED2026_01, CSS_L553_1_CSS_ED2026_04, CSS_L553_1_CSS_ED2026_06)
+rule PrescriptionFraudeCinqAns(p: Personne, echeance: Date, date: Date) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "En cas de manoeuvre frauduleuse ou de fausse déclaration, l'action de l'organisme se prescrit par cinq ans";
+    label en unofficial "In case of fraudulent scheme or false declaration, the body's action is time-barred after five years";
+    when creance_exigible_le(p, echeance) and date_appreciation(p, date)
+        and date >= add_calendar_period(echeance, 5 calendar_year)
+        and manoeuvre_frauduleuse(p, true);
+    then action_prescrite(p);
+}
+
+@source(CSS_L553_1, CSS_L553_1_CSS_ED2021_05, CSS_L553_1_CSS_ED2021_11, CSS_L553_1_CSS_ED2021_12,
+        CSS_L553_1_CSS_ED2022_01, CSS_L553_1_CSS_ED2022_02, CSS_L553_1_CSS_ED2022_03,
+        CSS_L553_1_CSS_ED2022_09, CSS_L553_1_CSS_ED2023_07, CSS_L553_1_CSS_ED2024_01,
+        CSS_L553_1_CSS_ED2025_02, CSS_L553_1_CSS_ED2025_09, CSS_L553_1_CSS_ED2025_12,
+        CSS_L553_1_CSS_ED2026_01, CSS_L553_1_CSS_ED2026_04, CSS_L553_1_CSS_ED2026_06)
+rule PrescriptionFausseDeclarationCinqAns(p: Personne, echeance: Date, date: Date) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "Fausse déclaration: même prescription de cinq ans pour l'organisme";
+    label en unofficial "False declaration: same five-year limitation for the body";
+    when creance_exigible_le(p, echeance) and date_appreciation(p, date)
+        and date >= add_calendar_period(echeance, 5 calendar_year)
+        and fausse_declaration(p, true);
+    then action_prescrite(p);
+}
+
+@source(CSS_L553_1, CSS_L553_1_CSS_ED2021_05, CSS_L553_1_CSS_ED2021_11, CSS_L553_1_CSS_ED2021_12,
+        CSS_L553_1_CSS_ED2022_01, CSS_L553_1_CSS_ED2022_02, CSS_L553_1_CSS_ED2022_03,
+        CSS_L553_1_CSS_ED2022_09, CSS_L553_1_CSS_ED2023_07, CSS_L553_1_CSS_ED2024_01,
+        CSS_L553_1_CSS_ED2025_02, CSS_L553_1_CSS_ED2025_09, CSS_L553_1_CSS_ED2025_12,
+        CSS_L553_1_CSS_ED2026_01, CSS_L553_1_CSS_ED2026_04, CSS_L553_1_CSS_ED2026_06)
+rule InterruptionProcedure(p: Personne) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "La prescription est interrompue tant que l'organisme est dans l'impossibilité de recouvrer du fait d'une procédure";
+    label en unofficial "Limitation interrupted while the body cannot recover due to a procedure - status removed";
+    when procedure_recouvrement_indu_en_cours(p);
+    defeat action_prescrite(p);
+}

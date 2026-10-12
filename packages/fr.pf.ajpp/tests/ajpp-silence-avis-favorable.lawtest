@@ -1,0 +1,23 @@
+// Silence through the second month: request received at month 10,
+// silence recorded through month 12 — the control opinion is deemed
+// favourable; the body decision is not yet (third month).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-silence-avis-favorable" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-saf-01": demande_initiale(entity_ref("urn:fr:pf-ajpp:case:enfant-saf")) { origin case_input; }
+        assert "ajpp-saf-02": demande_recue_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-saf"), 10) { origin case_input; }
+        assert "ajpp-saf-03": silence_observe_jusqu_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-saf"), 12) { origin case_input; }
+    }
+    evaluate truth(avis_silence_repute_favorable(entity_ref("urn:fr:pf-ajpp:case:enfant-saf")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(decision_silence_reputee_favorable(entity_ref("urn:fr:pf-ajpp:case:enfant-saf")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

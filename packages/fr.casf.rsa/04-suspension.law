@@ -1,0 +1,508 @@
+// Suspension and removal (L.262-37/38/39, R.262-68(-1..-7)/69(-1..-8),
+// decree 2025-478 art. 12).
+//
+// DEONTIC MAP: the president (or France Travail on proposal/delegation)
+// MAY suspend or remove, in whole or part, for a fixed duration; the
+// beneficiary MUST be heard first (10 days, team hearing for removal);
+// withheld sums MUST be repaid on compliance (3-month cap); the
+// non-bound (R.262-68-7) MUST NOT be sanctioned. Sanction scales run
+// from the decree's 2025-06-01 entry (B-RSA-SANCTION-PRE202506 for the
+// old scales and the January-May 2025 interim); the pre-2025
+// accompaniment/sanction regime is B-RSA-AVANT-2025.
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+use self::{
+    CASF_L262_28,
+    CASF_L262_28_PRE20260627,
+    CASF_L262_28_PRE20260627_ED2021_03,
+    CASF_L262_28_PRE20260627_ED2021_04,
+    CASF_L262_28_PRE20260627_ED2023_01,
+    CASF_L262_28_PRE20260627_ED2024_01,
+    CASF_L262_28_PRE20260627_ED2024_07,
+    CASF_L262_28_PRE20260627_ED2025_01,
+    CASF_L262_28_PRE20260627_ED2025_06,
+    CASF_L262_29,
+    CASF_L262_29_ED2025_06,
+    CASF_L262_29_ED2026_06,
+    CASF_L262_37,
+    CASF_L262_37_ED2025_06,
+    CASF_L262_37_ED2026_06,
+    CASF_L262_38,
+    CASF_L262_38_ED2025_06,
+    CASF_L262_38_ED2026_06,
+    CASF_L262_39,
+    CASF_L262_39_ED2025_06,
+    CASF_L262_39_ED2026_06,
+    CASF_R262_68,
+    CASF_R262_68_1,
+    CASF_R262_68_1_ED2026_06,
+    CASF_R262_68_2,
+    CASF_R262_68_2_ED2026_06,
+    CASF_R262_68_3,
+    CASF_R262_68_3_ED2026_06,
+    CASF_R262_68_4,
+    CASF_R262_68_4_ED2026_06,
+    CASF_R262_68_6,
+    CASF_R262_68_6_ED2026_06,
+    CASF_R262_68_7,
+    CASF_R262_68_7_ED2026_06,
+    CASF_R262_68_ED2026_06,
+    CASF_R262_69_1,
+    CASF_R262_69_1_ED2026_06,
+    CASF_R262_69_2,
+    CASF_R262_69_2_ED2026_06,
+    CASF_R262_69_5,
+    CASF_R262_69_5_ED2026_06,
+    CASF_R262_69_6,
+    CASF_R262_69_6_ED2026_06,
+    DEC2025_478_ART12,
+    MotifSanction,
+    audition_equipe,
+    avis_equipe,
+    foyer_nb_personnes,
+    inscrit_france_travail,
+    isole_majore,
+    manquement,
+    manquement_persiste,
+    manquement_reitere,
+    mise_en_conformite,
+    motif_legitime,
+    notification_10j,
+    notification_ft,
+    proposition_france_travail,
+    radiation_liste,
+    radiation_sans_versement,
+    reprise_president,
+    sanction_allocation_reference,
+    sanction_montant_mensuel,
+    sanction_suppression,
+    sanction_suspension,
+    sanction_taux,
+    sanction_taux_conforme,
+    sommes_reverses_3mois,
+    suppression_totale_4mois,
+    suspension_duree_conforme,
+    suspension_duree_mois,
+    tenu_obligations_262_28,
+};
+
+// --- Suspension and removal on the president's own motion ---
+@source(
+CASF_L262_37,
+CASF_L262_37_ED2025_06,
+CASF_L262_37_ED2026_06,
+CASF_R262_68,
+CASF_R262_68_ED2026_06,
+CASF_R262_68_7,
+CASF_R262_68_7_ED2026_06,
+CASF_R262_69_1,
+CASF_R262_69_1_ED2026_06,
+CASF_L262_28,
+CASF_L262_28_PRE20260627,
+CASF_L262_28_PRE20260627_ED2021_03,
+CASF_L262_28_PRE20260627_ED2021_04,
+CASF_L262_28_PRE20260627_ED2023_01,
+CASF_L262_28_PRE20260627_ED2024_01,
+CASF_L262_28_PRE20260627_ED2024_07,
+CASF_L262_28_PRE20260627_ED2025_01,
+CASF_L262_28_PRE20260627_ED2025_06)
+rule SuspensionRefusContrat(p: fr.minima.ressources::Personne) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "refus d'élaborer ou d'actualiser le contrat, sans motif légitime : suspension après notification dix jours (L. 262-37, I 1° ; R. 262-68 ; R. 262-69-1)";
+    label en unofficial "refusal to draw up or update the contract, no legitimate reason: suspension after ten-day notice (L. 262-37, I 1°; R. 262-68; R. 262-69-1)";
+    when manquement(p, REFUS_CONTRAT)
+        and not_known(motif_legitime(p))
+        and notification_10j(p)
+        and tenu_obligations_262_28(p);
+    then sanction_suspension(p, REFUS_CONTRAT);
+}
+
+
+@source(
+CASF_L262_37,
+CASF_L262_37_ED2025_06,
+CASF_L262_37_ED2026_06,
+CASF_R262_68_1,
+CASF_R262_68_1_ED2026_06,
+CASF_R262_68_7,
+CASF_R262_68_7_ED2026_06,
+CASF_R262_69_1,
+CASF_R262_69_1_ED2026_06,
+CASF_L262_28,
+CASF_L262_28_PRE20260627,
+CASF_L262_28_PRE20260627_ED2021_03,
+CASF_L262_28_PRE20260627_ED2021_04,
+CASF_L262_28_PRE20260627_ED2023_01,
+CASF_L262_28_PRE20260627_ED2024_01,
+CASF_L262_28_PRE20260627_ED2024_07,
+CASF_L262_28_PRE20260627_ED2025_01,
+CASF_L262_28_PRE20260627_ED2025_06)
+rule SuspensionNonRespectContrat(p: fr.minima.ressources::Personne) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "non-respect des obligations du contrat, sans motif légitime : suspension après notification dix jours (L. 262-37, I 2° ; R. 262-68-1 ; R. 262-69-1)";
+    label en unofficial "breach of the contract obligations, no legitimate reason: suspension after ten-day notice (L. 262-37, I 2°; R. 262-68-1; R. 262-69-1)";
+    when manquement(p, NON_RESPECT_CONTRAT)
+        and not_known(motif_legitime(p))
+        and notification_10j(p)
+        and tenu_obligations_262_28(p);
+    then sanction_suspension(p, NON_RESPECT_CONTRAT);
+}
+
+
+@source(
+CASF_L262_37,
+CASF_L262_37_ED2025_06,
+CASF_L262_37_ED2026_06,
+CASF_R262_68_1,
+CASF_R262_68_1_ED2026_06,
+CASF_R262_68_2,
+CASF_R262_68_2_ED2026_06,
+CASF_R262_68_7,
+CASF_R262_68_7_ED2026_06,
+CASF_R262_69_1,
+CASF_R262_69_1_ED2026_06,
+CASF_L262_28,
+CASF_L262_28_PRE20260627,
+CASF_L262_28_PRE20260627_ED2021_03,
+CASF_L262_28_PRE20260627_ED2021_04,
+CASF_L262_28_PRE20260627_ED2023_01,
+CASF_L262_28_PRE20260627_ED2024_01,
+CASF_L262_28_PRE20260627_ED2024_07,
+CASF_L262_28_PRE20260627_ED2025_01,
+CASF_L262_28_PRE20260627_ED2025_06)
+rule SuspensionDoubleRefusOffre(p: fr.minima.ressources::Personne) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "double refus sans motif légitime d'une offre raisonnable d'emploi : suspension R. 262-68-1 et radiation proposée (L. 262-37, I 2° ; R. 262-68-2)";
+    label en unofficial "two refusals without a legitimate reason of a reasonable job offer: R. 262-68-1 suspension with removal proposed (L. 262-37, I 2°; R. 262-68-2)";
+    when manquement(p, REFUS_OFFRE_RAISONNABLE)
+        and not_known(motif_legitime(p))
+        and notification_10j(p)
+        and tenu_obligations_262_28(p);
+    then sanction_suspension(p, REFUS_OFFRE_RAISONNABLE);
+}
+
+
+@source(
+CASF_L262_37,
+CASF_L262_37_ED2025_06,
+CASF_L262_37_ED2026_06,
+CASF_R262_68_3,
+CASF_R262_68_3_ED2026_06,
+CASF_R262_68_7,
+CASF_R262_68_7_ED2026_06,
+CASF_R262_69_1,
+CASF_R262_69_1_ED2026_06,
+CASF_R262_69_2,
+CASF_R262_69_2_ED2026_06,
+CASF_L262_28,
+CASF_L262_28_PRE20260627,
+CASF_L262_28_PRE20260627_ED2021_03,
+CASF_L262_28_PRE20260627_ED2021_04,
+CASF_L262_28_PRE20260627_ED2023_01,
+CASF_L262_28_PRE20260627_ED2024_01,
+CASF_L262_28_PRE20260627_ED2024_07,
+CASF_L262_28_PRE20260627_ED2025_01,
+CASF_L262_28_PRE20260627_ED2025_06,
+CASF_L262_39,
+CASF_L262_39_ED2025_06,
+CASF_L262_39_ED2026_06)
+rule SuppressionRefusControle(p: fr.minima.ressources::Personne) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "refus de contrôle : suppression après notification et audition d'équipe (L. 262-37, II 3° ; R. 262-68-3 ; R. 262-69-2 ; L. 262-39)";
+    label en unofficial "control refusal: removal after notice and team hearing (L. 262-37, II 3°; R. 262-68-3; R. 262-69-2; L. 262-39)";
+    when manquement(p, REFUS_CONTROLE)
+        and not_known(motif_legitime(p))
+        and notification_10j(p)
+        and audition_equipe(p)
+        and avis_equipe(p)
+        and tenu_obligations_262_28(p);
+    then sanction_suppression(p, REFUS_CONTROLE);
+}
+
+
+@source(
+CASF_L262_37,
+CASF_L262_37_ED2025_06,
+CASF_L262_37_ED2026_06,
+CASF_R262_69_1,
+CASF_R262_69_1_ED2026_06,
+CASF_R262_69_2,
+CASF_R262_69_2_ED2026_06,
+CASF_L262_39,
+CASF_L262_39_ED2025_06,
+CASF_L262_39_ED2026_06)
+rule SuppressionPersistance(p: fr.minima.ressources::Personne, motif: MotifSanction) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "persistance au terme de la suspension : suppression après audition d'équipe (L. 262-37, II 1° ; R. 262-69-2 ; L. 262-39)";
+    label en unofficial "persistence at the end of the suspension: removal after team hearing (L. 262-37, II 1°; R. 262-69-2; L. 262-39)";
+    when manquement_persiste(p, motif)
+        and not_known(motif_legitime(p))
+        and notification_10j(p)
+        and audition_equipe(p)
+        and avis_equipe(p)
+        and tenu_obligations_262_28(p);
+    then sanction_suppression(p, motif);
+}
+
+
+@source(
+CASF_L262_37,
+CASF_L262_37_ED2025_06,
+CASF_L262_37_ED2026_06,
+CASF_R262_68_4,
+CASF_R262_68_4_ED2026_06,
+CASF_R262_69_1,
+CASF_R262_69_1_ED2026_06,
+CASF_R262_69_2,
+CASF_R262_69_2_ED2026_06,
+CASF_L262_39,
+CASF_L262_39_ED2025_06,
+CASF_L262_39_ED2026_06)
+rule SuppressionReiteration(p: fr.minima.ressources::Personne, motif: MotifSanction) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "réitération dans les vingt-quatre mois : suppression après audition d'équipe (L. 262-37, II 2° ; R. 262-68-4 ; R. 262-69-2 ; L. 262-39)";
+    label en unofficial "repetition within twenty-four months: removal after team hearing (L. 262-37, II 2°; R. 262-68-4; R. 262-69-2; L. 262-39)";
+    when manquement_reitere(p, motif)
+        and not_known(motif_legitime(p))
+        and notification_10j(p)
+        and audition_equipe(p)
+        and avis_equipe(p)
+        and tenu_obligations_262_28(p);
+    then sanction_suppression(p, motif);
+}
+
+// --- Rate conformity, 3-month refund, operator path, radiation, transition ---
+@source(
+CASF_R262_68,
+CASF_R262_68_ED2026_06,
+CASF_R262_68_6,
+CASF_R262_68_6_ED2026_06)
+rule TauxConformePlafond(p: fr.minima.ressources::Personne, t: Decimal, n: Integer) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "taux régulier en foyer pluripersonnel : de 30 % à 50 % (R. 262-68 ; R. 262-68-6)";
+    label en unofficial "regular rate in a multi-person household: 30 % to 50 % (R. 262-68; R. 262-68-6)";
+    when sanction_taux(p, t)
+        and foyer_nb_personnes(p, n)
+        and n >= 2
+        and t >= TauxSanctionMini
+        and t <= PlafondSanctionMenage;
+    then sanction_taux_conforme(p);
+}
+
+
+@source(
+CASF_R262_68,
+CASF_R262_68_ED2026_06,
+CASF_R262_68_6,
+CASF_R262_68_6_ED2026_06)
+rule TauxConformePlafondMajore(p: fr.minima.ressources::Personne, t: Decimal) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "taux régulier avec majoration isolement : de 30 % à 50 % (R. 262-68 ; R. 262-68-6)";
+    label en unofficial "regular rate with the lone-parent increase: 30 % to 50 % (R. 262-68; R. 262-68-6)";
+    when sanction_taux(p, t)
+        and isole_majore(p)
+        and t >= TauxSanctionMini
+        and t <= PlafondSanctionMenage;
+    then sanction_taux_conforme(p);
+}
+
+
+@source(
+CASF_R262_68,
+CASF_R262_68_ED2026_06)
+rule TauxConformeSimple(p: fr.minima.ressources::Personne, t: Decimal) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "taux régulier personne seule sans majoration : au moins 30 % (R. 262-68)";
+    label en unofficial "regular rate for a single person without the increase: at least 30 % (R. 262-68)";
+    when sanction_taux(p, t)
+        and foyer_nb_personnes(p, 1)
+        and not_known(isole_majore(p))
+        and t >= TauxSanctionMini;
+    then sanction_taux_conforme(p);
+}
+
+// --- Duration conformity (R.262-68, R.262-68-1; G-A08) ------------------
+//
+// The sanction grounds are derived; the pronouncement (whether, how long,
+// at what rate) arrives as case inputs — the "peut décider" discretion is
+// never invented. These rules review the pronounced duration against the
+// decree bounds: one to two months, one to four on persistence/repetition.
+
+@source(
+CASF_R262_68,
+CASF_R262_68_ED2026_06,
+CASF_R262_68_1,
+CASF_R262_68_1_ED2026_06)
+rule DureeConformePremiere(p: fr.minima.ressources::Personne, motif: MotifSanction, d: Integer) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "durée régulière au premier manquement : un à deux mois (R. 262-68 ; R. 262-68-1)";
+    label en unofficial "regular duration at the first breach: one to two months (R. 262-68; R. 262-68-1)";
+    when sanction_suspension(p, motif)
+        and suspension_duree_mois(p, d)
+        and not_known(manquement_persiste(p, motif))
+        and not_known(manquement_reitere(p, motif))
+        and d >= 1
+        and d <= 2;
+    then suspension_duree_conforme(p);
+}
+
+@source(
+CASF_R262_68,
+CASF_R262_68_ED2026_06,
+CASF_R262_68_1,
+CASF_R262_68_1_ED2026_06)
+rule DureeConformeRepetition(p: fr.minima.ressources::Personne, motif: MotifSanction, motif2: MotifSanction, d: Integer) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "durée régulière en persistance ou réitération : un à quatre mois (R. 262-68 ; R. 262-68-1)";
+    label en unofficial "regular duration on persistence or repetition: one to four months (R. 262-68; R. 262-68-1)";
+    when sanction_suspension(p, motif)
+        and suspension_duree_mois(p, d)
+        and d >= 1
+        and d <= 4
+        and manquement_persiste(p, motif2);
+    then suspension_duree_conforme(p);
+}
+
+@source(
+CASF_R262_68,
+CASF_R262_68_ED2026_06,
+CASF_R262_68_1,
+CASF_R262_68_1_ED2026_06)
+rule DureeConformeReiteration(p: fr.minima.ressources::Personne, motif: MotifSanction, motif2: MotifSanction, d: Integer) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "durée régulière en réitération : un à quatre mois (R. 262-68 ; R. 262-68-1)";
+    label en unofficial "regular duration on repeated breach: one to four months (R. 262-68; R. 262-68-1)";
+    when sanction_suspension(p, motif)
+        and suspension_duree_mois(p, d)
+        and d >= 1
+        and d <= 4
+        and manquement_reitere(p, motif2);
+    then suspension_duree_conforme(p);
+}
+
+
+@source(
+CASF_L262_37,
+CASF_L262_37_ED2025_06,
+CASF_L262_37_ED2026_06)
+rule SommesReversesCourtes(p: fr.minima.ressources::Personne, d: Integer) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "mise en conformité : sommes retenues reversées, suspension de trois mois au plus (L. 262-37, VI)";
+    label en unofficial "back in compliance: withheld sums repaid, suspension of three months or less (L. 262-37, VI)";
+    when mise_en_conformite(p)
+        and suspension_duree_mois(p, d)
+        and d <= 3;
+    then sommes_reverses_3mois(p, d);
+}
+
+
+@source(
+CASF_L262_37,
+CASF_L262_37_ED2025_06,
+CASF_L262_37_ED2026_06)
+rule SommesReversesPlafond(p: fr.minima.ressources::Personne, d: Integer) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "mise en conformité : trois derniers mois reversés si la suspension excède trois mois (L. 262-37, VI)";
+    label en unofficial "back in compliance: last three months repaid if the suspension exceeds three months (L. 262-37, VI)";
+    when mise_en_conformite(p)
+        and suspension_duree_mois(p, d)
+        and d > 3;
+    then sommes_reverses_3mois(p, 3);
+}
+
+
+@source(
+CASF_L262_37,
+CASF_L262_37_ED2025_06,
+CASF_L262_37_ED2026_06,
+CASF_R262_69_5,
+CASF_R262_69_5_ED2026_06,
+CASF_R262_69_6,
+CASF_R262_69_6_ED2026_06,
+CASF_L262_29,
+CASF_L262_29_ED2025_06,
+CASF_L262_29_ED2026_06)
+rule SuspensionFTProposee(p: fr.minima.ressources::Personne, motif: MotifSanction) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "proposition France Travail, organisme référent : suspension prononcée sans reprise du président dans les quinze jours (L. 262-37, IV ; R. 262-69-5/6 ; cadre d'orientation L. 262-29)";
+    label en unofficial "France Travail proposal as referring body: suspension pronounced absent presidential takeover within fifteen days (L. 262-37, IV; R. 262-69-5/6; L. 262-29 orientation framework)";
+    when proposition_france_travail(p, motif)
+        and notification_ft(p)
+        and inscrit_france_travail(p)
+        and tenu_obligations_262_28(p)
+        and not_known(motif_legitime(p))
+        and not_known(reprise_president(p));
+    then sanction_suspension(p, motif);
+}
+
+
+@source(
+CASF_L262_38,
+CASF_L262_38_ED2025_06,
+CASF_L262_38_ED2026_06)
+rule RadiationSansVersement(p: fr.minima.ressources::Personne) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "période sans versement écoulée : radiation de la liste (L. 262-38 al. 1)";
+    label en unofficial "payment-free period elapsed: removal from the list (L. 262-38 al. 1)";
+    when radiation_sans_versement(p);
+    then radiation_liste(p);
+}
+
+
+@source(
+CASF_R262_68,
+CASF_R262_68_ED2026_06)
+rule RadiationSuppressionTotale(p: fr.minima.ressources::Personne) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "suppression totale de quatre mois sans mise en conformité : fin du droit et radiation (R. 262-68 à R. 262-68-3)";
+    label en unofficial "four-month total removal without compliance: entitlement ended and removed (R. 262-68 to R. 262-68-3)";
+    when suppression_totale_4mois(p)
+        and not_known(mise_en_conformite(p));
+    then radiation_liste(p);
+}
+
+
+@source(
+    DEC2025_478_ART12)
+rule MontantTransitoire(p: fr.minima.ressources::Personne, t: Decimal, a: Money) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "transitoire : montant mensuel sanctionné = taux x allocation du dernier mois du trimestre de référence (décret 2025-478 art. 12, I ; jusqu'à l'arrêté, au plus tard 2027-07-01 : B-RSA-DECRET-ARRETE)";
+    label en unofficial "transition: monthly sanctioned amount = rate x last reference-quarter month's allowance (decree 2025-478 art. 12, I; until the order, 2027-07-01 at the latest: B-RSA-DECRET-ARRETE)";
+    when sanction_taux(p, t)
+        and sanction_allocation_reference(p, a);
+    then sanction_montant_mensuel(p, t * a);
+}
+
+// --- Negative guards: mandatory procedure, bound claimants ---
+@source(
+CASF_L262_37,
+CASF_L262_37_ED2025_06,
+CASF_L262_37_ED2026_06,
+CASF_R262_69_1,
+CASF_R262_69_1_ED2026_06)
+rule SuspensionSansProcedure(p: fr.minima.ressources::Personne, motif: MotifSanction) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "manquement sans notification préalable des faits et de la sanction : pas de suspension régulière hors voie France Travail (R. 262-69-1 ; L. 262-37, IV a contrario)";
+    label en unofficial "breach with no prior notice of the facts and sanction: no regular suspension outside the France Travail path (R. 262-69-1; L. 262-37, IV a contrario)";
+    when manquement(p, motif)
+        and tenu_obligations_262_28(p)
+        and not_known(notification_10j(p))
+        and not_known(proposition_france_travail(p, motif));
+    then not sanction_suspension(p, motif);
+}
+
+
+@source(
+CASF_R262_68_7,
+CASF_R262_68_7_ED2026_06)
+rule NonTenuExempte(p: fr.minima.ressources::Personne, motif: MotifSanction) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "non tenu aux obligations L. 262-28 : pas de sanction R. 262-68 à R. 262-68-2 (R. 262-68-7)";
+    label en unofficial "not bound by the L. 262-28 obligations: no R. 262-68 to R. 262-68-2 sanction (R. 262-68-7)";
+    when manquement(p, motif)
+        and not_known(tenu_obligations_262_28(p));
+    then not sanction_suspension(p, motif);
+}

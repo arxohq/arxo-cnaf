@@ -1,0 +1,18 @@
+// No duty without the right (D1 silent): leave taken but residence
+// not established, so no computed total and no VerserAjpaDue position,
+// although the debtor link is stated.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-devoir-versement-sans-droit" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-dvs-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-dvs"), entity_ref("urn:fr:css:ajpa:case:aide-dvs")) { origin case_input; }
+        assert "ajpa-dvs-02": montant_journalier_retenu(entity_ref("urn:fr:css:ajpa:case:aidant-dvs"), 60.00 EUR) { origin case_input; }
+        assert "ajpa-dvs-03": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-dvs")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserAjpaDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

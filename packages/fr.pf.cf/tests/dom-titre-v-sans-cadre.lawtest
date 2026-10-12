@@ -1,0 +1,52 @@
+// Missing Title V inputs, two households. Household A in Saint-Barthélemy
+// states the L755-3 base 400 and BMAF 100 but the retained Title V frame is
+// absent, so both available amounts stay silent while scope holds. Household
+// B in Saint-Martin has the retained frame but states neither base nor BMAF,
+// so both available amounts stay silent while scope holds. No department
+// conclusion opens for either household.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-titre-v-sans-cadre" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "dsc-01": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-a"), SAINT_BARTHELEMY) { origin case_input; }
+        assert "dsc-02": base_dom_retenue(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-a"), 400.00 EUR) { origin case_input; }
+        assert "dsc-03": bmaf_retenu(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-a"), 100.00 EUR) { origin case_input; }
+        assert "dsc-04": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-b"), SAINT_MARTIN) { origin case_input; }
+        assert "dsc-05": cadre_cf_titre_v_remplie(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-b")) { origin case_input; }
+    }
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-a")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_montant_disponible(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-a"), 166.60 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_majore_disponible(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-a"), 62.48 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_droit_ouvert(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-a")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-b")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_montant_disponible(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-b"), 166.60 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_majore_disponible(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-b"), 62.48 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_droit_ouvert(entity_ref("urn:fr:pf-cf:case:dom-tv-sans-cadre-b")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

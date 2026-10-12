@@ -1,0 +1,18 @@
+// ASF judicial claim at the floor: cessation month gives March, floor is March - due from March, both branches agree (R. 552-2 II 5).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-dues-asf-juge-egalite" {
+    given {
+        context { decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "dues-asf-juge-egalite-01": fixation_judiciaire_apres_recouvrement(entity_ref("urn:fr:pf:case:asf-egalite")) { origin case_input; }
+        assert "dues-asf-juge-egalite-02": cessation_defaut_mois(entity_ref("urn:fr:pf:case:asf-egalite"), @2026-02-01) { origin case_input; }
+        assert "dues-asf-juge-egalite-03": plancher_3_mois_demande(entity_ref("urn:fr:pf:case:asf-egalite"), @2026-03-01) { origin case_input; }
+        assert "dues-asf-juge-egalite-04": conditions_asf_reunies(entity_ref("urn:fr:pf:case:asf-egalite")) { origin case_input; }
+    }
+    evaluate truth(prestations_dues_a_compter(entity_ref("urn:fr:pf:case:asf-egalite"), @2026-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

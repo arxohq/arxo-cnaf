@@ -1,0 +1,18 @@
+// 66-day career cap exceeded in the 2021 edition: 70 days recorded
+// in 2021 — outside the statutory ceiling, no record either way.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-carriere-66-2021-depassement" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ajpa-cd21-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-cd21"), entity_ref("urn:fr:css:ajpa:case:aide-cd21")) { origin case_input; }
+        assert "ajpa-cd21-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-cd21")) { origin adjudicated; }
+        assert "ajpa-cd21-03": jours_ajpa_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-cd21"), 70) { origin case_input; }
+    }
+    evaluate truth(ajpa_dans_limite_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-cd21")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,22 @@
+// Wrong benefit for 1° purpose: alimentary claim but benefit is AEEH (2° benefit), no listed 1° benefit - no 1° seizure (L. 553-4 I, PC-R03-03).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-saisie-mauvaise-prestation" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "saisie-mauvaise-01": parent_charge(entity_ref("urn:fr:pf:case:saisie-mauv"), entity_ref("urn:fr:pf:case:enfant-mauv")) { origin case_input; }
+        assert "saisie-mauvaise-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:saisie-mauv"), entity_ref("urn:fr:pf:case:enfant-mauv")) { origin adjudicated; }
+        assert "saisie-mauvaise-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-mauv")) { origin case_input; }
+        assert "saisie-mauvaise-04": reside_france_stable(entity_ref("urn:fr:pf:case:saisie-mauv")) { origin case_input; }
+        assert "saisie-mauvaise-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-mauv")) { origin case_input; }
+        assert "saisie-mauvaise-06": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:saisie-mauv")) { origin case_input; }
+        assert "saisie-mauvaise-07": saisie_alimentaire_possible(entity_ref("urn:fr:pf:case:saisie-mauv")) { origin case_input; }
+        assert "saisie-mauvaise-08": creance_1degre_alimentaire_l581(entity_ref("urn:fr:pf:case:saisie-mauv")) { origin case_input; }
+        assert "saisie-mauvaise-09": prestation_aeeh_2degre(entity_ref("urn:fr:pf:case:saisie-mauv")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(SaisieCas1Degre, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

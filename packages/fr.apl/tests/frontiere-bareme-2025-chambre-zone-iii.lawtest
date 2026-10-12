@@ -1,0 +1,28 @@
+// БАРЕМ С 1 ОКТЯБРЯ 2025 ГОДА: комната в зоне III. Плафон 244,91 € — это
+// 90 % плафона одинокого лица (272,12 €), округлённые до сантима самим
+// арретэ (ст. 8). Точный итог — 237,18884075 €.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-bareme-2025-chambre-zone-iii" {
+    given {
+        context { decision_time @2025-11-15T12:00:00Z; knowledge_time @2025-11-15T12:00:00Z; legal_time @2025-11-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-01": secteur_locatif(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii")) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-02": zone_du_logement(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), ZONE_III) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-03": aide_demandee(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), APL) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-04": situation_familiale(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), PERSONNE_SEULE) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-05": personnes_a_charge(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), 0) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-06": loyer_principal(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), 250 EUR) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-07": ressources_du_menage(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), 6000 EUR) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-08": mode_location(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), LOCATION_SEULE) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-09": forme_logement(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), CHAMBRE) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), 0 EUR) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), false) { origin case_input; }
+        assert "frontiere-bareme-2025-chambre-zone-iii-12": territoire(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-chambre-zone-iii"), 237.18884075 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

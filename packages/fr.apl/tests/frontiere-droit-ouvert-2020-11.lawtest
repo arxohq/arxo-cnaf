@@ -1,0 +1,40 @@
+// Месяц права — ноябрь 2020 года, САМЫЙ РАННИЙ, который пакет умеет считать
+// (барем главы III открывается редакцией от 1 октября 2020 года).
+//
+// ЧТО ЗДЕСЬ БЫЛО СЛОМАНО ДО 14.09.2026. Редакция кодекса была ОДНА и
+// начиналась 1 января 2021 года, поэтому в октябре—декабре 2020 года не
+// действовала НИ ОДНА редакция кодекса: нормы, у которых все якоря в кодексе
+// (открытие права, причитающееся пособие, вычет RLS), в этом месяце права были
+// мертвы по E-0095, и статика этого не показывала. Барем при этом считался —
+// у его правил есть якоря в арретэ, и они спасали.
+//
+// После перестройки редакция кодекса — ПОЛНОЕ состояние охвата на дату, и
+// первое состояние открывается 1 сентября 2019 года: норма открытия права
+// отвечает и здесь — запросом к органу по каналу §47.3.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-droit-ouvert-2020-11" {
+    given {
+        context { decision_time @2020-11-15T12:00:00Z; knowledge_time @2020-11-15T12:00:00Z; legal_time @2020-11-15; timezone "Europe/Paris"; }
+        assert "frontiere-droit-ouvert-2020-11-01": secteur_locatif(entity_ref("urn:fr:apl:case:frontiere-2020-11")) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-02": zone_du_logement(entity_ref("urn:fr:apl:case:frontiere-2020-11"), ZONE_I) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-03": aide_demandee(entity_ref("urn:fr:apl:case:frontiere-2020-11"), APL) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-04": situation_familiale(entity_ref("urn:fr:apl:case:frontiere-2020-11"), PERSONNE_SEULE) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-05": personnes_a_charge(entity_ref("urn:fr:apl:case:frontiere-2020-11"), 0) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-06": loyer_principal(entity_ref("urn:fr:apl:case:frontiere-2020-11"), 400 EUR) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-07": ressources_du_menage(entity_ref("urn:fr:apl:case:frontiere-2020-11"), 7800 EUR) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-08": mode_location(entity_ref("urn:fr:apl:case:frontiere-2020-11"), LOCATION_SEULE) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-09": forme_logement(entity_ref("urn:fr:apl:case:frontiere-2020-11"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:frontiere-2020-11"), 0 EUR) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:frontiere-2020-11"), false) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-12": occupation_residence_principale(entity_ref("urn:fr:apl:case:frontiere-2020-11")) { origin case_input; }
+        assert "frontiere-droit-ouvert-2020-11-13": territoire(entity_ref("urn:fr:apl:case:frontiere-2020-11"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(droit_ouvert(entity_ref("urn:fr:apl:case:frontiere-2020-11")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == REQUIRES_JUDGMENT;
+    expect judgment_request(logement_decent, OrganismePayeur);
+}

@@ -1,0 +1,23 @@
+// D. 532-2: the L. 533-1 exams were missed with the fund-established
+// absence of legitimate reasons, and the PMI head doctor's request was
+// transmitted 2025-06-10 — the suspension takes effect in the following
+// calendar month (2025-07-01). First scenario: inputs only, the rule builds
+// the effect. RETURN 2026-10-08: affirmative sans_motif_legitime_examens,
+// not missing evidence.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-suspension-accordee" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "susp-01": examens_l5331_non_passes(entity_ref("urn:fr:paje:case:susp"), entity_ref("urn:fr:paje:enfant:susp")) { origin adjudicated; }
+        assert "susp-02": sans_motif_legitime_examens(entity_ref("urn:fr:paje:case:susp"), entity_ref("urn:fr:paje:enfant:susp")) { origin adjudicated; }
+        assert "susp-03": demande_medecin_pmi(entity_ref("urn:fr:paje:case:susp"), entity_ref("urn:fr:paje:enfant:susp"), @2025-06-10) { origin adjudicated; }
+        assert "susp-04": mois_effet_suspension(entity_ref("urn:fr:paje:case:susp"), entity_ref("urn:fr:paje:enfant:susp"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(suspension_versement_paje(entity_ref("urn:fr:paje:case:susp"), entity_ref("urn:fr:paje:enfant:susp"), @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

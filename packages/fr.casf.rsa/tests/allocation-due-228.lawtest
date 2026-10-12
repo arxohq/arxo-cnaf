@@ -1,0 +1,35 @@
+// W2 interface figures: MF 600.00 with 300.00 income and 72.00
+// retained housing aid gives an upstream quarterly amount DUE of 228.00
+// (600 - 372, R. 262-7 I average of the monthly MF-minus-resources
+// intermediates). The consumer takes the due AS the allowance
+// (L. 262-2 al. 2: "porte les ressources du foyer au niveau du montant
+// forfaitaire"); it never subtracts the due from the MF again (D-26,
+// D-44: the old double subtraction claimed 372.00, paying the
+// household its own retained resources). The 300/72 split is the W2
+// dossier's fund-established upstream input, not a pinned RSA figure;
+// the RSA-side contract tested here is due 228.00 -> allowance 228.00.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-allocation-due-228" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "due228-01": mf_base(entity_ref("urn:fr:rsa:case:allocation-due-228"), 600.00 EUR) { origin case_input; }
+        assert "due228-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:allocation-due-228"), 1) { origin case_input; }
+        assert "due228-03": mois_droit(entity_ref("urn:fr:rsa:case:allocation-due-228"), @2026-04-01) { origin case_input; }
+        assert "due228-04": residence_stable(entity_ref("urn:fr:rsa:case:allocation-due-228")) { origin case_input; }
+        assert "due228-05": age_charge_condition(entity_ref("urn:fr:rsa:case:allocation-due-228")) { origin case_input; }
+        assert "due228-06": sejour_travail_condition(entity_ref("urn:fr:rsa:case:allocation-due-228")) { origin case_input; }
+        assert "due228-07": conjoint_enfants_comptes(entity_ref("urn:fr:rsa:case:allocation-due-228")) { origin case_input; }
+        assert "due228-08": fr.minima.ressources::montant_du_trimestre(entity_ref("urn:fr:rsa:case:allocation-due-228"), 228.00 EUR) { origin case_input; }
+    }
+    evaluate truth(droit_rsa(entity_ref("urn:fr:rsa:case:allocation-due-228"), @2026-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(allocation_mensuelle(entity_ref("urn:fr:rsa:case:allocation-due-228"), @2026-04-01, 228.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

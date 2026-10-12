@@ -1,0 +1,37 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Several children in Guadeloupe: the metropolitan computation on
+// the L. 551-1 base is mirrored (D. 755-5, I; D-PFAF-DOM-BASE).
+// Band 1, two children, BMAF 400.00 EUR stated assumption: 128.00.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-dom-plusieurs-enfants" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "domm-01": territoire(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), GUADELOUPE) { origin case_input; }
+        assert "domm-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 2) { origin case_input; }
+        assert "domm-03": ressources_menage(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 30000 EUR) { origin case_input; }
+        assert "domm-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 55950 EUR) { origin case_input; }
+        assert "domm-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 78300 EUR) { origin case_input; }
+        assert "domm-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 5595 EUR) { origin case_input; }
+        assert "domm-05": bmaf_retenu(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 400.00 EUR) { origin case_input; }
+        assert "domm-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 0) { origin case_input; }
+        assert "domm-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 0) { origin case_input; }
+        assert "domm-08": forfait_total_menage(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 0 EUR) { origin case_input; }
+        assert "domm-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 0) { origin case_input; }
+        assert "domm-10": foyer_du_cas(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants")) { origin case_input; }
+    }
+    evaluate truth(af_droit_ouvert(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af_dom(entity_ref("urn:fr:pf-af:case:dom-plusieurs-enfants"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

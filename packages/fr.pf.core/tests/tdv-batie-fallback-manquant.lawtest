@@ -1,0 +1,28 @@
+// Fallback missing: built value inapplicable but no occupied-dwelling amount - no retained value, no evaluation (R. 553-3-1 1°, PC-R04-04 missing-component control).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-batie-fallback-manquant" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-batie-manquant-01": batie_valeur_locative_inapplicable(entity_ref("urn:fr:pf:case:repli-manquant")) { origin case_input; }
+        assert "tdv-batie-manquant-02": valeur_locative_non_batie(entity_ref("urn:fr:pf:case:repli-manquant"), 0 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-manquant-03": depenses_travaux(entity_ref("urn:fr:pf:case:repli-manquant"), 2000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-manquant-04": depenses_domestiques(entity_ref("urn:fr:pf:case:repli-manquant"), 0 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-manquant-05": valeur_venale_vehicules(entity_ref("urn:fr:pf:case:repli-manquant"), 12000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-manquant-06": depenses_equipement(entity_ref("urn:fr:pf:case:repli-manquant"), 1500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-manquant-07": valeur_venale_art(entity_ref("urn:fr:pf:case:repli-manquant"), 0 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-manquant-08": depenses_loisirs(entity_ref("urn:fr:pf:case:repli-manquant"), 1000.00 EUR, 0.5) { origin case_input; }
+        assert "tdv-batie-manquant-09": depenses_clubs(entity_ref("urn:fr:pf:case:repli-manquant"), 500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-manquant-10": capitaux_fin_periode(entity_ref("urn:fr:pf:case:repli-manquant"), 10000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-manquant-11": prestation_soumise_section(entity_ref("urn:fr:pf:case:repli-manquant")) { origin case_input; }
+        assert "tdv-batie-manquant-12": depenses_foyer_periode_reference(entity_ref("urn:fr:pf:case:repli-manquant")) { origin case_input; }
+        assert "tdv-batie-manquant-13": vehicules_date_disposition(entity_ref("urn:fr:pf:case:repli-manquant"), @2026-02-15) { origin case_input; }
+        assert "tdv-batie-manquant-14": art_date_disposition(entity_ref("urn:fr:pf:case:repli-manquant"), @2026-02-20) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_train_vie(entity_ref("urn:fr:pf:case:repli-manquant"), 12600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

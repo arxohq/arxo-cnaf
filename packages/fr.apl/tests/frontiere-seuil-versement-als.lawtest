@@ -1,0 +1,29 @@
+// ПОРОГ ВЫПЛАТЫ, вторая половина пары: те же входы, что в
+// frontiere-seuil-versement-apl.lawtest, но аид — социальная аллокация,
+// и порог ст. 12 равен десяти евро. Итог 6.0316618 € ниже
+// порога, поэтому выплата не производится.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-seuil-versement-als" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frontiere-seuil-versement-als-01": secteur_locatif(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als")) { origin case_input; }
+        assert "frontiere-seuil-versement-als-02": zone_du_logement(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), ZONE_III) { origin case_input; }
+        assert "frontiere-seuil-versement-als-03": aide_demandee(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), ALS) { origin case_input; }
+        assert "frontiere-seuil-versement-als-04": situation_familiale(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), PERSONNE_SEULE) { origin case_input; }
+        assert "frontiere-seuil-versement-als-05": personnes_a_charge(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), 0) { origin case_input; }
+        assert "frontiere-seuil-versement-als-06": loyer_principal(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), 280 EUR) { origin case_input; }
+        assert "frontiere-seuil-versement-als-07": ressources_du_menage(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), 12800 EUR) { origin case_input; }
+        assert "frontiere-seuil-versement-als-08": mode_location(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), LOCATION_SEULE) { origin case_input; }
+        assert "frontiere-seuil-versement-als-09": forme_logement(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "frontiere-seuil-versement-als-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), 0 EUR) { origin case_input; }
+        assert "frontiere-seuil-versement-als-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), false) { origin case_input; }
+        assert "frontiere-seuil-versement-als-12": territoire(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_non_versee(entity_ref("urn:fr:apl:case:frontiere-seuil-versement-als")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,55 @@
+// Прочтение D-83 выбрано в context (`interpretation ArrondiLignesDss;`): суммы AF — округлённые
+// строки таблицы DSS, итог — их сумма (08-lecture-arrondi-lignes.law). Ожидания — строки
+// закреплённой таблицы DSS/SD2B/2023/41 (revalorisation/sources/dss-2023-41.txt), BMAF 445,93 € с 01.04.2023
+// (фрагмент DSS_2B_2023_41_BMAF): majoration «16 % 71,35 … 8% 35,67» (:217). Те же дети, что в
+// majoration-alternee-moitie: двое на постоянном попечении и один в résidence alternée (15 лет в июне 2023).
+// Полная надбавка — строка 71,35; половинная (R. 521-4 al. 2) — строка половинной ставки 8 %: 35,67,
+// а не половина округлённой строки (71,35 / 2 = 35,675 → 35,68 таблица не печатает). Полоса 1: ресурсы
+// 30 000 ≤ I(3) = 59 330 + 3 × 5 932 = 77 126 (DSS_SD2B_2022_283_PLAFOND_AF, 2023).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-lignes-dss-2023-majoration-alternee" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation ArrondiLignesDss; }
+        assert "l83-01": territoire(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), METROPOLE) { origin case_input; }
+        assert "l83-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 3) { origin case_input; }
+        assert "l83-03": ressources_menage(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 30000 EUR) { origin case_input; }
+        assert "l83-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 59330 EUR) { origin case_input; }
+        assert "l83-05": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 83029 EUR) { origin case_input; }
+        assert "l83-06": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 5932 EUR) { origin case_input; }
+        assert "l83-07": bmaf_retenu(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 445.93 EUR) { origin case_input; }
+        assert "l83-08": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 2) { origin case_input; }
+        assert "l83-09": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 1) { origin case_input; }
+        assert "l83-10": forfait_total_menage(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 0 EUR) { origin case_input; }
+        assert "l83-11": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 0) { origin case_input; }
+        assert "l83-12": foyer_du_cas(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee")) { origin case_input; }
+        assert "l83-13": mois_droit(@2023-06-01) { origin case_input; }
+        assert "l83-14": enfants_propres(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), 2) { origin case_input; }
+        assert "l83-15": enfants_alternes(1) { origin case_input; }
+        assert "l83-16": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), entity_ref("urn:fr:pf-af:child:aine-l83")) { origin case_input; }
+        assert "l83-17": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), entity_ref("urn:fr:pf-af:child:cadet-l83")) { origin case_input; }
+        assert "l83-18": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:lignes-dss-2023-majoration-alternee"), entity_ref("urn:fr:pf-af:child:partage-l83")) { origin case_input; }
+        assert "l83-19": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:aine-l83")) { origin case_input; }
+        assert "l83-20": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:cadet-l83")) { origin case_input; }
+        assert "l83-21": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:partage-l83")) { origin case_input; }
+        assert "l83-22": date_naissance(entity_ref("urn:fr:pf-af:child:aine-l83"), @2004-02-01) { origin case_input; }
+        assert "l83-23": date_naissance(entity_ref("urn:fr:pf-af:child:cadet-l83"), @2006-09-01) { origin case_input; }
+        assert "l83-24": date_naissance(entity_ref("urn:fr:pf-af:child:partage-l83"), @2008-03-01) { origin case_input; }
+        assert "l83-25": enfant_du_cas(entity_ref("urn:fr:pf-af:child:aine-l83")) { origin case_input; }
+        assert "l83-26": enfant_du_cas(entity_ref("urn:fr:pf-af:child:cadet-l83")) { origin case_input; }
+        assert "l83-27": enfant_du_cas(entity_ref("urn:fr:pf-af:child:partage-l83")) { origin case_input; }
+        assert "l83-28": garde(entity_ref("urn:fr:pf-af:child:aine-l83"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "l83-29": garde(entity_ref("urn:fr:pf-af:child:cadet-l83"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "l83-30": garde(entity_ref("urn:fr:pf-af:child:partage-l83"), RESIDENCE_ALTERNEE_PARTAGE) { origin case_input; }
+    }
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:child:partage-l83"), 35.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:child:aine-l83"), 71.35 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

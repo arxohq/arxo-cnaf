@@ -1,0 +1,18 @@
+// Monthly pieces duty, paid trainees (D4 active): training,
+// debtor-body link and the concerned month recorded — the
+// TransmettreAttestationFormateur position is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-pieces-stagiaire" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-dps-01": stagiaire_formation_remuneree(entity_ref("urn:fr:pf-ajpp:case:parent-dps")) { origin case_input; }
+        assert "ajpp-dps-02": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-dps")) { origin case_input; }
+        assert "ajpp-dps-03": mois_concerne_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-dps"), @2024-03-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreAttestationFormateur, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,32 @@
+// РАВНО ДО САНТИМА: их 230.63, наше точное 230.625. Их модель округляет
+// промежуточные величины до сантима, текст этого не велит — закреплён НАШ ответ.
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calculette_globale.catala_fr, scope Exemple2.
+// ПЕРЕНОС ТАБЛИЦЕЙ: их калькулятор (AL.CalculetteAidesAuLogementGardeAlternée) сам выводит право и вид пособия; дело переписано плоскими входами наёма ALF: célibataire → PersonneSeule, 2 ребёнка (2008, 2011) на иждивении, Zone2, loyer 500 €, bailleur privé (не конвенционирован → аллокация, с детьми — ALF), Сен-Пьер-и-Микелон, ресурсы 12 500 € — те же входы, что у al_locatif Exemple4
+// ИХ ОЖИДАНИЕ: montant_versé = 230.63.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-calculette_globale-exemple2-montant-vers" {
+    given {
+        context { decision_time @2023-04-01T12:00:00Z; knowledge_time @2023-04-01T12:00:00Z; legal_time @2023-04-01; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "calculette_globale-exemple2-01": secteur_locatif(entity_ref("urn:fr:apl:case:calculette_globale-exemple2")) { origin case_input; }
+        assert "calculette_globale-exemple2-02": aide_demandee(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), ALF) { origin case_input; }
+        assert "calculette_globale-exemple2-03": loyer_principal(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), 500 EUR) { origin case_input; }
+        assert "calculette_globale-exemple2-04": ressources_du_menage(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), 12500 EUR) { origin case_input; }
+        assert "calculette_globale-exemple2-05": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), false) { origin case_input; }
+        assert "calculette_globale-exemple2-06": personnes_a_charge(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), 2) { origin case_input; }
+        assert "calculette_globale-exemple2-07": situation_familiale(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), PERSONNE_SEULE) { origin case_input; }
+        assert "calculette_globale-exemple2-08": zone_du_logement(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), ZONE_II) { origin case_input; }
+        assert "calculette_globale-exemple2-09": territoire(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), SAINT_PIERRE_ET_MIQUELON) { origin case_input; }
+        assert "calculette_globale-exemple2-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), 0 EUR) { origin case_input; }
+        assert "calculette_globale-exemple2-11": mode_location(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), LOCATION_SEULE) { origin case_input; }
+        assert "calculette_globale-exemple2-12": forme_logement(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), LOGEMENT_ORDINAIRE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:calculette_globale-exemple2"), 230.625 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

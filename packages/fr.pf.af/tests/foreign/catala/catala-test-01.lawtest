@@ -1,0 +1,72 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Catala AF Test1 (2020-05-01, Metropole, resources 30 000):
+// children 2007/2009 (full custody), 2003 in shared custody with
+// shared allowances, 2001 earning 1 100 (no right opened).
+// Their case -> our answer -> class: REPORT.md (Catala, 1).
+// Structure here: 3 right-openers, band 1, the 2003 child opens
+// the supplement at half the band-1 rate (R. 521-4 al. 2, halves
+// every shared-custody supplement; their 351.54 pays it full: (c)).
+// Monthly 292.00 + 32.00 = 324.00 under the stated BMAF 400.00.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-catala-test-01" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2020-05-01T12:00:00Z; knowledge_time @2020-05-01T12:00:00Z; legal_time @2020-05-01; timezone "Europe/Paris"; }
+        assert "ct01-01": territoire(entity_ref("urn:fr:pf-af:foreign:catala-01"), METROPOLE) { origin case_input; }
+        assert "ct01-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:foreign:catala-01"), 3) { origin case_input; }
+        assert "ct01-03": ressources_menage(entity_ref("urn:fr:pf-af:foreign:catala-01"), 30000 EUR) { origin case_input; }
+        assert "ct01-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:foreign:catala-01"), 55950 EUR) { origin case_input; }
+        assert "ct01-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:foreign:catala-01"), 78300 EUR) { origin case_input; }
+        assert "ct01-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:foreign:catala-01"), 5595 EUR) { origin case_input; }
+        assert "ct01-05": bmaf_retenu(entity_ref("urn:fr:pf-af:foreign:catala-01"), 400.00 EUR) { origin case_input; }
+        assert "ct01-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:foreign:catala-01"), 0) { origin case_input; }
+        assert "ct01-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:foreign:catala-01"), 1) { origin case_input; }
+        assert "ct01-08": forfait_total_menage(entity_ref("urn:fr:pf-af:foreign:catala-01"), 0 EUR) { origin case_input; }
+        assert "ct01-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:foreign:catala-01"), 0) { origin case_input; }
+        assert "ct01-10": foyer_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-01")) { origin case_input; }
+        assert "ct01-11": mois_droit(@2020-05-01) { origin case_input; }
+        assert "ct01-12": enfants_propres(entity_ref("urn:fr:pf-af:foreign:catala-01"), 2) { origin case_input; }
+        assert "ct01-13": enfants_alternes(1) { origin case_input; }
+        assert "ct01-14": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:catala-01"), entity_ref("urn:fr:pf-af:foreign:catala-01-e1")) { origin case_input; }
+        assert "ct01-15": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:catala-01"), entity_ref("urn:fr:pf-af:foreign:catala-01-e2")) { origin case_input; }
+        assert "ct01-16": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:catala-01"), entity_ref("urn:fr:pf-af:foreign:catala-01-e3")) { origin case_input; }
+        assert "ct01-17": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:catala-01"), entity_ref("urn:fr:pf-af:foreign:catala-01-e4")) { origin case_input; }
+        assert "ct01-18": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-01-e1")) { origin case_input; }
+        assert "ct01-19": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-01-e2")) { origin case_input; }
+        assert "ct01-20": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-01-e3")) { origin case_input; }
+        assert "ct01-21": date_naissance(entity_ref("urn:fr:pf-af:foreign:catala-01-e1"), @2007-01-01) { origin case_input; }
+        assert "ct01-22": date_naissance(entity_ref("urn:fr:pf-af:foreign:catala-01-e2"), @2009-01-01) { origin case_input; }
+        assert "ct01-23": date_naissance(entity_ref("urn:fr:pf-af:foreign:catala-01-e3"), @2003-01-01) { origin case_input; }
+        assert "ct01-24": date_naissance(entity_ref("urn:fr:pf-af:foreign:catala-01-e4"), @2001-01-01) { origin case_input; }
+        assert "ct01-25": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-01-e1")) { origin case_input; }
+        assert "ct01-26": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-01-e2")) { origin case_input; }
+        assert "ct01-27": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-01-e3")) { origin case_input; }
+        assert "ct01-28": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-01-e4")) { origin case_input; }
+        assert "ct01-29": garde(entity_ref("urn:fr:pf-af:foreign:catala-01-e1"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "ct01-30": garde(entity_ref("urn:fr:pf-af:foreign:catala-01-e2"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "ct01-31": garde(entity_ref("urn:fr:pf-af:foreign:catala-01-e3"), RESIDENCE_ALTERNEE_PARTAGE) { origin case_input; }
+        assert "ct01-32": garde(entity_ref("urn:fr:pf-af:foreign:catala-01-e4"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+    }
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:foreign:catala-01"), BANDE_1));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(majoration_eligible(entity_ref("urn:fr:pf-af:foreign:catala-01-e3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:foreign:catala-01-e3"), 32.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:foreign:catala-01"), 324.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

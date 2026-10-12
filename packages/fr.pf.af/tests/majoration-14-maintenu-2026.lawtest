@@ -1,0 +1,49 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Transitional 14 kept after 01.03.2026: same child (born 2012-02-15,
+// 14th birthday before 01.03.2026), claimed month 2026-03-01 (ED2026_03).
+// Decree 2026-138 art. 2 keeps 14: eligible, 64.00. Pair of
+// majoration-14-avant-2026 (pre-reform edition).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-majoration-14-maintenu-2026" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2026-03-01T12:00:00Z; knowledge_time @2026-03-01T12:00:00Z; legal_time @2026-03-01; timezone "Europe/Paris"; }
+        assert "m14m-01": territoire(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), METROPOLE) { origin case_input; }
+        assert "m14m-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), 2) { origin case_input; }
+        assert "m14m-03": ressources_menage(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), 30000 EUR) { origin case_input; }
+        assert "m14m-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), 55950 EUR) { origin case_input; }
+        assert "m14m-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), 78300 EUR) { origin case_input; }
+        assert "m14m-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), 5595 EUR) { origin case_input; }
+        assert "m14m-05": bmaf_retenu(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), 400.00 EUR) { origin case_input; }
+        assert "m14m-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), 1) { origin case_input; }
+        assert "m14m-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), 0) { origin case_input; }
+        assert "m14m-08": forfait_total_menage(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), 0 EUR) { origin case_input; }
+        assert "m14m-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), 0) { origin case_input; }
+        assert "m14m-10": foyer_du_cas(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026")) { origin case_input; }
+        assert "m14m-11": mois_droit(@2026-03-01) { origin case_input; }
+        assert "m14m-12": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), entity_ref("urn:fr:pf-af:child:aine-14m")) { origin case_input; }
+        assert "m14m-13": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:majoration-14-maintenu-2026"), entity_ref("urn:fr:pf-af:child:cadet-14m")) { origin case_input; }
+        assert "m14m-14": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:aine-14m")) { origin case_input; }
+        assert "m14m-15": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:cadet-14m")) { origin case_input; }
+        assert "m14m-16": date_naissance(entity_ref("urn:fr:pf-af:child:aine-14m"), @2008-05-01) { origin case_input; }
+        assert "m14m-17": date_naissance(entity_ref("urn:fr:pf-af:child:cadet-14m"), @2012-02-15) { origin case_input; }
+        assert "m14m-18": enfant_du_cas(entity_ref("urn:fr:pf-af:child:aine-14m")) { origin case_input; }
+        assert "m14m-19": enfant_du_cas(entity_ref("urn:fr:pf-af:child:cadet-14m")) { origin case_input; }
+        assert "m14m-20": garde(entity_ref("urn:fr:pf-af:child:aine-14m"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "m14m-21": garde(entity_ref("urn:fr:pf-af:child:cadet-14m"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+    }
+    evaluate truth(age_requis_atteint(entity_ref("urn:fr:pf-af:child:cadet-14m")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:child:cadet-14m"), 64.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

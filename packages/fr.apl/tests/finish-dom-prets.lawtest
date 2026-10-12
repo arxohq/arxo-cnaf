@@ -1,0 +1,110 @@
+// DOM applicability of home-improvement loans (23, CSS L. 755-21-1):
+// both L. 542-9 regimes apply in L. 751-1 collectivities under unchanged
+// 1/2 conditions. DOM heads need the residence finding plus the base
+// eligibility head; households without the finding keep base eligibility
+// but derive no DOM head (absence is not negation).
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-dom-pret-logement-eligible" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdom1-01": allocataire_prestations_familiales(entity_ref("urn:fr:apl:case:fdom1")) { origin case_input; }
+        assert "fdom1-02": qualite_logement_pret(entity_ref("urn:fr:apl:case:fdom1"), PROPRIETAIRE_EMPRUNTEUR) { origin case_input; }
+        assert "fdom1-03": travaux_amelioration_logement(entity_ref("urn:fr:apl:case:fdom1")) { origin case_input; }
+        assert "fdom1-04": reside_collectivite_l751_1(entity_ref("urn:fr:apl:case:fdom1")) { origin case_input; }
+        // D-42: D. 542-35: loans go only to allocataires who are owners, tenants or
+        // D-42: good-faith occupants "des locaux qu'ils habitent"; the model (23
+        // D-42: EligiblePretLogement) takes that finding, which the case omitted.
+        assert "fdom1-hab": habite_locaux_ameliorer(entity_ref("urn:fr:apl:case:fdom1")) { origin case_input; }
+    }
+    evaluate truth(eligible_pret_amelioration_dom(entity_ref("urn:fr:apl:case:fdom1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-dom-pret-accueil-eligible" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdom2-01": assistant_maternel(entity_ref("urn:fr:apl:case:fdom2")) { origin case_input; }
+        assert "fdom2-02": qualite_lieu_accueil(entity_ref("urn:fr:apl:case:fdom2"), LOCATAIRE_EMPRUNTEUR) { origin case_input; }
+        assert "fdom2-03": travaux_lieu_accueil(entity_ref("urn:fr:apl:case:fdom2")) { origin case_input; }
+        assert "fdom2-04": reside_collectivite_l751_1(entity_ref("urn:fr:apl:case:fdom2")) { origin case_input; }
+        // D-42: D. 542-35 al. 2: "les depenses des travaux de mise aux normes ... d'une
+        // D-42: maison d'assistant maternel ne sont pas eligibles"; the model (23
+        // D-42: EligiblePretAccueilLieu) asks for the finding that the works are other
+        // D-42: works, which the case omitted.
+        assert "fdom2-hors-normes": travaux_hors_mise_aux_normes_mam(entity_ref("urn:fr:apl:case:fdom2")) { origin case_input; }
+    }
+    evaluate truth(eligible_pret_assistant_maternel_dom(entity_ref("urn:fr:apl:case:fdom2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-dom-pret-metro-base-eligible" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdom3-01": allocataire_prestations_familiales(entity_ref("urn:fr:apl:case:fdom3")) { origin case_input; }
+        assert "fdom3-02": qualite_logement_pret(entity_ref("urn:fr:apl:case:fdom3"), PROPRIETAIRE_EMPRUNTEUR) { origin case_input; }
+        assert "fdom3-03": travaux_amelioration_logement(entity_ref("urn:fr:apl:case:fdom3")) { origin case_input; }
+        // D-42: D. 542-35: loans go only to allocataires who are owners, tenants or
+        // D-42: good-faith occupants "des locaux qu'ils habitent"; the model (23
+        // D-42: EligiblePretLogement) takes that finding, which the case omitted.
+        assert "fdom3-hab": habite_locaux_ameliorer(entity_ref("urn:fr:apl:case:fdom3")) { origin case_input; }
+    }
+    evaluate truth(eligible_pret_amelioration(entity_ref("urn:fr:apl:case:fdom3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-dom-pret-metro-sans-dom" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdom4-01": allocataire_prestations_familiales(entity_ref("urn:fr:apl:case:fdom4")) { origin case_input; }
+        assert "fdom4-02": qualite_logement_pret(entity_ref("urn:fr:apl:case:fdom4"), PROPRIETAIRE_EMPRUNTEUR) { origin case_input; }
+        assert "fdom4-03": travaux_amelioration_logement(entity_ref("urn:fr:apl:case:fdom4")) { origin case_input; }
+    }
+    evaluate truth(eligible_pret_amelioration_dom(entity_ref("urn:fr:apl:case:fdom4")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-dom-pret-sans-travaux" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdom5-01": allocataire_prestations_familiales(entity_ref("urn:fr:apl:case:fdom5")) { origin case_input; }
+        assert "fdom5-02": qualite_logement_pret(entity_ref("urn:fr:apl:case:fdom5"), PROPRIETAIRE_EMPRUNTEUR) { origin case_input; }
+        assert "fdom5-03": reside_collectivite_l751_1(entity_ref("urn:fr:apl:case:fdom5")) { origin case_input; }
+    }
+    evaluate truth(eligible_pret_amelioration_dom(entity_ref("urn:fr:apl:case:fdom5")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-dom-pret-accueil-mam-exclu" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdom6-01": assistant_maternel(entity_ref("urn:fr:apl:case:fdom6")) { origin case_input; }
+        assert "fdom6-02": qualite_lieu_accueil(entity_ref("urn:fr:apl:case:fdom6"), LOCATAIRE_EMPRUNTEUR) { origin case_input; }
+        assert "fdom6-03": travaux_lieu_accueil(entity_ref("urn:fr:apl:case:fdom6")) { origin case_input; }
+        assert "fdom6-04": depenses_mise_aux_normes_mam(entity_ref("urn:fr:apl:case:fdom6")) { origin case_input; }
+        assert "fdom6-05": reside_collectivite_l751_1(entity_ref("urn:fr:apl:case:fdom6")) { origin case_input; }
+    }
+    evaluate truth(eligible_pret_assistant_maternel_dom(entity_ref("urn:fr:apl:case:fdom6")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

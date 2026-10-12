@@ -1,0 +1,16 @@
+// Extra delegated competences with a conventional remuneration: the
+// body may receive it (D. 262-62).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-remuneration-convention" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "remu-01": remuneration_ouvrable(entity_ref("urn:fr:rsa:org:caf")) { origin case_input; }
+        assert "remu-02": remuneration_fixee_convention(entity_ref("urn:fr:rsa:org:caf")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PercevoirRemunerationConvention, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

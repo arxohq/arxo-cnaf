@@ -1,0 +1,19 @@
+// Downstream N-2 link: with the reference year established (2024 for a 2026
+// payment period per R. 532-3), counted resources equal the reference-year net
+// categorical income. Companion to ressources-annee-reference, which pins the
+// engine gap on the Integer year computation itself.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-ressources-n2-lien-aval" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ressources-n2-lien-aval-01": annee_reference(entity_ref("urn:fr:pf:case:ressources-n2-aval"), 2024) { origin case_input; }
+        assert "ressources-n2-lien-aval-02": revenu_net_categoriel(entity_ref("urn:fr:pf:case:ressources-n2-aval"), 2024, 20000 EUR) { origin case_input; }
+    }
+    evaluate truth(ressources_totales(entity_ref("urn:fr:pf:case:ressources-n2-aval"), 20000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

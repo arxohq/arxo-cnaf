@@ -1,0 +1,31 @@
+// СЕН-ПЬЕР-И-МИКЕЛОН: ВЗНОСОВ НЕТ. Входы дела Catala «Exemple4» AL найма (апрель
+// 2023 года): L 424,22 + C 81,56 − Pp 131,30095 = 374,47905; минорация 5 → 369,47905.
+// В метрополии шаг взносов дал бы 368,8474 (округление к нижнему евро и возврат
+// CRDS); на Сен-Пьере CRDS не взимается — LO 6414-1 II 1° CGCT отдаёт
+// коллективности «impôts, droits et taxes». Шаг D. 823-16 остаётся: вычесть
+// ноль, округлить к нижнему евро, вернуть ноль — 369 €. Catala: то же.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-saint-pierre-contributions-nulles" {
+    given {
+        context { decision_time @2023-04-15T12:00:00Z; knowledge_time @2023-04-15T12:00:00Z; legal_time @2023-04-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "spm-crds-01": secteur_locatif(entity_ref("urn:fr:apl:case:spm-crds-2023")) { origin case_input; }
+        assert "spm-crds-02": aide_demandee(entity_ref("urn:fr:apl:case:spm-crds-2023"), ALF) { origin case_input; }
+        assert "spm-crds-03": zone_du_logement(entity_ref("urn:fr:apl:case:spm-crds-2023"), ZONE_II) { origin case_input; }
+        assert "spm-crds-04": situation_familiale(entity_ref("urn:fr:apl:case:spm-crds-2023"), PERSONNE_SEULE) { origin case_input; }
+        assert "spm-crds-05": personnes_a_charge(entity_ref("urn:fr:apl:case:spm-crds-2023"), 2) { origin case_input; }
+        assert "spm-crds-06": loyer_principal(entity_ref("urn:fr:apl:case:spm-crds-2023"), 500 EUR) { origin case_input; }
+        assert "spm-crds-07": ressources_du_menage(entity_ref("urn:fr:apl:case:spm-crds-2023"), 12500 EUR) { origin case_input; }
+        assert "spm-crds-08": mode_location(entity_ref("urn:fr:apl:case:spm-crds-2023"), LOCATION_SEULE) { origin case_input; }
+        assert "spm-crds-09": forme_logement(entity_ref("urn:fr:apl:case:spm-crds-2023"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "spm-crds-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:spm-crds-2023"), 0 EUR) { origin case_input; }
+        assert "spm-crds-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:spm-crds-2023"), false) { origin case_input; }
+        assert "spm-crds-12": territoire(entity_ref("urn:fr:apl:case:spm-crds-2023"), SAINT_PIERRE_ET_MIQUELON) { origin case_input; }
+    }
+    evaluate truth(aide_apres_contributions(entity_ref("urn:fr:apl:case:spm-crds-2023"), 369 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

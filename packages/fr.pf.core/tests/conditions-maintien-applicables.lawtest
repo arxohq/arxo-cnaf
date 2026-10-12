@@ -1,0 +1,15 @@
+// Ongoing conditions during maintien: maintien applies - opening conditions stay applicable (R. 552-4).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-conditions-maintien-applicables" {
+    given {
+        context { decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "conditions-maintien-applicables-01": maintien_applicable(entity_ref("urn:fr:pf:case:enfant-decede")) { origin case_input; }
+    }
+    evaluate truth(conditions_maintien_applicables(entity_ref("urn:fr:pf:case:enfant-decede")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

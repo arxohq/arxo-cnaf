@@ -1,0 +1,16 @@
+// Pension via intermediation refused: debtor parent on benefits and intermediation, but no consent - no levy (L. 553-4 I, PC-R03-03).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-pension-intermediation-sans-accord" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "pension-sans-accord-01": parent_debiteur_beneficiaire_pf(entity_ref("urn:fr:pf:case:parent-sans")) { origin case_input; }
+        assert "pension-sans-accord-02": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:parent-sans")) { origin case_input; }
+        assert "pension-sans-accord-03": intermediation_financiere_l5821(entity_ref("urn:fr:pf:case:parent-sans")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(PrelevementPensionIntermediation, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

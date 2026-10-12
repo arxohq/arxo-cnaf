@@ -1,0 +1,31 @@
+// OpenFisca AAH case (tests/formulas/aah/aah_couple.yaml, period 2023-08):
+// couple, claimant actif with retained quarterly base 990.33/month,
+// spouse income negligible (12 euros/year, fed as 0.00 — REPORT note).
+// Their rate 971.37, their expectation 767.85.
+// Ours, quarterly couple track: (3 x 971.37 x 1.81 - 3 x 990.33) / 3
+// = (5274.5391 - 2970.99) / 3 = 767.8497 (their cent-rounded 767.85;
+// no cent-rounding rule in scope, exact Decimal asserted).
+// Their case -> our answer -> class: REPORT.md (OpenFisca, 2).
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-of-2023-08-conjugalise" {
+    given {
+        context { decision_time @2023-08-15T12:00:00Z; knowledge_time @2023-08-15T12:00:00Z; legal_time @2023-08-15; timezone "Europe/Paris"; }
+        assert "of0823-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:foreign:of-2023-08")) { origin adjudicated; }
+        assert "of0823-02": age_droit_depasse(entity_ref("urn:fr:css-aah:foreign:of-2023-08")) { origin case_input; }
+        assert "of0823-03": residence_permanente(entity_ref("urn:fr:css-aah:foreign:of-2023-08")) { origin case_input; }
+        assert "of0823-04": sejour_regulier(entity_ref("urn:fr:css-aah:foreign:of-2023-08")) { origin case_input; }
+        assert "of0823-05": percoit_revenu_activite(entity_ref("urn:fr:css-aah:foreign:of-2023-08")) { origin case_input; }
+        assert "of0823-06": en_couple(entity_ref("urn:fr:css-aah:foreign:of-2023-08")) { origin case_input; }
+        assert "of0823-07": montant_mensuel_retenu(971.37 EUR) { origin case_input; }
+        assert "of0823-08": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:foreign:of-2023-08"), 2970.99 EUR) { origin case_input; }
+        assert "of0823-09": ressources_conjoint_retenues(entity_ref("urn:fr:css-aah:foreign:of-2023-08"), 0.00 EUR) { origin case_input; }
+        assert "of0823-10": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_ancien(entity_ref("urn:fr:css-aah:foreign:of-2023-08"), 767.8497 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

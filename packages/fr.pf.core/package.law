@@ -1,0 +1,238 @@
+// Shared package surface: socle types, case facts and predicates.
+// Norms L. 511-1 - L. 584-1 (except series L. 521-* and L. 531-*) + R. 512-1,
+// R. 512-2, R. 532-3 + FINISH payment-core: L. 552-2/4/6, L. 554-2/3,
+// R. 514-1, R. 552-1..4, R. 553-1/2/3(+1..7), D. 552-6/7, D. 553-1..5
+// (CSS snapshot 2026-10-06; payment/recovery rules - fr.prestations.versement).
+//
+// Module map:
+//   01-sources.law            - sources, back-to-back editions, fragments (generated)
+//   02-enfant-charge.law      - R. 512-2, L. 512-3, R. 512-1: child in care
+//   03-allocataire.law        - L. 513-1, L. 512-1, L. 512-4/5/6: allocataire
+//   04-bmaf.law               - L. 551-1: BMAF classification (amounts - bareme.json, ex-B-PFCORE-BAREME)
+//   05-ressources-n2.law      - R. 532-3: N-2 year, resource facts, concubinage
+//   06-prescription.law       - L. 553-1: 2/5-year limitation, interruption
+//   07-recouvrement.law       - L. 553-2/2-1/3/4/5: indu, 10%, unseizability
+//   08-devoir-paiement.law    - fund duty L. 511-1 + L. 583-1, L. 552-2/6,
+//                                sanctions L. 554-2/3 (restored FINISH payment-core)
+//   09a-prestations.law       - series L. 522/523/532/533/541/543/544/545,
+//                                L. 542-9, L. 552-*: principles, powers,
+//                                time limits (computation - benefit packages)
+//   09b-creances.law          - L. 581-584: maintenance claims, intermediation,
+//                                advances, data transmission
+//   10-service-dates.law      - R. 514-1, R. 552-1..4, L. 552-4/7, D. 552-7,
+//                                R. 553-2: service, due/cessation dates
+//   11-train-de-vie.law       - R. 553-3(+1..7): lifestyle scale, procedure
+//   12-cumul-5322.law         - L. 532-2 I-V, 2026 + 2018 cohorts (D72; II prev + 2026 delta)
+//
+// SCOPE BOUNDARIES (full list - README, "Boundaries" section):
+// B-PFCORE-BAREME - REMOVED 2026-10-06: BMAF and ceiling euros published
+//   by DSS/2B/2026/46 + DSS/2B/2025/177 (pinned in fr.css.revalorisation),
+//   transcribed to bareme.json (95 self-checked rows);
+//   the package derives threshold conditions and shares, not amounts.
+// B-PFCORE-SMIC-PRE2026 - SMIC pinned by fr.travail.smic only
+//   from 01.01.2026: cases with earlier legal_time yield MISSING.
+// B-PFCORE-CGI - revenu net categoriel details (art. 156, 158, 157 bis, 83,
+//   81 quater CGI) - package fr.tax.income_for_pf (CNAF-INCPF, wave 1,
+//   sibling session); amounts arrive here as provenanced facts.
+// B-PFCORE-DATES-MOIS - NARROWED 2026-10-08 (FINISH payment-core):
+//   R. 552-2/3 execute through caller-stated first-day-of-month anchors +
+//   SERVICE_MOIS steps (10-service-dates.law); backward month steps stay
+//   caller-stated (B-PFCORE-MOIS-PRECEDENT); titres de sejour (D. 512-1/2)
+//   still outside scope. Retenues scale (D. 553-1) - fr.prestations.versement.
+// B-PFCORE-MOIS-PRECEDENT - no backward month step exists (policies are
+//   FORWARD-only): CMG preceding month and ASF 3-month floor arrive as
+//   stated anchors; rules select and guard, never compute backwards.
+// B-PFCORE-MOIS-FIN-LECTURE - RESOLVED 2026-10-08 (PC-R03-01): R. 552-3 IV
+//   endpoints are month_end_of(add_calendar_period(deces, 3 calendar_month))
+//   (E-0084 term, no policy/calendar read); Mar 10 -> Jun 30, May 12 -> Aug 31.
+// B-PFCORE-DELEGUE-MAX - L. 552-6/L. 755-4 several-benefits case: the
+//   case states the highest-paying organ (metropole: organisme_montant_
+//   le_plus_eleve; DOM: organisme_montant_le_plus_eleve_eligible among
+//   non-prime benefits); the cross-benefit maximum is computed upstream,
+//   not derived here. Single-benefit cases state the serving organ
+//   (DOM: eligible serving organ); the prime forfaitaire (L. 524-5 II)
+//   is excluded at benefit level (L. 755-4 al. 2, PC-R04-05: single
+//   needs no prime, multi selects the highest eligible payer).
+// B-PFCORE-TDV-VEHICULE-ITEMISE - R. 553-3-1 5 per-vehicle test ("de
+//   chaque bien"): cases are not itemised, the caller states the
+//   qualifying sum and the rule re-tests the aggregate.
+// B-PFCORE-L5527-FENETRE - L. 552-7 NOTA applicability (decree date vs
+//   2022-01-01): new rules open 2022-01-31; existing ArsDecesApresJuin
+//   (09a) opens 2022-01-01 and is preserved (finding F-01, journaled).
+// B-PFCORE-L5322-II-PREV - RESOLVED 2026-10-08: the predecessor II rule
+//   is authored (NonCumulPrepareIndemnitesPrev, 2018 list); the two
+//   2026-only items (conge supplementaire de naissance, L. 623-2) have
+//   dedicated 2026-gated rules. B-PFCORE-L5322-II-MAP - the caller maps
+//   the two new items to the dedicated relations only, never to the
+//   shared 09a percoit_indemnite_concurrente (2018-listed items, both
+//   cohorts); post-2025 overlap on the shared head is consistent.
+// B-PFCORE-ANNEE2-REQUETE - pf-core-10 (wave 3): no genuine package-side
+//   fix exists - the rule is correct, the query literal lowers engine-side
+//   (Number 2024/1 vs Integer head, D-11 class); recorded 2026-10-08
+//   without type tricks, no code change.
+// B-PFCORE-DOM-LIVRE7 - DOM special provisions of Book VII (L. 751-* ff.)
+//   out of scope; in scope - L. 512-6 and R. 512-1 (metropole). D73
+//   2026-10-08: L. 755-4 has 3 DOM rules in 08 (PC-R03-09 metropole/DOM
+//   split, prime exclusion DOM-only); D. 755-2 has 1 applicability rule
+//   in fr.prestations.versement 06. Territory is caller-stated
+//   (beneficiaire_dom_l7554 / beneficiaire_departements_l7511);
+//   the metropole rules of 08 read the explicit negative
+//   not beneficiaire_dom_l7554 (SPEC 69): metropole is stated, not
+//   presumed; with neither polarity stated no territory rule fires
+//   (D-42 12.10.2026: the earlier "absence reads as metropole" note
+//   never matched the rules).
+// B-PFCORE-L5534-EXTERNAL - L. 553-4 renvois are input facts, not rules:
+//   L. 511-1 benefit scope, L. 742-1 voluntary contributions, L. 582-1
+//   intermediation mechanics, L. 581-1/3 recovery (priority in 09b),
+//   L. 541-1 establishments; the III decree modalities are unpinned.
+// B-PFCORE-D5526-ACTORS - D. 552-6 authority actors (DASEN under rector
+//   delegation, 4+2 ministers) are recorded in rule labels, not as typed
+//   entities; typed AutoriteAcademique/Ministre entities deferred (would
+//   widen the package surface for static designations).
+// B-PFCORE-DUES-KEY-PERSONNE - due/cessation date heads key on the person
+//   only: single-benefit cases; cross-benefit same-person cases derive
+//   one date each and cannot co-represent (recorded 2026-10-08).
+// B-PFCORE-N2-INTEGER-FN - engine gap (observed 2026-10-06): Integer literals
+//   in function bodies are not evaluated (silent absence, check stays green),
+//   so rule AnneeReference (R. 532-3, N-2) yields NEITHER; downstream link
+//   RessourcesPropres is scenario-proven. Ratchet: flips to TRUE_ONLY when the
+//   engine learns Integer constant folding.
+// B-PFCORE-NEGATION-ABSENCE - negative outcomes read NEITHER (negation as
+//   absence); no FALSE_ONLY verdict exists in the corpus for defeated
+//   defeasible conclusions - negatives are absence-of-position, not classical
+//   false (D-11/decimal-truth theme untouched).
+// B-PFCORE-JUGEMENT-CHARGE - the allocataire charge channel is judicial:
+//   charge_effective_permanente is an external-judgment relation; without the
+//   Organisme assessment the allocataire question needs judgment
+//   (REQUIRES_JUDGMENT + judgment_request).
+// B-PFCORE-POLICY-CONTEXT - calendar steps (add_calendar_period, §86/E-0029)
+//   need a deadline_policy bound in the evaluation context; package policies:
+//   ENFANT_VINGT_ANS, PRESCRIPTION_ANNEES, RECOUVREMENT_DELAI, SERVICE_MOIS,
+//   TRAIN_VIE_DELAI. Units are singular (calendar_year, calendar_month,
+//   calendar_day); plural forms are rejected.
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+import fr.travail.smic version "0.1.0";
+
+pub entity Personne {
+    label fr official "personne physique demandant ou recevant des prestations familiales";
+    label en unofficial "natural person claiming or receiving family benefits";
+}
+
+pub entity Enfant {
+    label fr official "enfant au titre duquel des prestations familiales sont demandées";
+    label en unofficial "child in respect of whom family benefits are claimed";
+}
+
+pub entity Organisme {
+    label fr official "organisme débiteur des prestations familiales (caisse)";
+    label en unofficial "body owing family benefits (fund)";
+}
+
+pub entity Juridiction {
+    label fr official "juridiction prononçant la condamnation (L. 554-3)";
+    label en unofficial "court handing down the conviction (L. 554-3)";
+}
+
+pub entity OrganismeNational {
+    label fr official "organisme national chargé de la coordination (R. 553-3-7)";
+    label en unofficial "national coordinating body (R. 553-3-7)";
+}
+
+pub entity Ministre {
+    label fr official "ministre chargé de la sécurité sociale (R. 553-3-7)";
+    label en unofficial "minister for social security (R. 553-3-7)";
+}
+
+pub entity Bien {
+    label fr official "bien pris en compte dans l'évaluation forfaitaire du train de vie (R. 553-3-1)";
+    label en unofficial "item counted in the scheduled lifestyle evaluation (R. 553-3-1)";
+}
+
+pub entity RegimeAssuranceMaladie {
+    label fr official "régime obligatoire d'assurance maladie communiquant au fisc (L. 583-4)";
+    label en unofficial "compulsory health-insurance scheme reporting to the tax administration (L. 583-4)";
+}
+
+pub entity AdministrationFiscale {
+    label fr official "administration fiscale destinataire des transmissions (L. 583-4, L. 583-5)";
+    label en unofficial "tax administration receiving the transmissions (L. 583-4, L. 583-5)";
+}
+
+pub relation parent_charge(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "la personne assume la charge de l'enfant (lien de filiation ou de fait)";
+    label en unofficial "person has the child in their care (link)";
+}
+
+pub relation allocataire(p: Personne) kind institutional {
+    key(p);
+    label fr official "les prestations familiales sont dues à la personne (L. 513-1)";
+    label en unofficial "person is the allocataire: benefits are due to them (L. 513-1)";
+}
+
+pub relation enfant_ouvre_droit(e: Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant ouvre droit aux prestations familiales (L. 512-3)";
+    label en unofficial "child opens entitlement to family benefits (L. 512-3)";
+}
+
+pub relation organisme_debiteur_pf(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "l'organisme est débiteur des prestations familiales de la personne";
+    label en unofficial "body owes the person's family benefits (case fact)";
+}
+
+pub relation prestation_versee(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "les prestations dues ont été versées à la personne";
+    label en unofficial "benefits due have been paid to the person (performance)";
+}
+
+pub relation action_prescrite(p: Personne) kind institutional {
+    key(p);
+    label fr official "l'action (paiement ou recouvrement) est prescrite (L. 553-1)";
+    label en unofficial "action (for payment or recovery) time-barred (L. 553-1)";
+}
+
+pub relation indu_recupere_retenues(p: Personne) kind institutional {
+    key(p);
+    label fr official "l'indu est récupéré par retenues sur les prestations à venir";
+    label en unofficial "overpayment recovered by deductions from future benefits";
+}
+
+pub relation indemnite_frais_gestion(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "indemnité de frais de gestion: 10 % des sommes réclamées (L. 553-2 al. 1)";
+    label en unofficial "management-cost indemnity: 10% of the amounts claimed (L. 553-2 para. 1)";
+}
+
+pub relation fraude_reiteree(p: Personne) kind institutional {
+    key(p);
+    label fr official "réitération de la fraude dans les cinq ans de la notification (taux doublé, L. 553-2 al. 3)";
+    label en unofficial "repeat fraud within five years of notification (rate doubled, L. 553-2 para. 3)";
+}
+
+pub relation indu_constate(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "paiement indu de prestations familiales constaté, montant réclamé";
+    label en unofficial "established family-benefit overpayment, amount claimed";
+}
+
+pub relation option_remboursement_unique(p: Personne) kind empirical {
+    label fr official "l'allocataire opte pour le remboursement intégral en un seul versement (L. 553-2 al. 1)";
+    label en unofficial "allocataire opted for full repayment in a single payment (L. 553-2 para. 1)";
+}
+
+pub relation indu_frauduleux(p: Personne) kind empirical {
+    label fr official "le versement indu résulte d'une manoeuvre frauduleuse de l'allocataire (L. 553-4 I)";
+    label en unofficial "overpayment results from the allocataire's fraudulent scheme (L. 553-4 I)";
+}
+
+pub relation indu_fausse_declaration(p: Personne) kind empirical {
+    label fr official "le versement indu résulte d'une fausse déclaration de l'allocataire (L. 553-4 I, seconde branche)";
+    label en unofficial "overpayment results from the allocataire's false declaration (L. 553-4 I, second branch)";
+}

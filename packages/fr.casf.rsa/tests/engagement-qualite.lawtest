@@ -1,0 +1,16 @@
+// Quality engagement: the instructing body defines it jointly with
+// the president, toward the claimant (D. 262-29, body side).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-engagement-qualite" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "qual-01": organisme_competent(entity_ref("urn:fr:rsa:org:caf"), entity_ref("urn:fr:rsa:case:engagement-qualite")) { origin case_input; }
+        assert "qual-02": departement_competent(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:case:engagement-qualite")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DefinirEngagementQualiteOrganisme, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

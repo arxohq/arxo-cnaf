@@ -1,0 +1,16 @@
+// 2015 text with the L. 531-10 case: death cessation does not apply (R. 552-3 III prev exception).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cessent-deces-prev-exception" {
+    given {
+        context { decision_time @2021-08-15T12:00:00Z; knowledge_time @2021-08-15T12:00:00Z; legal_time @2021-08-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "cessent-deces-prev-exception-01": deces_proche_mois(entity_ref("urn:fr:pf:case:deces-l5310"), @2021-05-01) { origin case_input; }
+        assert "cessent-deces-prev-exception-02": cas_exception_l531_10(entity_ref("urn:fr:pf:case:deces-l5310")) { origin case_input; }
+    }
+    evaluate truth(prestations_cessent_a_compter(entity_ref("urn:fr:pf:case:deces-l5310"), @2021-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

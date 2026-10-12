@@ -1,0 +1,773 @@
+// Package dictionary: free choice of childcare supplement (CMG, wave 3).
+// The rules of `02-`–`09-` derive values from the pinned fragments; the
+// case supplies the household situation, N-2 resources, the BMAF, the
+// SMIC and CPI factors, the care expenses and the examination facts
+// (provenance — case facts; BMAF and ceilings are neighbours
+// `fr.pf.core`/`fr.tax.income_for_pf`, SMIC is `fr.travail.smic` — see
+// README and boundaries).
+//
+// DEONTIC MAP OVER PINNED TEXTS ONLY (bytes of 01-sources.law; outside
+// them — boundary, not conjecture).
+//
+//   D1. Duty of the fund to pay. «L'aide est versée par l'organisme
+//   débiteur de prestations familiales» (L. 531-6, all wordings) +
+//   «le complément est versé mensuellement ... sur justification des
+//   dépenses» (D. 531-21, VI, reform). Triggers on the computed amount
+//   plus the filed justification. The duty-holder in the texts —
+//   the «debtor fund of the case» link is empirical
+//   (fr.pf.core::organisme_debiteur_pf), performance is the empirical
+//   fact cmg_verse. Window [@2021-01-01, ∞); tiers-payant variant
+//   09.2024–02.2025 (direct payment to the association/enterprise).
+//   D2. No «ne sont pas dues» exceptions in the CMG scope except the
+//   age and hour gates, which are modelled as right conditions, not
+//   defeaters: no defeaters.
+//   N1/N2 (FINISH paje-cmg). L. 531-9, para. 1 «n'est pas cumulable»
+//   (full-rate PreParE, then daily allowances for the same child) is
+//   a prohibition concluded as a literal head
+//   (cumul_prepare_plein_interdit / cumul_indemnite_interdit): the
+//   result is a premise for the payment stage
+//   (fr.prestations.versement, wave 5), not a registry row — the
+//   phase-1 literal-head criterion. The VI exception («sauf si») is an
+//   affirmative established fact prepare_plein_hors_vi (RETURN 2026-10-08:
+//   missing evidence must not prove absence); prepare_verse_titre_vi
+//   (positive) and prepare_plein_hors_vi (affirmative non-VI) are mutually
+//   exclusive fund inputs. The 2014 NOTA cohort (born/adopted from
+//   01.10.2014) is an explicit civil-record gate cohorte_l5319_2014 on the
+//   PreParE bar (all periods — the 2014 reform cohort persists; see
+//   journal); hors_cohorte_l5319_2014 is the affirmative pre-cutoff birth
+//   input, mutually exclusive with the gate (FULL RETURN 03 — the same
+//   input-pair shape as the VI exception). The 2025-12 cohort NOTA is a
+//   civil-record gate on the daily-allowance bar. L. 531-9, para. 2
+//   delegates the part-time
+//   reduction to decree: the decree halves are already executed through
+//   D. 531-21 (05/06, preparer_temps_partiel), so no new value rule — the
+//   delegating norm is pinned and anchored here.
+//   L. 531-8-1 «est minoré à hauteur de» builds the minoré levy from
+//   two established amounts (prelevement_cesu_minore).
+//   Recipient duties: declare specific hours on the expense attestation
+//   (D. 531-22, I B); file the dematerialised declaration with the
+//   recovery body within the deadline (D. 531-24 — CNAF-PFPAJE, read
+//   never: boundary B-CMG-DECLARATION).
+//   Powers: the fund controls specific hours yearly and recovers the
+//   undue majoration (D. 531-22, I C) — power PouvoirRecouvrerMajoration.
+//   No fund sanctions beyond recovery in scope; cross recovery under
+//   L. 553-2 is package fr.prestations.versement (wave 5).
+//   Time limits: monthly payment within one month of the justification
+//   (D. 531-21, VI) — the deadline date is derived by the rule from the
+//   justification date (add_calendar_period, B-PFAF precedent), the rule
+//   records lateness.
+//
+// LAYER BOUNDARIES (omission records, not norms):
+// B-CMG-BMAF: BMAF series (L. 551-1) — neighbour fr.pf.core; case fact.
+// B-CMG-SMIC-REVALO: SMIC-growth factors of the 8/15 and 4.85/10.38
+// figures remain unpinned (DSS/arrete) case inputs, DSS_PENDING.
+// CMG resource ceilings use DSS-published bases and per-child supplements.
+// B-CMG-FLOOR-EURO: RSA forfait figures (L. 262-2 amount for an isolated
+// person with one child, R. 262-9 deduction) — neighbours fr.casf.rsa
+// (wave 4); the floor FORMULA is built, the euro inputs are case facts.
+// B-CMG-N2: N-2 resources under R. 532-1..8 — fr.tax.income_for_pf; case
+// facts ressources_annuelles / revenu_mensuel_brut.
+// B-CMG-EAJE-SEUIL: EAJE capacity threshold (R. 2324-46) and tariff-scope
+// figures — external, case facts.
+// B-CMG-AGE-BASE: the L. 531-1/D. 531-1 base age figure — fr.pf.paje
+// (wave 3); ages arrive as fund-established facts.
+// B-CMG-ARRONDI-EURO: monthly income rounded to the nearest euro
+// (0.50 up, D. 531-18 2°) — round(., 0, HALF_UP) at the income rule.
+// B-CMG-ARRONDI-CENTIMES: the final aid is rounded to cents for payment
+// (payment mechanics, text names no rounding) — round(., 2, HALF_UP).
+// B-CMG-FORMULE-NEGATIVE: at the 8500 ceiling the formula can yield a
+// slightly negative aid; the text sets no floor — computed as is.
+// B-CMG-FRATRIE: the most-favourable-sibling clause of the differential
+// extinction — per-child rules; the cross-child maximum is not built.
+// B-CMG-DECLARATION: D. 531-24 procedure (CNAF-PFPAJE) — read never.
+// B-CMG-V-BIS-MORT-NE: L. 531-5 V bis (non-payment suspension, law
+// 2025-199) is MODIFIE_MORT_NE — never in force, not pinned, no rule.
+// B-CMG-TRANSFERT-18-1: old D. 531-18-1 ED2022 carries a TRANSFERE flag
+// with fin 2025-06-13; the edition is kept continuous to 2025-09-01.
+// B-CMG-L531-9-PREPARE (FINISH paje-cmg): the cross-benefit payment
+// exclusion (CMG vs PreParE/daily allowance) needs the versement
+// stage (fr.prestations.versement, wave 5); the markers conclude,
+// individual amounts still compute (same class as B-PAJE2-COUPLE-CUMUL).
+// B-CMG-L531-8-MONTANT (FINISH paje-cmg): L. 531-8 itself is unpinned
+// (outside the FINISH group) and the L. 133-5-10/12 levy mechanics
+// belong to the recovery body; both rule inputs are established facts.
+// B-CMG-L531-9-COHORTE-2014 (FINISH paje-cmg, RETURN 2026-10-08: now
+// modelled): the 2014-wording NOTA (children born/adopted from 01.10.2014)
+// is the explicit civil-record gate cohorte_l5319_2014 on both PreParE-bar
+// rules (all periods — adopted reading: the 2014 reform cohort persists
+// through the 2025-09/2025-12 wordings for the unchanged para. 1 bar; the
+// fund establishes birth/adoption dates). No isolated-parent fringe remains
+// unproven. Pre-2014-10-01 children conclude NEITHER on the PreParE bar;
+// the at-cutoff child (born 01.10.2014, «à partir du») carries the gate.
+// hors_cohorte_l5319_2014 is the affirmative pre-cutoff input (FULL
+// RETURN 03); neither input established stays a distinct NEITHER control.
+//
+// Scenarios: tests/cm-*.lawtest (families fr.pf.cmg#formule,
+// #ancien-bareme, #structure, #cumul-alternance, #devoir-versement,
+// #non-cumul in law.toml): inputs→value; boundary pairs (ceilings,
+// 16h, 25h, 50%, ages 3/6/12, wording pairs
+// 2024-09/2025-01/2025-02/2025-09/2025-12, FINISH 2019/2021-12 and
+// 2014/2025-09/2025-12 non-cumul pairs);
+// tests/devoir-versement-*.lawtest (positions: ACTIVE / no right /
+// late); differential pairs (loss/no-loss, hours, 90% cap, extinction).
+// FINISH paje-cmg adds tests/cm-non-cumul-*.lawtest and
+// tests/cm-prelevement-minore-*.lawtest (family #non-cumul):
+// prohibition markers TRUE vs NEITHER (affirmative hors-VI vs VI
+// exception vs unevaluated when neither established; 2014 cohort gate:
+// affirmative pre-cutoff vs at-cutoff TRUE vs unevaluated control;
+// pre-2025-12 daily allowance with coherent pre-2026 facts; non-2026
+// cohort), minoré levy built per wording.
+
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+import fr.pf.core version "0.1.0";
+
+pub enum ModeGarde {
+    label fr official "mode de garde rémunéré (L. 531-5 et L. 531-6)";
+    label en unofficial "paid care mode (L. 531-5 and L. 531-6)";
+    ASSISTANT_MATERNEL,
+    EMPLOYE_DOMICILE,
+    STRUCTURE,
+    EAJE
+}
+
+// --- Household case inputs (empirical) ---
+
+pub relation ressources_annuelles(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "ressources annuelles du ménage, appréciées R. 532-1 à R. 532-8 (fait du dossier; série N-2 — fr.tax.income_for_pf)";
+    label en unofficial "annual household resources under R. 532-1 to R. 532-8 (case fact; N-2 series — fr.tax.income_for_pf)";
+}
+
+pub relation revenu_mensuel_brut(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "ressources mensuelles brutes ramenées à une valeur mensuelle avant borne et arrondi (D. 531-18, 2°)";
+    label en unofficial "gross monthly resources as a monthly value before clamping and rounding (D. 531-18, 2°)";
+}
+
+pub relation personne_seule(m: fr.pf.core::Personne) kind empirical {
+    label fr official "la charge du ou des enfants est assumée par une personne seule (majorations, L. 531-5 III et L. 531-6)";
+    label en unofficial "the child burden is borne by a single person (majorations, L. 531-5 III and L. 531-6)";
+}
+
+pub relation parent_isole(m: fr.pf.core::Personne) kind empirical {
+    label fr official "parents isolés au sens du IV de L. 531-5 (âge limite porté à douze ans, D. 531-18-1)";
+    label en unofficial "isolated parents under L. 531-5 IV (age limit raised to twelve, D. 531-18-1)";
+}
+
+pub relation nb_enfants_charge(m: fr.pf.core::Personne, n: Integer) kind empirical {
+    key(m);
+    label fr official "nombre d'enfants à charge au sens de L. 512-1 retenu par la caisse (cohérent avec les faits enfant du cas)";
+    label en unofficial "dependent-children count under L. 512-1 retained by the fund (consistent with the case child facts)";
+}
+
+pub relation enfant_aeeh(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "l'enfant ouvre droit à la prestation L. 541-1 (taux d'effort immédiatement inférieur, D. 531-18, 3°)";
+    label en unofficial "child opens the L. 541-1 benefit (next-lower effort rate, D. 531-18, 3°)";
+}
+
+pub relation bmaf_retenu(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "base mensuelle retenue pour le mois du droit (arrêté, montant non épinglé)";
+    label en unofficial "monthly base retained for the month of right (arrete figure, unpinned)";
+}
+
+pub relation facteur_smic(m: fr.pf.core::Personne, facteur: Decimal) kind empirical {
+    key(m);
+    label fr official "croissance du SMIC constatée entre le 1er janvier de l'année précédente et le 1er janvier de l'année en cours (série — fr.travail.smic; SMIC_PENDING)";
+    label en unofficial "SMIC growth between 1 January of the previous year and 1 January of the current year (series — fr.travail.smic; SMIC_PENDING)";
+}
+
+pub relation plafond_a_base_publie(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "base publiée du plafond a (instruction DSS, année du droit)";
+    label en unofficial "published a-ceiling base (DSS circular, entitlement year)";
+}
+
+pub relation plafond_a_enfant_publie(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "majoration publiée du plafond a par enfant (instruction DSS, année du droit)";
+    label en unofficial "published a-ceiling supplement per child (DSS circular, entitlement year)";
+}
+
+pub relation plafond_c_base_publie(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "base publiée du plafond c (instruction DSS, année du droit)";
+    label en unofficial "published c-ceiling base (DSS circular, entitlement year)";
+}
+
+pub relation plafond_c_enfant_publie(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "majoration publiée du plafond c par enfant (instruction DSS, année du droit)";
+    label en unofficial "published c-ceiling supplement per child (DSS circular, entitlement year)";
+}
+
+pub relation plafond_a_base_isole_publie(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "base publiée du plafond a pour parent isolé (instruction DSS, année du droit)";
+    label en unofficial "published single-parent a-ceiling base (DSS circular, entitlement year)";
+}
+
+pub relation plafond_a_enfant_isole_publie(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "majoration publiée du plafond a par enfant pour parent isolé (instruction DSS, année du droit)";
+    label en unofficial "published single-parent a-ceiling supplement per child (DSS circular, entitlement year)";
+}
+
+pub relation plafond_c_base_isole_publie(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "base publiée du plafond c pour parent isolé (instruction DSS, année du droit)";
+    label en unofficial "published single-parent c-ceiling base (DSS circular, entitlement year)";
+}
+
+pub relation plafond_c_enfant_isole_publie(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "majoration publiée du plafond c par enfant pour parent isolé (instruction DSS, année du droit)";
+    label en unofficial "published single-parent c-ceiling supplement per child (DSS circular, entitlement year)";
+}
+
+pub relation montant_forfaitaire_isole(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "montant forfaitaire L. 262-2 retenu pour une personne isolée avec un enfant (voisin fr.casf.rsa; fait du dossier)";
+    label en unofficial "L. 262-2 forfait retained for an isolated person with one child (neighbour fr.casf.rsa; case fact)";
+}
+
+pub relation forfait_logement(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "forfait R. 262-9 déduit du plancher de ressources (voisin fr.casf.rsa; fait du dossier)";
+    label en unofficial "R. 262-9 housing forfait deducted from the resource floor (neighbour fr.casf.rsa; case fact)";
+}
+
+pub relation mois_droit(mois: Date) kind empirical {
+    label fr official "mois du droit apprécié (vaut normalement le mois de legal_time)";
+    label en unofficial "appreciated month of right (normally the legal_time month)";
+}
+
+// --- Per-child case inputs ---
+
+pub relation date_naissance(e: fr.pf.core::Enfant, naissance: Date) kind empirical {
+    key(e);
+    label fr official "date de naissance de l'enfant (MIGRATION-REQ-CMG-01: en attente du pub fr.pf.core)";
+    label en unofficial "child birthdate (MIGRATION-REQ-CMG-01: pending fr.pf.core pub)";
+}
+
+pub relation age_revolu_ans(e: fr.pf.core::Enfant, annees: Integer) kind empirical {
+    key(e);
+    label fr official "âge révolu de l'enfant en années au mois du droit, établi par la caisse (seuils 3/6/12 ans)";
+    label en unofficial "child completed age in years at the month of right, established by the fund (3/6/12-year thresholds)";
+}
+
+pub relation age_base_ans(e: fr.pf.core::Enfant, annees: Integer) kind empirical {
+    key(e);
+    label fr official "âge de base du taux plein fixé à D. 531-1, établi par la caisse (voisin fr.pf.paje; fait du dossier)";
+    label en unofficial "full-rate base age set by D. 531-1, established by the fund (neighbour fr.pf.paje; case fact)";
+}
+
+pub relation date_3eme_anniversaire(e: fr.pf.core::Enfant, date: Date) kind empirical {
+    key(e);
+    label fr official "date du troisième anniversaire de l'enfant (extinction du différentiel, décret 2025-515 art. 3, III)";
+    label en unofficial "date of the child third birthday (differential extinction, Decree 2025-515 Art. 3, III)";
+}
+
+pub relation mode_garde(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde) kind empirical {
+    key(m, e);
+    label fr official "mode de garde rémunéré retenu pour l'enfant au mois du droit";
+    label en unofficial "paid care mode retained for the child in the month of right";
+}
+
+pub relation heures_remunerees(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, heures: Decimal) kind empirical {
+    label fr official "nombre d'heures d'accueil ou de garde rémunérées au mois du droit";
+    label en unofficial "paid care hours in the month of right";
+}
+
+pub relation salaire_net_verse(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    label fr official "salaire net versé à la personne qui assure la garde de l'enfant au mois du droit";
+    label en unofficial "net salary paid to the child carer in the month of right";
+}
+
+pub relation indemnites_entretien_repas(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(m, e);
+    label fr official "indemnités journalières d'entretien et frais de repas, assistante maternelle uniquement, 0 sinon (D. 531-18, 1°)";
+    label en unofficial "daily care allowances and meal costs, childminder only, 0 otherwise (D. 531-18, 1°)";
+}
+
+pub relation cotisations_sociales(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    label fr official "cotisations et contributions sociales de la garde de l'enfant, établies par la caisse";
+    label en unofficial "social contributions on the child care, established by the fund";
+}
+
+pub relation jours_remuneres(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, jours: Decimal) kind empirical {
+    label fr official "jours de garde rémunérés au mois du droit (condition journalière SMIC, ancien D. 531-17)";
+    label en unofficial "paid care days in the month of right (old D. 531-17 daily SMIC condition)";
+}
+
+pub relation smic_horaire_retenu(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "valeur horaire du SMIC retenue pour le mois du droit (série — fr.travail.smic; SMIC_PENDING)";
+    label en unofficial "hourly SMIC retained for the month of right (series — fr.travail.smic; SMIC_PENDING)";
+}
+
+pub relation plafond_cotisations_domicile(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "plafond de la prise en charge 50 % à domicile, arrêté non épinglé (D. 531-17, II; DSS_PENDING)";
+    label en unofficial "cap on the 50% home-employment coverage, unpinned arrete (D. 531-17, II; DSS_PENDING)";
+}
+
+pub relation indemnites_rupture_exclues(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(m, e);
+    label fr official "indemnités L. 1234-5 et suivants exclues de la vérification des plafonds III 6° (L. 531-5 éd. 2025-12, 0 avant)";
+    label en unofficial "L. 1234-5 et seq. indemnities excluded from the III 6° ceiling check (L. 531-5 2025-12 wording, 0 before)";
+}
+
+pub relation depense_engagee(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    label fr official "dépense de garde engagée auprès de la structure ou de l'EAJE au mois du droit (L. 531-6)";
+    label en unofficial "care expense with the structure or EAJE in the month of right (L. 531-6)";
+}
+
+pub relation heures_specifiques(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, heures: Decimal) kind empirical {
+    label fr official "heures de garde en horaires spécifiques déclarées sur l'attestation (D. 531-22, I B, 0 par défaut)";
+    label en unofficial "specific-hours care declared on the certificate (D. 531-22, I B, 0 by default)";
+}
+
+pub relation beneficiaire_aah(m: fr.pf.core::Personne) kind empirical {
+    label fr official "la personne seule ou un membre du couple bénéficie de la prestation L. 821-1/821-2 (majoration L. 531-6, 2°)";
+    label en unofficial "the single person or a couple member receives the L. 821-1/821-2 benefit (L. 531-6 2° majoration)";
+}
+
+pub relation horaires_atypiques(m: fr.pf.core::Personne) kind empirical {
+    label fr official "horaires de travail spécifiques au sens du 1° de L. 531-6 (majoration D. 531-22, I)";
+    label en unofficial "specific working hours under L. 531-6 1° (D. 531-22, I majoration)";
+}
+
+pub relation eaje_capacite(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, places: Integer) kind empirical {
+    label fr official "capacité d'accueil simultané de l'EAJE (seuil décret R. 2324-46 — voisin; fait du dossier)";
+    label en unofficial "EAJE simultaneous capacity (R. 2324-46 decree threshold — neighbour; case fact)";
+}
+
+pub relation eaje_seuil_capacite(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, places: Integer) kind empirical {
+    key(m, e);
+    label fr official "seuil réglementaire de capacité EAJE applicable (R. 2324-46, fait établi)";
+    label en unofficial "applicable EAJE capacity regulatory threshold (R. 2324-46, established fact)";
+}
+
+pub relation eaje_tarif_horaire(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    label fr official "tarification horaire appliquée par l'EAJE (périmètre — décret; fait du dossier)";
+    label en unofficial "hourly tariff charged by the EAJE (scope — decree; case fact)";
+}
+
+// --- Activity condition inputs (L. 531-5, I + D. 531-19 + R. 531-5/6) ---
+
+pub relation exerce_activite(m: fr.pf.core::Personne) kind empirical {
+    label fr official "le ménage ou la personne seule exerce une activité professionnelle au mois apprécié (R. 531-5)";
+    label en unofficial "the household or single person works in the assessed month (R. 531-5)";
+}
+
+pub relation situation_assimilee(m: fr.pf.core::Personne) kind empirical {
+    label fr official "situation assimilée à une activité professionnelle (D. 531-19: indemnités, chômage, formation; 2026: naissance supplémentaire)";
+    label en unofficial "situation treated as professional activity (D. 531-19: allowances, unemployment, training; 2026: supplementary birth)";
+}
+
+pub relation situation_naissance_supplementaire(m: fr.pf.core::Personne) kind empirical {
+    label fr official "indemnités supplémentaires de naissance perçues (D. 531-19 éd. 2026-07 uniquement)";
+    label en unofficial "supplementary birth allowances received (D. 531-19 2026-07 wording only)";
+}
+
+pub relation dispense_activite(m: fr.pf.core::Personne) kind empirical {
+    label fr official "dispense de la condition d'activité: études, service civique, AAH/chômage, RSA en insertion (L. 531-5, I al. 7-11)";
+    label en unofficial "activity-condition waiver: studies, civic service, AAH/unemployment, RSA in insertion (L. 531-5, I paras. 7-11)";
+}
+
+pub relation inscrit_demandeur_emploi(m: fr.pf.core::Personne) kind empirical {
+    label fr official "inscription sur la liste des demandeurs d'emploi L. 5411-1 (R. 531-6 éd. 2025-06)";
+    label en unofficial "registration on the L. 5411-1 job-seeker list (R. 531-6 2025-06 wording)";
+}
+
+// --- Shared residence inputs (D. 531-18-2, from 01.12.2025) ---
+
+pub relation residence_alternee_effective(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "résidence alternée 373-2-9 mise en œuvre effective (D. 531-18-2, 1°)";
+    label en unofficial "effective shared residence under Art. 373-2-9 (D. 531-18-2, 1°)";
+}
+
+pub relation demande_cmg_parent(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "le parent demande le bénéfice du complément au titre de l'enfant (D. 531-18-2)";
+    label en unofficial "parent claims the supplement for the child (D. 531-18-2)";
+}
+
+pub relation eligible_af_partage(p: fr.pf.core::Personne) kind empirical {
+    label fr official "le ménage est éligible aux allocations familiales pour le choix R. 521-2 (D. 531-18-2, 2°; fait établi)";
+    label en unofficial "household is AF-eligible for the R. 521-2 choice (D. 531-18-2, 2°; established fact)";
+}
+
+pub relation choix_partage_af(p1: fr.pf.core::Personne, p2: fr.pf.core::Personne) kind empirical {
+    label fr official "les deux parents ont choisi chacun la qualité d'allocataire AF (R. 521-2; voisin fr.pf.af; fait établi)";
+    label en unofficial "both parents chose AF allocataire status each (R. 521-2; neighbour fr.pf.af; established fact)";
+}
+
+pub relation plafond_cumul_enfant(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "montant maximal applicable à l'enfant pour le cumul (D. 531-23: 1°/2° du III ou IV)";
+    label en unofficial "maximum applicable to the child for cumulation (D. 531-23: III 1°/2° or IV)";
+}
+
+// --- Transitional differential inputs (decree 2025-515, art. 3) ---
+
+pub relation moyenne_ancien_droit(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "montant moyen mensuel dû mars–mai 2025 sous l'ancien droit, mêmes enfants (décret 2025-515 art. 3, I)";
+    label en unofficial "average monthly amount due Mar–May 2025 under the old rules, same children (Decree 2025-515 Art. 3, I)";
+}
+
+pub relation moyenne_nouveau_droit(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "montant moyen du CMG sur éléments déclarés mars–mai 2025 par application du décret, établi par la caisse";
+    label en unofficial "average CMG on Mar–May 2025 declared elements under the decree, established by the fund";
+}
+
+pub relation heures_moyennes_periode(m: fr.pf.core::Personne, heures: Decimal) kind empirical {
+    key(m);
+    label fr official "recours horaire moyen mars–mai 2025 pour le seuil du décret 2025-515 art. 3, I 1° (fait établi)";
+    label en unofficial "average Mar–May 2025 hours for the Decree 2025-515 Art. 3, I 1° threshold (established fact)";
+}
+
+pub relation ressources_mois_reference(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "ressources du ménage au mois du VII 2° loi 2022-1616, appréciées R. 532-2 (décret 2025-515 art. 3, I 2°)";
+    label en unofficial "household resources in the Law 2022-1616 VII 2° month under R. 532-2 (Decree 2025-515 Art. 3, I 2°)";
+}
+
+pub relation remuneration_nette_salarie(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "rémunération nette du salarié pour le plafond 90 % du différentiel (décret 2025-515 art. 3, II)";
+    label en unofficial "employee net pay for the 90% differential cap (Decree 2025-515 Art. 3, II)";
+}
+
+// --- Payment inputs ---
+
+pub relation justification_depenses(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, date: Date) kind empirical {
+    label fr official "justification des dépenses du mois civil reçue par l'organisme à cette date (D. 531-21, VI)";
+    label en unofficial "month expense justification received by the body on this date (D. 531-21, VI)";
+}
+
+pub relation controle_heures_defaillant(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "le contrôle annuel fait apparaître le seuil de 25 heures non justifié (D. 531-22, I C)";
+    label en unofficial "the yearly control shows the 25-hour threshold unjustified (D. 531-22, I C)";
+}
+
+pub relation tiers_payant_demande(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "la famille demande le versement direct à l'association ou l'entreprise (L. 531-6 éd. 2024-09/2025-01)";
+    label en unofficial "the family requests direct payment to the association or enterprise (L. 531-6 2024-09/2025-01 wordings)";
+}
+
+pub relation tiers_payant_accord(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "accord de l'association ou de l'entreprise au versement direct (L. 531-6 éd. 2024-09/2025-01)";
+    label en unofficial "association or enterprise agrees to direct payment (L. 531-6 2024-09/2025-01 wordings)";
+}
+
+pub relation cmg_verse(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(m, e);
+    label fr official "le complément dû a été versé au ménage (exécution; l'organisme figure au porteur)";
+    label en unofficial "the due supplement was paid to the household (performance; the body is the Bearer)";
+}
+
+pub relation date_versement_cmg(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, date: Date) kind empirical {
+    label fr official "date du versement du complément (fait du dossier)";
+    label en unofficial "date the supplement was paid (case fact)";
+}
+
+pub relation organisme_recouvrement(o: fr.pf.core::Organisme, m: fr.pf.core::Personne) kind empirical {
+    label fr official "l'organisme L. 133-5-10 calcule et verse le différentiel (décret 2025-515 art. 3, V)";
+    label en unofficial "the L. 133-5-10 body computes and pays the differential (Decree 2025-515 Art. 3, V)";
+}
+
+// --- Institutional conclusions ---
+
+pub relation activite_requise_remplie(m: fr.pf.core::Personne) kind institutional {
+    key(m);
+    label fr official "condition d'activité remplie ou dispensée pour le mois (L. 531-5, I; D. 531-19; R. 531-5/6)";
+    label en unofficial "activity condition met or waived for the month (L. 531-5, I; D. 531-19; R. 531-5/6)";
+}
+
+pub relation age_eligible(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "condition d'âge remplie pour le mois (L. 531-5, IV; D. 531-18-1)";
+    label en unofficial "age condition met for the month (L. 531-5, IV; D. 531-18-1)";
+}
+
+pub relation age3_taux_plein_prolonge(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    key(m, e);
+    label fr official "plein tarif maintenu jusqu'au 31 août après troisième anniversaire entre janvier et août (L. 531-5 IV)";
+    label en unofficial "full rate maintained through 31 August after a January–August third birthday (L. 531-5 IV)";
+}
+
+pub relation age_taux_reduit(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "garde à montant réduit: âge entre trois et six ans (anciens textes; L. 531-6 et D. 531-21, IV)";
+    label en unofficial "reduced-rate care: age between three and six (old texts; L. 531-6 and D. 531-21, IV)";
+}
+
+pub relation droit_cmg_ouvert(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "droit au complément de libre choix du mode de garde ouvert pour le mois (L. 531-5, I)";
+    label en unofficial "free-choice childcare supplement right open for the month (L. 531-5, I)";
+}
+
+pub relation plancher_revenu(m: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(m);
+    label fr official "plancher de ressources: forfait isolé un enfant moins forfait logement (D. 531-18, 2°)";
+    label en unofficial "resource floor: single-with-one-child forfait minus housing forfait (D. 531-18, 2°)";
+}
+
+pub relation revenu_mensuel_retenu(m: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(m);
+    label fr official "ressources mensuelles bornées au plancher et au plafond de 8 500 €, arrondies à l'euro (D. 531-18, 2°)";
+    label en unofficial "monthly resources clamped to the floor and the 8,500 € ceiling, rounded to the euro (D. 531-18, 2°)";
+}
+
+pub relation cout_mensuel_retenu(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "coût mensuel de la garde sous plafonds horaires 8/15 € revalorisés SMIC (D. 531-18, 1°)";
+    label en unofficial "monthly care cost under the SMIC-revalorised 8/15 € hourly caps (D. 531-18, 1°)";
+}
+
+pub relation cout_mensuel_plafonne(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "coût mensuel écrêté au plafond horaire x heures (D. 531-18, 1°)";
+    label en unofficial "monthly cost cut to hourly cap x hours (D. 531-18, 1°)";
+}
+
+pub relation taux_effort(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, taux: Decimal) kind institutional {
+    key(m, e);
+    label fr official "taux d'effort applicable selon enfants et mode de garde (D. 531-18, 3°)";
+    label en unofficial "applicable effort rate by children and care mode (D. 531-18, 3°)";
+}
+
+pub relation cout_reference_retenu(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(m, e);
+    label fr official "coût horaire de référence retenu pour le mois du droit (arrêté, montant non épinglé; DSS_PENDING)";
+    label en unofficial "reference hourly cost retained for the month of right (arrete figure, unpinned; DSS_PENDING)";
+}
+
+pub relation cout_horaire_reference(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "coût horaire de référence applicable (D. 531-18, formule)";
+    label en unofficial "applicable reference hourly cost (D. 531-18, formula)";
+}
+
+pub relation plafond_horaire(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "plafond horaire du coût 8/15 € revalorisé SMIC (D. 531-18, 1°)";
+    label en unofficial "8/15 € hourly cost cap revalorised by SMIC (D. 531-18, 1°)";
+}
+
+pub relation montant_cmg_part_b(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "part b du I: formule coût x (1 - revenu x taux / référence), nette CRDS (D. 531-18)";
+    label en unofficial "part b of I: cost x (1 - income x rate / reference) formula, net of CRDS (D. 531-18)";
+}
+
+pub relation part_cotisations(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "part a du I: cotisations prises en charge, 100 %/50 % sous plafonds (D. 531-17)";
+    label en unofficial "part a of I: contributions covered, 100%/50% under caps (D. 531-17)";
+}
+
+pub relation montant_cmg_du(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "montant mensuel total du au ménage pour l'enfant (brut, avant CRDS)";
+    label en unofficial "total monthly amount due to the household for the child (gross, before CRDS)";
+}
+
+pub relation plafond1_applicable(m: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(m);
+    label fr official "plafond du a de D. 531-18-1/D. 531-20 applicable (base publiée + majoration publiée par enfant)";
+    label en unofficial "applicable D. 531-18-1/D. 531-20 a-ceiling (published base + published supplement per child)";
+}
+
+pub relation plafond2_applicable(m: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(m);
+    label fr official "plafond du c de D. 531-18-1/D. 531-20 applicable (base publiée + majoration publiée par enfant)";
+    label en unofficial "applicable D. 531-18-1/D. 531-20 c-ceiling (published base + published supplement per child)";
+}
+
+pub relation aide_ancienne_b(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "part b ancien droit: 85 % du net sous maxima BMAF (D. 531-18 éd. 2018)";
+    label en unofficial "old-law part b: 85% of net pay under BMAF maxima (D. 531-18 2018 wording)";
+}
+
+pub relation maximum_ancien_b(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "montants maximaux BMAF ancien droit, moitiés 3-6 ans et PreParE partiel (D. 531-18/20/21)";
+    label en unofficial "old-law BMAF maxima, 3-6 and part-time PreParE halves (D. 531-18/20/21)";
+}
+
+pub relation taux_bande_ancienne(m: fr.pf.core::Personne, r: Money, p1: Money, p2: Money, taux: Decimal) kind institutional {
+    label fr official "taux BMAF de la bande de ressources ancien droit (D. 531-18 éd. 2018)";
+    label en unofficial "old-law resource-band BMAF rate (D. 531-18 2018 wording)";
+}
+
+pub relation preparer_temps_partiel(m: fr.pf.core::Personne) kind empirical {
+    label fr official "activité au plus 50 % avec PreParE à taux partiel, établi par la caisse (voisin fr.pf.paje; D. 531-21)";
+    label en unofficial "work at most 50% with part-time PreParE, established by the fund (neighbour fr.pf.paje; D. 531-21)";
+}
+
+pub relation maximum_structure(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "montants maximaux L. 531-6, moitiés 3-6 ans et majorations (D. 531-21/22)";
+    label en unofficial "L. 531-6 maxima, 3-6 halves and majorations (D. 531-21/22)";
+}
+
+pub relation taux_bande_structure_am(m: fr.pf.core::Personne, r: Money, p1: Money, p2: Money, taux: Decimal) kind institutional {
+    label fr official "taux BMAF de la bande structure assistante maternelle (D. 531-21/23, III 1°)";
+    label en unofficial "structure-childminder band BMAF rate (D. 531-21/23, III 1°)";
+}
+
+pub relation taux_bande_structure_dom(m: fr.pf.core::Personne, r: Money, p1: Money, p2: Money, taux: Decimal) kind institutional {
+    label fr official "taux BMAF de la bande domicile/EAJE (D. 531-21/23, III 2°)";
+    label en unofficial "home/EAJE band BMAF rate (D. 531-21/23, III 2°)";
+}
+
+pub relation aide_structure(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "aide L. 531-6: 85 % de la dépense sous maxima BMAF majorés (D. 531-21/22)";
+    label en unofficial "L. 531-6 aid: 85% of expense under majorised BMAF maxima (D. 531-21/22)";
+}
+
+pub relation droit_structure_ouvert(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "droit à l'aide L. 531-6 ouvert pour le mois (seize heures minimum avant réforme)";
+    label en unofficial "L. 531-6 aid right open for the month (sixteen-hour minimum before the reform)";
+}
+
+pub relation montant_structure_du(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "montant mensuel L. 531-6 dû (moitiés 3-6 ans, EAJE, cumul — brut)";
+    label en unofficial "monthly L. 531-6 amount due (3-6 halves, EAJE, cumulation — gross)";
+}
+
+pub relation parent_allocataire_alternance(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "chaque parent allocataire au titre du même enfant en résidence alternée (D. 531-18-2)";
+    label en unofficial "each parent is allocataire for the same shared-residence child (D. 531-18-2)";
+}
+
+pub relation montant_cumul_5315(m: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(m);
+    label fr official "cumul au même mois de plusieurs aides L. 531-5 (D. 531-18-3)";
+    label en unofficial "same-month cumulation of several L. 531-5 aids (D. 531-18-3)";
+}
+
+pub relation montant_cumul_total(m: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(m);
+    label fr official "cumul L. 531-5 puis L. 531-6 sous somme des maxima par enfant (D. 531-23)";
+    label en unofficial "L. 531-5 then L. 531-6 cumulation under the per-child maxima sum (D. 531-23)";
+}
+
+pub relation differentiel_ouvert(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "droit au complément différentiel transitoire ouvert (décret 2025-515 art. 3)";
+    label en unofficial "transitional differential top-up right open (Decree 2025-515 Art. 3)";
+}
+
+pub relation differentiel_eteint(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date) kind institutional {
+    label fr official "différentiel éteint pour le mois: cohorte d'extinction applicable (décret 2025-515 art. 3, III)";
+    label en unofficial "differential extinguished for the month: applicable extinction cohort (Decree 2025-515 Art. 3, III)";
+}
+
+pub relation age_moitie36(e: fr.pf.core::Enfant) kind institutional {
+    label fr official "trois à six ans révolus: assiette des moitiés réforme (D. 531-21, IV)";
+    label en unofficial "age three to six: reform halve base (D. 531-21, IV)";
+}
+
+pub relation montant_differentiel(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "complément différentiel: perte moyenne sous plafond 90 % du net (décret 2025-515 art. 3, I-II)";
+    label en unofficial "differential top-up: average loss under the 90% net cap (Decree 2025-515 Art. 3, I–II)";
+}
+
+pub relation date_limite_paiement(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, date: Date) kind institutional {
+    key(m, e);
+    label fr official "date limite de versement: un mois après réception de la justification (D. 531-21, VI)";
+    label en unofficial "payment deadline: one month after the justification receipt (D. 531-21, VI)";
+}
+
+pub relation versement_tardif(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "versement après la date limite (D. 531-21, VI)";
+    label en unofficial "payment after the deadline (D. 531-21, VI)";
+}
+
+pub relation majoration_indue(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "majoration horaires spécifiques indûment versée, à recouvrer (D. 531-22, I C)";
+    label en unofficial "unduly paid specific-hours majoration, to be recovered (D. 531-22, I C)";
+}
+
+pub relation recouvrement_majoration_action(o: fr.pf.core::Organisme, m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "action: l'organisme recouvre la majoration indue";
+    label en unofficial "action: the body recovers the undue majoration";
+}
+
+pub relation majoration_recouvree(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "majoration indue recouvrée (D. 531-22, I C)";
+    label en unofficial "undue majoration recovered (D. 531-22, I C)";
+}
+
+// --- FINISH paje-cmg: L. 531-9 non-cumulation, L. 531-8-1 levy minoration ---
+
+pub relation beneficie_prepare_plein(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "un membre du ménage bénéficie de la PreParE à taux plein au titre de l'enfant (droit établi, voisin fr.pf.paje; L. 531-9, al. 1)";
+    label en unofficial "a household member gets full-rate PreParE for the child (established right, neighbour fr.pf.paje; L. 531-9, para. 1)";
+}
+
+pub relation prepare_verse_titre_vi(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "la PreParE à taux plein est versée au titre du VI de L. 531-4 (exception au non-cumul; fait établi)";
+    label en unofficial "the full-rate PreParE is paid under L. 531-4, VI (non-cumulation exception; established fact)";
+}
+
+pub relation prepare_plein_hors_vi(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "la PreParE à taux plein n'est pas versée au titre du VI de L. 531-4, établi (condition du non-cumul ; L. 531-9, al. 1 « sauf si … versée au titre du VI »)";
+    label en unofficial "established that the full-rate PreParE is not paid under L. 531-4, VI (non-cumulation condition; L. 531-9, para. 1 'sauf si … versée au titre du VI')";
+}
+
+pub relation cohorte_l5319_2014(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "enfant né ou adopté à partir du 1er octobre 2014 (NOTA L. 531-9 éd. 2014, loi 2014-873 art. 8 VI ; fait d'état civil)";
+    label en unofficial "child born or adopted from 1 October 2014 (NOTA of L. 531-9 2014 wording, Law 2014-873 Art. 8 VI; civil-record fact)";
+}
+
+pub relation hors_cohorte_l5319_2014(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "enfant né ou adopté avant le 1er octobre 2014, établi (hors cohorte NOTA L. 531-9 éd. 2014 ; fait d'état civil ; exclusif avec cohorte_l5319_2014)";
+    label en unofficial "child born or adopted before 1 October 2014, established (outside the NOTA cohort of L. 531-9 2014 wording; civil-record fact; mutually exclusive with cohorte_l5319_2014)";
+}
+
+pub relation indemnite_journaliere_meme_enfant(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "indemnité journalière L. 331-8-1, L. 623-2 ou CRPM L. 732-12-1-1 versée au titre du même enfant (fait établi; articles hors paquet)";
+    label en unofficial "L. 331-8-1, L. 623-2 or CRPM L. 732-12-1-1 daily allowance paid for the same child (established fact; articles outside the package)";
+}
+
+pub relation cohorte_l5319_2026(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "enfant né ou adopté à compter du 1er janvier 2026, ou naissance censée intervenir à compter de cette date (NOTA L. 531-9 éd. 2025-12; fait d'état civil)";
+    label en unofficial "child born or adopted from 1 January 2026, or birth expected from that date (NOTA of L. 531-9 2025-12 wording; civil-record fact)";
+}
+
+pub relation cumul_prepare_plein_interdit(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "complément non cumulable avec la PreParE à taux plein au titre de l'enfant (L. 531-9, al. 1)";
+    label en unofficial "supplement not cumulable with full-rate PreParE for the child (L. 531-9, para. 1)";
+}
+
+pub relation cumul_indemnite_interdit(m: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "complément non cumulable avec l'indemnité journalière au titre du même enfant (L. 531-9 éd. 2025-12, al. 1)";
+    label en unofficial "supplement not cumulable with the daily allowance for the same child (L. 531-9 2025-12 wording, para. 1)";
+}
+
+pub relation prelevement_cesu_base(m: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(m);
+    label fr official "prélèvement L. 133-5-12 avant minoration, établi par l'organisme de recouvrement (L. 531-8-1)";
+    label en unofficial "L. 133-5-12 levy before minoration, set by the recovery body (L. 531-8-1)";
+}
+
+pub relation cmg_imputable_l5318(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    label fr official "montant du complément mentionné au troisième alinéa de L. 531-8, imputé sur le prélèvement (fait établi; L. 531-8 hors paquet)";
+    label en unofficial "supplement amount of L. 531-8, para. 3, set against the levy (established fact; L. 531-8 outside the package)";
+}
+
+pub relation prelevement_cesu_minore(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "prélèvement minoré à hauteur du montant du complément (L. 531-8-1)";
+    label en unofficial "levy reduced by the supplement amount (L. 531-8-1)";
+}

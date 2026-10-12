@@ -1,0 +1,255 @@
+// Young workers 18-25: the hours condition (D.262-25-1/25-2/25-3/25-4).
+//
+// DEONTIC MAP: computation only (no must/must-not here):
+// - the 18-25 age band (L.262-7-1 scope, section 4 title) arrives as
+//   jeune_18_25 (fund-established);
+// - the D.262-25-1 route builds the minimum from the case hours: worked
+//   hours plus occasional hours against twice the annual reference
+//   hours; the annual C. trav. L.3121-41 figure is unpinned and arrives
+//   retained (heures_annuelles_reference, B-RSA-CTRAV-HORAIRES);
+// - the D.262-25-2/25-3 routes are legal deemings ("sont réputés
+//   remplir"): registration plus duration plus turnover against 43x/24x
+//   the single-person monthly MF at 1 January of the turnover year;
+//   the turnover and the MF inputs both carry the turnover year
+//   (tns/agricole_chiffre_affaires, mf_reference_ca, B-RSA-MF-EURO)
+//   and the rules join on it, per "en vigueur au 1er janvier de
+//   l'année de réalisation du chiffre d'affaires considéré";
+// - the D.262-25-2 1° premise reads "ou" since 2023 (RNE entry OR
+//   artist-author affiliation, artiste_auteur_affilie, CSS
+//   L.382-1/R.382-1: one rule per alternative, no "or" in bodies)
+//   but "et" before 2023 ("... d'une activité déclarée auprès du
+//   centre de formalités des entreprises ... et, pour les artistes
+//   auteurs, d'une affiliation ..."): old registers or declared
+//   activity AND affiliation, cumulative in a single rule;
+//   the register premise splits at 2023-01-01 (RNE versus old
+//   registers, in-window change read and split; the 2021-04-01 CFE
+//   wording micro-change is immaterial to the premises, journal);
+// - the D.262-25-4 mixed route adds the fund-established pro-rata
+//   hours-equivalent; the proration method is outside the text.
+// The head condition_heures_jeune is the activity limb only; the age
+// synthesis stays with the fund (age_charge_condition, seam in README).
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+// `use self` is hand-maintained in nochecks authoring (no `law fix
+// imports` until the locks free). Fragment names join the block via the
+// deferred `law fix imports fr.casf.rsa` run after regenerating sources;
+// bare A3 parameter names (CoefficientDoubleHeures, FacteurCATNS,
+// FacteurCAAgricole) stay outside the block, as in 02/04.
+use self::{
+    CASF_D262_25_1,
+    CASF_D262_25_1_ED2021_03,
+    CASF_D262_25_1_ED2021_04,
+    CASF_D262_25_1_ED2023_01,
+    CASF_D262_25_1_ED2024_01,
+    CASF_D262_25_1_ED2024_07,
+    CASF_D262_25_1_ED2025_01,
+    CASF_D262_25_1_ED2025_06,
+    CASF_D262_25_1_ED2026_06,
+    CASF_D262_25_2,
+    CASF_D262_25_2_ED2024_01,
+    CASF_D262_25_2_ED2024_07,
+    CASF_D262_25_2_ED2025_01,
+    CASF_D262_25_2_ED2025_06,
+    CASF_D262_25_2_ED2026_06,
+    CASF_D262_25_2_PRE202104,
+    CASF_D262_25_2_PRE202104_ED2021_03,
+    CASF_D262_25_2_PRE2023,
+    CASF_D262_25_3,
+    CASF_D262_25_3_ED2021_03,
+    CASF_D262_25_3_ED2021_04,
+    CASF_D262_25_3_ED2023_01,
+    CASF_D262_25_3_ED2024_01,
+    CASF_D262_25_3_ED2024_07,
+    CASF_D262_25_3_ED2025_01,
+    CASF_D262_25_3_ED2025_06,
+    CASF_D262_25_3_ED2026_06,
+    CASF_D262_25_4,
+    CASF_D262_25_4_ED2021_03,
+    CASF_D262_25_4_ED2021_04,
+    CASF_D262_25_4_ED2023_01,
+    CASF_D262_25_4_ED2024_01,
+    CASF_D262_25_4_ED2024_07,
+    CASF_D262_25_4_ED2025_01,
+    CASF_D262_25_4_ED2025_06,
+    CASF_D262_25_4_ED2026_06,
+    agricole_affiliation,
+    agricole_chiffre_affaires,
+    agricole_duree_mois,
+    agricole_l722_1,
+    artiste_auteur_affilie,
+    condition_ca_prorata,
+    condition_heures_jeune,
+    equivalent_tns_prorata,
+    heures_annuelles_reference,
+    heures_occasionnelles,
+    heures_travail_reference,
+    jeune_18_25,
+    mf_reference_ca,
+    mois_prestations_exclus,
+    tns_chiffre_affaires,
+    tns_duree_activite_mois,
+    tns_immatriculation_ancienne,
+    tns_immatriculation_rne,
+    tns_non_agricole,
+};
+
+@source(
+    CASF_D262_25_1,
+    CASF_D262_25_1_ED2021_03,
+    CASF_D262_25_1_ED2021_04,
+    CASF_D262_25_1_ED2023_01,
+    CASF_D262_25_1_ED2024_01,
+    CASF_D262_25_1_ED2024_07,
+    CASF_D262_25_1_ED2025_01,
+    CASF_D262_25_1_ED2025_06,
+    CASF_D262_25_1_ED2026_06)
+rule HeuresDirectesJeune(p: fr.minima.ressources::Personne, h: Decimal, ho: Decimal, ann: Decimal, m: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "jeunes : heures de travail plus heures occasionnelles au moins égales au double des heures annuelles de référence, prestations exclues dans la limite de six mois (D. 262-25-1)";
+    label en unofficial "young workers: worked plus occasional hours at least twice the annual reference hours, benefits excluded up to six months (D. 262-25-1)";
+    when jeune_18_25(p)
+        and heures_travail_reference(p, h)
+        and heures_occasionnelles(p, ho)
+        and heures_annuelles_reference(p, ann)
+        and mois_prestations_exclus(p, m)
+        and m <= 6
+        and h + ho >= CoefficientDoubleHeures * ann;
+    then condition_heures_jeune(p);
+}
+
+@source(
+    CASF_D262_25_2,
+    CASF_D262_25_2_ED2024_01,
+    CASF_D262_25_2_ED2024_07,
+    CASF_D262_25_2_ED2025_01,
+    CASF_D262_25_2_ED2025_06,
+    CASF_D262_25_2_ED2026_06)
+rule AssimilationTNS2023(p: fr.minima.ressources::Personne, m: Integer, annee: Integer, ca: Money, mf: Money) strict {
+    effective [@2023-01-01, infinity);
+    label fr official "jeunes non salariés non agricoles depuis 2023 : deux ans d'activité, immatriculation RNE, chiffre d'affaires d'au moins quarante-trois fois le MF (D. 262-25-2 en vigueur)";
+    label en unofficial "young non-agricultural self-employed since 2023: two years of activity, RNE entry, turnover of at least forty-three times the flat-rate (D. 262-25-2 in force)";
+    when jeune_18_25(p)
+        and tns_non_agricole(p)
+        and tns_immatriculation_rne(p)
+        and tns_duree_activite_mois(p, m)
+        and m >= 24
+        and tns_chiffre_affaires(p, annee, ca)
+        and mf_reference_ca(p, annee, mf)
+        and ca >= FacteurCATNS * mf;
+    then condition_heures_jeune(p);
+}
+
+@source(
+    CASF_D262_25_2,
+    CASF_D262_25_2_ED2024_01,
+    CASF_D262_25_2_ED2024_07,
+    CASF_D262_25_2_ED2025_01,
+    CASF_D262_25_2_ED2025_06,
+    CASF_D262_25_2_ED2026_06)
+rule AssimilationTNSArtiste2023(p: fr.minima.ressources::Personne, m: Integer, annee: Integer, ca: Money, mf: Money) strict {
+    effective [@2023-01-01, infinity);
+    label fr official "jeunes artistes auteurs depuis 2023 : deux ans d'activité, affiliation au régime général, chiffre d'affaires d'au moins quarante-trois fois le MF (D. 262-25-2 en vigueur)";
+    label en unofficial "young artist-authors since 2023: two years of activity, general-scheme affiliation, turnover of at least forty-three times the flat-rate (D. 262-25-2 in force)";
+    when jeune_18_25(p)
+        and tns_non_agricole(p)
+        and artiste_auteur_affilie(p)
+        and tns_duree_activite_mois(p, m)
+        and m >= 24
+        and tns_chiffre_affaires(p, annee, ca)
+        and mf_reference_ca(p, annee, mf)
+        and ca >= FacteurCATNS * mf;
+    then condition_heures_jeune(p);
+}
+
+@source(
+    CASF_D262_25_2_PRE202104,
+    CASF_D262_25_2_PRE202104_ED2021_03,
+    CASF_D262_25_2_PRE2023)
+rule AssimilationTNSPre2023(p: fr.minima.ressources::Personne, m: Integer, annee: Integer, ca: Money, mf: Money) strict {
+    effective [@2021-01-01, @2023-01-01);
+    label fr official "jeunes non salariés non agricoles avant 2023 : deux ans d'activité, immatriculation aux anciens registres ou activité déclarée, chiffre d'affaires d'au moins quarante-trois fois le MF (D. 262-25-2 prédécesseur)";
+    label en unofficial "young non-agricultural self-employed before 2023: two years of activity, old-register entry or declared activity, turnover of at least forty-three times the flat-rate (D. 262-25-2 predecessor)";
+    when jeune_18_25(p)
+        and tns_non_agricole(p)
+        and tns_immatriculation_ancienne(p)
+        and tns_duree_activite_mois(p, m)
+        and m >= 24
+        and tns_chiffre_affaires(p, annee, ca)
+        and mf_reference_ca(p, annee, mf)
+        and ca >= FacteurCATNS * mf;
+    then condition_heures_jeune(p);
+}
+
+@source(
+    CASF_D262_25_2_PRE202104,
+    CASF_D262_25_2_PRE202104_ED2021_03,
+    CASF_D262_25_2_PRE2023)
+rule AssimilationTNSArtistePre2023(p: fr.minima.ressources::Personne, m: Integer, annee: Integer, ca: Money, mf: Money) strict {
+    effective [@2021-01-01, @2023-01-01);
+    label fr official "jeunes artistes auteurs avant 2023 : immatriculation aux anciens registres ou activité déclarée ET affiliation au régime général, deux ans d'activité, chiffre d'affaires d'au moins quarante-trois fois le MF (D. 262-25-2 prédécesseur)";
+    label en unofficial "young artist-authors before 2023: old-register entry or declared activity AND general-scheme affiliation, two years of activity, turnover of at least forty-three times the flat-rate (D. 262-25-2 predecessor)";
+    when jeune_18_25(p)
+        and tns_non_agricole(p)
+        and tns_immatriculation_ancienne(p)
+        and artiste_auteur_affilie(p)
+        and tns_duree_activite_mois(p, m)
+        and m >= 24
+        and tns_chiffre_affaires(p, annee, ca)
+        and mf_reference_ca(p, annee, mf)
+        and ca >= FacteurCATNS * mf;
+    then condition_heures_jeune(p);
+}
+
+@source(
+    CASF_D262_25_3,
+    CASF_D262_25_3_ED2021_03,
+    CASF_D262_25_3_ED2021_04,
+    CASF_D262_25_3_ED2023_01,
+    CASF_D262_25_3_ED2024_01,
+    CASF_D262_25_3_ED2024_07,
+    CASF_D262_25_3_ED2025_01,
+    CASF_D262_25_3_ED2025_06,
+    CASF_D262_25_3_ED2026_06)
+rule AssimilationAgricole(p: fr.minima.ressources::Personne, m: Integer, annee: Integer, ca: Money, mf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "jeunes relevant du régime agricole : deux ans d'activité, affiliation L. 722-1, chiffre d'affaires d'au moins vingt-quatre fois le MF (D. 262-25-3)";
+    label en unofficial "young workers under the agricultural scheme: two years of activity, L. 722-1 affiliation, turnover of at least twenty-four times the flat-rate (D. 262-25-3)";
+    when jeune_18_25(p)
+        and agricole_l722_1(p)
+        and agricole_affiliation(p)
+        and agricole_duree_mois(p, m)
+        and m >= 24
+        and agricole_chiffre_affaires(p, annee, ca)
+        and mf_reference_ca(p, annee, mf)
+        and ca >= FacteurCAAgricole * mf;
+    then condition_heures_jeune(p);
+}
+
+@source(
+    CASF_D262_25_4,
+    CASF_D262_25_4_ED2021_03,
+    CASF_D262_25_4_ED2021_04,
+    CASF_D262_25_4_ED2023_01,
+    CASF_D262_25_4_ED2024_01,
+    CASF_D262_25_4_ED2024_07,
+    CASF_D262_25_4_ED2025_01,
+    CASF_D262_25_4_ED2025_06,
+    CASF_D262_25_4_ED2026_06)
+rule ParcoursMixteJeune(p: fr.minima.ressources::Personne, h: Decimal, ho: Decimal, eq: Decimal, ann: Decimal, m: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "jeunes en parcours mixte : heures salariées plus équivalent TNS ou agricole au prorata, condition de chiffre d'affaires proratisée remplie (D. 262-25-4)";
+    label en unofficial "young workers on a mixed path: salaried hours plus pro-rata self-employed or agricultural equivalent, prorated turnover condition met (D. 262-25-4)";
+    when jeune_18_25(p)
+        and heures_travail_reference(p, h)
+        and heures_occasionnelles(p, ho)
+        and equivalent_tns_prorata(p, eq)
+        and condition_ca_prorata(p)
+        and heures_annuelles_reference(p, ann)
+        and mois_prestations_exclus(p, m)
+        and m <= 6
+        and h + ho + eq >= CoefficientDoubleHeures * ann;
+    then condition_heures_jeune(p);
+}

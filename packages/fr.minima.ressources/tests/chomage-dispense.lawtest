@@ -1,0 +1,17 @@
+// Same sanction but the president dispenses on the particular situation:
+// the allowance is disregarded after all (R.262-13 al.2).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-chomage-dispense" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "chomdis-01": interruption_sanction_chomage(entity_ref("urn:fr:minima-ressources:case:chomage-dispense")) { origin case_input; }
+        assert "chomdis-02": dispense_president_interruption(entity_ref("urn:fr:minima-ressources:case:chomage-dispense")) { origin case_input; }
+    }
+    evaluate truth(neutralisation_revenu(entity_ref("urn:fr:minima-ressources:case:chomage-dispense"), ALLOCATION_CHOMAGE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

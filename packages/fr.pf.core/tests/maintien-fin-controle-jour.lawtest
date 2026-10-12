@@ -1,0 +1,17 @@
+// Control: death 10 March - same-day +3 months (10 June) is NOT the endpoint; only 30 June holds (R. 552-3 IV 1, PC-R03-01).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-maintien-fin-controle-jour" {
+    given {
+        context { decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "maintien-fin-controle-jour-01": deces_le(entity_ref("urn:fr:pf:case:enfant-decede"), @2026-03-10) { origin case_input; }
+        assert "maintien-fin-controle-jour-02": deces_enfant_charge(entity_ref("urn:fr:pf:case:enfant-decede")) { origin case_input; }
+        assert "maintien-fin-controle-jour-03": ouverture_droit_mois(entity_ref("urn:fr:pf:case:enfant-decede"), @2025-06-01) { origin case_input; }
+    }
+    evaluate truth(maintien_prestations_fin(entity_ref("urn:fr:pf:case:enfant-decede"), @2026-06-10));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

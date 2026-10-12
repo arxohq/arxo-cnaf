@@ -1,0 +1,24 @@
+// BMAF 2026 chain (DSS/2B/2026/46, annexe table BMAF): previous base
+// 474.37, coefficient 1.008 -> 474.37 x 1.008 = 478.16496, rounded to the
+// centime -> 478.16, the published 1 April 2026 base. Coefficient 1.008 is
+// at/above one, retained nominally.
+language "law.core" version "0.2";
+package fr.css.revalorisation version "0.1.0";
+namespace "urn:fr:corpus:clir:revalorisation";
+
+test "urn:query:fr-revalorisation-bmaf-chaine-2026" {
+    given {
+        context { deadline_policy REVALO_EXERCICE; decision_time @2026-04-01T12:00:00Z; knowledge_time @2026-04-01T12:00:00Z; legal_time @2026-04-01; timezone "Europe/Paris"; }
+        assert "bmaf-01": annee_exercice(entity_ref("urn:fr:revalorisation:exercice:2026"), 2026) { origin case_input; }
+        assert "bmaf-02": bmaf_precedente(entity_ref("urn:fr:revalorisation:exercice:2026"), 474.37 EUR) { origin case_input; }
+        assert "bmaf-03": coefficient_annee(entity_ref("urn:fr:revalorisation:exercice:2026"), 1.008) { origin case_input; }
+    }
+    evaluate truth(coefficient_retenu(entity_ref("urn:fr:revalorisation:exercice:2026"), 1.008));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bmaf_revalorisee(entity_ref("urn:fr:revalorisation:exercice:2026"), 478.16 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

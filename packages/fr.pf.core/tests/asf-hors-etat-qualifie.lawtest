@@ -1,0 +1,15 @@
+// ASF qualified-inability branch: parent considered unable under the decree conditions - entitlement opens (L. 523-1 I 3°, PC-R07-15).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-asf-hors-etat-qualifie" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "asf-hors-etat-qualifie-01": asf_parent_hors_etat_qualifie(entity_ref("urn:fr:pf:case:asf-hors-etat")) { origin case_input; }
+    }
+    evaluate truth(asf_ouvre_droit(entity_ref("urn:fr:pf:case:asf-hors-etat")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

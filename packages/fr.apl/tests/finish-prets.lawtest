@@ -1,0 +1,115 @@
+// Home-improvement loans (23): housing-loan eligibility, the 80 %
+// ceiling computation, the over-ceiling control marker, equal
+// instalments plus 1 %, the sixth-month first due date, the repayment
+// duty, and early balance on a move to a worse dwelling.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-eligible-pret-logement" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "feli-01": allocataire_prestations_familiales(entity_ref("urn:fr:apl:case:feli")) { origin case_input; }
+        assert "feli-02": qualite_logement_pret(entity_ref("urn:fr:apl:case:feli"), PROPRIETAIRE_EMPRUNTEUR) { origin case_input; }
+        assert "feli-03": travaux_amelioration_logement(entity_ref("urn:fr:apl:case:feli")) { origin case_input; }
+        // D-42: D. 542-35: loans go only to allocataires who are owners, tenants or
+        // D-42: good-faith occupants "des locaux qu'ils habitent"; the model (23
+        // D-42: EligiblePretLogement) takes that finding, which the case omitted.
+        assert "feli-hab": habite_locaux_ameliorer(entity_ref("urn:fr:apl:case:feli")) { origin case_input; }
+    }
+    evaluate truth(eligible_pret_amelioration(entity_ref("urn:fr:apl:case:feli")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-plafond-pret-80" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fpla-01": allocataire_prestations_familiales(entity_ref("urn:fr:apl:case:fpla")) { origin case_input; }
+        assert "fpla-02": qualite_logement_pret(entity_ref("urn:fr:apl:case:fpla"), LOCATAIRE_EMPRUNTEUR) { origin case_input; }
+        assert "fpla-03": travaux_amelioration_logement(entity_ref("urn:fr:apl:case:fpla")) { origin case_input; }
+        assert "fpla-04": depenses_travaux_pret(entity_ref("urn:fr:apl:case:fpla"), 1000.00 EUR) { origin case_input; }
+        // D-42: D. 542-35: loans go only to allocataires who are owners, tenants or
+        // D-42: good-faith occupants "des locaux qu'ils habitent"; the model (23
+        // D-42: EligiblePretLogement) takes that finding, which the case omitted.
+        assert "fpla-hab": habite_locaux_ameliorer(entity_ref("urn:fr:apl:case:fpla")) { origin case_input; }
+    }
+    evaluate truth(montant_max_pret(entity_ref("urn:fr:apl:case:fpla"), 800.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-pret-excede-plafond" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fexc2-01": allocataire_prestations_familiales(entity_ref("urn:fr:apl:case:fexc2")) { origin case_input; }
+        assert "fexc2-02": qualite_logement_pret(entity_ref("urn:fr:apl:case:fexc2"), PROPRIETAIRE_EMPRUNTEUR) { origin case_input; }
+        assert "fexc2-03": travaux_amelioration_logement(entity_ref("urn:fr:apl:case:fexc2")) { origin case_input; }
+        assert "fexc2-04": depenses_travaux_pret(entity_ref("urn:fr:apl:case:fexc2"), 1000.00 EUR) { origin case_input; }
+        assert "fexc2-05": pret_accorde_logement(entity_ref("urn:fr:apl:case:fexc2"), 900.00 EUR) { origin case_input; }
+        // D-42: D. 542-35: loans go only to allocataires who are owners, tenants or
+        // D-42: good-faith occupants "des locaux qu'ils habitent"; the model (23
+        // D-42: EligiblePretLogement) takes that finding, which the case omitted.
+        assert "fexc2-hab": habite_locaux_ameliorer(entity_ref("urn:fr:apl:case:fexc2")) { origin case_input; }
+    }
+    evaluate truth(pret_excede_plafond(entity_ref("urn:fr:apl:case:fexc2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-mensualite-pret" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fmen-01": pret_accorde_logement(entity_ref("urn:fr:apl:case:fmen"), 800.00 EUR) { origin case_input; }
+        assert "fmen-02": duree_remboursement_mois(entity_ref("urn:fr:apl:case:fmen"), 10) { origin case_input; }
+    }
+    evaluate truth(mensualite_pret(entity_ref("urn:fr:apl:case:fmen"), 80.80 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-premiere-mensualite-due" {
+    given {
+        // D-42: D. 542-37 first instalment "a compter du sixieme mois" is a month step; it needs the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; deadline_policy APL_PRET_MOIS; interpretation PpPlancherFinal; }
+        assert "fpre-01": pret_accorde_le(entity_ref("urn:fr:apl:case:fpre"), @2023-02-15) { origin case_input; }
+    }
+    evaluate truth(premiere_mensualite_due_le(entity_ref("urn:fr:apl:case:fpre"), @2023-08-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-rembourser-pret" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frem-01": pret_accorde_logement(entity_ref("urn:fr:apl:case:frem"), 800.00 EUR) { origin case_input; }
+        assert "frem-02": duree_remboursement_mois(entity_ref("urn:fr:apl:case:frem"), 10) { origin case_input; }
+        assert "frem-03": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:frem")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(RembourserPretAmelioration, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-solde-exigible-moins-bien" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fsol-01": depart_volontaire_moins_bien(entity_ref("urn:fr:apl:case:fsol")) { origin case_input; }
+    }
+    evaluate truth(solde_pret_exigible(entity_ref("urn:fr:apl:case:fsol")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

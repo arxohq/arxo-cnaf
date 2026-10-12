@@ -1,0 +1,18 @@
+// Recovery aid without ASF: titled claim for children under the age limit, ASF conditions unmet, help requested - aid granted (L. 581-6, PC-R07-19).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-aide-sans-asf" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "creance-aide-sans-asf-01": creance_alimentaire_titre(entity_ref("urn:fr:pf:case:creance-aide")) { origin case_input; }
+        assert "creance-aide-sans-asf-02": creance_enfant_avant_limite_age(entity_ref("urn:fr:pf:case:creance-aide")) { origin case_input; }
+        assert "creance-aide-sans-asf-03": conditions_asf_non_remplies(entity_ref("urn:fr:pf:case:creance-aide")) { origin case_input; }
+        assert "creance-aide-sans-asf-04": aide_recouvrement_demandee(entity_ref("urn:fr:pf:case:creance-aide")) { origin case_input; }
+    }
+    evaluate truth(aide_recouvrement_accordee(entity_ref("urn:fr:pf:case:creance-aide")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

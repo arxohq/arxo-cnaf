@@ -1,0 +1,105 @@
+// R. 541-1: incapacity thresholds, prise en charge, annual modality.
+//
+// DEONTIC MAP: computation only — thresholds, the 50-80 % tranche, the
+// prise-en-charge definition and the annual single payment modality are
+// institutional derivations. No positions: payment stays D1
+// (04-devoir-versement.law). The death prolongation of al. 5 lives in
+// 10-deces-prolongation.law (shared with R. 541-4 V).
+// Evaluative channel: the rate itself is fixed by the commission through
+// the guide-barème (external decrees, B-PFAEEH-GUIDE-BAREME) and arrives
+// as the established taux_incapacite_retenu fact (APL R. 822-13 pattern);
+// the rules only compare it against the pinned thresholds.
+// Thresholds are Decimal points («80» = 80 %), read from the bareme
+// (SeuilIncapacite80/50, two rows across the 2022-01-31 reform).
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+use self::{
+    CSS_R541_1,
+    CSS_R541_1_ED2026_04,
+    CSS_R541_1_PRE2022_ED2021_01,
+    FinanceurPriseEnCharge,
+    aeeh_droit_calcule,
+    decision_cdaph_favorable,
+    modalite_versement_annuel,
+    periodes_conges_internat,
+    prise_en_charge_par,
+    prise_en_charge_reconnue,
+    service_soins_domicile,
+    seuil_50_atteint,
+    seuil_80_atteint,
+    taux_incapacite_retenu,
+    tranche_50_80,
+};
+
+// --- R. 541-1 al. 1: 80 % for L. 541-1 para. 1 -----------------------------
+
+@source(
+    CSS_R541_1_PRE2022_ED2021_01,
+    CSS_R541_1,
+    CSS_R541_1_ED2026_04)
+rule Seuil80Atteint(e: fr.pf.core::Enfant, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "incapacité permanente au moins égale à 80 % (R. 541-1 al. 1)";
+    label en unofficial "permanent incapacity at least 80% (R. 541-1 para. 1)";
+    when taux_incapacite_retenu(e, t) and t >= SeuilIncapacite80;
+    then seuil_80_atteint(e);
+}
+
+// --- R. 541-1 al. 3: 50 % minimum for L. 541-1 para. 3 ---------------------
+
+@source(
+    CSS_R541_1_PRE2022_ED2021_01,
+    CSS_R541_1,
+    CSS_R541_1_ED2026_04)
+rule Seuil50Atteint(e: fr.pf.core::Enfant, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "incapacité permanente au moins égale à 50 % (R. 541-1 al. 3)";
+    label en unofficial "permanent incapacity at least 50% (R. 541-1 para. 3)";
+    when taux_incapacite_retenu(e, t) and t >= SeuilIncapacite50;
+    then seuil_50_atteint(e);
+}
+
+@source(
+    CSS_R541_1_PRE2022_ED2021_01,
+    CSS_R541_1,
+    CSS_R541_1_ED2026_04)
+rule Tranche5080(e: fr.pf.core::Enfant, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "taux au moins égal à 50 % et inférieur à 80 % (R. 541-1 al. 3)";
+    label en unofficial "rate at least 50% and below 80% (R. 541-1 para. 3)";
+    when taux_incapacite_retenu(e, t) and t >= SeuilIncapacite50
+        and t < SeuilIncapacite80;
+    then tranche_50_80(e);
+}
+
+// --- R. 541-1 al. 4: recognized prise en charge ----------------------------
+
+@source(
+    CSS_R541_1_PRE2022_ED2021_01,
+    CSS_R541_1,
+    CSS_R541_1_ED2026_04)
+rule PriseEnChargeReconnue(e: fr.pf.core::Enfant, f: FinanceurPriseEnCharge) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prise en charge accordée par l'assurance maladie, l'Etat ou l'aide sociale sur décision de la commission (R. 541-1 al. 4)";
+    label en unofficial "care granted under health insurance, the State or social aid on the commission decision (R. 541-1 para. 4)";
+    when service_soins_domicile(e) and prise_en_charge_par(e, f)
+        and decision_cdaph_favorable(e);
+    then prise_en_charge_reconnue(e);
+}
+
+// --- R. 541-1 al. 5: annual single payment for internat periods ------------
+
+@source(
+    CSS_R541_1_PRE2022_ED2021_01,
+    CSS_R541_1,
+    CSS_R541_1_ED2026_04)
+rule ModaliteVersementAnnuel(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montants des périodes d'internat versés annuellement en une seule fois (R. 541-1 al. 5)";
+    label en unofficial "residential-care period amounts paid annually in one go (R. 541-1 para. 5)";
+    when aeeh_droit_calcule(e) and periodes_conges_internat(e);
+    then modalite_versement_annuel(e);
+}

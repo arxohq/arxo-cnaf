@@ -1,0 +1,1041 @@
+// Package dictionary: disabled-child education allowance (AEEH, wave 3 +
+// finish wave R541-1..10).
+// The rules of `02-droit-montant.law` derive the computation-level right,
+// the base amount, the six category supplements and the isolated-parent
+// supplement (MPI) from the pinned fragments; the case supplies the BMAF,
+// the commission-established TrafficCategory and reason facts, the MTP
+// amount and the isolation facts (provenance — case facts).
+// Modules 05..10 carry the R. 541-1..10 regulatory mechanics: incapacity
+// thresholds, category criteria, demande procedure, durations, revision,
+// control, silence, effect dates, hospitalization, PCH interplay and the
+// death extension (see the per-article map below). Module 11-dom-aeeh
+// carries the DOM transfer (D-73): AEEH attribution in the L. 751-1
+// collectivities (L. 755-20) and the DOM/metropolitan amount identity
+// (D. 755-11), both as institutional norms without new positions.
+//
+// DEONTIC MAP OVER PINNED TEXTS ONLY (bytes of 01-sources.law; outside
+// them — boundary, not conjecture).
+//
+//   D1. Duty of the fund to pay. «a droit à une allocation» (L. 541-1,
+//   para. 1) + «est attribuée et versée» linkage via the computed total.
+//   The duty triggers on aeeh_montant_total (right + computed amount).
+//   The debtor fund unnamed in the texts — the «debtor fund of the case»
+//   link is empirical (deontic-migration.md pattern), performance is the
+//   empirical fact aeeh_versee. Window [@2021-01-01, ∞) is the package
+//   coverage window. The CNSA principal (L. 541-5: bodies serve and
+//   control for the CNSA against reimbursement) names the same empirical
+//   bearer; no separate rule.
+//   D2. Suspension power (L. 541-2, para. 2): «l'allocation peut être
+//   suspendue ou supprimée» when the carer does not follow the measures
+//   recommended by the commission, after a hearing at the person's
+//   request. Modelled as a power (03-pouvoir-suspension.law): holder the
+//   debtor body, exercise suspension_prononcee, effect the removal of the
+//   computed total. Window [@2021-01-01, ∞).
+//   No recipient duties («doit», «est tenu») in the L/D scope; no sanctions
+//   or recovery procedures in scope: cross recovery under L. 553-2 is package
+//   fr.prestations.versement (wave 5).
+//   L. 541-3 (L. 521-2 applicable): the designation/sharing mechanism is
+//   owned by fr.pf.af (wave-1 lane); the carer link arrives per case as
+//   fr.pf.core::parent_charge (B-AEEH-PARTAGE).
+//
+//   R. 541-1 (05-seuils-taux, 10-deces-prolongation): 80 %/50 % thresholds,
+//   50-80 % tranche, prise-en-charge definition and the annual single
+//   payment modality are institutional computation, no new positions
+//   (payment stays D1); the death prolongation end date is institutional
+//   computation shared with R. 541-4 V, while the branch amounts («ce
+//   versement») conclude only for L. 541-1 para. 4 leave/suspension
+//   periods (periodes_conges_internat).
+//   R. 541-2 (06-categories): the six-category criteria are an institutional
+//   verification skeleton (categorieN_criteres_remplis); the commission
+//   classification itself stays the established categorie_attribuee fact
+//   (B-PFAEEH-CATEGORIE kept for the act of classifying).
+//   R. 541-3 (07-procedure-demande): demande completeness is institutional
+//   (certificate + both declaration branches + dossier useful-pieces fact
+//   bound to the filing date, PIECES CONTRACT; the usefulness/completeness
+//   determination arrives as an adjudicated dossier fact, decision-maker
+//   unspecified in source — B-PFAEEH-PIECES-APPRECIATION); duties
+//   JoindrePiecesDemande (bearer: carer) and TransmettreDossierMDPH
+//   (bearer: MDPH, «transmet, sans délai» — no computable deadline).
+//   R. 541-4 (08-durees-revision, 10-deces-prolongation): duration bounds
+//   and exclusive due-ends are institutional computation under an explicit
+//   award regime (REGIME CONTRACT: the «Par dérogation» special period
+//   displaces the ordinary 1°/2° for the same award; the ordinary head
+//   additionally requires an affirmative record that at least one trigger
+//   is absent — certificat_sans_perspective or equipe_sans_proposition);
+//   the 2026 50-80 % special bounds and due-ends additionally require the
+//   initial/renewal filing cohort (demande_attribution_aeeh_deposee from
+//   2026-04-01, decree 2026-227 NOTA), older filings keeping the
+//   unconditional 2-5 year period (no regime, no prospect); liberties
+//   DemanderRevisionBeneficiaire/Organisme and ControlerEffectivite
+//   (organisme); duties SaisirCommission, VerserAvanceComplement (organisme),
+//   StatuerUrgence and ReexaminerAggravation (commission); the
+//   change-of-body persistence feeds aeeh_droit_calcule directly.
+//   R. 541-5 (08-durees-revision): reexamination deadline + retard are
+//   institutional computation; duty ReexaminerMesures (commission).
+//   R. 541-6 (09-dates-effet): silence deadline + rejet_implicite are
+//   institutional computation (legal fiction, no position).
+//   R. 541-7 (09-dates-effet): start/end dates are institutional
+//   computation; the R. 512-2 link is an institutional bridge reading pub
+//   fr.pf.core::enfant_ouvre_droit; PCH end is institutional computation;
+//   duties SuspendreComplement and RetablirComplement (organisme).
+//   R. 541-8 (09-dates-effet): assimilation date is institutional
+//   computation; assimilation is defeasible with a contraintes defeater;
+//   liberty MaintenirVersementHospitalisation (commission).
+//   R. 541-9 (07-procedure-demande): duty DeposerDemandePCH (carer),
+//   gated on a pursued third-element request (filing channel, not a
+//   universal filing duty).
+//   R. 541-10 (07-procedure-demande): charge exclusion is institutional
+//   (simultaneous AEEH + third-element PCH requests); duties
+//   ReviserDecision (al. 2, supplement awarded for non-tierce expenses)
+//   and ReexaminerComplement (al. 3, L. 245-1 III 1° beneficiary +
+//   handicap/factor evolution); prohibition OpterComplementAvantEcheance
+//   (al. 3, carer, L. 245-3 2°/4°/5° lump-sum elements, action named
+//   positively).
+//   L. 755-20 (11-dom-aeeh): «est attribuée dans les collectivités
+//   mentionnées à l'article L. 751-1» is an institutional attribution
+//   status (entitled child resident in a listed collectivity); no duty
+//   (no bearer, no «doit»: payment stays D1 on the computed total).
+//   «dans des conditions fixées par décret» is a decree delegation:
+//   D. 755-11 is pinned as the operative decree provision for the
+//   amounts (B-PFAEEH-DOM-DECRET-CONDITIONS).
+//   D. 755-11 (11-dom-aeeh): «est identique à celui qui est applicable
+//   en métropole» is institutional computation: the DOM amount is built
+//   from the computed metropolitan total and a presented DOM amount is
+//   checked against the built value (DECISION-0452). No duty,
+//   prohibition, power or liberty: an equality statement names no act
+//   and no actor.
+//
+// LAYER BOUNDARIES (omission records, not norms):
+// B-PFAEEH-TETE: the computation-level head is carried by this package on
+// its own decision fact. fr.pf.core holds parallel principle-level filters
+// (AeehDecisionCdaph, AeehExclusionInternat) that are package-internal (§24,
+// not exported): this package cannot read them, so it does not; case worlds
+// assert the local symbol and the upstream filters stay silent there. Same
+// source facts, no redefinition.
+// B-PFAEEH-INTERNAT: the L. 541-1 para. 4 exclusion («n'est pas due lorsque
+// ... sauf pour les périodes de congés ou de suspension») is period-scoped
+// and needs period facts this package has not (no month-of-right index):
+// not modelled here. The upstream principle-level defeater covers it in
+// 2021+ worlds; full-cover internat cases outside leave are out of scope
+// for the computation.
+// B-PFAEEH-BMAF-EURO: BMAF series (L. 551-1) — neighbour fr.pf.core; in the
+// case — bmaf_retenue fact.
+// B-PFAEEH-SEUIL: RETIRED by the finish wave — the 80 %/50 % thresholds are
+// pinned parameters (SeuilIncapacite80/50) read by 05-seuils-taux rules.
+// B-PFAEEH-CATEGORIE: the commission act of classifying and the evaluation
+// guide (R. 541-2 chapeau, arrêté-defined) arrive as the established
+// categorie_attribuee fact (CDAPH channel, as APL R. 822-13); the article's
+// verifiable criteria skeleton is executable in 06-categories.
+// B-PFAEEH-MTP: sixth-category complement equals the MTP amount (L. 341-4,
+// external, unpinned) — montant_mtp_retenu fact.
+// B-PFAEEH-PARTAGE: designation and sharing per L. 521-2 via L. 541-3 —
+// mechanism owned by fr.pf.af; carer link per case.
+// B-PFAEEH-DUREE: RETIRED by the finish wave — attribution periods,
+// revision, silence-is-rejection, AAH succession and the death extension
+// are modelled in 08/09/10 (R. 541-4..7 + R. 541-1 al. 5).
+// B-PFAEEH-PCH: PCH (CASF L. 245-1, external) — percoit_pch fact; the PCH
+// mechanics themselves (L. 245-1/R. 245-36) stay external
+// (B-PFAEEH-PCH-MECANIQUE): only the AEEH-side effects are modelled.
+// B-PFAEEH-ARRONDI: no cent-rounding rule in scope; Money keeps exact
+// Decimal products (observed: 395.04 x 0.32 = 126.4128 TRUE), no silent
+// rounding to cents. Payable cents are a fund-side step outside scope.
+// B-PFAEEH-GUIDE-BAREME: the incapacity guide-barème and its decrees
+// (93-1216, 2004-1136, 77-1549, R. 541-1 al. 2) are external; the fixed
+// rate arrives as taux_incapacite_retenu.
+// B-PFAEEH-SEUILS-ARRETE: each R. 541-2 category expense amount («montant
+// fixé par arrêté») is unpinned — seuil_depenses_retenu inputs.
+// B-PFAEEH-GUIDE-EVALUATION: the R. 541-2 evaluation guide (arrêté) is
+// unpinned; only the article's stated criteria are executable.
+// B-PFAEEH-TEMPS-PLEIN: the legal working duration (R. 541-2 last alinea,
+// Code du travail, external) is unpinned; full-time gates arrive as
+// established facts.
+// B-PFAEEH-MODELE-ARRETE: the R. 541-3 declaration model (joint arrêtés)
+// is unpinned; declaration contents arrive as case facts.
+// B-PFAEEH-PIECES-APPRECIATION: R. 541-3 al. 2 requires «toutes les pièces
+// justificatives utiles à l'appréciation des droits» but names no
+// decision-maker for the usefulness/completeness determination; the MDPH
+// is the recipient, not the appointed evaluator. The dossier fact arrives
+// as an adjudicated record; who established it is case provenance, not a
+// source delegation.
+// B-PFAEEH-DELAI-URGENCE: the urgent-decision deadline (R. 541-4 IV,
+// joint arrêté) is unpinned; the duty to decide urgently has no
+// computable date.
+// B-PFAEEH-PCH-MECANIQUE: CASF L. 245-1/R. 245-36 (PCH elements,
+// attribution) are external; PCH-side dates arrive as case facts.
+// B-PFAEEH-DOM-L751-1: the L. 751-1 collectivity list is not pinned in
+// this package; the Territoire values spell the six collectivities of
+// the Title V header in force over the program window (Guadeloupe,
+// Guyane, Martinique, Réunion, Saint-Barthélemy, Saint-Martin;
+// Mayotte joins only 2028-01-01, outside the window). Residence
+// arrives as the residence_enfant case fact.
+// B-PFAEEH-DOM-DECRET-CONDITIONS: L. 755-20 awards «dans des conditions
+// fixées par décret»; D. 755-11 (amount identity with metropolitan
+// France) is the pinned operative decree provision. No other decree-set
+// DOM award conditions are identified in the pinned corpus; the
+// metropolitan award mechanics of this package (CDAPH decision,
+// thresholds, categories) apply unmodified.
+//
+
+// INPUT CONTRACT (engine has no absence test): exactly one of
+// {categorie_attribuee, sans_complement} and exactly one of
+// {mpi-triggering facts, sans_mpi} per entitled child; cases probing
+// silence assert exactly one of {decision_cdaph_favorable,
+// sans_decision_cdaph}; cases probing reexamination assert exactly one of
+// {reexamen_effectue, sans_reexamen}. The retained BMAF is
+// keyed by child (not by household): the computation heads are per-child
+// (D. 541-1 «pour chaque enfant») and every keyed premise must arrive with
+// its key bound — free-key generation does not run outside the latest
+// edition, so per-child keying keeps the 2012 cases computable.
+// Percent and hour facts are Decimal points («80» means 80 %, «8» means
+// eight hours), matching the Decimal threshold parameters.
+// PCH SUBTYPE CONTRACT (R. 541-9/10): demande_troisieme_element_pch is
+// asserted only when a PCH third-element request (housing/vehicle/
+// transport charges) is pursued for the child; complement_depenses_
+// non_tierce only when the awarded supplement covers expenses other than
+// third-person recourse; beneficiaire_pch_l2451_iii_1 only for PCH
+// beneficiaries under L. 245-1 III 1° CASF; evolution_handicap_charges
+// only on handicap evolution or changed charge-determining factors;
+// elements_pch_versement_ponctuel only for L. 245-3 2°/4°/5° elements
+// with a lump-sum payment. Neighbouring-subtype requests never stand in
+// for these facts; missing subtype facts stay silent (open world).
+// COHORT CONTRACT (R. 541-4, decree 2026-227 NOTA): the 2026 50-80 %
+// special bounds and due-ends apply only to initial/renewal AEEH requests
+// filed from 2026-04-01 — demande_attribution_aeeh_deposee carries that
+// filing date; without it no 2026 50-80 % head concludes (pending, not
+// false), and pre-2026 filings keep the 2-5 year award period.
+// REGIME CONTRACT (R. 541-4 I, «Par dérogation aux dispositions des
+// deuxième et troisième alinéas»): the special period and the ordinary
+// due-ends cannot conclude for the same award. Cases assert exactly one
+// of {attribution_derogation_r5414, attribution_ordinaire_r5414} per
+// award, both as adjudicated commission-record facts; the derogation head
+// additionally requires the prospect + proposal facts, the ordinary head
+// the AAH/conditions trigger PLUS an affirmative record that at least one
+// trigger is absent ({certificat_sans_perspective, equipe_sans_proposition},
+// separate ordinary cases per basis). A missing regime or a missing
+// absence record stays silent on the ordinary head (pending, not false);
+// absence is never inferred from a missing trigger fact. The pre-2026
+// 50-80 % unconditional period needs no regime fact (R. 541-4 II,
+// 2019/2022 wordings).
+// PIECES CONTRACT (R. 541-3 al. 2, «toutes les pièces justificatives
+// utiles»): demande_complete requires the filing (demande_aeeh_deposee),
+// the certificate, both declaration branches AND the dossier
+// pieces_utiles_completes(e, depot) fact bound to that filing date. The
+// dossier fact arrives as an adjudicated record (origin adjudicated);
+// the certificate plus declarations alone never conclude completeness; a
+// missing dossier fact stays silent (pending, not false). The source does
+// not appoint the usefulness evaluator (B-PFAEEH-PIECES-APPRECIATION).
+// REJET CONTRACT (R. 541-6): date_rejet_implicite is the exclusive
+// +4-month threshold (filing + 4 calendar months); the fiction holds
+// strictly beyond it («plus de quatre mois»), never on it.
+//
+// Scenarios: tests/aeeh-*.lawtest (families fr.pf.aeeh#droit-montant /
+// #pouvoir-suspension / #devoir-versement in law.toml): inputs→value;
+// boundary pairs (category edges, MPI reasons, isolation); OpenFisca AEEH 3
+// (family #openfisca-import); positions: ACTIVE / power exercisable.
+// tests/r541-*.lawtest (families #seuils-taux, #categories,
+// #procedure-demande, #durees-revision, #dates-effet, #deces-prolongation):
+// threshold/date pairs, duration bounds, positions ACTIVE + silent pairs,
+// edition pairs across 2022-01-31.
+// tests/dom-*.lawtest (family #dom-aeeh): six-collectivity attribution +
+// metropole/autre silence, amount build-first, presented-vs-built check
+// pair, 2021-edition proof. No new positions (institutional norms only).
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+import fr.pf.core version "0.1.0";
+
+pub enum CategorieComplement {
+    label fr official "catégorie du complément d'allocation, fixée par la commission (D. 541-2, fait établi)";
+    label en unofficial "supplement category set by the commission (D. 541-2, established fact)";
+    CATEGORIE_1,
+    CATEGORIE_2,
+    CATEGORIE_3,
+    CATEGORIE_4,
+    CATEGORIE_5,
+    CATEGORIE_6
+}
+
+pub relation bmaf_retenue(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "base mensuelle L. 551-1 retenue pour le mois du droit de l'enfant (arrêté, montant non épinglé)";
+    label en unofficial "L. 551-1 monthly base retained for the child's month of right (arrete figure, unpinned)";
+}
+
+pub relation categorie_attribuee(e: fr.pf.core::Enfant, cat: CategorieComplement) kind empirical {
+    key(e);
+    label fr official "classement de l'enfant par la commission dans l'une des six catégories (R. 541-2 — hors champ, fait établi)";
+    label en unofficial "commission classification of the child into one of the six categories (R. 541-2 - out of scope, established fact)";
+}
+
+pub relation sans_complement(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "aucun complément attribué pour l'enfant (seule l'allocation proprement dite est due)";
+    label en unofficial "no supplement awarded for the child (only the base allowance is due)";
+}
+
+pub relation complement_contrainte_activite(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "la commission a accordé un complément car l'état de l'enfant contraint à renoncer, cesser ou réduire l'activité ou exige une tierce personne rémunérée (D. 541-3)";
+    label en unofficial "the commission granted a supplement because the condition forces giving up, stopping or reducing work or requires a paid third person (D. 541-3)";
+}
+
+pub relation personne_isolee(p: fr.pf.core::Personne) kind empirical {
+    label fr official "personne isolée assumant seule la charge de l'enfant handicapé (L. 541-4)";
+    label en unofficial "isolated person solely in charge of the disabled child (L. 541-4)";
+}
+
+pub relation percoit_pch(p: fr.pf.core::Personne) kind empirical {
+    label fr official "bénéficie de la prestation de compensation L. 245-1 CASF (hors champ, fait du dossier)";
+    label en unofficial "receives the L. 245-1 CASF compensation benefit (out of scope, case fact)";
+}
+
+pub relation montant_mtp_retenu(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "montant de la majoration pour tierce personne des invalides de 3e catégorie, retenu pour le complément de sixième catégorie (L. 341-4 — hors champ)";
+    label en unofficial "third-category-invalidity third-person supplement retained for the sixth-category supplement (L. 341-4 - out of scope)";
+}
+
+pub relation sans_mpi(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "aucune majoration parent isolé pour l'enfant (conditions L. 541-4/D. 541-3 non réunies)";
+    label en unofficial "no isolated-parent supplement for the child (L. 541-4/D. 541-3 conditions unmet)";
+}
+
+pub relation decision_cdaph_favorable(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "décision de la commission L. 146-9 CASF appréciant que l'état justifie l'attribution (L. 541-2, fait établi — adjudicated)";
+    label en unofficial "L. 146-9 CASF commission decision that the condition warrants award (L. 541-2, established fact)";
+}
+
+pub relation non_suite_mesures(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "la personne ayant la charge ne donne pas suite aux mesures préconisées par la commission (L. 541-2 al. 2)";
+    label en unofficial "the carer does not follow the measures recommended by the commission (L. 541-2 para. 2)";
+}
+
+pub relation audition_tenue(p: fr.pf.core::Personne) kind empirical {
+    label fr official "audition de la personne à sa demande avant suspension ou suppression (L. 541-2 al. 2)";
+    label en unofficial "hearing of the person at their request before suspension or removal (L. 541-2 para. 2)";
+}
+
+pub relation suspension_prononcee(e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "action: suspension ou suppression de l'allocation prononcée par l'organisme";
+    label en unofficial "action: suspension or removal of the allowance ordered by the body";
+}
+
+pub relation aeeh_versee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(p, e);
+    label fr official "versement constaté de l'allocation au bénéficiaire (exécution; l'organisme figure au porteur)";
+    label en unofficial "recorded payment of the allowance to the payee";
+}
+
+pub relation aeeh_droit_calcule(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "droit à l'AEEH au niveau calcul (décision CDAPH L. 541-2, taux décret — hors champ)";
+    label en unofficial "AEEH entitlement at computation level (CDAPH decision L. 541-2, rate by decree - out of scope)";
+}
+
+pub relation aeeh_montant_base(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant mensuel de l'allocation proprement dite, 32 p. 100 de la base (D. 541-1)";
+    label en unofficial "monthly base allowance, 32% of the base (D. 541-1)";
+}
+
+pub relation aeeh_montant_complement(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant mensuel du complément par catégorie, sixième = MTP (D. 541-2)";
+    label en unofficial "monthly category supplement, sixth = MTP amount (D. 541-2)";
+}
+
+pub relation mpi_eligible(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "majoration parent isolé attribuable (L. 541-4, D. 541-3)";
+    label en unofficial "isolated-parent supplement awardable (L. 541-4, D. 541-3)";
+}
+
+pub relation aeeh_montant_mpi(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant mensuel de la majoration parent isolé par catégorie (D. 541-4)";
+    label en unofficial "monthly isolated-parent supplement by category (D. 541-4)";
+}
+
+pub relation aeeh_montant_total(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "total mensuel dû: base + complément + MPI (zéros portés)";
+    label en unofficial "monthly total due: base + supplement + MPI (zeros carried)";
+}
+
+pub relation aeeh_montant_servi(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant servi arrondi au centime (annexe DSS/2B/2026/46 : montants arrondis au centième d’euro le plus proche)";
+    label en unofficial "served amount rounded to the centime (DSS/2B/2026/46 annex: amounts rounded to the nearest cent)";
+}
+
+// --- R. 541-1..10 actors (finish wave) ------------------------------------
+
+pub entity Commission {
+    label fr official "commission des droits et de l'autonomie des personnes handicapées (L. 146-9 CASF)";
+    label en unofficial "commission for the rights and autonomy of disabled persons (L. 146-9 CASF)";
+}
+
+pub entity MDPH {
+    label fr official "maison départementale des personnes handicapées compétente (R. 541-3)";
+    label en unofficial "competent departmental house for disabled persons (R. 541-3)";
+}
+
+pub enum FinanceurPriseEnCharge {
+    label fr official "financeur de la prise en charge au sens de R. 541-1 al. 4";
+    label en unofficial "care funder under R. 541-1 para. 4";
+    ASSURANCE_MALADIE,
+    ETAT,
+    AIDE_SOCIALE
+}
+
+// --- R. 541-1: thresholds, tranche, prise en charge (05-seuils-taux) ------
+
+pub relation taux_incapacite_retenu(e: fr.pf.core::Enfant, taux: Decimal) kind empirical {
+    key(e);
+    label fr official "taux d'incapacité permanente fixé par la commission, en points (R. 541-1 — fait établi)";
+    label en unofficial "commission-fixed permanent incapacity rate, in points (R. 541-1 - established fact)";
+}
+
+pub relation seuil_80_atteint(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "taux au moins égal à 80 % (R. 541-1 al. 1)";
+    label en unofficial "rate at least 80% (R. 541-1 para. 1)";
+}
+
+pub relation seuil_50_atteint(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "taux au moins égal à 50 % (R. 541-1 al. 3)";
+    label en unofficial "rate at least 50% (R. 541-1 para. 3)";
+}
+
+pub relation tranche_50_80(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "taux au moins égal à 50 % et inférieur à 80 % (R. 541-1 al. 3, R. 541-4 II)";
+    label en unofficial "rate at least 50% and below 80% (R. 541-1 para. 3, R. 541-4 II)";
+}
+
+pub relation service_soins_domicile(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "prise en charge par un service L. 312-1 CASF ou soins à domicile au sens de L. 541-1 (R. 541-1 al. 4)";
+    label en unofficial "care by a L. 312-1 CASF service or home care under L. 541-1 (R. 541-1 para. 4)";
+}
+
+pub relation prise_en_charge_par(e: fr.pf.core::Enfant, f: FinanceurPriseEnCharge) kind empirical {
+    key(e);
+    label fr official "prise en charge accordée au titre de l'assurance maladie, de l'Etat ou de l'aide sociale (R. 541-1 al. 4)";
+    label en unofficial "care granted under health insurance, the State or social aid (R. 541-1 para. 4)";
+}
+
+pub relation prise_en_charge_reconnue(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "prise en charge reconnue sur décision de la commission (R. 541-1 al. 4)";
+    label en unofficial "care recognized on the commission decision (R. 541-1 para. 4)";
+}
+
+pub relation periodes_conges_internat(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "montants dus au titre des périodes de congés ou de suspension de la prise en charge (L. 541-1 al. 4, R. 541-1 al. 5)";
+    label en unofficial "amounts due for leave or suspension periods of the care coverage (L. 541-1 para. 4, R. 541-1 para. 5)";
+}
+
+pub relation modalite_versement_annuel(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "versement annuel en une seule fois des montants des périodes d'internat (R. 541-1 al. 5)";
+    label en unofficial "annual single payment of the residential-care period amounts (R. 541-1 para. 5)";
+}
+
+// --- R. 541-2: category criteria evidence (06-categories) ------------------
+
+pub relation depenses_supplementaires(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "dépenses supplémentaires retenues liées au handicap (R. 541-2)";
+    label en unofficial "retained supplementary disability expenses (R. 541-2)";
+}
+
+pub relation seuil_depenses_retenu(cat: CategorieComplement, montant: Money) kind empirical {
+    key(cat);
+    label fr official "montant fixé par arrêté pour la catégorie (R. 541-2 — arrêté non épinglé, fait retenu)";
+    label en unofficial "arrete-set amount for the category (R. 541-2 - unpinned arretes, retained fact)";
+}
+
+pub relation taux_reduction_activite(e: fr.pf.core::Enfant, taux: Decimal) kind empirical {
+    key(e);
+    label fr official "réduction de l'activité professionnelle d'un parent, en points de temps plein (R. 541-2 — fait établi)";
+    label en unofficial "parent work reduction, in full-time points (R. 541-2 - established fact)";
+}
+
+pub relation heures_tierce_remuneree(e: fr.pf.core::Enfant, heures: Decimal) kind empirical {
+    key(e);
+    label fr official "recours hebdomadaire à une tierce personne rémunérée, en heures (R. 541-2 — fait établi)";
+    label en unofficial "weekly paid third-person care, in hours (R. 541-2 - established fact)";
+}
+
+pub relation cessation_activite_totale(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "contrainte à n'exercer aucune activité professionnelle (R. 541-2, 4°/5°/6° — fait établi)";
+    label en unofficial "forced to carry on no professional activity (R. 541-2, 4/5/6 - established fact)";
+}
+
+pub relation tierce_temps_plein(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "recours à une tierce personne rémunérée à temps plein (R. 541-2, 4°/5°/6° — fait établi)";
+    label en unofficial "full-time paid third-person care (R. 541-2, 4/5/6 - established fact)";
+}
+
+pub relation contraintes_permanentes(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "contraintes permanentes de surveillance et de soins à la charge de la famille (R. 541-2, 6° — fait établi)";
+    label en unofficial "permanent family-borne supervision and care constraints (R. 541-2, 6 - established fact)";
+}
+
+pub relation categorie1_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 1° de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 1 criteria satisfied on the retained facts";
+}
+
+pub relation categorie2_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 2° de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 2 criteria satisfied on the retained facts";
+}
+
+pub relation categorie3a_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 3° a) de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 3(a) criteria satisfied on the retained facts";
+}
+
+pub relation categorie3b_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 3° b) de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 3(b) criteria satisfied on the retained facts";
+}
+
+pub relation categorie3c_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 3° c) de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 3(c) criteria satisfied on the retained facts";
+}
+
+pub relation categorie4a_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 4° a) de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 4(a) criteria satisfied on the retained facts";
+}
+
+pub relation categorie4b_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 4° b) de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 4(b) criteria satisfied on the retained facts";
+}
+
+pub relation categorie4c_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 4° c) de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 4(c) criteria satisfied on the retained facts";
+}
+
+pub relation categorie4d_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 4° d) de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 4(d) criteria satisfied on the retained facts";
+}
+
+pub relation categorie5_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 5° de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 5 criteria satisfied on the retained facts";
+}
+
+pub relation categorie6_criteres_remplis(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "critères du 6° de R. 541-2 satisfaits sur les faits retenus";
+    label en unofficial "R. 541-2 6 criteria satisfied on the retained facts";
+}
+
+// --- R. 541-3/9/10: procedure (07-procedure-demande) -----------------------
+
+pub relation demande_aeeh_deposee(e: fr.pf.core::Enfant, depot: Date) kind empirical {
+    key(e);
+    label fr official "demande d'AEEH, de complément ou de majoration adressée à la MDPH (R. 541-3 al. 1)";
+    label en unofficial "AEEH/supplement/majoration request sent to the MDPH (R. 541-3 para. 1)";
+}
+
+pub relation certificat_medical(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "certificat médical détaillé joint sous pli fermé (R. 541-3, 1°)";
+    label en unofficial "detailed sealed medical certificate attached (R. 541-3, 1)";
+}
+
+pub relation declaration_admission(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "déclaration sur l'admission en établissement et l'internat (R. 541-3, 2° a))";
+    label en unofficial "declaration on establishment admission and boarding (R. 541-3, 2(a))";
+}
+
+pub relation declaration_soins(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "déclaration sur les soins et leur prise en charge (R. 541-3, 2° b))";
+    label en unofficial "declaration on care and its coverage (R. 541-3, 2(b))";
+}
+
+pub relation pieces_utiles_completes(e: fr.pf.core::Enfant, depot: Date) kind empirical {
+    key(e);
+    label fr official "toutes les pièces justificatives utiles à l'appréciation des droits sont jointes pour la demande déposée à cette date (R. 541-3 al. 2 — fait établi du dossier, appréciateur non désigné par la source)";
+    label en unofficial "all supporting documents useful to assess the rights are attached for the request filed on that date (R. 541-3 para. 2 - adjudicated dossier record, evaluator unspecified)";
+}
+
+pub relation demande_complete(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "demande accompagnée de toutes les pièces justificatives utiles (R. 541-3 al. 2)";
+    label en unofficial "request with all supporting documents attached (R. 541-3 para. 2)";
+}
+
+pub relation pieces_justificatives_fournies(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    key(p, e);
+    label fr official "exécution : pièces justificatives fournies par le demandeur (R. 541-3)";
+    label en unofficial "performance: supporting documents supplied by the claimant (R. 541-3)";
+}
+
+pub relation mdph_competente(m: MDPH, e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "MDPH compétente pour le dossier de l'enfant (R. 541-3)";
+    label en unofficial "MDPH competent for the child's file (R. 541-3)";
+}
+
+pub relation dossier_transmis_mdph(m: MDPH, o: fr.pf.core::Organisme, e: fr.pf.core::Enfant) kind empirical {
+    key(m, e);
+    label fr official "exécution : données du dossier transmises à l'organisme débiteur (R. 541-3 al. 5)";
+    label en unofficial "performance: file data sent to the debtor body (R. 541-3 para. 5)";
+}
+
+pub relation demande_pch_deposee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    key(p, e);
+    label fr official "exécution : demande du troisième élément de PCH déposée à la MDPH (R. 541-9)";
+    label en unofficial "performance: PCH third-element request filed with the MDPH (R. 541-9)";
+}
+
+pub relation demande_troisieme_element_pch(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "une demande portant sur le troisième élément de la PCH (aménagement du logement et du véhicule, surcoûts de transports) est poursuivie pour l'enfant (R. 541-9, R. 541-10 al. 1 — fait du dossier)";
+    label en unofficial "a PCH third-element request (housing/vehicle adaptation, transport overcosts) is pursued for the child (R. 541-9, R. 541-10 para. 1 - case fact)";
+}
+
+pub relation demande_simultanee_aeeh_pch(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "demandes AEEH et PCH présentées simultanément ou conjointement (R. 541-9 al. 2, R. 541-10 al. 1)";
+    label en unofficial "simultaneous or joint AEEH and PCH requests (R. 541-9 para. 2, R. 541-10 para. 1)";
+}
+
+pub relation charges_pch_exclues_complement(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "charges de logement, véhicule et transports imputées à la PCH, exclues du complément (R. 541-10 al. 1)";
+    label en unofficial "housing, vehicle and transport charges borne by the PCH, excluded from the supplement (R. 541-10 para. 1)";
+}
+
+pub relation beneficiaire_complement(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "bénéficiaire d'un complément de l'AEEH (R. 541-10 al. 2 — fait du dossier)";
+    label en unofficial "AEEH supplement beneficiary (R. 541-10 para. 2 - case fact)";
+}
+
+pub relation complement_depenses_non_tierce(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "complément attribué pour des dépenses autres que celles entraînées par le recours à une tierce personne (R. 541-10 al. 2 — fait établi)";
+    label en unofficial "supplement awarded for expenses other than third-person recourse (R. 541-10 para. 2 - established fact)";
+}
+
+pub relation demande_pch_complement(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "demande de PCH par un bénéficiaire de complément (R. 541-10 al. 2 — fait du dossier)";
+    label en unofficial "PCH request by a supplement beneficiary (R. 541-10 para. 2 - case fact)";
+}
+
+pub relation revision_decision_effectuee(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "exécution : décision d'allocation et de complément révisée (R. 541-10 al. 2)";
+    label en unofficial "performance: allowance and supplement decision revised (R. 541-10 para. 2)";
+}
+
+pub relation demande_renouvellement_pch(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "demande de renouvellement ou révision de la PCH (R. 541-10 al. 3 — fait du dossier)";
+    label en unofficial "PCH renewal or revision request (R. 541-10 para. 3 - case fact)";
+}
+
+pub relation beneficiaire_pch_l2451_iii_1(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "bénéficiaire de la PCH au titre du 1° du III de l'article L. 245-1 CASF (R. 541-10 al. 3, qualification externe — fait du dossier)";
+    label en unofficial "PCH beneficiary under L. 245-1 III 1° CASF (R. 541-10 para. 3, external qualification - case fact)";
+}
+
+pub relation evolution_handicap_charges(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "évolution du handicap ou des facteurs ayant déterminé les charges prises en compte (R. 541-10 al. 3 — fait établi)";
+    label en unofficial "handicap evolution or change of the charge-determining factors (R. 541-10 para. 3 - established fact)";
+}
+
+pub relation reexamen_complement_effectue(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "exécution : conditions du complément réexaminées (R. 541-10 al. 3)";
+    label en unofficial "performance: supplement conditions re-examined (R. 541-10 para. 3)";
+}
+
+pub relation elements_pch_versement_ponctuel(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "éléments L. 245-3 2°/4°/5° CASF ayant donné lieu à un versement ponctuel (R. 541-10 al. 3 — fait du dossier)";
+    label en unofficial "L. 245-3 2/4/5 CASF elements paid as a lump sum (R. 541-10 para. 3 - case fact)";
+}
+
+pub relation echeance_elements_pch(e: fr.pf.core::Enfant, echeance: Date) kind empirical {
+    key(e);
+    label fr official "date d'échéance de l'attribution des éléments PCH (R. 541-10 al. 3)";
+    label en unofficial "expiry date of the PCH elements award (R. 541-10 para. 3)";
+}
+
+pub relation option_complement_anticipee(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "action : option pour le complément avant l'échéance des éléments PCH (R. 541-10 al. 3)";
+    label en unofficial "action: opting for the supplement before the PCH elements expiry (R. 541-10 para. 3)";
+}
+
+// --- R. 541-4/5: durations, revision, control (08-durees-revision) --------
+
+pub relation date_attribution_aeeh(e: fr.pf.core::Enfant, attribution: Date) kind empirical {
+    key(e);
+    label fr official "date d'attribution initiale ou de renouvellement (R. 541-4 — fait du dossier)";
+    label en unofficial "initial award or renewal date (R. 541-4 - case fact)";
+}
+
+pub relation demande_attribution_aeeh_deposee(e: fr.pf.core::Enfant, depot: Date) kind empirical {
+    key(e);
+    label fr official "date de dépôt de la demande initiale ou de renouvellement portant l'attribution (cohorte d'applicabilité, NOTA décret 2026-227 — fait du dossier)";
+    label en unofficial "filing date of the initial or renewal request behind the award (applicability cohort, decree 2026-227 NOTA - case fact)";
+}
+
+pub relation perspective_amelioration(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "perspective d'amélioration expressément mentionnée par le certificat médical (R. 541-4 I)";
+    label en unofficial "improvement prospect expressly stated in the medical certificate (R. 541-4 I)";
+}
+
+pub relation proposition_equipe_pluridisciplinaire(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "proposition de l'équipe pluridisciplinaire L. 146-8 CASF (R. 541-4 I — fait établi)";
+    label en unofficial "L. 146-8 CASF multidisciplinary team proposal (R. 541-4 I - established fact)";
+}
+
+pub relation certificat_sans_perspective(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "le certificat médical versé au dossier ne mentionne expressément aucune perspective d'amélioration (R. 541-4 I — fait établi)";
+    label en unofficial "the filed medical certificate expressly records no improvement prospect (R. 541-4 I - established record fact)";
+}
+
+pub relation equipe_sans_proposition(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "le dossier ne contient aucune proposition de période de l'équipe pluridisciplinaire L. 146-8 CASF (R. 541-4 I — fait établi)";
+    label en unofficial "the file contains no period proposal from the L. 146-8 CASF multidisciplinary team (R. 541-4 I - established record fact)";
+}
+
+pub relation attribution_derogation_r5414(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "la commission a fixé la période d'attribution par dérogation aux 1°/2° (R. 541-4 I — fait établi)";
+    label en unofficial "the commission fixed the award period by derogation from 1/2 (R. 541-4 I - established fact)";
+}
+
+pub relation attribution_ordinaire_r5414(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "attribution relevant des 1°/2° ordinaires, sans période dérogatoire fixée (R. 541-4 I — fait établi de la décision)";
+    label en unofficial "award under the ordinary 1/2, no derogation period fixed (R. 541-4 I - adjudicated decision record)";
+}
+
+pub relation bornes_duree_attribution(e: fr.pf.core::Enfant, fin_minimale: Date, fin_maximale: Date) kind institutional {
+    key(e);
+    label fr official "bornes de la période d'attribution, complément dans les mêmes limites (R. 541-4 I-II)";
+    label en unofficial "award period bounds, supplement within the same limits (R. 541-4 I-II)";
+}
+
+pub relation ouverture_droit_aah(e: fr.pf.core::Enfant, ouverture: Date) kind empirical {
+    key(e);
+    label fr official "date d'ouverture du droit à l'allocation aux adultes handicapés (R. 541-4 I 1° — fait du dossier)";
+    label en unofficial "adult disability allowance right opening date (R. 541-4 I 1 - case fact)";
+}
+
+pub relation fin_conditions_droit(e: fr.pf.core::Enfant, fin_conditions: Date) kind empirical {
+    key(e);
+    label fr official "date à laquelle les conditions d'ouverture cessent d'être réunies (R. 541-4 I 2° — fait du dossier)";
+    label en unofficial "date the opening conditions cease to be met (R. 541-4 I 2 - case fact)";
+}
+
+pub relation fin_exclusive_droit(e: fr.pf.core::Enfant, fin_exclusive: Date) kind institutional {
+    key(e);
+    label fr official "borne exclusive de fin de droit : premier jour du mois d'ouverture AAH ou de fin des conditions (R. 541-4 I)";
+    label en unofficial "exclusive right-end bound: first day of the AAH-opening or conditions-end month (R. 541-4 I)";
+}
+
+pub relation changement_organisme_allocataire(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "changement d'organisme débiteur, de service débiteur ou d'allocataire (R. 541-4 IV al. 2 — fait du dossier)";
+    label en unofficial "change of debtor body, debtor service or allocataire (R. 541-4 IV para. 2 - case fact)";
+}
+
+pub relation decision_cdaph_initiale(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "décision initiale favorable de la commission territorialement compétente (R. 541-4 IV al. 2 — fait établi)";
+    label en unofficial "initial favourable decision of the territorially competent commission (R. 541-4 IV para. 2 - established fact)";
+}
+
+pub relation revision_demandee_beneficiaire(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "action : révision demandée par le bénéficiaire (R. 541-4 III)";
+    label en unofficial "action: revision requested by the beneficiary (R. 541-4 III)";
+}
+
+pub relation revision_demandee_organisme(o: fr.pf.core::Organisme, e: fr.pf.core::Enfant) kind empirical {
+    key(o, e);
+    label fr official "action : révision demandée par l'organisme débiteur (R. 541-4 III)";
+    label en unofficial "action: revision requested by the debtor body (R. 541-4 III)";
+}
+
+pub relation connaissance_aggravation(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "amélioration ou aggravation notable connue à l'occasion du réexamen (R. 541-4 III al. 2 — fait établi)";
+    label en unofficial "notable improvement or worsening known at re-examination (R. 541-4 III para. 2 - established fact)";
+}
+
+pub relation reexamen_commission(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "exécution : droits réexaminés par la commission après réévaluation (R. 541-4 III al. 2)";
+    label en unofficial "performance: rights re-examined by the commission after reassessment (R. 541-4 III para. 2)";
+}
+
+pub relation commission_competente(c: Commission, e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "commission compétente pour l'enfant (R. 541-4 — lien du dossier)";
+    label en unofficial "commission competent for the child (R. 541-4 - case link)";
+}
+
+pub relation controle_effectivite(o: fr.pf.core::Organisme, e: fr.pf.core::Enfant) kind empirical {
+    key(o, e);
+    label fr official "action : contrôle de l'effectivité du recours ou de la réduction d'activité (R. 541-4 IV al. 3)";
+    label en unofficial "action: control of the recourse or work-reduction effectiveness (R. 541-4 IV para. 3)";
+}
+
+pub relation constat_non_effectif(o: fr.pf.core::Organisme, e: fr.pf.core::Enfant) kind empirical {
+    key(o, e);
+    label fr official "l'organisme constate le recours non effectif dans les conditions des catégories (R. 541-4 IV al. 3 — fait du dossier)";
+    label en unofficial "the body finds the recourse ineffective under the category conditions (R. 541-4 IV para. 3 - case fact)";
+}
+
+pub relation saisine_commission(o: fr.pf.core::Organisme, e: fr.pf.core::Enfant) kind empirical {
+    key(o, e);
+    label fr official "exécution : commission saisie par l'organisme (R. 541-4 IV al. 3)";
+    label en unofficial "performance: commission seized by the body (R. 541-4 IV para. 3)";
+}
+
+pub relation avance_complement_versee(o: fr.pf.core::Organisme, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(o, e);
+    label fr official "exécution : complément de la situation constatée versé à titre d'avance (R. 541-4 IV al. 3)";
+    label en unofficial "performance: ascertained-situation supplement paid as an advance (R. 541-4 IV para. 3)";
+}
+
+pub relation decision_urgence_commission(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "exécution : commission statuant en urgence sur le réexamen (R. 541-4 IV al. 3)";
+    label en unofficial "performance: commission deciding urgently on the re-examination (R. 541-4 IV para. 3)";
+}
+
+pub relation mesures_particulieres(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "mesures particulières d'éducation et de soins préconisées dans l'intérêt de l'enfant (R. 541-5 — fait établi)";
+    label en unofficial "special education and care measures recommended in the child's interest (R. 541-5 - established fact)";
+}
+
+pub relation date_limite_reexamen(e: fr.pf.core::Enfant, limite: Date) kind institutional {
+    key(e);
+    label fr official "date limite de réexamen : deux ans au plus après l'ouverture du droit (R. 541-5)";
+    label en unofficial "re-examination deadline: two years at most after the right opens (R. 541-5)";
+}
+
+pub relation reexamen_effectue(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "exécution : réexamen de l'ouverture du droit effectué (R. 541-5)";
+    label en unofficial "performance: entitlement re-examination carried out (R. 541-5)";
+}
+
+pub relation sans_reexamen(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "aucun réexamen effectué (pendant du contrat d'entrée, R. 541-5)";
+    label en unofficial "no re-examination carried out (input-contract counterpart, R. 541-5)";
+}
+
+pub relation reexamen_en_retard(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "réexamen non effectué à la date d'appréciation postérieure à la limite (R. 541-5)";
+    label en unofficial "re-examination missing at an appreciation date past the deadline (R. 541-5)";
+}
+
+// --- R. 541-6/7/8: silence, effect dates, hospitalization (09-dates-effet)
+
+pub relation sans_decision_cdaph(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "aucune décision de la commission (pendant du contrat d'entrée, R. 541-6)";
+    label en unofficial "no commission decision (input-contract counterpart, R. 541-6)";
+}
+
+pub relation date_appreciation(e: fr.pf.core::Enfant, date: Date) kind empirical {
+    key(e);
+    label fr official "date d'appréciation du dossier pour les comparaisons de délais (R. 541-5/6/8, R. 541-10)";
+    label en unofficial "case appreciation date for deadline comparisons (R. 541-5/6/8, R. 541-10)";
+}
+
+pub relation date_rejet_implicite(e: fr.pf.core::Enfant, rejet: Date) kind institutional {
+    key(e);
+    label fr official "seuil exclusif du rejet implicite : quatre mois après le dépôt, le silence au-delà valant rejet (R. 541-6)";
+    label en unofficial "implicit-rejection exclusive threshold: four months after filing, silence beyond it deemed a rejection (R. 541-6)";
+}
+
+pub relation rejet_implicite(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "silence de plus de quatre mois valant rejet (R. 541-6)";
+    label en unofficial "silence over four months deemed a rejection (R. 541-6)";
+}
+
+pub relation date_debut_droit(e: fr.pf.core::Enfant, debut: Date) kind institutional {
+    key(e);
+    label fr official "attribution à compter du premier jour du mois suivant le dépôt (R. 541-7 al. 1)";
+    label en unofficial "award from the first day of the month after filing (R. 541-7 para. 1)";
+}
+
+pub relation notification_suppression(e: fr.pf.core::Enfant, notification: Date) kind empirical {
+    key(e);
+    label fr official "notification de la décision de suppression à l'allocataire (R. 541-7 al. 2 — fait du dossier)";
+    label en unofficial "suppression decision notified to the allocataire (R. 541-7 para. 2 - case fact)";
+}
+
+pub relation ouvre_droit_aah(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "l'enfant ouvre droit à l'allocation aux adultes handicapés (R. 541-7 al. 2 — fait du dossier)";
+    label en unofficial "the child opens the adult disability allowance right (R. 541-7 para. 2 - case fact)";
+}
+
+pub relation date_fin_suppression(e: fr.pf.core::Enfant, fin: Date) kind institutional {
+    key(e);
+    label fr official "cessation au premier jour du mois de notification, ou du mois suivant si droit AAH (R. 541-7 al. 2)";
+    label en unofficial "end on the first day of the notification month, or the next month with an AAH right (R. 541-7 para. 2)";
+}
+
+pub relation aeeh_condition_r512_2(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "dispositions de R. 512-2 applicables à l'AEEH : enfant ouvrant droit (R. 541-7 al. 3, lecture amont)";
+    label en unofficial "R. 512-2 applicable to the AEEH: entitled child (R. 541-7 para. 3, upstream reading)";
+}
+
+pub relation option_prestation_compensation(e: fr.pf.core::Enfant, option: Date) kind empirical {
+    key(e);
+    label fr official "option pour la prestation de compensation L. 245-1 CASF (R. 541-7 al. 4 — fait du dossier)";
+    label en unofficial "option for the L. 245-1 CASF compensation benefit (R. 541-7 para. 4 - case fact)";
+}
+
+pub relation attribution_pch(e: fr.pf.core::Enfant, attribution: Date) kind empirical {
+    key(e);
+    label fr official "date d'attribution de la PCH fixée par la commission ou le président (R. 541-7 al. 4 — fait du dossier)";
+    label en unofficial "PCH attribution date set by the commission or the president (R. 541-7 para. 4 - case fact)";
+}
+
+pub relation date_fin_complement_pch(e: fr.pf.core::Enfant, fin: Date) kind institutional {
+    key(e);
+    label fr official "cessation du versement du complément à compter de la date d'attribution PCH (R. 541-7 al. 4)";
+    label en unofficial "supplement payment ending on the PCH attribution date (R. 541-7 para. 4)";
+}
+
+pub relation information_attribution_pch(o: fr.pf.core::Organisme, e: fr.pf.core::Enfant, information: Date) kind empirical {
+    key(o, e);
+    label fr official "organisme informé par le président du conseil départemental (R. 541-7 al. 4 — fait du dossier)";
+    label en unofficial "body informed by the departmental council president (R. 541-7 para. 4 - case fact)";
+}
+
+pub relation complement_suspendu_pch(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "exécution : versement du complément suspendu à compter de la date d'attribution (R. 541-7 al. 4)";
+    label en unofficial "performance: supplement payment suspended from the attribution date (R. 541-7 para. 4)";
+}
+
+pub relation sans_confirmation_pch(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "attribution présidentielle de PCH non confirmée par la commission (R. 541-7 al. 4 — fait du dossier)";
+    label en unofficial "presidential PCH attribution unconfirmed by the commission (R. 541-7 para. 4 - case fact)";
+}
+
+pub relation complement_retabli(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "exécution : versement du complément rétabli rétroactivement (R. 541-7 al. 4)";
+    label en unofficial "performance: supplement payment retroactively restored (R. 541-7 para. 4)";
+}
+
+pub relation hospitalisation(e: fr.pf.core::Enfant, debut: Date) kind empirical {
+    key(e);
+    label fr official "début de l'hospitalisation dans un établissement de santé (R. 541-8 — fait du dossier)";
+    label en unofficial "hospital stay start in a health establishment (R. 541-8 - case fact)";
+}
+
+pub relation date_assimilation_hospitalisation(e: fr.pf.core::Enfant, assimilation: Date) kind institutional {
+    key(e);
+    label fr official "assimilation à l'internat à compter du premier jour du troisième mois civil suivant (R. 541-8)";
+    label en unofficial "assimilation to boarding from the first day of the third following civil month (R. 541-8)";
+}
+
+pub relation assimile_internat(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "hospitalisation assimilée au placement en internat (R. 541-8, sauf contraintes)";
+    label en unofficial "hospital stay assimilated to boarding placement (R. 541-8, unless constraints)";
+}
+
+pub relation contraintes_hospitalisation_complement(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "contraintes d'hospitalisation dans les conditions d'un complément (R. 541-8 — fait établi)";
+    label en unofficial "hospital constraints meeting supplement conditions (R. 541-8 - established fact)";
+}
+
+pub relation maintien_verse(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "action : versement maintenu sur décision de la commission (R. 541-8)";
+    label en unofficial "action: payment maintained on the commission decision (R. 541-8)";
+}
+
+// --- Death extension (10-deces-prolongation: R. 541-1 al. 5, R. 541-4 V) --
+
+pub relation deces_enfant(e: fr.pf.core::Enfant, deces: Date) kind empirical {
+    key(e);
+    label fr official "décès de l'enfant (R. 541-1 al. 5, R. 541-4 V — fait du dossier)";
+    label en unofficial "child death (R. 541-1 para. 5, R. 541-4 V - case fact)";
+}
+
+pub relation montant_mois_deces(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "montant dû au titre du mois de décès (R. 541-1 al. 5 — fait retenu)";
+    label en unofficial "amount due for the death month (R. 541-1 para. 5 - retained fact)";
+}
+
+pub relation montant_mois_precedent(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "montant dû au titre du mois précédant le décès (R. 541-1 al. 5 — fait retenu)";
+    label en unofficial "amount due for the pre-death month (R. 541-1 para. 5 - retained fact)";
+}
+
+pub relation date_fin_prolongation_deces(e: fr.pf.core::Enfant, fin: Date) kind institutional {
+    key(e);
+    label fr official "versement jusqu'au dernier jour du troisième mois civil suivant le décès (R. 541-1 al. 5, R. 541-4 V)";
+    label en unofficial "payment until the last day of the third civil month after death (R. 541-1 para. 5, R. 541-4 V)";
+}
+
+pub relation montant_prolongation_deces(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant mensuel de prolongation : mois de décès ou mois précédent s'il est supérieur (R. 541-1 al. 5)";
+    label en unofficial "monthly prolongation amount: death month or previous month if higher (R. 541-1 para. 5)";
+}
+
+// --- DOM transfer (11-dom-aeeh: L. 755-20, D. 755-11) -----------------------
+
+pub enum Territoire {
+    label fr official "territoire de résidence pour les règles DOM AEEH : six collectivités L. 751-1 en vigueur sur la fenêtre, plus METROPOLE/AUTRE pour les tests d'exclusion (L. 755-20)";
+    label en unofficial "residence territory for the AEEH DOM rules: six L. 751-1 collectivities in force over the window, plus METROPOLE/AUTRE for exclusion tests (L. 755-20)";
+    GUADELOUPE,
+    GUYANE,
+    MARTINIQUE,
+    REUNION,
+    SAINT_BARTHELEMY,
+    SAINT_MARTIN,
+    METROPOLE,
+    AUTRE
+}
+
+pub relation residence_enfant(e: fr.pf.core::Enfant, t: Territoire) kind empirical {
+    key(e);
+    label fr official "l'enfant réside sur le territoire t (L. 755-20 — fait du dossier)";
+    label en unofficial "the child resides in territory t (L. 755-20 - case fact)";
+}
+
+pub relation aeeh_attribuee_dom(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "AEEH attribuée dans les collectivités L. 751-1 : enfant ouvrant droit et résident (L. 755-20)";
+    label en unofficial "AEEH awarded in the L. 751-1 collectivities: entitled and resident child (L. 755-20)";
+}
+
+pub relation montant_aeeh_dom(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant DOM construit : allocation, compléments et majoration éventuelle identiques à la métropole (D. 755-11)";
+    label en unofficial "built DOM amount: allowance, supplements and possible majoration identical to metropolitan France (D. 755-11)";
+}
+
+pub relation montant_aeeh_dom_presente(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "montant DOM présenté à contrôler (D. 755-11 — fait du dossier)";
+    label en unofficial "presented DOM amount to check (D. 755-11 - case fact)";
+}
+
+pub relation montant_aeeh_dom_verifie(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant DOM présenté égal au montant construit (D. 755-11, contrôle)";
+    label en unofficial "presented DOM amount equal to the built amount (D. 755-11, check)";
+}

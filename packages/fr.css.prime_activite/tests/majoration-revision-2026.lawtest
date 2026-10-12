@@ -1,0 +1,28 @@
+// Isolated majoration: timely request -> 12 months, prolonged to the
+// youngest's third birthday; separation in April -> revision 1 April.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-majoration-revision-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": evenement_isolement(entity_ref("urn:fr:ppa:case:majoration-revision-2026"), @2026-01-15) { origin case_input; }
+        assert "ppa-02": demande_majoration(entity_ref("urn:fr:ppa:case:majoration-revision-2026"), @2026-05-01) { origin case_input; }
+        assert "ppa-03": plus_jeune_trois_ans(entity_ref("urn:fr:ppa:case:majoration-revision-2026"), @2028-03-01) { origin case_input; }
+        assert "ppa-04": mois_separation(entity_ref("urn:fr:ppa:case:majoration-revision-2026"), @2026-04-01) { origin case_input; }
+        assert "ppa-05": regime_general(entity_ref("urn:fr:ppa:case:majoration-revision-2026")) { origin case_input; }
+    }
+    evaluate truth(duree_majoration_mois(entity_ref("urn:fr:ppa:case:majoration-revision-2026"), 12));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_majoration(entity_ref("urn:fr:ppa:case:majoration-revision-2026"), @2028-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revision_prend_effet(entity_ref("urn:fr:ppa:case:majoration-revision-2026"), @2026-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,17 @@
+// Death extension end date (DateFinProlongationDeces, R. 541-1 al. 5 +
+// R. 541-4 V): death on 2024-03-15 prolongs payment until the last day
+// of the third following civil month, 2024-06-30.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-deces-date-fin" {
+    given {
+        context { deadline_policy AEEH_PROLONGATION; decision_time @2024-07-15T12:00:00Z; knowledge_time @2024-07-15T12:00:00Z; legal_time @2024-07-15; timezone "Europe/Paris"; }
+        assert "r541-dd-01": deces_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-deces"), @2024-03-15) { origin case_input; }
+    }
+    evaluate truth(date_fin_prolongation_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-deces"), @2024-06-30));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

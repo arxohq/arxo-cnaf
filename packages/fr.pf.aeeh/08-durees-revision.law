@@ -1,0 +1,418 @@
+// R. 541-4/5: durations, revision, control, reexamination.
+//
+// DEONTIC MAP: duration bounds and exclusive due-ends are institutional
+// computation under an explicit award regime (REGIME CONTRACT in
+// package.law): the «Par dérogation» special period displaces the
+// ordinary 1°/2° due-ends for the same award, so bounds require the
+// derogation fact (+ prospect/proposal) and due-ends the ordinary fact
+// PLUS an affirmative record that at least one trigger is absent
+// (certificat_sans_perspective or equipe_sans_proposition, one rule per
+// basis — absence is never inferred from missing trigger facts).
+// The 80 % bounds and due-ends anchor all three R. 541-4 versions
+// (identical conclusions across wordings); the 2026 50-80 % special
+// bounds and due-ends anchor the current fragment alone and require the
+// initial/renewal filing cohort from 2026-04-01 (decree 2026-227 NOTA),
+// while pre-2026 filings keep the unconditional 2-5 year period
+// (R. 541-4 II, no regime, no prospect).
+// The change-of-body persistence feeds aeeh_droit_calcule directly.
+// Liberties: DemanderRevisionBeneficiaire/Organisme (R. 541-4 III),
+// ControlerEffectivite (R. 541-4 IV — «peut contrôler» is a liberty, as
+// the L. 541-2 «peut être suspendue» liberty of 03-pouvoir-suspension).
+// Duties: ReexaminerAggravation, SaisirCommission, VerserAvanceComplement,
+// StatuerUrgence (R. 541-4 III-IV), ReexaminerMesures (R. 541-5).
+// The urgency-deadline value by arrêté is unpinned
+// (B-PFAEEH-DELAI-URGENCE). R. 541-5 counts two years from the attribution
+// date (proxy for the opening of the right, stated in the rule).
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+use self::{
+    CSS_R541_4,
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_5_ED2021_01,
+    CSS_R541_5_ED2022_01,
+    CSS_R541_5_ED2026_04,
+    Commission,
+    aeeh_droit_calcule,
+    aeeh_montant_complement,
+    attribution_derogation_r5414,
+    attribution_ordinaire_r5414,
+    avance_complement_versee,
+    bornes_duree_attribution,
+    certificat_sans_perspective,
+    changement_organisme_allocataire,
+    commission_competente,
+    connaissance_aggravation,
+    constat_non_effectif,
+    controle_effectivite,
+    date_appreciation,
+    date_attribution_aeeh,
+    date_limite_reexamen,
+    decision_cdaph_initiale,
+    decision_urgence_commission,
+    demande_attribution_aeeh_deposee,
+    equipe_sans_proposition,
+    fin_conditions_droit,
+    fin_exclusive_droit,
+    mesures_particulieres,
+    ouverture_droit_aah,
+    perspective_amelioration,
+    proposition_equipe_pluridisciplinaire,
+    reexamen_commission,
+    reexamen_effectue,
+    reexamen_en_retard,
+    revision_demandee_beneficiaire,
+    revision_demandee_organisme,
+    saisine_commission,
+    sans_reexamen,
+    seuil_80_atteint,
+    tranche_50_80,
+};
+
+deadline policy AEEH_DUREES {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+// --- R. 541-4 I: derogation bounds at 80 % (3-5 years) ----------------------
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule BornesDuree80(e: fr.pf.core::Enfant, attribution: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "par dérogation, perspective d'amélioration à 80 % : attribution pour trois à cinq ans, complément dans les mêmes limites (R. 541-4 I-II)";
+    label en unofficial "by derogation, improvement prospect at 80%: award for three to five years, supplement within the same limits (R. 541-4 I-II)";
+    when seuil_80_atteint(e) and date_attribution_aeeh(e, attribution)
+        and perspective_amelioration(e)
+        and proposition_equipe_pluridisciplinaire(e)
+        and attribution_derogation_r5414(e);
+    then bornes_duree_attribution(e, add_calendar_period(attribution, 3 calendar_year), add_calendar_period(attribution, 5 calendar_year));
+}
+
+// --- R. 541-4 I: 2026 derogation bounds at 50-80 % (2-5 years) --------------
+// The improvement-prospect derogation for the 50-80 % tranche exists
+// only in the 2026 wording (decree 2026-227 NOTA: initial/renewal filings
+// from 2026-04-01); the 2019/2022 wordings give 50-80 % only the
+// unconditional section-II period below.
+
+@source(CSS_R541_4)
+rule BornesDuree5080(e: fr.pf.core::Enfant, attribution: Date, depot: Date) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "par dérogation, perspective d'amélioration à 50-80 % : attribution pour deux à cinq ans, demandes dès 2026-04-01 (R. 541-4 I, rédaction 2026)";
+    label en unofficial "by derogation, improvement prospect at 50-80%: award for two to five years, filings from 2026-04-01 (R. 541-4 I, 2026 wording)";
+    when tranche_50_80(e) and date_attribution_aeeh(e, attribution)
+        and perspective_amelioration(e)
+        and proposition_equipe_pluridisciplinaire(e)
+        and demande_attribution_aeeh_deposee(e, depot) and depot >= @2026-04-01
+        and attribution_derogation_r5414(e);
+    then bornes_duree_attribution(e, add_calendar_period(attribution, 2 calendar_year), add_calendar_period(attribution, 5 calendar_year));
+}
+
+// --- Pre-2026 cohort at 50-80 %: the 2-5 year period stands -------------
+// The 2026 wording applies only to initial/renewal requests filed from
+// 2026-04-01 (decree 2026-227 NOTA, pinned in CSS_R541_4); older filings
+// keep R. 541-4 II as it stood (2022-01-31..2026-04-01 and 2019 wordings:
+// a 2-5 year award period with no improvement-prospect condition). The
+// current fragment joins the anchors so the rule still participates when
+// the 2026 edition is open: the cohort premise, not legal_time alone,
+// selects the applicable wording.
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule BornesDuree5080AncienneCohorte(e: fr.pf.core::Enfant, attribution: Date, depot: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "cohorte antérieure à 2026-04-01 à 50-80 % : attribution pour deux à cinq ans, sans condition de perspective (R. 541-4 II, rédactions 2019/2022)";
+    label en unofficial "pre-2026-04-01 cohort at 50-80%: award for two to five years, no prospect condition (R. 541-4 II, 2019/2022 wordings)";
+    when tranche_50_80(e) and date_attribution_aeeh(e, attribution)
+        and demande_attribution_aeeh_deposee(e, depot) and depot < @2026-04-01;
+    then bornes_duree_attribution(e, add_calendar_period(attribution, 2 calendar_year), add_calendar_period(attribution, 5 calendar_year));
+}
+
+// --- R. 541-4 I 1°/2°: exclusive due-ends at 80 % (all versions) --------------
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule FinExclusiveAAH80SansPerspective(e: fr.pf.core::Enfant, ouverture: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "à 80 %, régime ordinaire, certificat sans perspective expresse, due jusqu'au dernier jour du mois précédant l'ouverture AAH : borne exclusive au premier jour du mois (R. 541-4 I 1°)";
+    label en unofficial "at 80%, ordinary regime, certificate records no express prospect, due until the last day before the AAH-opening month: exclusive bound on the month's first day (R. 541-4 I 1)";
+    when seuil_80_atteint(e) and ouverture_droit_aah(e, ouverture)
+        and attribution_ordinaire_r5414(e) and certificat_sans_perspective(e);
+    then fin_exclusive_droit(e, month_start_of(ouverture));
+}
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule FinExclusiveAAH80SansProposition(e: fr.pf.core::Enfant, ouverture: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "à 80 %, régime ordinaire, équipe sans proposition, due jusqu'au dernier jour du mois précédant l'ouverture AAH : borne exclusive au premier jour du mois (R. 541-4 I 1°)";
+    label en unofficial "at 80%, ordinary regime, team records no proposal, due until the last day before the AAH-opening month: exclusive bound on the month's first day (R. 541-4 I 1)";
+    when seuil_80_atteint(e) and ouverture_droit_aah(e, ouverture)
+        and attribution_ordinaire_r5414(e) and equipe_sans_proposition(e);
+    then fin_exclusive_droit(e, month_start_of(ouverture));
+}
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule FinExclusiveConditions80SansPerspective(e: fr.pf.core::Enfant, fin_conditions: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "à 80 %, régime ordinaire, certificat sans perspective expresse, due jusqu'au dernier jour du mois précédant la fin des conditions : borne exclusive au premier jour du mois (R. 541-4 I 2°)";
+    label en unofficial "at 80%, ordinary regime, certificate records no express prospect, due until the last day before the conditions-end month: exclusive bound on the month's first day (R. 541-4 I 2)";
+    when seuil_80_atteint(e) and fin_conditions_droit(e, fin_conditions)
+        and attribution_ordinaire_r5414(e) and certificat_sans_perspective(e);
+    then fin_exclusive_droit(e, month_start_of(fin_conditions));
+}
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule FinExclusiveConditions80SansProposition(e: fr.pf.core::Enfant, fin_conditions: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "à 80 %, régime ordinaire, équipe sans proposition, due jusqu'au dernier jour du mois précédant la fin des conditions : borne exclusive au premier jour du mois (R. 541-4 I 2°)";
+    label en unofficial "at 80%, ordinary regime, team records no proposal, due until the last day before the conditions-end month: exclusive bound on the month's first day (R. 541-4 I 2)";
+    when seuil_80_atteint(e) and fin_conditions_droit(e, fin_conditions)
+        and attribution_ordinaire_r5414(e) and equipe_sans_proposition(e);
+    then fin_exclusive_droit(e, month_start_of(fin_conditions));
+}
+
+// --- R. 541-4 I 1°/2°: exclusive due-ends at 50-80 % (2026 wording only) ------
+
+@source(CSS_R541_4)
+rule FinExclusiveAAH5080SansPerspective(e: fr.pf.core::Enfant, ouverture: Date, depot: Date) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "à 50-80 %, régime ordinaire, certificat sans perspective expresse, due jusqu'au dernier jour du mois précédant l'ouverture AAH (rédaction 2026, demandes dès 2026-04-01, R. 541-4 I 1°)";
+    label en unofficial "at 50-80%, ordinary regime, certificate records no express prospect, due until the last day before the AAH-opening month (2026 wording, filings from 2026-04-01, R. 541-4 I 1)";
+    when tranche_50_80(e) and ouverture_droit_aah(e, ouverture)
+        and demande_attribution_aeeh_deposee(e, depot) and depot >= @2026-04-01
+        and attribution_ordinaire_r5414(e) and certificat_sans_perspective(e);
+    then fin_exclusive_droit(e, month_start_of(ouverture));
+}
+
+@source(CSS_R541_4)
+rule FinExclusiveAAH5080SansProposition(e: fr.pf.core::Enfant, ouverture: Date, depot: Date) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "à 50-80 %, régime ordinaire, équipe sans proposition, due jusqu'au dernier jour du mois précédant l'ouverture AAH (rédaction 2026, demandes dès 2026-04-01, R. 541-4 I 1°)";
+    label en unofficial "at 50-80%, ordinary regime, team records no proposal, due until the last day before the AAH-opening month (2026 wording, filings from 2026-04-01, R. 541-4 I 1)";
+    when tranche_50_80(e) and ouverture_droit_aah(e, ouverture)
+        and demande_attribution_aeeh_deposee(e, depot) and depot >= @2026-04-01
+        and attribution_ordinaire_r5414(e) and equipe_sans_proposition(e);
+    then fin_exclusive_droit(e, month_start_of(ouverture));
+}
+
+@source(CSS_R541_4)
+rule FinExclusiveConditions5080SansPerspective(e: fr.pf.core::Enfant, fin_conditions: Date, depot: Date) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "à 50-80 %, régime ordinaire, certificat sans perspective expresse, due jusqu'au dernier jour du mois précédant la fin des conditions (rédaction 2026, demandes dès 2026-04-01, R. 541-4 I 2°)";
+    label en unofficial "at 50-80%, ordinary regime, certificate records no express prospect, due until the last day before the conditions-end month (2026 wording, filings from 2026-04-01, R. 541-4 I 2)";
+    when tranche_50_80(e) and fin_conditions_droit(e, fin_conditions)
+        and demande_attribution_aeeh_deposee(e, depot) and depot >= @2026-04-01
+        and attribution_ordinaire_r5414(e) and certificat_sans_perspective(e);
+    then fin_exclusive_droit(e, month_start_of(fin_conditions));
+}
+
+@source(CSS_R541_4)
+rule FinExclusiveConditions5080SansProposition(e: fr.pf.core::Enfant, fin_conditions: Date, depot: Date) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "à 50-80 %, régime ordinaire, équipe sans proposition, due jusqu'au dernier jour du mois précédant la fin des conditions (rédaction 2026, demandes dès 2026-04-01, R. 541-4 I 2°)";
+    label en unofficial "at 50-80%, ordinary regime, team records no proposal, due until the last day before the conditions-end month (2026 wording, filings from 2026-04-01, R. 541-4 I 2)";
+    when tranche_50_80(e) and fin_conditions_droit(e, fin_conditions)
+        and demande_attribution_aeeh_deposee(e, depot) and depot >= @2026-04-01
+        and attribution_ordinaire_r5414(e) and equipe_sans_proposition(e);
+    then fin_exclusive_droit(e, month_start_of(fin_conditions));
+}
+
+// --- R. 541-4 IV al. 2: decision persists across changes -----------------------
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule DroitMaintenuChangement(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "changement d'organisme ou d'allocataire : la décision initiale s'impose sans renouveler la procédure (R. 541-4 IV al. 2)";
+    label en unofficial "change of body or allocataire: the initial decision stands without a new procedure (R. 541-4 IV para. 2)";
+    when decision_cdaph_initiale(e) and changement_organisme_allocataire(e);
+    then aeeh_droit_calcule(e);
+}
+
+// --- R. 541-4 III: revision liberties -------------------------------------------
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule LiberteRevisionBeneficiaire(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "les droits peuvent être révisés à la demande du bénéficiaire (R. 541-4 III)";
+    label en unofficial "rights may be revised at the beneficiary's request (R. 541-4 III)";
+    when aeeh_droit_calcule(e) and fr.pf.core::parent_charge(p, e);
+    then liberty DemanderRevisionBeneficiaire {
+        holder p;
+        action revision_demandee_beneficiaire(e);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule LiberteRevisionOrganisme(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "les droits peuvent être révisés à la demande de l'organisme débiteur (R. 541-4 III)";
+    label en unofficial "rights may be revised at the debtor body's request (R. 541-4 III)";
+    when aeeh_droit_calcule(e) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then liberty DemanderRevisionOrganisme {
+        holder o;
+        action revision_demandee_organisme(o, e);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule DevoirReexaminerAggravation(c: Commission, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "amélioration ou aggravation notable : la commission réexamine les droits après réévaluation (R. 541-4 III al. 2)";
+    label en unofficial "notable improvement or worsening: the commission re-examines rights after reassessment (R. 541-4 III para. 2)";
+    when commission_competente(c, e) and fr.pf.core::parent_charge(p, e)
+        and connaissance_aggravation(e);
+    then duty ReexaminerAggravation {
+        bearer c;
+        beneficiary p;
+        maintain reexamen_commission(e) during [@2021-01-01, infinity);
+    };
+}
+
+// --- R. 541-4 IV al. 3: control, saisine, advance, urgency -----------------------
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule LiberteControlerEffectivite(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'organisme peut contrôler l'effectivité du recours ou de la réduction d'activité (R. 541-4 IV al. 3)";
+    label en unofficial "the body may control the recourse or work-reduction effectiveness (R. 541-4 IV para. 3)";
+    when aeeh_droit_calcule(e) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then liberty ControlerEffectivite {
+        holder o;
+        action controle_effectivite(o, e);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule DevoirSaisirCommission(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, c: Commission) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "recours non effectif constaté : l'organisme saisit la commission (R. 541-4 IV al. 3)";
+    label en unofficial "recourse found ineffective: the body seizes the commission (R. 541-4 IV para. 3)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and constat_non_effectif(o, e) and commission_competente(c, e);
+    then duty SaisirCommission {
+        bearer o;
+        beneficiary c;
+        maintain saisine_commission(o, e) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule DevoirVerserAvance(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "dans l'attente de la décision, l'organisme verse à titre d'avance le complément de la situation constatée (R. 541-4 IV al. 3)";
+    label en unofficial "pending the decision, the body pays the ascertained-situation supplement as an advance (R. 541-4 IV para. 3)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and saisine_commission(o, e) and aeeh_montant_complement(e, m);
+    then duty VerserAvanceComplement {
+        bearer o;
+        beneficiary p;
+        maintain avance_complement_versee(o, e, m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R541_4_PRE2022,
+    CSS_R541_4_PRE2026,
+    CSS_R541_4)
+rule DevoirStatuerUrgence(c: Commission, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, o: fr.pf.core::Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la commission statue en urgence sur le réexamen (R. 541-4 IV al. 3)";
+    label en unofficial "the commission decides urgently on the re-examination (R. 541-4 IV para. 3)";
+    when commission_competente(c, e) and fr.pf.core::parent_charge(p, e)
+        and saisine_commission(o, e);
+    then duty StatuerUrgence {
+        bearer c;
+        beneficiary p;
+        maintain decision_urgence_commission(e) during [@2021-01-01, infinity);
+    };
+}
+
+// --- R. 541-5: reexamination within two years -------------------------------------
+
+@source(
+    CSS_R541_5_ED2021_01,
+    CSS_R541_5_ED2022_01,
+    CSS_R541_5_ED2026_04)
+rule DateLimiteReexamen(e: fr.pf.core::Enfant, attribution: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "mesures particulières : réexamen dans un délai maximum de deux ans après l'attribution (R. 541-5)";
+    label en unofficial "special measures: re-examination within two years at most after the award (R. 541-5)";
+    when mesures_particulieres(e) and date_attribution_aeeh(e, attribution);
+    then date_limite_reexamen(e, add_calendar_period(attribution, 2 calendar_year));
+}
+
+@source(
+    CSS_R541_5_ED2021_01,
+    CSS_R541_5_ED2022_01,
+    CSS_R541_5_ED2026_04)
+rule DevoirReexaminerMesures(c: Commission, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "mesures particulières préconisées : l'ouverture du droit fait l'objet d'un réexamen (R. 541-5)";
+    label en unofficial "special measures recommended: the entitlement is re-examined (R. 541-5)";
+    when commission_competente(c, e) and fr.pf.core::parent_charge(p, e)
+        and mesures_particulieres(e);
+    then duty ReexaminerMesures {
+        bearer c;
+        beneficiary p;
+        maintain reexamen_effectue(e) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R541_5_ED2021_01,
+    CSS_R541_5_ED2022_01,
+    CSS_R541_5_ED2026_04)
+rule ReexamenEnRetard(e: fr.pf.core::Enfant, limite: Date, d: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "réexamen non effectué à une date postérieure à la limite de deux ans (R. 541-5)";
+    label en unofficial "re-examination missing past the two-year deadline (R. 541-5)";
+    when date_limite_reexamen(e, limite) and date_appreciation(e, d) and d > limite
+        and sans_reexamen(e);
+    then reexamen_en_retard(e);
+}

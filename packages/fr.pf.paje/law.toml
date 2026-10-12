@@ -1,0 +1,178 @@
+# Manifest §10 — package root marker (DECISION-0033). Normative headings per §22
+# live in the .law files themselves; the manifest must match them (LDC-E1109, lawc check).
+[package]
+name = "fr.pf.paje"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:pf-paje"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after editing .law files run
+# `law fix imports <package>`; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Catalog metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-pf-paje"
+title = "PAJE: birth/adoption grant (L. 531-2, 229.75% / 459.5% of BMAF, wave 1) + base allowance (L. 531-3, 41.65% / 20.825%, 2018 and 2015 wordings, wave 3) + PreParE (L. 531-4, 96.62% / 157.93% / 62.46% / 36.03%, wave 3); examination of R. 531-1, duties of the fund"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_official_bytes"
+legalStatus = "in_force"
+issuer = "République française; texte codifié (LEGI DILA)"
+verifiedAgainstSource = true
+
+# Own families (DECISION-0127): regression = false until the ratchet is registered.
+[[tests]]
+family = "fr.pf.paje#prime-naissance"
+regression = false
+suites = [
+    "tests/prime-naissance-montant.lawtest",
+    "tests/prime-naissance-plafond-egal.lawtest",
+    "tests/prime-naissance-plafond-depasse.lawtest",
+    "tests/prime-naissance-regime-ancien.lawtest",
+    "tests/prime-naissance-regime-nouveau.lawtest",
+    "tests/prime-naissance-deces-20-semaines.lawtest",
+    "tests/prime-naissance-precoce.lawtest",
+    "tests/prime-naissance-sans-examen.lawtest",
+]
+world = ["fr.pf.paje"]
+
+[[tests]]
+family = "fr.pf.paje#prime-adoption"
+regression = false
+suites = [
+    "tests/prime-adoption-montant.lawtest",
+    "tests/prime-adoption-plafond-depasse.lawtest",
+    "tests/prime-adoption-sans-condition-age.lawtest",
+]
+world = ["fr.pf.paje"]
+
+[[tests]]
+family = "fr.pf.paje#devoir-versement"
+regression = false
+suites = [
+    "tests/devoir-versement-actif.lawtest",
+    "tests/devoir-versement-sans-droit.lawtest",
+    "tests/devoir-versement-tardif.lawtest",
+    "tests/devoir-versement-a-temps.lawtest",
+]
+world = ["fr.pf.paje"]
+
+# OpenFisca-France cases (openfisca/openfisca-france@<see foreign-map>, tests/formulas/paje/paje_adoption.yaml):
+# each case's expectation is THEIR number. Not regressions: measurement of third-party cases.
+[[tests]]
+family = "fr.pf.paje#openfisca-import"
+regression = false
+suites = [
+    "tests/openfisca-adoption-eligible.lawtest",
+    "tests/openfisca-adoption-non-eligible.lawtest",
+]
+world = ["fr.pf.paje"]
+
+# Wave 3: base allowance (L. 531-3/D. 531-3, 2018 + 2015 wordings).
+[[tests]]
+family = "fr.pf.paje#allocation-base"
+regression = false
+suites = [
+    "tests/base-plein-montant.lawtest",
+    "tests/base-partiel-montant.lawtest",
+    "tests/base-plafond-egal.lawtest",
+    "tests/base-juste-au-dessus.lawtest",
+    "tests/base-partiel-plafond-egal.lawtest",
+    "tests/base-partiel-plafond-depasse.lawtest",
+    "tests/base-ancien-regime.lawtest",
+    "tests/base-nouveau-regime.lawtest",
+    "tests/base-dss-2026.lawtest",
+    "tests/base-ancien-partiel.lawtest",
+    "tests/base-adoption.lawtest",
+    "tests/base-sans-mois.lawtest",
+    "tests/devoir-base-actif.lawtest",
+    "tests/devoir-base-sans-droit.lawtest",
+]
+world = ["fr.pf.paje"]
+
+# FINISH D72 transfer: pregnancy declaration and suspension (D. 532-1/D. 532-2).
+[[tests]]
+family = "fr.pf.paje#examens-medicaux"
+regression = false
+suites = [
+    "tests/declaration-grossesse-en-delai.lawtest",
+    "tests/declaration-grossesse-tardive.lawtest",
+    "tests/declaration-grossesse-limite.lawtest",
+    "tests/declaration-grossesse-avant-debut.lawtest",
+    "tests/declaration-grossesse-jour-debut.lawtest",
+    "tests/declaration-grossesse-effectuee-conforme.lawtest",
+    "tests/declaration-grossesse-effectuee-tardive.lawtest",
+    "tests/declaration-grossesse-effectuee-avant-debut.lawtest",
+    "tests/declaration-grossesse-sans-document-conforme.lawtest",
+    "tests/declaration-grossesse-sans-envoi.lawtest",
+    "tests/devoir-declarer-actif.lawtest",
+    "tests/devoir-declarer-satisfait.lawtest",
+    "tests/devoir-declarer-envoi-tardif.lawtest",
+    "tests/devoir-declarer-sans-grossesse.lawtest",
+    "tests/declaration-grossesse-avant-2023.lawtest",
+    "tests/suspension-versement-accordee.lawtest",
+    "tests/suspension-motif-legitime.lawtest",
+    "tests/suspension-sans-motif-ni-absence.lawtest",
+    "tests/suspension-sans-demande.lawtest",
+    "tests/suspension-examens-passes.lawtest",
+    "tests/suspension-avec-prime.lawtest",
+]
+world = ["fr.pf.paje"]
+
+# FINISH D73 transfer: DOM scope and non-cumulation (L. 755-19).
+[[tests]]
+family = "fr.pf.paje#dom-paje"
+regression = false
+suites = [
+    "tests/dom-paje-applicable-guadeloupe.lawtest",
+    "tests/dom-paje-applicable-saint-barthelemy.lawtest",
+    "tests/dom-paje-applicable-saint-martin.lawtest",
+    "tests/dom-paje-hors-dom-metro.lawtest",
+    "tests/dom-base-af-unique-plein.lawtest",
+    "tests/dom-base-af-unique-partiel.lawtest",
+    "tests/dom-base-af-sans-af-unique.lawtest",
+    "tests/dom-base-af-saint-barthelemy-sans-af.lawtest",
+    "tests/dom-base-cf-dom-plein.lawtest",
+    "tests/dom-base-cf-dom-partiel.lawtest",
+    "tests/dom-base-cf-dom-sans-cf.lawtest",
+    "tests/dom-prepare-cf-dom-plein.lawtest",
+    "tests/dom-prepare-cf-dom-partiel.lawtest",
+    "tests/dom-non-cumul-hors-dom.lawtest",
+    "tests/dom-non-cumul-avant-2021.lawtest",
+]
+world = ["fr.pf.paje"]
+
+# Wave 3: PreParE (L. 531-4, R. 531-2/4, D. 531-4..D. 531-11, D. 531-13..D. 531-16-1).
+[[tests]]
+family = "fr.pf.paje#prepare"
+regression = false
+suites = [
+    "tests/prepare-plein-montant.lawtest",
+    "tests/prepare-formation.lawtest",
+    "tests/prepare-elu.lawtest",
+    "tests/prepare-partiel-50-attestation.lawtest",
+    "tests/prepare-partiel-80-attestation.lawtest",
+    "tests/prepare-garde-50.lawtest",
+    "tests/prepare-garde-80.lawtest",
+    "tests/prepare-garde-hors-bande.lawtest",
+    "tests/prepare-forfait-jours-50.lawtest",
+    "tests/prepare-smic-50-ok.lawtest",
+    "tests/prepare-smic-50-depasse.lawtest",
+    "tests/prepare-smic-80-ok.lawtest",
+    "tests/prepare-majore.lawtest",
+    "tests/prepare-sans-activite-anterieure.lawtest",
+    "tests/prepare-d531-15-avant.lawtest",
+    "tests/prepare-d531-15-apres.lawtest",
+    "tests/prepare-sans-mois.lawtest",
+    "tests/prepare-couple-deux-partiels.lawtest",
+    "tests/devoir-prepare-actif.lawtest",
+    "tests/devoir-prepare-sans-droit.lawtest",
+]
+world = ["fr.pf.paje"]

@@ -1,0 +1,18 @@
+// SMIC formula rate: shn 8.00 with CRDS rate 0.005 —
+// (7*8.00)/(1-0.005) = 56.2814..., rounded to the cent: 56.28
+// (D. 544-6; the shn and CRDS figures are stated-assumption inputs).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-taux-formule-smic" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-tf-01": smic_horaire_net_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-tf"), 8.00 EUR) { origin case_input; }
+        assert "ajpp-tf-02": taux_crds_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-tf"), 0.005) { origin case_input; }
+    }
+    evaluate truth(taux_journalier_calcule(entity_ref("urn:fr:pf-ajpp:case:enfant-tf"), 56.28 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,19 @@
+// 310-day ceiling exceeded: 311 daily allowances paid, no record
+// either way for the within-limit head.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-depassement-310" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-dep-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-dep")) { origin adjudicated; }
+        assert "ajpp-dep-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-dep")) { origin adjudicated; }
+        assert "ajpp-dep-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-dep"), entity_ref("urn:fr:pf-ajpp:case:enfant-dep")) { origin case_input; }
+        assert "ajpp-dep-04": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-dep"), 311) { origin case_input; }
+    }
+    evaluate truth(ajpp_dans_limite(entity_ref("urn:fr:pf-ajpp:case:enfant-dep")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,16 @@
+// Full-rate PreParE with no concurrent indemnity at all: nothing triggers II in either text - no refusal (L. 532-2 II).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cumul-indemnite-sans-concurrent-neither" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "cumul-indemnite-sans-concurrent-neither-01": beneficie_prepare_taux_plein(entity_ref("urn:fr:pf:case:prepare-seul"), entity_ref("urn:fr:pf:case:enfant-2026")) { origin case_input; }
+        assert "cumul-indemnite-sans-concurrent-neither-02": cohorte_2026(entity_ref("urn:fr:pf:case:enfant-2026")) { origin case_input; }
+    }
+    evaluate truth(cumul_prepare_indemnite_refuse(entity_ref("urn:fr:pf:case:prepare-seul")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

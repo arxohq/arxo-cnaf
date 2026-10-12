@@ -1,0 +1,34 @@
+// Eldest is 20 but pay above the ceiling is not established: neither
+// the [3,20) band (strict under-20) nor the [20,21) band fires, so the
+// child does not count. The fund count stays at two: no right opens.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-conditions-vingt-ans-remunere" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "c20-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere"), entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere-e1")) { origin case_input; }
+        assert "c20-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere"), entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere-e2")) { origin case_input; }
+        assert "c20-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere"), entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere-e3")) { origin case_input; }
+        assert "c20-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere-e1")) { origin case_input; }
+        assert "c20-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere-e2")) { origin case_input; }
+        assert "c20-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere-e3")) { origin case_input; }
+        assert "c20-07": date_naissance(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere-e1"), @2016-03-15) { origin case_input; }
+        assert "c20-08": date_naissance(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere-e2"), @2014-03-15) { origin case_input; }
+        assert "c20-09": date_naissance(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere-e3"), @2001-06-01) { origin case_input; }
+        assert "c20-10": mois_droit(@2021-06-01) { origin case_input; }
+        assert "c20-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere"), 2) { origin case_input; }
+        assert "c20-12": ressources_menage(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere"), 20000 EUR) { origin case_input; }
+        assert "c20-13": plafond_cf_applicable(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere"), 30000 EUR) { origin case_input; }
+        assert "c20-14": cadre_cf_remplie(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere")) { origin case_input; }
+    }
+    evaluate truth(cf_enfant_qualifie(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere-e3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:case:cond-vingt-ans-remunere")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

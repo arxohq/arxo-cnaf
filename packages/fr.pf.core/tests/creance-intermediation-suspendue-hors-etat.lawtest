@@ -1,0 +1,18 @@
+// Hors-etat suspends intermediation: stable residences, II title, debtor qualified hors d'etat outside violence - suspension holds and the active status is withdrawn via condition I c) (L. 582-1 al. final, PC-R08-08).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-intermediation-suspendue-hors-etat" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-intermediation-suspendue-hors-etat-01": stabilite_residence_creancier(entity_ref("urn:fr:pf:case:creance-susp")) { origin case_input; }
+        assert "creance-intermediation-suspendue-hors-etat-02": debiteur_stable(entity_ref("urn:fr:pf:case:creance-susp")) { origin case_input; }
+        assert "creance-intermediation-suspendue-hors-etat-03": debiteur_hors_etat(entity_ref("urn:fr:pf:case:creance-susp")) { origin case_input; }
+        assert "creance-intermediation-suspendue-hors-etat-04": intermediation_titre_3732_2_ii(entity_ref("urn:fr:pf:case:creance-susp")) { origin case_input; }
+    }
+    evaluate truth(intermediation_suspendue_hors_etat(entity_ref("urn:fr:pf:case:creance-susp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

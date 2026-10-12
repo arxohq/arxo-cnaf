@@ -1,0 +1,22 @@
+// Childminder above 80%: 34 care days for 2 children over 20 working days —
+// 34 × 10 = 340 > 320, no band concludes, no part-time right —
+// the 144.12 € award is NEITHER.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-garde-hors-bande" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-ghb-01": jours_garde(entity_ref("urn:fr:paje:benef:prepare-ghb"), 34, 2, 20) { origin adjudicated; }
+        assert "prepare-ghb-02": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-ghb"), entity_ref("urn:fr:paje:enfant:prepare-ghb")) { origin adjudicated; }
+        assert "prepare-ghb-03": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-ghb")) { origin adjudicated; }
+        assert "prepare-ghb-04": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-ghb"), entity_ref("urn:fr:paje:case:prepare-ghb")) { origin case_input; }
+        assert "prepare-ghb-05": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-ghb"), 400.00 EUR) { origin case_input; }
+        assert "prepare-ghb-06": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-ghb"), entity_ref("urn:fr:paje:enfant:prepare-ghb"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-ghb"), entity_ref("urn:fr:paje:enfant:prepare-ghb"), 144.12 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

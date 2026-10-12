@@ -1,0 +1,13 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-crds-prepare-net" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "brut": fr.pf.paje::prepare_attribuee(entity_ref("urn:fr:pv:case:beneficiaire"), entity_ref("urn:fr:pv:case:enfant"), 400.00 EUR, @2024-03-01) { origin case_input; }
+    }
+    evaluate truth(montant_net_crds_prepare(entity_ref("urn:fr:pv:case:beneficiaire"), entity_ref("urn:fr:pv:case:enfant"), @2024-03-01, 398.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

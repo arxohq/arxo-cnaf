@@ -1,0 +1,273 @@
+# Manifest §10 — package root marker (DECISION-0033). Normative headings per §22
+# live in the .law files themselves; the manifest must match them (LDC-E1109, lawc check).
+[package]
+name = "fr.casf.rsa"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:rsa"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after editing .law files run
+# `law fix imports fr/rsa`; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Catalog metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-rsa"
+title = "Revenu de solidarite active (RSA): right, flat-rate amount, lone-parent increase, duties, support, suspension and recovery; wave 4"
+primarySource = "CASF"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française; texte codifié (LEGI DILA)"
+verifiedAgainstSource = false
+
+# Upstream premises: the quarterly resources (quarter average, matrix,
+# housing flat-rate) are computed by fr.minima.ressources (same wave 4
+# lane W4-RSA) and arrive qualified; NOTHING owned by a neighbour package
+# is redefined here. Household PF benefits counted in the matrix (AF,
+# CF, ASF, PAJE base) arrive as case inputs with provenance until the
+# wave-5 cascade links the PF amounts (B-RSA-PF-CASCADE).
+[dependencies]
+"fr.minima.ressources" = "0.1.0"
+
+[[tests]]
+family = "fr.casf.rsa#montant"
+regression = false
+suites = [
+    "tests/mf-composition-1.lawtest",
+    "tests/mf-composition-2.lawtest",
+    "tests/mf-composition-3.lawtest",
+    "tests/mf-composition-4-isole.lawtest",
+    "tests/mf-composition-5-couple.lawtest",
+    "tests/mf-majore-1enfant.lawtest",
+    "tests/majore-duree-retard.lawtest",
+    "tests/majore-prolonge.lawtest",
+    "tests/allocation-normale.lawtest",
+    "tests/allocation-seuil.lawtest",
+    "tests/allocation-due-228.lawtest",
+    "tests/droit-etudiant-majore.lawtest",
+    "tests/cascade-trimestre-300.lawtest",
+    "tests/cascade-trimestre-200.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+[[tests]]
+family = "fr.casf.rsa#mf-decrets"
+regression = false
+suites = [
+    "tests/mf-decret-2020-490.lawtest",
+    "tests/mf-decret-2021-530.lawtest",
+    "tests/mf-decret-2022-699.lawtest",
+    "tests/mf-decret-2023-340.lawtest",
+    "tests/mf-decret-2024-396.lawtest",
+    "tests/mf-decret-2025-293.lawtest",
+    "tests/mf-decret-apres-serie.lawtest",
+    "tests/mf-decret-couple-2-enfants.lawtest",
+    "tests/mf-decret-couple-2024.lawtest",
+    "tests/mf-decret-couple-2025.lawtest",
+    "tests/mf-decret-couple-3-enfants.lawtest",
+    "tests/mf-decret-couple-trimestre.lawtest",
+    "tests/mf-decret-isole-3-enfants.lawtest",
+    "tests/mf-decret-majore.lawtest",
+    "tests/mf-decret-minima-couple.lawtest",
+    "tests/mf-decret-saisie-hors-serie.lawtest",
+    "tests/mf-decret-saisie-prevaut.lawtest",
+    "tests/mf-decret-trou-2022.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+# Window 2022-07..2023-03: art. 9 of law 2022-1158 (coefficient 1.04) on the amount of
+# decree 2022-699, rounded to the centime HALF_UP. The rounding is not the text but a
+# reading (SPEC 152, owner decision 08.10.2026): MfJuillet2022ArrondiCentime.
+[[tests]]
+family = "fr.casf.rsa#mf-loi-2022"
+regression = false
+suites = [
+    "tests/mf-loi-2022-06.lawtest",
+    "tests/mf-loi-2022-07.lawtest",
+    "tests/mf-loi-2022-12.lawtest",
+    "tests/mf-loi-2023-03.lawtest",
+    "tests/mf-loi-2023-04.lawtest",
+    "tests/mf-loi-2022-couple.lawtest",
+    "tests/mf-loi-2022-saisie-prevaut.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+# Rounding of an inexact quarterly average (R. 262-7): the reading
+# fr.minima.ressources::MoyenneArrondieCentime selected in the context (B-RSA-MOYENNE-INEXACTE).
+[[tests]]
+family = "fr.casf.rsa#lecture-moyenne"
+regression = false
+suites = [
+    "tests/moyenne-arrondie-couple.lawtest",
+    "tests/moyenne-inexacte-sans-lecture.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+[[tests]]
+family = "fr.casf.rsa#devoirs"
+regression = false
+suites = [
+    "tests/contrat-15h.lawtest",
+    "tests/contrat-10h-sans-motif.lawtest",
+    "tests/contrat-dispense.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+[[tests]]
+family = "fr.casf.rsa#suspension"
+regression = false
+suites = [
+    "tests/suspension-refus-contrat.lawtest",
+    "tests/suspension-sans-procedure.lawtest",
+    "tests/suspension-non-tenu.lawtest",
+    "tests/suppression-persistance.lawtest",
+    "tests/radiation-sans-versement.lawtest",
+    "tests/reverses-3-mois.lawtest",
+    "tests/taux-conforme-plafond.lawtest",
+    "tests/duree-conforme-premiere.lawtest",
+    "tests/transitoire.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+[[tests]]
+family = "fr.casf.rsa#recouvrement"
+regression = false
+suites = [
+    "tests/indu-recouvrable.lawtest",
+    "tests/indu-sous-seuil.lawtest",
+    "tests/indu-prescrit.lawtest",
+    "tests/indu-prescription-interrompue.lawtest",
+    "tests/indu-fraude-indemnite.lawtest",
+    "tests/indu-suspensif.lawtest",
+    "tests/indu-remise.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+[[tests]]
+family = "fr.casf.rsa#jeunes"
+regression = false
+suites = [
+    "tests/jeune-heures-directes.lawtest",
+    "tests/jeune-heures-insuffisantes.lawtest",
+    "tests/jeune-tns-2023.lawtest",
+    "tests/jeune-tns-pre2023.lawtest",
+    "tests/jeune-tns-artiste-2023.lawtest",
+    "tests/jeune-tns-artiste-pre2023.lawtest",
+    "tests/jeune-tns-artiste-pre2023-sans-registre.lawtest",
+    "tests/jeune-tns-sans-immatriculation.lawtest",
+    "tests/jeune-tns-annees-decalees.lawtest",
+    "tests/jeune-agricole.lawtest",
+    "tests/jeune-mixte.lawtest",
+    "tests/jeune-mixte-sans-ca.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+[[tests]]
+family = "fr.casf.rsa#demandes"
+regression = false
+suites = [
+    "tests/depot-ccas.lawtest",
+    "tests/depot-services.lawtest",
+    "tests/depot-association.lawtest",
+    "tests/depot-organisme.lawtest",
+    "tests/depot-ft.lawtest",
+    "tests/depot-ft-sans-convention.lawtest",
+    "tests/decision-instruction-ft.lawtest",
+    "tests/gratuite-interdite.lawtest",
+    "tests/gratuite-interdite-dept.lawtest",
+    "tests/gratuite-violee.lawtest",
+    "tests/gratuite-autre-destinataire.lawtest",
+    "tests/gratuite-autre-destinataire-dept.lawtest",
+    "tests/engagement-qualite.lawtest",
+    "tests/engagement-qualite-president.lawtest",
+    "tests/ressort-delegation.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+[[tests]]
+family = "fr.casf.rsa#conventions"
+regression = false
+suites = [
+    "tests/convention-financiere-complete.lawtest",
+    "tests/convention-financiere-incomplete.lawtest",
+    "tests/convention-controle-complete.lawtest",
+    "tests/acomptes-mensuels.lawtest",
+    "tests/regularisation-exercice.lawtest",
+    "tests/remboursement-charges.lawtest",
+    "tests/remboursement-charges-sans-charges.lawtest",
+    "tests/transmettre-indus.lawtest",
+    "tests/remuneration-convention.lawtest",
+    "tests/sans-convention-service.lawtest",
+    "tests/sans-convention-controle.lawtest",
+    "tests/sans-convention-financement.lawtest",
+    "tests/sans-convention-remboursement.lawtest",
+    "tests/sans-convention-remboursement-sans-charges.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+[[tests]]
+family = "fr.casf.rsa#devoirs-insertion"
+regression = false
+suites = [
+    "tests/devoirs-revenus-sous-seuil.lawtest",
+    "tests/devoirs-revenus-au-seuil.lawtest",
+    "tests/orientation-ft.lawtest",
+    "tests/orientation-president-faite.lawtest",
+    "tests/orientation-ft-sans-constat.lawtest",
+    "tests/delai-12-mois.lawtest",
+    "tests/delai-12-mois-six.lawtest",
+    "tests/reorientation.lawtest",
+    "tests/reorientation-deux-mois.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+[[tests]]
+family = "fr.casf.rsa#controle"
+regression = false
+suites = [
+    "tests/patrimoine-exclu.lawtest",
+    "tests/patrimoine-plafond.lawtest",
+    "tests/recouvrement-suit-d553.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]
+
+[[tests]]
+family = "fr.casf.rsa#statistiques"
+regression = false
+suites = [
+    "tests/donnees-annuelles-president.lawtest",
+    "tests/donnees-annuelles-pre2025.lawtest",
+    "tests/donnees-annuelles-prefet.lawtest",
+    "tests/donnees-annuelles-prefet-pre2025.lawtest",
+    "tests/effectifs-trimestre.lawtest",
+    "tests/trimestre-pre2025.lawtest",
+    "tests/effectifs-annuels.lawtest",
+    "tests/annuelles-caisses-pre2025.lawtest",
+    "tests/infos-l262-55.lawtest",
+    "tests/infos-l262-55-hors-echantillon.lawtest",
+    "tests/infos-l262-55-dept.lawtest",
+    "tests/infos-l262-55-dept-hors-echantillon.lawtest",
+    "tests/publication-resultats.lawtest",
+    "tests/publication-caisses.lawtest",
+]
+
+world = ["fr.casf.rsa", "fr.minima.ressources"]

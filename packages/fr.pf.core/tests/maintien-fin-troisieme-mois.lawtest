@@ -1,0 +1,17 @@
+// Post-death maintien: death 10 March, right opened 2025-06-01 - maintained up to 30 June, last day of the third month (R. 552-3 IV 1, R. 552-4 gate; SPEC 86 month-end reading).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-maintien-fin-troisieme-mois" {
+    given {
+        context { decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "maintien-fin-troisieme-mois-01": deces_le(entity_ref("urn:fr:pf:case:enfant-decede"), @2026-03-10) { origin case_input; }
+        assert "maintien-fin-troisieme-mois-02": deces_enfant_charge(entity_ref("urn:fr:pf:case:enfant-decede")) { origin case_input; }
+        assert "maintien-fin-troisieme-mois-03": ouverture_droit_mois(entity_ref("urn:fr:pf:case:enfant-decede"), @2025-06-01) { origin case_input; }
+    }
+    evaluate truth(maintien_prestations_fin(entity_ref("urn:fr:pf:case:enfant-decede"), @2026-06-30));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

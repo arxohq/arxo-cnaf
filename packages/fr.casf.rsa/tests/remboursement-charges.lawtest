@@ -1,0 +1,22 @@
+// Annual reimbursement of the established financial charges borne
+// by the body from the department's late advance payments
+// ("charges financières qui pourraient résulter pour l'organisme
+// ... des retards de versement des acomptes mensuels par le
+// département", D. 262-61 2°). The duty fires only on established
+// charges: the no-charges control is
+// remboursement-charges-sans-charges.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-remboursement-charges" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "remb-01": convention_service(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:org:caf")) { origin case_input; }
+        assert "remb-02": exercice_comptable(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:org:caf"), 2024) { origin case_input; }
+        assert "remb-03": charges_retard_acomptes(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:org:caf"), 2024, 150.00 EUR) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(RembourserChargesFinancieres, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

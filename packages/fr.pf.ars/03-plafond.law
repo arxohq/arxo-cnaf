@@ -1,0 +1,71 @@
+// Resource ceiling (L543-1, R543-5, R543-6).
+//
+// Single tier: the nominal grows 30 % per dependent child from the
+// first (unlike the CF stacked tiers). The family situation the count
+// rests on is assessed 31 July before the rentree (R543-6): the fund
+// establishes nb_enfants_ars as of that date (input contract,
+// B-PFARS-SITUATION). Households without children (n = 0) conclude
+// nothing.
+
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+use self::{
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02,
+    CSS_R543_5,
+    CSS_R543_5_ED2012_06,
+    CSS_R543_5_ED2013_06,
+    CSS_R543_5_ED2014_08,
+    CSS_R543_5_ED2016_03,
+    CSS_R543_5_ED2016_10,
+    CSS_R543_5_ED2019_01,
+    CSS_R543_5_ED2022_01,
+    CSS_R543_5_ED2022_02,
+    CSS_R543_6,
+    CSS_R543_6_ED2022_02,
+    CSS_R543_6_PRE2022,
+    CSS_R543_6_PRE2022_ED2008_08,
+    CSS_R543_6_PRE2022_ED2012_06,
+    CSS_R543_6_PRE2022_ED2013_06,
+    CSS_R543_6_PRE2022_ED2014_08,
+    CSS_R543_6_PRE2022_ED2016_03,
+    CSS_R543_6_PRE2022_ED2016_10,
+    CSS_R543_6_PRE2022_ED2019_01,
+    nb_enfants_ars,
+    plafond_ars_applicable,
+    plafond_base_ars,
+};
+
+@source(
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02,
+    CSS_R543_5,
+    CSS_R543_5_ED2012_06,
+    CSS_R543_5_ED2013_06,
+    CSS_R543_5_ED2014_08,
+    CSS_R543_5_ED2016_03,
+    CSS_R543_5_ED2016_10,
+    CSS_R543_5_ED2019_01,
+    CSS_R543_5_ED2022_01,
+    CSS_R543_5_ED2022_02,
+    CSS_R543_6,
+    CSS_R543_6_ED2022_02,
+    CSS_R543_6_PRE2022,
+    CSS_R543_6_PRE2022_ED2008_08,
+    CSS_R543_6_PRE2022_ED2012_06,
+    CSS_R543_6_PRE2022_ED2013_06,
+    CSS_R543_6_PRE2022_ED2014_08,
+    CSS_R543_6_PRE2022_ED2016_03,
+    CSS_R543_6_PRE2022_ED2016_10,
+    CSS_R543_6_PRE2022_ED2019_01)
+rule PlafondArs(p: fr.pf.core::Personne, base: Money, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "plafond majoré de 30 % par enfant à charge dès le premier (R. 543-5)";
+    label en unofficial "ceiling raised 30 % per dependent child from the first (R. 543-5)";
+    when plafond_base_ars(p, base) and nb_enfants_ars(p, n) and n >= 1;
+    then plafond_ars_applicable(p, base + base * MajorationPlafondArs * n);
+}

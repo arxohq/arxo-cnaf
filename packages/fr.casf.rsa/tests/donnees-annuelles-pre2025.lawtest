@@ -1,0 +1,18 @@
+// Annual data, predecessor wording: before 2025 the president
+// transmitted the claimants-only annual data before the end of the
+// first quarter (D. 262-95 predecessor). Edition pair of
+// donnees-annuelles-president.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-donnees-annuelles-pre2025" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2023-02-15T12:00:00Z; knowledge_time @2023-02-15T12:00:00Z; legal_time @2023-02-15; timezone "Europe/Paris"; }
+        assert "statp-01": annee_donnees_fin(entity_ref("urn:fr:rsa:dept:nord"), @2022-12-31) { origin case_input; }
+        assert "statp-02": est_service_statistique(entity_ref("urn:fr:rsa:org:drees")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreDonneesAnnuellesPresidentPre2025, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

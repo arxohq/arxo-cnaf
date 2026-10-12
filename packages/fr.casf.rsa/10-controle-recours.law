@@ -1,0 +1,83 @@
+// Control and recovery bridge (D.262-77/94-2).
+//
+// DEONTIC MAP: computation only (no must/must-not here):
+// - D.262-77 excludes below-ceiling professional assets from the
+//   L.262-41 lifestyle assessment; the monthly social-security
+//   ceiling is unpinned and arrives retained (plafond_secu_retenu,
+//   B-RSA-PLAFOND-SECU); the L.262-41 assessment itself stays
+//   outside (documented seam);
+// - D.262-94-2 extends CSS D.553-1/2/4/5 to RSA overpayment recovery;
+//   the D.553 modalities are owned by the payment-core finish group
+//   and arrive external (B-RSA-D553-MODALITES); the bridge fires on
+//   the 05-recouvrement indu_recouvrable head.
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+// `use self` is hand-maintained in nochecks authoring (no `law fix
+// imports` until the locks free). Fragment names join the block via the
+// deferred `law fix imports fr.casf.rsa` run after regenerating sources.
+use self::{
+    CASF_D262_77,
+    CASF_D262_77_ED2021_03,
+    CASF_D262_77_ED2021_04,
+    CASF_D262_77_ED2023_01,
+    CASF_D262_77_ED2024_01,
+    CASF_D262_77_ED2024_07,
+    CASF_D262_77_ED2025_01,
+    CASF_D262_77_ED2025_06,
+    CASF_D262_77_ED2026_06,
+    CASF_D262_94_2,
+    CASF_D262_94_2_ED2021_03,
+    CASF_D262_94_2_ED2021_04,
+    CASF_D262_94_2_ED2023_01,
+    CASF_D262_94_2_ED2024_01,
+    CASF_D262_94_2_ED2024_07,
+    CASF_D262_94_2_ED2025_01,
+    CASF_D262_94_2_ED2025_06,
+    CASF_D262_94_2_ED2026_06,
+    indu_recouvrable,
+    patrimoine_pro_exclu,
+    patrimoine_pro_foyer,
+    plafond_secu_retenu,
+    recouvrement_suit_d553,
+};
+
+@source(
+    CASF_D262_77,
+    CASF_D262_77_ED2021_03,
+    CASF_D262_77_ED2021_04,
+    CASF_D262_77_ED2023_01,
+    CASF_D262_77_ED2024_01,
+    CASF_D262_77_ED2024_07,
+    CASF_D262_77_ED2025_01,
+    CASF_D262_77_ED2025_06,
+    CASF_D262_77_ED2026_06)
+rule PatrimoineProExclu(p: fr.minima.ressources::Personne, m: Money, plafond: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "patrimoine professionnel sous le plafond mensuel de la sécurité sociale, exclu du train de vie (D. 262-77 ; L. 262-41)";
+    label en unofficial "professional assets below the monthly social-security ceiling, excluded from the lifestyle assessment (D. 262-77; L. 262-41)";
+    when patrimoine_pro_foyer(p, m)
+        and plafond_secu_retenu(p, plafond)
+        and m < plafond;
+    then patrimoine_pro_exclu(p);
+}
+
+@source(
+    CASF_D262_94_2,
+    CASF_D262_94_2_ED2021_03,
+    CASF_D262_94_2_ED2021_04,
+    CASF_D262_94_2_ED2023_01,
+    CASF_D262_94_2_ED2024_01,
+    CASF_D262_94_2_ED2024_07,
+    CASF_D262_94_2_ED2025_01,
+    CASF_D262_94_2_ED2025_06,
+    CASF_D262_94_2_ED2026_06)
+rule RecouvrementSuitD553(p: fr.minima.ressources::Personne, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'indu RSA est recouvré suivant CSS D. 553-1/2/4/5, modalités du groupe payment-core (D. 262-94-2 ; B-RSA-D553-MODALITES)";
+    label en unofficial "the RSA overpayment is recovered following CSS D. 553-1/2/4/5, payment-core group modalities (D. 262-94-2; B-RSA-D553-MODALITES)";
+    when indu_recouvrable(p, m);
+    then recouvrement_suit_d553(p);
+}

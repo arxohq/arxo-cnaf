@@ -1,0 +1,31 @@
+// Decision-actor evidence (PA-FE09-05): the director of the serving
+// organism is known and the dated rejection of a timely request on
+// a date-certain notice exists, but nothing proves the director
+// himself decided it. D7 ACTIVE and the CRA deadline interrupted,
+// yet the D7bis follow-up duty does not activate (R. 847-1-1 III).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-rejet-rectification-directeur-incertain-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-25T12:00:00Z; knowledge_time @2026-06-25T12:00:00Z; legal_time @2026-06-25; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_recupere(entity_ref("urn:fr:ppa:case:rejet-rectification-directeur-incertain-2026"), 300.00 EUR) { origin case_input; }
+        assert "ppa-02": constat_indu(entity_ref("urn:fr:ppa:case:rejet-rectification-directeur-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-03": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:rejet-rectification-directeur-incertain-2026")) { origin case_input; }
+        assert "ppa-04": directeur_de(entity_ref("urn:fr:ppa:org:directeur"), entity_ref("urn:fr:ppa:org:caisse")) { origin case_input; }
+        assert "ppa-05": notification_recouvrement(entity_ref("urn:fr:ppa:case:rejet-rectification-directeur-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-06": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:rejet-rectification-directeur-incertain-2026")) { origin case_input; }
+        assert "ppa-07": reception_notification(entity_ref("urn:fr:ppa:case:rejet-rectification-directeur-incertain-2026"), @2026-05-25) { origin case_input; }
+        assert "ppa-08": demande_rectification(entity_ref("urn:fr:ppa:case:rejet-rectification-directeur-incertain-2026"), @2026-06-10) { origin case_input; }
+        assert "ppa-09": decision_rectification_rejet(entity_ref("urn:fr:ppa:case:rejet-rectification-directeur-incertain-2026"), @2026-06-20) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NotifierIndu, ACTIVE);
+    expect not position(NotifierRejetRectification, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(interruption_delai_cra(entity_ref("urn:fr:ppa:case:rejet-rectification-directeur-incertain-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

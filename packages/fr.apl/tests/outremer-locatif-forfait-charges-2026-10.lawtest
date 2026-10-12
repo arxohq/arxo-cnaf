@@ -1,0 +1,27 @@
+// Месяц права — ноябрь 2026 года: редакция, применимая «aux prestations dues à
+// compter du 1er octobre 2026» (арретэ от 28 сентября 2026 года,
+// NOR VLOL2620735A). Её версии статей пришли ИНКРЕМЕНТОМ DILA
+// LEGI_20260930-215413 — в глобальный дамп они попасть не могли, он снят
+// 13 июля 2025 года.
+// ШАГ: заморский форфейт расходов — 41,15 € + 10,59 € = 51,74 €. Изъятия ст. 46
+// переоценены тем же арретэ от 28 сентября 2026 года, что и барем главы III.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-locatif-forfait-charges-2026-10" {
+    given {
+        context { decision_time @2026-11-15T12:00:00Z; knowledge_time @2026-11-15T12:00:00Z; legal_time @2026-11-15; timezone "Europe/Paris"; }
+        assert "outremer-locatif-forfait-charges-2026-10-01": secteur_locatif(entity_ref("urn:fr:apl:case:om-loc-2026-10")) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2026-10-02": aide_demandee(entity_ref("urn:fr:apl:case:om-loc-2026-10"), APL) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2026-10-03": zone_du_logement(entity_ref("urn:fr:apl:case:om-loc-2026-10"), ZONE_II) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2026-10-04": situation_familiale(entity_ref("urn:fr:apl:case:om-loc-2026-10"), COUPLE) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2026-10-05": personnes_a_charge(entity_ref("urn:fr:apl:case:om-loc-2026-10"), 1) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2026-10-06": mode_location(entity_ref("urn:fr:apl:case:om-loc-2026-10"), LOCATION_SEULE) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2026-10-07": territoire(entity_ref("urn:fr:apl:case:om-loc-2026-10"), OUTRE_MER) { origin case_input; }
+    }
+    evaluate truth(forfait_charges(entity_ref("urn:fr:apl:case:om-loc-2026-10"), 51.74 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

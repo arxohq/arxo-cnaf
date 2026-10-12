@@ -1,0 +1,17 @@
+// Delegation scope: the president fixes the territorial scope in the
+// instruction delegation (D. 262-30).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-ressort-delegation" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "ress-01": delegation_instruction(entity_ref("urn:fr:rsa:org:assoc")) { origin case_input; }
+        assert "ress-02": organisme_competent(entity_ref("urn:fr:rsa:org:assoc"), entity_ref("urn:fr:rsa:case:ressort-delegation")) { origin case_input; }
+        assert "ress-03": departement_competent(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:case:ressort-delegation")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(FixerRessortDelegation, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

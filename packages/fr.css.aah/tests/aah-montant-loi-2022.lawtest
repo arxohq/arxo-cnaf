@@ -1,0 +1,77 @@
+// Окно 01.07.2022 — 31.03.2023 (ст. 9 закона 2022-1158): сумма декрета 2022-700 × 1,04 с округлением
+// до сантима HALF_UP — ЧТЕНИЕ D-82 (AahRevalorisationArrondiCentime); границы окна и середина.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+// 2022-07-01: montant_aah_applicable = 956.65 EUR (lecture); сумма декрета 2022-700 здесь не применяется
+test "urn:query:fr-css-aah-loi-2022-07-01" {
+    given {
+        context { decision_time @2022-07-01T12:00:00Z; knowledge_time @2022-07-01T12:00:00Z; legal_time @2022-07-01; timezone "Europe/Paris"; interpretation AahRevalorisationArrondiCentime; }
+        assert "loi-2022-07-01-01": en_couple(entity_ref("urn:fr:css-aah:case:loi-2022-07-01")) { origin case_input; }
+    }
+    evaluate truth(montant_aah_applicable(956.65 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_aah_applicable(919.86 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2022-12-15: montant_aah_applicable = 956.65 EUR (lecture); сумма декрета 2022-700 здесь не применяется
+test "urn:query:fr-css-aah-loi-2022-12-15" {
+    given {
+        context { decision_time @2022-12-15T12:00:00Z; knowledge_time @2022-12-15T12:00:00Z; legal_time @2022-12-15; timezone "Europe/Paris"; interpretation AahRevalorisationArrondiCentime; }
+        assert "loi-2022-12-15-01": en_couple(entity_ref("urn:fr:css-aah:case:loi-2022-12-15")) { origin case_input; }
+    }
+    evaluate truth(montant_aah_applicable(956.65 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_aah_applicable(919.86 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2023-03-31: montant_aah_applicable = 956.65 EUR (lecture); сумма декрета 2022-700 здесь не применяется
+test "urn:query:fr-css-aah-loi-2023-03-31" {
+    given {
+        context { decision_time @2023-03-31T12:00:00Z; knowledge_time @2023-03-31T12:00:00Z; legal_time @2023-03-31; timezone "Europe/Paris"; interpretation AahRevalorisationArrondiCentime; }
+        assert "loi-2023-03-31-01": en_couple(entity_ref("urn:fr:css-aah:case:loi-2023-03-31")) { origin case_input; }
+    }
+    evaluate truth(montant_aah_applicable(956.65 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_aah_applicable(919.86 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2022-06-30: накануне окна закона — ещё сумма декрета 2022-700
+test "urn:query:fr-css-aah-loi-2022-06-30" {
+    given {
+        context { decision_time @2022-06-30T12:00:00Z; knowledge_time @2022-06-30T12:00:00Z; legal_time @2022-06-30; timezone "Europe/Paris"; interpretation AahRevalorisationArrondiCentime; }
+        assert "loi-2022-06-30-01": en_couple(entity_ref("urn:fr:css-aah:case:loi-2022-06-30")) { origin case_input; }
+    }
+    evaluate truth(montant_aah_applicable(919.86 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2023-04-01: окно закона закрыто — сумма декрета 2023-328
+test "urn:query:fr-css-aah-loi-2023-04-01" {
+    given {
+        context { decision_time @2023-04-01T12:00:00Z; knowledge_time @2023-04-01T12:00:00Z; legal_time @2023-04-01; timezone "Europe/Paris"; interpretation AahRevalorisationArrondiCentime; }
+        assert "loi-2023-04-01-01": en_couple(entity_ref("urn:fr:css-aah:case:loi-2023-04-01")) { origin case_input; }
+    }
+    evaluate truth(montant_aah_applicable(971.37 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

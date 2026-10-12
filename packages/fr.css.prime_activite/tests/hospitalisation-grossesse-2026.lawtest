@@ -1,0 +1,33 @@
+// Pregnancy exception evidence (PA-R4-07): a recorded pregnancy
+// affirmatively bars the hospital half-rate; without any pregnancy
+// evidence the reduction stays undetermined (R.846-7).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-hospitalisation-grossesse-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": prime_due_trimestre(entity_ref("urn:fr:ppa:case:hospitalisation-enceinte"), 400.00 EUR) { origin case_input; }
+        assert "ppa-02": hospitalisation_prise_en_charge(entity_ref("urn:fr:ppa:case:hospitalisation-enceinte")) { origin case_input; }
+        assert "ppa-03": deuxieme_revision_depassee(entity_ref("urn:fr:ppa:case:hospitalisation-enceinte")) { origin case_input; }
+        assert "ppa-04": hospitalisation_en_cours(entity_ref("urn:fr:ppa:case:hospitalisation-enceinte")) { origin case_input; }
+        assert "ppa-05": grossesse_en_cours(entity_ref("urn:fr:ppa:case:hospitalisation-enceinte")) { origin case_input; }
+        assert "ppa-10": foyer_sans_conjoint_ni_charge(entity_ref("urn:fr:ppa:case:hospitalisation-enceinte")) { origin case_input; }
+        assert "ppa-11": prise_en_charge_active(entity_ref("urn:fr:ppa:case:hospitalisation-enceinte")) { origin case_input; }
+        assert "ppa-06": prime_due_trimestre(entity_ref("urn:fr:ppa:case:hospitalisation-inconnue"), 400.00 EUR) { origin case_input; }
+        assert "ppa-07": hospitalisation_prise_en_charge(entity_ref("urn:fr:ppa:case:hospitalisation-inconnue")) { origin case_input; }
+        assert "ppa-08": deuxieme_revision_depassee(entity_ref("urn:fr:ppa:case:hospitalisation-inconnue")) { origin case_input; }
+        assert "ppa-09": hospitalisation_en_cours(entity_ref("urn:fr:ppa:case:hospitalisation-inconnue")) { origin case_input; }
+        assert "ppa-12": foyer_sans_conjoint_ni_charge(entity_ref("urn:fr:ppa:case:hospitalisation-inconnue")) { origin case_input; }
+        assert "ppa-13": prise_en_charge_active(entity_ref("urn:fr:ppa:case:hospitalisation-inconnue")) { origin case_input; }
+    }
+    evaluate truth(prime_reduite_hospitalisation(entity_ref("urn:fr:ppa:case:hospitalisation-enceinte"), 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(prime_reduite_hospitalisation(entity_ref("urn:fr:ppa:case:hospitalisation-inconnue"), 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

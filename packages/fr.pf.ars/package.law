@@ -1,0 +1,214 @@
+// Shared surface of the package: case facts and predicates that the ARS
+// modules fill in. Upstream premises (child in care, opener status,
+// debtor body) belong to fr.pf.core and arrive as case inputs; NOTHING
+// owned by a neighbour package is redefined here.
+//
+// Module map:
+//   01-sources.law         - sources, back-to-back editions, fragments (generated)
+//   02-conditions.law      - L543-1, R543-1, R543-2, R543-4: per-child eligibility, open right
+//   03-plafond.law         - L543-1, R543-5, R543-6: single-tier ceiling, +30 % from the first
+//   04-montant.law         - D543-1, L543-2, R543-6-1: age-band amounts, differential
+//   05-beneficiaire.law    - L543-3, R543-8, R543-9: CDC vs family payment routing
+//   06-devoir-versement.law - fund payment duties with the 31-October deadline
+//   07-dom.law              - L755-22, R755-14, R755-14-1: DOM attribution, R543 applicability, fund exclusion
+//   bareme/*.lawparam.json - age bounds, rates, ceiling increment, 15 EUR floor (generated)
+//
+// SCOPE BOUNDARY. The package computes the yearly school-start allowance
+// (brut) for metropolitan France, plus the DOM extension (L755-22,
+// R755-14, R755-14-1 in 07-dom.law: attribution, applicability,
+// fund exclusion). Outside: the 15 EUR household-total
+// floor (no engine fold, B-PFARS-SEUIL), N-2-style reference-year
+// assessment and the July-31 family situation (fund-stated,
+// B-PFARS-SITUATION), euro BMAF and decree plafond nominals (unpinned
+// arretes/decree -> stated-assumption inputs), CDC account mechanics,
+// interest, reporting and indu restitution (R543-9 procedure,
+// B-PFARS-CDC-PROC), month mechanics of the rentree (assumed dates).
+// Full list - README, "Boundaries".
+//
+// MIGRATION-REQ-PFARS-01. date_naissance is declared locally ONLY because
+// fr.pf.core does not publish it (parallel lane). When the upstream pub
+// lands, delete the local relation and qualify uses with fr.pf.core::.
+
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+import fr.pf.core version "0.1.0";
+
+pub enum BandeArs {
+    label fr official "tranche d'âge du barème de l'allocation de rentrée scolaire (D. 543-1)";
+    label en unofficial "school-start allowance age band (D. 543-1)";
+    ARS_MOINS_11,
+    ARS_11_14,
+    ARS_15_PLUS
+}
+
+// --- Household case inputs (empirical) ---
+
+pub relation bmaf_retenu(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "base mensuelle retenue pour l'allocation (montant en vigueur, appréciation du fonds)";
+    label en unofficial "monthly base retained for the allowance (amount in force, fund assessment)";
+}
+
+pub relation ressources_menage(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "ressources annuelles du ménage, année civile de référence (appréciation du fonds)";
+    label en unofficial "household yearly resources, reference calendar year (fund assessment)";
+}
+
+pub relation plafond_base_ars(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "nominal du plafond de ressources, montant fixé par décret (appréciation du fonds)";
+    label en unofficial "resource ceiling nominal, decree-set amount (fund assessment)";
+}
+
+pub relation nb_enfants_ars(p: fr.pf.core::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "enfants ouvrant droit à l'allocation pour la rentrée (appréciation du fonds, situation au 31 juillet)";
+    label en unofficial "children opening right to the allowance for the rentree (fund assessment, situation at 31 July)";
+}
+
+pub relation nb_bande(p: fr.pf.core::Personne, bande: BandeArs, n: Integer) kind empirical {
+    key(p, bande);
+    label fr official "enfants ouvrant droit par tranche d'âge du barème (appréciation du fonds)";
+    label en unofficial "entitled children per scale age band (fund assessment)";
+}
+
+pub relation seuil_six_ans(d: Date) kind empirical {
+    label fr official "1er février de l'année suivant la rentrée (seuil des six ans, R. 543-2)";
+    label en unofficial "1 February of the year after the rentree (six-year line, R. 543-2)";
+}
+
+pub relation seuil_dix_huit_ans(d: Date) kind empirical {
+    label fr official "15 septembre de l'année de la rentrée (seuil des dix-huit ans, R. 543-2)";
+    label en unofficial "15 September of the rentree year (eighteen-year line, R. 543-2)";
+}
+
+pub relation date_reference_taux(d: Date) kind empirical {
+    label fr official "31 décembre de l'année civile de la rentrée (tranches du taux, D. 543-1)";
+    label en unofficial "31 December of the rentree calendar year (rate bands, D. 543-1)";
+}
+
+pub relation date_limite_versement(d: Date) kind empirical {
+    label fr official "31 octobre de l'année, versement unique au plus tard (R. 543-7, appréciation du fonds)";
+    label en unofficial "31 October of the year, single payment due no later (R. 543-7, fund assessment)";
+}
+
+pub relation residence_dom(p: fr.pf.core::Personne) kind empirical {
+    key(p);
+    label fr official "réside dans une collectivité mentionnée à l'article L. 751-1 (appréciation du fonds, L. 755-22; n'implique pas la résidence départementale)";
+    label en unofficial "resides in an L. 751-1 collectivity (fund assessment, L. 755-22; does not imply department residence)";
+}
+
+pub relation residence_departement_dom(p: fr.pf.core::Personne) kind empirical {
+    key(p);
+    label fr official "réside dans un département mentionné à l'article L. 751-1 (appréciation du fonds, R. 755-14, R. 755-14-1; fait indépendant avec provenance)";
+    label en unofficial "resides in a department listed in article L. 751-1 (fund assessment, R. 755-14, R. 755-14-1; independent provenance-bearing fact)";
+}
+
+// --- Per-child case inputs ---
+
+pub relation date_naissance(e: fr.pf.core::Enfant, naissance: Date) kind empirical {
+    key(e);
+    label fr official "date de naissance de l'enfant (MIGRATION-REQ-PFARS-01: en attente du pub fr.pf.core)";
+    label en unofficial "child birthdate (MIGRATION-REQ-PFARS-01: pending fr.pf.core pub)";
+}
+
+pub relation inscription_scolaire(e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "inscription dans un établissement d'enseignement, présumée sauf contestation (R. 543-4, appréciation du fonds)";
+    label en unofficial "school enrolment, presumed unless contested (R. 543-4, fund assessment)";
+}
+
+pub relation etudes_apprentissage(e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "poursuite d'études ou apprentissage du jeune enfant (L. 543-1 al. 2, appréciation du fonds)";
+    label en unofficial "young child studying or apprenticed (L. 543-1 para. 2, fund assessment)";
+}
+
+pub relation remuneration_bornee(e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "rémunération du jeune enfant sous le plafond du 2° de L. 512-3 (appréciation amont)";
+    label en unofficial "young child pay within the L. 512-3 2° ceiling (upstream assessment)";
+}
+
+pub relation placement_ase(e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "enfant confié au titre du 3°/5° de 375-3 ou de 375-5 du code civil, situation au 31 juillet (L. 543-3, R. 543-8)";
+    label en unofficial "child placed under 375-3 3/5 or 375-5 civil code, situation at 31 July (L. 543-3, R. 543-8)";
+}
+
+pub relation residence_famille(e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "enfant placé résidant au sein de sa famille, à la charge d'un membre (L. 543-3 al. 2, appréciation du fonds)";
+    label en unofficial "placed child living with the family, in a member's care (L. 543-3 para. 2, fund assessment)";
+}
+
+// --- Institutional conclusions ---
+
+pub relation ars_enfant_eligible(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant ouvre droit à l'allocation de rentrée scolaire pour la rentrée (L. 543-1, R. 543-2)";
+    label en unofficial "child opens right to the school-start allowance for the rentree (L. 543-1, R. 543-2)";
+}
+
+pub relation ars_droit_ouvert(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "droit à l'allocation de rentrée scolaire ouvert pour la rentrée (L. 543-1, R. 543-5)";
+    label en unofficial "school-start allowance right open for the rentree (L. 543-1, R. 543-5)";
+}
+
+pub relation plafond_ars_applicable(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "plafond de ressources applicable au ménage, majoration comprise (R. 543-5)";
+    label en unofficial "resource ceiling for the household, increment included (R. 543-5)";
+}
+
+pub relation ars_montant_du(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant d'allocation dû pour l'enfant selon sa tranche d'âge (D. 543-1, brut)";
+    label en unofficial "allowance amount due for the child by age band (D. 543-1, gross)";
+}
+
+pub relation ars_differentiel_du(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "complément différentiel dû pour l'enfant, voie autonome (L. 543-2, R. 543-6-1, brut)";
+    label en unofficial "differential top-up due for the child, standalone track (L. 543-2, R. 543-6-1, gross)";
+}
+
+pub relation ars_paiement_cdc(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'allocation de l'enfant placé est versée à la Caisse des dépôts, pécule (L. 543-3)";
+    label en unofficial "placed child's allowance is paid to the CDC, pecule (L. 543-3)";
+}
+
+pub relation ars_paiement_famille(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'allocation de l'enfant placé est versée au membre assumant la charge effective et permanente (L. 543-3 al. 2)";
+    label en unofficial "placed child's allowance is paid to the member with effective permanent charge (L. 543-3 para. 2)";
+}
+
+pub relation ars_r543_applicable_dom(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "R. 543-1 à R. 543-7 applicables au cas résidant dans un département L. 751-1 (R. 755-14)";
+    label en unofficial "R. 543-1 to R. 543-7 applicable to the case residing in an L. 751-1 department (R. 755-14)";
+}
+
+pub relation ars_attribuee_dom(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'allocation de rentrée scolaire est attribuée pour l'enfant dans une collectivité L. 751-1 (L. 755-22)";
+    label en unofficial "school-start allowance granted for the child in an L. 751-1 collectivity (L. 755-22)";
+}
+
+pub relation ars_exclue_ressources_fonds(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'allocation versée pour l'enfant dans un département L. 751-1 n'entre pas en compte pour les ressources du fonds d'action sanitaire et social (R. 755-14-1)";
+    label en unofficial "allowance paid for the child in an L. 751-1 department does not count towards the health and social action fund resources (R. 755-14-1)";
+}
+
+pub relation ars_verse(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(p, e);
+    label fr official "l'allocation due a été versée, au ménage ou à la Caisse des dépôts selon le canal (exécution)";
+    label en unofficial "the due allowance was paid, to the household or the CDC per the channel (performance)";
+}

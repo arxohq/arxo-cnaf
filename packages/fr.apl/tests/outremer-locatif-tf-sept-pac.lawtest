@@ -1,0 +1,36 @@
+// СВОЙ сценарий заморского найма: наёмных дел заморских территорий нет ни у
+// Catala, ни у OpenFisca, поэтому шаги выведены из закреплённого текста.
+//
+// Факты дела нарочно скупые: ни найма, ни ресурсов. Этому шагу они не нужны, а с
+// ними сработала бы вся цепочка расчёта, и её отказ в любом звене поразил бы весь
+// evaluation-документ.
+//
+// ШАГ: у заморской таблицы TF ЕСТЬ строка семи иждивенцев, которой у метрополии
+// нет вовсе (та кончается шестью и дальше идёт надбавкой −0,06 %). При семи
+// иждивенцах заморская ставка равна 1,67 %.
+//
+// НАБЛЮДЕНИЕ: ровно то же число даёт и метропольная экстраполяция
+// (1,73 % − 0,06 %). То есть строка семи иждивенцев у заморской таблицы
+// арифметически совпадает с продолжением метропольной — но она ВЫПИСАНА
+// отдельно, и пакет читает её как строку, а не как формулу. Сценарий закрепляет
+// именно исполнение заморской ветви.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-locatif-tf-sept-pac" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "outremer-locatif-tf-sept-pac-01": secteur_locatif(entity_ref("urn:fr:apl:case:om-loc-b")) { origin case_input; }
+        assert "outremer-locatif-tf-sept-pac-02": aide_demandee(entity_ref("urn:fr:apl:case:om-loc-b"), APL) { origin case_input; }
+        assert "outremer-locatif-tf-sept-pac-03": zone_du_logement(entity_ref("urn:fr:apl:case:om-loc-b"), ZONE_II) { origin case_input; }
+        assert "outremer-locatif-tf-sept-pac-04": situation_familiale(entity_ref("urn:fr:apl:case:om-loc-b"), COUPLE) { origin case_input; }
+        assert "outremer-locatif-tf-sept-pac-05": personnes_a_charge(entity_ref("urn:fr:apl:case:om-loc-b"), 7) { origin case_input; }
+        assert "outremer-locatif-tf-sept-pac-06": mode_location(entity_ref("urn:fr:apl:case:om-loc-b"), LOCATION_SEULE) { origin case_input; }
+        assert "outremer-locatif-tf-sept-pac-07": territoire(entity_ref("urn:fr:apl:case:om-loc-b"), OUTRE_MER) { origin case_input; }
+    }
+    evaluate truth(taux_composition_familiale(entity_ref("urn:fr:apl:case:om-loc-b"), 0.0167));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

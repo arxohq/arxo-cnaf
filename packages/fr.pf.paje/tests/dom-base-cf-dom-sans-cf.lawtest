@@ -1,0 +1,21 @@
+// L. 755-19, para. 3, premise control: Guadeloupe household with a
+// full-rate base right open, but no L. 755-16 complément familial served —
+// no cumulation bar concludes. Control — dom-base-cf-dom-plein.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-base-cf-dom-sans-cf" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-cfno-01": territoire(entity_ref("urn:fr:paje:case:dom-cfno"), GUADELOUPE) { origin case_input; }
+        assert "dom-cfno-02": enfant_en_charge(entity_ref("urn:fr:paje:case:dom-cfno"), entity_ref("urn:fr:paje:enfant:dom-cfno")) { origin case_input; }
+        assert "dom-cfno-03": condition_age_base(entity_ref("urn:fr:paje:enfant:dom-cfno")) { origin adjudicated; }
+        assert "dom-cfno-04": ressources_annuelles(entity_ref("urn:fr:paje:case:dom-cfno"), 20000 EUR) { origin case_input; }
+        assert "dom-cfno-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:dom-cfno"), 30000 EUR) { origin case_input; }
+    }
+    evaluate truth(cumul_base_cf_dom_interdit(entity_ref("urn:fr:paje:case:dom-cfno"), entity_ref("urn:fr:paje:enfant:dom-cfno")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

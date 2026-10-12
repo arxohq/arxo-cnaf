@@ -1,0 +1,14 @@
+language "law.core" version "0.2";
+package fr.apl.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:apl:versement";
+
+// D-42 (08.10.2026): working reading of fr.apl (G-A13, PpPlancherFinal now pub) selected in context.
+test "urn:query:fr-apl-versement-decision-non-versement" {
+    given {
+        context { decision_time @2021-01-15T12:00:00Z; knowledge_time @2021-01-15T12:00:00Z; legal_time @2021-01-15; timezone "Europe/Paris"; interpretation fr.apl::PpPlancherFinal; }
+        assert "decision": fr.apl::aide_non_versee(entity_ref("urn:fr:apl:versement:non")) { origin case_input; }
+    }
+    evaluate truth(decision_non_versement(entity_ref("urn:fr:apl:versement:non")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

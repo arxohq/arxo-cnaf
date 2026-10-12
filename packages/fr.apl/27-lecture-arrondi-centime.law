@@ -1,0 +1,221 @@
+// D-82 (решение владельца, 08.10.2026): прочтение §152 «неточное деление, у
+// которого текст политики округления не называет, округляется до САНТИМА по
+// HALF_UP». Основание — практика CNAF (их код округляет пропорцию D. 823-16
+// как `round_(Af × coeff, 2)`), а НЕ текст: D. 823-16 («décroît
+// proportionnellement») и D. 832-26 («le total étant divisé par douze»)
+// об округлении молчат. Поэтому это прочтение, а не норма пакета.
+//
+// ГДЕ ПРИМЕНЕНО (два места, названные решением, и третье — D-85):
+//   1. пропорция дегрессивности D. 823-16 (02-calcul-locatif.law,
+//      DegressiviteProportionnelle): пособие × (плафон прекращения − наём) /
+//      (плафон прекращения − плафон дегрессивности) → одно деление с
+//      округлением, `div_round(…, 2, "HALF_UP")`;
+//   2. E0 «le total étant divisé par douze» D. 832-26 (04-calcul-foyer.law,
+//      обе эпохи таблиц ст. 31): `div_round(сумма, 12.0, 2, "HALF_UP")`.
+//   3. две трети уплаченной цены меблированного найма D. 842-2 (28-loyer-meuble.law,
+//      LoyerPrincipalMeubleArrondi; D-85, 09.10.2026 — то же общее правило D-82
+//      «деление без политики в тексте», применённое к новой норме):
+//      `div_round(цена × 2, 3.0, 2, "HALF_UP")`.
+// Не затронуты: L0 (D. 842-15 5° «se substitue à E0»), L0 APL-приобретения,
+// деление платежей на сособственников D. 842-10 1° — решение D-82 их не
+// называет, они остаются отказом INEXACT_DIVISION и под этим прочтением.
+//
+// КАК УСТРОЕН ВЫБОР. Правило ArrondiIntermediaireCentime выводит политику
+// arrondi_intermediaire_centime(m) только под выбранным прочтением (правило с
+// непустой принадлежностью активно лишь при выборе, §152). Базовые правила
+// неточного деления несут охранное условие not_known(arrondi_intermediaire_centime(m)):
+// без выбора прочтения они работают как прежде и отказывают
+// (INEXACT_DIVISION); под выбранным условие ложно, и то же место считает
+// правило этого файла. Две активные головы одного ключа не встречаются. Группы
+// выбора у прочтения НЕТ (§155 требует от группы две альтернативы и при
+// exactly_one без выбора даёт INTERPRETATION_REQUIRED на каждый зависимый
+// запрос): это необязательное прочтение, членство правил которого и есть
+// условие активности. Выбор приходит из дела:
+// `interpretation ArrondiCentimeHalfUp;` в context.
+//
+// ОКРУГЛЯЕТСЯ ВСЕГДА, КОГДА ПРОЧТЕНИЕ ВЫБРАНО: и там, где частное точное, но
+// длиннее двух знаков (деление `div_round` не различает «точное» и «неточное»
+// — округление есть часть операции, §50, errata E-0036/E-0170). Где частное
+// уже в сантимах, результат тот же, что у базового правила.
+//
+// ЧТО ДАЛЬШЕ ПО ЦЕПОЧКЕ ПРЕЖНЕЕ: минорация, вилка взносов D. 823-16 («arrondi
+// à l'euro inférieur, puis majoré») и удержание CRDS работают по тексту без
+// изменений; расхождение с кодом OpenFisca после этого прочтения остаётся
+// только за их шагом взносов (README, «Квалификация расхождений»).
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    ARR_ART31_ED2019_10,
+    ARR_ART31_ED2020_01,
+    ARR_ART31_ED2020_10,
+    ARR_ART31_ED2021_01,
+    ARR_ART31_ED2021_10,
+    ARR_ART31_ED2022_01,
+    ARR_ART31_ED2022_07,
+    ARR_ART31_ED2023_01,
+    ARR_ART31_ED2023_10,
+    ARR_ART31_ED2024_01,
+    ARR_ART31_ED2024_10,
+    ARR_ART31_ED2025_01,
+    ARR_ART31_ED2025_10,
+    CCH_D823_16,
+    CCH_D823_16_ED2019_12,
+    CCH_D823_16_ED2020_01,
+    CCH_D823_16_ED2021_01,
+    CCH_D823_16_ED2023_04,
+    CCH_D823_16_ED2023_09,
+    CCH_D823_16_ED2023_12,
+    CCH_D823_16_ED2026_07,
+    CCH_D832_26,
+    CCH_D832_26_ED2019_12,
+    CCH_D832_26_ED2020_01,
+    CCH_D832_26_ED2021_01,
+    CCH_D832_26_ED2023_04,
+    CCH_D832_26_ED2023_09,
+    CCH_D832_26_ED2023_12,
+    CCH_D832_26_ED2026_07,
+    LoyerPrincipalMeubleArrondi,
+    Menage,
+    SituationFamiliale,
+    TypeAide,
+    TypeLogementFoyer,
+    aide_apres_degressivite,
+    aide_demandee,
+    aide_formule,
+    arrondi_intermediaire_centime,
+    beneficiaire_aah_ou_aeeh,
+    equivalence_loyer_minimale,
+    loyer_principal,
+    parts_applicables,
+    personnes_a_charge,
+    plafond_degressivite,
+    plafond_suppression,
+    ressources_retenues,
+    secteur_logement_foyer,
+    situation_familiale,
+    somme_tranches_e0,
+    somme_tranches_second_alinea_depuis_2022,
+    type_logement_foyer,
+};
+
+// Пропорция D. 823-16 как ОДНО деление с округлением: числитель
+// aide × (S − L), знаменатель (S − P), оба — безразмерные десятичные числа
+// (деньги на 1 EUR, §58). Округляется произведение «пособие × доля», то есть
+// именно промежуточное значение, а не сама доля.
+function aide_proportionnelle_arrondie(aide: Money, loyer: Money, plafond: Money,
+                                       suppression: Money) -> Money =
+    div_round(aide * ((suppression - loyer) / 1 EUR),
+              (suppression - plafond) / 1 EUR, 2, "HALF_UP");
+
+function equivalence_minimale_avant_2022_arrondie(type_foyer: TypeLogementFoyer,
+                                                  situation: SituationFamiliale,
+                                                  pac: Integer,
+                                                  ressources: Money) -> Money {
+    let parts: Decimal = parts_applicables(type_foyer, situation, pac);
+    let forfait: Money = match type_foyer {
+        GENERAL => ForfaitE0General * parts;
+        JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE => ForfaitE0JeunesTravailleurs;
+    };
+    return div_round(somme_tranches_e0(parts, ressources) + forfait, 12.0, 2, "HALF_UP");
+}
+
+function equivalence_minimale_arrondie(type_foyer: TypeLogementFoyer,
+                                       situation: SituationFamiliale,
+                                       pac: Integer,
+                                       ressources: Money) -> Money {
+    let parts: Decimal = parts_applicables(type_foyer, situation, pac);
+    return match type_foyer {
+        GENERAL => div_round(somme_tranches_e0(parts, ressources)
+                             + ForfaitE0General * parts, 12.0, 2, "HALF_UP");
+        JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE =>
+            div_round(somme_tranches_second_alinea_depuis_2022(parts, ressources)
+                      + ForfaitE0JeunesTravailleurs, 12.0, 2, "HALF_UP");
+    };
+}
+
+// Источники — ВСЕ редакции обеих статей, как у правил-потребителей: правило с
+// закрытой редакцией единственным источником выпадает из вычисления на даты
+// другой редакции (E-0095), и тогда политика не выводилась бы, а потребители
+// отказывали бы вопреки выбранному прочтению.
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07,
+        CCH_D832_26, CCH_D832_26_ED2019_12, CCH_D832_26_ED2020_01,
+        CCH_D832_26_ED2021_01, CCH_D832_26_ED2023_04,
+        CCH_D832_26_ED2023_09, CCH_D832_26_ED2023_12,
+        CCH_D832_26_ED2026_07)
+rule ArrondiIntermediaireCentime(m: Menage, aide: TypeAide) strict {
+    label fr official "pratique de l'organisme payeur : la valeur intermédiaire d'un quotient inexact, que le texte ne fait pas arrondir, est arrondie au centime (demi supérieur)";
+    label ru unofficial "D-82, практика CNAF: промежуточное значение неточного частного, которое текст округлять не велит, округляется до сантима (HALF_UP)";
+    when aide_demandee(m, aide);
+    then arrondi_intermediaire_centime(m);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule DegressiviteProportionnelleArrondie(
+    m: Menage, aide: Money, loyer: Money, plafond: Money, suppression: Money,
+) strict {
+    label fr official "Il décroît proportionnellement au dépassement de ce plafond, de telle sorte qu'il soit nul lorsqu'il atteint un plafond de suppression";
+    label ru unofficial "D-82: пропорциональное уменьшение D. 823-16 с округлением произведения до сантима (HALF_UP)";
+    when aide_formule(m, aide) and loyer_principal(m, loyer)
+        and plafond_degressivite(m, plafond) and plafond_suppression(m, suppression)
+        and beneficiaire_aah_ou_aeeh(m, false)
+        and loyer > plafond and loyer < suppression;
+    then aide_apres_degressivite(m,
+        aide_proportionnelle_arrondie(aide, loyer, plafond, suppression));
+}
+
+@source(CCH_D832_26, CCH_D832_26_ED2019_12, CCH_D832_26_ED2020_01,
+        CCH_D832_26_ED2021_01, CCH_D832_26_ED2023_04,
+        CCH_D832_26_ED2023_09, CCH_D832_26_ED2023_12,
+        CCH_D832_26_ED2026_07, ARR_ART31_ED2019_10, ARR_ART31_ED2020_01,
+        ARR_ART31_ED2020_10, ARR_ART31_ED2021_01, ARR_ART31_ED2021_10,
+        ARR_ART31_ED2022_01)
+rule EquivalenceLoyerMinimaleArrondieAvantJuillet2022(m: Menage, type_foyer: TypeLogementFoyer,
+                                                      situation: SituationFamiliale, pac: Integer,
+                                                      ressources: Money) strict {
+    label fr official "E0 est obtenue par application de pourcentages à des tranches de ressources, dont les limites inférieures et supérieures sont multipliées par le nombre de parts N, majorée d'un montant forfaitaire, le total étant divisé par douze";
+    label ru unofficial "D-82: E0 до июля 2022 года, деление на двенадцать с округлением до сантима (HALF_UP)";
+    effective [@2019-10-02, @2022-07-01);
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and type_logement_foyer(m, type_foyer)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources);
+    then equivalence_loyer_minimale(m,
+        equivalence_minimale_avant_2022_arrondie(type_foyer, situation, pac, ressources));
+}
+
+@source(CCH_D832_26, CCH_D832_26_ED2019_12, CCH_D832_26_ED2020_01,
+        CCH_D832_26_ED2021_01, CCH_D832_26_ED2023_04,
+        CCH_D832_26_ED2023_09, CCH_D832_26_ED2023_12,
+        CCH_D832_26_ED2026_07, ARR_ART31_ED2022_07, ARR_ART31_ED2023_01,
+        ARR_ART31_ED2023_10, ARR_ART31_ED2024_01, ARR_ART31_ED2024_10,
+        ARR_ART31_ED2025_01, ARR_ART31_ED2025_10)
+rule EquivalenceLoyerMinimaleArrondie(m: Menage, type_foyer: TypeLogementFoyer,
+                                      situation: SituationFamiliale, pac: Integer,
+                                      ressources: Money) strict {
+    label fr official "E0 est obtenue par application de pourcentages à des tranches de ressources, dont les limites inférieures et supérieures sont multipliées par le nombre de parts N, majorée d'un montant forfaitaire, le total étant divisé par douze";
+    label ru unofficial "D-82: E0 с июля 2022 года, деление на двенадцать с округлением до сантима (HALF_UP)";
+    effective [@2022-07-01, infinity);
+    when secteur_logement_foyer(m) and aide_demandee(m, APL)
+        and type_logement_foyer(m, type_foyer)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and ressources_retenues(m, ressources);
+    then equivalence_loyer_minimale(m,
+        equivalence_minimale_arrondie(type_foyer, situation, pac, ressources));
+}
+
+pub interpretation ArrondiCentimeHalfUp {
+    status disputed;
+    label ru unofficial "D-82, практика CNAF (не текст): неточное промежуточное значение округляется до сантима, HALF_UP";
+    label en unofficial "D-82, CNAF practice (not text): an inexact intermediate value is rounded to the centime, HALF_UP";
+    include ArrondiIntermediaireCentime;
+    include DegressiviteProportionnelleArrondie;
+    include EquivalenceLoyerMinimaleArrondieAvantJuillet2022;
+    include EquivalenceLoyerMinimaleArrondie;
+    include LoyerPrincipalMeubleArrondi;
+}

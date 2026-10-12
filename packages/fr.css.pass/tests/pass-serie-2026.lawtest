@@ -1,0 +1,19 @@
+// PASS 2026: valeur mensuelle 4005 € (arrêté du 2025-12-22, CPPS2536168A; sources/pass/arrete-2025-12-22-art1.txt);
+// годовое значение строится 12 × 4005 = 48060 €. Дата дела ни при чём: ключ — год.
+language "law.core" version "0.2";
+package fr.css.pass version "0.1.0";
+namespace "urn:fr:corpus:clir:pass";
+
+test "urn:query:fr-pass-serie-2026" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+    }
+    evaluate truth(pass_mensuel_arrete(2026, 4005 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(pass_annuel_arrete(2026, 48060 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

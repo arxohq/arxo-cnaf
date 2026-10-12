@@ -1,0 +1,176 @@
+// Insertion duties and orientation (D.262-65/65-2/65-2-1/73).
+//
+// DEONTIC MAP:
+// - D.262-65 is the income limb of the L.262-28 duties, computed as
+//   the quarterly monthly average against 500 EUR; the full
+//   bound-by-duties synthesis stays fund-established
+//   (tenu_obligations_262_28, seam in README);
+// - D.262-65-2 is France Travail's orientation duty when the president
+//   has not oriented within six weeks of the information; the
+//   presidential inaction is an established absence fact for the
+//   six-week interval (never not_known: unknown is not absence),
+//   plus the established expiry; the 42-day deadline is computed;
+// - D.262-65-2-1 extends the orientation period to twelve months on
+//   diagnostic-established vulnerabilities that block job-seeking
+//   engagement and require over six months of prior support; the
+//   obstacle assessment arrives through the diagnostic (§47
+//   fund-established channel, APL pattern);
+// - D.262-73 is the referrer's duty to propose a new orientation to
+//   the president once the L.262-30 removal exceeds two months,
+//   wired to the 04-suspension radiation_liste head.
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+// `use self` is hand-maintained in nochecks authoring (no `law fix
+// imports` until the locks free). Fragment names join the block via the
+// deferred `law fix imports fr.casf.rsa` run after regenerating sources;
+// the bare A3 parameter name (SeuilRevenusDevoirs) stays outside the
+// block, as in 02/04.
+use self::{
+    CASF_D262_65,
+    CASF_D262_65_2,
+    CASF_D262_65_2_1,
+    CASF_D262_65_2_1_ED2025_06,
+    CASF_D262_65_2_1_ED2026_06,
+    CASF_D262_65_2_ED2025_06,
+    CASF_D262_65_2_ED2026_06,
+    CASF_D262_65_ED2021_03,
+    CASF_D262_65_ED2021_04,
+    CASF_D262_65_ED2023_01,
+    CASF_D262_65_ED2024_01,
+    CASF_D262_65_ED2024_07,
+    CASF_D262_65_ED2025_01,
+    CASF_D262_65_ED2025_06,
+    CASF_D262_65_ED2026_06,
+    CASF_D262_73,
+    CASF_D262_73_ED2021_03,
+    CASF_D262_73_ED2021_04,
+    CASF_D262_73_ED2023_01,
+    CASF_D262_73_ED2024_01,
+    CASF_D262_73_ED2024_07,
+    CASF_D262_73_ED2025_01,
+    CASF_D262_73_ED2025_06,
+    CASF_D262_73_ED2026_06,
+    Departement,
+    MotifVulnerabilite,
+    Organisme,
+    Referent,
+    absence_orientation_president_six_semaines,
+    condition_revenus_l262_28,
+    delai_porte_12_mois,
+    delai_six_semaines_expire,
+    departement_competent,
+    diagnostic_global,
+    duree_accompagnement_mois,
+    duree_radiation_mois,
+    echeance_orientation_ft,
+    est_france_travail,
+    info_orientation_recue,
+    mois_trimestre_reference,
+    obstacle_engagement_emploi,
+    organisme_competent,
+    orientation_ft_effectuee,
+    proposition_orientation,
+    radiation_liste,
+    referent_attribue,
+    revenus_pro_mois,
+    vulnerabilite_constatee,
+};
+
+@source(
+    CASF_D262_65,
+    CASF_D262_65_ED2021_03,
+    CASF_D262_65_ED2021_04,
+    CASF_D262_65_ED2023_01,
+    CASF_D262_65_ED2024_01,
+    CASF_D262_65_ED2024_07,
+    CASF_D262_65_ED2025_01,
+    CASF_D262_65_ED2025_06,
+    CASF_D262_65_ED2026_06)
+rule ConditionRevenusDevoirs(p: fr.minima.ressources::Personne, m1: Date, m2: Date, m3: Date, r1: Money, r2: Money, r3: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "branche revenus des devoirs : moyenne mensuelle des revenus professionnels du trimestre de référence sous 500 € (D. 262-65)";
+    label en unofficial "income limb of the duties: monthly average of the reference-quarter professional income below 500 EUR (D. 262-65)";
+    when mois_trimestre_reference(p, m1, m2, m3)
+        and revenus_pro_mois(p, m1, r1)
+        and revenus_pro_mois(p, m2, r2)
+        and revenus_pro_mois(p, m3, r3)
+        and (r1 + r2 + r3) / 3.0 < SeuilRevenusDevoirs;
+    then condition_revenus_l262_28(p);
+}
+
+@source(
+    CASF_D262_65_2,
+    CASF_D262_65_2_ED2025_06,
+    CASF_D262_65_2_ED2026_06)
+rule EcheanceOrientationFT(p: fr.minima.ressources::Personne, d: Departement, date: Date) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "échéance d'orientation : information du président plus six semaines, quarante-deux jours (D. 262-65-2)";
+    label en unofficial "orientation deadline: presidential information plus six weeks, forty-two days (D. 262-65-2)";
+    when info_orientation_recue(d, p, date);
+    then echeance_orientation_ft(p, add_calendar_period(date, 42 calendar_day));
+}
+
+@source(
+    CASF_D262_65_2,
+    CASF_D262_65_2_ED2025_06,
+    CASF_D262_65_2_ED2026_06)
+rule OrienterBeneficiaireFTRule(p: fr.minima.ressources::Personne, d: Departement, o: Organisme, date: Date) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "sans orientation du président dans les six semaines, France Travail oriente le bénéficiaire (D. 262-65-2 ; L. 262-29 al. 2)";
+    label en unofficial "without presidential orientation within six weeks, France Travail orients the claimant (D. 262-65-2; L. 262-29 al. 2)";
+    when info_orientation_recue(d, p, date)
+        and absence_orientation_president_six_semaines(p)
+        and delai_six_semaines_expire(p)
+        and est_france_travail(o)
+        and organisme_competent(o, p);
+    then duty OrienterBeneficiaireFT {
+        bearer o;
+        beneficiary p;
+        maintain orientation_ft_effectuee(o, p) during [add_calendar_period(date, 42 calendar_day), infinity);
+    };
+}
+
+@source(
+    CASF_D262_65_2_1,
+    CASF_D262_65_2_1_ED2025_06,
+    CASF_D262_65_2_1_ED2026_06)
+rule DelaiOrientation12Mois(p: fr.minima.ressources::Personne, motif: MotifVulnerabilite, m: Integer) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "délai porté à douze mois : vulnérabilité au diagnostic, obstacle à l'engagement, accompagnement préalable de plus de six mois requis (D. 262-65-2-1)";
+    label en unofficial "period extended to twelve months: diagnostic vulnerability, engagement obstacle, over six months of prior support required (D. 262-65-2-1)";
+    when vulnerabilite_constatee(p, motif)
+        and diagnostic_global(p)
+        and obstacle_engagement_emploi(p)
+        and duree_accompagnement_mois(p, m)
+        and m > 6;
+    then delai_porte_12_mois(p);
+}
+
+@source(
+    CASF_D262_73,
+    CASF_D262_73_ED2021_03,
+    CASF_D262_73_ED2021_04,
+    CASF_D262_73_ED2023_01,
+    CASF_D262_73_ED2024_01,
+    CASF_D262_73_ED2024_07,
+    CASF_D262_73_ED2025_01,
+    CASF_D262_73_ED2025_06,
+    CASF_D262_73_ED2026_06)
+rule ProposerReorientationRule(r: Referent, p: fr.minima.ressources::Personne, d: Departement, m: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "au-delà de deux mois de radiation, le référent propose au président une nouvelle orientation (D. 262-73 ; L. 262-30)";
+    label en unofficial "beyond two months of removal, the referrer proposes a new orientation to the president (D. 262-73; L. 262-30)";
+    when radiation_liste(p)
+        and duree_radiation_mois(p, m)
+        and m > 2
+        and referent_attribue(r, p)
+        and departement_competent(d, p);
+    then duty ProposerReorientation {
+        bearer r;
+        beneficiary d;
+        maintain proposition_orientation(r, p) during [@2021-01-01, infinity);
+    };
+}

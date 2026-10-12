@@ -1,0 +1,23 @@
+// Active subsidiary withholding power (P2): a 300.00 notified undue
+// payment recorded non-recoverable on the first-paragraph benefits,
+// both block-1 reserves plus the separately recorded single-payment
+// non-option recorded, paying-body link established —
+// RecouvrerParRetenueL5532 is ACTIVE.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-pouvoir-retenue-l5532-actif" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-pl1-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-pl1"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pl1-02": indu_notifie_non_recuperable(entity_ref("urn:fr:css:ajpa:case:aidant-pl1"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pl1-03": indu_non_conteste(entity_ref("urn:fr:css:ajpa:case:aidant-pl1"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pl1-04": indu_sans_option_remboursement(entity_ref("urn:fr:css:ajpa:case:aidant-pl1"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pl1-05": indu_sans_option_versement_unique(entity_ref("urn:fr:css:ajpa:case:aidant-pl1"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pl1-06": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-pl1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(RecouvrerParRetenueL5532, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,22 @@
+// Seasonal worker: N-2 resources 8000.00 above twelve times the January
+// MF (12 x 600.00 = 7200.00): the bar applies (R.262-25).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-saisonnier-barrage" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "sais-01": activite_saisonniere(entity_ref("urn:fr:minima-ressources:case:saisonnier-barrage")) { origin case_input; }
+        assert "sais-02": ressources_n_moins_2(entity_ref("urn:fr:minima-ressources:case:saisonnier-barrage"), 8000.00 EUR) { origin case_input; }
+        assert "sais-03": mf_reference_annuelle(entity_ref("urn:fr:minima-ressources:case:saisonnier-barrage"), 600.00 EUR) { origin case_input; }
+    }
+    evaluate truth(seuil_saisonnier(entity_ref("urn:fr:minima-ressources:case:saisonnier-barrage"), 7200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(barrage_saisonnier(entity_ref("urn:fr:minima-ressources:case:saisonnier-barrage")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

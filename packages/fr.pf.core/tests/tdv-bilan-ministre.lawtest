@@ -1,0 +1,15 @@
+// Periodic review: review due - the national body must transmit it to the minister (R. 553-3-7).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-bilan-ministre" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-bilan-ministre-01": bilan_periodique_du(entity_ref("urn:fr:pf:org:cnaf")) { origin case_input; }
+        assert "tdv-bilan-ministre-02": ministre_tutelle(entity_ref("urn:fr:pf:org:ministre")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreBilanMinistre, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

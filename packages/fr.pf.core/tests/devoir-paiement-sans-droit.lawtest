@@ -1,0 +1,27 @@
+// No duty without entitlement: temporarily seconded worker outside affiliation with benefits otherwise due from 2026-04-01 - no allocataire, no duty (L. 512-1 al. 2, PC-R07-07 isolated on entitlement).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-paiement-sans-droit" {
+    given {
+        context { decision_time @2026-04-15T12:00:00Z; knowledge_time @2026-04-15T12:00:00Z; legal_time @2026-04-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "devoir-paiement-sans-droit-01": parent_charge(entity_ref("urn:fr:pf:case:detache"), entity_ref("urn:fr:pf:case:enfant-detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:detache"), entity_ref("urn:fr:pf:case:enfant-detache")) { origin adjudicated; }
+        assert "devoir-paiement-sans-droit-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-04": reside_france_stable(entity_ref("urn:fr:pf:case:detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-06": detache_temporaire_exempte(entity_ref("urn:fr:pf:case:detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-07": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-08": conditions_reunies_mois(entity_ref("urn:fr:pf:case:detache"), @2026-03-01) { origin case_input; }
+        assert "devoir-paiement-sans-droit-09": not prepare_enfant_unique_ou_option(entity_ref("urn:fr:pf:case:detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-10": not prestation_cmg(entity_ref("urn:fr:pf:case:detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-11": not prestation_ajpp(entity_ref("urn:fr:pf:case:detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-12": not prestation_aeeh(entity_ref("urn:fr:pf:case:detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-13": not asf_cas3_soustrait_seul(entity_ref("urn:fr:pf:case:detache")) { origin case_input; }
+        assert "devoir-paiement-sans-droit-14": not fixation_judiciaire_apres_recouvrement(entity_ref("urn:fr:pf:case:detache")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserPrestationsDues, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

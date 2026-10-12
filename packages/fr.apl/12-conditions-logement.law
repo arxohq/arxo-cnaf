@@ -1,0 +1,570 @@
+// Dwelling conditions (L. 821-2, L. 822-3/R. 822-1, R. 821-2, R. 822-23/25,
+// R. 842-14, R. 844-4/5, L. 823-3): main-residence recognition, the 10 %
+// owner-share defeater, the required floor area with its foyer/chambre
+// tracks, the family-care compatibility marker, and the six L. 823-3 sums
+// deemed rent (the assimilated sum feeds loyer_principal for the calculation).
+//
+// EFFECT ON THE RIGHT: the surface and owner-share defeaters below target
+// 03's droit_ouvert (already defeasible); they fire only on their own new
+// facts, so all pre-existing scenarios are unaffected. residence_principale_
+// reconnue is ADVISORY (03 keeps reading occupation_residence_principale);
+// wiring it as a gate is an owner follow-up.
+// R. 822-24 (decency criteria in decree 2002-120) has no rule here: its
+// criteria live in an unpinned decree and the mechanism stays the 03
+// judgment channel (declared despite in source-manifest.json).
+//
+// FRAGMENTS (predicted): base + all 7 _ED per cited article (all stable
+// since 2019-09-01). L. 822-3 reuses its EXISTING fragments.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_L821_2,
+    CCH_L821_2_ED2019_12,
+    CCH_L821_2_ED2020_01,
+    CCH_L821_2_ED2021_01,
+    CCH_L821_2_ED2023_04,
+    CCH_L821_2_ED2023_09,
+    CCH_L821_2_ED2023_12,
+    CCH_L821_2_ED2026_07,
+    CCH_L822_3,
+    CCH_L822_3_ED2019_12,
+    CCH_L822_3_ED2020_01,
+    CCH_L822_3_ED2021_01,
+    CCH_L822_3_ED2023_04,
+    CCH_L822_3_ED2023_09,
+    CCH_L822_3_ED2023_12,
+    CCH_L822_3_ED2026_07,
+    CCH_L823_3,
+    CCH_L823_3_ED2019_12,
+    CCH_L823_3_ED2020_01,
+    CCH_L823_3_ED2021_01,
+    CCH_L823_3_ED2023_04,
+    CCH_L823_3_ED2023_09,
+    CCH_L823_3_ED2023_12,
+    CCH_L823_3_ED2026_07,
+    CCH_R821_2,
+    CCH_R821_2_ED2019_12,
+    CCH_R821_2_ED2020_01,
+    CCH_R821_2_ED2021_01,
+    CCH_R821_2_ED2023_04,
+    CCH_R821_2_ED2023_09,
+    CCH_R821_2_ED2023_12,
+    CCH_R821_2_ED2026_07,
+    CCH_R822_1,
+    CCH_R822_1_ED2019_12,
+    CCH_R822_1_ED2020_01,
+    CCH_R822_1_ED2021_01,
+    CCH_R822_1_ED2023_04,
+    CCH_R822_1_ED2023_09,
+    CCH_R822_1_ED2023_12,
+    CCH_R822_1_ED2026_07,
+    CCH_R822_23,
+    CCH_R822_23_ED2019_12,
+    CCH_R822_23_ED2020_01,
+    CCH_R822_23_ED2021_01,
+    CCH_R822_23_ED2023_04,
+    CCH_R822_23_ED2023_09,
+    CCH_R822_23_ED2023_12,
+    CCH_R822_23_ED2026_07,
+    CCH_R822_25,
+    CCH_R822_25_ED2019_12,
+    CCH_R822_25_ED2020_01,
+    CCH_R822_25_ED2021_01,
+    CCH_R822_25_ED2023_04,
+    CCH_R822_25_ED2023_09,
+    CCH_R822_25_ED2023_12,
+    CCH_R822_25_ED2026_07,
+    CCH_R842_14,
+    CCH_R842_14_ED2019_12,
+    CCH_R842_14_ED2020_01,
+    CCH_R842_14_ED2021_01,
+    CCH_R842_14_ED2023_04,
+    CCH_R842_14_ED2023_09,
+    CCH_R842_14_ED2023_12,
+    CCH_R842_14_ED2026_07,
+    CCH_R844_4,
+    CCH_R844_4_ED2019_12,
+    CCH_R844_4_ED2020_01,
+    CCH_R844_4_ED2021_01,
+    CCH_R844_4_ED2023_04,
+    CCH_R844_4_ED2023_09,
+    CCH_R844_4_ED2023_12,
+    CCH_R844_4_ED2026_07,
+    CCH_R844_5,
+    CCH_R844_5_ED2019_12,
+    CCH_R844_5_ED2020_01,
+    CCH_R844_5_ED2021_01,
+    CCH_R844_5_ED2023_04,
+    CCH_R844_5_ED2023_09,
+    CCH_R844_5_ED2023_12,
+    CCH_R844_5_ED2026_07,
+    Menage,
+    SituationFamiliale,
+    droit_ouvert,
+    loyer_principal,
+    personnes_a_charge,
+    situation_familiale,
+};
+
+// --- Owner-share threshold (L. 822-3 derogation set by R. 822-1) -------------
+// Derogation iff ALL held shares stay strictly below 10 %; at or above,
+// the right is defeated. The kinship/tenant finding stays an agency fact.
+
+const SeuilPartsLogement: Decimal = 0.10 {
+    label fr official "seuil reglementaire des parts de propriete et d'usufruit : 10 % (art. R. 822-1)";
+    label en unofficial "regulatory property/usufruit share threshold: 10 % (art. R. 822-1)";
+}
+
+pub relation locataire_logement_parts(m: Menage) kind empirical {
+    label fr official "locataire d'un logement dont lui, son conjoint ou un ascendant/descendant detient des parts (constat)";
+    label en unofficial "tenant of a dwelling in which self, spouse or kin holds shares (finding)";
+}
+
+pub relation parts_logement_detentions(m: Menage, pct: Decimal) kind empirical {
+    label fr official "ensemble des parts de propriete et d'usufruit detenues, ratio 0-1 (mesure)";
+    label en unofficial "all held property and usufruit shares, 0-1 ratio (measured)";
+}
+
+@source(CCH_L822_3, CCH_L822_3_ED2019_12, CCH_L822_3_ED2020_01,
+        CCH_L822_3_ED2021_01, CCH_L822_3_ED2023_04, CCH_L822_3_ED2023_09,
+        CCH_L822_3_ED2023_12, CCH_L822_3_ED2026_07, CCH_R822_1,
+        CCH_R822_1_ED2019_12, CCH_R822_1_ED2020_01, CCH_R822_1_ED2021_01,
+        CCH_R822_1_ED2023_04, CCH_R822_1_ED2023_09, CCH_R822_1_ED2023_12,
+        CCH_R822_1_ED2026_07)
+rule ExclusionPartsSeuil(m: Menage, pct: Decimal) defeater {
+    label fr official "parts detenues egales ou superieures a 10 % : le droit est ecarte";
+    label en unofficial "held shares at or above 10 %: the right is defeated";
+    when locataire_logement_parts(m) and parts_logement_detentions(m, pct)
+        and pct >= SeuilPartsLogement;
+    defeat droit_ouvert(m);
+}
+
+// --- Main-residence recognition (L. 821-2 via R. 822-23, R. 821-2, R. 842-14)
+
+pub relation mois_occupation_logement(m: Menage, n: Integer) kind empirical {
+    label fr official "mois d'occupation du logement sur les douze derniers mois (mesure)";
+    label en unofficial "months occupying the dwelling over the last twelve (measured)";
+}
+
+pub relation exception_occupation_professionnelle(m: Menage) kind empirical {
+    label fr official "obligation professionnelle excusant l'occupation reduite (constat)";
+    label en unofficial "work obligation excusing reduced occupation (finding)";
+}
+
+pub relation exception_occupation_sante(m: Menage) kind empirical {
+    label fr official "raison de sante excusant l'occupation reduite (constat)";
+    label en unofficial "health reason excusing reduced occupation (finding)";
+}
+
+pub relation exception_occupation_force_majeure(m: Menage) kind empirical {
+    label fr official "force majeure excusant l'occupation reduite (constat)";
+    label en unofficial "force majeure excusing reduced occupation (finding)";
+}
+
+pub relation deux_locaux_assimiles_logement(m: Menage) kind empirical {
+    label fr official "deux locaux assimiles au logement R. 822-23 par l'article R. 821-2 (constat)";
+    label en unofficial "two units deemed the R. 822-23 dwelling under R. 821-2 (finding)";
+}
+
+pub relation foyer_jeunes_travailleurs_r842_14(m: Menage) kind empirical {
+    label fr official "logement-foyer de jeunes travailleurs construit en application du III de l'art. 12 loi 57-908 (constat R. 842-14)";
+    label en unofficial "young-workers hostel built under art. 12 III of the 1957-908 act (R. 842-14 finding)";
+}
+
+pub relation superficie_reputee_foyer_jt(m: Menage) kind institutional {
+    label fr official "condition de superficie R. 822-25 reputee remplie en foyer de jeunes travailleurs R. 842-14";
+    label en unofficial "R. 822-25 area condition deemed satisfied in a young-workers hostel R. 842-14";
+}
+
+pub relation residence_principale_reconnue(m: Menage) kind institutional {
+    label fr official "residence principale reconnue au sens de l'article R. 822-23";
+    label en unofficial "main residence recognised under R. 822-23";
+}
+
+@source(CCH_L821_2, CCH_L821_2_ED2019_12, CCH_L821_2_ED2020_01,
+        CCH_L821_2_ED2021_01, CCH_L821_2_ED2023_04, CCH_L821_2_ED2023_09,
+        CCH_L821_2_ED2023_12, CCH_L821_2_ED2026_07, CCH_R822_23,
+        CCH_R822_23_ED2019_12, CCH_R822_23_ED2020_01, CCH_R822_23_ED2021_01,
+        CCH_R822_23_ED2023_04, CCH_R822_23_ED2023_09, CCH_R822_23_ED2023_12,
+        CCH_R822_23_ED2026_07)
+rule ResidenceHuitMois(m: Menage, n: Integer) strict {
+    label fr official "huit mois d'occupation : residence principale reconnue";
+    label en unofficial "eight months of occupation: main residence recognised";
+    when mois_occupation_logement(m, n) and n >= 8;
+    then residence_principale_reconnue(m);
+}
+
+@source(CCH_R822_23, CCH_R822_23_ED2019_12, CCH_R822_23_ED2020_01,
+        CCH_R822_23_ED2021_01, CCH_R822_23_ED2023_04, CCH_R822_23_ED2023_09,
+        CCH_R822_23_ED2023_12, CCH_R822_23_ED2026_07)
+rule ResidenceExceptionProfessionnelle(m: Menage, n: Integer) strict {
+    label fr official "obligation professionnelle : occupation reduite excusee";
+    label en unofficial "work obligation: reduced occupation excused";
+    when mois_occupation_logement(m, n) and n < 8
+        and exception_occupation_professionnelle(m);
+    then residence_principale_reconnue(m);
+}
+
+@source(CCH_R822_23, CCH_R822_23_ED2019_12, CCH_R822_23_ED2020_01,
+        CCH_R822_23_ED2021_01, CCH_R822_23_ED2023_04, CCH_R822_23_ED2023_09,
+        CCH_R822_23_ED2023_12, CCH_R822_23_ED2026_07)
+rule ResidenceExceptionSante(m: Menage, n: Integer) strict {
+    label fr official "raison de sante : occupation reduite excusee";
+    label en unofficial "health reason: reduced occupation excused";
+    when mois_occupation_logement(m, n) and n < 8
+        and exception_occupation_sante(m);
+    then residence_principale_reconnue(m);
+}
+
+@source(CCH_R822_23, CCH_R822_23_ED2019_12, CCH_R822_23_ED2020_01,
+        CCH_R822_23_ED2021_01, CCH_R822_23_ED2023_04, CCH_R822_23_ED2023_09,
+        CCH_R822_23_ED2023_12, CCH_R822_23_ED2026_07)
+rule ResidenceExceptionForceMajeure(m: Menage, n: Integer) strict {
+    label fr official "force majeure : occupation reduite excusee";
+    label en unofficial "force majeure: reduced occupation excused";
+    when mois_occupation_logement(m, n) and n < 8
+        and exception_occupation_force_majeure(m);
+    then residence_principale_reconnue(m);
+}
+
+@source(CCH_R821_2, CCH_R821_2_ED2019_12, CCH_R821_2_ED2020_01,
+        CCH_R821_2_ED2021_01, CCH_R821_2_ED2023_04, CCH_R821_2_ED2023_09,
+        CCH_R821_2_ED2023_12, CCH_R821_2_ED2026_07, CCH_R822_23,
+        CCH_R822_23_ED2019_12, CCH_R822_23_ED2020_01, CCH_R822_23_ED2021_01,
+        CCH_R822_23_ED2023_04, CCH_R822_23_ED2023_09, CCH_R822_23_ED2023_12,
+        CCH_R822_23_ED2026_07)
+rule ResidenceDeuxLocauxAssimiles(m: Menage) strict {
+    label fr official "deux locaux assimiles R. 821-2 : residence reconnue";
+    label en unofficial "two units deemed a dwelling under R. 821-2: residence recognised";
+    when deux_locaux_assimiles_logement(m);
+    then residence_principale_reconnue(m);
+}
+
+@source(CCH_R842_14, CCH_R842_14_ED2019_12, CCH_R842_14_ED2020_01,
+        CCH_R842_14_ED2021_01, CCH_R842_14_ED2023_04, CCH_R842_14_ED2023_09,
+        CCH_R842_14_ED2023_12, CCH_R842_14_ED2026_07)
+rule ResidenceFoyerJeunesTravailleurs(m: Menage) strict {
+    label fr official "foyer de jeunes travailleurs : R. 822-23 repute satisfait";
+    label en unofficial "young-workers hostel: R. 822-23 deemed satisfied";
+    when foyer_jeunes_travailleurs_r842_14(m);
+    then residence_principale_reconnue(m);
+}
+
+@source(CCH_R842_14, CCH_R842_14_ED2019_12, CCH_R842_14_ED2020_01,
+        CCH_R842_14_ED2021_01, CCH_R842_14_ED2023_04, CCH_R842_14_ED2023_09,
+        CCH_R842_14_ED2023_12, CCH_R842_14_ED2026_07)
+rule SuperficieReputeeFoyerJT(m: Menage) strict {
+    label fr official "foyer de jeunes travailleurs : R. 822-25 repute satisfait (l'insuffisance generale est ecartee)";
+    label en unofficial "young-workers hostel: R. 822-25 deemed satisfied (general insufficiency set aside)";
+    when foyer_jeunes_travailleurs_r842_14(m);
+    then superficie_reputee_foyer_jt(m);
+}
+
+// --- Required floor area (R. 822-25) + foyer/chambre track (R. 844-4) --------
+
+function surface_minimale_exigible(occupants: Integer) -> Decimal {
+    return if occupants <= 1 then 9 else min(70, 16 + 9 * (occupants - 2));
+}
+
+pub relation occupants_logement(m: Menage, n: Integer) kind institutional {
+    label fr official "occupants du logement : situation plus personnes a charge";
+    label en unofficial "dwelling occupants: situation plus dependents";
+}
+
+pub relation surface_habitable(m: Menage, s: Decimal) kind empirical {
+    label fr official "surface habitable globale en metres carres (mesure)";
+    label en unofficial "total habitable area in square metres (measured)";
+}
+
+pub relation surface_exigible(m: Menage, e: Decimal) kind institutional {
+    label fr official "surface minimale exigible R. 822-25";
+    label en unofficial "minimum required area under R. 822-25";
+}
+
+pub relation surface_insuffisante(m: Menage) kind institutional {
+    label fr official "surface constatee inferieure a la surface exigible";
+    label en unofficial "measured area below the required area";
+}
+
+pub relation resident_foyer_ehpad_r844_4(m: Menage) kind empirical {
+    label fr official "resident d'EHPAD ou accueilli en USLD L. 841-3, hors premiere cohorte R. 844-4 (constat)";
+    label en unofficial "EHPAD resident or USLD L. 841-3 inpatient, outside the R. 844-4 first cohort (finding)";
+}
+
+pub relation personne_agee_ou_handicapee(m: Menage) kind empirical {
+    label fr official "personne agee ou handicapee R. 844-4 premiere cohorte (constat)";
+    label en unofficial "elderly or disabled person, R. 844-4 first cohort (finding)";
+}
+
+pub relation unite_autonome_foyer_services(m: Menage) kind empirical {
+    label fr official "logement amenage en unite d'habitation autonome dans un foyer dote de services collectifs (constat)";
+    label en unofficial "dwelling fitted as an autonomous unit in a serviced hostel (finding)";
+}
+
+pub relation superficie_reputee_r844_4(m: Menage) kind institutional {
+    label fr official "condition de superficie R. 822-25 reputee remplie R. 844-4 premiere cohorte";
+    label en unofficial "R. 822-25 area condition deemed satisfied, R. 844-4 first cohort";
+}
+
+@source(CCH_R822_25, CCH_R822_25_ED2019_12, CCH_R822_25_ED2020_01,
+        CCH_R822_25_ED2021_01, CCH_R822_25_ED2023_04, CCH_R822_25_ED2023_09,
+        CCH_R822_25_ED2023_12, CCH_R822_25_ED2026_07)
+rule OccupantsSeule(m: Menage, pac: Integer) strict {
+    label fr official "personne seule : occupants egaux aux personnes a charge plus un";
+    label en unofficial "single person: occupants equal dependents plus one";
+    when situation_familiale(m, PERSONNE_SEULE) and personnes_a_charge(m, pac);
+    then occupants_logement(m, pac + 1);
+}
+
+@source(CCH_R822_25, CCH_R822_25_ED2019_12, CCH_R822_25_ED2020_01,
+        CCH_R822_25_ED2021_01, CCH_R822_25_ED2023_04, CCH_R822_25_ED2023_09,
+        CCH_R822_25_ED2023_12, CCH_R822_25_ED2026_07)
+rule OccupantsCouple(m: Menage, pac: Integer) strict {
+    label fr official "couple : occupants egaux aux personnes a charge plus deux";
+    label en unofficial "couple: occupants equal dependents plus two";
+    when situation_familiale(m, COUPLE) and personnes_a_charge(m, pac);
+    then occupants_logement(m, pac + 2);
+}
+
+@source(CCH_R822_25, CCH_R822_25_ED2019_12, CCH_R822_25_ED2020_01,
+        CCH_R822_25_ED2021_01, CCH_R822_25_ED2023_04, CCH_R822_25_ED2023_09,
+        CCH_R822_25_ED2023_12, CCH_R822_25_ED2026_07)
+rule SurfaceExigibleLogement(m: Menage, n: Integer) strict {
+    label fr official "9 m2 seul, 16 m2 a deux, plus 9 par personne, plafond 70 m2";
+    label en unofficial "9 sqm single, 16 sqm for two, plus 9 per person, 70 sqm cap";
+    when occupants_logement(m, n);
+    then surface_exigible(m, surface_minimale_exigible(n));
+}
+
+pub relation logement_hors_ehpad_usld(m: Menage) kind empirical {
+    label fr official "logement etabli hors EHPAD et hors unite de soins de longue duree (classification positive R. 842-14)";
+    label en unofficial "dwelling positively classified outside EHPAD/USLD care (R. 842-14)";
+}
+
+pub relation logement_hors_foyer_jeunes_travailleurs(m: Menage) kind empirical {
+    label fr official "logement etabli hors foyer de jeunes travailleurs (classification positive R. 842-14)";
+    label en unofficial "dwelling positively classified outside a young-workers hostel (R. 842-14)";
+}
+
+@source(CCH_R822_25, CCH_R822_25_ED2019_12, CCH_R822_25_ED2020_01,
+        CCH_R822_25_ED2021_01, CCH_R822_25_ED2023_04, CCH_R822_25_ED2023_09,
+        CCH_R822_25_ED2023_12, CCH_R822_25_ED2026_07)
+rule InsuffisanceSurfaceLogement(m: Menage, s: Decimal, e: Decimal) defeasible {
+    label fr official "surface constatee sous la surface exigible, hors regimes d'exception : condition en defaut";
+    label en unofficial "measured area below required area, outside the exception regimes: condition failed";
+    when surface_habitable(m, s) and surface_exigible(m, e) and s < e
+        and logement_hors_ehpad_usld(m)
+        and logement_hors_foyer_jeunes_travailleurs(m);
+    then surface_insuffisante(m);
+}
+
+@source(CCH_R844_4, CCH_R844_4_ED2019_12, CCH_R844_4_ED2020_01,
+        CCH_R844_4_ED2021_01, CCH_R844_4_ED2023_04, CCH_R844_4_ED2023_09,
+        CCH_R844_4_ED2023_12, CCH_R844_4_ED2026_07)
+rule SuperficieReputeePremiereCohorte(m: Menage) strict {
+    label fr official "R. 844-4 : age ou handicape en unite autonome de foyer a services, hors EHPAD/USLD, superficie reputee remplie";
+    label en unofficial "R. 844-4: elderly or disabled in an autonomous serviced-hostel unit, outside EHPAD/USLD, area deemed satisfied";
+    when personne_agee_ou_handicapee(m) and unite_autonome_foyer_services(m)
+        and logement_hors_ehpad_usld(m);
+    then superficie_reputee_r844_4(m);
+}
+
+@source(CCH_R844_4, CCH_R844_4_ED2019_12, CCH_R844_4_ED2020_01,
+        CCH_R844_4_ED2021_01, CCH_R844_4_ED2023_04, CCH_R844_4_ED2023_09,
+        CCH_R844_4_ED2023_12, CCH_R844_4_ED2026_07)
+rule SuperficieReputeeExclutInsuffisance(m: Menage) defeater {
+    label fr official "R. 844-4 : la superficie reputee remplace l'insuffisance de surface generale";
+    label en unofficial "R. 844-4: deemed area displaces general surface insufficiency";
+    when superficie_reputee_r844_4(m);
+    defeat surface_insuffisante(m);
+}
+
+@source(CCH_R822_25, CCH_R822_25_ED2019_12, CCH_R822_25_ED2020_01,
+        CCH_R822_25_ED2021_01, CCH_R822_25_ED2023_04, CCH_R822_25_ED2023_09,
+        CCH_R822_25_ED2023_12, CCH_R822_25_ED2026_07)
+rule ExclusionSurfaceInsuffisante(m: Menage) defeater {
+    label fr official "surface insuffisante : le droit n'est pas ouvert";
+    label en unofficial "insufficient area: the right is not opened";
+    when surface_insuffisante(m);
+    defeat droit_ouvert(m);
+}
+
+pub relation surface_chambre(m: Menage, s: Decimal) kind empirical {
+    label fr official "surface de la chambre en EHPAD ou USLD en metres carres (mesure)";
+    label en unofficial "EHPAD or USLD room area in square metres (measured)";
+}
+
+pub relation occupants_chambre(m: Menage, n: Integer) kind empirical {
+    label fr official "personnes accueillies dans la chambre (mesure)";
+    label en unofficial "persons accommodated in the room (measured)";
+}
+
+pub relation sur_occupation_chambre(m: Menage) kind institutional {
+    label fr official "chambre accueillant plus de deux personnes : condition en defaut";
+    label en unofficial "room accommodating more than two persons: condition failed";
+}
+
+@source(CCH_R844_4, CCH_R844_4_ED2019_12, CCH_R844_4_ED2020_01,
+        CCH_R844_4_ED2021_01, CCH_R844_4_ED2023_04, CCH_R844_4_ED2023_09,
+        CCH_R844_4_ED2023_12, CCH_R844_4_ED2026_07)
+rule InsuffisanceChambreSeule(m: Menage, s: Decimal) strict {
+    label fr official "chambre seule sous 9 m2 : condition en defaut";
+    label en unofficial "single room below 9 sqm: condition failed";
+    when resident_foyer_ehpad_r844_4(m) and surface_chambre(m, s)
+        and occupants_chambre(m, 1) and s < 9.0;
+    then surface_insuffisante(m);
+}
+
+@source(CCH_R844_4, CCH_R844_4_ED2019_12, CCH_R844_4_ED2020_01,
+        CCH_R844_4_ED2021_01, CCH_R844_4_ED2023_04, CCH_R844_4_ED2023_09,
+        CCH_R844_4_ED2023_12, CCH_R844_4_ED2026_07)
+rule InsuffisanceChambreDouble(m: Menage, s: Decimal) strict {
+    label fr official "chambre double sous 16 m2 : condition en defaut";
+    label en unofficial "double room below 16 sqm: condition failed";
+    when resident_foyer_ehpad_r844_4(m) and surface_chambre(m, s)
+        and occupants_chambre(m, 2) and s < 16.0;
+    then surface_insuffisante(m);
+}
+
+@source(CCH_R844_4, CCH_R844_4_ED2019_12, CCH_R844_4_ED2020_01,
+        CCH_R844_4_ED2021_01, CCH_R844_4_ED2023_04, CCH_R844_4_ED2023_09,
+        CCH_R844_4_ED2023_12, CCH_R844_4_ED2026_07)
+rule SurOccupationChambre(m: Menage, n: Integer) strict {
+    label fr official "chambre de plus de deux personnes : condition en defaut";
+    label en unofficial "room of more than two persons: condition failed";
+    when resident_foyer_ehpad_r844_4(m) and occupants_chambre(m, n) and n > 2;
+    then sur_occupation_chambre(m);
+}
+
+@source(CCH_R844_4, CCH_R844_4_ED2019_12, CCH_R844_4_ED2020_01,
+        CCH_R844_4_ED2021_01, CCH_R844_4_ED2023_04, CCH_R844_4_ED2023_09,
+        CCH_R844_4_ED2023_12, CCH_R844_4_ED2026_07)
+rule ExclusionSurOccupationChambre(m: Menage) defeater {
+    label fr official "sur-occupation de la chambre : le droit n'est pas ouvert";
+    label en unofficial "room over-occupation: the right is not opened";
+    when sur_occupation_chambre(m);
+    defeat droit_ouvert(m);
+}
+
+// --- Family-care compatibility (R. 844-5) ------------------------------------
+
+pub relation accueil_familial_compatible(m: Menage) kind empirical {
+    label fr official "accueil familial aux caracteristiques compatibles (evaluation de l'organisme)";
+    label en unofficial "family care with compatible characteristics (agency assessment)";
+}
+
+pub relation condition_accueil_satisfaite(m: Menage) kind institutional {
+    label fr official "condition d'accueil familial de l'article R. 844-5 satisfaite";
+    label en unofficial "R. 844-5 family-care condition satisfied";
+}
+
+@source(CCH_R844_5, CCH_R844_5_ED2019_12, CCH_R844_5_ED2020_01,
+        CCH_R844_5_ED2021_01, CCH_R844_5_ED2023_04, CCH_R844_5_ED2023_09,
+        CCH_R844_5_ED2023_12, CCH_R844_5_ED2026_07)
+rule AccueilFamilialRetenu(m: Menage) strict {
+    label fr official "compatibilite constatee : condition d'accueil satisfaite";
+    label en unofficial "compatibility established: care condition satisfied";
+    when accueil_familial_compatible(m);
+    then condition_accueil_satisfaite(m);
+}
+
+// --- Rent assimilation (L. 823-3 1-6) ---------------------------------------
+// The six sums the statute deems rent. Each category amount arrives as an
+// agency finding and is assimilated to rent for the calculation; the
+// assimilated amounts feed loyer_principal at case-construction time
+// (ADVISORY like residence recognition: the calculation keeps reading the
+// household's rent fact).
+
+pub enum CategorieLoyerAssimile {
+    label fr official "sommes assimilees aux loyers (art. L. 823-3 1 a 6)";
+    label en unofficial "sums deemed rent (art. L. 823-3 1-6)";
+    MENSUALITES_PRET_ACQUISITION, REDEVANCE_LOCATION_ACCESSION,
+    REMUNERATION_OPERATEUR_COPRO, INDEMNITE_OCCUPATION_L615_9,
+    REDEVANCE_L615_10, INDEMNITE_ACCUEIL_CASF
+}
+
+pub relation montant_assimile_loyer(m: Menage, c: CategorieLoyerAssimile, v: Money) kind empirical {
+    label fr official "montant de la categorie constate par l'agence (fait de dossier)";
+    label en unofficial "agency-established category amount (case fact)";
+}
+
+pub relation loyer_assimile_l823_3(m: Menage, c: CategorieLoyerAssimile, v: Money) kind institutional {
+    label fr official "somme assimilee au loyer au sens de l'article L. 823-3";
+    label en unofficial "sum deemed rent under L. 823-3";
+}
+
+@source(CCH_L823_3, CCH_L823_3_ED2019_12, CCH_L823_3_ED2020_01,
+        CCH_L823_3_ED2021_01, CCH_L823_3_ED2023_04, CCH_L823_3_ED2023_09,
+        CCH_L823_3_ED2023_12, CCH_L823_3_ED2026_07)
+rule AssimilationMensualitesPret(m: Menage, v: Money) strict {
+    label fr official "L. 823-3 1 : mensualites de remboursement des prets d'acquisition ou d'amelioration";
+    label en unofficial "L. 823-3 1: purchase or improvement loan repayment instalments";
+    when montant_assimile_loyer(m, MENSUALITES_PRET_ACQUISITION, v);
+    then loyer_assimile_l823_3(m, MENSUALITES_PRET_ACQUISITION, v);
+}
+
+@source(CCH_L823_3, CCH_L823_3_ED2019_12, CCH_L823_3_ED2020_01,
+        CCH_L823_3_ED2021_01, CCH_L823_3_ED2023_04, CCH_L823_3_ED2023_09,
+        CCH_L823_3_ED2023_12, CCH_L823_3_ED2026_07)
+rule AssimilationRedevanceLocationAccession(m: Menage, v: Money) strict {
+    label fr official "L. 823-3 2 : redevance de location-accession loi 84-595";
+    label en unofficial "L. 823-3 2: location-accession charge under the 1984 act";
+    when montant_assimile_loyer(m, REDEVANCE_LOCATION_ACCESSION, v);
+    then loyer_assimile_l823_3(m, REDEVANCE_LOCATION_ACCESSION, v);
+}
+
+@source(CCH_L823_3, CCH_L823_3_ED2019_12, CCH_L823_3_ED2020_01,
+        CCH_L823_3_ED2021_01, CCH_L823_3_ED2023_04, CCH_L823_3_ED2023_09,
+        CCH_L823_3_ED2023_12, CCH_L823_3_ED2026_07)
+rule AssimilationRemunerationOperateur(m: Menage, v: Money) strict {
+    label fr official "L. 823-3 3 : remuneration de l'operateur, art. 29-11 III loi copropriete";
+    label en unofficial "L. 823-3 3: operator fee under co-ownership act art. 29-11 III";
+    when montant_assimile_loyer(m, REMUNERATION_OPERATEUR_COPRO, v);
+    then loyer_assimile_l823_3(m, REMUNERATION_OPERATEUR_COPRO, v);
+}
+
+@source(CCH_L823_3, CCH_L823_3_ED2019_12, CCH_L823_3_ED2020_01,
+        CCH_L823_3_ED2021_01, CCH_L823_3_ED2023_04, CCH_L823_3_ED2023_09,
+        CCH_L823_3_ED2023_12, CCH_L823_3_ED2026_07)
+rule AssimilationIndemniteOccupation(m: Menage, v: Money) strict {
+    label fr official "L. 823-3 4 : indemnite d'occupation art. L. 615-9";
+    label en unofficial "L. 823-3 4: occupation indemnity under L. 615-9";
+    when montant_assimile_loyer(m, INDEMNITE_OCCUPATION_L615_9, v);
+    then loyer_assimile_l823_3(m, INDEMNITE_OCCUPATION_L615_9, v);
+}
+
+@source(CCH_L823_3, CCH_L823_3_ED2019_12, CCH_L823_3_ED2020_01,
+        CCH_L823_3_ED2021_01, CCH_L823_3_ED2023_04, CCH_L823_3_ED2023_09,
+        CCH_L823_3_ED2023_12, CCH_L823_3_ED2026_07)
+rule AssimilationRedevanceL61510(m: Menage, v: Money) strict {
+    label fr official "L. 823-3 5 : redevance art. L. 615-10";
+    label en unofficial "L. 823-3 5: charge under L. 615-10";
+    when montant_assimile_loyer(m, REDEVANCE_L615_10, v);
+    then loyer_assimile_l823_3(m, REDEVANCE_L615_10, v);
+}
+
+@source(CCH_L823_3, CCH_L823_3_ED2019_12, CCH_L823_3_ED2020_01,
+        CCH_L823_3_ED2021_01, CCH_L823_3_ED2023_04, CCH_L823_3_ED2023_09,
+        CCH_L823_3_ED2023_12, CCH_L823_3_ED2026_07)
+@source(CCH_L823_3, CCH_L823_3_ED2019_12, CCH_L823_3_ED2020_01,
+        CCH_L823_3_ED2021_01, CCH_L823_3_ED2023_04, CCH_L823_3_ED2023_09,
+        CCH_L823_3_ED2023_12, CCH_L823_3_ED2026_07)
+rule LoyerPrincipalDepuisAssimilationL8233(m: Menage, c: CategorieLoyerAssimile, v: Money) strict {
+    label fr official "L. 823-3 : la somme assimilee au loyer alimente le loyer principal du calcul";
+    label en unofficial "L. 823-3: the rent-assimilated sum feeds the calculation's principal rent";
+    when loyer_assimile_l823_3(m, c, v);
+    then loyer_principal(m, v);
+}
+
+@source(CCH_L823_3, CCH_L823_3_ED2019_12, CCH_L823_3_ED2020_01,
+        CCH_L823_3_ED2021_01, CCH_L823_3_ED2023_04, CCH_L823_3_ED2023_09,
+        CCH_L823_3_ED2023_12, CCH_L823_3_ED2026_07)
+rule AssimilationIndemniteAccueil(m: Menage, v: Money) strict {
+    label fr official "L. 823-3 6 : indemnite de mise a disposition CASF L. 442-1 4";
+    label en unofficial "L. 823-3 6: hosting indemnity under CASF L. 442-1 4";
+    when montant_assimile_loyer(m, INDEMNITE_ACCUEIL_CASF, v);
+    then loyer_assimile_l823_3(m, INDEMNITE_ACCUEIL_CASF, v);
+}

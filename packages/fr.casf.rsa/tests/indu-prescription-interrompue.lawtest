@@ -1,0 +1,19 @@
+// Same three years but a registered letter interrupted the
+// limitation: still recoverable (L.262-45 al. 2).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-indu-prescription-interrompue" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "inter-01": indu_montant(entity_ref("urn:fr:rsa:case:indu-prescription-interrompue"), 500.00 EUR) { origin case_input; }
+        assert "inter-02": prescription_cours(entity_ref("urn:fr:rsa:case:indu-prescription-interrompue"), 3) { origin case_input; }
+        assert "inter-03": interruption_prescription(entity_ref("urn:fr:rsa:case:indu-prescription-interrompue")) { origin case_input; }
+        assert "inter-04": notification_indu(entity_ref("urn:fr:rsa:case:indu-prescription-interrompue")) { origin case_input; }
+    }
+    evaluate truth(indu_recouvrable(entity_ref("urn:fr:rsa:case:indu-prescription-interrompue"), 500.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

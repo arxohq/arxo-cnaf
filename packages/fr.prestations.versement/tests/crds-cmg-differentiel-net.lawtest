@@ -1,0 +1,13 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-crds-cmg-differentiel-net" {
+    given {
+        context { decision_time @2025-10-15T12:00:00Z; knowledge_time @2025-10-15T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "brut": fr.pf.cmg::montant_differentiel(entity_ref("urn:fr:pv:case:allocataire"), entity_ref("urn:fr:pv:case:enfant"), 80.00 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_net_crds_cmg_differentiel(entity_ref("urn:fr:pv:case:allocataire"), entity_ref("urn:fr:pv:case:enfant"), 79.60 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

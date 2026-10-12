@@ -1,0 +1,21 @@
+// D. 532-2, trigger control: the exams were missed with established absence
+// of legitimate reasons, but the PMI head doctor never requested the
+// suspension («sur demande du médecin») — no suspension. The absence fact
+// isolates the request premise (RETURN 2026-10-08). Control —
+// suspension-versement-accordee.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-suspension-sans-demande" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "susp-node-01": examens_l5331_non_passes(entity_ref("urn:fr:paje:case:susp-node"), entity_ref("urn:fr:paje:enfant:susp-node")) { origin adjudicated; }
+        assert "susp-node-02": sans_motif_legitime_examens(entity_ref("urn:fr:paje:case:susp-node"), entity_ref("urn:fr:paje:enfant:susp-node")) { origin adjudicated; }
+        assert "susp-node-03": mois_effet_suspension(entity_ref("urn:fr:paje:case:susp-node"), entity_ref("urn:fr:paje:enfant:susp-node"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(suspension_versement_paje(entity_ref("urn:fr:paje:case:susp-node"), entity_ref("urn:fr:paje:enfant:susp-node"), @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

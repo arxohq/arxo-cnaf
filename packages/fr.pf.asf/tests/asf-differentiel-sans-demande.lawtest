@@ -1,0 +1,25 @@
+// Pension 60, carence served, NO request: differential 112.52 - 60 = 52.52 fires standalone (L. 523-1 4°); no right opens.
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-differentiel-sans-demande" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ods-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:differentiel-sans-demande"), entity_ref("urn:fr:pf-asf:case:differentiel-sans-demande-e1")) { origin case_input; }
+        assert "ods-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:differentiel-sans-demande-e1")) { origin case_input; }
+        assert "ods-03": motif_asf(entity_ref("urn:fr:pf-asf:case:differentiel-sans-demande-e1"), PENSION_PARTIELLE) { origin case_input; }
+        assert "ods-04": manquement_debiteur(entity_ref("urn:fr:pf-asf:case:differentiel-sans-demande-e1"), @2021-03-01) { origin case_input; }
+        assert "ods-05": mois_ouverture_asf(@2021-04-01) { origin case_input; }
+        assert "ods-06": pension_recue(entity_ref("urn:fr:pf-asf:case:differentiel-sans-demande-e1"), 60.00 EUR) { origin case_input; }
+        assert "ods-07": bmaf_retenu(entity_ref("urn:fr:pf-asf:case:differentiel-sans-demande"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(asf_differentiel_du(entity_ref("urn:fr:pf-asf:case:differentiel-sans-demande-e1"), 52.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_enfant_eligible(entity_ref("urn:fr:pf-asf:case:differentiel-sans-demande-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

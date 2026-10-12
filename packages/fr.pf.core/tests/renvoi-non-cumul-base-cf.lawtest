@@ -1,0 +1,16 @@
+// Base/CF non-overlap: allocation de base received while claiming complement familial - refused (L. 532-1).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-renvoi-non-cumul-base-cf" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "renvoi-non-cumul-base-cf-01": beneficie_allocation_base(entity_ref("urn:fr:pf:case:non-cumul-base-cf")) { origin case_input; }
+        assert "renvoi-non-cumul-base-cf-02": demande_complement_familial(entity_ref("urn:fr:pf:case:non-cumul-base-cf")) { origin case_input; }
+    }
+    evaluate truth(cumul_base_cf_refuse(entity_ref("urn:fr:pf:case:non-cumul-base-cf")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

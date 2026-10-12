@@ -1,0 +1,17 @@
+// D553-1 missing clock dates (PC-R05-02): quarterly right, last-known 800 EUR, declaration not received, quarterly unknown, but no depart/appreciation dates; no weighted income (NEITHER).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-d5531-dates-manquantes-neither" {
+    given {
+        context { decision_time @2022-04-10T12:00:00Z; knowledge_time @2022-04-10T12:00:00Z; legal_time @2022-04-10; timezone "Europe/Paris"; }
+        assert "d5531-m1": droit_trimestriel_ouvert(entity_ref("urn:fr:pv:case:trimestriel")) { origin case_input; }
+        assert "d5531-m2": pond_trimestriel_connu(entity_ref("urn:fr:pv:case:trimestriel"), 800.00 EUR) { origin case_input; }
+        assert "d5531-m3": ressources_trimestrielles_inconnues(entity_ref("urn:fr:pv:case:trimestriel")) { origin case_input; }
+        assert "d5531-m4": declaration_montant_revenus_non_recue(entity_ref("urn:fr:pv:case:trimestriel")) { origin case_input; }
+    }
+    evaluate truth(revenu_pondere(entity_ref("urn:fr:pv:case:trimestriel"), 800.00 EUR));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

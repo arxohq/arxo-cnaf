@@ -1,0 +1,20 @@
+// Quarterly data, predecessor wording: before 2025 the national
+// fund transmitted the four-item quarterly data before the end of
+// the quarter (D. 262-96 predecessor). Edition pair of
+// effectifs-trimestre.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-trimestre-pre2025" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2023-02-15T12:00:00Z; knowledge_time @2023-02-15T12:00:00Z; legal_time @2023-02-15; timezone "Europe/Paris"; }
+        assert "trip-01": est_caisse_nationale(entity_ref("urn:fr:rsa:org:cnaf")) { origin case_input; }
+        assert "trip-02": est_service_statistique(entity_ref("urn:fr:rsa:org:drees")) { origin case_input; }
+        assert "trip-03": trimestre_donnees_fin(@2022-12-31) { origin case_input; }
+        assert "trip-04": trimestre_courant_fin(@2023-03-31) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreTrimestrePre2025, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

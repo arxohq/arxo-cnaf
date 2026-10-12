@@ -1,0 +1,43 @@
+// Oral late request after a date-certain notice, documented in
+// time: examination as a prior appeal, requalification; implicit
+// CRA rejection opens the court, the director represents the
+// State (R. 847-1-1 IV, R. 847-2; PA-FE09-03).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-examen-representation-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": demande_rectification_orale(entity_ref("urn:fr:ppa:case:examen-representation-2026")) { origin case_input; }
+        assert "ppa-02": demande_rectification(entity_ref("urn:fr:ppa:case:examen-representation-2026"), @2026-05-25) { origin case_input; }
+        assert "ppa-03": reception_notification(entity_ref("urn:fr:ppa:case:examen-representation-2026"), @2026-05-01) { origin case_input; }
+        assert "ppa-04": documents_rectification_produits(entity_ref("urn:fr:ppa:case:examen-representation-2026"), @2026-06-05) { origin case_input; }
+        assert "ppa-05": date_observation_recours(entity_ref("urn:fr:ppa:case:examen-representation-2026"), @2026-06-15) { origin case_input; }
+        assert "ppa-06": decision_refus(entity_ref("urn:fr:ppa:case:examen-representation-2026")) { origin case_input; }
+        assert "ppa-07": recours_cra_forme(entity_ref("urn:fr:ppa:case:examen-representation-2026"), @2026-06-05) { origin case_input; }
+        assert "ppa-08": delai_r142_6_expire(entity_ref("urn:fr:ppa:case:examen-representation-2026")) { origin case_input; }
+        assert "ppa-09": directeur_de(entity_ref("urn:fr:ppa:org:directeur"), entity_ref("urn:fr:ppa:org:caisse")) { origin case_input; }
+        assert "ppa-10": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:examen-representation-2026")) { origin case_input; }
+        assert "ppa-11": delai_recours_cra_en_cours(entity_ref("urn:fr:ppa:case:examen-representation-2026")) { origin case_input; }
+        assert "ppa-12": absence_decision_cra(entity_ref("urn:fr:ppa:case:examen-representation-2026")) { origin case_input; }
+        assert "ppa-13": delai_r421_1_en_cours(entity_ref("urn:fr:ppa:case:examen-representation-2026")) { origin case_input; }
+        assert "ppa-14": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:examen-representation-2026")) { origin case_input; }
+    }
+    evaluate truth(pieces_orales_produites(entity_ref("urn:fr:ppa:case:examen-representation-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(examen_demande_possible(entity_ref("urn:fr:ppa:case:examen-representation-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(demande_requalifiee_recours(entity_ref("urn:fr:ppa:case:examen-representation-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(represente_etat_ta(entity_ref("urn:fr:ppa:org:directeur"), entity_ref("urn:fr:ppa:case:examen-representation-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,36 @@
+// R. 541-8, hospitalization (DateAssimilationHospitalisation and the
+// defeasible AssimilationHospitalisation): a stay starting 2024-03-15 is
+// assimilated to boarding from 2024-06-01; supplement-grade hospital
+// constraints defeat the assimilation and open the commission liberty
+// MaintenirVersementHospitalisation instead.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-hospitalisation" {
+    given {
+        context { deadline_policy AEEH_MOIS_CIVIL; decision_time @2024-07-15T12:00:00Z; knowledge_time @2024-07-15T12:00:00Z; legal_time @2024-07-15; timezone "Europe/Paris"; }
+        assert "r541-h-01": hospitalisation(entity_ref("urn:fr:pf-aeeh:case:enfant-h"), @2024-03-15) { origin case_input; }
+        assert "r541-h-02": date_appreciation(entity_ref("urn:fr:pf-aeeh:case:enfant-h"), @2024-06-01) { origin case_input; }
+        assert "r541-h-03": hospitalisation(entity_ref("urn:fr:pf-aeeh:case:enfant-h-contraintes"), @2024-03-15) { origin case_input; }
+        assert "r541-h-04": date_appreciation(entity_ref("urn:fr:pf-aeeh:case:enfant-h-contraintes"), @2024-06-01) { origin case_input; }
+        assert "r541-h-05": contraintes_hospitalisation_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-h-contraintes")) { origin adjudicated; }
+        assert "r541-h-06": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-h"), entity_ref("urn:fr:pf-aeeh:case:enfant-h-contraintes")) { origin case_input; }
+        assert "r541-h-07": commission_competente(entity_ref("urn:fr:pf-aeeh:commission:cdaph-75"), entity_ref("urn:fr:pf-aeeh:case:enfant-h-contraintes")) { origin case_input; }
+    }
+    evaluate truth(date_assimilation_hospitalisation(entity_ref("urn:fr:pf-aeeh:case:enfant-h"), @2024-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(assimile_internat(entity_ref("urn:fr:pf-aeeh:case:enfant-h")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(assimile_internat(entity_ref("urn:fr:pf-aeeh:case:enfant-h-contraintes")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate positions();
+    expect position(MaintenirVersementHospitalisation, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

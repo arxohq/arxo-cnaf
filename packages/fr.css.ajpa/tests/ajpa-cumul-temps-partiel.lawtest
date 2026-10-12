@@ -1,0 +1,21 @@
+// Part-time sick exception: partial days plus part-time sick pay,
+// no motif asserted — the permission record holds, no refusal.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-cumul-temps-partiel" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-tp-01": percoit_maladie_temps_partiel(entity_ref("urn:fr:css:ajpa:case:aidant-tp")) { origin case_input; }
+        assert "ajpa-tp-02": jours_ajpa_partiels(entity_ref("urn:fr:css:ajpa:case:aidant-tp")) { origin case_input; }
+    }
+    evaluate truth(activite_partielle_cumulee(entity_ref("urn:fr:css:ajpa:case:aidant-tp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpa_cumul_refuse(entity_ref("urn:fr:css:ajpa:case:aidant-tp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

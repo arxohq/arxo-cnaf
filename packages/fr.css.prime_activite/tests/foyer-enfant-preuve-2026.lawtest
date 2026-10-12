@@ -1,0 +1,46 @@
+// Child benefit and arrival evidence (PA-R4-05): a PF child who
+// benefited from the bonus is affirmatively not a member; a PF
+// child without benefit evidence stays undetermined; an over-17
+// arrival with kinship, care and non-benefit is a member (R.842-3).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-foyer-enfant-preuve-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": mois_du_droit(entity_ref("urn:fr:ppa:case:foyer-enfant-preuve-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-02": enfant_ou_charge(entity_ref("urn:fr:ppa:case:foyer-enfant-preuve-2026"), entity_ref("urn:fr:ppa:enfant:beneficiaire")) { origin case_input; }
+        assert "ppa-03": ouvre_droit_pf(entity_ref("urn:fr:ppa:enfant:beneficiaire")) { origin case_input; }
+        assert "ppa-04": enfant_beneficiaire_pa_annee_droit(entity_ref("urn:fr:ppa:enfant:beneficiaire")) { origin case_input; }
+        assert "ppa-13": naissance(entity_ref("urn:fr:ppa:enfant:beneficiaire"), @2015-01-01) { origin case_input; }
+        assert "ppa-14": arrivee_foyer(entity_ref("urn:fr:ppa:enfant:beneficiaire"), @2016-01-01) { origin case_input; }
+        assert "ppa-15": charge_effective_permanente(entity_ref("urn:fr:ppa:case:foyer-enfant-preuve-2026"), entity_ref("urn:fr:ppa:enfant:beneficiaire")) { origin adjudicated; }
+        assert "ppa-05": enfant_ou_charge(entity_ref("urn:fr:ppa:case:foyer-enfant-preuve-2026"), entity_ref("urn:fr:ppa:enfant:inconnu")) { origin case_input; }
+        assert "ppa-06": ouvre_droit_pf(entity_ref("urn:fr:ppa:enfant:inconnu")) { origin case_input; }
+        assert "ppa-07": enfant_ou_charge(entity_ref("urn:fr:ppa:case:foyer-enfant-preuve-2026"), entity_ref("urn:fr:ppa:enfant:arrive-tard")) { origin case_input; }
+        assert "ppa-08": naissance(entity_ref("urn:fr:ppa:enfant:arrive-tard"), @2005-01-01) { origin case_input; }
+        assert "ppa-09": arrivee_foyer(entity_ref("urn:fr:ppa:enfant:arrive-tard"), @2024-06-01) { origin case_input; }
+        assert "ppa-10": charge_effective_permanente(entity_ref("urn:fr:ppa:case:foyer-enfant-preuve-2026"), entity_ref("urn:fr:ppa:enfant:arrive-tard")) { origin adjudicated; }
+        assert "ppa-11": lien_parente_4e_degre(entity_ref("urn:fr:ppa:enfant:arrive-tard"), entity_ref("urn:fr:ppa:case:foyer-enfant-preuve-2026")) { origin case_input; }
+        assert "ppa-12": enfant_non_beneficiaire_pa_annee_droit(entity_ref("urn:fr:ppa:enfant:arrive-tard")) { origin case_input; }
+    }
+    evaluate truth(enfant_membre_foyer(entity_ref("urn:fr:ppa:case:foyer-enfant-preuve-2026"), entity_ref("urn:fr:ppa:enfant:beneficiaire")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+    // D-42 BOUNDARY: for the PF child without benefit evidence the
+    // R. 842-3 3° a) second limb («être à la charge effective et
+    // permanente») stays open and reads the organ's care assessment
+    // (judgment relation charge_effective_permanente); membership is
+    // undetermined and the engine names the pending assessment
+    // (REQUIRES_JUDGMENT, §47.3) rather than a computed NEITHER.
+    evaluate truth(enfant_membre_foyer(entity_ref("urn:fr:ppa:case:foyer-enfant-preuve-2026"), entity_ref("urn:fr:ppa:enfant:inconnu")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == REQUIRES_JUDGMENT;
+    evaluate truth(enfant_membre_foyer(entity_ref("urn:fr:ppa:case:foyer-enfant-preuve-2026"), entity_ref("urn:fr:ppa:enfant:arrive-tard")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

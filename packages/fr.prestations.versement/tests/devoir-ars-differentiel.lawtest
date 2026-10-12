@@ -1,0 +1,15 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-devoir-ars-differentiel" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "brut": fr.pf.ars::ars_differentiel_du(entity_ref("urn:fr:pv:case:enfant"), 60.00 EUR) { origin case_input; }
+        assert "org": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pv:case:caisse"), entity_ref("urn:fr:pv:case:allocataire")) { origin case_input; }
+        assert "limite": date_limite_versement(@2024-03-31) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PayerArsDifferentielNet, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

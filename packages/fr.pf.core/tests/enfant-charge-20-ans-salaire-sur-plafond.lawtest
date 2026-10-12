@@ -1,0 +1,20 @@
+// Over the ceiling: 17-year-old with pay above 55% of SMIC x 169 - no entitlement (R. 512-2, L. 512-3 2°).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-enfant-charge-20-ans-salaire-sur-plafond" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; deadline_policy ENFANT_VINGT_ANS; }
+        assert "enfant-charge-20-ans-salaire-sur-plafond-01": date_naissance(entity_ref("urn:fr:pf:case:enfant-sur-plafond"), @2008-05-10) { origin case_input; }
+        assert "enfant-charge-20-ans-salaire-sur-plafond-02": date_reference_enfant(entity_ref("urn:fr:pf:case:enfant-sur-plafond"), @2026-03-15) { origin case_input; }
+        assert "enfant-charge-20-ans-salaire-sur-plafond-03": remuneration_mensuelle(entity_ref("urn:fr:pf:case:enfant-sur-plafond"), 1200 EUR) { origin case_input; }
+        assert "enfant-charge-20-ans-salaire-sur-plafond-04": smic_applicable(entity_ref("urn:fr:pf:case:enfant-sur-plafond"), entity_ref("urn:fr:pf:case:travailleur-sur-plafond")) { origin case_input; }
+        assert "enfant-charge-20-ans-salaire-sur-plafond-05": fr.travail.smic::territoire_smic(entity_ref("urn:fr:pf:case:travailleur-sur-plafond"), fr.travail.smic::METROPOLE_ET_DOM) { origin case_input; }
+        assert "enfant-charge-20-ans-salaire-sur-plafond-06": apres_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-sur-plafond")) { origin case_input; }
+    }
+    evaluate truth(enfant_ouvre_droit(entity_ref("urn:fr:pf:case:enfant-sur-plafond")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

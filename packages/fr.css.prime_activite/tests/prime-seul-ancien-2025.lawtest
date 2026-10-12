@@ -1,0 +1,38 @@
+// Old wording, review February 2025: single person, SMIC 10.00, base
+// 600.00, professional income 895.00/month (Nov 2024-Jan 2025), resources
+// 895.00. 59xSMIC=590.00, 120xSMIC=1200.00; ratio (895-590)/610 = 0.5;
+// boni = 0.29101x600x0.5 = 87.303 (D.843-2 pre-2026); fraction 0.61x895
+// = 545.95 (D.843-3 pre-2025); prime = 600 + 545.95 + 87.303 - 895
+// = 338.253; old trimestre M-3..M-1 average 338.253, above the 15.00
+// floor -> due 338.253 (R.843-1 pre-2025, decree 2025-185 not yet in
+// force at review).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-prime-seul-ancien-2025" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "ppa-01": forfait_base_retenu(@2024-11-01, 600.00 EUR) { origin case_input; }
+        assert "ppa-02": forfait_base_retenu(@2024-12-01, 600.00 EUR) { origin case_input; }
+        assert "ppa-03": forfait_base_retenu(@2025-01-01, 600.00 EUR) { origin case_input; }
+        assert "ppa-04": smic_horaire_retenu(@2024-11-01, 10.00 EUR) { origin case_input; }
+        assert "ppa-05": smic_horaire_retenu(@2024-12-01, 10.00 EUR) { origin case_input; }
+        assert "ppa-06": smic_horaire_retenu(@2025-01-01, 10.00 EUR) { origin case_input; }
+        assert "ppa-07": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), @2024-11-01, SEUL) { origin case_input; }
+        assert "ppa-08": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), @2024-12-01, SEUL) { origin case_input; }
+        assert "ppa-09": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), @2025-01-01, SEUL) { origin case_input; }
+        assert "ppa-10": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), @2024-11-01, 895.00 EUR) { origin case_input; }
+        assert "ppa-11": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), @2024-12-01, 895.00 EUR) { origin case_input; }
+        assert "ppa-12": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), @2025-01-01, 895.00 EUR) { origin case_input; }
+        assert "ppa-13": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), @2024-11-01, 895.00 EUR) { origin case_input; }
+        assert "ppa-14": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), @2024-12-01, 895.00 EUR) { origin case_input; }
+        assert "ppa-15": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), @2025-01-01, 895.00 EUR) { origin case_input; }
+        assert "ppa-16": mois_revue(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), @2025-02-01) { origin case_input; }
+        assert "ppa-17": minimum_paiement_retenu(@2025-02-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:seul-ancien-2025"), 338.253 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

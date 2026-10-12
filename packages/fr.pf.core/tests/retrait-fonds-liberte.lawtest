@@ -1,0 +1,19 @@
+// Withdrawal liberty: benefits paid into account - allocataire may withdraw monthly despite opposition (L. 553-4 III, PC-R03-03).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-retrait-fonds-liberte" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "retrait-liberte-01": parent_charge(entity_ref("urn:fr:pf:case:retrait-lib"), entity_ref("urn:fr:pf:case:enfant-lib")) { origin case_input; }
+        assert "retrait-liberte-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:retrait-lib"), entity_ref("urn:fr:pf:case:enfant-lib")) { origin adjudicated; }
+        assert "retrait-liberte-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-lib")) { origin case_input; }
+        assert "retrait-liberte-04": reside_france_stable(entity_ref("urn:fr:pf:case:retrait-lib")) { origin case_input; }
+        assert "retrait-liberte-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-lib")) { origin case_input; }
+        assert "retrait-liberte-06": prestations_versees_compte(entity_ref("urn:fr:pf:case:retrait-lib"), 300 EUR) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(RetraitFondsCompte, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,220 @@
+// R. 541-3/9/10: demande procedure and PCH interplay.
+//
+// DEONTIC MAP: demande completeness (filing + certificate + both
+// declaration branches + dossier useful-pieces fact bound to that filing,
+// PIECES CONTRACT; usefulness determination is an adjudicated dossier
+// record, evaluator unspecified — B-PFAEEH-PIECES-APPRECIATION) and the
+// R. 541-10 al. 1 charge exclusion are institutional.
+// Duties: JoindrePiecesDemande (bearer: the
+// carer, owed to the MDPH), TransmettreDossierMDPH (bearer: the MDPH —
+// «transmet, sans délai» sets no computable date), DeposerDemandePCH
+// (bearer: the carer), ReviserDecisionPCH and ReexaminerComplementPCH
+// (bearer: the commission). Prohibition OpterComplementAvantEcheance
+// (bearer: the carer; corpus pattern: the position is ACTIVE when the
+// prohibited early option occurs).
+// R. 541-9 sets the filing channel of a pursued third-element request,
+// not a universal filing duty: DeposerDemandePCH requires the
+// demande_troisieme_element_pch case fact (housing/vehicle/transport
+// charges, R. 541-10 al. 1), as does the al. 1 exclusion. R. 541-10 al. 2
+// revision requires the awarded-for-non-tierce-expenses subtype; al. 3
+// re-examination requires the L. 245-1 III 1° beneficiary status and the
+// handicap/factor evolution. The al. 3 option prohibition fires only
+// when the lump-sum elements are L. 245-3 2°/4°/5° (typed input: the
+// elements_pch_versement_ponctuel fact is asserted for those subtypes
+// alone). Missing subtype facts stay silent (open world).
+// Boundaries: the declaration model by joint arrêtés
+// (B-PFAEEH-MODELE-ARRETE); the usefulness evaluator is unnamed in source
+// (B-PFAEEH-PIECES-APPRECIATION); PCH-side mechanics (B-PFAEEH-PCH-MECANIQUE).
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+use self::{
+    CSS_R541_10_ED2021_01,
+    CSS_R541_10_ED2022_01,
+    CSS_R541_10_ED2026_04,
+    CSS_R541_3,
+    CSS_R541_3_ED2022_01,
+    CSS_R541_3_ED2026_04,
+    CSS_R541_9_ED2021_01,
+    CSS_R541_9_ED2022_01,
+    CSS_R541_9_ED2026_04,
+    Commission,
+    MDPH,
+    beneficiaire_complement,
+    beneficiaire_pch_l2451_iii_1,
+    certificat_medical,
+    charges_pch_exclues_complement,
+    commission_competente,
+    complement_depenses_non_tierce,
+    date_appreciation,
+    decision_cdaph_favorable,
+    declaration_admission,
+    declaration_soins,
+    demande_aeeh_deposee,
+    demande_complete,
+    demande_pch_complement,
+    demande_pch_deposee,
+    demande_renouvellement_pch,
+    demande_simultanee_aeeh_pch,
+    demande_troisieme_element_pch,
+    dossier_transmis_mdph,
+    echeance_elements_pch,
+    elements_pch_versement_ponctuel,
+    evolution_handicap_charges,
+    mdph_competente,
+    option_complement_anticipee,
+    pieces_justificatives_fournies,
+    pieces_utiles_completes,
+    reexamen_complement_effectue,
+    revision_decision_effectuee,
+};
+
+// --- R. 541-3: completeness ------------------------------------------------
+
+@source(
+    CSS_R541_3,
+    CSS_R541_3_ED2022_01,
+    CSS_R541_3_ED2026_04)
+rule DemandeComplete(e: fr.pf.core::Enfant, depot: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande déposée accompagnée du certificat médical, de la déclaration du demandeur et de toutes les pièces justificatives utiles au dossier (R. 541-3 al. 2, 1°/2°)";
+    label en unofficial "filed request with the medical certificate, the claimant declaration and all useful supporting documents on file (R. 541-3 para. 2, 1/2)";
+    when demande_aeeh_deposee(e, depot) and certificat_medical(e)
+        and declaration_admission(e) and declaration_soins(e)
+        and pieces_utiles_completes(e, depot);
+    then demande_complete(e);
+}
+
+@source(
+    CSS_R541_3,
+    CSS_R541_3_ED2022_01,
+    CSS_R541_3_ED2026_04)
+rule DevoirJoindrePieces(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, m: MDPH, depot: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la demande est accompagnée des pièces justificatives utiles (R. 541-3 al. 2)";
+    label en unofficial "the request carries the supporting documents (R. 541-3 para. 2)";
+    when fr.pf.core::parent_charge(p, e) and demande_aeeh_deposee(e, depot)
+        and mdph_competente(m, e);
+    then duty JoindrePiecesDemande {
+        bearer p;
+        beneficiary m;
+        maintain pieces_justificatives_fournies(p, e) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R541_3,
+    CSS_R541_3_ED2022_01,
+    CSS_R541_3_ED2026_04)
+rule DevoirTransmettreDossier(m: MDPH, o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "après décision favorable, la MDPH transmet sans délai les données à l'organisme débiteur (R. 541-3 al. 5)";
+    label en unofficial "after a favourable decision the MDPH promptly sends the file data to the debtor body (R. 541-3 para. 5)";
+    when mdph_competente(m, e) and decision_cdaph_favorable(e)
+        and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty TransmettreDossierMDPH {
+        bearer m;
+        beneficiary o;
+        maintain dossier_transmis_mdph(m, o, e) during [@2021-01-01, infinity);
+    };
+}
+
+// --- R. 541-9: PCH third-element request ------------------------------------
+
+@source(
+    CSS_R541_9_ED2021_01,
+    CSS_R541_9_ED2022_01,
+    CSS_R541_9_ED2026_04)
+rule DevoirDeposerDemandePCH(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, m: MDPH) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la demande du troisième élément de PCH est déposée à la MDPH, conjointement à la demande d'AEEH si besoin (R. 541-9)";
+    label en unofficial "the PCH third-element request is filed with the MDPH, jointly with the AEEH request where needed (R. 541-9)";
+    when fr.pf.core::parent_charge(p, e) and mdph_competente(m, e)
+        and demande_troisieme_element_pch(e);
+    then duty DeposerDemandePCH {
+        bearer p;
+        beneficiary m;
+        maintain demande_pch_deposee(p, e) during [@2021-01-01, infinity);
+    };
+}
+
+// --- R. 541-10 al. 1: charges borne by the PCH --------------------------------
+
+@source(
+    CSS_R541_10_ED2021_01,
+    CSS_R541_10_ED2022_01,
+    CSS_R541_10_ED2026_04)
+rule ExclusionChargesComplement(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "logement, véhicule et transports pris en compte au titre de la PCH, exclus du complément (R. 541-10 al. 1)";
+    label en unofficial "housing, vehicle and transport charges borne by the PCH, excluded from the supplement (R. 541-10 para. 1)";
+    when demande_simultanee_aeeh_pch(e) and demande_troisieme_element_pch(e);
+    then charges_pch_exclues_complement(e);
+}
+
+// --- R. 541-10 al. 2: systematic revision -------------------------------------
+
+@source(
+    CSS_R541_10_ED2021_01,
+    CSS_R541_10_ED2022_01,
+    CSS_R541_10_ED2026_04)
+rule DevoirReviserDecisionPCH(c: Commission, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la demande de PCH entraîne systématiquement révision de la décision d'allocation et de son complément (R. 541-10 al. 2)";
+    label en unofficial "the PCH request systematically revises the allowance and supplement decision (R. 541-10 para. 2)";
+    when commission_competente(c, e) and fr.pf.core::parent_charge(p, e)
+        and beneficiaire_complement(e) and demande_pch_complement(e)
+        and complement_depenses_non_tierce(e);
+    then duty ReviserDecisionPCH {
+        bearer c;
+        beneficiary p;
+        maintain revision_decision_effectuee(e) during [@2021-01-01, infinity);
+    };
+}
+
+// --- R. 541-10 al. 3: systematic re-examination -------------------------------
+
+@source(
+    CSS_R541_10_ED2021_01,
+    CSS_R541_10_ED2022_01,
+    CSS_R541_10_ED2026_04)
+rule DevoirReexaminerComplementPCH(c: Commission, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la demande de renouvellement ou révision de PCH entraîne systématiquement réexamen du complément (R. 541-10 al. 3)";
+    label en unofficial "the PCH renewal or revision request systematically re-examines the supplement (R. 541-10 para. 3)";
+    when commission_competente(c, e) and fr.pf.core::parent_charge(p, e)
+        and demande_renouvellement_pch(e)
+        and beneficiaire_pch_l2451_iii_1(e) and evolution_handicap_charges(e);
+    then duty ReexaminerComplementPCH {
+        bearer c;
+        beneficiary p;
+        maintain reexamen_complement_effectue(e) during [@2021-01-01, infinity);
+    };
+}
+
+// --- R. 541-10 al. 3: option only at expiry ------------------------------------
+
+@source(
+    CSS_R541_10_ED2021_01,
+    CSS_R541_10_ED2022_01,
+    CSS_R541_10_ED2026_04)
+rule InterdictionOpterAvantEcheance(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, ech: Date, d: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "après versement ponctuel, option pour le complément seulement à l'échéance des éléments PCH (R. 541-10 al. 3)";
+    label en unofficial "after a lump-sum payment, supplement option only at the PCH elements expiry (R. 541-10 para. 3)";
+    when fr.pf.core::parent_charge(p, e) and elements_pch_versement_ponctuel(e)
+        and echeance_elements_pch(e, ech) and date_appreciation(e, d) and d < ech;
+    // D-42 (08.10.2026): the prohibition arises from the situation (lump-sum PCH
+    // elements running before their expiry, R. 541-10 al. 3); the early option
+    // itself is the forbidden action and makes the position VIOLATED. It was a
+    // premise before, so the prohibition could only ever exist already violated.
+    then prohibition OpterComplementAvantEcheance {
+        bearer p;
+        beneficiary p;
+        action option_complement_anticipee(e);
+        window [@2021-01-01, infinity);
+    };
+}

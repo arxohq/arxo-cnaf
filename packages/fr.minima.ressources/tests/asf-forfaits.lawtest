@@ -1,0 +1,18 @@
+// ASF: BMAF 400.00 -> class-1 flat 120.00, class-2 flat 90.00.
+// Class-1 150.00 is cut to 120.00; class-2 50.00 is kept (R.262-10-1, II).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-asf-forfaits" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "asfforf-01": asf_percue(entity_ref("urn:fr:minima-ressources:case:asf-forfaits"), @2025-04-01, RANG_1, 150.00 EUR) { origin case_input; }
+        assert "asfforf-02": asf_percue(entity_ref("urn:fr:minima-ressources:case:asf-forfaits"), @2025-04-01, RANG_2, 50.00 EUR) { origin case_input; }
+        assert "asfforf-03": bmaf_retenue(entity_ref("urn:fr:minima-ressources:case:asf-forfaits"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_retenu_mois(entity_ref("urn:fr:minima-ressources:case:asf-forfaits"), @2025-04-01, ASF_PERCUE, 170.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

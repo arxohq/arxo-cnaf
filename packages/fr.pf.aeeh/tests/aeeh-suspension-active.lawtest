@@ -1,0 +1,23 @@
+// Suspension liberty exercisable (L. 541-2, para. 2): the carer does not
+// follow the recommended measures and was heard at their request. The
+// debtor body holds the SuspendreAeehNonSuivi position (ACTIVE).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-suspension-active" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "aeeh-susp-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-susp"), entity_ref("urn:fr:pf-aeeh:case:enfant-susp")) { origin case_input; }
+        assert "aeeh-susp-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-susp")) { origin adjudicated; }
+        assert "aeeh-susp-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-susp"), 400.00 EUR) { origin case_input; }
+        assert "aeeh-susp-04": sans_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-susp")) { origin case_input; }
+        assert "aeeh-susp-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-susp")) { origin case_input; }
+        assert "aeeh-susp-06": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-aeeh:org:caisse"), entity_ref("urn:fr:pf-aeeh:case:parent-susp")) { origin case_input; }
+        assert "aeeh-susp-07": non_suite_mesures(entity_ref("urn:fr:pf-aeeh:case:enfant-susp")) { origin case_input; }
+        assert "aeeh-susp-08": audition_tenue(entity_ref("urn:fr:pf-aeeh:case:parent-susp")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SuspendreAeehNonSuivi, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,402 @@
+// Ряд SMIC 2021–2025 (метрополия+ и Майотта) и minimum garanti — из девяти
+// закреплённых актов о relèvement (декреты 2020-1598, 2021-1741, 2022-1608,
+// 2023-1216, 2024-951 и arrêtés 27.09.2021, 19.04.2022, 29.07.2022,
+// 26.04.2023; байты — глобальный дамп LEGI DILA, см. 01-sources.law).
+// Окна подряд, без пропусков: [2021-01-01, 2026-01-01), далее — 02-montants.law.
+//
+// DECISION-0452 (сначала строит, потом проверяет). Декрет сам называет
+// абсолютную ставку (1° и 2° ст. 1) — правило несёт её литералом. Arrêté,
+// напротив, в ст. 1 называет не сумму, а ПРОЦЕНТ («le taux du salaire minimum
+// de croissance, tel qu'il résulte du décret/de l'arrêté … est majoré de
+// X %»), и только ст. 2 пересказывает результат в евро. Поэтому ставка окна
+// arrêté СТРОИТСЯ: предыдущая закреплённая ставка (ст. 1 декрета либо ст. 2
+// предыдущего arrêté) × (1 + X %), округление до сантима HALF_UP; опубликованная
+// сумма ст. 2 попадает в `smic_horaire_publie` и служит ПРОВЕРКОЙ
+// (`SmicConstruitConformePublie`), а не подставленным ответом. Все восемь
+// построений (4 arrêtés × метрополия+/Майотта) совпали с опубликованными
+// суммами до сантима.
+//
+// 2025 год отдельного акта не имеет: ставка декрета 2024-951 (с 01.11.2024)
+// действует до 01.01.2026 (декрет 2025-1228). Дамп LEGI кончается 13.07.2025;
+// отсутствие промежуточного акта после этой даты закреплёнными байтами не
+// доказано, окно закрыто следующим закреплённым актом (граница в README).
+
+language "law.core" version "0.2";
+package fr.travail.smic version "0.1.0";
+namespace "urn:fr:corpus:clir:smic";
+
+use self::{
+    Travailleur,
+    TerritoireSmic,
+    territoire_smic,
+    smic_horaire,
+    smic_horaire_publie,
+    smic_conforme_publie,
+    minimum_garanti,
+    DEC20201598_ART1,
+    DEC20201598_ART2,
+    ARR20210927_ART1,
+    ARR20210927_ART2,
+    ARR20210927_ART3,
+    DEC20211741_ART1,
+    DEC20211741_ART2,
+    ARR20220419_ART1,
+    ARR20220419_ART2,
+    ARR20220419_ART3,
+    ARR20220729_ART1,
+    ARR20220729_ART2,
+    ARR20220729_ART3,
+    DEC20221608_ART1,
+    DEC20221608_ART2,
+    ARR20230426_ART1,
+    ARR20230426_ART2,
+    ARR20230426_ART3,
+    DEC20231216_ART1,
+    DEC20231216_ART2,
+    DEC20240951_ART1,
+    DEC20240951_ART2,
+};
+
+// --- 1er janvier 2021: décret DEC20201598 ---
+
+@source(DEC20201598_ART1)
+rule SmicHoraireMetropole2021(t: Travailleur) strict {
+    effective [@2021-01-01, @2021-10-01);
+    label fr official "à compter du 1er janvier 2021, le SMIC est porté à 10,25 euros l'heure (1°)";
+    label ru unofficial "с 01.01.2021 SMIC — 10,25 €/ч (метрополия+, 1°)";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, 10.25 EUR);
+}
+
+@source(DEC20201598_ART1)
+rule SmicHoraireMayotte2021(t: Travailleur) strict {
+    effective [@2021-01-01, @2021-10-01);
+    label fr official "à compter du 1er janvier 2021, à Mayotte le SMIC est fixé à 7,74 euros l'heure (2°)";
+    label ru unofficial "с 01.01.2021 на Майотте SMIC — 7,74 €/ч (2°)";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, 7.74 EUR);
+}
+
+@source(DEC20201598_ART2)
+rule MinimumGaranti2021(t: Travailleur) strict {
+    effective [@2021-01-01, @2021-10-01);
+    label fr official "à compter du 1er janvier 2021, le minimum garanti est fixé à 3,65 euros";
+    label ru unofficial "с 01.01.2021 минимум garanti — 3,65 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 3.65 EUR);
+}
+
+// --- 1er octobre 2021: arrêté ARR20210927 ---
+
+@source(ARR20210927_ART1, DEC20201598_ART1)
+rule SmicHoraireMetropole2021_10(t: Travailleur) strict {
+    effective [@2021-10-01, @2022-01-01);
+    label fr official "à compter du 1er octobre 2021, le taux du SMIC est majoré de 2,20 % (art. 1) : 10,25 euros × 1.0220, arrondi au centime";
+    label ru unofficial "с 01.10.2021 SMIC построен: 10,25 € × 1.0220 (+2,20 %, ст. 1), округление до сантима HALF_UP; опубликованное 10,48 € проверяет SmicConstruitConformePublie";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, round(10.25 EUR * 1.0220, 2, "HALF_UP"));
+}
+
+@source(ARR20210927_ART1, DEC20201598_ART1)
+rule SmicHoraireMayotte2021_10(t: Travailleur) strict {
+    effective [@2021-10-01, @2022-01-01);
+    label fr official "à compter du 1er octobre 2021, le taux du SMIC à Mayotte est majoré de 2,20 % (art. 1) : 7,74 euros × 1.0220, arrondi au centime";
+    label ru unofficial "с 01.10.2021 SMIC на Майотте построен: 7,74 € × 1.0220 (+2,20 %, ст. 1), округление до сантима HALF_UP; опубликованное 7,91 € проверяет SmicConstruitConformePublie";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, round(7.74 EUR * 1.0220, 2, "HALF_UP"));
+}
+
+@source(ARR20210927_ART2)
+rule SmicHorairePublieMetropole2021_10(t: Travailleur) strict {
+    effective [@2021-10-01, @2022-01-01);
+    label fr official "l'arrêté publie en conséquence 10,48 euros l'heure (art. 2, 1°) : valeur de vérification";
+    label ru unofficial "arrêté публикует итог 10,48 €/ч (ст. 2, 1°): значение для проверки построенной ставки";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire_publie(t, 10.48 EUR);
+}
+
+@source(ARR20210927_ART2)
+rule SmicHorairePublieMayotte2021_10(t: Travailleur) strict {
+    effective [@2021-10-01, @2022-01-01);
+    label fr official "l'arrêté publie en conséquence 7,91 euros l'heure à Mayotte (art. 2, 2°) : valeur de vérification";
+    label ru unofficial "arrêté публикует итог 7,91 €/ч для Майотты (ст. 2, 2°): значение для проверки построенной ставки";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire_publie(t, 7.91 EUR);
+}
+
+@source(ARR20210927_ART3)
+rule MinimumGaranti2021_10(t: Travailleur) strict {
+    effective [@2021-10-01, @2022-01-01);
+    label fr official "à compter du 1er octobre 2021, le minimum garanti est fixé à 3,73 euros";
+    label ru unofficial "с 01.10.2021 минимум garanti — 3,73 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 3.73 EUR);
+}
+
+// --- 1er janvier 2022: décret DEC20211741 ---
+
+@source(DEC20211741_ART1)
+rule SmicHoraireMetropole2022(t: Travailleur) strict {
+    effective [@2022-01-01, @2022-05-01);
+    label fr official "à compter du 1er janvier 2022, le SMIC est porté à 10,57 euros l'heure (1°)";
+    label ru unofficial "с 01.01.2022 SMIC — 10,57 €/ч (метрополия+, 1°)";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, 10.57 EUR);
+}
+
+@source(DEC20211741_ART1)
+rule SmicHoraireMayotte2022(t: Travailleur) strict {
+    effective [@2022-01-01, @2022-05-01);
+    label fr official "à compter du 1er janvier 2022, à Mayotte le SMIC est fixé à 7,98 euros l'heure (2°)";
+    label ru unofficial "с 01.01.2022 на Майотте SMIC — 7,98 €/ч (2°)";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, 7.98 EUR);
+}
+
+@source(DEC20211741_ART2)
+rule MinimumGaranti2022(t: Travailleur) strict {
+    effective [@2022-01-01, @2022-05-01);
+    label fr official "à compter du 1er janvier 2022, le minimum garanti est fixé à 3,76 euros";
+    label ru unofficial "с 01.01.2022 минимум garanti — 3,76 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 3.76 EUR);
+}
+
+// --- 1er mai 2022: arrêté ARR20220419 ---
+
+@source(ARR20220419_ART1, DEC20211741_ART1)
+rule SmicHoraireMetropole2022_05(t: Travailleur) strict {
+    effective [@2022-05-01, @2022-08-01);
+    label fr official "à compter du 1er mai 2022, le taux du SMIC est majoré de 2,65 % (art. 1) : 10,57 euros × 1.0265, arrondi au centime";
+    label ru unofficial "с 01.05.2022 SMIC построен: 10,57 € × 1.0265 (+2,65 %, ст. 1), округление до сантима HALF_UP; опубликованное 10,85 € проверяет SmicConstruitConformePublie";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, round(10.57 EUR * 1.0265, 2, "HALF_UP"));
+}
+
+@source(ARR20220419_ART1, DEC20211741_ART1)
+rule SmicHoraireMayotte2022_05(t: Travailleur) strict {
+    effective [@2022-05-01, @2022-08-01);
+    label fr official "à compter du 1er mai 2022, le taux du SMIC à Mayotte est majoré de 2,65 % (art. 1) : 7,98 euros × 1.0265, arrondi au centime";
+    label ru unofficial "с 01.05.2022 SMIC на Майотте построен: 7,98 € × 1.0265 (+2,65 %, ст. 1), округление до сантима HALF_UP; опубликованное 8,19 € проверяет SmicConstruitConformePublie";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, round(7.98 EUR * 1.0265, 2, "HALF_UP"));
+}
+
+@source(ARR20220419_ART2)
+rule SmicHorairePublieMetropole2022_05(t: Travailleur) strict {
+    effective [@2022-05-01, @2022-08-01);
+    label fr official "l'arrêté publie en conséquence 10,85 euros l'heure (art. 2, 1°) : valeur de vérification";
+    label ru unofficial "arrêté публикует итог 10,85 €/ч (ст. 2, 1°): значение для проверки построенной ставки";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire_publie(t, 10.85 EUR);
+}
+
+@source(ARR20220419_ART2)
+rule SmicHorairePublieMayotte2022_05(t: Travailleur) strict {
+    effective [@2022-05-01, @2022-08-01);
+    label fr official "l'arrêté publie en conséquence 8,19 euros l'heure à Mayotte (art. 2, 2°) : valeur de vérification";
+    label ru unofficial "arrêté публикует итог 8,19 €/ч для Майотты (ст. 2, 2°): значение для проверки построенной ставки";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire_publie(t, 8.19 EUR);
+}
+
+@source(ARR20220419_ART3)
+rule MinimumGaranti2022_05(t: Travailleur) strict {
+    effective [@2022-05-01, @2022-08-01);
+    label fr official "à compter du 1er mai 2022, le minimum garanti est fixé à 3,86 euros";
+    label ru unofficial "с 01.05.2022 минимум garanti — 3,86 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 3.86 EUR);
+}
+
+// --- 1er août 2022: arrêté ARR20220729 ---
+
+@source(ARR20220729_ART1, ARR20220419_ART2)
+rule SmicHoraireMetropole2022_08(t: Travailleur) strict {
+    effective [@2022-08-01, @2023-01-01);
+    label fr official "à compter du 1er août 2022, le taux du SMIC est majoré de 2,01 % (art. 1) : 10,85 euros × 1.0201, arrondi au centime";
+    label ru unofficial "с 01.08.2022 SMIC построен: 10,85 € × 1.0201 (+2,01 %, ст. 1), округление до сантима HALF_UP; опубликованное 11,07 € проверяет SmicConstruitConformePublie";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, round(10.85 EUR * 1.0201, 2, "HALF_UP"));
+}
+
+@source(ARR20220729_ART1, ARR20220419_ART2)
+rule SmicHoraireMayotte2022_08(t: Travailleur) strict {
+    effective [@2022-08-01, @2023-01-01);
+    label fr official "à compter du 1er août 2022, le taux du SMIC à Mayotte est majoré de 2,01 % (art. 1) : 8,19 euros × 1.0201, arrondi au centime";
+    label ru unofficial "с 01.08.2022 SMIC на Майотте построен: 8,19 € × 1.0201 (+2,01 %, ст. 1), округление до сантима HALF_UP; опубликованное 8,35 € проверяет SmicConstruitConformePublie";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, round(8.19 EUR * 1.0201, 2, "HALF_UP"));
+}
+
+@source(ARR20220729_ART2)
+rule SmicHorairePublieMetropole2022_08(t: Travailleur) strict {
+    effective [@2022-08-01, @2023-01-01);
+    label fr official "l'arrêté publie en conséquence 11,07 euros l'heure (art. 2, 1°) : valeur de vérification";
+    label ru unofficial "arrêté публикует итог 11,07 €/ч (ст. 2, 1°): значение для проверки построенной ставки";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire_publie(t, 11.07 EUR);
+}
+
+@source(ARR20220729_ART2)
+rule SmicHorairePublieMayotte2022_08(t: Travailleur) strict {
+    effective [@2022-08-01, @2023-01-01);
+    label fr official "l'arrêté publie en conséquence 8,35 euros l'heure à Mayotte (art. 2, 2°) : valeur de vérification";
+    label ru unofficial "arrêté публикует итог 8,35 €/ч для Майотты (ст. 2, 2°): значение для проверки построенной ставки";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire_publie(t, 8.35 EUR);
+}
+
+@source(ARR20220729_ART3)
+rule MinimumGaranti2022_08(t: Travailleur) strict {
+    effective [@2022-08-01, @2023-01-01);
+    label fr official "à compter du 1er août 2022, le minimum garanti est fixé à 3,94 euros";
+    label ru unofficial "с 01.08.2022 минимум garanti — 3,94 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 3.94 EUR);
+}
+
+// --- 1er janvier 2023: décret DEC20221608 ---
+
+@source(DEC20221608_ART1)
+rule SmicHoraireMetropole2023(t: Travailleur) strict {
+    effective [@2023-01-01, @2023-05-01);
+    label fr official "à compter du 1er janvier 2023, le SMIC est porté à 11,27 euros l'heure (1°)";
+    label ru unofficial "с 01.01.2023 SMIC — 11,27 €/ч (метрополия+, 1°)";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, 11.27 EUR);
+}
+
+@source(DEC20221608_ART1)
+rule SmicHoraireMayotte2023(t: Travailleur) strict {
+    effective [@2023-01-01, @2023-05-01);
+    label fr official "à compter du 1er janvier 2023, à Mayotte le SMIC est fixé à 8,51 euros l'heure (2°)";
+    label ru unofficial "с 01.01.2023 на Майотте SMIC — 8,51 €/ч (2°)";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, 8.51 EUR);
+}
+
+@source(DEC20221608_ART2)
+rule MinimumGaranti2023(t: Travailleur) strict {
+    effective [@2023-01-01, @2023-05-01);
+    label fr official "à compter du 1er janvier 2023, le minimum garanti est fixé à 4,01 euros";
+    label ru unofficial "с 01.01.2023 минимум garanti — 4,01 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 4.01 EUR);
+}
+
+// --- 1er mai 2023: arrêté ARR20230426 ---
+
+@source(ARR20230426_ART1, DEC20221608_ART1)
+rule SmicHoraireMetropole2023_05(t: Travailleur) strict {
+    effective [@2023-05-01, @2024-01-01);
+    label fr official "à compter du 1er mai 2023, le taux du SMIC est majoré de 2,22 % (art. 1) : 11,27 euros × 1.0222, arrondi au centime";
+    label ru unofficial "с 01.05.2023 SMIC построен: 11,27 € × 1.0222 (+2,22 %, ст. 1), округление до сантима HALF_UP; опубликованное 11,52 € проверяет SmicConstruitConformePublie";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, round(11.27 EUR * 1.0222, 2, "HALF_UP"));
+}
+
+@source(ARR20230426_ART1, DEC20221608_ART1)
+rule SmicHoraireMayotte2023_05(t: Travailleur) strict {
+    effective [@2023-05-01, @2024-01-01);
+    label fr official "à compter du 1er mai 2023, le taux du SMIC à Mayotte est majoré de 2,22 % (art. 1) : 8,51 euros × 1.0222, arrondi au centime";
+    label ru unofficial "с 01.05.2023 SMIC на Майотте построен: 8,51 € × 1.0222 (+2,22 %, ст. 1), округление до сантима HALF_UP; опубликованное 8,70 € проверяет SmicConstruitConformePublie";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, round(8.51 EUR * 1.0222, 2, "HALF_UP"));
+}
+
+@source(ARR20230426_ART2)
+rule SmicHorairePublieMetropole2023_05(t: Travailleur) strict {
+    effective [@2023-05-01, @2024-01-01);
+    label fr official "l'arrêté publie en conséquence 11,52 euros l'heure (art. 2, 1°) : valeur de vérification";
+    label ru unofficial "arrêté публикует итог 11,52 €/ч (ст. 2, 1°): значение для проверки построенной ставки";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire_publie(t, 11.52 EUR);
+}
+
+@source(ARR20230426_ART2)
+rule SmicHorairePublieMayotte2023_05(t: Travailleur) strict {
+    effective [@2023-05-01, @2024-01-01);
+    label fr official "l'arrêté publie en conséquence 8,70 euros l'heure à Mayotte (art. 2, 2°) : valeur de vérification";
+    label ru unofficial "arrêté публикует итог 8,70 €/ч для Майотты (ст. 2, 2°): значение для проверки построенной ставки";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire_publie(t, 8.70 EUR);
+}
+
+@source(ARR20230426_ART3)
+rule MinimumGaranti2023_05(t: Travailleur) strict {
+    effective [@2023-05-01, @2024-01-01);
+    label fr official "à compter du 1er mai 2023, le minimum garanti est fixé à 4,10 euros";
+    label ru unofficial "с 01.05.2023 минимум garanti — 4,10 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 4.10 EUR);
+}
+
+// --- 1er janvier 2024: décret DEC20231216 ---
+
+@source(DEC20231216_ART1)
+rule SmicHoraireMetropole2024(t: Travailleur) strict {
+    effective [@2024-01-01, @2024-11-01);
+    label fr official "à compter du 1er janvier 2024, le SMIC est porté à 11,65 euros l'heure (1°)";
+    label ru unofficial "с 01.01.2024 SMIC — 11,65 €/ч (метрополия+, 1°)";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, 11.65 EUR);
+}
+
+@source(DEC20231216_ART1)
+rule SmicHoraireMayotte2024(t: Travailleur) strict {
+    effective [@2024-01-01, @2024-11-01);
+    label fr official "à compter du 1er janvier 2024, à Mayotte le SMIC est fixé à 8,80 euros l'heure (2°)";
+    label ru unofficial "с 01.01.2024 на Майотте SMIC — 8,80 €/ч (2°)";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, 8.80 EUR);
+}
+
+@source(DEC20231216_ART2)
+rule MinimumGaranti2024(t: Travailleur) strict {
+    effective [@2024-01-01, @2024-11-01);
+    label fr official "à compter du 1er janvier 2024, le minimum garanti est fixé à 4,15 euros";
+    label ru unofficial "с 01.01.2024 минимум garanti — 4,15 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 4.15 EUR);
+}
+
+// --- 1er novembre 2024: décret DEC20240951 ---
+
+@source(DEC20240951_ART1)
+rule SmicHoraireMetropole2024_11(t: Travailleur) strict {
+    effective [@2024-11-01, @2026-01-01);
+    label fr official "à compter du 1er novembre 2024, le SMIC est porté à 11,88 euros l'heure (1°)";
+    label ru unofficial "с 01.11.2024 SMIC — 11,88 €/ч (метрополия+, 1°)";
+    when territoire_smic(t, METROPOLE_ET_DOM);
+    then smic_horaire(t, 11.88 EUR);
+}
+
+@source(DEC20240951_ART1)
+rule SmicHoraireMayotte2024_11(t: Travailleur) strict {
+    effective [@2024-11-01, @2026-01-01);
+    label fr official "à compter du 1er novembre 2024, à Mayotte le SMIC est fixé à 8,98 euros l'heure (2°)";
+    label ru unofficial "с 01.11.2024 на Майотте SMIC — 8,98 €/ч (2°)";
+    when territoire_smic(t, MAYOTTE);
+    then smic_horaire(t, 8.98 EUR);
+}
+
+@source(DEC20240951_ART2)
+rule MinimumGaranti2024_11(t: Travailleur) strict {
+    effective [@2024-11-01, @2026-01-01);
+    label fr official "à compter du 1er novembre 2024, le minimum garanti est fixé à 4,22 euros";
+    label ru unofficial "с 01.11.2024 минимум garanti — 4,22 €";
+    when territoire_smic(t, METROPOLE_ET_DOM) or territoire_smic(t, MAYOTTE);
+    then minimum_garanti(t, 4.22 EUR);
+}
+
+// --- Проверка: построенное = опубликованному ----------------------------------
+
+@source(ARR20210927_ART2, ARR20220419_ART2, ARR20220729_ART2, ARR20230426_ART2)
+rule SmicConstruitConformePublie(t: Travailleur, construit: Money, publie: Money) strict {
+    effective [@2021-10-01, @2024-01-01);
+    label fr official "le taux construit par la majoration de l'article 1 coïncide avec le montant publié à l'article 2";
+    label ru unofficial "ставка, построенная по проценту ст. 1, совпала с суммой, опубликованной в ст. 2";
+    when smic_horaire(t, construit) and smic_horaire_publie(t, publie) and construit == publie;
+    then smic_conforme_publie(t);
+}

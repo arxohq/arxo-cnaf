@@ -1,0 +1,141 @@
+// Calcul de la somme effectivement versée selon le guide ministériel 2021.
+// Le guide est un canon d'exécution assumé par DECISION-0276, non une loi.
+language "law.core" version "0.2";
+package fr.apl.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:apl:versement";
+
+import fr.apl version "0.1.0";
+
+use self::{
+    GUIDE_P22_DEGRESSIVITE_RLS,
+    GUIDE_P23_CRDS_ARRONDI,
+    GUIDE_P24_EXEMPLE,
+    GUIDE_P50_ARRONDIS,
+};
+
+const TauxCRDSVersement: Decimal = 0.005 {
+    label fr official "taux de la CRDS applicable aux aides personnelles au logement : 0,5 %";
+    label ru unofficial "ставка CRDS для жилищных пособий: 0,5 %";
+}
+
+function crds_precomptee_calculee(base: Money) -> Money =
+    round(base * TauxCRDSVersement, 2, "FLOOR");
+
+function montant_verse_calcule(base: Money, crds: Money) -> Money =
+    round(base - crds, 0, "FLOOR");
+
+pub relation assiette_crds(m: fr.apl::Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "assiette de la CRDS retenue pour la finalisation du versement";
+    label ru unofficial "база фактического удержания CRDS для финализации выплаты";
+}
+
+pub relation assiette_crds_auditee_openfisca(m: fr.apl::Menage, montant: Money) kind empirical {
+    key(m);
+    label fr unofficial "base avant CRDS mesurée dans OpenFisca pour reproduire l'audit, sans attribution à la CAF/MSA";
+    label ru unofficial "измеренная в OpenFisca база до CRDS для воспроизведения аудита, не приписываемая CAF/MSA";
+}
+
+pub relation crds_precomptee(m: fr.apl::Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "CRDS précomptée et arrondie au centime inférieur";
+    label ru unofficial "удерживаемая CRDS, усечённая до нижнего сантима";
+}
+
+pub relation montant_net_crds(m: fr.apl::Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "montant net de CRDS avant l'arrondi final";
+    label ru unofficial "сумма после CRDS до финального округления";
+}
+
+pub relation montant_verse(m: fr.apl::Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "montant d'aide versé, arrondi à l'euro inférieur";
+    label ru unofficial "выплачиваемая сумма пособия, округлённая вниз до евро";
+}
+
+pub relation decision_versement(m: fr.apl::Menage) kind institutional {
+    label fr official "une aide est versée";
+    label ru unofficial "пособие выплачивается";
+}
+
+pub relation decision_non_versement(m: fr.apl::Menage) kind institutional {
+    label fr official "il n'est pas procédé au versement de l'aide";
+    label ru unofficial "выплата пособия не производится";
+}
+
+@source(fr.apl::CCH_D823_16_ED2021_01, GUIDE_P22_DEGRESSIVITE_RLS,
+        GUIDE_P23_CRDS_ARRONDI)
+rule AssietteDepuisAideMensuelle(m: fr.apl::Menage, aide: Money) strict {
+    label fr official "la somme après RLS et contributions représentatives entre dans la finalisation du versement";
+    label ru unofficial "сумма после RLS и представительных взносов поступает на стадию финализации выплаты";
+    when fr.apl::aide_mensuelle(m, aide);
+    then assiette_crds(m, aide);
+}
+
+@source(GUIDE_P23_CRDS_ARRONDI)
+rule AssietteAuditOpenFisca(m: fr.apl::Menage, aide: Money) strict {
+    label fr unofficial "l'assiette mesurée dans OpenFisca est isolée pour reproduire les deux cas de l'audit";
+    label ru unofficial "измеренная в OpenFisca база изолирована для воспроизведения двух дел аудита";
+    when assiette_crds_auditee_openfisca(m, aide);
+    then assiette_crds(m, aide);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+        GUIDE_P23_CRDS_ARRONDI, GUIDE_P50_ARRONDIS)
+rule RetenueCRDSMetropole(m: fr.apl::Menage, base: Money) strict {
+    label fr official "la CRDS au taux de 0,5 % est précomptée et arrondie au centime inférieur";
+    label ru unofficial "CRDS по ставке 0,5 % удерживается с усечением до нижнего сантима";
+    when assiette_crds(m, base) and fr.apl::territoire(m, fr.apl::METROPOLE);
+    then crds_precomptee(m, crds_precomptee_calculee(base));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+        GUIDE_P23_CRDS_ARRONDI, GUIDE_P50_ARRONDIS)
+rule RetenueCRDSOutreMer(m: fr.apl::Menage, base: Money) strict {
+    label fr official "la CRDS au taux de 0,5 % est précomptée et arrondie au centime inférieur";
+    label ru unofficial "CRDS по ставке 0,5 % удерживается с усечением до нижнего сантима";
+    when assiette_crds(m, base) and fr.apl::territoire(m, fr.apl::OUTRE_MER);
+    then crds_precomptee(m, crds_precomptee_calculee(base));
+}
+
+@source(fr.apl::CGCT_LO6414_1, GUIDE_P23_CRDS_ARRONDI)
+rule SansCRDSSaintPierre(m: fr.apl::Menage, base: Money) strict {
+    label fr official "à Saint-Pierre-et-Miquelon aucune contribution n'est précomptée dans ce calcul";
+    label ru unofficial "в Сен-Пьер-и-Микелоне этот расчёт не удерживает взнос";
+    when assiette_crds(m, base)
+        and fr.apl::territoire(m, fr.apl::SAINT_PIERRE_ET_MIQUELON);
+    then crds_precomptee(m, 0 EUR);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, GUIDE_P23_CRDS_ARRONDI)
+rule NetApresCRDS(m: fr.apl::Menage, base: Money, crds: Money) strict {
+    label fr official "le montant net de CRDS est la base diminuée de la contribution précomptée";
+    label ru unofficial "сумма net de CRDS равна базе за вычетом удержанной CRDS";
+    when assiette_crds(m, base) and crds_precomptee(m, crds);
+    then montant_net_crds(m, base - crds);
+}
+
+@source(GUIDE_P23_CRDS_ARRONDI, GUIDE_P24_EXEMPLE, GUIDE_P50_ARRONDIS)
+rule ArrondiFinalVersement(m: fr.apl::Menage, base: Money, crds: Money) strict {
+    label fr official "le montant d'aide net de CRDS est arrondi à l'euro inférieur";
+    label ru unofficial "помощь после CRDS округляется вниз до целого евро";
+    when assiette_crds(m, base) and crds_precomptee(m, crds);
+    then montant_verse(m, montant_verse_calcule(base, crds));
+}
+
+@source(GUIDE_P23_CRDS_ARRONDI)
+rule DecisionVersement(m: fr.apl::Menage, montant: Money) strict {
+    label fr official "un montant final calculé emporte une décision de versement";
+    label ru unofficial "выведенная финальная сумма образует решение о выплате";
+    when montant_verse(m, montant);
+    then decision_versement(m);
+}
+
+@source(fr.apl::CCH_D823_16_ED2021_01)
+rule DecisionNonVersement(m: fr.apl::Menage) strict {
+    label fr official "lorsque le paquet de calcul conclut à l'absence de versement, aucune finalisation monétaire n'est engagée";
+    label ru unofficial "если расчётный пакет установил невыплату, денежная финализация не начинается";
+    when fr.apl::aide_non_versee(m);
+    then decision_non_versement(m);
+}

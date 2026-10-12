@@ -1,0 +1,19 @@
+// DOM delegate designation: judicial measure in DOM, non-prime benefits - the judge may appoint a delegate (L. 755-4 al. 1, PC-R03-09).
+// D-42: the case lacked the seized court: DesignerDelegueMesureDOM (08) binds the liberty holder through
+// juge_mesure_aide_gestion (L. 755-4 al. 1 "le juge"). Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-juge-dom" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-juge-dom-01": mesure_judiciaire_aide_gestion(entity_ref("urn:fr:pf:case:budget-dom-juge")) { origin case_input; }
+        assert "devoir-juge-dom-02": beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:budget-dom-juge")) { origin case_input; }
+        assert "devoir-juge-dom-03": delegue_percoit_prestation_eligible(entity_ref("urn:fr:pf:case:budget-dom-juge")) { origin case_input; }
+        assert "devoir-juge-dom-04": juge_mesure_aide_gestion(entity_ref("urn:fr:pf:case:tribunal"), entity_ref("urn:fr:pf:case:budget-dom-juge")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DesignerDeleguePrestationsDOM, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

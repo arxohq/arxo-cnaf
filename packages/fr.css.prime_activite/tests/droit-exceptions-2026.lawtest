@@ -1,0 +1,56 @@
+// Exception evidence for L.842-2 3°/5° (PA-R4-09): a student above
+// the ceiling keeps the right on the retained file check; a student
+// and a leave without any exception evidence stay undetermined; a
+// leave with kept professional income keeps the right, its exclusion
+// rule blocked. The disjunctive exclusion head stays NEITHER while
+// any status branch is unknown (FALSE iff every producer is FALSE).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-droit-exceptions-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": age_plus_dix_huit(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-ok")) { origin case_input; }
+        assert "ppa-02": residence_stable(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-ok")) { origin case_input; }
+        assert "ppa-03": revenus_professionnels(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-ok")) { origin case_input; }
+        assert "ppa-04": sejour_travail_ok(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-ok")) { origin case_input; }
+        assert "ppa-05": conjoint_conditions_ok(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-ok")) { origin case_input; }
+        assert "ppa-06": sans_exclusion_statutaire(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-ok")) { origin case_input; }
+        assert "ppa-07": etudiant_stagiaire_apprenti(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-ok")) { origin case_input; }
+        assert "ppa-08": revenus_etudiant_plafond_depasse(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-ok")) { origin case_input; }
+        assert "ppa-09": etudiant_stagiaire_apprenti(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-inconnu")) { origin case_input; }
+        assert "ppa-10": conge_sans_solde(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-inconnu")) { origin case_input; }
+        assert "ppa-11": age_plus_dix_huit(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-actif")) { origin case_input; }
+        assert "ppa-12": residence_stable(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-actif")) { origin case_input; }
+        assert "ppa-13": revenus_professionnels(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-actif")) { origin case_input; }
+        assert "ppa-14": sejour_travail_ok(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-actif")) { origin case_input; }
+        assert "ppa-15": conjoint_conditions_ok(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-actif")) { origin case_input; }
+        assert "ppa-16": sans_exclusion_statutaire(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-actif")) { origin case_input; }
+        assert "ppa-17": conge_sans_solde(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-actif")) { origin case_input; }
+    }
+    evaluate truth(exclu_statut(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-ok")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droit_ouvert(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-ok")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(exclu_statut(entity_ref("urn:fr:ppa:case:droit-exceptions-etu-inconnu")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(exclu_statut(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-inconnu")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(exclu_statut(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-actif")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droit_ouvert(entity_ref("urn:fr:ppa:case:droit-exceptions-conge-actif")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

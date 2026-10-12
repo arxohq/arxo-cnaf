@@ -1,0 +1,17 @@
+// Increased CF: BMAF 400.00 -> flat-rate 166.60. Received 100.00 is kept
+// as is; received 200.00 is cut to 166.60 (R.262-10-1, I).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-cf-majore-sous-plafond" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "cfmaj-01": ressource_declaree_mois(entity_ref("urn:fr:minima-ressources:case:cf-majore-sous-plafond"), @2025-04-01, CF_MAJORE, 100.00 EUR) { origin case_input; }
+        assert "cfmaj-02": bmaf_retenue(entity_ref("urn:fr:minima-ressources:case:cf-majore-sous-plafond"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_retenu_mois(entity_ref("urn:fr:minima-ressources:case:cf-majore-sous-plafond"), @2025-04-01, CF_MAJORE, 100.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,19 @@
+// 2026 cohort: single dependent child, opening month with 1-3 indemnities - cumulation admitted (L. 532-2 IV).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cumul-enfant-unique-2026" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "cumul-enfant-unique-2026-01": beneficie_prepare(entity_ref("urn:fr:pf:case:unique-2026"), entity_ref("urn:fr:pf:case:enfant-2026e")) { origin case_input; }
+        assert "cumul-enfant-unique-2026-02": un_seul_enfant_charge(entity_ref("urn:fr:pf:case:unique-2026")) { origin case_input; }
+        assert "cumul-enfant-unique-2026-03": indemnites_1_3(entity_ref("urn:fr:pf:case:unique-2026")) { origin case_input; }
+        assert "cumul-enfant-unique-2026-04": prepare_ouverture(entity_ref("urn:fr:pf:case:unique-2026"), entity_ref("urn:fr:pf:case:enfant-2026e")) { origin case_input; }
+        assert "cumul-enfant-unique-2026-05": cohorte_2026(entity_ref("urn:fr:pf:case:enfant-2026e")) { origin case_input; }
+    }
+    evaluate truth(cumul_prepare_enfant_unique_admis(entity_ref("urn:fr:pf:case:unique-2026"), entity_ref("urn:fr:pf:case:enfant-2026e")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

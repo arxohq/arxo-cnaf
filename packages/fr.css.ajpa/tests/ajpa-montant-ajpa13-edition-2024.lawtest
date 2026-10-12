@@ -1,0 +1,23 @@
+// ajpa-blind-13 as an edition test (D-38, class (c) edition/input): 10 days at the
+// retained increased rate 70.00 in March 2024. The edition in force
+// on 2024-03-01 (CSS_ED2023_07, wording LEGIARTI000047864765) carries
+// no single-carer majoration — loi 2023-622 removed it — so the
+// increased monthly total 700.00 computes nothing. The expectation
+// follows the 2023-07 edition text, not current law read back.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-montant-ajpa13-edition-2024" {
+    given {
+        context { decision_time @2024-03-01T12:00:00Z; knowledge_time @2024-03-01T12:00:00Z; legal_time @2024-03-01; timezone "Europe/Paris"; }
+        assert "ajpa-e13-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-e13"), entity_ref("urn:fr:css:ajpa:case:aide-e13")) { origin case_input; }
+        assert "ajpa-e13-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-e13")) { origin adjudicated; }
+        assert "ajpa-e13-03": jours_ajpa_mois(entity_ref("urn:fr:css:ajpa:case:aidant-e13"), entity_ref("urn:fr:css:ajpa:case:aide-e13"), @2024-03-01, 10) { origin case_input; }
+        assert "ajpa-e13-04": montant_journalier_majore_retenu(entity_ref("urn:fr:css:ajpa:case:aidant-e13"), 70.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ajpa_montant_mois(entity_ref("urn:fr:css:ajpa:case:aidant-e13"), entity_ref("urn:fr:css:ajpa:case:aide-e13"), @2024-03-01, 700.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

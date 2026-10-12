@@ -1,0 +1,33 @@
+// Дело Catala «Exemple2» сектора приобретения по линии аллокаций —
+// СЕН-ПЬЕР-И-МИКЕЛОН. Пара с четырьмя иждивенцами, зона II, сертификат от
+// 1 декабря 2021 года (винтаж «с 01/10/19»), мензуальность 500 €, ресурсы
+// 22 000 €, месяц права — апрель 2023 года.
+//
+// ИСПОЛНИМАЯ ГРАНИЦА. L0 второго абзаца при N = 4,3 и ресурсах 22 000 € даёт
+// сумму 3 563,557112 €, двенадцатая часть — 296,96309266… €, непредставимо.
+// Catala утверждает 296,96 € — наш итог, округлённый до цента. Третье из трёх
+// дел, подтвердивших находку о собственных траншах второго абзаца.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-saint-pierre-mensualite-minimale-inexacte" {
+    given {
+        context { decision_time @2023-04-10T12:00:00Z; knowledge_time @2023-04-10T12:00:00Z; legal_time @2023-04-10; timezone "Europe/Paris"; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-01": secteur_accession_allocations(entity_ref("urn:fr:apl:case:outremer-saint-pierre")) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-02": aide_demandee(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), ALF) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-03": zone_du_logement(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), ZONE_II) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-04": situation_familiale(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), COUPLE) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-05": personnes_a_charge(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), 4) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-06": vintage_certificat(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), CERTIFICAT_DEPUIS_01_10_2019) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-07": mode_propriete(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-08": territoire(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), SAINT_PIERRE_ET_MIQUELON) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-09": mensualite_declaree(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), 500 EUR) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-10": ressources_du_menage(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), 22000 EUR) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-11": base_plancher_ressources(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), COEFFICIENT_MENSUALITE) { origin case_input; }
+        assert "outremer-saint-pierre-mensualite-minimale-inexacte-12": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), false) { origin case_input; }
+    }
+    evaluate truth(mensualite_minimale_al(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), 296.96 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}

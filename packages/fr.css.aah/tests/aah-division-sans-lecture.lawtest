@@ -1,0 +1,106 @@
+// D-82/D-83 без прочтения DouziemeTiersArrondiCentime (поведение прежнее): D. 821-2 al. 3 говорит «douzième» и
+// «tiers» и округления не задаёт, поэтому деление точное, а бесконечное частное — отказ (INEXACT_DIVISION, SPEC 50/18:
+// округление только явной политикой). Те же факты, что в aah-division-*-arrondi, без interpretation в context:
+//   div-s1 (= div-a3) 7000 / 12 = 583,3333… -> RUNTIME_ERROR, значение не выводится;
+//   div-s2 (= div-a2) 6999,90 / 12 = 583,325 ровно (конечная дробь) -> 583,325 как прежде (без чтения округления нет);
+//   div-s3 (= div-q1) 2000 / 3 -> RUNTIME_ERROR;  div-s4 (= div-a7) 7720 / 12 -> RUNTIME_ERROR;
+//   div-s5 (= div-a4) 6000 / 12 = 500 -> 500,00 (точное, чтение не нужно).
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-division-sans-lecture-annuel-inexact" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "div-s1-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-s1")) { origin adjudicated; }
+        assert "div-s1-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-s1")) { origin case_input; }
+        assert "div-s1-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-s1")) { origin case_input; }
+        assert "div-s1-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-s1")) { origin case_input; }
+        assert "div-s1-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-s1")) { origin case_input; }
+        assert "div-s1-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-s1")) { origin case_input; }
+        assert "div-s1-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-s1-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-s1"), 5000.00 EUR) { origin case_input; }
+        assert "div-s1-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-s1"), 583.33 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-css-aah-division-sans-lecture-annuel-exact-long" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "div-s2-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-s2")) { origin adjudicated; }
+        assert "div-s2-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-s2")) { origin case_input; }
+        assert "div-s2-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-s2")) { origin case_input; }
+        assert "div-s2-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-s2")) { origin case_input; }
+        assert "div-s2-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-s2")) { origin case_input; }
+        assert "div-s2-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-s2")) { origin case_input; }
+        assert "div-s2-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-s2-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-s2"), 5000.10 EUR) { origin case_input; }
+        assert "div-s2-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-s2"), 583.325 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-sans-lecture-trimestriel-inexact" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "div-s3-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-s3")) { origin adjudicated; }
+        assert "div-s3-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-s3")) { origin case_input; }
+        assert "div-s3-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-s3")) { origin case_input; }
+        assert "div-s3-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-s3")) { origin case_input; }
+        assert "div-s3-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-s3")) { origin case_input; }
+        assert "div-s3-06": percoit_revenu_activite(entity_ref("urn:fr:css-aah:case:div-s3")) { origin case_input; }
+        assert "div-s3-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-s3-08": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:case:div-s3"), 1000.00 EUR) { origin case_input; }
+        assert "div-s3-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-s3"), 666.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-css-aah-division-sans-lecture-ancien-couple-inexact" {
+    given {
+        context { decision_time @2023-09-30T12:00:00Z; knowledge_time @2023-09-30T12:00:00Z; legal_time @2023-09-30; timezone "Europe/Paris"; }
+        assert "div-s4-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-s4")) { origin adjudicated; }
+        assert "div-s4-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-s4")) { origin case_input; }
+        assert "div-s4-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-s4")) { origin case_input; }
+        assert "div-s4-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-s4")) { origin case_input; }
+        assert "div-s4-05": en_couple(entity_ref("urn:fr:css-aah:case:div-s4")) { origin case_input; }
+        assert "div-s4-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-s4")) { origin case_input; }
+        assert "div-s4-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-s4-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-s4"), 9000.00 EUR) { origin case_input; }
+        assert "div-s4-09": ressources_conjoint_retenues(entity_ref("urn:fr:css-aah:case:div-s4"), 5000.00 EUR) { origin case_input; }
+        assert "div-s4-10": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_ancien(entity_ref("urn:fr:css-aah:case:div-s4"), 643.33 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-css-aah-division-sans-lecture-exact-court" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "div-s5-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-s5")) { origin adjudicated; }
+        assert "div-s5-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-s5")) { origin case_input; }
+        assert "div-s5-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-s5")) { origin case_input; }
+        assert "div-s5-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-s5")) { origin case_input; }
+        assert "div-s5-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-s5")) { origin case_input; }
+        assert "div-s5-06": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:div-s5")) { origin case_input; }
+        assert "div-s5-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-s5-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:div-s5"), 6000.00 EUR) { origin case_input; }
+        assert "div-s5-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-s5"), 500.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

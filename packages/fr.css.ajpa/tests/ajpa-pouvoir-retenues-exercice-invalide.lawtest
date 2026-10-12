@@ -1,0 +1,20 @@
+// Invalid exercise (P1): a withholding act on RSA without the
+// «A défaut» branch, without the reserves and without a recorded
+// target — ajpa_retenue_prestations is NEITHER (exercise without
+// valid_when, no effect).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-pouvoir-retenues-exercice-invalide" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-pri-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-pri"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pri-02": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-pri")) { origin case_input; }
+        assert "ajpa-pri-03": retenue_prestations_exercee(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-pri"), 300.00 EUR, RSA) { origin case_input; }
+    }
+    evaluate truth(ajpa_retenue_prestations(entity_ref("urn:fr:css:ajpa:case:aidant-pri"), 300.00 EUR, RSA));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,27 @@
+// Orientation done by the president: the France Travail fallback duty
+// does not arise even though the six weeks elapsed, because no
+// absence is established (the positive orientation fact excludes
+// it), while the 42-day deadline still computes (D. 262-65-2).
+// Pair of orientation-ft.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-orientation-president-faite" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-04-01T12:00:00Z; knowledge_time @2025-04-01T12:00:00Z; legal_time @2025-04-01; timezone "Europe/Paris"; }
+        assert "ori-01": info_orientation_recue(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:case:orientation-president-faite"), @2025-02-01) { origin case_input; }
+        assert "ori-02": orientation_president_effectuee(entity_ref("urn:fr:rsa:case:orientation-president-faite")) { origin case_input; }
+        assert "ori-03": est_france_travail(entity_ref("urn:fr:rsa:org:ft")) { origin case_input; }
+        assert "ori-04": organisme_competent(entity_ref("urn:fr:rsa:org:ft"), entity_ref("urn:fr:rsa:case:orientation-president-faite")) { origin case_input; }
+        assert "ori-05": delai_six_semaines_expire(entity_ref("urn:fr:rsa:case:orientation-president-faite")) { origin case_input; }
+    }
+    evaluate truth(echeance_orientation_ft(entity_ref("urn:fr:rsa:case:orientation-president-faite"), @2025-03-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(orientation_ft_effectuee(entity_ref("urn:fr:rsa:org:ft"), entity_ref("urn:fr:rsa:case:orientation-president-faite")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

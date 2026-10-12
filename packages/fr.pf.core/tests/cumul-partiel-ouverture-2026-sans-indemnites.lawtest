@@ -1,0 +1,17 @@
+// 2026 cohort, opening without concurrent indemnities: partial-rate PreParE opening alone - no opening refusal (L. 532-2 III).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cumul-partiel-ouverture-2026-sans-indemnites" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "cumul-partiel-ouverture-2026-sans-indemnites-01": beneficie_prepare_taux_partiel(entity_ref("urn:fr:pf:case:partiel-seul"), entity_ref("urn:fr:pf:case:enfant-2026f")) { origin case_input; }
+        assert "cumul-partiel-ouverture-2026-sans-indemnites-02": prepare_ouverture(entity_ref("urn:fr:pf:case:partiel-seul"), entity_ref("urn:fr:pf:case:enfant-2026f")) { origin case_input; }
+        assert "cumul-partiel-ouverture-2026-sans-indemnites-03": cohorte_2026(entity_ref("urn:fr:pf:case:enfant-2026f")) { origin case_input; }
+    }
+    evaluate truth(cumul_prepare_partiel_ouverture_refuse(entity_ref("urn:fr:pf:case:partiel-seul"), entity_ref("urn:fr:pf:case:enfant-2026f")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

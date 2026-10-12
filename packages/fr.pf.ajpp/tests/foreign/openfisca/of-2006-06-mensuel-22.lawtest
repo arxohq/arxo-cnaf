@@ -1,0 +1,23 @@
+// OpenFisca measurement (parameters only, no model upstream):
+// the frozen 2006 monthly figure (22 days) as the retained maximum —
+// 22 days in June 2006 sits within the retained maximum. Measurement
+// only (B-PFAJPP-OF, REPORT): the 22 is an assumed input, not a pinned
+// computation.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-of-2006-06-mensuel-22" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "of0606-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:foreign:of-2006-06-enfant")) { origin adjudicated; }
+        assert "of0606-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:foreign:of-2006-06-enfant")) { origin adjudicated; }
+        assert "of0606-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:foreign:of-2006-06-parent"), entity_ref("urn:fr:pf-ajpp:foreign:of-2006-06-enfant")) { origin case_input; }
+        assert "of0606-04": jours_ajpp_mois(entity_ref("urn:fr:pf-ajpp:foreign:of-2006-06-enfant"), @2024-06-01, 22) { origin case_input; }
+        assert "of0606-05": plafond_mensuel_retenu(entity_ref("urn:fr:pf-ajpp:foreign:of-2006-06-enfant"), 22) { origin case_input; }
+    }
+    evaluate truth(mensuel_dans_limite(entity_ref("urn:fr:pf-ajpp:foreign:of-2006-06-enfant"), @2024-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,35 @@
+// EAJE within capacity and tariff: thirty places under the forty
+// threshold, 9 EUR/h under the 10 EUR/h tariff — right open; home/EAJE
+// band-1 maximum 208.53% of 400.00 = 834.12; 85% of 500.00 = 425.00.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-structure-eaje" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "struct-eaje-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), entity_ref("urn:fr:pf-cmg:child:ej"), EAJE) { origin case_input; }
+        assert "struct-eaje-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:structure-eaje")) { origin case_input; }
+        assert "struct-eaje-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), entity_ref("urn:fr:pf-cmg:child:ej")) { origin case_input; }
+        assert "struct-eaje-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:ej"), 2) { origin case_input; }
+        assert "struct-eaje-05": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), 1) { origin case_input; }
+        assert "struct-eaje-06-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), 17633 EUR) { origin case_input; }
+        assert "struct-eaje-06-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), 2917 EUR) { origin case_input; }
+        assert "struct-eaje-06-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), 39184 EUR) { origin case_input; }
+        assert "struct-eaje-06-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), 6482 EUR) { origin case_input; }
+        assert "struct-eaje-07": ressources_annuelles(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), 15000 EUR) { origin case_input; }
+        assert "struct-eaje-08": bmaf_retenu(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), 400.00 EUR) { origin case_input; }
+        assert "struct-eaje-09": depense_engagee(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), entity_ref("urn:fr:pf-cmg:child:ej"), 500 EUR) { origin case_input; }
+        assert "struct-eaje-10": eaje_capacite(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), entity_ref("urn:fr:pf-cmg:child:ej"), 30) { origin case_input; }
+        assert "struct-eaje-11": eaje_seuil_capacite(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), entity_ref("urn:fr:pf-cmg:child:ej"), 40) { origin case_input; }
+        assert "struct-eaje-12": eaje_tarif_horaire(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), entity_ref("urn:fr:pf-cmg:child:ej"), 9 EUR) { origin case_input; }
+    }
+    evaluate truth(droit_structure_ouvert(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), entity_ref("urn:fr:pf-cmg:child:ej")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_structure_du(entity_ref("urn:fr:pf-cmg:case:structure-eaje"), entity_ref("urn:fr:pf-cmg:child:ej"), 425.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

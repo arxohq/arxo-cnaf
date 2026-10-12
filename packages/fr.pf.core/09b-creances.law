@@ -1,0 +1,950 @@
+// Maintenance claims and intermediation: L. 581-1..10, L. 582-1/2,
+// L. 583-2/4/5 (L. 583-1/3 - module 08; L. 584-1 - decree renvoi, no norm).
+//
+// DEONTIC MAP:
+// - L. 581-1 "habilites" - fund liberty to help recovery.
+// - L. 581-2/3/9 - subrogation/mandat/priorite: institutional statuses.
+// - L. 581-4 - creancier liberty (renoncer), organisme liberty (suspendre).
+// - L. 581-7/10 "delai de cinq jours ouvrables" - prefect deadline: jours
+//   ouvrables need a business-day calendar section 85 (working-day roll),
+//   which the package lacks: no figure derived (boundary); executable -
+//   prohibition on pursuing after saisine (L. 581-10 para. 3).
+// - L. 581-5 (frais fixes par decret) - figure boundary, rule follows.
+// - L. 582-1 - intermediation: mise en oeuvre status (conditions a/b/c),
+//   cessation defeaters (VII 1° deces, 2° fin-titre/pension, 3° nouveau
+//   titre, 4° demande conjointe hors violences) + suspension hors-etat
+//   status (final para., violence-based qualification excluded); II
+//   penalite - amount <= BMAF by decree: figure boundary (BMAF),
+//   structure - status.
+// - L. 582-2 - titre executoire: status + nullite defeater + later-judgment
+//   defeater; competent issuer (allocataire residence, creditor fallback);
+//   parent duties (signaler changement, transmettre nouvel accord);
+//   "n'est susceptible d'aucun recours" - recorded immunity without a
+//   position (no appeal as a case fact).
+// - L. 583-2 - avance liberty (fonds d'action sanitaire et sociale).
+// - L. 583-4/5 - transmettre duties (IJ maladie; L. 582-2 contribution).
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_L581_1,
+    CSS_L581_10,
+    CSS_L581_10_CSS_ED2021_05,
+    CSS_L581_10_CSS_ED2021_11,
+    CSS_L581_10_CSS_ED2021_12,
+    CSS_L581_10_CSS_ED2022_01,
+    CSS_L581_10_CSS_ED2022_02,
+    CSS_L581_10_CSS_ED2022_03,
+    CSS_L581_10_CSS_ED2022_09,
+    CSS_L581_10_CSS_ED2023_07,
+    CSS_L581_10_CSS_ED2024_01,
+    CSS_L581_10_CSS_ED2025_02,
+    CSS_L581_10_CSS_ED2025_09,
+    CSS_L581_10_CSS_ED2025_12,
+    CSS_L581_10_CSS_ED2026_01,
+    CSS_L581_10_CSS_ED2026_04,
+    CSS_L581_10_CSS_ED2026_06,
+    CSS_L581_1_CSS_ED2021_05,
+    CSS_L581_1_CSS_ED2021_11,
+    CSS_L581_1_CSS_ED2021_12,
+    CSS_L581_1_CSS_ED2022_01,
+    CSS_L581_1_CSS_ED2022_02,
+    CSS_L581_1_CSS_ED2022_03,
+    CSS_L581_1_CSS_ED2022_09,
+    CSS_L581_1_CSS_ED2023_07,
+    CSS_L581_1_CSS_ED2024_01,
+    CSS_L581_1_CSS_ED2025_02,
+    CSS_L581_1_CSS_ED2025_09,
+    CSS_L581_1_CSS_ED2025_12,
+    CSS_L581_1_CSS_ED2026_01,
+    CSS_L581_1_CSS_ED2026_04,
+    CSS_L581_1_CSS_ED2026_06,
+    CSS_L581_2,
+    CSS_L581_2_CSS_ED2021_05,
+    CSS_L581_2_CSS_ED2021_11,
+    CSS_L581_2_CSS_ED2021_12,
+    CSS_L581_2_CSS_ED2022_01,
+    CSS_L581_2_CSS_ED2022_02,
+    CSS_L581_2_CSS_ED2022_03,
+    CSS_L581_2_CSS_ED2022_09,
+    CSS_L581_2_CSS_ED2023_07,
+    CSS_L581_2_CSS_ED2024_01,
+    CSS_L581_2_CSS_ED2025_02,
+    CSS_L581_2_CSS_ED2025_09,
+    CSS_L581_2_CSS_ED2025_12,
+    CSS_L581_2_CSS_ED2026_01,
+    CSS_L581_2_CSS_ED2026_04,
+    CSS_L581_2_CSS_ED2026_06,
+    CSS_L581_3,
+    CSS_L581_3_CSS_ED2026_06,
+    CSS_L581_4,
+    CSS_L581_4_CSS_ED2022_09,
+    CSS_L581_4_CSS_ED2023_07,
+    CSS_L581_4_CSS_ED2024_01,
+    CSS_L581_4_CSS_ED2025_02,
+    CSS_L581_4_CSS_ED2025_09,
+    CSS_L581_4_CSS_ED2025_12,
+    CSS_L581_4_CSS_ED2026_01,
+    CSS_L581_4_CSS_ED2026_04,
+    CSS_L581_4_CSS_ED2026_06,
+    CSS_L581_6,
+    CSS_L581_6_CSS_ED2026_06,
+    CSS_L581_9,
+    CSS_L581_9_CSS_ED2021_05,
+    CSS_L581_9_CSS_ED2021_11,
+    CSS_L581_9_CSS_ED2021_12,
+    CSS_L581_9_CSS_ED2022_01,
+    CSS_L581_9_CSS_ED2022_02,
+    CSS_L581_9_CSS_ED2022_03,
+    CSS_L581_9_CSS_ED2022_09,
+    CSS_L581_9_CSS_ED2023_07,
+    CSS_L581_9_CSS_ED2024_01,
+    CSS_L581_9_CSS_ED2025_02,
+    CSS_L581_9_CSS_ED2025_09,
+    CSS_L581_9_CSS_ED2025_12,
+    CSS_L581_9_CSS_ED2026_01,
+    CSS_L581_9_CSS_ED2026_04,
+    CSS_L581_9_CSS_ED2026_06,
+    CSS_L582_1,
+    CSS_L582_1_CSS_ED2022_09,
+    CSS_L582_1_CSS_ED2023_07,
+    CSS_L582_1_CSS_ED2024_01,
+    CSS_L582_1_CSS_ED2025_02,
+    CSS_L582_1_CSS_ED2025_09,
+    CSS_L582_1_CSS_ED2025_12,
+    CSS_L582_1_CSS_ED2026_01,
+    CSS_L582_1_CSS_ED2026_04,
+    CSS_L582_1_CSS_ED2026_06,
+    CSS_L582_2,
+    CSS_L582_2_CSS_ED2022_01,
+    CSS_L582_2_CSS_ED2022_02,
+    CSS_L582_2_CSS_ED2022_03,
+    CSS_L582_2_CSS_ED2022_09,
+    CSS_L582_2_CSS_ED2023_07,
+    CSS_L582_2_CSS_ED2024_01,
+    CSS_L582_2_CSS_ED2025_02,
+    CSS_L582_2_CSS_ED2025_09,
+    CSS_L582_2_CSS_ED2025_12,
+    CSS_L582_2_CSS_ED2026_01,
+    CSS_L582_2_CSS_ED2026_04,
+    CSS_L582_2_CSS_ED2026_06,
+    CSS_L583_2,
+    CSS_L583_2_CSS_ED2021_05,
+    CSS_L583_2_CSS_ED2021_11,
+    CSS_L583_2_CSS_ED2021_12,
+    CSS_L583_2_CSS_ED2022_01,
+    CSS_L583_2_CSS_ED2022_02,
+    CSS_L583_2_CSS_ED2022_03,
+    CSS_L583_2_CSS_ED2022_09,
+    CSS_L583_2_CSS_ED2023_07,
+    CSS_L583_2_CSS_ED2024_01,
+    CSS_L583_2_CSS_ED2025_02,
+    CSS_L583_2_CSS_ED2025_09,
+    CSS_L583_2_CSS_ED2025_12,
+    CSS_L583_2_CSS_ED2026_01,
+    CSS_L583_2_CSS_ED2026_04,
+    CSS_L583_2_CSS_ED2026_06,
+    CSS_L583_4,
+    CSS_L583_4_CSS_ED2021_05,
+    CSS_L583_4_CSS_ED2021_11,
+    CSS_L583_4_CSS_ED2021_12,
+    CSS_L583_4_CSS_ED2022_01,
+    CSS_L583_4_CSS_ED2022_02,
+    CSS_L583_4_CSS_ED2022_03,
+    CSS_L583_4_CSS_ED2022_09,
+    CSS_L583_4_CSS_ED2023_07,
+    CSS_L583_4_CSS_ED2024_01,
+    CSS_L583_4_CSS_ED2025_02,
+    CSS_L583_4_CSS_ED2025_09,
+    CSS_L583_4_CSS_ED2025_12,
+    CSS_L583_4_CSS_ED2026_01,
+    CSS_L583_4_CSS_ED2026_04,
+    CSS_L583_4_CSS_ED2026_06,
+    CSS_L583_5,
+    CSS_L583_5_CSS_ED2021_05,
+    CSS_L583_5_CSS_ED2021_11,
+    CSS_L583_5_CSS_ED2021_12,
+    CSS_L583_5_CSS_ED2022_01,
+    CSS_L583_5_CSS_ED2022_02,
+    CSS_L583_5_CSS_ED2022_03,
+    CSS_L583_5_CSS_ED2022_09,
+    CSS_L583_5_CSS_ED2023_07,
+    CSS_L583_5_CSS_ED2024_01,
+    CSS_L583_5_CSS_ED2025_02,
+    CSS_L583_5_CSS_ED2025_09,
+    CSS_L583_5_CSS_ED2025_12,
+    CSS_L583_5_CSS_ED2026_01,
+    CSS_L583_5_CSS_ED2026_04,
+    CSS_L583_5_CSS_ED2026_06,
+    AdministrationFiscale,
+    Organisme,
+    Personne,
+    RegimeAssuranceMaladie,
+    allocataire,
+    organisme_debiteur_pf,
+};
+
+relation aider_recouvrement_action(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "action: apporter l'aide au recouvrement des créances d'entretien (L. 581-1)";
+    label en unofficial "action: helping recovery of maintenance claims (L. 581-1)";
+}
+
+relation avance_asf_versee(p: Personne) kind empirical {
+    label fr official "ASF versée à titre d'avance sur créance alimentaire (L. 581-2)";
+    label en unofficial "ASF paid as an advance on a maintenance claim (L. 581-2)";
+}
+
+relation subrogation_organisme(p: Personne) kind institutional {
+    key(p);
+    label fr official "l'organisme est subrogé dans les droits du créancier (L. 581-2 al. 3)";
+    label en unofficial "body subrogated to the creditor's rights (L. 581-2 para. 3)";
+}
+
+relation avance_differentielle_cas4(p: Personne) kind empirical {
+    label fr official "allocation différentielle du 4° du I de L. 523-1 versée à titre d'avance";
+    label en unofficial "differential allowance of 4 of I of L. 523-1 paid as an advance";
+}
+
+relation allocation_acquise_creancier(p: Personne) kind institutional {
+    key(p);
+    label fr official "l'allocation différentielle n'est pas recouvrée et demeure acquise au créancier (L. 581-2 al. 4)";
+    label en unofficial "differential allowance not recovered, kept by the creditor (L. 581-2 para. 4)";
+}
+
+relation mandat_recouvrement(p: Personne) kind empirical {
+    label fr official "la demande d'allocation emporte mandat du créancier au profit de l'organisme (L. 581-3 al. 1)";
+    label en unofficial "benefit claim carries the creditor's mandate to the body (L. 581-3 para. 1)";
+}
+
+relation priorite_organisme_sommes(p: Personne) kind institutional {
+    key(p);
+    label fr official "l'organisme a droit, en priorité sur les sommes recouvrées, au montant des avances (L. 581-3 al. 2)";
+    label en unofficial "body entitled by priority over recovered amounts up to the advances (L. 581-3 para. 2)";
+}
+
+relation renonciation_asf(p: Personne) kind empirical {
+    label fr official "le titulaire renonce à percevoir l'ASF (L. 581-4 al. 2)";
+    label en unofficial "holder declines to receive ASF (L. 581-4 para. 2)";
+}
+
+relation renoncement_effectif(p: Personne) kind institutional {
+    key(p);
+    label fr official "renonciation effective, subrogation maintenue jusqu'au recouvrement complet (L. 581-4 al. 2)";
+    label en unofficial "declinature effective, subrogation kept until full recovery (L. 581-4 para. 2)";
+}
+
+relation refus_pouvoir_special(p: Personne) kind empirical {
+    label fr official "refus du pouvoir spécial de saisie immobilière (L. 581-4 al. 3)";
+    label en unofficial "refusal of the special power to attach real property (L. 581-4 para. 3)";
+}
+
+relation suspension_asf_possible(o: Organisme, p: Personne) kind institutional {
+    key(o, p);
+    label fr official "l'organisme peut suspendre le versement de l'ASF (L. 581-4 al. 3)";
+    label en unofficial "body may suspend ASF payment (L. 581-4 para. 3)";
+}
+
+relation creance_alimentaire_titre(p: Personne) kind empirical {
+    label fr official "créance alimentaire fixée par décision de justice devenue exécutoire ou actes ou accords L. 523-1 IV (L. 581-6, instrument)";
+    label en unofficial "maintenance claim set by an enforceable court decision or L. 523-1 IV acts or agreements (L. 581-6, instrument)";
+}
+
+relation creance_enfant_avant_limite_age(p: Personne) kind empirical {
+    label fr official "créance en faveur des enfants jusqu'à la limite d'âge du 2° de L. 512-3, fait constaté (L. 581-6)";
+    label en unofficial "claim for children up to the L. 512-3 2 age limit, stated fact (L. 581-6)";
+}
+
+relation conditions_asf_non_remplies(p: Personne) kind empirical {
+    label fr official "le titulaire ne remplit pas les conditions d'attribution de l'ASF, fait négatif constaté (L. 581-6)";
+    label en unofficial "holder does not meet the ASF award conditions, stated negative fact (L. 581-6)";
+}
+
+relation aide_recouvrement_demandee(p: Personne) kind empirical {
+    label fr official "aide des organismes sollicitée par le titulaire, « à sa demande » (L. 581-6)";
+    label en unofficial "bodies' help requested by the holder, 'at his request' (L. 581-6)";
+}
+
+relation aide_recouvrement_accordee(p: Personne) kind institutional {
+    key(p);
+    label fr official "aide des organismes pour le recouvrement des termes échus et à échoir (L. 581-6)";
+    label en unofficial "bodies' help recovering due and future instalments (L. 581-6)";
+}
+
+relation saisine_prefet(p: Personne) kind empirical {
+    label fr official "organismes ayant saisi le représentant de l'Etat (état des sommes certifié — L. 581-7/10)";
+    label en unofficial "bodies referred to the State representative (certified statement - L. 581-7/10)";
+}
+
+relation sommes_objet_demande_recouvrement(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "sommes faisant l'objet de la demande de recouvrement confiée aux comptables publics (L. 581-10 al. 3)";
+    label en unofficial "sums covered by the recovery request entrusted to the public accountants (L. 581-10 para. 3)";
+}
+
+relation cessation_procedure_recouvrement_notifiee(p: Personne) kind empirical {
+    label fr official "cessation de la procédure de recouvrement notifiée à l'organisme par les comptables publics (L. 581-10 al. 3 « jusqu'à ce qu'ils soient informés »)";
+    label en unofficial "recovery-procedure termination notified to the body by the public accountants (L. 581-10 para. 3 'until informed')";
+}
+
+relation recouvrement_direct_action(o: Organisme, p: Personne, montant: Money) kind empirical {
+    key(o, p);
+    label fr official "action: action directe de l'organisme pour récupérer les sommes de sa demande";
+    label en unofficial "action: direct recovery by the body of the sums in its request";
+}
+
+relation avance_fonds_sociaux(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "avance sur pensions consentie sur le fonds d'action sanitaire et sociale (L. 581-9)";
+    label en unofficial "pension advance from the health-and-social-action fund (L. 581-9)";
+}
+
+relation caisse_allocations_familiales(o: Organisme) kind empirical {
+    label fr official "l'organisme est une caisse d'allocations familiales habilitée (L. 581-9 « Les caisses d'allocations familiales »)";
+    label en unofficial "the body is an empowered family-allowance fund (L. 581-9 'Les caisses d'allocations familiales')";
+}
+
+relation avance_fonds_sociaux_montant(o: Organisme, p: Personne, montant: Money) kind empirical {
+    key(o, p);
+    label fr official "montant de l'avance sur pensions consentie sur le fonds d'action sanitaire et sociale (L. 581-9)";
+    label en unofficial "amount of the pension advance from the health-and-social-action fund (L. 581-9)";
+}
+
+relation subrogation_plein_droit(p: Personne) kind institutional {
+    key(p);
+    label fr official "subrogation de plein droit à concurrence des avances, contre débiteur et Trésor (L. 581-9)";
+    label en unofficial "subrogation as of right up to the advances - against debtor and Treasury (L. 581-9)";
+}
+
+relation subrogation_plein_droit_montant(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "subrogation de plein droit à concurrence du montant des avances consenties (L. 581-9)";
+    label en unofficial "subrogation as of right up to the amount of the advances granted (L. 581-9)";
+}
+
+relation stabilite_residence_creancier(p: Personne) kind empirical {
+    label fr official "condition L. 582-1 I a): stabilité de résidence et régularité du séjour du créancier (L. 512-1)";
+    label en unofficial "L. 582-1 I a) condition: creditor residence stability and stay lawfulness (L. 512-1)";
+}
+
+relation debiteur_stable(p: Personne) kind empirical {
+    label fr official "condition L. 582-1 I b): stabilité de résidence du débiteur (L. 512-1)";
+    label en unofficial "L. 582-1 I b) condition: debtor residence stability (L. 512-1)";
+}
+
+relation debiteur_hors_etat(p: Personne) kind empirical {
+    label fr official "débiteur hors d'état au sens du 3° du I de L. 523-1 (hors violences — L. 582-1 I c))";
+    label en unofficial "debtor hors d'etat under 3 of I of article L. 523-1 (except violence - L. 582-1 I c))";
+}
+
+relation intermediation_titre_3732_2_ii(p: Personne) kind empirical {
+    label fr official "intermédiation lors de la fixation de la pension par un titre du II de 373-2-2 civil, fait constaté (L. 582-1 I 1°)";
+    label en unofficial "intermediation at pension-fixing by a 373-2-2 II civil-code title, stated fact (L. 582-1 I 1)";
+}
+
+relation intermediation_conditions_3732_2_iii(p: Personne) kind empirical {
+    label fr official "intermédiation dans les conditions du III de 373-2-2 civil, à défaut de titre du II (L. 582-1 I 2°)";
+    label en unofficial "intermediation under 373-2-2 III civil-code conditions, absent a II title (L. 582-1 I 2)";
+}
+
+relation intermediation_mise_en_oeuvre(p: Personne) kind institutional {
+    key(p);
+    label fr official "intermédiation financière mise en oeuvre (L. 582-1 I)";
+    label en unofficial "financial intermediation in place (L. 582-1 I)";
+}
+
+relation deces_parent(p: Personne) kind empirical {
+    label fr official "décès de l'un ou l'autre parent ou de l'enfant (cessation VII 1° — L. 582-1)";
+    label en unofficial "death of either parent or the child (VII 1 termination - L. 582-1)";
+}
+
+relation silence_informations(p: Personne) kind empirical {
+    label fr official "refus ou silence du débiteur sur les informations du II (L. 582-1 II al. 2)";
+    label en unofficial "debtor refusal/silence on II information (L. 582-1 II para. 2)";
+}
+
+relation penalite_prononcable(p: Personne) kind institutional {
+    key(p);
+    label fr official "pénalité prononçable par le directeur (montant ≤ BMAF par décret — hors champ)";
+    label en unofficial "director penalty available (amount <= BMAF by decree - out of scope)";
+}
+
+relation attestation_absence_creance(p: Personne) kind empirical {
+    label fr official "attestation qu'aucun parent n'est titulaire d'une créance fixée pour cet enfant (L. 582-2 1°, premier volet)";
+    label en unofficial "attestation that neither parent holds an established claim for this child (L. 582-2 1, first limb)";
+}
+
+relation attestation_absence_demarche(p: Personne) kind empirical {
+    label fr official "attestation qu'aucun parent n'a engagé de démarche en ce sens (L. 582-2 1°, second volet)";
+    label en unofficial "attestation that neither parent has initiated steps to that end (L. 582-2 1, second limb)";
+}
+
+relation demande_conjointe_parents_separes(p: Personne) kind empirical {
+    label fr official "demande conjointe des parents mettant fin au concubinage ou ayant dissous leur pacs, fait constaté (L. 582-2 al. 1)";
+    label en unofficial "joint request by the parents ending cohabitation or having dissolved their pacs, stated fact (L. 582-2 para. 1)";
+}
+
+relation information_1degre_non_portee(p: Personne) kind empirical {
+    label fr official "information du 1° non portée à la connaissance de l'organisme, preuve positive constatée (L. 582-2 al. nullité)";
+    label en unofficial "1 information not brought to the body's knowledge, positive evidence stated (L. 582-2 nullity paragraph)";
+}
+
+relation decision_organisme_delivree(p: Personne) kind empirical {
+    label fr official "décision de l'organisme conférant force exécutoire rendue (L. 582-2 al. 2, fait de procédure)";
+    label en unofficial "body decision conferring enforceable force issued (L. 582-2 para. 2, procedural fact)";
+}
+
+relation contribution_seuil_atteint(p: Personne) kind empirical {
+    label fr official "contribution en numéraire au moins égale au seuil réglementaire (L. 582-2 2° — seuil décret, fait)";
+    label en unofficial "cash contribution at or above the regulatory threshold (L. 582-2 2 - decree-set threshold, fact)";
+}
+
+relation infos_contribution_precisees(p: Personne) kind empirical {
+    label fr official "informations strictement nécessaires précisées dans l'accord (L. 582-2 3°)";
+    label en unofficial "strictly necessary information stated in the agreement (L. 582-2 3)";
+}
+
+relation titre_executoire_delivre(p: Personne) kind institutional {
+    key(p);
+    label fr official "force exécutoire donnée à l'accord: titre exécutoire (L. 582-2 al. 2)";
+    label en unofficial "agreement given enforceable force: enforceable title (L. 582-2 para. 2)";
+}
+
+relation ij_l4311_dues(r: RegimeAssuranceMaladie, p: Personne, montant: Money) kind empirical {
+    label fr official "indemnités journalières du 2° de L. 431-1 dues par le régime obligatoire pour l'assuré, montant constaté (L. 583-4; conditions loi 78-17 hors champ)";
+    label en unofficial "L. 431-1 2 daily allowances due by the compulsory scheme for the insured, stated amount (L. 583-4; law 78-17 conditions out of scope)";
+}
+
+relation administration_fiscale_competente(f: AdministrationFiscale, p: Personne) kind empirical {
+    key(p);
+    label fr official "administration fiscale destinataire des informations pour la personne (L. 583-4, L. 583-5; fait du dossier)";
+    label en unofficial "tax administration receiving the information for the person (L. 583-4, L. 583-5; case fact)";
+}
+
+relation ij_maladie_transmises_fisc(r: RegimeAssuranceMaladie, f: AdministrationFiscale, p: Personne) kind empirical {
+    key(r, f, p);
+    label fr official "indemnités journalières L. 431-1 2° communiquées par le régime au fisc (L. 583-4)";
+    label en unofficial "L. 431-1 2 daily allowances communicated by the scheme to the fisc (L. 583-4)";
+}
+
+relation contribution_transmise_fisc(o: Organisme, f: AdministrationFiscale, p: Personne, montant: Money) kind empirical {
+    key(o, f, p);
+    label fr official "montant de la contribution L. 582-2 à force exécutoire communiqué par l'organisme au fisc (L. 583-5)";
+    label en unofficial "amount of the enforceable L. 582-2 contribution communicated by the body to the fisc (L. 583-5)";
+}
+
+relation titre_organisme_residence_allocataire(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "l'organisme est celui du lieu de résidence de l'allocataire (L. 582-2, délivrance du titre)";
+    label en unofficial "the body is the one of the allocataire's place of residence (L. 582-2, title delivery)";
+}
+
+relation titre_organisme_residence_creancier(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "l'organisme est celui du lieu de résidence du parent créancier, à défaut d'allocataire (L. 582-2, délivrance du titre)";
+    label en unofficial "the body is the one of the creditor parent's place of residence, failing allocataire (L. 582-2, title delivery)";
+}
+
+relation sans_organisme_residence_allocataire(p: Personne) kind empirical {
+    label fr official "aucun organisme du lieu de résidence de l'allocataire identifié, fait négatif constaté (L. 582-2 « ou, à défaut »)";
+    label en unofficial "no body of the allocataire's place of residence identified, stated negative fact (L. 582-2 'ou, à défaut')";
+}
+
+relation organisme_competent_titre(o: Organisme, p: Personne) kind institutional {
+    key(o, p);
+    label fr official "organisme débiteur auquel incombe la délivrance du titre exécutoire (L. 582-2)";
+    label en unofficial "debtor body responsible for delivering the enforceable title (L. 582-2)";
+}
+
+relation accord_parents_contribution_montant(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant de la contribution fixée dans l'accord des parents mentionné à L. 582-2, fait constaté";
+    label en unofficial "amount of the contribution fixed in the parents' agreement mentioned in L. 582-2, stated fact";
+}
+
+relation titre_delivre_par_organisme_competent(o: Organisme, p: Personne) kind institutional {
+    key(o, p);
+    label fr official "titre exécutoire L. 582-2 délivré par l'organisme compétent, force exécutoire donnée par cet organisme";
+    label en unofficial "L. 582-2 enforceable title delivered by the competent body, enforceable force given by that body";
+}
+
+relation titre_executoire_delivre_le(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "date de délivrance du titre exécutoire établi en application de L. 582-2, fait de procédure";
+    label en unofficial "delivery date of the enforceable title established under L. 582-2, procedural fact";
+}
+
+relation decision_executoire_contribution(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "décision judiciaire exécutoire supprimant ou modifiant la contribution, date constatée (L. 582-2)";
+    label en unofficial "enforceable judicial decision suppressing or modifying the contribution, stated date (L. 582-2)";
+}
+
+relation changement_situation_revision_contribution(p: Personne) kind empirical {
+    label fr official "changement de situation susceptible d'entraîner la révision du montant de la contribution, fait constaté (L. 582-2)";
+    label en unofficial "change of situation likely to revise the contribution amount, stated fact (L. 582-2)";
+}
+
+relation changement_modifie_droit_l5231_4(p: Personne) kind empirical {
+    label fr official "le changement entraîne une modification du droit à l'allocation du 4° du I de L. 523-1, fait constaté (L. 582-2)";
+    label en unofficial "the change modifies the right to the I 4° L. 523-1 allowance, stated fact (L. 582-2)";
+}
+
+relation nouvel_accord_parents_conclu(p: Personne) kind empirical {
+    label fr official "les parents ont conclu un nouvel accord sur la contribution, fait constaté (L. 582-2)";
+    label en unofficial "the parents concluded a new agreement on the contribution, stated fact (L. 582-2)";
+}
+
+relation changement_contribution_signale(p: Personne, o: Organisme) kind empirical {
+    key(p, o);
+    label fr official "changement de situation signalé par les parents à l'organisme débiteur (L. 582-2)";
+    label en unofficial "change of situation reported by the parents to the debtor body (L. 582-2)";
+}
+
+relation nouvel_accord_transmis_organisme(p: Personne, o: Organisme) kind empirical {
+    key(p, o);
+    label fr official "nouvel accord des parents transmis à l'organisme débiteur en vue du maintien de l'allocation (L. 582-2)";
+    label en unofficial "parents' new agreement transmitted to the debtor body to keep the allowance (L. 582-2)";
+}
+
+relation fin_intermediation_titre_echue(p: Personne) kind empirical {
+    label fr official "date de fin de l'intermédiation fixée dans le titre atteinte (L. 582-1 VII 2°, fait constaté)";
+    label en unofficial "intermediation end date set in the title reached (L. 582-1 VII 2°, stated fact)";
+}
+
+relation pension_alimentaire_non_exigible(p: Personne) kind empirical {
+    label fr official "la pension alimentaire a cessé d'être exigible (L. 582-1 VII 2°, fait constaté)";
+    label en unofficial "the maintenance pension is no longer exigible (L. 582-1 VII 2°, stated fact)";
+}
+
+relation nouveau_titre_notifie_fin_pension_ou_intermediation(p: Personne) kind empirical {
+    label fr official "nouveau titre porté à la connaissance de l'organisme supprimant la pension ou mettant fin à son intermédiation (L. 582-1 VII 3°)";
+    label en unofficial "new title notified to the body suppressing the pension or ending its intermediation (L. 582-1 VII 3°)";
+}
+
+relation demande_fin_intermediation_conjointe(p: Personne) kind empirical {
+    label fr official "demande de fin de l'intermédiation formée par un parent (L. 582-1 VII 4°)";
+    label en unofficial "request to end intermediation made by a parent (L. 582-1 VII 4°)";
+}
+
+relation consentement_autre_parent_fin(p: Personne) kind empirical {
+    label fr official "consentement donné par l'autre parent à la fin de l'intermédiation (L. 582-1 VII 4°)";
+    label en unofficial "consent given by the other parent to end intermediation (L. 582-1 VII 4°)";
+}
+
+relation violences_alleguees_procedure_37322(p: Personne) kind empirical {
+    label fr official "menaces ou violences alléguées dans la procédure 373-2-2 civile (plainte, condamnation ou décision), fait constaté (L. 582-1 VII 4° « sauf »)";
+    label en unofficial "threats or violence alleged in the 373-2-2 civil procedure (complaint, conviction or decision), stated fact (L. 582-1 VII 4° 'sauf')";
+}
+
+relation debiteur_hors_etat_violences(p: Personne) kind empirical {
+    label fr official "débiteur hors d'état sur qualification reposant sur des violences (plainte, condamnation ou décision), fait constaté (L. 582-1, al. final « sauf »)";
+    label en unofficial "debtor hors d'etat on a violence-based qualification (complaint, conviction or decision), stated fact (L. 582-1, final para. 'sauf')";
+}
+
+relation intermediation_suspendue_hors_etat(p: Personne) kind institutional {
+    key(p);
+    label fr official "intermédiation suspendue, débiteur hors d'état hors violences (L. 582-1 al. final)";
+    label en unofficial "intermediation suspended, debtor hors d'etat outside violence (L. 582-1 final para.)";
+}
+
+relation prestation_sollicitee_merites_evaluables(p: Personne) kind empirical {
+    label fr official "prestation sollicitée dans des conditions permettant d'évaluer sans ambiguïté les mérites de la demande, fait constaté (L. 583-2)";
+    label en unofficial "benefit solicited under conditions allowing unambiguous assessment of the claim's merits, stated fact (L. 583-2)";
+}
+
+relation avance_remboursable_fonds_legaux(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "avance financée sur les fonds d'action sanitaire et sociale, remboursée par les fonds des prestations légales (L. 583-2)";
+    label en unofficial "advance funded from health-and-social-action funds, reimbursed from legal-benefit funds (L. 583-2)";
+}
+
+relation droits_etablis_existant(p: Personne) kind empirical {
+    label fr official "droits établis existant, dans la limite desquels l'avance est consentie (L. 583-2 « dans la limite des droits établis »)";
+    label en unofficial "established rights existing, within which the advance is granted (L. 583-2 'within established rights')";
+}
+
+@source(CSS_L581_1, CSS_L581_1_CSS_ED2021_05, CSS_L581_1_CSS_ED2021_11, CSS_L581_1_CSS_ED2021_12,
+        CSS_L581_1_CSS_ED2022_01, CSS_L581_1_CSS_ED2022_02, CSS_L581_1_CSS_ED2022_03,
+        CSS_L581_1_CSS_ED2022_09, CSS_L581_1_CSS_ED2023_07, CSS_L581_1_CSS_ED2024_01,
+        CSS_L581_1_CSS_ED2025_02, CSS_L581_1_CSS_ED2025_09, CSS_L581_1_CSS_ED2025_12,
+        CSS_L581_1_CSS_ED2026_01, CSS_L581_1_CSS_ED2026_04, CSS_L581_1_CSS_ED2026_06)
+rule HabilitationAideRecouvrement(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Les organismes sont habilités à apporter leur aide au recouvrement des créances d'entretien";
+    label en unofficial "Bodies may help recover maintenance claims";
+    when organisme_debiteur_pf(o, p);
+    then liberty AiderRecouvrementCreances {
+        holder o;
+        action aider_recouvrement_action(o, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L581_2, CSS_L581_2_CSS_ED2021_05, CSS_L581_2_CSS_ED2021_11, CSS_L581_2_CSS_ED2021_12,
+        CSS_L581_2_CSS_ED2022_01, CSS_L581_2_CSS_ED2022_02, CSS_L581_2_CSS_ED2022_03,
+        CSS_L581_2_CSS_ED2022_09, CSS_L581_2_CSS_ED2023_07, CSS_L581_2_CSS_ED2024_01,
+        CSS_L581_2_CSS_ED2025_02, CSS_L581_2_CSS_ED2025_09, CSS_L581_2_CSS_ED2025_12,
+        CSS_L581_2_CSS_ED2026_01, CSS_L581_2_CSS_ED2026_04, CSS_L581_2_CSS_ED2026_06)
+rule SubrogationAvance(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF versée à titre d'avance: l'organisme est subrogé dans les droits du créancier";
+    label en unofficial "ASF as advance: body subrogated to the creditor's rights";
+    when avance_asf_versee(p);
+    then subrogation_organisme(p);
+}
+
+@source(CSS_L581_2, CSS_L581_2_CSS_ED2021_05, CSS_L581_2_CSS_ED2021_11, CSS_L581_2_CSS_ED2021_12,
+        CSS_L581_2_CSS_ED2022_01, CSS_L581_2_CSS_ED2022_02, CSS_L581_2_CSS_ED2022_03,
+        CSS_L581_2_CSS_ED2022_09, CSS_L581_2_CSS_ED2023_07, CSS_L581_2_CSS_ED2024_01,
+        CSS_L581_2_CSS_ED2025_02, CSS_L581_2_CSS_ED2025_09, CSS_L581_2_CSS_ED2025_12,
+        CSS_L581_2_CSS_ED2026_01, CSS_L581_2_CSS_ED2026_04, CSS_L581_2_CSS_ED2026_06)
+rule DifferentielleCas4Acquise(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Cas du 4° du I de L. 523-1: la différentielle n'est pas recouvrée et demeure acquise";
+    label en unofficial "4 of I of article L. 523-1 case: difference not recovered, kept by the creditor";
+    when avance_differentielle_cas4(p);
+    then allocation_acquise_creancier(p);
+}
+
+@source(CSS_L581_3, CSS_L581_3_CSS_ED2026_06)
+rule PrioriteOrganisme(p: Personne) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "Mandat du créancier: l'organisme a droit en priorité au montant des avances";
+    label en unofficial "Creditor mandate: body entitled by priority up to the advances";
+    when mandat_recouvrement(p);
+    then priorite_organisme_sommes(p);
+}
+
+@source(CSS_L581_4, CSS_L581_4_CSS_ED2022_09, CSS_L581_4_CSS_ED2023_07, CSS_L581_4_CSS_ED2024_01,
+        CSS_L581_4_CSS_ED2025_02, CSS_L581_4_CSS_ED2025_09, CSS_L581_4_CSS_ED2025_12,
+        CSS_L581_4_CSS_ED2026_01, CSS_L581_4_CSS_ED2026_04, CSS_L581_4_CSS_ED2026_06)
+rule RenonciationEffective(p: Personne) strict {
+    effective [@2022-03-01, infinity);
+    label fr official "Le titulaire peut à tout moment renoncer; subrogation maintenue jusqu'au recouvrement complet";
+    label en unofficial "Holder may decline at any time; subrogation kept until full recovery";
+    when renonciation_asf(p);
+    then renoncement_effectif(p);
+}
+
+@source(CSS_L581_4, CSS_L581_4_CSS_ED2022_09, CSS_L581_4_CSS_ED2023_07, CSS_L581_4_CSS_ED2024_01,
+        CSS_L581_4_CSS_ED2025_02, CSS_L581_4_CSS_ED2025_09, CSS_L581_4_CSS_ED2025_12,
+        CSS_L581_4_CSS_ED2026_01, CSS_L581_4_CSS_ED2026_04, CSS_L581_4_CSS_ED2026_06)
+rule SuspensionAsfRefus(o: Organisme, p: Personne) strict {
+    effective [@2022-03-01, infinity);
+    label fr official "Refus du pouvoir spécial de saisie immobilière: suspension possible du versement de l'ASF";
+    label en unofficial "Refusal of the real-property power: ASF suspension possible";
+    when refus_pouvoir_special(p) and organisme_debiteur_pf(o, p);
+    then suspension_asf_possible(o, p);
+}
+
+@source(CSS_L581_6, CSS_L581_6_CSS_ED2026_06)
+rule AideRecouvrementSansAsf(p: Personne) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "Créance titrée pour enfants sous la limite d'âge, sans conditions ASF, à la demande: aide des organismes pour les termes échus et à échoir";
+    label en unofficial "Titled claim for children under the age limit, no ASF conditions, on request: bodies' help for due and future instalments";
+    when creance_alimentaire_titre(p) and creance_enfant_avant_limite_age(p)
+        and conditions_asf_non_remplies(p) and aide_recouvrement_demandee(p);
+    then aide_recouvrement_accordee(p);
+}
+
+@source(CSS_L581_10, CSS_L581_10_CSS_ED2021_05, CSS_L581_10_CSS_ED2021_11,
+        CSS_L581_10_CSS_ED2021_12, CSS_L581_10_CSS_ED2022_01, CSS_L581_10_CSS_ED2022_02,
+        CSS_L581_10_CSS_ED2022_03, CSS_L581_10_CSS_ED2022_09, CSS_L581_10_CSS_ED2023_07,
+        CSS_L581_10_CSS_ED2024_01, CSS_L581_10_CSS_ED2025_02, CSS_L581_10_CSS_ED2025_09,
+        CSS_L581_10_CSS_ED2025_12, CSS_L581_10_CSS_ED2026_01, CSS_L581_10_CSS_ED2026_04,
+        CSS_L581_10_CSS_ED2026_06)
+rule InterdictionPoursuiteDirecte(o: Organisme, p: Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Après saisine du préfet et jusqu'à cessation notifiée: aucune action directe pour récupérer les sommes de la demande";
+    label en unofficial "After prefet referral and until notified termination: no direct action to recover the sums in the request";
+    when saisine_prefet(p) and organisme_debiteur_pf(o, p)
+        and sommes_objet_demande_recouvrement(p, montant)
+        and not cessation_procedure_recouvrement_notifiee(p);
+    then prohibition PoursuivreRecouvrementDirect {
+        bearer o;
+        beneficiary p;
+        action recouvrement_direct_action(o, p, montant);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L581_9, CSS_L581_9_CSS_ED2021_05, CSS_L581_9_CSS_ED2021_11, CSS_L581_9_CSS_ED2021_12,
+        CSS_L581_9_CSS_ED2022_01, CSS_L581_9_CSS_ED2022_02, CSS_L581_9_CSS_ED2022_03,
+        CSS_L581_9_CSS_ED2022_09, CSS_L581_9_CSS_ED2023_07, CSS_L581_9_CSS_ED2024_01,
+        CSS_L581_9_CSS_ED2025_02, CSS_L581_9_CSS_ED2025_09, CSS_L581_9_CSS_ED2025_12,
+        CSS_L581_9_CSS_ED2026_01, CSS_L581_9_CSS_ED2026_04, CSS_L581_9_CSS_ED2026_06)
+rule SubrogationPleinDroit(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Avances CAF sur fonds sociaux: subrogation de plein droit à concurrence des avances";
+    label en unofficial "CAF social-fund advances: subrogation as of right up to the advances";
+    when avance_fonds_sociaux(o, p) and caisse_allocations_familiales(o);
+    then subrogation_plein_droit(p);
+}
+
+@source(CSS_L581_9, CSS_L581_9_CSS_ED2021_05, CSS_L581_9_CSS_ED2021_11, CSS_L581_9_CSS_ED2021_12,
+        CSS_L581_9_CSS_ED2022_01, CSS_L581_9_CSS_ED2022_02, CSS_L581_9_CSS_ED2022_03,
+        CSS_L581_9_CSS_ED2022_09, CSS_L581_9_CSS_ED2023_07, CSS_L581_9_CSS_ED2024_01,
+        CSS_L581_9_CSS_ED2025_02, CSS_L581_9_CSS_ED2025_09, CSS_L581_9_CSS_ED2025_12,
+        CSS_L581_9_CSS_ED2026_01, CSS_L581_9_CSS_ED2026_04, CSS_L581_9_CSS_ED2026_06)
+rule SubrogationPleinDroitMontant(o: Organisme, p: Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Avances CAF: subrogation de plein droit à concurrence du montant avancé";
+    label en unofficial "CAF advances: subrogation as of right up to the advanced amount";
+    when avance_fonds_sociaux_montant(o, p, montant) and caisse_allocations_familiales(o);
+    then subrogation_plein_droit_montant(p, montant);
+}
+
+@source(CSS_L582_1, CSS_L582_1_CSS_ED2022_09, CSS_L582_1_CSS_ED2023_07, CSS_L582_1_CSS_ED2024_01,
+        CSS_L582_1_CSS_ED2025_02, CSS_L582_1_CSS_ED2025_09, CSS_L582_1_CSS_ED2025_12,
+        CSS_L582_1_CSS_ED2026_01, CSS_L582_1_CSS_ED2026_04, CSS_L582_1_CSS_ED2026_06)
+rule IntermediationMiseEnOeuvre(p: Personne) defeasible {
+    effective [@2022-03-01, infinity);
+    label fr official "Intermédiation mise en oeuvre par titre 373-2-2 II ou conditions 373-2-2 III: créancier stable et régulier, débiteur stable et non hors d'état";
+    label en unofficial "Intermediation in place via 373-2-2 II title or 373-2-2 III conditions: creditor stable and lawful, debtor stable and not hors d'etat";
+    when stabilite_residence_creancier(p) and debiteur_stable(p)
+        and not debiteur_hors_etat(p)
+        and (intermediation_titre_3732_2_ii(p) or intermediation_conditions_3732_2_iii(p));
+    then intermediation_mise_en_oeuvre(p);
+}
+
+@source(CSS_L582_1, CSS_L582_1_CSS_ED2022_09, CSS_L582_1_CSS_ED2023_07, CSS_L582_1_CSS_ED2024_01,
+        CSS_L582_1_CSS_ED2025_02, CSS_L582_1_CSS_ED2025_09, CSS_L582_1_CSS_ED2025_12,
+        CSS_L582_1_CSS_ED2026_01, CSS_L582_1_CSS_ED2026_04, CSS_L582_1_CSS_ED2026_06)
+rule CessationIntermediationDeces(p: Personne) defeater {
+    effective [@2022-03-01, infinity);
+    label fr official "L'intermédiation cesse en cas de décès de l'un ou l'autre parent ou de l'enfant";
+    label en unofficial "Intermediation ends on death of a parent or the child - status removed";
+    when deces_parent(p);
+    defeat intermediation_mise_en_oeuvre(p);
+}
+
+@source(CSS_L582_1, CSS_L582_1_CSS_ED2022_09, CSS_L582_1_CSS_ED2023_07, CSS_L582_1_CSS_ED2024_01,
+        CSS_L582_1_CSS_ED2025_02, CSS_L582_1_CSS_ED2025_09, CSS_L582_1_CSS_ED2025_12,
+        CSS_L582_1_CSS_ED2026_01, CSS_L582_1_CSS_ED2026_04, CSS_L582_1_CSS_ED2026_06)
+rule CessationIntermediationFinTitre(p: Personne) defeater {
+    effective [@2022-03-01, infinity);
+    label fr official "L'intermédiation cesse à la date de fin fixée dans le titre (VII 2°)";
+    label en unofficial "Intermediation ends on the end date set in the title (VII 2°) - status removed";
+    when fin_intermediation_titre_echue(p);
+    defeat intermediation_mise_en_oeuvre(p);
+}
+
+@source(CSS_L582_1, CSS_L582_1_CSS_ED2022_09, CSS_L582_1_CSS_ED2023_07, CSS_L582_1_CSS_ED2024_01,
+        CSS_L582_1_CSS_ED2025_02, CSS_L582_1_CSS_ED2025_09, CSS_L582_1_CSS_ED2025_12,
+        CSS_L582_1_CSS_ED2026_01, CSS_L582_1_CSS_ED2026_04, CSS_L582_1_CSS_ED2026_06)
+rule CessationIntermediationPensionNonExigible(p: Personne) defeater {
+    effective [@2022-03-01, infinity);
+    label fr official "L'intermédiation cesse lorsque la pension cesse d'être exigible (VII 2°)";
+    label en unofficial "Intermediation ends when the pension is no longer exigible (VII 2°) - status removed";
+    when pension_alimentaire_non_exigible(p);
+    defeat intermediation_mise_en_oeuvre(p);
+}
+
+@source(CSS_L582_1, CSS_L582_1_CSS_ED2022_09, CSS_L582_1_CSS_ED2023_07, CSS_L582_1_CSS_ED2024_01,
+        CSS_L582_1_CSS_ED2025_02, CSS_L582_1_CSS_ED2025_09, CSS_L582_1_CSS_ED2025_12,
+        CSS_L582_1_CSS_ED2026_01, CSS_L582_1_CSS_ED2026_04, CSS_L582_1_CSS_ED2026_06)
+rule CessationIntermediationNouveauTitre(p: Personne) defeater {
+    effective [@2022-03-01, infinity);
+    label fr official "L'intermédiation cesse sur nouveau titre notifié supprimant la pension ou y mettant fin (VII 3°)";
+    label en unofficial "Intermediation ends on a notified new title suppressing the pension or ending it (VII 3°) - status removed";
+    when nouveau_titre_notifie_fin_pension_ou_intermediation(p);
+    defeat intermediation_mise_en_oeuvre(p);
+}
+
+@source(CSS_L582_1, CSS_L582_1_CSS_ED2022_09, CSS_L582_1_CSS_ED2023_07, CSS_L582_1_CSS_ED2024_01,
+        CSS_L582_1_CSS_ED2025_02, CSS_L582_1_CSS_ED2025_09, CSS_L582_1_CSS_ED2025_12,
+        CSS_L582_1_CSS_ED2026_01, CSS_L582_1_CSS_ED2026_04, CSS_L582_1_CSS_ED2026_06)
+rule CessationIntermediationDemandeConjointe(p: Personne) defeater {
+    effective [@2022-03-01, infinity);
+    label fr official "L'intermédiation cesse sur demande d'un parent avec le consentement de l'autre, hors violences alléguées (VII 4°)";
+    label en unofficial "Intermediation ends on one parent's request with the other's consent, absent alleged violence (VII 4°) - status removed";
+    when demande_fin_intermediation_conjointe(p) and consentement_autre_parent_fin(p)
+        and not violences_alleguees_procedure_37322(p);
+    defeat intermediation_mise_en_oeuvre(p);
+}
+
+@source(CSS_L582_1, CSS_L582_1_CSS_ED2022_09, CSS_L582_1_CSS_ED2023_07, CSS_L582_1_CSS_ED2024_01,
+        CSS_L582_1_CSS_ED2025_02, CSS_L582_1_CSS_ED2025_09, CSS_L582_1_CSS_ED2025_12,
+        CSS_L582_1_CSS_ED2026_01, CSS_L582_1_CSS_ED2026_04, CSS_L582_1_CSS_ED2026_06)
+rule SuspensionIntermediationHorsEtat(p: Personne) strict {
+    effective [@2022-03-01, infinity);
+    label fr official "La qualification hors d'état hors violences emporte la suspension de l'intermédiation (al. final; le retrait du statut passe par la condition I c))";
+    label en unofficial "Non-violence hors-etat qualification suspends intermediation (final para.; status removal via condition I c))";
+    when debiteur_hors_etat(p);
+    then intermediation_suspendue_hors_etat(p);
+}
+
+@source(CSS_L582_1, CSS_L582_1_CSS_ED2022_09, CSS_L582_1_CSS_ED2023_07, CSS_L582_1_CSS_ED2024_01,
+        CSS_L582_1_CSS_ED2025_02, CSS_L582_1_CSS_ED2025_09, CSS_L582_1_CSS_ED2025_12,
+        CSS_L582_1_CSS_ED2026_01, CSS_L582_1_CSS_ED2026_04, CSS_L582_1_CSS_ED2026_06)
+rule PenaliteSilence(p: Personne) strict {
+    effective [@2022-03-01, infinity);
+    label fr official "Refus ou silence sur les informations du II: pénalité du directeur (montant ≤ BMAF par décret — hors champ)";
+    label en unofficial "Refusal/silence on II information: director penalty (amount <= BMAF by decree - out of scope)";
+    when silence_informations(p);
+    then penalite_prononcable(p);
+}
+
+@source(CSS_L582_2, CSS_L582_2_CSS_ED2022_01, CSS_L582_2_CSS_ED2022_02, CSS_L582_2_CSS_ED2022_03,
+        CSS_L582_2_CSS_ED2022_09, CSS_L582_2_CSS_ED2023_07, CSS_L582_2_CSS_ED2024_01,
+        CSS_L582_2_CSS_ED2025_02, CSS_L582_2_CSS_ED2025_09, CSS_L582_2_CSS_ED2025_12,
+        CSS_L582_2_CSS_ED2026_01, CSS_L582_2_CSS_ED2026_04, CSS_L582_2_CSS_ED2026_06)
+rule TitreExecutoireDelivre(p: Personne) defeasible {
+    effective [@2021-12-25, infinity);
+    label fr official "Demande conjointe des parents séparés, sans créance ni démarche, seuil et informations: titre exécutoire (L. 582-2 al. 1 et 1°-3°)";
+    label en unofficial "Joint request by the separated parents, no claim or steps, threshold and information: enforceable title (L. 582-2 para. 1 and 1-3)";
+    when demande_conjointe_parents_separes(p) and attestation_absence_creance(p)
+        and attestation_absence_demarche(p) and contribution_seuil_atteint(p)
+        and infos_contribution_precisees(p);
+    then titre_executoire_delivre(p);
+}
+
+@source(CSS_L582_2, CSS_L582_2_CSS_ED2022_01, CSS_L582_2_CSS_ED2022_02, CSS_L582_2_CSS_ED2022_03,
+        CSS_L582_2_CSS_ED2022_09, CSS_L582_2_CSS_ED2023_07, CSS_L582_2_CSS_ED2024_01,
+        CSS_L582_2_CSS_ED2025_02, CSS_L582_2_CSS_ED2025_09, CSS_L582_2_CSS_ED2025_12,
+        CSS_L582_2_CSS_ED2026_01, CSS_L582_2_CSS_ED2026_04, CSS_L582_2_CSS_ED2026_06)
+rule NulliteTitreInformationMasquee(p: Personne) defeater {
+    effective [@2021-12-25, infinity);
+    label fr official "Information du 1° établie non portée à la connaissance de l'organisme, décision rendue: nullité";
+    label en unofficial "1 information proven not brought to the body's knowledge, decision issued: void - status removed";
+    when information_1degre_non_portee(p) and decision_organisme_delivree(p);
+    defeat titre_executoire_delivre(p);
+}
+
+@source(CSS_L582_2, CSS_L582_2_CSS_ED2022_01, CSS_L582_2_CSS_ED2022_02, CSS_L582_2_CSS_ED2022_03,
+        CSS_L582_2_CSS_ED2022_09, CSS_L582_2_CSS_ED2023_07, CSS_L582_2_CSS_ED2024_01,
+        CSS_L582_2_CSS_ED2025_02, CSS_L582_2_CSS_ED2025_09, CSS_L582_2_CSS_ED2025_12,
+        CSS_L582_2_CSS_ED2026_01, CSS_L582_2_CSS_ED2026_04, CSS_L582_2_CSS_ED2026_06)
+rule TitrePriveEffetJugementPosterieur(p: Personne, titre: Date, jugement: Date) defeater {
+    effective [@2021-12-25, infinity);
+    label fr official "Décision judiciaire exécutoire postérieure supprimant ou modifiant la contribution: le titre est privé de tout effet";
+    label en unofficial "Later enforceable judicial decision suppressing or modifying the contribution: the title is deprived of all effect - status removed";
+    when titre_executoire_delivre_le(p, titre) and decision_executoire_contribution(p, jugement)
+        and jugement > titre;
+    defeat titre_executoire_delivre(p);
+}
+
+@source(CSS_L582_2, CSS_L582_2_CSS_ED2022_01, CSS_L582_2_CSS_ED2022_02, CSS_L582_2_CSS_ED2022_03,
+        CSS_L582_2_CSS_ED2022_09, CSS_L582_2_CSS_ED2023_07, CSS_L582_2_CSS_ED2024_01,
+        CSS_L582_2_CSS_ED2025_02, CSS_L582_2_CSS_ED2025_09, CSS_L582_2_CSS_ED2025_12,
+        CSS_L582_2_CSS_ED2026_01, CSS_L582_2_CSS_ED2026_04, CSS_L582_2_CSS_ED2026_06)
+rule OrganismeCompetentTitreAllocataire(o: Organisme, p: Personne) strict {
+    effective [@2021-12-25, infinity);
+    label fr official "L'organisme du lieu de résidence de l'allocataire délivre le titre exécutoire";
+    label en unofficial "The body of the allocataire's place of residence delivers the enforceable title";
+    when titre_organisme_residence_allocataire(o, p);
+    then organisme_competent_titre(o, p);
+}
+
+@source(CSS_L582_2, CSS_L582_2_CSS_ED2022_01, CSS_L582_2_CSS_ED2022_02, CSS_L582_2_CSS_ED2022_03,
+        CSS_L582_2_CSS_ED2022_09, CSS_L582_2_CSS_ED2023_07, CSS_L582_2_CSS_ED2024_01,
+        CSS_L582_2_CSS_ED2025_02, CSS_L582_2_CSS_ED2025_09, CSS_L582_2_CSS_ED2025_12,
+        CSS_L582_2_CSS_ED2026_01, CSS_L582_2_CSS_ED2026_04, CSS_L582_2_CSS_ED2026_06)
+rule OrganismeCompetentTitreCreancierDefaut(o: Organisme, p: Personne) strict {
+    effective [@2021-12-25, infinity);
+    label fr official "A défaut d'organisme de résidence de l'allocataire, l'organisme du lieu de résidence du parent créancier délivre le titre";
+    label en unofficial "Failing an allocataire-residence body, the creditor parent's residence body delivers the title";
+    when titre_organisme_residence_creancier(o, p) and sans_organisme_residence_allocataire(p);
+    then organisme_competent_titre(o, p);
+}
+
+@source(CSS_L582_2, CSS_L582_2_CSS_ED2022_01, CSS_L582_2_CSS_ED2022_02, CSS_L582_2_CSS_ED2022_03,
+        CSS_L582_2_CSS_ED2022_09, CSS_L582_2_CSS_ED2023_07, CSS_L582_2_CSS_ED2024_01,
+        CSS_L582_2_CSS_ED2025_02, CSS_L582_2_CSS_ED2025_09, CSS_L582_2_CSS_ED2025_12,
+        CSS_L582_2_CSS_ED2026_01, CSS_L582_2_CSS_ED2026_04, CSS_L582_2_CSS_ED2026_06)
+rule TitreDelivreParCompetent(o: Organisme, p: Personne) defeasible {
+    effective [@2021-12-25, infinity);
+    label fr official "Titre délivré et organisme compétent: force exécutoire donnée à l'accord par cet organisme";
+    label en unofficial "Title delivered and competent body: enforceable force given to the agreement by that body";
+    when titre_executoire_delivre(p) and organisme_competent_titre(o, p);
+    then titre_delivre_par_organisme_competent(o, p);
+}
+
+@source(CSS_L582_2, CSS_L582_2_CSS_ED2022_01, CSS_L582_2_CSS_ED2022_02, CSS_L582_2_CSS_ED2022_03,
+        CSS_L582_2_CSS_ED2022_09, CSS_L582_2_CSS_ED2023_07, CSS_L582_2_CSS_ED2024_01,
+        CSS_L582_2_CSS_ED2025_02, CSS_L582_2_CSS_ED2025_09, CSS_L582_2_CSS_ED2025_12,
+        CSS_L582_2_CSS_ED2026_01, CSS_L582_2_CSS_ED2026_04, CSS_L582_2_CSS_ED2026_06)
+rule DevoirSignalerChangementContribution(p: Personne, o: Organisme) strict {
+    effective [@2021-12-25, infinity);
+    label fr official "Les parents sont tenus de signaler à l'organisme débiteur tout changement susceptible de réviser la contribution";
+    label en unofficial "The parents must report to the debtor body any change likely to revise the contribution";
+    when changement_situation_revision_contribution(p) and organisme_debiteur_pf(o, p);
+    then duty SignalerChangementContribution {
+        bearer p;
+        beneficiary o;
+        maintain changement_contribution_signale(p, o) during [@2021-12-25, infinity);
+    };
+}
+
+@source(CSS_L582_2, CSS_L582_2_CSS_ED2022_01, CSS_L582_2_CSS_ED2022_02, CSS_L582_2_CSS_ED2022_03,
+        CSS_L582_2_CSS_ED2022_09, CSS_L582_2_CSS_ED2023_07, CSS_L582_2_CSS_ED2024_01,
+        CSS_L582_2_CSS_ED2025_02, CSS_L582_2_CSS_ED2025_09, CSS_L582_2_CSS_ED2025_12,
+        CSS_L582_2_CSS_ED2026_01, CSS_L582_2_CSS_ED2026_04, CSS_L582_2_CSS_ED2026_06)
+rule DevoirTransmettreNouvelAccord(p: Personne, o: Organisme) strict {
+    effective [@2021-12-25, infinity);
+    label fr official "Changement modifiant le droit à l'allocation L. 523-1 I 4° et nouvel accord conclu: les parents le transmettent à l'organisme en vue du maintien";
+    label en unofficial "Change modifying the L. 523-1 I 4° allowance right and new agreement concluded: the parents transmit it to the body to keep the allowance";
+    when changement_modifie_droit_l5231_4(p) and nouvel_accord_parents_conclu(p)
+        and organisme_debiteur_pf(o, p);
+    then duty TransmettreNouvelAccordContribution {
+        bearer p;
+        beneficiary o;
+        maintain nouvel_accord_transmis_organisme(p, o) during [@2021-12-25, infinity);
+    };
+}
+
+@source(CSS_L583_2, CSS_L583_2_CSS_ED2021_05, CSS_L583_2_CSS_ED2021_11, CSS_L583_2_CSS_ED2021_12,
+        CSS_L583_2_CSS_ED2022_01, CSS_L583_2_CSS_ED2022_02, CSS_L583_2_CSS_ED2022_03,
+        CSS_L583_2_CSS_ED2022_09, CSS_L583_2_CSS_ED2023_07, CSS_L583_2_CSS_ED2024_01,
+        CSS_L583_2_CSS_ED2025_02, CSS_L583_2_CSS_ED2025_09, CSS_L583_2_CSS_ED2025_12,
+        CSS_L583_2_CSS_ED2026_01, CSS_L583_2_CSS_ED2026_04, CSS_L583_2_CSS_ED2026_06)
+rule AvanceFondsSociaux(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Prestation sollicitée aux mérites évaluables, droits établis: avance sur fonds sociaux possible, remboursée par les fonds des prestations légales";
+    label en unofficial "Benefit solicited with assessable merits, established rights: social-fund advance possible, reimbursed from legal-benefit funds";
+    when organisme_debiteur_pf(o, p) and allocataire(p)
+        and prestation_sollicitee_merites_evaluables(p)
+        and avance_remboursable_fonds_legaux(o, p) and droits_etablis_existant(p);
+    then liberty AccorderAvanceFondsSociaux {
+        holder o;
+        action avance_fonds_sociaux(o, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L583_4, CSS_L583_4_CSS_ED2021_05, CSS_L583_4_CSS_ED2021_11, CSS_L583_4_CSS_ED2021_12,
+        CSS_L583_4_CSS_ED2022_01, CSS_L583_4_CSS_ED2022_02, CSS_L583_4_CSS_ED2022_03,
+        CSS_L583_4_CSS_ED2022_09, CSS_L583_4_CSS_ED2023_07, CSS_L583_4_CSS_ED2024_01,
+        CSS_L583_4_CSS_ED2025_02, CSS_L583_4_CSS_ED2025_09, CSS_L583_4_CSS_ED2025_12,
+        CSS_L583_4_CSS_ED2026_01, CSS_L583_4_CSS_ED2026_04, CSS_L583_4_CSS_ED2026_06)
+rule DevoirTransmettreIJ(r: RegimeAssuranceMaladie, f: AdministrationFiscale, p: Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Le régime obligatoire communique au fisc les indemnités journalières L. 431-1 2° dues (L. 583-4)";
+    label en unofficial "The compulsory scheme communicates the due L. 431-1 2 daily allowances to the fisc (L. 583-4)";
+    when administration_fiscale_competente(f, p) and ij_l4311_dues(r, p, montant);
+    then duty TransmettreIndemnitesJournalieres {
+        bearer r;
+        beneficiary f;
+        maintain ij_maladie_transmises_fisc(r, f, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L583_5, CSS_L583_5_CSS_ED2021_05, CSS_L583_5_CSS_ED2021_11, CSS_L583_5_CSS_ED2021_12,
+        CSS_L583_5_CSS_ED2022_01, CSS_L583_5_CSS_ED2022_02, CSS_L583_5_CSS_ED2022_03,
+        CSS_L583_5_CSS_ED2022_09, CSS_L583_5_CSS_ED2023_07, CSS_L583_5_CSS_ED2024_01,
+        CSS_L583_5_CSS_ED2025_02, CSS_L583_5_CSS_ED2025_09, CSS_L583_5_CSS_ED2025_12,
+        CSS_L583_5_CSS_ED2026_01, CSS_L583_5_CSS_ED2026_04, CSS_L583_5_CSS_ED2026_06)
+rule DevoirTransmettreContribution(o: Organisme, f: AdministrationFiscale, p: Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Titre L. 582-2 délivré par cet organisme, montant fixé dans l'accord: l'organisme communique au fisc le montant de la contribution à force exécutoire";
+    label en unofficial "L. 582-2 title delivered by that body, amount fixed in the agreement: the body communicates the enforceable contribution amount to the fisc";
+    when administration_fiscale_competente(f, p) and titre_delivre_par_organisme_competent(o, p) and accord_parents_contribution_montant(p, montant);
+    then duty TransmettreContributionFisc {
+        bearer o;
+        beneficiary f;
+        maintain contribution_transmise_fisc(o, f, p, montant) during [@2021-01-01, infinity);
+    };
+}

@@ -1,0 +1,17 @@
+// Couple, April 2025 decree: 646.52 + 50 % = 969.78 (R.262-1).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-decret-couple-2025" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "mfdc25-01": mois_droit(entity_ref("urn:fr:rsa:case:mf-decret-couple-2025"), @2025-06-01) { origin case_input; }
+        assert "mfdc25-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-decret-couple-2025"), 2) { origin case_input; }
+        assert "mfdc25-03": foyer_nb_parents(entity_ref("urn:fr:rsa:case:mf-decret-couple-2025"), 2) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-decret-couple-2025"), 969.78 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

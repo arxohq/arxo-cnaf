@@ -1,0 +1,40 @@
+// Дело Catala «Exemple1» (сектор приобретения, APL).
+//
+// ШАГ: число долей N по барему 4° ст. D. 832-11 — «bénéficiaire isolé ou ménage
+// ayant deux personnes à charge | 3,0».
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-accession-01-nombre-parts" {
+    given {
+        // D-42: G-A13 migration (24-lecture-pp.law) — D. 823-17 "P0 ... ne peut etre
+        // inferieure a un montant minimum" has two readings in group SensMinimumPp
+        // (selection exactly_one); this hand suite selects the working reading, as
+        // the other hand suites do. No expectation changed.
+        context { decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "accession-01-nombre-parts-01": secteur_accession(entity_ref("urn:fr:apl:case:accession-01")) { origin case_input; }
+        assert "accession-01-nombre-parts-02": aide_demandee(entity_ref("urn:fr:apl:case:accession-01"), APL) { origin case_input; }
+        assert "accession-01-nombre-parts-03": zone_du_logement(entity_ref("urn:fr:apl:case:accession-01"), ZONE_II) { origin case_input; }
+        assert "accession-01-nombre-parts-04": situation_familiale(entity_ref("urn:fr:apl:case:accession-01"), COUPLE) { origin case_input; }
+        assert "accession-01-nombre-parts-05": personnes_a_charge(entity_ref("urn:fr:apl:case:accession-01"), 2) { origin case_input; }
+        assert "accession-01-nombre-parts-06": sous_cas_mensualite(entity_ref("urn:fr:apl:case:accession-01"), PRET_APRES_30_09_2017) { origin case_input; }
+        assert "accession-01-nombre-parts-07": finalite_operation(entity_ref("urn:fr:apl:case:accession-01"), LOGEMENT_NEUF) { origin case_input; }
+        assert "accession-01-nombre-parts-08": type_travaux(entity_ref("urn:fr:apl:case:accession-01"), PAS_DE_TRAVAUX) { origin case_input; }
+        assert "accession-01-nombre-parts-09": mode_propriete(entity_ref("urn:fr:apl:case:accession-01"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "accession-01-nombre-parts-10": mensualite_declaree(entity_ref("urn:fr:apl:case:accession-01"), 650 EUR) { origin case_input; }
+        assert "accession-01-nombre-parts-11": ressources_du_menage(entity_ref("urn:fr:apl:case:accession-01"), 18000 EUR) { origin case_input; }
+        assert "accession-01-nombre-parts-12": vintage_pret_depense_nette(entity_ref("urn:fr:apl:case:accession-01"), PRET_DEPUIS_OCTOBRE_1998) { origin case_input; }
+        assert "accession-01-nombre-parts-13": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:accession-01"), false) { origin case_input; }
+    }
+    // D-42 BOUNDARY: the derived value is Decimal (barème parameter / Decimal
+    // function), while the query literal in a Decimal slot lowers to Number
+    // (law.core 0.2.7 Number domain) and does not match a Decimal value —
+    // named outside E-0324 ("Вне правки": Decimal slots are a separate errata
+    // candidate). Both lawc and lawref agree; the expectation follows the pinned
+    // text and is kept. Not decidable in the package.
+    evaluate truth(nombre_parts_accession(entity_ref("urn:fr:apl:case:accession-01"), 3.0));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

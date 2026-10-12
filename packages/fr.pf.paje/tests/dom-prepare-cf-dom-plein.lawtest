@@ -1,0 +1,23 @@
+// L. 755-19, para. 3, PreParE side: Guadeloupe household, claimant stopped
+// working with sufficient prior activity (full-rate PreParE right open),
+// L. 755-16 complément familial served — the PreParE/CF cumulation is
+// barred.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-prepare-cf-dom-plein" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-prp-01": territoire(entity_ref("urn:fr:paje:case:dom-prp"), GUADELOUPE) { origin case_input; }
+        assert "dom-prp-02": menage_beneficiaire(entity_ref("urn:fr:paje:benef:dom-prp"), entity_ref("urn:fr:paje:case:dom-prp")) { origin case_input; }
+        assert "dom-prp-03": arret_activite(entity_ref("urn:fr:paje:benef:dom-prp"), entity_ref("urn:fr:paje:enfant:dom-prp")) { origin adjudicated; }
+        assert "dom-prp-04": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:dom-prp"), entity_ref("urn:fr:paje:enfant:dom-prp")) { origin adjudicated; }
+        assert "dom-prp-05": condition_age_prepare(entity_ref("urn:fr:paje:enfant:dom-prp")) { origin adjudicated; }
+        assert "dom-prp-06": cf_dom_l755_16_servi(entity_ref("urn:fr:paje:case:dom-prp")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_prepare_cf_dom_interdit(entity_ref("urn:fr:paje:benef:dom-prp"), entity_ref("urn:fr:paje:enfant:dom-prp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

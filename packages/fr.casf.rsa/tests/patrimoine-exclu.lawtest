@@ -1,0 +1,19 @@
+// Professional assets below the retained monthly social-security
+// ceiling: excluded from the lifestyle assessment (D. 262-77 ;
+// L. 262-41). The ceiling is a retained case input
+// (B-RSA-PLAFOND-SECU); the L. 262-41 assessment itself stays outside.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-patrimoine-exclu" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "pat-01": patrimoine_pro_foyer(entity_ref("urn:fr:rsa:case:patrimoine-exclu"), 3000.00 EUR) { origin case_input; }
+        assert "pat-02": plafond_secu_retenu(entity_ref("urn:fr:rsa:case:patrimoine-exclu"), 3925.00 EUR) { origin case_input; }
+    }
+    evaluate truth(patrimoine_pro_exclu(entity_ref("urn:fr:rsa:case:patrimoine-exclu")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

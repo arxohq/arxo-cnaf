@@ -1,0 +1,31 @@
+// Recovery status evidence (PA-R4-10): stated undue with positive
+// non-prescription and no-stay status is recovered; without any
+// status evidence recovery stays undetermined; a prescribed action
+// affirmatively bars recovery (L.845-3/4).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-indu-statut-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_constate(entity_ref("urn:fr:ppa:case:indu-statut-ok"), 200.00 EUR) { origin case_input; }
+        assert "ppa-02": action_non_prescrite(entity_ref("urn:fr:ppa:case:indu-statut-ok")) { origin case_input; }
+        assert "ppa-03": aucun_recours_suspensif(entity_ref("urn:fr:ppa:case:indu-statut-ok")) { origin case_input; }
+        assert "ppa-04": indu_constate(entity_ref("urn:fr:ppa:case:indu-statut-inconnu"), 200.00 EUR) { origin case_input; }
+        assert "ppa-05": indu_constate(entity_ref("urn:fr:ppa:case:indu-statut-prescrit"), 200.00 EUR) { origin case_input; }
+        assert "ppa-06": action_prescrite_retenue(entity_ref("urn:fr:ppa:case:indu-statut-prescrit")) { origin case_input; }
+    }
+    evaluate truth(indu_recupere(entity_ref("urn:fr:ppa:case:indu-statut-ok"), 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(indu_recupere(entity_ref("urn:fr:ppa:case:indu-statut-inconnu"), 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(indu_recupere(entity_ref("urn:fr:ppa:case:indu-statut-prescrit"), 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

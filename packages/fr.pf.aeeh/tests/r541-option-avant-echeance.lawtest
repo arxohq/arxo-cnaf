@@ -1,0 +1,27 @@
+// R. 541-10 al. 3, early option (InterdictionOpterAvantEcheance): opting
+// for the supplement while the lump-sum PCH elements run (appreciation
+// before expiry) makes OpterComplementAvantEcheance ACTIVE. The
+// elements_pch_versement_ponctuel fact is asserted for L. 245-3 2°/4°/5°
+// elements alone (typed input contract); lump-sum elements of another
+// subtype never assert it, so the prohibition stays silent for them
+// (see r541-pch-silencieux). The expiry guard (d < ech) is the silent
+// counterpart: at or past expiry the rule fires nothing.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-option-avant-echeance" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-oae-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-oae"), entity_ref("urn:fr:pf-aeeh:case:enfant-oae")) { origin case_input; }
+        assert "r541-oae-02": elements_pch_versement_ponctuel(entity_ref("urn:fr:pf-aeeh:case:enfant-oae")) { origin case_input; }
+        assert "r541-oae-03": echeance_elements_pch(entity_ref("urn:fr:pf-aeeh:case:enfant-oae"), @2025-01-01) { origin case_input; }
+        assert "r541-oae-04": date_appreciation(entity_ref("urn:fr:pf-aeeh:case:enfant-oae"), @2024-03-15) { origin case_input; }
+        assert "r541-oae-05": option_complement_anticipee(entity_ref("urn:fr:pf-aeeh:case:enfant-oae")) { origin case_input; }
+    }
+    evaluate positions();
+    // D-42 (08.10.2026): the option is asserted (the forbidden action), so the
+    // prohibition in force is VIOLATED (R. 541-10 al. 3).
+    expect position(OpterComplementAvantEcheance, VIOLATED);
+    expect evaluation_status == COMPUTED;
+}

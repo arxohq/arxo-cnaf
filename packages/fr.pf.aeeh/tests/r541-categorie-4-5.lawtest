@@ -1,0 +1,59 @@
+// R. 541-2, 4° and 5° gates: (a) no activity or full-time third person
+// alone; (b)/(c) 50 %/20 % (twenty/eight hours) pairs with expenses;
+// (d) expenses alone; 5° pairs no-activity/full-time with expenses. A
+// child with expenses below the arrêté amount meets none.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-categorie-4-5" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-c45-01": seuil_depenses_retenu(CATEGORIE_4, 150.00 EUR) { origin case_input; }
+        assert "r541-c45-02": seuil_depenses_retenu(CATEGORIE_5, 150.00 EUR) { origin case_input; }
+        assert "r541-c45-03": cessation_activite_totale(entity_ref("urn:fr:pf-aeeh:case:enfant-c4a")) { origin adjudicated; }
+        assert "r541-c45-04": tierce_temps_plein(entity_ref("urn:fr:pf-aeeh:case:enfant-c4a-tp")) { origin adjudicated; }
+        assert "r541-c45-05": taux_reduction_activite(entity_ref("urn:fr:pf-aeeh:case:enfant-c4b"), 50.0) { origin adjudicated; }
+        assert "r541-c45-06": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c4b"), 150.00 EUR) { origin case_input; }
+        assert "r541-c45-07": heures_tierce_remuneree(entity_ref("urn:fr:pf-aeeh:case:enfant-c4c"), 8.0) { origin adjudicated; }
+        assert "r541-c45-08": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c4c"), 150.00 EUR) { origin case_input; }
+        assert "r541-c45-09": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c4d"), 500.00 EUR) { origin case_input; }
+        assert "r541-c45-10": cessation_activite_totale(entity_ref("urn:fr:pf-aeeh:case:enfant-c5")) { origin adjudicated; }
+        assert "r541-c45-11": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c5"), 150.00 EUR) { origin case_input; }
+        assert "r541-c45-12": tierce_temps_plein(entity_ref("urn:fr:pf-aeeh:case:enfant-c5-tp")) { origin adjudicated; }
+        assert "r541-c45-13": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c5-tp"), 150.00 EUR) { origin case_input; }
+        assert "r541-c45-14": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c45-bas"), 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(categorie4a_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c4a")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie4a_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c4a-tp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie4b_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c4b")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie4c_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c4c")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie4d_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c4d")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie5_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c5")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie5_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c5-tp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie4d_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c45-bas")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,18 @@
+// Duty to inform (D1 active): right open, leave and debtor-body link
+// established — the InformerDemandeurAjpp position is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-informer" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-di-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-di")) { origin adjudicated; }
+        assert "ajpp-di-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-di")) { origin adjudicated; }
+        assert "ajpp-di-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-di"), entity_ref("urn:fr:pf-ajpp:case:enfant-di")) { origin case_input; }
+        assert "ajpp-di-04": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-di")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InformerDemandeurAjpp, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

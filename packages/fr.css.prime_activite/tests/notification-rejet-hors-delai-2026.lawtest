@@ -1,0 +1,31 @@
+// Out-of-window rectification (reception 05-20, request 06-15 =
+// 26 days) on a date-certain notice: monthly rejection condition
+// met (06-25 < 07-15) but the III twenty-day premise fails. D7
+// (director-qualified) ACTIVE, D7bis absent, P2 interruption
+// absent (R. 847-1-1 III vs IV; PA-FE09-03/04).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-notification-rejet-hors-delai-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-07-10T12:00:00Z; knowledge_time @2026-07-10T12:00:00Z; legal_time @2026-07-10; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_recupere(entity_ref("urn:fr:ppa:case:notification-rejet-hors-delai-2026"), 300.00 EUR) { origin case_input; }
+        assert "ppa-02": constat_indu(entity_ref("urn:fr:ppa:case:notification-rejet-hors-delai-2026"), @2026-05-18) { origin case_input; }
+        assert "ppa-03": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:notification-rejet-hors-delai-2026")) { origin case_input; }
+        assert "ppa-04": notification_recouvrement(entity_ref("urn:fr:ppa:case:notification-rejet-hors-delai-2026"), @2026-05-19) { origin case_input; }
+        assert "ppa-05": reception_notification(entity_ref("urn:fr:ppa:case:notification-rejet-hors-delai-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-06": demande_rectification(entity_ref("urn:fr:ppa:case:notification-rejet-hors-delai-2026"), @2026-06-15) { origin case_input; }
+        assert "ppa-07": decision_rectification_rejet(entity_ref("urn:fr:ppa:case:notification-rejet-hors-delai-2026"), @2026-06-25) { origin case_input; }
+        assert "ppa-08": directeur_de(entity_ref("urn:fr:ppa:org:directeur"), entity_ref("urn:fr:ppa:org:caisse")) { origin case_input; }
+        assert "ppa-09": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:notification-rejet-hors-delai-2026")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NotifierIndu, ACTIVE);
+    expect not position(NotifierRejetRectification, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(interruption_delai_cra(entity_ref("urn:fr:ppa:case:notification-rejet-hors-delai-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

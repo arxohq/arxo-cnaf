@@ -1,0 +1,26 @@
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_apl_logement_foyer.catala_fr, scope CasTest4.
+// ИХ ОЖИДАНИЕ: plafond_équivalence_loyer_éligible = 446.30.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-apl_logement_foyer-castest4-plafond-quivalence-loyer-ligible" {
+    given {
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "apl_logement_foyer-castest4-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest4")) { origin case_input; }
+        assert "apl_logement_foyer-castest4-02": aide_demandee(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest4"), APL) { origin case_input; }
+        assert "apl_logement_foyer-castest4-03": territoire(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest4"), METROPOLE) { origin case_input; }
+        assert "apl_logement_foyer-castest4-04": type_logement_foyer(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest4"), GENERAL) { origin case_input; }
+        assert "apl_logement_foyer-castest4-05": redevance(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest4"), 350 EUR) { origin case_input; }
+        assert "apl_logement_foyer-castest4-06": ressources_du_menage(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest4"), 7500 EUR) { origin case_input; }
+        assert "apl_logement_foyer-castest4-07": personnes_a_charge(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest4"), 0) { origin case_input; }
+        assert "apl_logement_foyer-castest4-08": situation_familiale(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest4"), PERSONNE_SEULE) { origin case_input; }
+        assert "apl_logement_foyer-castest4-09": zone_du_logement(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest4"), ZONE_I) { origin case_input; }
+    }
+    evaluate truth(plafond_equivalence_loyer(entity_ref("urn:fr:apl:case:apl_logement_foyer-castest4"), 446.3 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

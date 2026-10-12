@@ -1,0 +1,34 @@
+// Active DOM fund duty, differential track: 0.01 EUR due in Guyane, debtor
+// fund recorded. Position PayerCfDomDifferentielDu is ACTIVE.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-devoir-differentiel" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "ddd-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel-e1")) { origin case_input; }
+        assert "ddd-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel-e1")) { origin case_input; }
+        assert "ddd-03": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel-e1"), @2017-03-15) { origin case_input; }
+        assert "ddd-04": mois_droit(@2021-09-01) { origin case_input; }
+        assert "ddd-05": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), 1) { origin case_input; }
+        assert "ddd-06": ressources_menage(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), 26199.40 EUR) { origin case_input; }
+        assert "ddd-07": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), 20000 EUR) { origin case_input; }
+        assert "ddd-07a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), 5000 EUR) { origin case_input; }
+        assert "ddd-07b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), 6000 EUR) { origin case_input; }
+        assert "ddd-07c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), 10000 EUR) { origin case_input; }
+        assert "ddd-07d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), 2500 EUR) { origin case_input; }
+        assert "ddd-07e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), 3000 EUR) { origin case_input; }
+        assert "ddd-08": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel")) { origin case_input; }
+        assert "ddd-09": territoire(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), GUYANE) { origin case_input; }
+        assert "ddd-10": cadre_cf_dom_remplie(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel")) { origin case_input; }
+        assert "ddd-11": presence_jeune_dom(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel")) { origin case_input; }
+        assert "ddd-12": base_dom_retenue(entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel"), 240.00 EUR) { origin case_input; }
+        assert "ddd-13": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-cf:org:caisse"), entity_ref("urn:fr:pf-cf:case:dom-devoir-differentiel")) { origin case_input; }
+        assert "ddd-14": departement_l751_1(GUYANE) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PayerCfDomDifferentielDu, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

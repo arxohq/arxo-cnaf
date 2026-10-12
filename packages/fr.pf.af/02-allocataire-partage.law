@@ -1,0 +1,374 @@
+// Designation and sharing (L521-2, R521-2/3/4).
+//
+// DEONTIC MAP:
+// - L521-2 al. 1 ("sont versées à la personne qui assume...") and al. 3
+//   (father/mother fallback): the allocataire STATUS is owned by fr.pf.core
+//   (L513-1); this package does not re-conclude it (REQ-PFAF-02 records the
+//   al. 3 fallback as upstream work).
+// - L521-2 al. 2 ("les parents désignent l'allocataire"): POWER of the two
+//   parents to designate by mutual agreement (position DesignerAllocataire).
+// - R521-2 1°/2°: institutional sharing status (partage_actif) per parent.
+// - R521-2 al. 4 (one-year lock): institutional status with a deadline
+//   (VERROU_UN_AN); no deontic head.
+// - L521-2 al. 4 (ASE): POWER of the judge to keep family payment
+//   (position MaintenirVersementFamille) + receipt redirection
+//   (famille_percoit / service_ase_percoit). The per-child service share in
+//   mixed families is indeterminate from marginal rates (B-PFAF-ASE-MIXTE).
+// - L521-2 al. 5 (décret CE, a-d): renvoi; covered for alternée by R521-2/3/4
+//   and for ASE by al. 4; retrait/indignité/divorce end the charge upstream
+//   (B-PFAF-DECRET-L5212).
+
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+use self::{
+    CSS_L521_2,
+    CSS_L521_2_ED2022_01,
+    CSS_L521_2_ED2026_03,
+    CSS_L521_2_PRE2021,
+    CSS_L521_2_PRE2021_ED2015_07,
+    CSS_L521_2_PRE2021_ED2015_10,
+    CSS_R521_2,
+    CSS_R521_2_ED2008_04,
+    CSS_R521_2_ED2014_12,
+    CSS_R521_2_ED2015_03,
+    CSS_R521_2_ED2015_07,
+    CSS_R521_2_ED2015_10,
+    CSS_R521_2_ED2021_09,
+    CSS_R521_2_ED2022_01,
+    CSS_R521_2_ED2026_03,
+    CSS_R521_3,
+    CSS_R521_3_ED2008_04,
+    CSS_R521_3_ED2014_12,
+    CSS_R521_3_ED2015_03,
+    CSS_R521_3_ED2015_07,
+    CSS_R521_3_ED2015_10,
+    CSS_R521_3_ED2021_09,
+    CSS_R521_3_ED2022_01,
+    CSS_R521_3_ED2026_03,
+    af_montant_du,
+    allocataire_unique_af,
+    allocataire_unique_convenu,
+    changement_modalite_possible,
+    coefficient_partage,
+    complement_degressif,
+    date_choix_modalite,
+    demande_conjointe_partage,
+    desaccord_designation,
+    enfant_confie_ase,
+    enfants_alternes,
+    enfants_propres,
+    famille_participe_prise_en_charge,
+    famille_percoit,
+    foyer_du_cas,
+    juge_maintien_famille,
+    juge_saisi,
+    maintenir_versement_action,
+    modification_residence,
+    mois_droit,
+    montant_mensuel_af,
+    montant_parent_partage,
+    nb_enfants_ase_service,
+    nb_enfants_charge,
+    partage_actif,
+    service_ase_percoit,
+};
+
+deadline policy VERROU_UN_AN {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+function coefficient_foyer(propres: Integer, alternes: Integer) -> Decimal =
+    (propres * 1.0 + 0.5 * alternes) / ((propres + alternes) * 1.0);
+
+// L521-2 al. 2 ("les parents désignent", indicative) is a constitutive
+// designation rule, not a power: agreement inputs feed DesignationUnique
+// and the Partage rules above. No position exists for it (cf. pf-core
+// prescription: computation creates no must/must-not positions).
+
+@source(
+    CSS_R521_2,
+    CSS_R521_2_ED2008_04,
+    CSS_R521_2_ED2014_12,
+    CSS_R521_2_ED2015_03,
+    CSS_R521_2_ED2015_07,
+    CSS_R521_2_ED2015_10,
+    CSS_R521_2_ED2021_09,
+    CSS_R521_2_ED2022_01,
+    CSS_R521_2_ED2026_03)
+rule DesignationUnique(q: fr.pf.core::Personne) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "l'allocataire désigné d'un commun accord est l'allocataire unique";
+    label en unofficial "the mutually designated allocataire is the single allocataire";
+    when allocataire_unique_convenu(q);
+    then allocataire_unique_af(q);
+}
+
+@source(
+    CSS_R521_2,
+    CSS_R521_2_ED2008_04,
+    CSS_R521_2_ED2014_12,
+    CSS_R521_2_ED2015_03,
+    CSS_R521_2_ED2015_07,
+    CSS_R521_2_ED2015_10,
+    CSS_R521_2_ED2021_09,
+    CSS_R521_2_ED2022_01,
+    CSS_R521_2_ED2026_03)
+rule PartageConjoint(p1: fr.pf.core::Personne, p2: fr.pf.core::Personne) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "demande conjointe: chacun des deux parents est allocataire (R. 521-2, 1°)";
+    label en unofficial "joint request: each parent is an allocataire (R. 521-2, 1°)";
+    when demande_conjointe_partage(p1, p2);
+    then partage_actif(p1);
+}
+
+@source(
+    CSS_R521_2,
+    CSS_R521_2_ED2008_04,
+    CSS_R521_2_ED2014_12,
+    CSS_R521_2_ED2015_03,
+    CSS_R521_2_ED2015_07,
+    CSS_R521_2_ED2015_10,
+    CSS_R521_2_ED2021_09,
+    CSS_R521_2_ED2022_01,
+    CSS_R521_2_ED2026_03)
+rule PartageConjointSecond(p1: fr.pf.core::Personne, p2: fr.pf.core::Personne) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "demande conjointe: chacun des deux parents est allocataire, second parent (R. 521-2, 1°)";
+    label en unofficial "joint request: each parent is an allocataire, second parent (R. 521-2, 1°)";
+    when demande_conjointe_partage(p1, p2);
+    then partage_actif(p2);
+}
+
+@source(
+    CSS_R521_2,
+    CSS_R521_2_ED2008_04,
+    CSS_R521_2_ED2014_12,
+    CSS_R521_2_ED2015_03,
+    CSS_R521_2_ED2015_07,
+    CSS_R521_2_ED2015_10,
+    CSS_R521_2_ED2021_09,
+    CSS_R521_2_ED2022_01,
+    CSS_R521_2_ED2026_03)
+rule PartageDesaccord(p1: fr.pf.core::Personne, p2: fr.pf.core::Personne) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "sans désignation ni demande conjointe: chacun peut être allocataire (R. 521-2, 2°)";
+    label en unofficial "with neither designation nor joint request: each may be an allocataire (R. 521-2, 2°)";
+    when desaccord_designation(p1, p2);
+    then partage_actif(p1);
+}
+
+@source(
+    CSS_R521_2,
+    CSS_R521_2_ED2008_04,
+    CSS_R521_2_ED2014_12,
+    CSS_R521_2_ED2015_03,
+    CSS_R521_2_ED2015_07,
+    CSS_R521_2_ED2015_10,
+    CSS_R521_2_ED2021_09,
+    CSS_R521_2_ED2022_01,
+    CSS_R521_2_ED2026_03)
+rule PartageDesaccordSecond(p1: fr.pf.core::Personne, p2: fr.pf.core::Personne) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "sans désignation ni demande conjointe: second parent allocataire (R. 521-2, 2°)";
+    label en unofficial "with neither designation nor joint request: second parent allocataire (R. 521-2, 2°)";
+    when desaccord_designation(p1, p2);
+    then partage_actif(p2);
+}
+
+@source(
+    CSS_R521_3,
+    CSS_R521_3_ED2008_04,
+    CSS_R521_3_ED2014_12,
+    CSS_R521_3_ED2015_03,
+    CSS_R521_3_ED2015_07,
+    CSS_R521_3_ED2015_10,
+    CSS_R521_3_ED2021_09,
+    CSS_R521_3_ED2022_01,
+    CSS_R521_3_ED2026_03)
+rule CoefficientPartage(p: fr.pf.core::Personne, propres: Integer, alternes: Integer) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "coefficient du foyer: rapport du nombre moyen au nombre total (alternés à 0,5)";
+    label en unofficial "household coefficient: average-to-total ratio (shared-custody children at 0.5)";
+    when partage_actif(p) and enfants_propres(p, propres)
+        and enfants_alternes(alternes) and alternes >= 1;
+    then coefficient_partage(p, coefficient_foyer(propres, alternes));
+}
+
+@source(
+    CSS_R521_3,
+    CSS_R521_3_ED2008_04,
+    CSS_R521_3_ED2014_12,
+    CSS_R521_3_ED2015_03,
+    CSS_R521_3_ED2015_07,
+    CSS_R521_3_ED2015_10,
+    CSS_R521_3_ED2021_09,
+    CSS_R521_3_ED2022_01,
+    CSS_R521_3_ED2026_03)
+rule MontantParent(p: fr.pf.core::Personne, m: Money, c: Money, k: Decimal) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "prestation due à chaque parent: total du mois par le coefficient du foyer";
+    label en unofficial "benefit due to each parent: monthly total times the household coefficient";
+    when partage_actif(p) and montant_mensuel_af(p, m)
+        and complement_degressif(p, c) and coefficient_partage(p, k);
+    then montant_parent_partage(p, (m + c) * k);
+}
+
+@source(
+    CSS_R521_2,
+    CSS_R521_2_ED2008_04,
+    CSS_R521_2_ED2014_12,
+    CSS_R521_2_ED2015_03,
+    CSS_R521_2_ED2015_07,
+    CSS_R521_2_ED2015_10,
+    CSS_R521_2_ED2021_09,
+    CSS_R521_2_ED2022_01,
+    CSS_R521_2_ED2026_03)
+rule VerrouDelai(p: fr.pf.core::Personne, choix: Date, mois: Date) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "modalités remises en cause au bout d'un an (R. 521-2 al. 4, VERROU_UN_AN)";
+    label en unofficial "arrangements revisable after one year (R. 521-2 para. 4, VERROU_UN_AN)";
+    when date_choix_modalite(p, choix) and mois_droit(mois)
+        and mois >= add_calendar_period(choix, 1 calendar_year);
+    then changement_modalite_possible(p);
+}
+
+@source(
+    CSS_R521_2,
+    CSS_R521_2_ED2008_04,
+    CSS_R521_2_ED2014_12,
+    CSS_R521_2_ED2015_03,
+    CSS_R521_2_ED2015_07,
+    CSS_R521_2_ED2015_10,
+    CSS_R521_2_ED2021_09,
+    CSS_R521_2_ED2022_01,
+    CSS_R521_2_ED2026_03)
+rule VerrouResidence(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "modification des modalités de résidence: fin anticipée du verrou";
+    label en unofficial "changed residence arrangements: early end of the lock";
+    when fr.pf.core::parent_charge(p, e) and modification_residence(e);
+    then changement_modalite_possible(p);
+}
+
+@source(
+    CSS_L521_2,
+    CSS_L521_2_ED2022_01,
+    CSS_L521_2_ED2026_03,
+    CSS_L521_2_PRE2021,
+    CSS_L521_2_PRE2021_ED2015_07,
+    CSS_L521_2_PRE2021_ED2015_10)
+rule PouvoirMaintienJuge(j: fr.pf.core::Juridiction, e: fr.pf.core::Enfant) strict {
+    effective [@2021-09-30, infinity);
+    label fr official "le juge peut maintenir le versement à la famille qui participe à la prise en charge";
+    label en unofficial "the judge may keep paying the family taking part in the care";
+    when juge_saisi(j, e) and enfant_confie_ase(e);
+    then power MaintenirVersementFamille {
+        holder j;
+        over e;
+        exercise maintenir_versement_action(j, e);
+        valid_when famille_participe_prise_en_charge(e);
+        effect juge_maintien_famille(e);
+    };
+}
+
+// §70 closure: the household anchor recorded in the case exhausts the
+// sharing assessment. Without it `not partage_actif` in FamillePercoitNormal
+// would never fire (E4113: absence of a record is not a negative, §69).
+@source(
+    CSS_R521_2,
+    CSS_R521_2_ED2008_04,
+    CSS_R521_2_ED2014_12,
+    CSS_R521_2_ED2015_03,
+    CSS_R521_2_ED2015_07,
+    CSS_R521_2_ED2015_10,
+    CSS_R521_2_ED2021_09,
+    CSS_R521_2_ED2022_01,
+    CSS_R521_2_ED2026_03)
+closure PartageActifEstClos {
+    label fr official "la personne-ancre décrite par le cas porte l'appréciation du partage";
+    label en unofficial "the anchor person recorded in the case carries the sharing assessment";
+    predicate partage_actif;
+    domain foyer_du_cas;
+    snapshot "urn:fr:corpus:clir:pf-af:snapshot:partage-actif";
+    complete_as_of @2007-05-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+@source(
+    CSS_L521_2,
+    CSS_L521_2_ED2022_01,
+    CSS_L521_2_ED2026_03,
+    CSS_L521_2_PRE2021,
+    CSS_L521_2_PRE2021_ED2015_07,
+    CSS_L521_2_PRE2021_ED2015_10)
+rule FamillePercoitNormal(p: fr.pf.core::Personne, m: Money, k: Integer) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "hors ASE: la famille perçoit le total mensuel";
+    label en unofficial "outside ASE: the family receives the monthly total";
+    when af_montant_du(p, m) and nb_enfants_ase_service(p, k) and k == 0
+        and not partage_actif(p);
+    then famille_percoit(p, m);
+}
+
+@source(
+    CSS_L521_2,
+    CSS_L521_2_ED2022_01,
+    CSS_L521_2_ED2026_03,
+    CSS_L521_2_PRE2021,
+    CSS_L521_2_PRE2021_ED2015_07,
+    CSS_L521_2_PRE2021_ED2015_10)
+rule FamillePercoitMaintien(p: fr.pf.core::Personne, m: Money, e: fr.pf.core::Enfant) strict {
+    effective [@2021-09-30, infinity);
+    label fr official "maintien décidé par le juge: la famille perçoit malgré la mesure (cas à un seul confié)";
+    label en unofficial "judge-ordered maintenance: the family receives despite the placement (single-placement case)";
+    when af_montant_du(p, m) and nb_enfants_ase_service(p, 1)
+        and enfant_confie_ase(e) and juge_maintien_famille(e);
+    then famille_percoit(p, m);
+}
+
+@source(
+    CSS_L521_2,
+    CSS_L521_2_ED2022_01,
+    CSS_L521_2_ED2026_03,
+    CSS_L521_2_PRE2021,
+    CSS_L521_2_PRE2021_ED2015_07,
+    CSS_L521_2_PRE2021_ED2015_10)
+rule ServicePercoitTotal(p: fr.pf.core::Personne, m: Money, k: Integer, n: Integer) strict {
+    effective [@2021-09-30, infinity);
+    label fr official "tous les enfants confiés sans maintien: le total est versé au service";
+    label en unofficial "all children placed without maintenance: the total goes to the service";
+    when af_montant_du(p, m) and nb_enfants_ase_service(p, k)
+        and nb_enfants_charge(p, n) and k == n and k >= 1;
+    then service_ase_percoit(p, m);
+}
+
+@source(
+    CSS_L521_2_PRE2021,
+    CSS_L521_2_PRE2021_ED2015_07,
+    CSS_L521_2_PRE2021_ED2015_10)
+rule ServicePercoitTotalAvant2021(p: fr.pf.core::Personne, m: Money, k: Integer, n: Integer) strict {
+    effective [@2015-07-01, @2021-09-30);
+    label fr official "avant l'ordonnance 2019-950: tous les enfants confiés sans maintien du juge, le total est versé au service (L. 521-2 al. 4)";
+    label en unofficial "before ordinance 2019-950: all children placed without judge maintenance, the total goes to the service (L. 521-2 para. 4)";
+    when af_montant_du(p, m) and nb_enfants_ase_service(p, k)
+        and nb_enfants_charge(p, n) and k == n and k >= 1;
+    then service_ase_percoit(p, m);
+}
+
+@source(
+    CSS_L521_2_PRE2021,
+    CSS_L521_2_PRE2021_ED2015_07,
+    CSS_L521_2_PRE2021_ED2015_10)
+rule FamillePercoitMaintienAvant2021(p: fr.pf.core::Personne, m: Money, e: fr.pf.core::Enfant) strict {
+    effective [@2015-07-01, @2021-09-30);
+    label fr official "avant l'ordonnance 2019-950: maintien décidé par le juge, la famille perçoit malgré la mesure (cas à un seul confié)";
+    label en unofficial "before ordinance 2019-950: judge-ordered maintenance, the family receives despite the placement (single-placement case)";
+    when af_montant_du(p, m) and nb_enfants_ase_service(p, 1)
+        and enfant_confie_ase(e) and juge_maintien_famille(e);
+    then famille_percoit(p, m);
+}

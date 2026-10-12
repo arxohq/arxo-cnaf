@@ -1,0 +1,19 @@
+// Quarterly headcounts, current wording: the national fund
+// transmits the month-end headcounts for the previous quarter before
+// the end of the second month of the quarter (D. 262-96 in force).
+// Legal time inside the [quarter end, quarter end + 2 months] window.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-effectifs-trimestre" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-04-15T12:00:00Z; knowledge_time @2025-04-15T12:00:00Z; legal_time @2025-04-15; timezone "Europe/Paris"; }
+        assert "tri-01": est_caisse_nationale(entity_ref("urn:fr:rsa:org:cnaf")) { origin case_input; }
+        assert "tri-02": est_service_statistique(entity_ref("urn:fr:rsa:org:drees")) { origin case_input; }
+        assert "tri-03": trimestre_donnees_fin(@2025-03-31) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreEffectifsTrimestre, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

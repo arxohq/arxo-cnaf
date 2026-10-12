@@ -1,0 +1,24 @@
+// BMAF 2025 chain (DSS/2B/2025/38, COEFF fragment): previous base
+// 466.44, coefficient 1.017 -> 466.44 x 1.017 = 474.36948, rounded to the
+// centime -> 474.37, the published 1 April 2025 base. Coefficient 1.017 is
+// at/above one, retained nominally.
+language "law.core" version "0.2";
+package fr.css.revalorisation version "0.1.0";
+namespace "urn:fr:corpus:clir:revalorisation";
+
+test "urn:query:fr-revalorisation-bmaf-chaine-2025" {
+    given {
+        context { deadline_policy REVALO_EXERCICE; decision_time @2025-04-01T12:00:00Z; knowledge_time @2025-04-01T12:00:00Z; legal_time @2025-04-01; timezone "Europe/Paris"; }
+        assert "bmaf-01": annee_exercice(entity_ref("urn:fr:revalorisation:exercice:2025"), 2025) { origin case_input; }
+        assert "bmaf-02": bmaf_precedente(entity_ref("urn:fr:revalorisation:exercice:2025"), 466.44 EUR) { origin case_input; }
+        assert "bmaf-03": coefficient_annee(entity_ref("urn:fr:revalorisation:exercice:2025"), 1.017) { origin case_input; }
+    }
+    evaluate truth(coefficient_retenu(entity_ref("urn:fr:revalorisation:exercice:2025"), 1.017));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bmaf_revalorisee(entity_ref("urn:fr:revalorisation:exercice:2025"), 474.37 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

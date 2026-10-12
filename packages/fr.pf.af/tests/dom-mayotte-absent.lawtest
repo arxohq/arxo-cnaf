@@ -1,0 +1,18 @@
+// Mayotte (wave 7): no conclusion. The right is neither opened
+// nor denied by this package (B-PFAF-MAYOTTE).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-dom-mayotte-absent" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "dommyt-01": territoire(entity_ref("urn:fr:pf-af:case:dom-mayotte-absent"), MAYOTTE) { origin case_input; }
+        assert "dommyt-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:dom-mayotte-absent"), 2) { origin case_input; }
+        assert "dommyt-03": foyer_du_cas(entity_ref("urn:fr:pf-af:case:dom-mayotte-absent")) { origin case_input; }
+    }
+    evaluate truth(af_droit_ouvert(entity_ref("urn:fr:pf-af:case:dom-mayotte-absent")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

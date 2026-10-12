@@ -1,0 +1,81 @@
+language "law.core" version "0.2";
+package fr.apl.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:apl:versement";
+
+source GUIDE_MINISTERE_2021 {
+    kind guidance;
+    jurisdiction FR;
+    number "APL-ELEMENTS-CALCUL-2021-09";
+    label fr official "Les aides personnelles au logement — Éléments de calcul, septembre 2021";
+    label ru unofficial "Руководство министерства по элементам расчёта жилищных пособий, сентябрь 2021";
+}
+
+// Официальные байты закреплены отдельно от адресуемой текстовой выдержки:
+// `fr.txt` — проверенная редакционная материализация четырёх страниц, а не
+// выдаваемый за PDF поток байтов.
+edition GUIDE_MINISTERE_2021_PDF_FR of GUIDE_MINISTERE_2021 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_OFFICIAL_BYTES;
+    in_force [@2021-01-01, @2021-10-01);
+    label fr official "PDF officiel du guide explicatif 2021; ce n'est pas un acte normatif";
+    label ru unofficial "Официальный PDF разъясняющего руководства 2021 года; не нормативный акт";
+}
+
+publication GUIDE_MINISTERE_2021_PDF of GUIDE_MINISTERE_2021_PDF_FR {
+    media_type "application/pdf";
+    uri "https://www.ecologie.gouv.fr/sites/default/files/publications/les_aides_personnelles_au_logement_element_de_calcul_septembre_2021.pdf";
+    retrieved_at @2026-09-16T12:00:00Z;
+    content_hash "sha256:a4c1f3fa99635c87e4c68abc6f08b7ab56634e49ab5dc27df5c1fc97e89a2030";
+    local_path "sources/ministere-2021/guide-officiel.pdf";
+}
+
+edition GUIDE_MINISTERE_2021_FR of GUIDE_MINISTERE_2021 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_EDITORIAL_RECONSTRUCTION;
+    in_force [@2021-01-01, @2021-10-01);
+    label fr official "Extraits vérifiés des pages 22, 23, 24 et 50 du PDF officiel";
+    label ru unofficial "Проверенные выдержки страниц 22, 23, 24 и 50 официального PDF";
+}
+
+publication GUIDE_MINISTERE_2021_TEXT of GUIDE_MINISTERE_2021_FR {
+    media_type "text/plain; charset=utf-8";
+    uri "https://www.ecologie.gouv.fr/sites/default/files/publications/les_aides_personnelles_au_logement_element_de_calcul_septembre_2021.pdf";
+    retrieved_at @2026-09-16T12:00:00Z;
+    content_hash "sha256:8705c3bf421ebd933c62802af3c5c1110e8d2a3962da70852cb8aba9ccb98904";
+    local_path "sources/ministere-2021/fr.txt";
+}
+
+fragment GUIDE_P22_DEGRESSIVITE_RLS in GUIDE_MINISTERE_2021_FR {
+    kind section;
+    locator "page/22#degressivite-rls";
+    text fr official """L’aide résultant de la formule APL ou AL = L+C-Pp devient, après application de la mesure dégressivité :
+APL ou AL = (L + C - Pp) * (cs – (Lréel / Lplafond)) / (cs - cd)""";
+    content_hash "sha256:f6563a88edac935c3cfe3351723e5c4997de91617c1b7ff056e9f633c2e15de5";
+}
+
+fragment GUIDE_P23_CRDS_ARRONDI in GUIDE_MINISTERE_2021_FR {
+    kind section;
+    locator "page/23#crds-arrondi";
+    text fr official """Le montant effectivement versé au ménage diffère légèrement du montant obtenu par les calculs précédents. Une contribution au remboursement de la dette sociale est prélevée et le montant d’aide, net de cette contribution, est arrondi à l’euro inférieur.""";
+    content_hash "sha256:03be0bd68655fb982140d7e021f00cd67c63b59877f4a4b945ca9a9eeb430faa";
+}
+
+fragment GUIDE_P24_EXEMPLE in GUIDE_MINISTERE_2021_FR {
+    kind section;
+    locator "page/24#exemple-metropole";
+    text fr official """Aide brute = 346,53 € (la dégressivité de l’aide pour loyer élevé ne s’applique pas car 425 € < 2,5 x 408,16 €)
+Aide nette = 346,53 € (seuil de 10 € vérifié)
+Aide versée = 344 € (CRDS tronquée au centime, puis application de l’arrondi de l’aide à verser à l’euro inférieur)""";
+    content_hash "sha256:a8dbb1c832794f0e97d8c46cb3e82ee31602876eb9fe115b23a5c412b34ddd73";
+}
+
+fragment GUIDE_P50_ARRONDIS in GUIDE_MINISTERE_2021_FR {
+    kind section;
+    locator "page/50#regles-arrondis";
+    text fr official """Par défaut, les paramètres du barème des aides personnelles au logement sont arrondis au centime d’euro le plus proche. Aucun arrondi intermédiaire ne doit être réalisé par ailleurs.
+CRDS : La CRDS prélevée mensuellement sur l’aide calculée est arrondie au centime inférieur.
+Aide versée : Arrondie à l’euro inférieur.""";
+    content_hash "sha256:31cbe7bddf758ebc86b47e63514515d704876c5041c532a251c43f58e1b99af3";
+}

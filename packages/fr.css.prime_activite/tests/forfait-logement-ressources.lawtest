@@ -1,0 +1,95 @@
+// Élément de logement des ressources (R. 844-3, R. 844-4 I), couple, mois 2024-10-01, base du décret 622.63:
+// forfait 622.63 x 1.5 x 0.16 = 149.43120.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+// aide 100.00 <= forfait: incluse en entier (R. 844-4 I)
+test "urn:query:fr-ppa-fl-aide-sous-forfait" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-aide-sous-forfait-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-aide-sous-forfait"), @2024-10-01, COUPLE) { origin case_input; }
+        assert "fl-aide-sous-forfait-02": situation_logement_retenue(entity_ref("urn:fr:ppa:case:fl-aide-sous-forfait"), @2024-10-01, AIDE) { origin case_input; }
+        assert "fl-aide-sous-forfait-03": aide_logement_retenue(entity_ref("urn:fr:ppa:case:fl-aide-sous-forfait"), @2024-10-01, 100.00 EUR) { origin case_input; }
+        assert "fl-aide-sous-forfait-04": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:fl-aide-sous-forfait"), @2024-10-01, 1200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(logement_ressource_mois(entity_ref("urn:fr:ppa:case:fl-aide-sous-forfait"), @2024-10-01, 100.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ressources_foyer_mois(entity_ref("urn:fr:ppa:case:fl-aide-sous-forfait"), @2024-10-01, 1300.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// aide 200.00 > forfait: le forfait est retenu (R. 844-4 I)
+test "urn:query:fr-ppa-fl-aide-plafonnee" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-aide-plafonnee-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-aide-plafonnee"), @2024-10-01, COUPLE) { origin case_input; }
+        assert "fl-aide-plafonnee-02": situation_logement_retenue(entity_ref("urn:fr:ppa:case:fl-aide-plafonnee"), @2024-10-01, AIDE) { origin case_input; }
+        assert "fl-aide-plafonnee-03": aide_logement_retenue(entity_ref("urn:fr:ppa:case:fl-aide-plafonnee"), @2024-10-01, 200.00 EUR) { origin case_input; }
+        assert "fl-aide-plafonnee-04": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:fl-aide-plafonnee"), @2024-10-01, 1200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(logement_ressource_mois(entity_ref("urn:fr:ppa:case:fl-aide-plafonnee"), @2024-10-01, 149.43120 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(logement_ressource_mois(entity_ref("urn:fr:ppa:case:fl-aide-plafonnee"), @2024-10-01, 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ressources_foyer_mois(entity_ref("urn:fr:ppa:case:fl-aide-plafonnee"), @2024-10-01, 1349.43120 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// logement occupé par son propriétaire sans aide: avantage en nature = forfait (R. 844-3)
+test "urn:query:fr-ppa-fl-nature" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-nature-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-nature"), @2024-10-01, COUPLE) { origin case_input; }
+        assert "fl-nature-02": situation_logement_retenue(entity_ref("urn:fr:ppa:case:fl-nature"), @2024-10-01, NATURE) { origin case_input; }
+        assert "fl-nature-03": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:fl-nature"), @2024-10-01, 1200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(logement_ressource_mois(entity_ref("urn:fr:ppa:case:fl-nature"), @2024-10-01, 149.43120 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ressources_foyer_mois(entity_ref("urn:fr:ppa:case:fl-nature"), @2024-10-01, 1349.43120 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// ni aide ni avantage en nature: aucun élément de logement
+test "urn:query:fr-ppa-fl-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-sans-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:fl-sans"), @2024-10-01, COUPLE) { origin case_input; }
+        assert "fl-sans-02": situation_logement_retenue(entity_ref("urn:fr:ppa:case:fl-sans"), @2024-10-01, SANS) { origin case_input; }
+        assert "fl-sans-03": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:fl-sans"), @2024-10-01, 1200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(logement_ressource_mois(entity_ref("urn:fr:ppa:case:fl-sans"), @2024-10-01, 0.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ressources_foyer_mois(entity_ref("urn:fr:ppa:case:fl-sans"), @2024-10-01, 1200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// total déjà retenu (forfait inclus) pris tel quel, chemin d'avant R. 844-3
+test "urn:query:fr-ppa-fl-total-retenu" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "fl-total-retenu-01": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:fl-total-retenu"), @2024-10-01, 1349.43 EUR) { origin case_input; }
+    }
+    evaluate truth(ressources_foyer_mois(entity_ref("urn:fr:ppa:case:fl-total-retenu"), @2024-10-01, 1349.43 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

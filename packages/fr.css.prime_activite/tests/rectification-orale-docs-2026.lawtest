@@ -1,0 +1,37 @@
+// Oral late request after a date-certain notice, with documents
+// produced in time: deemed a prior appeal and examinable; no
+// rejection while the production delay has not expired
+// (R. 847-1-1 IV 2°; PA-FE09-03).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-rectification-orale-docs-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-21T12:00:00Z; knowledge_time @2026-06-21T12:00:00Z; legal_time @2026-06-21; timezone "Europe/Paris"; }
+        assert "ppa-01": reception_notification(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-02": demande_rectification(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026"), @2026-06-10) { origin case_input; }
+        assert "ppa-03": demande_rectification_orale(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026")) { origin case_input; }
+        assert "ppa-04": documents_rectification_produits(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026"), @2026-06-20) { origin case_input; }
+        assert "ppa-05": date_observation_recours(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026"), @2026-06-21) { origin case_input; }
+        assert "ppa-06": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026")) { origin case_input; }
+        assert "ppa-07": delai_recours_cra_en_cours(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026")) { origin case_input; }
+        assert "ppa-08": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026")) { origin case_input; }
+    }
+    evaluate truth(pieces_orales_produites(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(demande_requalifiee_recours(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(examen_demande_possible(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_demande_orale(entity_ref("urn:fr:ppa:case:rectification-orale-docs-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

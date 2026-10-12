@@ -1,0 +1,21 @@
+// Local report without any sanction statement: timely transmission and other particulars present, but no sanction kind/amount nor stated absence - the report is not conforming (R. 553-3-7 4, PC-R02-05).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-compte-rendu-sans-sanction" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-compte-rendu-sans-sanction-01": compte_rendu_transmis(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf")) { origin case_input; }
+        assert "tdv-compte-rendu-sans-sanction-02": compte_rendu_transmis_sans_delai(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf")) { origin case_input; }
+        assert "tdv-compte-rendu-sans-sanction-03": compte_rendu_anonymise(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:evalue-sans-sanction")) { origin case_input; }
+        assert "tdv-compte-rendu-sans-sanction-04": compte_rendu_reponse_dans_delai(entity_ref("urn:fr:pf:case:evalue-sans-sanction")) { origin case_input; }
+        assert "tdv-compte-rendu-sans-sanction-05": compte_rendu_decision_attribution(entity_ref("urn:fr:pf:case:evalue-sans-sanction")) { origin case_input; }
+        assert "tdv-compte-rendu-sans-sanction-06": compte_rendu_elements_evalues(entity_ref("urn:fr:pf:case:evalue-sans-sanction")) { origin case_input; }
+        assert "tdv-compte-rendu-sans-sanction-07": prestation_soumise_section(entity_ref("urn:fr:pf:case:evalue-sans-sanction")) { origin case_input; }
+    }
+    evaluate truth(compte_rendu_evaluation_conforme(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf"), entity_ref("urn:fr:pf:case:evalue-sans-sanction")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

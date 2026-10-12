@@ -1,0 +1,16 @@
+// Non-cumulation 2018, item 3: full-time sick-leave benefit recorded
+// for the beneficiary — cumulation refused.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-noncumul-maladie-2018" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-ncm-01": motif_non_cumul_2018(entity_ref("urn:fr:pf-ajpp:case:parent-ncm"), MALADIE_AT) { origin case_input; }
+    }
+    evaluate truth(ajpp_cumul_refuse(entity_ref("urn:fr:pf-ajpp:case:parent-ncm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

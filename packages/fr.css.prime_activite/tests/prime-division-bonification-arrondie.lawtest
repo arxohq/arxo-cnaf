@@ -1,0 +1,81 @@
+// D-82/D-83: bonification linéaire D. 843-2 (un travailleur) sous la lecture BonificationLineaireArrondieCentime — le montant en
+// euros base x taux x (revenu - 59 SMIC) / (étendue x SMIC) est arrondi au centime HALF_UP en UNE division (le rapport lui-même
+// n'est pas arrondi; la bonification maximale base x taux, sans division, n'est pas touchée). Ancienne rédaction (avant le
+// 01.04.2026): taux 29,101 %, étendue 61 (59 -> 120 SMIC); nouvelle: 37,7 %, étendue 79 (59 -> 138). Réplique indépendante sur
+// fractions (HALF_UP), nombres fixés: forfait 633,21 (décret 2025-294, février 2026), SMIC 12,02 (2026), forfait 622,63 (décret
+// 2024-403, juin 2024), SMIC 11,65 (2024):
+//   div-b1 633,21 x 0,377 x (1000,00 - 709,18) / 949,58 = 73.11084884… -> 73.11;
+//   div-b2 revenu 1183,97: (1183,97 - 709,18) / 949,58 = 1/2 exactement; 633,21 x 0,377 / 2 = 119.360085 (conforme: plus de deux
+//          décimales) -> 119.36;
+//   div-b3 couple, deux travailleurs, chacun arrondi: 1000,00 -> 73.11 et 1200,00 -> 123.39, somme 196.50;
+//   div-b4 ancienne rédaction: 622,63 x 0,29101 x (1000,00 - 687,35) / 710,65 = 79.71510600… -> 79.72;
+//   div-b5 revenu 1700,00 (au-delà de 138 x 12,02 = 1658,76): maximum 633,21 x 0,377 = 238.72017, sans division, inchangé.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-division-boni-nouveau" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; interpretation BonificationLineaireArrondieCentime; }
+        assert "div-b1-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-b1"), @2026-02-01, SEUL) { origin case_input; }
+        assert "div-b1-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-b1"), @2026-02-01, 1000.00 EUR) { origin case_input; }
+        assert "div-b1-03": smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+    }
+    evaluate truth(bonification_mensuelle(entity_ref("urn:fr:ppa:case:div-b1"), @2026-02-01, 73.11 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-ppa-division-boni-nouveau-moitie" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; interpretation BonificationLineaireArrondieCentime; }
+        assert "div-b2-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-b2"), @2026-02-01, SEUL) { origin case_input; }
+        assert "div-b2-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-b2"), @2026-02-01, 1183.97 EUR) { origin case_input; }
+        assert "div-b2-03": smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+    }
+    evaluate truth(bonification_mensuelle(entity_ref("urn:fr:ppa:case:div-b2"), @2026-02-01, 119.36 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-ppa-division-boni-nouveau-couple" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; interpretation BonificationLineaireArrondieCentime; }
+        assert "div-b3-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-b3"), @2026-02-01, COUPLE) { origin case_input; }
+        assert "div-b3-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-b3"), @2026-02-01, 1000.00 EUR) { origin case_input; }
+        assert "div-b3-03": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:div-b3"), @2026-02-01, 1200.00 EUR) { origin case_input; }
+        assert "div-b3-04": smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+    }
+    evaluate truth(bonification_mensuelle(entity_ref("urn:fr:ppa:case:div-b3"), @2026-02-01, 196.50 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-ppa-division-boni-ancien" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2024-09-15T12:00:00Z; knowledge_time @2024-09-15T12:00:00Z; legal_time @2024-09-15; timezone "Europe/Paris"; interpretation BonificationLineaireArrondieCentime; }
+        assert "div-b4-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-b4"), @2024-06-01, SEUL) { origin case_input; }
+        assert "div-b4-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-b4"), @2024-06-01, 1000.00 EUR) { origin case_input; }
+        assert "div-b4-03": smic_horaire_retenu(@2024-06-01, 11.65 EUR) { origin case_input; }
+    }
+    evaluate truth(bonification_mensuelle(entity_ref("urn:fr:ppa:case:div-b4"), @2024-06-01, 79.72 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-ppa-division-boni-max-inchange" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; interpretation BonificationLineaireArrondieCentime; }
+        assert "div-b5-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-b5"), @2026-02-01, SEUL) { origin case_input; }
+        assert "div-b5-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-b5"), @2026-02-01, 1700.00 EUR) { origin case_input; }
+        assert "div-b5-03": smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+    }
+    evaluate truth(bonification_mensuelle(entity_ref("urn:fr:ppa:case:div-b5"), @2026-02-01, 238.72017 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

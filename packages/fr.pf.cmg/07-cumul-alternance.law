@@ -1,0 +1,392 @@
+// Cumulation, shared residence and the transitional differential.
+//
+// D. 531-18-3 (reform): several L.531-5 aids may cumulate in one month
+// (same childminder for different children; several carers). The
+// household L.531-5 total is built here for two-child cases (three and
+// more — B-CMG-CUMUL-N, fund mechanics).
+// D. 531-18-2 (from 01.12.2025): effective shared residence — each
+// parent claiming is allocataire; AF-eligible parents add the R. 521-2
+// choice (fund fact, no pf-af import — parallel lane).
+// D. 531-23 (reform): L.531-5 aids first, then the L.531-6 aid, the sum
+// capped at the per-child L.531-6 maxima (home-only: 2° bands).
+// Old D. 531-22 mixed-employment pooling (masse des rémunérations) is a
+// boundary (B-CMG-MASSE-ANCIENNE): per-employment amounts stand.
+// Decree 2025-515 art. 3: transitional differential (Mar–May 2025 loss,
+// hour thresholds, 90% net cap, per-cohort extinction; fratrie
+// most-favourable — B-CMG-FRATRIE). Eligibility frozen September 2025
+// (IV); Mayotte/SPM adaptations (VI–VII) are wave 7.
+
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+use self::{
+    CSS_D531_18_2_ED2025_12,
+    CSS_D531_18_3_ED2025_09,
+    CSS_D531_21_ED2025_09,
+    CSS_D531_23_ED2020_01,
+    CSS_D531_23_ED2021_09,
+    CSS_D531_23_ED2025_09,
+    JORF_DECR2025_515_ART3,
+    ModeGarde,
+    age_moitie36,
+    age_revolu_ans,
+    age_taux_reduit,
+    bmaf_retenu,
+    choix_partage_af,
+    cmg_verse,
+    date_3eme_anniversaire,
+    demande_cmg_parent,
+    differentiel_eteint,
+    differentiel_ouvert,
+    eligible_af_partage,
+    heures_moyennes_periode,
+    mode_garde,
+    mois_droit,
+    montant_cmg_du,
+    montant_cumul_5315,
+    montant_cumul_total,
+    montant_differentiel,
+    montant_structure_du,
+    moyenne_ancien_droit,
+    moyenne_nouveau_droit,
+    nb_enfants_charge,
+    parent_allocataire_alternance,
+    plafond1_applicable,
+    plafond2_applicable,
+    plafond_cumul_enfant,
+    remuneration_nette_salarie,
+    residence_alternee_effective,
+    ressources_annuelles,
+    ressources_mois_reference,
+    taux_bande_structure_am,
+    taux_bande_structure_dom,
+};
+
+// --- D. 531-18-3: same-month cumulation of L.531-5 aids --------------------------
+
+@source(CSS_D531_18_3_ED2025_09)
+rule Cumul5315DeuxEnfants(p: fr.pf.core::Personne, e1: fr.pf.core::Enfant, e2: fr.pf.core::Enfant, x1: Money, x2: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "deux enfants, deux aides L. 531-5: masse mensuelle";
+    label en unofficial "two children, two L.531-5 aids: monthly total";
+    when montant_cmg_du(p, e1, x1) and montant_cmg_du(p, e2, x2) and e1 != e2;
+    then montant_cumul_5315(p, x1 + x2);
+}
+
+// --- D. 531-18-2: shared residence (from 01.12.2025) ----------------------------------
+//
+// Each claiming parent is allocataire for the same child. AF-eligible
+// parents must also hold the R. 521-2 shared-allocataire choice.
+
+@source(CSS_D531_18_2_ED2025_12)
+rule AlternanceBase(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2025-12-01, infinity);
+    label fr official "résidence alternée effective, parent demandeur: allocataire";
+    label en unofficial "effective shared residence, claimant parent: allocataire";
+    when residence_alternee_effective(e) and demande_cmg_parent(p, e) and not_known(eligible_af_partage(p));
+    then parent_allocataire_alternance(p, e);
+}
+
+@source(CSS_D531_18_2_ED2025_12)
+rule AlternanceAvecAF(p1: fr.pf.core::Personne, p2: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2025-12-01, infinity);
+    label fr official "résidence alternée, choix R. 521-2: chaque parent allocataire";
+    label en unofficial "shared residence, R. 521-2 choice: each parent allocataire";
+    when residence_alternee_effective(e)
+        and eligible_af_partage(p1)
+        and demande_cmg_parent(p1, e) and demande_cmg_parent(p2, e) and p1 != p2
+        and choix_partage_af(p1, p2);
+    then parent_allocataire_alternance(p1, e);
+}
+
+// --- D. 531-23 (reform): L.531-5 then capped L.531-6 -----------------------------------
+//
+// Per-child cap from the L.531-6 bands: the 1°-of-III scale by default
+// (childminder, structure, EAJE), the 2° scale for domicile-only care,
+// IV halves 3–6. The cap rows read the band readers, no structure
+// right needed — they are cap references. Over the cap the L.531-6 aid
+// absorbs the difference (total = cap sum). Mixed-mode households read
+// per child (B-CMG-CUMUL-DOMICILE-MIXTE): the «uniquement à domicile»
+// household scope is not modelled.
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule CapCumulAmAncien(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "plafond de cumul par enfant: bande assistante maternelle (ancien droit)";
+    label en unofficial "per-child cumulation cap: childminder band (old law)";
+    when mode_garde(p, e, mode) and mode != EMPLOYE_DOMICILE and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and bmaf_retenu(p, bmaf) and taux_bande_structure_am(p, r, p1, p2, t) and not_known(age_taux_reduit(p, e));
+    then plafond_cumul_enfant(p, e, t * bmaf);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule CapCumulDomAncien(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "plafond de cumul par enfant: bande domicile (ancien droit)";
+    label en unofficial "per-child cumulation cap: home band (old law)";
+    when mode_garde(p, e, EMPLOYE_DOMICILE) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and bmaf_retenu(p, bmaf) and taux_bande_structure_dom(p, r, p1, p2, t) and not_known(age_taux_reduit(p, e));
+    then plafond_cumul_enfant(p, e, t * bmaf);
+}
+
+@source(CSS_D531_21_ED2025_09, CSS_D531_23_ED2025_09)
+rule CapCumulAmReforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "plafond de cumul par enfant: bande assistante maternelle (réforme)";
+    label en unofficial "per-child cumulation cap: childminder band (reform)";
+    when mode_garde(p, e, mode) and mode != EMPLOYE_DOMICILE
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_am(p, r, p1, p2, t)
+        and not_known(age_moitie36(e));
+    then plafond_cumul_enfant(p, e, t * bmaf);
+}
+
+@source(CSS_D531_21_ED2025_09, CSS_D531_23_ED2025_09)
+rule CapCumulDomReforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "plafond de cumul par enfant: bande domicile (réforme)";
+    label en unofficial "per-child cumulation cap: home band (reform)";
+    when mode_garde(p, e, EMPLOYE_DOMICILE)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_dom(p, r, p1, p2, t)
+        and not_known(age_moitie36(e));
+    then plafond_cumul_enfant(p, e, t * bmaf);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule CapCumulReduitAgeAm(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "plafond de cumul assistante maternelle divisé par deux (taux réduit ancien)";
+    label en unofficial "childminder cumulation cap halved (old reduced rate)";
+    when mode_garde(p, e, mode) and mode != EMPLOYE_DOMICILE and age_taux_reduit(p, e)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_am(p, r, p1, p2, t);
+    then plafond_cumul_enfant(p, e, t * bmaf / 2.0);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule CapCumulReduitAgeDom(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "plafond de cumul domicile divisé par deux (taux réduit ancien)";
+    label en unofficial "home cumulation cap halved (old reduced rate)";
+    when mode_garde(p, e, EMPLOYE_DOMICILE) and age_taux_reduit(p, e)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_dom(p, r, p1, p2, t);
+    then plafond_cumul_enfant(p, e, t * bmaf / 2.0);
+}
+
+@source(CSS_D531_21_ED2025_09, CSS_D531_23_ED2025_09)
+rule CapCumulReduit36Am(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mode: ModeGarde, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "plafond de cumul assistante maternelle divisé par deux entre trois et six ans";
+    label en unofficial "childminder cumulation cap halved between three and six";
+    when mode_garde(p, e, mode) and mode != EMPLOYE_DOMICILE
+        and age_revolu_ans(e, n) and n >= AgeSeuil3 and n < AgeLimite6
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_am(p, r, p1, p2, t);
+    then plafond_cumul_enfant(p, e, t * bmaf / 2.0);
+}
+
+@source(CSS_D531_21_ED2025_09, CSS_D531_23_ED2025_09)
+rule CapCumulReduit36Dom(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "plafond de cumul domicile divisé par deux entre trois et six ans";
+    label en unofficial "home cumulation cap halved between three and six";
+    when mode_garde(p, e, EMPLOYE_DOMICILE)
+        and age_revolu_ans(e, n) and n >= AgeSeuil3 and n < AgeLimite6
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_structure_dom(p, r, p1, p2, t);
+    then plafond_cumul_enfant(p, e, t * bmaf / 2.0);
+}
+
+@source(CSS_D531_23_ED2025_09)
+rule CumulMixteSousPlafonds(p: fr.pf.core::Personne, e1: fr.pf.core::Enfant, e2: fr.pf.core::Enfant, x1: Money, x2: Money, c1: Money, c2: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "cumul L. 531-5 puis L. 531-6 sous la somme des maxima";
+    label en unofficial "L.531-5 then L.531-6 cumulation under the maxima sum";
+    when montant_cmg_du(p, e1, x1) and montant_structure_du(p, e2, x2) and e1 != e2
+        and plafond_cumul_enfant(p, e1, c1) and plafond_cumul_enfant(p, e2, c2)
+        and x1 + x2 <= c1 + c2;
+    then montant_cumul_total(p, x1 + x2);
+}
+
+@source(CSS_D531_23_ED2025_09)
+rule CumulMixteEcrete(p: fr.pf.core::Personne, e1: fr.pf.core::Enfant, e2: fr.pf.core::Enfant, x1: Money, x2: Money, c1: Money, c2: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "cumul écrêté: l'aide L. 531-6 absorbe la différence";
+    label en unofficial "capped cumulation: the L.531-6 aid absorbs the difference";
+    when montant_cmg_du(p, e1, x1) and montant_structure_du(p, e2, x2) and e1 != e2
+        and plafond_cumul_enfant(p, e1, c1) and plafond_cumul_enfant(p, e2, c2)
+        and x1 + x2 > c1 + c2;
+    then montant_cumul_total(p, c1 + c2);
+}
+
+// --- Old cumul (old D. 531-23, VI): same shape, old aids -------------------------------
+//
+// L.531-5 old aid first (via old D. 531-22), then the old L.531-6 aid,
+// capped at the same band figures.
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule CumulMixteAncienSousPlafonds(p: fr.pf.core::Personne, e1: fr.pf.core::Enfant, e2: fr.pf.core::Enfant, x1: Money, x2: Money, c1: Money, c2: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien cumul L. 531-5 puis L. 531-6 sous la somme des maxima";
+    label en unofficial "old L.531-5 then L.531-6 cumulation under the maxima sum";
+    when montant_cmg_du(p, e1, x1) and montant_structure_du(p, e2, x2) and e1 != e2
+        and plafond_cumul_enfant(p, e1, c1) and plafond_cumul_enfant(p, e2, c2)
+        and x1 + x2 <= c1 + c2;
+    then montant_cumul_total(p, x1 + x2);
+}
+
+@source(CSS_D531_23_ED2020_01, CSS_D531_23_ED2021_09)
+rule CumulMixteAncienEcrete(p: fr.pf.core::Personne, e1: fr.pf.core::Enfant, e2: fr.pf.core::Enfant, x1: Money, x2: Money, c1: Money, c2: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien cumul écrêté à la somme des maxima";
+    label en unofficial "old cumulation capped at the maxima sum";
+    when montant_cmg_du(p, e1, x1) and montant_structure_du(p, e2, x2) and e1 != e2
+        and plafond_cumul_enfant(p, e1, c1) and plafond_cumul_enfant(p, e2, c2)
+        and x1 + x2 > c1 + c2;
+    then montant_cumul_total(p, c1 + c2);
+}
+
+// --- Transitional differential (decree 2025-515, art. 3) ----------------------------------
+//
+// Loss on Mar–May 2025 declared elements plus the hour and resource
+// gates. Four hour rows (I 1°): AM under-3 100h; home any-age or AM
+// over-3 50h; AM several under-3 150h; AM several with one over-3 100h.
+// Resources in the VII-2° month within the D. 531-20 2° ceiling (+40%
+// single). Amount: the average loss under 90% of net pay (II).
+// Per-cohort extinction (III) is a strict monthly marker
+// (differentiel_eteint); the open rows are disjoint from it through
+// not_known. The most-favourable-sibling clause is a boundary
+// (B-CMG-FRATRIE).
+
+@source(JORF_DECR2025_515_ART3)
+rule DifferentielAssmatMoins3(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, x: Date, ancien: Money, nouveau: Money, h: Decimal, ress: Money, plafond: Money, n: Integer, age: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "différentiel: assistante maternelle, un moins de trois ans, cent heures";
+    label en unofficial "differential: childminder, one under three, one hundred hours";
+    when moyenne_ancien_droit(p, ancien) and moyenne_nouveau_droit(p, nouveau) and nouveau < ancien and mode_garde(p, e, ASSISTANT_MATERNEL) and nb_enfants_charge(p, n) and n == 1 and age_revolu_ans(e, age) and age < 3 and heures_moyennes_periode(p, h) and h >= SeuilDiffAssmat100 and mois_droit(x) and ressources_mois_reference(p, ress) and plafond2_applicable(p, plafond) and ress <= plafond and not_known(differentiel_eteint(p, e, x));
+    then differentiel_ouvert(p, e);
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule DifferentielDomicile(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, x: Date, ancien: Money, nouveau: Money, h: Decimal, ress: Money, plafond: Money, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "différentiel: garde à domicile quel que soit l'âge, cinquante heures";
+    label en unofficial "differential: home care whatever the age, fifty hours";
+    when moyenne_ancien_droit(p, ancien) and moyenne_nouveau_droit(p, nouveau) and nouveau < ancien and mode_garde(p, e, EMPLOYE_DOMICILE) and nb_enfants_charge(p, n) and n == 1 and heures_moyennes_periode(p, h) and h >= SeuilDiffDomicile50 and mois_droit(x) and ressources_mois_reference(p, ress) and plafond2_applicable(p, plafond) and ress <= plafond and not_known(differentiel_eteint(p, e, x));
+    then differentiel_ouvert(p, e);
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule DifferentielAssmatGrand(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, x: Date, ancien: Money, nouveau: Money, h: Decimal, ress: Money, plafond: Money, n: Integer, age: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "différentiel: assistante maternelle plus de trois ans, cinquante heures";
+    label en unofficial "differential: childminder over three, fifty hours";
+    when moyenne_ancien_droit(p, ancien) and moyenne_nouveau_droit(p, nouveau) and nouveau < ancien and mode_garde(p, e, ASSISTANT_MATERNEL) and nb_enfants_charge(p, n) and n == 1 and age_revolu_ans(e, age) and age > AgeSeuil3 and heures_moyennes_periode(p, h) and h >= SeuilDiffDomicile50 and mois_droit(x) and ressources_mois_reference(p, ress) and plafond2_applicable(p, plafond) and ress <= plafond and not_known(differentiel_eteint(p, e, x));
+    then differentiel_ouvert(p, e);
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule DifferentielAssmatNombreuxJeunes(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, x: Date, ancien: Money, nouveau: Money, h: Decimal, ress: Money, plafond: Money, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "différentiel: assistante maternelle, plusieurs moins de trois ans, cent cinquante heures";
+    label en unofficial "differential: childminder, several under three, one hundred fifty hours";
+    when moyenne_ancien_droit(p, ancien) and moyenne_nouveau_droit(p, nouveau) and nouveau < ancien and mode_garde(p, e, ASSISTANT_MATERNEL) and nb_enfants_charge(p, n) and n >= 2 and heures_moyennes_periode(p, h) and h >= SeuilDiffNombreuxJeunes150 and mois_droit(x) and ressources_mois_reference(p, ress) and plafond2_applicable(p, plafond) and ress <= plafond and not_known(differentiel_eteint(p, e, x));
+    then differentiel_ouvert(p, e);
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule DifferentielAssmatNombreuxGrand(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, x: Date, e2: fr.pf.core::Enfant, ancien: Money, nouveau: Money, h: Decimal, ress: Money, plafond: Money, n: Integer, age2: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "différentiel: assistante maternelle, plusieurs dont un plus de trois ans, cent heures";
+    label en unofficial "differential: childminder, several with one over three, one hundred hours";
+    when moyenne_ancien_droit(p, ancien) and moyenne_nouveau_droit(p, nouveau) and nouveau < ancien and mode_garde(p, e, ASSISTANT_MATERNEL) and nb_enfants_charge(p, n) and n >= 2 and age_revolu_ans(e2, age2) and age2 > AgeSeuil3 and heures_moyennes_periode(p, h) and h >= SeuilDiffNombreuxGrand100 and h < SeuilDiffNombreuxJeunes150 and mois_droit(x) and ressources_mois_reference(p, ress) and plafond2_applicable(p, plafond) and ress <= plafond and not_known(differentiel_eteint(p, e, x));
+    then differentiel_ouvert(p, e);
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule MontantDifferentielSousPlafond(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, ancien: Money, nouveau: Money, net: Money, verse: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "différentiel: perte moyenne sous 90 % du net";
+    label en unofficial "differential: average loss under 90% of net pay";
+    when differentiel_ouvert(p, e)
+        and moyenne_ancien_droit(p, ancien) and moyenne_nouveau_droit(p, nouveau)
+        and remuneration_nette_salarie(p, net) and cmg_verse(p, e, verse)
+        and ancien - nouveau + verse <= PlafondDifferentiel90 * net;
+    then montant_differentiel(p, e, round(ancien - nouveau, 2, "HALF_UP"));
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule MontantDifferentielEcrete(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, ancien: Money, nouveau: Money, net: Money, verse: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "différentiel écrêté à 90 % du net moins le versé";
+    label en unofficial "differential cut to 90% of net pay minus paid";
+    when differentiel_ouvert(p, e)
+        and moyenne_ancien_droit(p, ancien) and moyenne_nouveau_droit(p, nouveau)
+        and remuneration_nette_salarie(p, net) and cmg_verse(p, e, verse)
+        and ancien - nouveau + verse > PlafondDifferentiel90 * net;
+    then montant_differentiel(p, e, round(PlafondDifferentiel90 * net - verse, 2, "HALF_UP"));
+}
+
+// --- Extinction per cohort (III) ----------------------------------------------------------------
+//
+// Cohort A (third birthday before 2025-01-01): first day of the month
+// after the sixth-birthday month — for first-of-month mois_droit, the
+// month strictly after the sixth birthday (B-CMG-EXTINCTION-JOUR for
+// day precision). Cohorts B (third birthday in 2025–2028): 1 September
+// of that year.
+
+@source(JORF_DECR2025_515_ART3)
+rule DifferentielEteint6Ans(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date, d3: Date, ancien_montant: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "extinction: mois postérieur au sixième anniversaire";
+    label en unofficial "extinction: month after the sixth birthday";
+    when date_3eme_anniversaire(e, d3) and d3 < @2025-01-01
+        and mois_droit(mois) and mois > add_calendar_period(d3, 3 calendar_year)
+        and moyenne_ancien_droit(p, ancien_montant);
+    then differentiel_eteint(p, e, mois);
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule DifferentielEteint2025(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date, d3: Date, ancien_montant: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "extinction: troisième anniversaire en 2025, 1er septembre 2025";
+    label en unofficial "extinction: third birthday in 2025, 1 September 2025";
+    when date_3eme_anniversaire(e, d3) and d3 >= @2025-01-01 and d3 < @2026-01-01
+        and mois_droit(mois) and mois >= @2025-09-01
+        and moyenne_ancien_droit(p, ancien_montant);
+    then differentiel_eteint(p, e, mois);
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule DifferentielEteint2026(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date, d3: Date, ancien_montant: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "extinction: troisième anniversaire en 2026, 1er septembre 2026";
+    label en unofficial "extinction: third birthday in 2026, 1 September 2026";
+    when date_3eme_anniversaire(e, d3) and d3 >= @2026-01-01 and d3 < @2027-01-01
+        and mois_droit(mois) and mois >= @2026-09-01
+        and moyenne_ancien_droit(p, ancien_montant);
+    then differentiel_eteint(p, e, mois);
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule DifferentielEteint2027(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date, d3: Date, ancien_montant: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "extinction: troisième anniversaire en 2027, 1er septembre 2027";
+    label en unofficial "extinction: third birthday in 2027, 1 September 2027";
+    when date_3eme_anniversaire(e, d3) and d3 >= @2027-01-01 and d3 < @2028-01-01
+        and mois_droit(mois) and mois >= @2027-09-01
+        and moyenne_ancien_droit(p, ancien_montant);
+    then differentiel_eteint(p, e, mois);
+}
+
+@source(JORF_DECR2025_515_ART3)
+rule DifferentielEteint2028(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date, d3: Date, ancien_montant: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "extinction: troisième anniversaire en 2028, 1er septembre 2028";
+    label en unofficial "extinction: third birthday in 2028, 1 September 2028";
+    when date_3eme_anniversaire(e, d3) and d3 >= @2028-01-01 and d3 < @2029-01-01
+        and mois_droit(mois) and mois >= @2028-09-01
+        and moyenne_ancien_droit(p, ancien_montant);
+    then differentiel_eteint(p, e, mois);
+}

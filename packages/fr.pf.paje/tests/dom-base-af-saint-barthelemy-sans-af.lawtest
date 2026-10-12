@@ -1,0 +1,23 @@
+// L. 755-19, para. 2, premise control in Saint-Barthélemy (FULL RETURN 03,
+// R02-03): the household resides in Saint-Barthélemy with a full-rate base
+// right open, but no single-child family allowances are served (e.g.
+// several children in care) — the applicability holds, yet no cumulation
+// bar concludes. Control — dom-base-af-unique-plein.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-base-af-saint-barthelemy-sans-af" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-sbaf-01": territoire(entity_ref("urn:fr:paje:case:dom-sbaf"), SAINT_BARTHELEMY) { origin case_input; }
+        assert "dom-sbaf-02": enfant_en_charge(entity_ref("urn:fr:paje:case:dom-sbaf"), entity_ref("urn:fr:paje:enfant:dom-sbaf")) { origin case_input; }
+        assert "dom-sbaf-03": condition_age_base(entity_ref("urn:fr:paje:enfant:dom-sbaf")) { origin adjudicated; }
+        assert "dom-sbaf-04": ressources_annuelles(entity_ref("urn:fr:paje:case:dom-sbaf"), 20000 EUR) { origin case_input; }
+        assert "dom-sbaf-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:dom-sbaf"), 30000 EUR) { origin case_input; }
+    }
+    evaluate truth(cumul_base_af_unique_interdit(entity_ref("urn:fr:paje:case:dom-sbaf"), entity_ref("urn:fr:paje:enfant:dom-sbaf")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

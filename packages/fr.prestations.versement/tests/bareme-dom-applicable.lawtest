@@ -1,0 +1,14 @@
+// DOM applicability: L. 751-1 department beneficiary - R. 553-1 and D. 553-1..4 apply (D. 755-2, D73).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-dom-applicable" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "dom-applicable-01": beneficiaire_departements_l7511(entity_ref("urn:fr:pv:case:dom-allocataire")) { origin case_input; }
+    }
+    evaluate truth(retenues_dom_applicables(entity_ref("urn:fr:pv:case:dom-allocataire")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,16 @@
+// AJPP applicant information: claim filed but benefit not yet received - the body must still inform of AEEH/PCH criteria and procedure (L. 544-10 applicant branch, PC-R07-11).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-ajpp-informer-demandeur" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-informer-demandeur-01": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:ajpp-dem")) { origin case_input; }
+        assert "ajpp-informer-demandeur-02": demande_ajpp_deposee(entity_ref("urn:fr:pf:case:ajpp-dem")) { origin case_input; }
+        assert "ajpp-informer-demandeur-03": not beneficie_ajpp(entity_ref("urn:fr:pf:case:ajpp-dem")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InformerDemandeurAjpp, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

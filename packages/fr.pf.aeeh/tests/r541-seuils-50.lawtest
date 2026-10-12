@@ -1,0 +1,30 @@
+// R. 541-1 al. 3, 50 % edge (Seuil50Atteint/Tranche5080): first child
+// rated exactly 50.0 reaches the minimum and falls inside the tranche;
+// second child rated 49.0 reaches neither threshold.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-seuils-50" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-s50-01": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-50"), 50.0) { origin adjudicated; }
+        assert "r541-s50-02": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-49"), 49.0) { origin adjudicated; }
+    }
+    evaluate truth(seuil_50_atteint(entity_ref("urn:fr:pf-aeeh:case:enfant-50")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(tranche_50_80(entity_ref("urn:fr:pf-aeeh:case:enfant-50")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(seuil_50_atteint(entity_ref("urn:fr:pf-aeeh:case:enfant-49")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(tranche_50_80(entity_ref("urn:fr:pf-aeeh:case:enfant-49")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

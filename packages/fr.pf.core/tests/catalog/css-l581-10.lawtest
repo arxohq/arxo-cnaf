@@ -1,0 +1,25 @@
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+// Generated witness scenarios of the question catalog (DECISION-0190):
+// the world fulfils the rule premises, the query asks its conclusion.
+// Built by corpus/tools/questions_catalog/build_catalog.py from the package CLIR;
+// hand edits — only together with the catalog.
+
+// 
+// D-42: witness world completed by hand - rule InterdictionPoursuiteDirecte (09b) binds the sums of
+// the recovery request and reads "until notified termination" as an explicit negative case fact
+// (not cessation_procedure_recouvrement_notifiee, SPEC 69; L. 581-10). Card and test id unchanged.
+test "CATALOG-INTERDICTIONPOURSUITEDIRECTE" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": saisine_prefet(entity_ref("urn:law:catalog:interdictionpoursuitedirecte:v1")) { origin case_input; }
+        assert "cat-1": organisme_debiteur_pf(entity_ref("urn:law:catalog:interdictionpoursuitedirecte:v0"), entity_ref("urn:law:catalog:interdictionpoursuitedirecte:v1")) { origin case_input; }
+        assert "cat-2": sommes_objet_demande_recouvrement(entity_ref("urn:law:catalog:interdictionpoursuitedirecte:v1"), 500 EUR) { origin case_input; }
+        assert "cat-3": not cessation_procedure_recouvrement_notifiee(entity_ref("urn:law:catalog:interdictionpoursuitedirecte:v1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(PoursuivreRecouvrementDirect, ACTIVE);
+}

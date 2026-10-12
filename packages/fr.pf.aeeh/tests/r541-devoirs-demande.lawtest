@@ -1,0 +1,21 @@
+// R. 541-3 duties ACTIVE: the carer who filed with the competent MDPH
+// holds JoindrePiecesDemande; after the favourable decision the MDPH
+// holds TransmettreDossierMDPH toward the debtor body.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-devoirs-demande" {
+    given {
+        context { deadline_policy AEEH_MOIS_CIVIL; decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-dd-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-dd"), entity_ref("urn:fr:pf-aeeh:case:enfant-dd")) { origin case_input; }
+        assert "r541-dd-02": demande_aeeh_deposee(entity_ref("urn:fr:pf-aeeh:case:enfant-dd"), @2024-01-10) { origin case_input; }
+        assert "r541-dd-03": mdph_competente(entity_ref("urn:fr:pf-aeeh:mdph:mdph-75"), entity_ref("urn:fr:pf-aeeh:case:enfant-dd")) { origin case_input; }
+        assert "r541-dd-04": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-dd")) { origin adjudicated; }
+        assert "r541-dd-05": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-aeeh:org:caisse"), entity_ref("urn:fr:pf-aeeh:case:parent-dd")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(JoindrePiecesDemande, ACTIVE);
+    expect position(TransmettreDossierMDPH, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

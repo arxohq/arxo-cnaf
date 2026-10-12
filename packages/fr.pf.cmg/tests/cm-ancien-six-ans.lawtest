@@ -1,0 +1,31 @@
+// D. 531-20: the reduced rate ends before the sixth birthday.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-ancien-six-ans" {
+    given {
+        context { decision_time @2024-06-20T12:00:00Z; knowledge_time @2024-06-20T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "ancien-six-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), entity_ref("urn:fr:pf-cmg:child:six"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "ancien-six-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans")) { origin case_input; }
+        assert "ancien-six-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), entity_ref("urn:fr:pf-cmg:child:six")) { origin case_input; }
+        assert "ancien-six-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:six"), 6) { origin case_input; }
+        assert "ancien-six-05": age_base_ans(entity_ref("urn:fr:pf-cmg:child:six"), 3) { origin case_input; }
+        assert "ancien-six-06": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), 1) { origin case_input; }
+        assert "ancien-six-07-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), 17633 EUR) { origin case_input; }
+        assert "ancien-six-07-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), 2917 EUR) { origin case_input; }
+        assert "ancien-six-07-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), 39184 EUR) { origin case_input; }
+        assert "ancien-six-07-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), 6482 EUR) { origin case_input; }
+        assert "ancien-six-08": ressources_annuelles(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), 15000 EUR) { origin case_input; }
+        assert "ancien-six-09": bmaf_retenu(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), 400.00 EUR) { origin case_input; }
+        assert "ancien-six-10": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), entity_ref("urn:fr:pf-cmg:child:six"), 600 EUR) { origin case_input; }
+        assert "ancien-six-11": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), entity_ref("urn:fr:pf-cmg:child:six"), 50 EUR) { origin case_input; }
+        assert "ancien-six-12": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), entity_ref("urn:fr:pf-cmg:child:six"), 150 EUR) { origin case_input; }
+        assert "ancien-six-13": smic_horaire_retenu(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), 12 EUR) { origin case_input; }
+        assert "ancien-six-14": jours_remuneres(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), entity_ref("urn:fr:pf-cmg:child:six"), 20.0) { origin case_input; }
+    }
+    evaluate truth(age_eligible(entity_ref("urn:fr:pf-cmg:case:ancien-six-ans"), entity_ref("urn:fr:pf-cmg:child:six")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

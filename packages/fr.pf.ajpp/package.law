@@ -1,0 +1,925 @@
+// Package dictionary: daily parental-presence allowance (AJPP, wave 3,
+// FINISH ajpp-death: D. 544-1..10, R. 544-1..3; D73 transfer: L. 755-33).
+// The rules of `02-droit-duree.law` derive the computation-level right from
+// the medical channel (certificate + control agreement) and the parental
+// leave; `03-plafond-renouvellement.law` carries the 310-day ceiling, the
+// exceptional once-renewal and reopening; `04-montants.law` the monthly cap,
+// the daily-rate amounts, the expense complement and the special workers;
+// `05-non-cumul.law` the nine non-cumulation items with the part-time sick
+// exception; `06-devoir-informer.law` the fund information duty.
+// `07-durees-decret.law` carries the decree duration mechanics (3-year
+// limit, re-exam window and renewal, reopening delay and branches, new
+// pathology); `08-montants-decret.law` the pinned decree figures (22-day
+// monthly cap, SMIC formula and 2021 BMAF rates, half-day and part-time
+// amounts, computed complement threshold, job-seeker flat 22);
+// `09-procedure-devoirs.law` the file completeness, the competent service,
+// the silence rules and the monthly and expense duties;
+// `10-attribution-dom.law` the L. 751-1 collectivity attribution (L. 755-33,
+// D73 owner transfer).
+//
+// KEY DISCIPLINE (engine-bound): every keyed premise arrives with its key
+// bound (per-child and per-month keys); free-key generation runs only in
+// the latest edition, so no rule generates over a keyed relation with a
+// free key (fr.pf.aeeh evidence: pre-2021 silence). The carer link
+// conge_presence_parentale carries no key (multi-carer sharing).
+//
+// DEONTIC MAP OVER PINNED TEXTS ONLY (bytes of 01-sources.law; outside
+// them — boundary, not conjecture).
+//
+//   D1. Duty of the fund to inform. «L'organisme débiteur des prestations
+//   familiales est tenu d'informer le demandeur ou le bénéficiaire»
+//   (L. 544-10) of the AEEH/PCH award criteria and claim steps. Trigger:
+//   leave + open right + debtor link. Performance: the recorded information
+//   fact. Window [@2021-01-01, ∞).
+//   D2. Duty of the L. 5421-1 job-seeker to declare to France Travail
+//   (D. 544-8, para. 3: «portent à la connaissance de l'opérateur France
+//   Travail le nombre de jours pris»). Bearer: the job-seeker;
+//   beneficiary: the operator body. Window [@2021-01-01, ∞).
+//   D3-D7. Monthly supporting-document duties of the five beneficiary
+//   classes (D. 544-9 1°-5°: employer attestation for leave-takers and
+//   public agents, trainer attestation plus sworn statement for paid
+//   trainees, sworn cessation statement for job-seekers, sworn activity
+//   interruption statement for non-salaried/VRP). Bearer: the beneficiary;
+//   beneficiary: the debtor body. Window [@2021-01-01, ∞). Trigger:
+//   beneficiary class + debtor link + concerned month (mois_concerne_ajpp).
+//   «Chaque mois au plus» is read as the monthly proof rhythm (frequency
+//   ceiling, satisfied by monthly sending; no over-frequency prohibition
+//   is modelled). Each duty instance and performance is keyed by the
+//   concerned month: a transmission for March never satisfies April.
+//   D8. Monthly sworn expense declaration for the L. 544-7 complement
+//   (D. 544-10, sentence 1: «pour chaque mois considéré»). Bearer: the
+//   allocataire; beneficiary: the debtor body. Window [@2021-01-01, ∞).
+//   Month-keyed like D3-D7.
+//   D9. Production of the supporting elements on the fund's demand
+//   (D. 544-10, sentence 2: «doit être en mesure de produire, à la demande
+//   de l'organisme»). Conditional duty, triggered by the recorded demand
+//   plus the standing declaration for the concerned month. Window
+//   [@2021-01-01, ∞). Month-keyed like D3-D7.
+//   D10. Notification of the favourable control opinion on renewal
+//   requests (R. 544-3, II, 3°, prev window only: «notifie, dès qu'il en a
+//   connaissance, l'avis favorable»). Bearer: the debtor body; beneficiary:
+//   the claimant. Window [@2022-04-30, @2024-02-05).
+//   Permissions without a named holder stay status heads, not liberties:
+//   the re-exam request window (D. 544-2 «peut être demandé», passive),
+//   the reopening (D. 544-3 «peut être ouvert à nouveau», passive) and the
+//   half-day payment (D. 544-6 «peut être versée», passive).
+//   No sanctions in scope. The ARE suspension/reprise (L. 544-8, para. 3)
+//   is automatic versement mechanics — package fr.prestations.versement
+//   (wave 5), not a power here. R. 544-2 is a competence attribution (the
+//   child's health-cost scheme service gives the L. 544-2 agreement), not
+//   a new position.
+//   L. 544-1 (base right per leave day, L. 1225-62 travail) is SANS_OWNER
+//   with a future abrogation (ABROGE_DIFF, end 2027-12-12): boundary quote
+//   in REPORT, never cited. The head is grounded on L. 544-2 (certificate +
+//   agreement open the right) with the leave as the external channel fact.
+//   The D. 544-8 exception («dans les conditions définies à l'article
+//   L. 544-1») therefore ends at that boundary: an exception marker, not
+//   a payment rule (B-PFAJPP-L544-1-EXCEPTION).
+//
+// LAYER BOUNDARIES (omission records, not norms):
+// B-PFAJPP-TETE: the computation heads are carried by this package on its
+// own established facts. fr.pf.core holds parallel principle-level filters
+// (beneficie_ajpp, AjppPlafond310, NonCumulAjpp, demandeur_ajpp_informe)
+// that are package-internal (§24, not exported): this package cannot read
+// them, so it does not; case worlds assert the local symbols and the
+// upstream filters stay silent there. Same source facts, no redefinition.
+// B-PFAJPP-D544: PARTLY CLOSED by the FINISH ajpp-death wave. Now pinned
+// decree text with params and rules: 22 monthly days (D. 544-4),
+// 3-year duration per child and pathology (D. 544-1), daily-rate formula
+// and 2021 BMAF rates with half-day and part-time amounts (D. 544-6),
+// 27.19 % complement threshold and amount (D. 544-7), job-seeker flat 22
+// (D. 544-8). Still case inputs with provenance: the retained BMAF euro
+// figure (series owned by fr.css.revalorisation; the decree names no
+// reference month — B-PFAJPP-BMAF-FIGURE), the net hourly SMIC shn
+// (established pre-rounded figure — B-PFAJPP-SHN-NET), the CRDS rate a
+// (ordonnance 96-50 art. 14; cross-check against
+// fr.prestations.versement TauxCRDSPF is deferred, no import — the
+// versement package consumes our brut heads, so importing it would cycle —
+// B-PFAJPP-CRDS-TAUX), the R. 522-2 annual ceiling and the R. 532-1
+// assessed resources (neighbour articles, out of scope).
+// B-PFAJPP-DUREE: PARTLY CLOSED. Modelled now: 3-year limit, re-exam
+// request window and renewal within the remaining caps, reopening delay
+// and payment branches, new pathology, file completeness, competent
+// service, silence-deemed agreement and decision. The reopening routes
+// stay separate: D. 544-3 para. 1 reopens within three years while the
+// day maximum is unused; L. 544-3 para. 3 (2019: para. 2) reopens only
+// beyond the expired maximum duration («Au-delà de la durée maximale»),
+// and only that route pays beyond the maximum (D. 544-3 2°). Still open: renewal
+// silence before 2022-04-30 (the text then covers only the initial
+// request — NEITHER by construction,
+// B-PFAJPP-SILENCE-RENOUVELLEMENT-AVANT-2022); death extension mechanics
+// (none in the pinned R. 544-x — no rule).
+// B-PFAJPP-FORMULE-DIVISION: the D. 544-6 quotient (7*shn)/(1-a) is built
+// by one formula rule with the text rounding («arrondi au centième
+// d'euro»). Per D75 the pin names no tie-breaking mode: non-tie
+// outputs are source-derived (every nearest-mode agrees), exact
+// half-cent ties are case-flagged (tie_formule_taux) and stay pending
+// (taux_tie_en_attente, B-PFAJPP-TIE-ARRONDI) until the owner records
+// a tie policy; the HALF_UP mode argument of ajpp_taux_formule is
+// mechanical, never a tie assertion, and no other package's precedent
+// is cited as policy. D-42 (08.10.2026): the run qualified the
+// division — `/` refuses the non-terminating quotient (INEXACT_DIVISION,
+// §58), so the formula is written div_round §50 (exact quotient rounded
+// once to the cent); built rates run on Python and Rust.
+// B-PFAJPP-TIE-ARRONDI: exact half-cent ties of the D. 544-6 formula
+// (D75 source boundary): the rounded rate is not derived; the pending
+// head taux_tie_en_attente stands instead. Tie worlds assert
+// tie_formule_taux with the external computation as provenance;
+// unflagged ties are a case-authoring error, not a legal assertion.
+// B-PFAJPP-L544-1-EXCEPTION: D. 544-8 occasional-activity job-seekers are
+// paid «dans les conditions définies à l'article L. 544-1» — L. 544-1 is
+// SANS_OWNER (boundary quote): exception marker only, no payment rule.
+// B-PFAJPP-D544-UN-AN: D. 544-2 still measures the one-year mark as a
+// fixed 12 months while L. 544-2 raised the re-exam ceiling to 14 months
+// in 2026: decoded as written (12 in the D. 544-2 branch), proposed D-NN.
+// B-PFAJPP-ARE: ARE suspension/reprise mechanics (L. 544-8, para. 3;
+// L. 5421-1 travail, external) — versement package (wave 5).
+// B-PFAJPP-PARTAGE: designation/sharing between the two members (L. 544-4
+// «à l'un ou aux deux membres du couple», L. 544-6 modulation) — mechanism
+// owned by fr.pf.af; carer links arrive per case.
+// B-PFAJPP-ARRONDI: no cent-rounding rule in scope; Money keeps exact
+// Decimal products, no silent rounding (fr.pf.aeeh evidence).
+// B-PFAJPP-OF: OpenFisca AJPP parameters (frozen 2006-06-05) are parameters
+// without a model upstream: documentary measurement only (REPORT +
+// tests/foreign/openfisca/NOTE.md), never regressions.
+// B-PFAJPP-DOM-L751: L. 755-33 extends the AJPP attribution to the
+// collectivités listed in L. 751-1; the L. 751-1 list itself (which
+// territories) is out of scope — residence arrives as a case fact
+// with provenance. Pre-2021 DOM attribution is a prev-coverage gap.
+// B-PFAJPP-ENVELOPPE-QUALIFIEE (F05-01): monthly daily amounts
+// require the qualified envelope plus the month conformity. Initial
+// / once-renewal branch: ajpp_dans_limite (first 310 OR renewal
+// 310 — no blanket lifetime cap) and ajpp_duree_dans_limite (3
+// years per child and pathology). Beyond-maximum reopening branch:
+// droit_rouvert + versement_au_dela_max (fresh D. 544-1
+// application; old exhaustion/expiry do not block). Monthly:
+// mensuel_dans_limite for daily paths (L. 544-4 / D. 544-4 22),
+// forfait_22_conforme for flat paths (D. 544-8 22). Demi-day and
+// part-time amounts require the envelope only (monthly conversion
+// boundary B-PFAJPP-DEMI-PLAFOND).
+// B-PFAJPP-DEMI-PLAFOND: D. 544-4 caps «le nombre d'allocations
+// journalières versées ... au titre d'un mois civil» at 22. The
+// pinned bytes do not convert half-day allowances (D. 544-6 demi)
+// or part-time days not worked into that count — no monthly gate
+// for demi/part-time amounts, envelope only. No invented 44-half
+// or 22-not-worked cap.
+// B-PFAJPP-ROUVERTURE-COMPTEUR: the beyond-maximum reopened right
+// is paid «dans la limite d'une nouvelle application de la durée
+// maximale» (D. 544-3 2°). No fresh day counter for the reopened
+// envelope is modelled (jours_ajpp_verses counts the original
+// envelope); reopening amounts require monthly + droit_rouvert +
+// versement_au_dela_max, no new 310 check. A fresh counter needs
+// an owner D-NN and a new empirical input.
+// B-PFAJPP-NOUVELLE-PATHOLOGIE-COMPTEUR: D. 544-1 limits per child
+// AND pathology, but jours_ajpp_verses is per child. A new
+// pathology gets no separate fresh counter here; new-pathology
+// amounts would gate on the old child counter. No amount tests
+// for new pathology; a per-cause counter is future work.
+//
+// INPUT CONTRACT (engine has no absence test): exactly one taux input
+// (normal / majoré / modulé) per child-month; exactly one of
+// {jours_ajpp_mois, jours_forfaitaires} per child-month; for non-cumul
+// exactly one of {one motif fact, the part-time pair, neither} per
+// beneficiary (run the motif tests one motif per world). Decree layer:
+// exactly one of {couple rate, single rate} per child for the 2021 BMAF
+// rates; exactly one treatment start and one foreseeable duration per
+// child; exactly one opening month and one relapse month per reopening
+// case; exactly one cause duration per child in reopening/expiry
+// worlds (the expiry head projects the cause); exactly one of
+// {demande_initiale, demande_renouvellement} per
+// silence case; month facts are Integer months on one case-local scale.
+// Flat-day worlds assert the pinned D. 544-8 figure (22 per month for
+// the L. 544-8 para. 2 class, both pinned versions) outside the
+// L. 544-1 exception; any other asserted count leaves the decree
+// conformance head silent.
+// Monthly-duty worlds assert the concerned month per beneficiary
+// (mois_concerne_ajpp, first-of-month Date; one child each — cross-child
+// months need separate worlds). Formula worlds with an exact half-cent
+// tie assert tie_formule_taux, established by external computation
+// (B-PFAJPP-TIE-ARRONDI). Amount worlds assert the envelope history
+// for enveloppe_ajpp_qualifiee (F05-01): cumulative jours_ajpp_verses
+// (or second-envelope jours_ajpp_second_enveloppe with a granted
+// renewal) plus duree_versement_ajpp per child and cause; reopening
+// amount worlds assert the expiry-gated droit_rouvert route instead
+// (old exhaustion/expiry do not block). Monthly conformity needs no
+// extra fact where the decree 22 path applies (daily days <= 22,
+// flat days == 22); the retained-max path needs plafond_mensuel_retenu.
+// Worlds without envelope history leave amounts NEITHER by
+// construction (no negative from unknown).
+//
+// Scenarios: tests/ajpp-*.lawtest (families fr.pf.ajpp#droit-duree,
+// #plafond-renouvellement, #montants, #non-cumul, #devoir-informer,
+// #durees-decret, #montants-decret, #procedure-devoirs, #attribution-dom
+// in law.toml):
+// inputs→value; boundary pairs (310 edges, renewal window, 2018/2025
+// lists, part-time exception, 2023-H1 majoration, 3-year duration,
+// re-exam window, reopening delay and max, beyond-maximum expiry gate,
+// 22-day cap, formula rate,
+// tie pending, complement threshold equality, silence months, renewal
+// silence generations, monthly-duty months, DOM residence,
+// F05-01 amount qualification (monthly overflow, flat 15, 311 spent,
+// duration spent, unknown history, renewal and reopening positives)).
+// ajpp-blind-22 pins the D-38 class (c) contract: the 2018
+// cumulation refusal carries no parental-leave premise (exact L. 544-9
+// quote in the test header).
+
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+import fr.pf.core version "0.1.0";
+
+pub enum MotifNonCumul2018 {
+    label fr official "cause de non-cumul 2018-2025 (L. 544-9, fait établi)";
+    label en unofficial "non-cumulation ground 2018-2025 (L. 544-9, established fact)";
+    MATERNITE_PATERNITE_ADOPTION,
+    INTERRUPTION_ACTIVITE,
+    MALADIE_AT,
+    CHOMAGE,
+    VIEILLESSE_INVALIDITE,
+    PREPARE,
+    AEEH_COMPLEMENT_MAJO,
+    AAH,
+    PCH_ELEMENT
+}
+
+pub enum MotifNonCumul2025 {
+    label fr official "cause de non-cumul depuis 2026 (L. 544-9 2025, fait établi)";
+    label en unofficial "non-cumulation ground from 2026 (L. 544-9 2025, established fact)";
+    MATERNITE_PATERNITE_NAISSANCE,
+    INTERRUPTION_ACTIVITE_623_2,
+    MALADIE_AT,
+    CHOMAGE,
+    VIEILLESSE_INVALIDITE,
+    PREPARE,
+    AEEH_COMPLEMENT_MAJO,
+    AAH,
+    PCH_ELEMENT
+}
+
+pub relation certificat_gravite(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "certificat médical détaillé : particulière gravité et caractère indispensable d'une présence soutenue et de soins contraignants, durée prévisible du traitement (L. 544-2, fait établi)";
+    label en unofficial "detailed medical certificate: particular gravity and indispensable sustained presence and constraining care, foreseeable treatment duration (L. 544-2, established fact)";
+}
+
+pub relation avis_favorable_controle(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "avis favorable du service du contrôle médical L. 315-1 ou du régime spécial (L. 544-2, fait établi)";
+    label en unofficial "favourable agreement of the L. 315-1 medical control service or special scheme (L. 544-2, established fact)";
+}
+
+pub relation avis_en_attente(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "avis du contrôle médical demandé, en attente (avance L. 544-3, fait du dossier)";
+    label en unofficial "medical control agreement requested, pending (L. 544-3 advance, case fact)";
+}
+
+pub relation conge_presence_parentale(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "congé de présence parentale L. 1225-62 travail (ou règles agents publics) pris pour l'enfant (hors champ, fait du dossier)";
+    label en unofficial "L. 1225-62 labour-code parental presence leave (or public-agent rules) taken for the child (out of scope, case fact)";
+}
+
+pub relation echeance_reexamen(e: fr.pf.core::Enfant, mois: Integer) kind empirical {
+    key(e);
+    label fr official "échéance de réexamen fixée par le médecin, en mois (L. 544-2, fait établi)";
+    label en unofficial "re-examination deadline set by the doctor, in months (L. 544-2, established fact)";
+}
+
+pub relation jours_ajpp_verses(e: fr.pf.core::Enfant, jours: Integer) kind empirical {
+    key(e);
+    label fr official "allocations journalières versées, première enveloppe, constatées par l'organisme (L. 544-3, fait établi)";
+    label en unofficial "daily allowances paid, first envelope, recorded by the body (L. 544-3, established fact)";
+}
+
+pub relation jours_ajpp_second_enveloppe(e: fr.pf.core::Enfant, jours: Integer) kind empirical {
+    key(e);
+    label fr official "allocations journalières versées au titre du renouvellement unique, constatées par l'organisme (L. 544-3, fait établi)";
+    label en unofficial "daily allowances paid under the once-renewal, recorded by the body (L. 544-3, established fact)";
+}
+
+pub relation nouveau_certificat(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "nouveau certificat médical attestant le caractère indispensable de la poursuite (L. 544-3 al. 2, fait établi)";
+    label en unofficial "new medical certificate attesting the indispensable continuation (L. 544-3 para. 2, established fact)";
+}
+
+pub relation accord_controle_renouvellement(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "accord du contrôle médical au renouvellement unique (L. 544-3 al. 2, fait établi)";
+    label en unofficial "medical control agreement to the once-renewal (L. 544-3 para. 2, established fact)";
+}
+
+pub relation avant_terme_initial(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "renouvellement demandé avant la fin du terme initialement fixé (L. 544-3 al. 2, fait du dossier)";
+    label en unofficial "renewal requested before the end of the initially set term (L. 544-3 para. 2, case fact)";
+}
+
+pub relation rechute_pathologie(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "rechute ou récidive de la pathologie au titre de laquelle le droit avait été ouvert (L. 544-3 al. 3, fait établi)";
+    label en unofficial "relapse or recurrence of the pathology for which the right was opened (L. 544-3 para. 3, established fact)";
+}
+
+pub relation gravite_persistante(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "gravité de la pathologie nécessitant toujours présence soutenue et soins contraignants (L. 544-3 al. 3, fait établi)";
+    label en unofficial "pathology gravity still requiring sustained presence and constraining care (L. 544-3 para. 3, established fact)";
+}
+
+pub relation jours_ajpp_mois(e: fr.pf.core::Enfant, mois: Date, jours: Integer) kind empirical {
+    key(e, mois);
+    label fr official "allocations journalières du mois civil, constatées par l'organisme (L. 544-4, fait établi)";
+    label en unofficial "daily allowances of the calendar month, recorded by the body (L. 544-4, established fact)";
+}
+
+pub relation jours_forfaitaires(e: fr.pf.core::Enfant, mois: Date, jours: Integer) kind empirical {
+    key(e, mois);
+    label fr official "jours forfaitaires du mois du demandeur d'emploi ou en formation (L. 544-8 al. 2, D. 544-8 épinglé : 22, hors exception L. 544-1, fait du dossier)";
+    label en unofficial "flat days of the month of the job-seeker or trainee (L. 544-8 para. 2, pinned D. 544-8: 22, outside the L. 544-1 exception, case fact)";
+}
+
+pub relation plafond_mensuel_retenu(e: fr.pf.core::Enfant, max: Integer) kind empirical {
+    key(e);
+    label fr official "nombre maximal mensuel retenu pour le mois (L. 544-4, décret — hors champ, fait du dossier)";
+    label en unofficial "monthly maximum retained for the month (L. 544-4, decree - out of scope, case fact)";
+}
+
+pub relation montant_journalier_retenu(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "montant journalier retenu, décret revalorisé SMIC (L. 544-6, montant non épinglé, fait du dossier)";
+    label en unofficial "retained daily rate, SMIC-revalorised decree figure (L. 544-6, unpinned amount, case fact)";
+}
+
+pub relation montant_journalier_majore_retenu(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "montant journalier majoré personne seule retenu, 2023 (L. 544-6 2023-01, montant non épinglé, fait du dossier)";
+    label en unofficial "retained increased single-person daily rate, 2023 (L. 544-6 2023-01, unpinned amount, case fact)";
+}
+
+pub relation montant_journalier_module_retenu(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "montant journalier modulé retenu, fractionnement ou temps partiel (L. 544-6, décret — hors champ, fait du dossier)";
+    label en unofficial "retained modulated daily rate, split or part-time leave (L. 544-6, decree - out of scope, case fact)";
+}
+
+pub relation ressources_complement(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "ressources du ménage retenues pour le complément pour frais (L. 544-7, fait du dossier)";
+    label en unofficial "household resources retained for the expense supplement (L. 544-7, case fact)";
+}
+
+pub relation plafond_ressources(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "plafond de ressources applicable, enfants et majorations compris (L. 544-7, décret — hors champ, fait du dossier)";
+    label en unofficial "applicable resource ceiling, children and increases included (L. 544-7, decree - out of scope, case fact)";
+}
+
+pub relation depenses_complement(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "dépenses mensuelles retenues pour le complément pour frais (D. 544-7, fait du dossier)";
+    label en unofficial "monthly expenses retained for the expense supplement (D. 544-7, case fact)";
+}
+
+pub relation depenses_exposees(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "dépenses exigées par la maladie, à la charge du ménage (L. 544-7, fait du dossier)";
+    label en unofficial "condition-driven expenses borne by the household (L. 544-7, case fact)";
+}
+
+pub relation seuil_depenses(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "montant déterminé au-delà duquel le complément est dû (L. 544-7, décret — hors champ, fait du dossier)";
+    label en unofficial "set amount above which the supplement is due (L. 544-7, decree - out of scope, case fact)";
+}
+
+pub relation montant_complement_retenu(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "complément pour frais forfaitaire mensuel retenu (L. 544-7, montant non épinglé, fait du dossier)";
+    label en unofficial "retained monthly flat expense supplement (L. 544-7, unpinned amount, case fact)";
+}
+
+pub relation cesse_activite_non_salarie(p: fr.pf.core::Personne) kind empirical {
+    label fr official "personne visée L. 544-8 al. 1 ayant cessé son activité (fait du dossier)";
+    label en unofficial "L. 544-8 para. 1 person who stopped working (case fact)";
+}
+
+pub relation demandeur_emploi_ajpp(p: fr.pf.core::Personne) kind empirical {
+    label fr official "travailleur sans emploi ou en formation professionnelle rémunérée (L. 544-8 al. 2, fait du dossier)";
+    label en unofficial "job-seeker or paid trainee (L. 544-8 para. 2, case fact)";
+}
+
+pub relation motif_non_cumul_2018(p: fr.pf.core::Personne, motif: MotifNonCumul2018) kind empirical {
+    label fr official "cause de non-cumul 2018 constatée pour le bénéficiaire (L. 544-9 2018, fait du dossier)";
+    label en unofficial "2018 non-cumulation ground recorded for the beneficiary (L. 544-9 2018, case fact)";
+}
+
+pub relation motif_non_cumul_2025(p: fr.pf.core::Personne, motif: MotifNonCumul2025) kind empirical {
+    label fr official "cause de non-cumul 2025 constatée pour le bénéficiaire (L. 544-9 2025, fait du dossier)";
+    label en unofficial "2025 non-cumulation ground recorded for the beneficiary (L. 544-9 2025, case fact)";
+}
+
+pub relation percoit_maladie_temps_partiel(p: fr.pf.core::Personne) kind empirical {
+    label fr official "indemnisation maladie au titre de l'activité à temps partiel (L. 544-9 exception, fait du dossier)";
+    label en unofficial "sick-leave payment for part-time work (L. 544-9 exception, case fact)";
+}
+
+pub relation jours_ajpp_partiels(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "allocation non servie pour la totalité des jours L. 544-4 (L. 544-9 exception, fait du dossier)";
+    label en unofficial "allowance not paid for all the L. 544-4 days (L. 544-9 exception, case fact)";
+}
+
+pub relation scope_2026(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "enfant né ou adopté à compter du 1er janvier 2026, ou naissance censée intervenir à compter de cette date (NOTA L. 544-9 2025, fait du dossier)";
+    label en unofficial "child born or adopted from 1 January 2026, or birth deemed to occur from that date (L. 544-9 2025 NOTA, case fact)";
+}
+
+pub relation ajpp_droit_ouvert(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "droit à l'AJPP au niveau calcul (certificat + avis L. 544-2, congé — hors champ L. 544-1)";
+    label en unofficial "AJPP entitlement at computation level (certificate + agreement L. 544-2, leave - L. 544-1 out of scope)";
+}
+
+pub relation reexamen_conforme(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "échéance de réexamen dans la fourchette décret (L. 544-2)";
+    label en unofficial "re-examination deadline within the decree window (L. 544-2)";
+}
+
+pub relation ajpp_dans_limite(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "compteur dans la limite des trois cent dix jours (L. 544-3)";
+    label en unofficial "count within the three-hundred-ten-day ceiling (L. 544-3)";
+}
+
+pub relation renouvellement_accorde(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "renouvellement unique de la durée maximale (L. 544-3 al. 2, dès 2021)";
+    label en unofficial "once-renewal of the maximum duration (L. 544-3 para. 2, from 2021)";
+}
+
+pub relation droit_rouvert(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "droit rouvert après le maximum : rechute ou gravité persistante (L. 544-3 al. 3)";
+    label en unofficial "right reopened past the maximum: relapse or persistent gravity (L. 544-3 para. 3)";
+}
+
+pub relation avance_accordee(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "avance dans l'attente de l'avis (L. 544-3, dès 2023)";
+    label en unofficial "advance pending the agreement (L. 544-3, from 2023)";
+}
+
+pub relation enveloppe_ajpp_qualifiee(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "enveloppe et durée qualifiées : compteur dans les 310 et durée dans les trois ans, ou réouverture au-delà du maximum (L. 544-3, D. 544-1, D. 544-3)";
+    label en unofficial "qualified envelope and duration: count within 310 and duration within three years, or beyond-maximum reopening (L. 544-3, D. 544-1, D. 544-3)";
+}
+
+pub relation mensuel_dans_limite(e: fr.pf.core::Enfant, mois: Date) kind institutional {
+    key(e, mois);
+    label fr official "jours du mois dans le maximum mensuel (L. 544-4)";
+    label en unofficial "month days within the monthly maximum (L. 544-4)";
+}
+
+pub relation ajpp_montant_mois(e: fr.pf.core::Enfant, mois: Date, montant: Money) kind institutional {
+    key(e, mois);
+    label fr official "total mensuel dû : taux journalier retenu par jours du mois (L. 544-6, L. 544-4)";
+    label en unofficial "monthly total due: retained daily rate times month days (L. 544-6, L. 544-4)";
+}
+
+pub relation complement_frais_attribue(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "complément pour frais attribué (L. 544-7)";
+    label en unofficial "expense supplement awarded (L. 544-7)";
+}
+
+pub relation ajpp_montant_complement(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant mensuel du complément pour frais retenu (L. 544-7)";
+    label en unofficial "retained monthly expense-supplement amount (L. 544-7)";
+}
+
+pub relation activite_partielle_cumulee(p: fr.pf.core::Personne) kind institutional {
+    label fr official "cumul en cours de droit avec la maladie à temps partiel (L. 544-9 exception)";
+    label en unofficial "in-right cumulation with part-time sick leave (L. 544-9 exception)";
+}
+
+pub relation ajpp_cumul_refuse(p: fr.pf.core::Personne) kind institutional {
+    label fr official "cumul refusé : prestation concurrente (L. 544-9)";
+    label en unofficial "cumulation refused: concurrent benefit (L. 544-9)";
+}
+
+pub relation ajpp_informe(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    key(p, e);
+    label fr official "demandeur ou bénéficiaire informé des critères AEEH/PCH (L. 544-10, exécution)";
+    label en unofficial "applicant or beneficiary informed of the AEEH/PCH criteria (L. 544-10, performance)";
+}
+
+// --- FINISH ajpp-death: decree layer (D. 544-1..10, R. 544-1..3) --------
+
+pub enum CausePathologie {
+    label fr official "maladie, accident ou handicap au titre duquel le droit est ouvert (D. 544-1)";
+    label en unofficial "illness, accident or disability for which the right is opened (D. 544-1)";
+    MALADIE,
+    ACCIDENT,
+    HANDICAP
+}
+
+pub relation bmaf_retenue_ajpp(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "base mensuelle de calcul des allocations familiales retenue pour le calcul (D. 544-6 2021, D. 544-7, montant non épinglé, fait du dossier)";
+    label en unofficial "retained monthly family-benefit computation base (D. 544-6 2021, D. 544-7, unpinned amount, case fact)";
+}
+
+pub relation smic_horaire_net_retenu(e: fr.pf.core::Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "shn : SMIC horaire L. 3231-2 travail au 1er janvier de l'année civile, après déduction des cotisations, arrondi à la deuxième décimale (D. 544-6, fait établi)";
+    label en unofficial "shn: hourly SMIC at 1 January of the civil year, net of contributions, rounded to two decimals (D. 544-6, established fact)";
+}
+
+pub relation taux_crds_retenu(e: fr.pf.core::Enfant, taux: Decimal) kind empirical {
+    key(e);
+    label fr official "a : taux de la contribution de l'article 14 de l'ordonnance du 24 janvier 1996 (D. 544-6, fait du dossier, rapprochement TauxCRDSPF différé)";
+    label en unofficial "a: rate of the 24 January 1996 ordinance article 14 contribution (D. 544-6, case fact, TauxCRDSPF cross-check deferred)";
+}
+
+pub relation tie_formule_taux(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "valeur non arrondie de la formule exactement à un demi-centime, établie par le calcul du dossier avec provenance (D. 544-6 arrondi au centième, fait établi)";
+    label en unofficial "unrounded formula value exactly on a half-cent tie, established by the case computation with provenance (D. 544-6 rounded to the cent, established fact)";
+}
+
+pub relation charge_personne_seule(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "charge de l'enfant assumée par une personne seule (D. 544-6 2021, fait du dossier)";
+    label en unofficial "child in the care of a single person (D. 544-6 2021, case fact)";
+}
+
+pub relation duree_versement_ajpp(e: fr.pf.core::Enfant, cause: CausePathologie, annees: Integer) kind empirical {
+    label fr official "durée de versement constatée par l'organisme, en années, pour l'enfant et la pathologie (D. 544-1, fait établi)";
+    label en unofficial "payment duration recorded by the body, in years, for the child and pathology (D. 544-1, established fact)";
+}
+
+pub relation nouvelle_pathologie(e: fr.pf.core::Enfant, cause: CausePathologie) kind empirical {
+    label fr official "nouvelle pathologie de l'enfant, distincte de celle au titre de laquelle le droit avait été ouvert (D. 544-5, fait établi)";
+    label en unofficial "new pathology of the child, distinct from the one the right was opened for (D. 544-5, established fact)";
+}
+
+pub relation debut_traitement_mois(e: fr.pf.core::Enfant, mois: Integer) kind empirical {
+    key(e);
+    label fr official "mois de début du traitement de l'enfant, échelle locale du dossier (D. 544-2, fait établi)";
+    label en unofficial "month the child treatment started, case-local scale (D. 544-2, established fact)";
+}
+
+pub relation duree_previsible_mois(e: fr.pf.core::Enfant, duree: Integer) kind empirical {
+    key(e);
+    label fr official "durée prévisible de traitement fixée par le médecin, en mois (D. 544-2, fait établi)";
+    label en unofficial "foreseeable treatment duration set by the doctor, in months (D. 544-2, established fact)";
+}
+
+pub relation demande_reexamen_mois(e: fr.pf.core::Enfant, mois: Integer) kind empirical {
+    key(e);
+    label fr official "mois de la demande de réexamen au médecin, même échelle (D. 544-2, fait du dossier)";
+    label en unofficial "month of the re-examination request to the doctor, same scale (D. 544-2, case fact)";
+}
+
+pub relation nouvelle_duree_fixee(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "nouvelle durée prévisible de traitement fixée par le médecin après réexamen (D. 544-2, fait établi)";
+    label en unofficial "new foreseeable treatment duration set by the doctor after re-examination (D. 544-2, established fact)";
+}
+
+pub relation ouverture_droit_mois(e: fr.pf.core::Enfant, mois: Integer) kind empirical {
+    key(e);
+    label fr official "mois d'ouverture du droit, échelle locale du dossier (D. 544-3, fait établi)";
+    label en unofficial "month the right was opened, case-local scale (D. 544-3, established fact)";
+}
+
+pub relation rechute_mois(e: fr.pf.core::Enfant, mois: Integer) kind empirical {
+    key(e);
+    label fr official "mois de la rechute de la pathologie, même échelle (D. 544-3, fait établi)";
+    label en unofficial "month of the pathology relapse, same scale (D. 544-3, established fact)";
+}
+
+pub relation activite_occasionnelle_remuneree(p: fr.pf.core::Personne) kind empirical {
+    label fr official "travailleur à la recherche d'un emploi exerçant une activité occasionnelle rémunérée (D. 544-8, fait du dossier)";
+    label en unofficial "job-seeker in occasional paid work (D. 544-8, case fact)";
+}
+
+pub relation chomeur_l5421(p: fr.pf.core::Personne) kind empirical {
+    label fr official "personne mentionnée à l'article L. 5421-1 du code du travail (D. 544-6, D. 544-8, fait du dossier)";
+    label en unofficial "person under labour-code article L. 5421-1 (D. 544-6, D. 544-8, case fact)";
+}
+
+pub relation stagiaire_formation_remuneree(p: fr.pf.core::Personne) kind empirical {
+    label fr official "travailleur en formation professionnelle rémunérée (D. 544-9 2°, fait du dossier)";
+    label en unofficial "worker in paid vocational training (D. 544-9 item 2, case fact)";
+}
+
+pub relation agent_public_conge(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "bénéficiaire d'un congé de présence parentale selon les dispositions des agents publics (D. 544-9 5°, fait du dossier)";
+    label en unofficial "parental-presence leave taker under public-agent rules (D. 544-9 item 5, case fact)";
+}
+
+pub relation france_travail_operateur(o: fr.pf.core::Organisme) kind empirical {
+    label fr official "opérateur France Travail destinataire de la déclaration (D. 544-8, fait du dossier)";
+    label en unofficial "France Travail operator receiving the declaration (D. 544-8, case fact)";
+}
+
+pub relation demande_pieces_organisme(o: fr.pf.core::Organisme, p: fr.pf.core::Personne) kind empirical {
+    label fr official "demande de l'organisme débiteur de produire les éléments de justification des dépenses (D. 544-10, fait du dossier)";
+    label en unofficial "debtor-body request to produce the expense supporting elements (D. 544-10, case fact)";
+}
+
+pub relation mois_concerne_ajpp(p: fr.pf.core::Personne, mois: Date) kind empirical {
+    key(p, mois);
+    label fr official "mois concerné par les justifications mensuelles du bénéficiaire, premier du mois (D. 544-9 Chaque mois, D. 544-10 chaque mois considéré, fait du dossier)";
+    label en unofficial "month covered by the beneficiary monthly supporting documents, first of the month (D. 544-9 each month, D. 544-10 each month concerned, case fact)";
+}
+
+pub relation residence_collectivite_l751(p: fr.pf.core::Personne) kind empirical {
+    label fr official "résidence dans une collectivité mentionnée à l'article L. 751-1 (L. 755-33, liste L. 751-1 hors champ, fait du dossier avec provenance)";
+    label en unofficial "residence in a collectivity listed in article L. 751-1 (L. 755-33, L. 751-1 list out of scope, case fact with provenance)";
+}
+
+pub relation attestation_conge_employeur(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "attestation de l'employeur précisant le congé de présence parentale, jointe à la demande (R. 544-1 1°, fait établi)";
+    label en unofficial "employer attestation of the parental-presence leave, attached to the claim (R. 544-1 item 1, established fact)";
+}
+
+pub relation certificat_transmis_sous_pli(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "certificat médical détaillé transmis sous pli fermé au contrôle médical (R. 544-1, fait établi)";
+    label en unofficial "detailed medical certificate sent sealed to the medical control (R. 544-1, established fact)";
+}
+
+pub relation organisme_prise_en_charge_sante(e: fr.pf.core::Enfant, o: fr.pf.core::Organisme) kind empirical {
+    label fr official "service dont relève l'enfant pour la prise en charge des frais de santé en cas de maladie (R. 544-2, fait du dossier)";
+    label en unofficial "service covering the child's health costs in case of illness (R. 544-2, case fact)";
+}
+
+pub relation demande_recue_mois(e: fr.pf.core::Enfant, mois: Integer) kind empirical {
+    key(e);
+    label fr official "mois de réception de la demande par l'organisme débiteur, échelle locale (R. 544-3, fait établi)";
+    label en unofficial "month the debtor body received the claim, local scale (R. 544-3, established fact)";
+}
+
+pub relation silence_observe_jusqu_mois(e: fr.pf.core::Enfant, mois: Integer) kind empirical {
+    key(e);
+    label fr official "mois jusqu'à la fin duquel le silence est constaté, même échelle (R. 544-3, fait établi)";
+    label en unofficial "month through whose end silence is recorded, same scale (R. 544-3, established fact)";
+}
+
+pub relation demande_renouvellement(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "demande de renouvellement de l'allocation au titre du deuxième alinéa de l'article L. 544-3 (R. 544-1, R. 544-3, fait du dossier)";
+    label en unofficial "allowance renewal request under L. 544-3 paragraph 2 (R. 544-1, R. 544-3, case fact)";
+}
+
+pub relation demande_initiale(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "demande initiale d'allocation de présence parentale reçue par l'organisme (R. 544-3, fait du dossier)";
+    label en unofficial "initial parental-presence allowance claim received by the body (R. 544-3, case fact)";
+}
+
+pub relation organisme_connait_avis(o: fr.pf.core::Organisme, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "organisme débiteur ayant eu connaissance de l'avis du contrôle médical (R. 544-3 II 3°, fait du dossier)";
+    label en unofficial "debtor body aware of the medical-control opinion (R. 544-3 II item 3, case fact)";
+}
+
+pub relation jours_non_travailles_temps_partiel(e: fr.pf.core::Enfant, mois: Date, jours: Decimal) kind empirical {
+    key(e, mois);
+    label fr official "journées ou demi-journées non travaillées du mois civil, temps partiel (D. 544-6, fait établi)";
+    label en unofficial "full or half days not worked in the calendar month, part-time (D. 544-6, established fact)";
+}
+
+pub relation demies_journees_mois(e: fr.pf.core::Enfant, mois: Date, demies: Integer) kind empirical {
+    key(e, mois);
+    label fr official "demi-journées payées du mois civil (D. 544-6, fait établi)";
+    label en unofficial "half-days paid in the calendar month (D. 544-6, established fact)";
+}
+
+pub relation ajpp_duree_dans_limite(e: fr.pf.core::Enfant, cause: CausePathologie) kind institutional {
+    label fr official "durée de versement dans la limite de trois ans pour l'enfant et la pathologie (D. 544-1)";
+    label en unofficial "payment duration within the three-year limit for the child and pathology (D. 544-1)";
+}
+
+pub relation duree_maximale_expiree(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "durée maximale de trois ans dépassée pour l'enfant (D. 544-1, porte de la réouverture L. 544-3 al. 3)";
+    label en unofficial "three-year maximum duration passed for the child (D. 544-1, gate of the L. 544-3 para. 3 reopening)";
+}
+
+pub relation droit_nouvelle_pathologie(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "nouveau droit ouvert pour la nouvelle pathologie, enveloppe D. 544-1 neuve (D. 544-5)";
+    label en unofficial "new right opened for the new pathology, fresh D. 544-1 envelope (D. 544-5)";
+}
+
+pub relation echeance_reexamen_mois(e: fr.pf.core::Enfant, mois: Integer) kind institutional {
+    key(e);
+    label fr official "échéance de réexamen construite : fin de la durée prévisible, ou un an si elle atteint un an (D. 544-2)";
+    label en unofficial "built re-examination point: end of the foreseeable duration, or one year where it reaches one year (D. 544-2)";
+}
+
+pub relation delai_demande_reexamen(e: fr.pf.core::Enfant, mois: Integer) kind institutional {
+    key(e);
+    label fr official "mois entre la demande de réexamen et l'échéance, construit (D. 544-2)";
+    label en unofficial "built months between the re-examination request and the point (D. 544-2)";
+}
+
+pub relation reexamen_demande_recevable(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "demande de réexamen à compter du dernier mois précédant l'échéance (D. 544-2)";
+    label en unofficial "re-examination request from the last month before the point (D. 544-2)";
+}
+
+pub relation droit_renouvele_reexamen(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "droit renouvelé à compter de l'échéance, dans les reliquats de durée et de jours (D. 544-2)";
+    label en unofficial "right renewed from the point, within the remaining duration and days (D. 544-2)";
+}
+
+pub relation mois_depuis_ouverture(e: fr.pf.core::Enfant, mois: Integer) kind institutional {
+    key(e);
+    label fr official "mois écoulés entre l'ouverture du droit et la rechute, construits (D. 544-3)";
+    label en unofficial "built months between the right opening and the relapse (D. 544-3)";
+}
+
+pub relation reouverture_dans_delai(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "réouverture dans les trois ans, maximum inutilisé, conditions L. 544-1/2 réunies (D. 544-3 al. 1)";
+    label en unofficial "reopening within three years, maximum unused, L. 544-1/2 conditions met (D. 544-3 para. 1)";
+}
+
+pub relation versement_sans_attendre_fin_max(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "renouvellement L. 544-3 al. 2 : versé sans attendre la fin de la durée maximale (D. 544-3 1°)";
+    label en unofficial "L. 544-3 para. 2 renewal: paid without waiting for the end of the maximum duration (D. 544-3 item 1)";
+}
+
+pub relation versement_au_dela_max(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "réouverture L. 544-3 al. 3 : versé au-delà de la durée maximale, nouvelle application (D. 544-3 2°)";
+    label en unofficial "L. 544-3 para. 3 reopening: paid beyond the maximum duration, fresh application (D. 544-3 item 2)";
+}
+
+pub relation taux_journalier_calcule(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "taux journalier construit par la formule (7*shn)/(1-a), arrondi au centième, hors tie exact (D. 544-6)";
+    label en unofficial "daily rate built by the (7*shn)/(1-a) formula, rounded to the cent, except exact ties (D. 544-6)";
+}
+
+pub relation taux_tie_en_attente(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "tie exact au demi-centime : taux arrondi en attente de la politique de départage du propriétaire (D. 544-6, limite D75)";
+    label en unofficial "exact half-cent tie: rounded rate pending the owner tie-breaking policy (D. 544-6, D75 boundary)";
+}
+
+pub relation taux_demi_journee_calcule(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "taux de demi-journée : moitié du taux journalier, hors L. 5421-1 (D. 544-6)";
+    label en unofficial "half-day rate: half the daily rate, except L. 5421-1 (D. 544-6)";
+}
+
+pub relation taux_journalier_2021(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "taux journalier 2021 : 10,63 % de la BMAF, 12,63 % personne seule (D. 544-6 2020)";
+    label en unofficial "2021 daily rate: 10.63% of BMAF, 12.63% single person (D. 544-6 2020)";
+}
+
+pub relation taux_demi_journee_2021(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "taux de demi-journée 2021 : 5,315 % de la BMAF, 6,315 % personne seule, hors L. 5421-1 (D. 544-6 2020)";
+    label en unofficial "2021 half-day rate: 5.315% of BMAF, 6.315% single person, except L. 5421-1 (D. 544-6 2020)";
+}
+
+pub relation charge_isolee_2021(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "charge de l'enfant assumée par une personne seule, intermédiaire du taux 2021 (D. 544-6 2020)";
+    label en unofficial "child in the care of a single person, 2021 rate intermediate (D. 544-6 2020)";
+}
+
+pub relation statut_chomeur_l5421(p: fr.pf.core::Personne) kind institutional {
+    label fr official "statut L. 5421-1 établi, intermédiaire d'exclusion de la demi-journée (D. 544-6)";
+    label en unofficial "established L. 5421-1 status, half-day exclusion intermediate (D. 544-6)";
+}
+
+pub relation seuil_complement_calcule(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "seuil et montant du complément pour frais : 27,19 % de la BMAF (D. 544-7)";
+    label en unofficial "expense-supplement threshold and amount: 27.19% of BMAF (D. 544-7)";
+}
+
+pub relation forfait_22_conforme(e: fr.pf.core::Enfant, mois: Date) kind institutional {
+    key(e, mois);
+    label fr official "jours forfaitaires du demandeur d'emploi égaux aux 22 décret, hors exception (D. 544-8)";
+    label en unofficial "job-seeker flat days equal to the decree 22, outside the exception (D. 544-8)";
+}
+
+pub relation exception_forfait_l544_1(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    label fr official "activité occasionnelle et congé : forfait écarté, conditions L. 544-1 hors champ (D. 544-8, B-PFAJPP-L544-1-EXCEPTION)";
+    label en unofficial "occasional work and leave: flat rate set aside, L. 544-1 conditions out of scope (D. 544-8, B-PFAJPP-L544-1-EXCEPTION)";
+}
+
+pub relation dossier_demande_complet(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "demande accompagnée de l'attestation de congé et du certificat sous pli (R. 544-1 1°-2°)";
+    label en unofficial "claim with the leave attestation and the sealed certificate (R. 544-1 items 1-2)";
+}
+
+pub relation dossier_reexamen_complet(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "réexamen : demande recevable et nouveau certificat sous pli (R. 544-1 al. 4)";
+    label en unofficial "re-examination: admissible request and new sealed certificate (R. 544-1 para. 4)";
+}
+
+pub relation dossier_renouvellement_complet(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "renouvellement L. 544-3 al. 2 : nouveau certificat d'indispensable poursuite sous pli (R. 544-1 al. 5, dès 2024)";
+    label en unofficial "L. 544-3 para. 2 renewal: new sealed certificate of indispensable continuation (R. 544-1 para. 5, from 2024)";
+}
+
+pub relation controle_medical_competent(e: fr.pf.core::Enfant, o: fr.pf.core::Organisme) kind institutional {
+    key(e);
+    label fr official "service du contrôle médical compétent : celui de la prise en charge santé de l'enfant (R. 544-2)";
+    label en unofficial "competent medical-control service: the child's health-cost service (R. 544-2)";
+}
+
+pub relation mois_silence_ecoules(e: fr.pf.core::Enfant, mois: Integer) kind institutional {
+    key(e);
+    label fr official "mois de silence écoulés depuis la réception, construits (R. 544-3)";
+    label en unofficial "built months of silence since receipt (R. 544-3)";
+}
+
+pub relation avis_silence_repute_favorable(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "silence du contrôle médical jusqu'au dernier jour du deuxième mois : avis favorable réputé (R. 544-3)";
+    label en unofficial "medical-control silence through the last day of the second month: deemed favourable opinion (R. 544-3)";
+}
+
+pub relation decision_silence_reputee_favorable(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "silence de l'organisme jusqu'au dernier jour du troisième mois : décision favorable réputée (R. 544-3)";
+    label en unofficial "body silence through the last day of the third month: deemed favourable decision (R. 544-3)";
+}
+
+pub relation avis_silence_repute_defavorable(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "renouvellement 2022-2024 : silence du contrôle vaut avis défavorable (R. 544-3 II 1°)";
+    label en unofficial "2022-2024 renewal: control silence is an unfavourable opinion (R. 544-3 II item 1)";
+}
+
+pub relation decision_silence_rejet(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "renouvellement 2022-2024 : silence de l'organisme vaut décision de rejet (R. 544-3 II 2°)";
+    label en unofficial "2022-2024 renewal: body silence is a rejection decision (R. 544-3 II item 2)";
+}
+
+pub relation jours_pris_declares_ft(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    key(p, e);
+    label fr official "jours pris pour assumer la charge déclarés à France Travail (D. 544-8, exécution)";
+    label en unofficial "days taken to care declared to France Travail (D. 544-8, performance)";
+}
+
+pub relation attestation_conge_employeur_transmise(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date) kind institutional {
+    key(p, e, mois);
+    label fr official "attestation visée de congé transmise par le salarié pour le mois considéré (D. 544-9 1°, exécution)";
+    label en unofficial "stamped leave attestation sent by the employee for the concerned month (D. 544-9 item 1, performance)";
+}
+
+pub relation attestation_formateur_transmise(p: fr.pf.core::Personne, mois: Date) kind institutional {
+    key(p, mois);
+    label fr official "attestation du formateur et déclaration sur l'honneur transmises pour le mois considéré (D. 544-9 2°, exécution)";
+    label en unofficial "trainer attestation and sworn statement sent for the concerned month (D. 544-9 item 2, performance)";
+}
+
+pub relation declaration_cessation_recherche_transmise(p: fr.pf.core::Personne, mois: Date) kind institutional {
+    key(p, mois);
+    label fr official "déclaration de cessation de recherche active d'emploi transmise pour le mois considéré (D. 544-9 3°, exécution)";
+    label en unofficial "active-job-search cessation statement sent for the concerned month (D. 544-9 item 3, performance)";
+}
+
+pub relation declaration_interruption_activite_transmise(p: fr.pf.core::Personne, mois: Date) kind institutional {
+    key(p, mois);
+    label fr official "déclaration d'interruption d'activité transmise par le non-salarié pour le mois considéré (D. 544-9 4°, exécution)";
+    label en unofficial "activity-interruption statement sent by the non-salaried worker for the concerned month (D. 544-9 item 4, performance)";
+}
+
+pub relation attestation_agent_public_transmise(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date) kind institutional {
+    key(p, e, mois);
+    label fr official "attestation visée de congé transmise par l'agent public pour le mois considéré (D. 544-9 5°, exécution)";
+    label en unofficial "stamped leave attestation sent by the public agent for the concerned month (D. 544-9 item 5, performance)";
+}
+
+pub relation declaration_depenses_transmise(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date) kind institutional {
+    key(p, e, mois);
+    label fr official "déclaration sur l'honneur des dépenses du complément transmise pour le mois considéré (D. 544-10, exécution)";
+    label en unofficial "sworn supplement-expense statement sent for the concerned month (D. 544-10, performance)";
+}
+
+pub relation pieces_depenses_produites(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, mois: Date) kind institutional {
+    key(p, e, mois);
+    label fr official "éléments de justification des dépenses produits à la demande pour le mois considéré (D. 544-10, exécution)";
+    label en unofficial "expense supporting elements produced on demand for the concerned month (D. 544-10, performance)";
+}
+
+pub relation avis_renouvellement_notifie(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    key(p, e);
+    label fr official "avis favorable du contrôle notifié au demandeur de renouvellement (R. 544-3 II 3°, exécution)";
+    label en unofficial "favourable control opinion notified to the renewal claimant (R. 544-3 II item 3, performance)";
+}
+
+pub relation ajpp_attribution_l751(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) kind institutional {
+    key(p, e);
+    label fr official "AJPP attribuée dans une collectivité L. 751-1, droit ouvert (L. 755-33)";
+    label en unofficial "AJPP attributed in an L. 751-1 collectivity, right open (L. 755-33)";
+}

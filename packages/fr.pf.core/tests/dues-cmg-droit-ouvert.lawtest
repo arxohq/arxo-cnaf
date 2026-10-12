@@ -1,0 +1,17 @@
+// CMG right already open: another child covered - due from the conditions month (R. 552-2 II 2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-dues-cmg-droit-ouvert" {
+    given {
+        context { decision_time @2026-05-15T12:00:00Z; knowledge_time @2026-05-15T12:00:00Z; legal_time @2026-05-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "dues-cmg-droit-ouvert-01": conditions_reunies_mois(entity_ref("urn:fr:pf:case:cmg-ouvert"), @2026-04-01) { origin case_input; }
+        assert "dues-cmg-droit-ouvert-02": droit_ouvert_autre_enfant(entity_ref("urn:fr:pf:case:cmg-ouvert")) { origin case_input; }
+        assert "dues-cmg-droit-ouvert-03": prestation_cmg(entity_ref("urn:fr:pf:case:cmg-ouvert")) { origin case_input; }
+    }
+    evaluate truth(prestations_dues_a_compter(entity_ref("urn:fr:pf:case:cmg-ouvert"), @2026-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

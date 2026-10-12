@@ -1,0 +1,38 @@
+// Rectification granted (undated) on a date-certain notice,
+// observed before II-2° maturity: the generic decision exists and
+// blocks the II positives, but its unknown date cannot prove a
+// decision within the statutory month, so implicit rejection stays
+// NEITHER (PA-FE11-01); recovery is FALSE via pre-maturity
+// observation (R. 847-1-1 II). The timely request still interrupted
+// the CRA deadline when filed (III al. 1; PA-FE09-03).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-decision-accordee-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-08-15T12:00:00Z; knowledge_time @2026-08-15T12:00:00Z; legal_time @2026-08-15; timezone "Europe/Paris"; }
+        assert "ppa-01": reception_notification(entity_ref("urn:fr:ppa:case:decision-accordee-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-02": demande_rectification(entity_ref("urn:fr:ppa:case:decision-accordee-2026"), @2026-06-10) { origin case_input; }
+        assert "ppa-03": decision_rectification_accordee(entity_ref("urn:fr:ppa:case:decision-accordee-2026")) { origin case_input; }
+        assert "ppa-04": date_observation_recours(entity_ref("urn:fr:ppa:case:decision-accordee-2026"), @2026-08-15) { origin case_input; }
+        assert "ppa-05": notification_recouvrement(entity_ref("urn:fr:ppa:case:decision-accordee-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-06": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:decision-accordee-2026")) { origin case_input; }
+    }
+    evaluate truth(decision_rectification(entity_ref("urn:fr:ppa:case:decision-accordee-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_implicite_rectification(entity_ref("urn:fr:ppa:case:decision-accordee-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recouvrement_apres_demande(entity_ref("urn:fr:ppa:case:decision-accordee-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(interruption_delai_cra(entity_ref("urn:fr:ppa:case:decision-accordee-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

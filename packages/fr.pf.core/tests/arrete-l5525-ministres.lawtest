@@ -1,0 +1,15 @@
+// Two-minister order: allocataire - L. 552-5 order by education and social-security ministers (D. 552-6 al. 3, PC-R03-07).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-arrete-l5525-ministres" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "arrete-l5525-01": allocataire(entity_ref("urn:fr:pf:case:allocataire-ordre")) { origin case_input; }
+    }
+    evaluate truth(arrete_l5525_deux_ministres(entity_ref("urn:fr:pf:case:allocataire-ordre")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

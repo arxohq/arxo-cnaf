@@ -1,0 +1,17 @@
+// 2026 cohort, ending indemnities without the option: full-rate PreParE, indemnities ending this month, no L. 531-4 VI option - no option admission (L. 532-2 V).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cumul-option-2026-sans-option" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "cumul-option-2026-sans-option-01": beneficie_prepare_taux_plein(entity_ref("urn:fr:pf:case:option-sans"), entity_ref("urn:fr:pf:case:enfant-2026i")) { origin case_input; }
+        assert "cumul-option-2026-sans-option-02": fin_indemnites_mois(entity_ref("urn:fr:pf:case:option-sans")) { origin case_input; }
+        assert "cumul-option-2026-sans-option-03": cohorte_2026(entity_ref("urn:fr:pf:case:enfant-2026i")) { origin case_input; }
+    }
+    evaluate truth(cumul_prepare_option_admis(entity_ref("urn:fr:pf:case:option-sans"), entity_ref("urn:fr:pf:case:enfant-2026i")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

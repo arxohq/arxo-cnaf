@@ -1,0 +1,504 @@
+// Home-improvement loans (CSS L. 542-9, D. 542-35..38): borrower and
+// childminder eligibility, the 80 % caps (1 067.14 EUR / 10 000 EUR),
+// flat instalments over at most 36 months from the sixth month after grant
+// with 1 % interest per instalment, and early-exigibility triggers.
+// Granting is a liberty (L. 542-9 "peuvent accorder"); the granted sum
+// arrives as the liberty's exercised action and is checked against the cap.
+// D. 542-39 (the 0.50 % fund cap) is fund-level accounting with no case
+// effect and D. 542-40 (arrete modalities) is a pure renvoi: both carry
+// declared despite entries. The loan-end date needs a variable calendar
+// step (n months), which the language does not express: only the standard
+// 36-instalment end derives, other durations stay a recorded boundary.
+// Money is divided by Decimal counts only (06 precedent); durations are
+// Decimal facts holding whole months by input contract.
+// L. 755-21-1 extends both regimes to the L. 751-1 collectivities under the
+// unchanged 1/2 conditions: two DOM eligibility heads keyed on an
+// affirmative residence finding, no new deontics (B-APL-PRET-L751-1).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CSS_D542_35,
+    CSS_D542_36,
+    CSS_D542_37,
+    CSS_D542_38,
+    CSS_L542_9,
+    CSS_L755_21_1,
+    Menage,
+    Organisme,
+    organisme_debiteur,
+};
+
+deadline policy APL_PRET_MOIS {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+const TauxPretDepenses: Decimal = 0.80 {
+    label fr official "les prets peuvent atteindre 80 % des depenses (art. D. 542-36)";
+    label en unofficial "loans may reach 80 % of expenses (art. D. 542-36)";
+}
+
+const PlafondPretLogement: Money = 1067.14 EUR {
+    label fr official "maximum de 1 067,14 euros, prets logement (art. D. 542-36)";
+    label en unofficial "1 067.14 euro maximum, housing loans (art. D. 542-36)";
+}
+
+const PlafondPretAssistantMaternel: Money = 10000 EUR {
+    label fr official "maximum de 10 000 euros, prets assistants maternels L. 542-9 2 (art. D. 542-36)";
+    label en unofficial "10 000 euro maximum, childminder L. 542-9 2 loans (art. D. 542-36)";
+}
+
+pub relation allocataire_prestations_familiales(m: Menage) kind empirical {
+    label fr official "allocataire de prestations familiales (constat)";
+    label en unofficial "family-benefits claimant (finding)";
+}
+
+@source(CSS_D542_35)
+pub enum QualiteLogementPret {
+    label fr official "qualite d'occupation pour le pret (art. D. 542-35)";
+    label en unofficial "occupancy status for the loan (art. D. 542-35)";
+    PROPRIETAIRE_EMPRUNTEUR, LOCATAIRE_EMPRUNTEUR, OCCUPANT_BONNE_FOI
+}
+
+pub relation qualite_logement_pret(m: Menage, q: QualiteLogementPret) kind empirical {
+    label fr official "qualite d'occupation du logement a ameliorer (constat)";
+    label en unofficial "occupancy status of the dwelling to improve (finding)";
+}
+
+pub relation travaux_amelioration_logement(m: Menage) kind empirical {
+    label fr official "travaux d'amelioration de l'habitat envisages (constat)";
+    label en unofficial "planned home-improvement works (finding)";
+}
+
+pub relation habite_locaux_ameliorer(m: Menage) kind empirical {
+    label fr official "l'allocataire habite les locaux a ameliorer (constat D. 542-35 al. 1 : des locaux qu'ils habitent)";
+    label en unofficial "the claimant inhabits the premises to improve (D. 542-35 al. 1 finding)";
+}
+
+pub relation eligible_pret_amelioration(m: Menage) kind institutional {
+    label fr official "eligible au pret d'amelioration de l'habitat L. 542-9 1";
+    label en unofficial "eligible for the L. 542-9 1 home-improvement loan";
+}
+
+@source(CSS_L542_9, CSS_D542_35)
+rule EligiblePretLogement(m: Menage, q: QualiteLogementPret) strict {
+    label fr official "allocataire proprietaire, locataire ou occupant de bonne foi des locaux qu'il habite, avec travaux : eligible 1";
+    label en unofficial "claimant owner, tenant or good-faith occupant of the inhabited premises, with works: eligible 1";
+    when allocataire_prestations_familiales(m) and qualite_logement_pret(m, q)
+        and habite_locaux_ameliorer(m) and travaux_amelioration_logement(m);
+    then eligible_pret_amelioration(m);
+}
+
+pub relation assistant_maternel(m: Menage) kind empirical {
+    label fr official "assistant maternel L. 421-1 ou L. 424-1 CASF (constat)";
+    label en unofficial "childminder under CASF L. 421-1 or L. 424-1 (finding)";
+}
+
+pub relation qualite_lieu_accueil(m: Menage, q: QualiteLogementPret) kind empirical {
+    label fr official "qualite d'occupation du lieu d'accueil (constat)";
+    label en unofficial "occupancy status of the reception premises (finding)";
+}
+
+pub relation travaux_lieu_accueil(m: Menage) kind empirical {
+    label fr official "travaux d'amelioration du lieu d'accueil (constat)";
+    label en unofficial "reception-premises improvement works (finding)";
+}
+
+pub relation depenses_mise_aux_normes_mam(m: Menage) kind empirical {
+    label fr official "depenses de mise aux normes d'une maison d'assistants maternels (constat d'exclusion D. 542-35 al. 2 in fine)";
+    label en unofficial "childminder-centre standard-compliance expenses (D. 542-35 al. 2 in fine exclusion finding)";
+}
+
+pub relation travaux_hors_mise_aux_normes_mam(m: Menage) kind empirical {
+    label fr official "travaux etablis hors mise aux normes MAM mentionnee a l'article L. 141-2 CCH (classification positive)";
+    label en unofficial "works positively classified outside the CCH L. 141-2 MAM compliance category";
+}
+
+pub relation travaux_sante_securite_enfants(m: Menage) kind empirical {
+    label fr official "travaux visant a ameliorer la sante ou la securite des enfants accueillis (constat D. 542-35 al. 2)";
+    label en unofficial "works improving the health or safety of the children cared for (D. 542-35 al. 2 finding)";
+}
+
+pub relation assistant_exerce_domicile(m: Menage) kind empirical {
+    label fr official "l'assistant maternel exerce a son domicile (constat D. 542-35 al. 2)";
+    label en unofficial "the childminder works at home (D. 542-35 al. 2 finding)";
+}
+
+pub relation travaux_facilitent_agrement(m: Menage) kind empirical {
+    label fr official "travaux facilitant l'obtention, le renouvellement ou l'extension de l'agrement D. 421-4 CASF (constat)";
+    label en unofficial "works facilitating the grant, renewal or extension of the CASF D. 421-4 approval (finding)";
+}
+
+pub relation montant_demande_pret(m: Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "montant de pret demande (fait de dossier ; accorde au plus au plafond D. 542-38)";
+    label en unofficial "requested loan amount (case fact; granted at most at the D. 542-38 ceiling)";
+}
+
+pub relation eligible_pret_assistant_maternel(m: Menage) kind institutional {
+    label fr official "eligible au pret lieu d'accueil L. 542-9 2";
+    label en unofficial "eligible for the L. 542-9 2 reception-premises loan";
+}
+
+@source(CSS_L542_9, CSS_D542_35)
+rule EligiblePretAccueilLieu(m: Menage, q: QualiteLogementPret) defeasible {
+    label fr official "assistant maternel occupant avec travaux d'amelioration de l'accueil, hors MAM : eligible 2";
+    label en unofficial "occupant childminder with reception-improvement works, outside MAM: eligible 2";
+    when assistant_maternel(m) and qualite_lieu_accueil(m, q)
+        and travaux_lieu_accueil(m) and travaux_hors_mise_aux_normes_mam(m);
+    unless depenses_mise_aux_normes_mam(m);
+    then eligible_pret_assistant_maternel(m);
+}
+
+@source(CSS_L542_9, CSS_D542_35)
+rule EligiblePretAccueilSanteSecurite(m: Menage, q: QualiteLogementPret) defeasible {
+    label fr official "assistant maternel occupant avec travaux de sante ou securite des enfants, hors MAM : eligible 2";
+    label en unofficial "occupant childminder with child health/safety works, outside MAM: eligible 2";
+    when assistant_maternel(m) and qualite_lieu_accueil(m, q)
+        and travaux_sante_securite_enfants(m) and travaux_hors_mise_aux_normes_mam(m);
+    unless depenses_mise_aux_normes_mam(m);
+    then eligible_pret_assistant_maternel(m);
+}
+
+@source(CSS_L542_9, CSS_D542_35)
+rule EligiblePretAccueilAgrement(m: Menage, q: QualiteLogementPret) defeasible {
+    label fr official "assistant maternel a domicile avec travaux facilitant l'agrement, hors MAM : eligible 2";
+    label en unofficial "home-based childminder with approval-facilitating works, outside MAM: eligible 2";
+    when assistant_maternel(m) and qualite_lieu_accueil(m, q)
+        and assistant_exerce_domicile(m) and travaux_facilitent_agrement(m)
+        and travaux_hors_mise_aux_normes_mam(m);
+    unless depenses_mise_aux_normes_mam(m);
+    then eligible_pret_assistant_maternel(m);
+}
+
+pub relation pret_accorde_logement(m: Menage, montant: Money) kind empirical {
+    label fr official "pret logement accorde, montant verse (execution)";
+    label en unofficial "housing loan granted, amount paid (performance)";
+}
+
+pub relation pret_accorde_assistant(m: Menage, montant: Money) kind empirical {
+    label fr official "pret accueil accorde, montant verse (execution)";
+    label en unofficial "reception loan granted, amount paid (performance)";
+}
+
+@source(CSS_L542_9)
+rule LiberteAccorderPretLogement(m: Menage, o: Organisme, montant: Money) strict {
+    label fr official "les regimes peuvent accorder le pret logement aux allocataires";
+    label en unofficial "the schemes may grant housing loans to claimants";
+    when eligible_pret_amelioration(m) and organisme_debiteur(o, m)
+        and montant_max_pret(m, montant);
+    then liberty AccorderPretLogement {
+        holder o;
+        action pret_accorde_logement(m, montant);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L542_9)
+rule LiberteAccorderPretAccueil(m: Menage, o: Organisme, montant: Money) strict {
+    label fr official "les regimes peuvent accorder le pret accueil aux assistants maternels";
+    label en unofficial "the schemes may grant reception loans to childminders";
+    when eligible_pret_assistant_maternel(m) and organisme_debiteur(o, m)
+        and montant_max_pret(m, montant);
+    then liberty AccorderPretAccueil {
+        holder o;
+        action pret_accorde_assistant(m, montant);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L542_9, CSS_D542_38)
+rule LiberteAccorderPretLogementDemande(m: Menage, o: Organisme, montant: Money, cap: Money) strict {
+    label fr official "le pret logement demande au plus au plafond peut etre accorde";
+    label en unofficial "the housing loan requested at most at the ceiling may be granted";
+    when eligible_pret_amelioration(m) and organisme_debiteur(o, m)
+        and montant_max_pret(m, cap) and montant_demande_pret(m, montant)
+        and montant <= cap;
+    then liberty AccorderPretLogementDemande {
+        holder o;
+        action pret_accorde_logement(m, montant);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L542_9, CSS_D542_38)
+rule LiberteAccorderPretAccueilDemande(m: Menage, o: Organisme, montant: Money, cap: Money) strict {
+    label fr official "le pret accueil demande au plus au plafond peut etre accorde";
+    label en unofficial "the reception loan requested at most at the ceiling may be granted";
+    when eligible_pret_assistant_maternel(m) and organisme_debiteur(o, m)
+        and montant_max_pret(m, cap) and montant_demande_pret(m, montant)
+        and montant <= cap;
+    then liberty AccorderPretAccueilDemande {
+        holder o;
+        action pret_accorde_assistant(m, montant);
+        window [@2021-01-01, infinity);
+    };
+}
+
+pub relation depenses_travaux_pret(m: Menage, d: Money) kind empirical {
+    label fr official "depenses de travaux engagees par l'entrepreneur ou l'assistant (mesure)";
+    label en unofficial "works expenses by the contractor or childminder (measured)";
+}
+
+pub relation montant_max_pret(m: Menage, cap: Money) kind institutional {
+    label fr official "montant maximal du pret : 80 % des depenses dans le plafond";
+    label en unofficial "maximum loan amount: 80 % of expenses within the ceiling";
+}
+
+@source(CSS_D542_36)
+rule PlafondPretLogement80(m: Menage, depenses: Money) strict {
+    label fr official "pret logement : 80 % des depenses dans 1 067,14 euros";
+    label en unofficial "housing loan: 80 % of expenses within 1 067.14 euros";
+    when eligible_pret_amelioration(m) and depenses_travaux_pret(m, depenses);
+    then montant_max_pret(m, min(depenses * TauxPretDepenses, PlafondPretLogement));
+}
+
+@source(CSS_D542_36)
+rule PlafondPretAccueil80(m: Menage, depenses: Money) defeasible {
+    label fr official "pret accueil : 80 % des depenses dans 10 000 euros";
+    label en unofficial "reception loan: 80 % of expenses within 10 000 euros";
+    when eligible_pret_assistant_maternel(m) and depenses_travaux_pret(m, depenses);
+    then montant_max_pret(m, min(depenses * TauxPretDepenses, PlafondPretAssistantMaternel));
+}
+
+pub relation pret_excede_plafond(m: Menage) kind institutional {
+    label fr official "pret accorde au-dela du plafond D. 542-36 (marqueur de controle)";
+    label en unofficial "loan granted above the D. 542-36 ceiling (control marker)";
+}
+
+@source(CSS_D542_36)
+rule DepassementPretLogement(m: Menage, accorde: Money, cap: Money) defeasible {
+    label fr official "controle : accorde logement contre plafond";
+    label en unofficial "check: granted housing amount against the ceiling";
+    when pret_accorde_logement(m, accorde) and montant_max_pret(m, cap) and accorde > cap;
+    then pret_excede_plafond(m);
+}
+
+@source(CSS_D542_36)
+rule DepassementPretAccueil(m: Menage, accorde: Money, cap: Money) defeasible {
+    label fr official "controle : accorde accueil contre plafond";
+    label en unofficial "check: granted reception amount against the ceiling";
+    when pret_accorde_assistant(m, accorde) and montant_max_pret(m, cap) and accorde > cap;
+    then pret_excede_plafond(m);
+}
+
+pub relation pret_accorde_le(m: Menage, d: Date) kind empirical {
+    label fr official "date d'attribution du pret (dossier)";
+    label en unofficial "loan grant date (case file)";
+}
+
+pub relation duree_remboursement_mois(m: Menage, n: Decimal) kind empirical {
+    label fr official "duree de remboursement en mois, entier par contrat (fait de dossier)";
+    label en unofficial "repayment duration in months, whole by contract (case fact)";
+}
+
+pub relation duree_remboursement_invalide(m: Menage) kind institutional {
+    label fr official "duree hors un a trente-six mois : invalide D. 542-37 (marqueur)";
+    label en unofficial "duration outside one to thirty-six months: invalid under D. 542-37 (marker)";
+}
+
+pub relation mensualite_pret(m: Menage, v: Money) kind institutional {
+    label fr official "mensualite D. 542-37 : ordinaire majoree de 1 %, accueil sans interet";
+    label en unofficial "D. 542-37 instalment: ordinary plus 1 %, childminder without interest";
+}
+
+pub relation premiere_mensualite_due_le(m: Menage, d: Date) kind institutional {
+    label fr official "premiere mensualite exigible le sixieme mois apres l'attribution";
+    label en unofficial "first instalment due the sixth month after the grant";
+}
+
+pub relation fin_remboursement_36_le(m: Menage, d: Date) kind institutional {
+    label fr official "fin du remboursement a trente-six mensualites";
+    label en unofficial "thirty-six-instalment repayment end";
+}
+
+pub relation fin_remboursement_120_le(m: Menage, d: Date) kind institutional {
+    label fr official "fin du remboursement accueil a cent vingt mensualites D. 542-37 al. 3";
+    label en unofficial "childminder one-hundred-twenty-instalment repayment end D. 542-37 al. 3";
+}
+
+@source(CSS_D542_37)
+rule DureeInvalideHauteOrdinaire(m: Menage, n: Decimal, montant: Money) strict {
+    label fr official "pret ordinaire : plus de trente-six mensualites, duree invalide";
+    label en unofficial "ordinary loan: more than thirty-six instalments, invalid duration";
+    when duree_remboursement_mois(m, n) and n > 36.0 and pret_accorde_logement(m, montant);
+    then duree_remboursement_invalide(m);
+}
+
+@source(CSS_D542_37)
+rule DureeInvalideHauteAssistant(m: Menage, n: Decimal, montant: Money) strict {
+    label fr official "pret accueil D. 542-37 al. 3 : plus de cent vingt mensualites, duree invalide";
+    label en unofficial "childminder loan D. 542-37 al. 3: more than one hundred twenty instalments, invalid duration";
+    when duree_remboursement_mois(m, n) and n > 120.0 and pret_accorde_assistant(m, montant);
+    then duree_remboursement_invalide(m);
+}
+
+@source(CSS_D542_37)
+rule DureeInvalideBasse(m: Menage, n: Decimal) strict {
+    label fr official "moins d'une mensualite : duree invalide";
+    label en unofficial "fewer than one instalment: invalid duration";
+    when duree_remboursement_mois(m, n) and n < 1.0;
+    then duree_remboursement_invalide(m);
+}
+
+@source(CSS_D542_37)
+rule MensualitePretEgale(m: Menage, montant: Money, n: Decimal) strict {
+    label fr official "fractions egales : mensualite majoree de 1 %";
+    label en unofficial "equal shares: instalment plus 1 %";
+    when pret_accorde_logement(m, montant) and duree_remboursement_mois(m, n)
+        and n >= 1.0 and n <= 36.0;
+    then mensualite_pret(m, (montant / n) * 1.01);
+}
+
+@source(CSS_D542_37)
+rule MensualitePretEgaleAccueil(m: Menage, montant: Money, n: Decimal) strict {
+    label fr official "fractions egales accueil D. 542-37 al. 3 : cent vingt mensualites au maximum, sans interet";
+    label en unofficial "childminder equal shares D. 542-37 al. 3: one hundred twenty instalments at most, no interest";
+    when pret_accorde_assistant(m, montant) and duree_remboursement_mois(m, n)
+        and n >= 1.0 and n <= 120.0;
+    then mensualite_pret(m, montant / n);
+}
+
+@source(CSS_D542_37)
+rule DebutRemboursementSixiemeMois(m: Menage, attribution: Date) strict {
+    label fr official "exigible a compter du sixieme mois suivant l'attribution";
+    label en unofficial "due from the sixth month after the grant";
+    when pret_accorde_le(m, attribution);
+    then premiere_mensualite_due_le(m, add_calendar_period(month_start_of(attribution), 6 calendar_month));
+}
+
+@source(CSS_D542_37)
+rule FinRemboursement36(m: Menage, debut: Date, n: Decimal, montant: Money) strict {
+    label fr official "trente-six mensualites : fin a la trente-sixieme echeance";
+    label en unofficial "thirty-six instalments: end at the thirty-sixth due date";
+    when premiere_mensualite_due_le(m, debut) and duree_remboursement_mois(m, n) and n == 36.0
+        and pret_accorde_logement(m, montant);
+    then fin_remboursement_36_le(m, add_calendar_period(debut, 35 calendar_month));
+}
+
+@source(CSS_D542_37)
+rule FinRemboursement120Accueil(m: Menage, debut: Date, n: Decimal, montant: Money) strict {
+    label fr official "cent vingt mensualites accueil D. 542-37 al. 3 : fin a la cent vingtieme echeance";
+    label en unofficial "one hundred twenty childminder instalments D. 542-37 al. 3: end at the last due date";
+    when premiere_mensualite_due_le(m, debut) and duree_remboursement_mois(m, n) and n == 120.0
+        and pret_accorde_assistant(m, montant);
+    then fin_remboursement_120_le(m, add_calendar_period(debut, 119 calendar_month));
+}
+
+pub relation pret_rembourse_echeances(m: Menage) kind empirical {
+    label fr official "pret rembourse selon les echeances (execution)";
+    label en unofficial "loan repaid per the schedule (performance)";
+}
+
+@source(CSS_D542_37)
+rule DevoirRembourserPret(m: Menage, o: Organisme, v: Money) strict {
+    label fr official "l'emprunteur rembourse par fractions D. 542-37 (ordinaire majorees, accueil sans interet)";
+    label en unofficial "the borrower repays in D. 542-37 shares (ordinary increased, childminder without interest)";
+    when mensualite_pret(m, v) and organisme_debiteur(o, m);
+    then duty RembourserPretAmelioration {
+        bearer m;
+        beneficiary o;
+        maintain pret_rembourse_echeances(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation depart_volontaire_moins_bien(m: Menage) kind empirical {
+    label fr official "depart volontaire vers un local moins bien avant extinction (constat D. 542-38)";
+    label en unofficial "voluntary move to a worse dwelling before payoff (finding)";
+}
+
+pub relation arret_agrement_assistant(m: Menage) kind empirical {
+    label fr official "renonciation, perte ou refus d'agrement avant extinction (constat D. 542-38)";
+    label en unofficial "agreement given up, lost or denied before payoff (finding)";
+}
+
+pub relation cessation_sans_autre_agrement(m: Menage) kind empirical {
+    label fr official "cessation etablie sans poursuite sous un autre agrement (constat positif D. 542-38 al. 2)";
+    label en unofficial "established stop with no continuation under another agreement (positive D. 542-38 al. 2 finding)";
+}
+
+pub relation solde_pret_exigible(m: Menage) kind institutional {
+    label fr official "sommes restant dues devenues exigibles D. 542-38";
+    label en unofficial "remaining sums due under D. 542-38";
+}
+
+pub relation solde_pret_rembourse(m: Menage) kind empirical {
+    label fr official "solde anticipe rembourse (execution)";
+    label en unofficial "early balance repaid (performance)";
+}
+
+@source(CSS_D542_38)
+rule ExigibiliteDepartMoinsBien(m: Menage) strict {
+    label fr official "depart vers un moins bien : le solde devient exigible";
+    label en unofficial "move to a worse dwelling: the balance falls due";
+    when depart_volontaire_moins_bien(m);
+    then solde_pret_exigible(m);
+}
+
+@source(CSS_D542_38)
+rule ExigibiliteArretAgrement(m: Menage) strict {
+    label fr official "arret et cessation etablie sans autre agrement : le solde devient exigible";
+    label en unofficial "stop with established no-other-agreement cessation: the balance falls due";
+    when arret_agrement_assistant(m) and cessation_sans_autre_agrement(m);
+    then solde_pret_exigible(m);
+}
+
+@source(CSS_D542_38)
+rule DevoirRembourserSolde(m: Menage, o: Organisme) strict {
+    label fr official "le solde devenu exigible est rembourse";
+    label en unofficial "the fallen-due balance is repaid";
+    when solde_pret_exigible(m) and organisme_debiteur(o, m);
+    then duty RembourserSoldeAnticipe {
+        bearer m;
+        beneficiary o;
+        maintain solde_pret_rembourse(m) during [@2021-01-01, infinity);
+    };
+}
+
+// --- DOM applicability (CSS L. 755-21-1) -----------------------------------
+//
+// Both loan regimes apply in the collectivities listed in L. 751-1 under
+// the unchanged L. 542-9 1 and 2 conditions. The residence finding is a
+// dedicated L. 751-1 premise: the package Territoire axis (arrete scope,
+// seven territories including Mayotte) does not match L. 751-1 (six
+// collectivities, no Mayotte or Saint-Pierre-et-Miquelon). No new deontic
+// positions: granting stays the L. 542-9 liberty, repayment the D. 542-37/38
+// duties. The L. 751-1 enumeration itself is established by the agency at
+// article level (boundary B-APL-PRET-L751-1); households outside L. 751-1
+// keep the base eligibility heads but derive no DOM head.
+
+pub relation reside_collectivite_l751_1(m: Menage) kind empirical {
+    label fr official "reside dans une collectivite visee a l'article L. 751-1 (constat)";
+    label en unofficial "resides in an L. 751-1 collectivity (finding)";
+}
+
+pub relation eligible_pret_amelioration_dom(m: Menage) kind institutional {
+    label fr official "eligible au pret d'amelioration de l'habitat dans les collectivites L. 751-1";
+    label en unofficial "eligible for the home-improvement loan in L. 751-1 collectivities";
+}
+
+pub relation eligible_pret_assistant_maternel_dom(m: Menage) kind institutional {
+    label fr official "eligible au pret lieu d'accueil dans les collectivites L. 751-1";
+    label en unofficial "eligible for the reception-premises loan in L. 751-1 collectivities";
+}
+
+@source(CSS_L755_21_1, CSS_L542_9)
+rule EligiblePretLogementDOM(m: Menage) strict {
+    label fr official "L. 542-9 1 dans une collectivite L. 751-1 : eligible pret logement DOM";
+    label en unofficial "L. 542-9 1 met in an L. 751-1 collectivity: DOM housing-loan eligible";
+    when eligible_pret_amelioration(m) and reside_collectivite_l751_1(m);
+    then eligible_pret_amelioration_dom(m);
+}
+
+@source(CSS_L755_21_1, CSS_L542_9)
+rule EligiblePretAccueilDOM(m: Menage) defeasible {
+    label fr official "L. 542-9 2 dans une collectivite L. 751-1 : eligible pret accueil DOM";
+    label en unofficial "L. 542-9 2 met in an L. 751-1 collectivity: DOM reception-loan eligible";
+    when eligible_pret_assistant_maternel(m) and reside_collectivite_l751_1(m);
+    then eligible_pret_assistant_maternel_dom(m);
+}

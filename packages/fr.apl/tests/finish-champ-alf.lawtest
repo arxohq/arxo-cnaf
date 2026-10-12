@@ -1,0 +1,98 @@
+// ALF/ALS scope (10): family-benefit category, child-without-benefits
+// category, residual ALS by default and defeated by ALF, post-2017
+// allocation exclusion, and the PF headcount bridge marker.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-champ-alf-prestations" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcalf-01": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:fcalf"), true) { origin case_input; }
+    }
+    evaluate truth(categorie_alf(entity_ref("urn:fr:apl:case:fcalf"), ALF_PRESTATIONS_FAMILIALES));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(eligible_alf(entity_ref("urn:fr:apl:case:fcalf")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-champ-alf-enfant" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcale-01": enfant_charge_l512_3(entity_ref("urn:fr:apl:case:fcale")) { origin case_input; }
+        assert "fcale-02": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:fcale"), false) { origin case_input; }
+        assert "fcale-03": percoit_complement_familial(entity_ref("urn:fr:apl:case:fcale"), false) { origin case_input; }
+        assert "fcale-04": percoit_aeeh(entity_ref("urn:fr:apl:case:fcale"), false) { origin case_input; }
+        assert "fcale-05": percoit_asf(entity_ref("urn:fr:apl:case:fcale"), false) { origin case_input; }
+        // D-42: L. 841-1 2°: "n'ayant pas droit a l'une des prestations enumerees au
+        // D-42: 1°" — no entitlement, not merely no receipt (the percoit_* facts); the
+        // D-42: model (10 CategorieALFEnfantCharge) takes that finding, omitted by the case.
+        assert "fcale-06": sans_droit_prestations_alf1(entity_ref("urn:fr:apl:case:fcale")) { origin case_input; }
+    }
+    evaluate truth(categorie_alf(entity_ref("urn:fr:apl:case:fcale"), ALF_ENFANT_CHARGE_SANS_PF));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-champ-als-residuelle" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcals-01": aide_demandee(entity_ref("urn:fr:apl:case:fcals"), ALS) { origin case_input; }
+    }
+    evaluate truth(eligible_als(entity_ref("urn:fr:apl:case:fcals")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-champ-als-ecartee" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcalsx-01": aide_demandee(entity_ref("urn:fr:apl:case:fcalsx"), ALS) { origin case_input; }
+        assert "fcalsx-02": percoit_asf(entity_ref("urn:fr:apl:case:fcalsx"), true) { origin case_input; }
+    }
+    // D-79: L. 841-2 makes the ALS residual; this household falls within the ALF
+    // scope (ASF, L. 841-1 1° d), so AlfAttribueeExclutALS defeats eligible_als
+    // whatever aid was requested. Blind expectation unchanged.
+    evaluate truth(aide_attribuee(entity_ref("urn:fr:apl:case:fcalsx"), ALS));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-champ-alf-pret-exclu" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcalx-01": percoit_complement_familial(entity_ref("urn:fr:apl:case:fcalx"), true) { origin case_input; }
+        assert "fcalx-02": aide_demandee(entity_ref("urn:fr:apl:case:fcalx"), ALF) { origin case_input; }
+        assert "fcalx-03": dette_accession_allocation(entity_ref("urn:fr:apl:case:fcalx"), DETTE_ACCESSION_PROPRIETE) { origin case_input; }
+        assert "fcalx-04": pret_allocation_date_signature(entity_ref("urn:fr:apl:case:fcalx"), @2019-09-01) { origin case_input; }
+    }
+    evaluate truth(aide_attribuee(entity_ref("urn:fr:apl:case:fcalx"), ALF));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-champ-pont-pf" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcapf-01": enfant_beneficiaire_personnel(entity_ref("urn:fr:apl:case:fcapf")) { origin case_input; }
+    }
+    evaluate truth(exclusion_denombrement_pf(entity_ref("urn:fr:apl:case:fcapf")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

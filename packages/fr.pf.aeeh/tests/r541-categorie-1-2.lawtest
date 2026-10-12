@@ -1,0 +1,43 @@
+// R. 541-2, 1° and 2° gates: category 1 on expenses exactly at the
+// retained arrêté amount (and silence one cent below); category 2 on
+// each of the three alternative gates (20 % reduction, eight weekly
+// hours, expenses). The retained threshold is a case input
+// (B-PFAEEH-SEUILS-ARRETE): this file demonstrates the comparison
+// mechanics the rules build, not the legal arrêté value, which stays
+// unpinned.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-categorie-1-2" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-c12-01": seuil_depenses_retenu(CATEGORIE_1, 150.00 EUR) { origin case_input; }
+        assert "r541-c12-02": seuil_depenses_retenu(CATEGORIE_2, 150.00 EUR) { origin case_input; }
+        assert "r541-c12-03": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c1"), 150.00 EUR) { origin case_input; }
+        assert "r541-c12-04": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c1-bas"), 149.99 EUR) { origin case_input; }
+        assert "r541-c12-05": taux_reduction_activite(entity_ref("urn:fr:pf-aeeh:case:enfant-c2r"), 20.0) { origin adjudicated; }
+        assert "r541-c12-06": heures_tierce_remuneree(entity_ref("urn:fr:pf-aeeh:case:enfant-c2t"), 8.0) { origin adjudicated; }
+        assert "r541-c12-07": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c2d"), 200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(categorie1_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie1_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c1-bas")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie2_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c2r")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie2_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c2t")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie2_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c2d")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

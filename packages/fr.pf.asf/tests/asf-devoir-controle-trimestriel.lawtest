@@ -1,0 +1,23 @@
+// Fourth-month control due, control deadline 2021-07-31: ControlerTrimestre ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-devoir-controle-trimestriel" {
+    given {
+        context { deadline_policy CONTROLE_TRIMESTRIEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ovc-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:devoir-controle-trimestriel"), entity_ref("urn:fr:pf-asf:case:devoir-controle-trimestriel-e1")) { origin case_input; }
+        assert "ovc-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:devoir-controle-trimestriel-e1")) { origin case_input; }
+        assert "ovc-03": motif_asf(entity_ref("urn:fr:pf-asf:case:devoir-controle-trimestriel-e1"), DEFAUT_SIMPLE) { origin case_input; }
+        assert "ovc-04": demande_asf(entity_ref("urn:fr:pf-asf:case:devoir-controle-trimestriel-e1")) { origin case_input; }
+        assert "ovc-05": manquement_debiteur(entity_ref("urn:fr:pf-asf:case:devoir-controle-trimestriel-e1"), @2021-03-01) { origin case_input; }
+        assert "ovc-06": mois_ouverture_asf(@2021-04-01) { origin case_input; }
+        assert "ovc-07": bmaf_retenu(entity_ref("urn:fr:pf-asf:case:devoir-controle-trimestriel"), 400.00 EUR) { origin case_input; }
+        assert "ovc-08": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-asf:org:caisse"), entity_ref("urn:fr:pf-asf:case:devoir-controle-trimestriel")) { origin case_input; }
+        assert "ovc-09": mois_controle_4m(@2021-07-01) { origin case_input; }
+        assert "ovc-10": date_limite_controle(@2021-07-31) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(ControlerTrimestre, ACTIVE);
+}

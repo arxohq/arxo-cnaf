@@ -1,0 +1,47 @@
+// In-kind housing flat-rate flows into every month of the quarterly
+// base (new regime): review March 2025, DSN pro 200.00 each month, no
+// other blocks, MF 600.00. Single owner-occupier without aid: flat-rate
+// 72.00 (R.262-9, 1°) added to each month, no aid received; base 272.00
+// each month, due 328.00. (R.262-7, II 3°; R.262-9.)
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-base-forfait-nouveau" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-03-15T12:00:00Z; knowledge_time @2025-03-15T12:00:00Z; legal_time @2025-03-15; timezone "Europe/Paris"; }
+        assert "baseforf-01": foyer_du_cas(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau")) { origin case_input; }
+        assert "baseforf-02": mois_demande(@2025-03-01) { origin case_input; }
+        assert "baseforf-03": mois_reference(@2024-11-01, @2024-12-01, @2025-01-01) { origin case_input; }
+        assert "baseforf-04": mf_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2024-11-01, 600.00 EUR) { origin case_input; }
+        assert "baseforf-05": mf_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2024-12-01, 600.00 EUR) { origin case_input; }
+        assert "baseforf-06": mf_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2025-01-01, 600.00 EUR) { origin case_input; }
+        assert "baseforf-07": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2024-11-01, 200.00 EUR) { origin case_input; }
+        assert "baseforf-08": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2024-12-01, 200.00 EUR) { origin case_input; }
+        assert "baseforf-09": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2025-01-01, 200.00 EUR) { origin case_input; }
+        assert "baseforf-10": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "baseforf-11": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2024-12-01, 0 EUR) { origin case_input; }
+        assert "baseforf-12": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2025-01-01, 0 EUR) { origin case_input; }
+        assert "baseforf-13": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "baseforf-14": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2024-12-01, 0 EUR) { origin case_input; }
+        assert "baseforf-15": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2025-01-01, 0 EUR) { origin case_input; }
+        assert "baseforf-16": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "baseforf-17": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2024-12-01, 0 EUR) { origin case_input; }
+        assert "baseforf-18": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2025-01-01, 0 EUR) { origin case_input; }
+        assert "baseforf-19": nb_personnes_forfait(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), 1) { origin case_input; }
+        assert "baseforf-20": logement(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), PROPRIETAIRE_SANS_AIDE) { origin case_input; }
+        assert "baseforf-21": mf_composition(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), 1, 600.00 EUR) { origin case_input; }
+    }
+    evaluate truth(forfait_logement(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), 72.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(base_ressources_mois(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), @2025-01-01, 272.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_du_trimestre(entity_ref("urn:fr:minima-ressources:case:base-forfait-nouveau"), 328.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

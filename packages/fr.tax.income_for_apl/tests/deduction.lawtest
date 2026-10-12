@@ -1,0 +1,113 @@
+language "law.core" version "0.2";
+package fr.tax.income_for_apl version "0.1.0";
+namespace "urn:fr:tax:clir:income-for-apl";
+
+// Сценарии вычета ст. 83 3° CGI. Окно [2024-01-01, 2025-01-01) — двенадцать
+// месяцев; legal_time 2025-08-01 попадает в редакцию CGI_ED2025_06 (потолок
+// 14 426 €, пол 504 €).
+
+test "CGI83-01 брутто 36 000, вычет 10% под потолком и над полом" {
+    given {
+        context { legal_time @2025-08-01; decision_time @2025-08-01T09:00:00Z; knowledge_time @2025-08-01T09:00:00Z; timezone "Europe/Paris"; }
+        assert "pe": periode_evaluee(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-01-01, @2025-01-01) { origin case_input; }
+        assert "s01": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-01-01, 3000.00 EUR) { origin case_input; }
+        assert "s02": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-02-01, 3000.00 EUR) { origin case_input; }
+        assert "s03": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-03-01, 3000.00 EUR) { origin case_input; }
+        assert "s04": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-04-01, 3000.00 EUR) { origin case_input; }
+        assert "s05": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-05-01, 3000.00 EUR) { origin case_input; }
+        assert "s06": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-06-01, 3000.00 EUR) { origin case_input; }
+        assert "s07": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-07-01, 3000.00 EUR) { origin case_input; }
+        assert "s08": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-08-01, 3000.00 EUR) { origin case_input; }
+        assert "s09": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-09-01, 3000.00 EUR) { origin case_input; }
+        assert "s10": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-10-01, 3000.00 EUR) { origin case_input; }
+        assert "s11": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-11-01, 3000.00 EUR) { origin case_input; }
+        assert "s12": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-12-01, 3000.00 EUR) { origin case_input; }
+        assert "c01": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-01-01, 0.00 EUR) { origin case_input; }
+        assert "c02": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-02-01, 0.00 EUR) { origin case_input; }
+        assert "c03": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-03-01, 0.00 EUR) { origin case_input; }
+        assert "c04": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-04-01, 0.00 EUR) { origin case_input; }
+        assert "c05": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-05-01, 0.00 EUR) { origin case_input; }
+        assert "c06": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-06-01, 0.00 EUR) { origin case_input; }
+        assert "c07": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-07-01, 0.00 EUR) { origin case_input; }
+        assert "c08": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-08-01, 0.00 EUR) { origin case_input; }
+        assert "c09": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-09-01, 0.00 EUR) { origin case_input; }
+        assert "c10": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-10-01, 0.00 EUR) { origin case_input; }
+        assert "c11": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-11-01, 0.00 EUR) { origin case_input; }
+        assert "c12": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-12-01, 0.00 EUR) { origin case_input; }
+    }
+    evaluate truth(revenu_net_categoriel_periode(entity_ref("urn:fr:example:income-for-apl:p1"), @2024-01-01, @2025-01-01, 32400.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    expect applied(RevenuNetCategorielPeriode);
+}
+
+// Пол: 12 × 100 = 1200; 10% = 120 < пол 504 → вычет = 504 (пол не превышает
+// сам брутто-доход 1200). Итог 1200 − 504 = 696.
+test "CGI83-02 низкий доход: вычет упирается в пол 504 евро" {
+    given {
+        context { legal_time @2025-08-01; decision_time @2025-08-01T09:00:00Z; knowledge_time @2025-08-01T09:00:00Z; timezone "Europe/Paris"; }
+        assert "pe": periode_evaluee(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-01-01, @2025-01-01) { origin case_input; }
+        assert "s01": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-01-01, 100.00 EUR) { origin case_input; }
+        assert "s02": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-02-01, 100.00 EUR) { origin case_input; }
+        assert "s03": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-03-01, 100.00 EUR) { origin case_input; }
+        assert "s04": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-04-01, 100.00 EUR) { origin case_input; }
+        assert "s05": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-05-01, 100.00 EUR) { origin case_input; }
+        assert "s06": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-06-01, 100.00 EUR) { origin case_input; }
+        assert "s07": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-07-01, 100.00 EUR) { origin case_input; }
+        assert "s08": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-08-01, 100.00 EUR) { origin case_input; }
+        assert "s09": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-09-01, 100.00 EUR) { origin case_input; }
+        assert "s10": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-10-01, 100.00 EUR) { origin case_input; }
+        assert "s11": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-11-01, 100.00 EUR) { origin case_input; }
+        assert "s12": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-12-01, 100.00 EUR) { origin case_input; }
+        assert "c01": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-01-01, 0.00 EUR) { origin case_input; }
+        assert "c02": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-02-01, 0.00 EUR) { origin case_input; }
+        assert "c03": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-03-01, 0.00 EUR) { origin case_input; }
+        assert "c04": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-04-01, 0.00 EUR) { origin case_input; }
+        assert "c05": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-05-01, 0.00 EUR) { origin case_input; }
+        assert "c06": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-06-01, 0.00 EUR) { origin case_input; }
+        assert "c07": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-07-01, 0.00 EUR) { origin case_input; }
+        assert "c08": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-08-01, 0.00 EUR) { origin case_input; }
+        assert "c09": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-09-01, 0.00 EUR) { origin case_input; }
+        assert "c10": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-10-01, 0.00 EUR) { origin case_input; }
+        assert "c11": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-11-01, 0.00 EUR) { origin case_input; }
+        assert "c12": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-12-01, 0.00 EUR) { origin case_input; }
+    }
+    evaluate truth(revenu_net_categoriel_periode(entity_ref("urn:fr:example:income-for-apl:p2"), @2024-01-01, @2025-01-01, 696.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Отсутствующий месяц (только одиннадцать деклараций зарплаты) — правило не
+// срабатывает: пустой агрегат не считается нулём (§59), счётчик 11 != 12.
+test "CGI83-03 отсутствующий месяц не считается нулём: правило не срабатывает" {
+    given {
+        context { legal_time @2025-08-01; decision_time @2025-08-01T09:00:00Z; knowledge_time @2025-08-01T09:00:00Z; timezone "Europe/Paris"; }
+        assert "pe": periode_evaluee(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-01-01, @2025-01-01) { origin case_input; }
+        assert "s01": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-01-01, 3000.00 EUR) { origin case_input; }
+        assert "s02": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-02-01, 3000.00 EUR) { origin case_input; }
+        assert "s03": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-03-01, 3000.00 EUR) { origin case_input; }
+        assert "s04": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-04-01, 3000.00 EUR) { origin case_input; }
+        assert "s05": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-05-01, 3000.00 EUR) { origin case_input; }
+        assert "s06": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-06-01, 3000.00 EUR) { origin case_input; }
+        assert "s07": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-07-01, 3000.00 EUR) { origin case_input; }
+        assert "s08": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-08-01, 3000.00 EUR) { origin case_input; }
+        assert "s09": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-09-01, 3000.00 EUR) { origin case_input; }
+        assert "s10": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-10-01, 3000.00 EUR) { origin case_input; }
+        assert "s11": salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-11-01, 3000.00 EUR) { origin case_input; }
+        // Декабрь НЕ декларирован.
+        assert "c01": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-01-01, 0.00 EUR) { origin case_input; }
+        assert "c02": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-02-01, 0.00 EUR) { origin case_input; }
+        assert "c03": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-03-01, 0.00 EUR) { origin case_input; }
+        assert "c04": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-04-01, 0.00 EUR) { origin case_input; }
+        assert "c05": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-05-01, 0.00 EUR) { origin case_input; }
+        assert "c06": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-06-01, 0.00 EUR) { origin case_input; }
+        assert "c07": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-07-01, 0.00 EUR) { origin case_input; }
+        assert "c08": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-08-01, 0.00 EUR) { origin case_input; }
+        assert "c09": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-09-01, 0.00 EUR) { origin case_input; }
+        assert "c10": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-10-01, 0.00 EUR) { origin case_input; }
+        assert "c11": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-11-01, 0.00 EUR) { origin case_input; }
+        assert "c12": indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-12-01, 0.00 EUR) { origin case_input; }
+    }
+    evaluate truth(revenu_net_categoriel_periode(entity_ref("urn:fr:example:income-for-apl:p3"), @2024-01-01, @2025-01-01, 0.00 EUR));
+    expect truth_status == NEITHER;
+}

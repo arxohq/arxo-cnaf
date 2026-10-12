@@ -1,0 +1,507 @@
+// AEEH right and amounts (L. 541-1/2, D. 541-1/2/3/4, L. 541-4/5).
+//
+// DEONTIC MAP: right-conferring computation rules only. The duty to pay
+// the computed total lives in 04-devoir-versement.law; the suspension
+// liberty in 03-pouvoir-suspension.law. Two evaluative channels arrive as
+// established facts and are never recomputed here:
+// - decision_cdaph_favorable (L. 541-2, commission decision: §47.3
+//   judgment read as an adjudicated fact, as APL R. 822-13);
+// - categorie_attribuee + complement_contrainte_activite (R. 541-2/D. 541-3
+//   mechanics, inventory PENDING_WAVE: the resulting category and reason
+//   are the established facts, B-PFAEEH-CATEGORIE).
+//
+// MONEY FORMS. All multiplications are Money x Decimal (bareme fractions
+// 0.32, never "32 p. 100", APL convention).
+//
+// WINDOWS. Entitlement and amount rules open at 2006-01-01 (D. 541-1/2
+// debut) so the OpenFisca 2012-01 cases run on the same pinned rates;
+// MPI rules open at 2009-06-01 (D. 541-3 debut). The entitlement head is
+// one rule for all periods (B-PFAEEH-TETE); the 2021 upstream window is a
+// parallel filter, not a premise here.
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+use self::{
+    CSS_D541_1,
+    CSS_D541_1_ED2009_06,
+    CSS_D541_1_ED2012_01,
+    CSS_D541_1_ED2021_01,
+    CSS_D541_1_ED2022_01,
+    CSS_D541_1_ED2026_04,
+    CSS_D541_2,
+    CSS_D541_2_ED2009_06,
+    CSS_D541_2_ED2012_01,
+    CSS_D541_2_ED2021_01,
+    CSS_D541_2_ED2022_01,
+    CSS_D541_2_ED2026_04,
+    CSS_D541_3,
+    CSS_D541_3_ED2012_01,
+    CSS_D541_3_ED2021_01,
+    CSS_D541_3_ED2022_01,
+    CSS_D541_3_ED2026_04,
+    CSS_D541_4,
+    CSS_D541_4_ED2009_06,
+    CSS_D541_4_ED2012_01,
+    CSS_D541_4_ED2021_01,
+    CSS_D541_4_ED2022_01,
+    CSS_D541_4_ED2026_04,
+    CSS_L541_1,
+    CSS_L541_1_ED2006_01,
+    CSS_L541_1_ED2009_06,
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_L541_2_ED2006_01,
+    CSS_L541_2_ED2009_06,
+    CSS_L541_2_ED2012_01,
+    CSS_L541_2_ED2021_01,
+    CSS_L541_2_ED2022_01,
+    CSS_L541_2_ED2026_04,
+    CSS_L541_4,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04,
+    CategorieComplement,
+    aeeh_droit_calcule,
+    aeeh_montant_base,
+    aeeh_montant_complement,
+    aeeh_montant_mpi,
+    aeeh_montant_servi,
+    aeeh_montant_total,
+    bmaf_retenue,
+    categorie_attribuee,
+    complement_contrainte_activite,
+    decision_cdaph_favorable,
+    montant_mtp_retenu,
+    mpi_eligible,
+    percoit_pch,
+    personne_isolee,
+    sans_complement,
+    sans_mpi,
+};
+
+function base_montant(bmaf: Money) -> Money =
+    bmaf * TauxAeehBase;
+
+function complement_montant(taux: Decimal, bmaf: Money) -> Money =
+    bmaf * taux;
+
+function total_montant(base: Money, compl: Money, mpi: Money) -> Money =
+    base + compl + mpi;
+
+// --- L. 541-1/2: computation-level right --------------------------------
+//
+// «Toute personne qui assume la charge d'un enfant handicapé a droit» (para. 1)
+// «attribués au vu de la décision de la commission» (L. 541-2, para. 1).
+// One head for all periods on the package's own established fact
+// (B-PFAEEH-TETE): the upstream principle-level filters are package-internal
+// (§24) and cannot be read here. The L. 541-1 para. 4 internat exclusion is
+// period-scoped («sauf pour les périodes») and needs period facts this
+// package has not (B-PFAEEH-INTERNAT): it is not modelled here.
+
+@source(
+    CSS_L541_1_ED2006_01,
+    CSS_L541_1_ED2009_06,
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_L541_2_ED2006_01,
+    CSS_L541_2_ED2009_06,
+    CSS_L541_2_ED2012_01,
+    CSS_L541_2_ED2021_01,
+    CSS_L541_2_ED2022_01,
+    CSS_L541_2_ED2026_04)
+rule DroitAeeh(e: fr.pf.core::Enfant) strict {
+    effective [@2006-01-01, infinity);
+    label fr official "droit ouvert au vu de la décision CDAPH (taux décret — hors champ)";
+    label en unofficial "right opened by the CDAPH decision (rate by decree - out of scope)";
+    when decision_cdaph_favorable(e);
+    then aeeh_droit_calcule(e);
+}
+
+// --- D. 541-1: base amount, 32 p. 100 of the L. 551-1 base ---------------
+
+@source(
+    CSS_L541_1,
+    CSS_L541_1_ED2006_01,
+    CSS_L541_1_ED2009_06,
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_D541_1,
+    CSS_D541_1_ED2009_06,
+    CSS_D541_1_ED2012_01,
+    CSS_D541_1_ED2021_01,
+    CSS_D541_1_ED2022_01,
+    CSS_D541_1_ED2026_04)
+rule MontantBase(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2006-01-01, infinity);
+    label fr official "allocation proprement dite : 32 p. 100 de la base mensuelle L. 551-1, pour chaque enfant ouvrant droit";
+    label en unofficial "base allowance: 32% of the L. 551-1 monthly base, for each entitled child";
+    when aeeh_droit_calcule(e) and bmaf_retenue(e, bmaf);
+    then aeeh_montant_base(e, base_montant(bmaf));
+}
+
+// --- D. 541-2: category supplements 1-5 ----------------------------------
+
+@source(
+    CSS_L541_1,
+    CSS_L541_1_ED2006_01,
+    CSS_L541_1_ED2009_06,
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_D541_2,
+    CSS_D541_2_ED2009_06,
+    CSS_D541_2_ED2012_01,
+    CSS_D541_2_ED2021_01,
+    CSS_D541_2_ED2022_01,
+    CSS_D541_2_ED2026_04)
+rule ComplementCategorie1(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2006-01-01, infinity);
+    label fr official "complément de première catégorie : 24 % de la base mensuelle AF";
+    label en unofficial "first-category supplement: 24% of the AF monthly base";
+    when aeeh_droit_calcule(e) and categorie_attribuee(e, CATEGORIE_1)
+        and bmaf_retenue(e, bmaf);
+    then aeeh_montant_complement(e, complement_montant(TauxComplementCategorie1, bmaf));
+}
+
+@source(
+    CSS_L541_1,
+    CSS_L541_1_ED2006_01,
+    CSS_L541_1_ED2009_06,
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_D541_2,
+    CSS_D541_2_ED2009_06,
+    CSS_D541_2_ED2012_01,
+    CSS_D541_2_ED2021_01,
+    CSS_D541_2_ED2022_01,
+    CSS_D541_2_ED2026_04)
+rule ComplementCategorie2(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2006-01-01, infinity);
+    label fr official "complément de deuxième catégorie : 65 % de la base mensuelle AF";
+    label en unofficial "second-category supplement: 65% of the AF monthly base";
+    when aeeh_droit_calcule(e) and categorie_attribuee(e, CATEGORIE_2)
+        and bmaf_retenue(e, bmaf);
+    then aeeh_montant_complement(e, complement_montant(TauxComplementCategorie2, bmaf));
+}
+
+@source(
+    CSS_L541_1,
+    CSS_L541_1_ED2006_01,
+    CSS_L541_1_ED2009_06,
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_D541_2,
+    CSS_D541_2_ED2009_06,
+    CSS_D541_2_ED2012_01,
+    CSS_D541_2_ED2021_01,
+    CSS_D541_2_ED2022_01,
+    CSS_D541_2_ED2026_04)
+rule ComplementCategorie3(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2006-01-01, infinity);
+    label fr official "complément de troisième catégorie : 92 % de la base mensuelle AF";
+    label en unofficial "third-category supplement: 92% of the AF monthly base";
+    when aeeh_droit_calcule(e) and categorie_attribuee(e, CATEGORIE_3)
+        and bmaf_retenue(e, bmaf);
+    then aeeh_montant_complement(e, complement_montant(TauxComplementCategorie3, bmaf));
+}
+
+@source(
+    CSS_L541_1,
+    CSS_L541_1_ED2006_01,
+    CSS_L541_1_ED2009_06,
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_D541_2,
+    CSS_D541_2_ED2009_06,
+    CSS_D541_2_ED2012_01,
+    CSS_D541_2_ED2021_01,
+    CSS_D541_2_ED2022_01,
+    CSS_D541_2_ED2026_04)
+rule ComplementCategorie4(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2006-01-01, infinity);
+    label fr official "complément de quatrième catégorie : 142,57 % de la base mensuelle AF";
+    label en unofficial "fourth-category supplement: 142.57% of the AF monthly base";
+    when aeeh_droit_calcule(e) and categorie_attribuee(e, CATEGORIE_4)
+        and bmaf_retenue(e, bmaf);
+    then aeeh_montant_complement(e, complement_montant(TauxComplementCategorie4, bmaf));
+}
+
+@source(
+    CSS_L541_1,
+    CSS_L541_1_ED2006_01,
+    CSS_L541_1_ED2009_06,
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_D541_2,
+    CSS_D541_2_ED2009_06,
+    CSS_D541_2_ED2012_01,
+    CSS_D541_2_ED2021_01,
+    CSS_D541_2_ED2022_01,
+    CSS_D541_2_ED2026_04)
+rule ComplementCategorie5(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2006-01-01, infinity);
+    label fr official "complément de cinquième catégorie : 182,21 % de la base mensuelle AF";
+    label en unofficial "fifth-category supplement: 182.21% of the AF monthly base";
+    when aeeh_droit_calcule(e) and categorie_attribuee(e, CATEGORIE_5)
+        and bmaf_retenue(e, bmaf);
+    then aeeh_montant_complement(e, complement_montant(TauxComplementCategorie5, bmaf));
+}
+
+// --- D. 541-2, para. 6: sixth category = MTP amount (L. 341-4, external) --
+
+@source(
+    CSS_L541_1,
+    CSS_L541_1_ED2006_01,
+    CSS_L541_1_ED2009_06,
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_D541_2,
+    CSS_D541_2_ED2009_06,
+    CSS_D541_2_ED2012_01,
+    CSS_D541_2_ED2021_01,
+    CSS_D541_2_ED2022_01,
+    CSS_D541_2_ED2026_04)
+rule ComplementCategorie6(e: fr.pf.core::Enfant, mtp: Money) strict {
+    effective [@2006-01-01, infinity);
+    label fr official "complément de sixième catégorie : montant MTP retenu (L. 341-4 — hors champ)";
+    label en unofficial "sixth-category supplement: retained MTP amount (L. 341-4 - out of scope)";
+    when aeeh_droit_calcule(e) and categorie_attribuee(e, CATEGORIE_6)
+        and montant_mtp_retenu(e, mtp);
+    then aeeh_montant_complement(e, mtp);
+}
+
+// --- No supplement: zero carried so the total always closes --------------
+
+@source(
+    CSS_L541_1_ED2006_01,
+    CSS_L541_1_ED2009_06,
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04)
+rule ComplementZero(e: fr.pf.core::Enfant) strict {
+    effective [@2006-01-01, infinity);
+    label fr official "sans complément : zéro porté pour clore le total";
+    label en unofficial "no supplement: zero carried to close the total";
+    when aeeh_droit_calcule(e) and sans_complement(e);
+    then aeeh_montant_complement(e, 0 EUR);
+}
+
+// --- L. 541-4 + D. 541-3: isolated-parent supplement (MPI) ----------------
+//
+// «a droit à une majoration spécifique» for the isolated carer of a child
+// whose condition requires a third person, where the commission granted a
+// supplement because the condition forces work reduction/cessation or paid
+// third-person care (D. 541-3, para. 1), or where the carer also receives
+// the PCH (L. 541-4 alternative).
+
+@source(
+    CSS_L541_4,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04,
+    CSS_D541_3,
+    CSS_D541_3_ED2012_01,
+    CSS_D541_3_ED2021_01,
+    CSS_D541_3_ED2022_01,
+    CSS_D541_3_ED2026_04)
+rule MpiEligibleComplement(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@2009-06-01, infinity);
+    label fr official "MPI : personne isolée, complément accordé pour contrainte d'activité ou tierce personne";
+    label en unofficial "MPI: isolated person, supplement granted on work-constraint or third-person grounds";
+    when aeeh_droit_calcule(e) and personne_isolee(p)
+        and complement_contrainte_activite(e);
+    then mpi_eligible(e);
+}
+
+@source(
+    CSS_L541_4,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04,
+    CSS_D541_3,
+    CSS_D541_3_ED2012_01,
+    CSS_D541_3_ED2021_01,
+    CSS_D541_3_ED2022_01,
+    CSS_D541_3_ED2026_04)
+rule MpiEligiblePch(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@2009-06-01, infinity);
+    label fr official "MPI : personne isolée cumulant allocation et PCH L. 245-1 CASF";
+    label en unofficial "MPI: isolated person combining the allowance with the L. 245-1 CASF PCH";
+    when aeeh_droit_calcule(e) and personne_isolee(p) and percoit_pch(p);
+    then mpi_eligible(e);
+}
+
+// --- D. 541-4: MPI amounts by granted category (none for category 1) ------
+
+@source(
+    CSS_L541_4,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04,
+    CSS_D541_4,
+    CSS_D541_4_ED2009_06,
+    CSS_D541_4_ED2012_01,
+    CSS_D541_4_ED2021_01,
+    CSS_D541_4_ED2022_01,
+    CSS_D541_4_ED2026_04)
+rule MpiMontantCategorie2(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2009-06-01, infinity);
+    label fr official "MPI, complément de deuxième catégorie : 13 % de la base mensuelle AF";
+    label en unofficial "MPI, second-category supplement: 13% of the AF monthly base";
+    when mpi_eligible(e) and categorie_attribuee(e, CATEGORIE_2)
+        and bmaf_retenue(e, bmaf);
+    then aeeh_montant_mpi(e, complement_montant(TauxMpiCategorie2, bmaf));
+}
+
+@source(
+    CSS_L541_4,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04,
+    CSS_D541_4,
+    CSS_D541_4_ED2009_06,
+    CSS_D541_4_ED2012_01,
+    CSS_D541_4_ED2021_01,
+    CSS_D541_4_ED2022_01,
+    CSS_D541_4_ED2026_04)
+rule MpiMontantCategorie3(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2009-06-01, infinity);
+    label fr official "MPI, complément de troisième catégorie : 18 % de la base mensuelle AF";
+    label en unofficial "MPI, third-category supplement: 18% of the AF monthly base";
+    when mpi_eligible(e) and categorie_attribuee(e, CATEGORIE_3)
+        and bmaf_retenue(e, bmaf);
+    then aeeh_montant_mpi(e, complement_montant(TauxMpiCategorie3, bmaf));
+}
+
+@source(
+    CSS_L541_4,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04,
+    CSS_D541_4,
+    CSS_D541_4_ED2009_06,
+    CSS_D541_4_ED2012_01,
+    CSS_D541_4_ED2021_01,
+    CSS_D541_4_ED2022_01,
+    CSS_D541_4_ED2026_04)
+rule MpiMontantCategorie4(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2009-06-01, infinity);
+    label fr official "MPI, complément de quatrième catégorie : 57 % de la base mensuelle AF";
+    label en unofficial "MPI, fourth-category supplement: 57% of the AF monthly base";
+    when mpi_eligible(e) and categorie_attribuee(e, CATEGORIE_4)
+        and bmaf_retenue(e, bmaf);
+    then aeeh_montant_mpi(e, complement_montant(TauxMpiCategorie4, bmaf));
+}
+
+@source(
+    CSS_L541_4,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04,
+    CSS_D541_4,
+    CSS_D541_4_ED2009_06,
+    CSS_D541_4_ED2012_01,
+    CSS_D541_4_ED2021_01,
+    CSS_D541_4_ED2022_01,
+    CSS_D541_4_ED2026_04)
+rule MpiMontantCategorie5(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2009-06-01, infinity);
+    label fr official "MPI, complément de cinquième catégorie : 73 % de la base mensuelle AF";
+    label en unofficial "MPI, fifth-category supplement: 73% of the AF monthly base";
+    when mpi_eligible(e) and categorie_attribuee(e, CATEGORIE_5)
+        and bmaf_retenue(e, bmaf);
+    then aeeh_montant_mpi(e, complement_montant(TauxMpiCategorie5, bmaf));
+}
+
+@source(
+    CSS_L541_4,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04,
+    CSS_D541_4,
+    CSS_D541_4_ED2009_06,
+    CSS_D541_4_ED2012_01,
+    CSS_D541_4_ED2021_01,
+    CSS_D541_4_ED2022_01,
+    CSS_D541_4_ED2026_04)
+rule MpiMontantCategorie6(e: fr.pf.core::Enfant, bmaf: Money) strict {
+    effective [@2009-06-01, infinity);
+    label fr official "MPI, complément de sixième catégorie : 107 % de la base mensuelle AF";
+    label en unofficial "MPI, sixth-category supplement: 107% of the AF monthly base";
+    when mpi_eligible(e) and categorie_attribuee(e, CATEGORIE_6)
+        and bmaf_retenue(e, bmaf);
+    then aeeh_montant_mpi(e, complement_montant(TauxMpiCategorie6, bmaf));
+}
+
+@source(
+    CSS_L541_4,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04,
+    CSS_D541_3,
+    CSS_D541_3_ED2012_01,
+    CSS_D541_3_ED2021_01,
+    CSS_D541_3_ED2022_01,
+    CSS_D541_3_ED2026_04)
+rule MpiZero(e: fr.pf.core::Enfant) strict {
+    effective [@2009-06-01, infinity);
+    label fr official "sans MPI : zéro porté pour clore le total";
+    label en unofficial "no MPI: zero carried to close the total";
+    when aeeh_droit_calcule(e) and sans_mpi(e);
+    then aeeh_montant_mpi(e, 0 EUR);
+}
+
+// --- Monthly total: base + supplement + MPI --------------------------------
+
+@source(
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04)
+rule MontantTotal(e: fr.pf.core::Enfant, base: Money, compl: Money, mpi: Money) strict {
+    effective [@2009-06-01, infinity);
+    label fr official "total mensuel dû : allocation + complément + MPI";
+    label en unofficial "monthly total due: allowance + supplement + MPI";
+    when aeeh_montant_base(e, base) and aeeh_montant_complement(e, compl)
+        and aeeh_montant_mpi(e, mpi);
+    then aeeh_montant_total(e, total_montant(base, compl, mpi));
+}
+
+@source(
+    CSS_L541_1_ED2012_01,
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_L541_4_ED2021_01,
+    CSS_L541_4_ED2022_01,
+    CSS_L541_4_ED2026_04)
+rule MontantServi(e: fr.pf.core::Enfant, total: Money) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "montant servi : total arrondi au centime le plus proche (annexe DSS/2B/2026/46)";
+    label en unofficial "served amount: total rounded to the nearest centime (DSS/2B/2026/46 annex)";
+    when aeeh_montant_total(e, total);
+    then aeeh_montant_servi(e, round(total, 2, "HALF_UP"));
+}

@@ -1,0 +1,30 @@
+// Дело Catala «Exemple3» — вход «Exemple1», месяц права май 2022 года.
+//
+// ШАГ: плафон мензуальности не изменился (у ст. 18 одна версия на оба месяца
+// права) — 533,91 €, как и у «Exemple1».
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-accession-03-plafond-mensualite" {
+    given {
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; }
+        assert "accession-03-plafond-mensualite-01": secteur_accession(entity_ref("urn:fr:apl:case:accession-03")) { origin case_input; }
+        assert "accession-03-plafond-mensualite-02": aide_demandee(entity_ref("urn:fr:apl:case:accession-03"), APL) { origin case_input; }
+        assert "accession-03-plafond-mensualite-03": zone_du_logement(entity_ref("urn:fr:apl:case:accession-03"), ZONE_II) { origin case_input; }
+        assert "accession-03-plafond-mensualite-04": situation_familiale(entity_ref("urn:fr:apl:case:accession-03"), COUPLE) { origin case_input; }
+        assert "accession-03-plafond-mensualite-05": personnes_a_charge(entity_ref("urn:fr:apl:case:accession-03"), 2) { origin case_input; }
+        assert "accession-03-plafond-mensualite-06": sous_cas_mensualite(entity_ref("urn:fr:apl:case:accession-03"), PRET_APRES_30_09_2017) { origin case_input; }
+        assert "accession-03-plafond-mensualite-07": finalite_operation(entity_ref("urn:fr:apl:case:accession-03"), LOGEMENT_NEUF) { origin case_input; }
+        assert "accession-03-plafond-mensualite-08": type_travaux(entity_ref("urn:fr:apl:case:accession-03"), PAS_DE_TRAVAUX) { origin case_input; }
+        assert "accession-03-plafond-mensualite-09": mode_propriete(entity_ref("urn:fr:apl:case:accession-03"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "accession-03-plafond-mensualite-10": mensualite_declaree(entity_ref("urn:fr:apl:case:accession-03"), 650 EUR) { origin case_input; }
+        assert "accession-03-plafond-mensualite-11": ressources_du_menage(entity_ref("urn:fr:apl:case:accession-03"), 18000 EUR) { origin case_input; }
+        assert "accession-03-plafond-mensualite-12": vintage_pret_depense_nette(entity_ref("urn:fr:apl:case:accession-03"), PRET_DEPUIS_OCTOBRE_1998) { origin case_input; }
+        assert "accession-03-plafond-mensualite-13": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:accession-03"), false) { origin case_input; }
+    }
+    evaluate truth(plafond_mensualite(entity_ref("urn:fr:apl:case:accession-03"), 533.91 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

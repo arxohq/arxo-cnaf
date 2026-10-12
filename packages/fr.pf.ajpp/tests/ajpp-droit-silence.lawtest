@@ -1,0 +1,21 @@
+// Right opened on silence: certificate and leave recorded, control
+// silent through the second month — the deemed agreement opens the
+// right like a recorded one.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-droit-silence" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-ds-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-ds")) { origin adjudicated; }
+        assert "ajpp-ds-02": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-ds"), entity_ref("urn:fr:pf-ajpp:case:enfant-ds")) { origin case_input; }
+        assert "ajpp-ds-03": demande_initiale(entity_ref("urn:fr:pf-ajpp:case:enfant-ds")) { origin case_input; }
+        assert "ajpp-ds-04": demande_recue_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-ds"), 10) { origin case_input; }
+        assert "ajpp-ds-05": silence_observe_jusqu_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-ds"), 12) { origin case_input; }
+    }
+    evaluate truth(ajpp_droit_ouvert(entity_ref("urn:fr:pf-ajpp:case:enfant-ds")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

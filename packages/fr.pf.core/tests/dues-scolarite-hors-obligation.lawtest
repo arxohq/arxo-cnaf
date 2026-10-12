@@ -1,0 +1,17 @@
+// Schooling scope: certificate produced but child past the end of compulsory schooling - L. 552-4 does not apply (scope bound, PC-R07-31).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-dues-scolarite-hors-obligation" {
+    given {
+        context { decision_time @2026-10-01T12:00:00Z; knowledge_time @2026-10-01T12:00:00Z; legal_time @2026-10-01; timezone "Europe/Paris"; }
+        assert "dues-scolarite-hors-obligation-01": certificat_inscription_le(entity_ref("urn:fr:pf:case:scol-hors"), entity_ref("urn:fr:pf:case:enfant-scol-hors"), @2026-09-05) { origin case_input; }
+        assert "dues-scolarite-hors-obligation-02": not avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-scol-hors")) { origin case_input; }
+        assert "dues-scolarite-hors-obligation-03": apres_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-scol-hors")) { origin case_input; }
+    }
+    evaluate truth(prestations_dues_scolarite(entity_ref("urn:fr:pf:case:scol-hors"), entity_ref("urn:fr:pf:case:enfant-scol-hors"), @2026-09-05));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,18 @@
+// Annual data, current wording: the president transmits the 2024
+// annual data, spouse included, before the end of the first quarter
+// of 2025 (D. 262-95 in force). Legal time inside the [year end,
+// year end + 3 months] duty window.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-donnees-annuelles-president" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "stat-01": annee_donnees_fin(entity_ref("urn:fr:rsa:dept:nord"), @2024-12-31) { origin case_input; }
+        assert "stat-02": est_service_statistique(entity_ref("urn:fr:rsa:org:drees")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreDonneesAnnuellesPresident, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

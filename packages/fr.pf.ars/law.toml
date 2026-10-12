@@ -1,0 +1,111 @@
+# Manifest §10 — package root marker (DECISION-0033). Normative headings per §22
+# live in the .law files themselves; the manifest must match them (LDC-E1109, lawc check).
+[package]
+name = "fr.pf.ars"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:pf-ars"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after editing .law files run
+# `law fix imports` from this directory; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Catalog metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-pf-ars"
+title = "Allocation de rentree scolaire (ARS): eligibility (L. 543-1, R. 543-1/2/4), ceiling (R. 543-5/6), amounts (D. 543-1) and differential (L. 543-2, R. 543-6-1), CDC routing (L. 543-3, R. 543-8/9), fund payment duty with the 31-October deadline; wave 3; DOM extension (L. 755-22, R. 755-14/14-1, FINISH transfer)"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française"
+verifiedAgainstSource = false
+
+[dependencies]
+"fr.pf.core" = "0.1.0"
+
+# Upstream premises: child status and the debtor body are established by
+# fr.pf.core (parallel lane W1-PFCORE). Worlds below include both
+# packages; cross-package institutional facts arrive as case inputs.
+
+# Own families (DECISION-0127): regression = false until the ratchet is registered.
+[[tests]]
+family = "fr.pf.ars#conditions"
+regression = false
+suites = [
+    "tests/ars-eligible-standard.lawtest",
+    "tests/ars-six-ans-atteint.lawtest",
+    "tests/ars-dix-huit-atteint.lawtest",
+    "tests/ars-dix-huit-jour-pile.lawtest",
+    "tests/ars-jeune-etudiant.lawtest",
+    "tests/ars-jeune-sans-plafond.lawtest",
+    "tests/ars-droit-ouvert.lawtest",
+    "tests/ars-droit-plafond-egal.lawtest",
+]
+world = ["fr.pf.ars", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.ars#plafond"
+regression = false
+suites = [
+    "tests/ars-plafond-deux-enfants.lawtest",
+    "tests/ars-plafond-cinq-enfants.lawtest",
+]
+world = ["fr.pf.ars", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.ars#montant"
+regression = false
+suites = [
+    "tests/ars-montant-moins-11.lawtest",
+    "tests/ars-montant-depassement.lawtest",
+    "tests/ars-montant-11-14.lawtest",
+    "tests/ars-montant-dss-2026.lawtest",
+    "tests/ars-montant-15-plus.lawtest",
+]
+world = ["fr.pf.ars", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.ars#differentiel"
+regression = false
+suites = [
+    "tests/ars-differentiel-ouvert.lawtest",
+    "tests/ars-differentiel-seuil-egal.lawtest",
+    "tests/ars-differentiel-ferme.lawtest",
+]
+world = ["fr.pf.ars", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.ars#beneficiaire-cdc"
+regression = false
+suites = [
+    "tests/ars-paiement-cdc.lawtest",
+    "tests/ars-paiement-famille.lawtest",
+]
+world = ["fr.pf.ars", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.ars#devoir-versement"
+regression = false
+suites = [
+    "tests/ars-devoir-versement-actif.lawtest",
+    "tests/ars-devoir-versement-differentiel.lawtest",
+    "tests/ars-devoir-versement-cdc.lawtest",
+]
+world = ["fr.pf.ars", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.ars#dom"
+regression = false
+suites = [
+    "tests/ars-dom-attribution.lawtest",
+    "tests/ars-dom-exclusion-fonds.lawtest",
+    "tests/ars-dom-avant-2021.lawtest",
+]
+world = ["fr.pf.ars", "fr.pf.core"]

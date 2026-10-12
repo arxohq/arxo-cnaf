@@ -1,0 +1,22 @@
+// MSA claimant, ministerial order of 1 July 2025, review August
+// 2025: new provisions apply (NOTA 2025-185, MSA gate).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-transition-msa-apres-arrete-2025" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-09-15T12:00:00Z; knowledge_time @2025-09-15T12:00:00Z; legal_time @2025-09-15; timezone "Europe/Paris"; }
+        assert "ppa-01": allocataire_msa(entity_ref("urn:fr:ppa:case:transition-msa-apres-arrete-2025")) { origin case_input; }
+        assert "ppa-02": arrete_msa_application(@2025-07-01) { origin case_input; }
+        assert "ppa-03": mois_revue(entity_ref("urn:fr:ppa:case:transition-msa-apres-arrete-2025"), @2025-08-01) { origin case_input; }
+    }
+    evaluate truth(dispositions_nouvelles_2025(entity_ref("urn:fr:ppa:case:transition-msa-apres-arrete-2025"), @2025-08-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(dispositions_anciennes_2025(entity_ref("urn:fr:ppa:case:transition-msa-apres-arrete-2025"), @2025-08-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

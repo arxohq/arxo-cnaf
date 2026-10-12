@@ -1,0 +1,18 @@
+// Monthly pieces duty, non-salaried (D6 active): activity stopped,
+// debtor-body link and the concerned month recorded — the
+// TransmettreDeclarationInterruption position is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-pieces-nonsalarie" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-dpn-01": cesse_activite_non_salarie(entity_ref("urn:fr:pf-ajpp:case:parent-dpn")) { origin case_input; }
+        assert "ajpp-dpn-02": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-dpn")) { origin case_input; }
+        assert "ajpp-dpn-03": mois_concerne_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-dpn"), @2024-03-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreDeclarationInterruption, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,558 @@
+// Forfait logement de la prime d'activité (R. 844-3, R. 844-4 I).
+//
+// R. 844-3: l'avantage en nature d'un logement occupé par son propriétaire ne bénéficiant pas
+// d'aide personnelle au logement, ou à titre gratuit, est évalué mensuellement et de manière
+// forfaitaire — 12 % du montant forfaitaire d'une seule personne (foyer d'une personne), 16 % du
+// montant forfaitaire calculé pour deux personnes (foyer de deux personnes), 16,5 % du montant
+// forfaitaire calculé pour trois personnes (trois personnes ou plus). R. 844-4 I: les aides
+// personnelles au logement sont incluses dans les ressources dans la limite de ce même forfait.
+//
+// « Calculé pour deux (trois) personnes » : D. 843-1 al. 1 (base + 50 %, puis + 30 % par personne
+// supplémentaire) selon le nombre de personnes du foyer ; il ne dépend pas de l'isolement
+// (lecture alignée sur la formule d'OpenFisca-France, le texte de R. 844-3 ne parle que du nombre de
+// personnes). Les personnes exclues du calcul de l'aide au logement (R. 844-4 I al. 2) ne sont pas
+// modélisées (B-PPA-FL-MENAGE-AL): la composition du foyer est celle de forme_foyer_retenue.
+//
+// Entrées du mois: la situation de logement (AIDE / NATURE / SANS, exactement une), le montant de l'aide
+// (avec AIDE), le total des autres ressources (fait retenu). Le total complet déjà retenu
+// (revenus_mensuels_retenus, forfait inclus) reste admis et prévaut sur ce chemin.
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27,
+    CSS_L842_4_ED2021_01_01,
+    CSS_L842_4_ED2021_03_25,
+    CSS_L842_4_ED2021_06_01,
+    CSS_L842_4_ED2022_03_21,
+    CSS_L842_4_ED2023_12_31,
+    CSS_L842_4_ED2024_01_01,
+    CSS_L842_4_ED2024_07_01,
+    CSS_L842_4_ED2025_01_01,
+    CSS_L842_4_ED2025_02_28,
+    CSS_L842_4_ED2025_03_31,
+    CSS_L842_4_ED2026_04_01,
+    CSS_L842_4_ED2026_06_27,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_4_ED2021_01_01,
+    CSS_R844_4_ED2021_03_25,
+    CSS_R844_4_ED2021_06_01,
+    CSS_R844_4_ED2022_03_21,
+    CSS_R844_4_ED2023_12_31,
+    CSS_R844_4_ED2024_01_01,
+    CSS_R844_4_ED2024_07_01,
+    CSS_R844_4_ED2025_01_01,
+    CSS_R844_4_ED2025_02_28,
+    CSS_R844_4_ED2025_03_31,
+    CSS_R844_4_ED2026_04_01,
+    CSS_R844_4_ED2026_06_27,
+    Demandeur,
+    FormeFoyer,
+    forfait_base_du_mois,
+    forme_foyer_retenue,
+    revenus_mensuels_retenus,
+};
+
+pub enum SituationLogement {
+    label fr official "situation de logement du foyer pour le mois (R. 844-3, R. 844-4 I)";
+    label en unofficial "household housing situation for the month (R. 844-3, R. 844-4 I)";
+    AIDE, NATURE, SANS
+}
+
+pub relation situation_logement_retenue(d: Demandeur, mois: Date, situation: SituationLogement) kind empirical {
+    key(d, mois);
+    label fr official "situation de logement du mois : aide personnelle au logement perçue, logement occupé par son propriétaire sans aide ou à titre gratuit, ou aucune (fait retenu)";
+    label en unofficial "housing situation of the month: personal housing aid received, owner-occupied without aid or free housing, or none (retained fact)";
+}
+
+pub relation aide_logement_retenue(d: Demandeur, mois: Date, montant: Money) kind empirical {
+    key(d, mois);
+    label fr official "aide personnelle au logement perçue au cours du mois (R. 844-4 I; fait retenu)";
+    label en unofficial "personal housing aid received in the month (R. 844-4 I; retained fact)";
+}
+
+pub relation ressources_hors_logement_retenues(d: Demandeur, mois: Date, total: Money) kind empirical {
+    key(d, mois);
+    label fr official "ressources du foyer du mois, catégories L. 842-4, hors élément de logement (fait retenu B-PPA-RESSOURCES-CALCUL)";
+    label en unofficial "household resources of the month, L. 842-4 categories, without the housing item (retained fact B-PPA-RESSOURCES-CALCUL)";
+}
+
+pub relation forfait_logement_du_mois(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "forfait logement du mois : 12 %, 16 % ou 16,5 % du montant forfaitaire selon le nombre de personnes (R. 844-3)";
+    label en unofficial "housing forfait of the month: 12 %, 16 % or 16.5 % of the flat-rate amount by number of persons (R. 844-3)";
+}
+
+pub relation logement_ressource_mois(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "élément de logement des ressources du mois : aide dans la limite du forfait, avantage en nature forfaitaire, ou zéro (R. 844-3, R. 844-4 I)";
+    label en unofficial "housing item of the month's resources: aid up to the forfait, flat-rate benefit in kind, or zero (R. 844-3, R. 844-4 I)";
+}
+
+pub relation ressources_foyer_mois(d: Demandeur, mois: Date, total: Money) kind institutional {
+    key(d, mois);
+    label fr official "ressources du foyer du mois prises en compte avant le plancher L. 842-3 2° (total retenu, ou ressources hors logement et élément de logement)";
+    label en unofficial "household resources of the month before the L. 842-3 2 floor (retained total, or resources without housing plus the housing item)";
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitLogementSeul(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 12 % du montant forfaitaire d'une seule personne (R. 844-3 1°)";
+    label en unofficial "housing forfait: 12 % of the single-person flat-rate amount (R. 844-3 1°)";
+    when forme_foyer_retenue(d, mois, SEUL) and forfait_base_du_mois(mois, base);
+    then forfait_logement_du_mois(d, mois, base * 0.12);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitLogementIsole(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 12 % du montant forfaitaire d'une seule personne, foyer isolé d'une personne (R. 844-3 1°)";
+    label en unofficial "housing forfait: 12 % of the single-person flat-rate amount, isolated one-person household (R. 844-3 1°)";
+    when forme_foyer_retenue(d, mois, ISOLE) and forfait_base_du_mois(mois, base);
+    then forfait_logement_du_mois(d, mois, base * 0.12);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitLogementCouple(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 16 % du montant forfaitaire calculé pour deux personnes, couple (R. 844-3 2°, D. 843-1 al. 1)";
+    label en unofficial "housing forfait: 16 % of the flat-rate amount calculated for two persons, couple (R. 844-3 2°, D. 843-1 para. 1)";
+    when forme_foyer_retenue(d, mois, COUPLE) and forfait_base_du_mois(mois, base);
+    then forfait_logement_du_mois(d, mois, base * 1.5 * 0.16);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitLogementIsole1E(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 16 % du montant forfaitaire calculé pour deux personnes, parent isolé et un enfant (R. 844-3 2°, D. 843-1 al. 1)";
+    label en unofficial "housing forfait: 16 % of the flat-rate amount calculated for two persons, isolated parent and one child (R. 844-3 2°, D. 843-1 para. 1)";
+    when forme_foyer_retenue(d, mois, ISOLE_1E) and forfait_base_du_mois(mois, base);
+    then forfait_logement_du_mois(d, mois, base * 1.5 * 0.16);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitLogementCouple1E(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 16,5 % du montant forfaitaire calculé pour trois personnes, couple et un enfant (R. 844-3 3°, D. 843-1 al. 1)";
+    label en unofficial "housing forfait: 16.5 % of the flat-rate amount calculated for three persons, couple and one child (R. 844-3 3°, D. 843-1 para. 1)";
+    when forme_foyer_retenue(d, mois, COUPLE_1E) and forfait_base_du_mois(mois, base);
+    then forfait_logement_du_mois(d, mois, base * 1.8 * 0.165);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitLogementCouple2E(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 16,5 % du montant forfaitaire calculé pour trois personnes, foyer de quatre personnes (R. 844-3 3°, D. 843-1 al. 1)";
+    label en unofficial "housing forfait: 16.5 % of the flat-rate amount calculated for three persons, four-person household (R. 844-3 3°, D. 843-1 para. 1)";
+    when forme_foyer_retenue(d, mois, COUPLE_2E) and forfait_base_du_mois(mois, base);
+    then forfait_logement_du_mois(d, mois, base * 1.8 * 0.165);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitLogementCouple3E(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 16,5 % du montant forfaitaire calculé pour trois personnes, foyer de cinq personnes (R. 844-3 3°, D. 843-1 al. 1)";
+    label en unofficial "housing forfait: 16.5 % of the flat-rate amount calculated for three persons, five-person household (R. 844-3 3°, D. 843-1 para. 1)";
+    when forme_foyer_retenue(d, mois, COUPLE_3E) and forfait_base_du_mois(mois, base);
+    then forfait_logement_du_mois(d, mois, base * 1.8 * 0.165);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitLogementIsole2E(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 16,5 % du montant forfaitaire calculé pour trois personnes, parent isolé et deux enfants (R. 844-3 3°, D. 843-1 al. 1)";
+    label en unofficial "housing forfait: 16.5 % of the flat-rate amount calculated for three persons, isolated parent and two children (R. 844-3 3°, D. 843-1 para. 1)";
+    when forme_foyer_retenue(d, mois, ISOLE_2E) and forfait_base_du_mois(mois, base);
+    then forfait_logement_du_mois(d, mois, base * 1.8 * 0.165);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_R844_4_ED2021_01_01,
+    CSS_R844_4_ED2021_03_25,
+    CSS_R844_4_ED2021_06_01,
+    CSS_R844_4_ED2022_03_21,
+    CSS_R844_4_ED2023_12_31,
+    CSS_R844_4_ED2024_01_01,
+    CSS_R844_4_ED2024_07_01,
+    CSS_R844_4_ED2025_01_01,
+    CSS_R844_4_ED2025_02_28,
+    CSS_R844_4_ED2025_03_31,
+    CSS_R844_4_ED2026_04_01,
+    CSS_R844_4_ED2026_06_27)
+rule LogementAide(d: Demandeur, mois: Date, a: Money, f: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "aide personnelle au logement incluse dans les ressources, dans la limite du forfait : aide inférieure ou égale au forfait (R. 844-4 I)";
+    label en unofficial "personal housing aid included in the resources up to the forfait: aid not above the forfait (R. 844-4 I)";
+    when situation_logement_retenue(d, mois, AIDE) and aide_logement_retenue(d, mois, a) and forfait_logement_du_mois(d, mois, f) and a <= f;
+    then logement_ressource_mois(d, mois, a);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_R844_4_ED2021_01_01,
+    CSS_R844_4_ED2021_03_25,
+    CSS_R844_4_ED2021_06_01,
+    CSS_R844_4_ED2022_03_21,
+    CSS_R844_4_ED2023_12_31,
+    CSS_R844_4_ED2024_01_01,
+    CSS_R844_4_ED2024_07_01,
+    CSS_R844_4_ED2025_01_01,
+    CSS_R844_4_ED2025_02_28,
+    CSS_R844_4_ED2025_03_31,
+    CSS_R844_4_ED2026_04_01,
+    CSS_R844_4_ED2026_06_27)
+rule LogementAidePlafonnee(d: Demandeur, mois: Date, a: Money, f: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "aide personnelle au logement incluse dans les ressources, dans la limite du forfait : aide supérieure au forfait, le forfait est retenu (R. 844-4 I)";
+    label en unofficial "personal housing aid included in the resources up to the forfait: aid above the forfait, the forfait is used (R. 844-4 I)";
+    when situation_logement_retenue(d, mois, AIDE) and aide_logement_retenue(d, mois, a) and forfait_logement_du_mois(d, mois, f) and a > f;
+    then logement_ressource_mois(d, mois, f);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27)
+rule LogementNature(d: Demandeur, mois: Date, f: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "logement occupé par son propriétaire sans aide personnelle ou à titre gratuit : avantage en nature évalué au forfait (R. 844-3)";
+    label en unofficial "owner-occupied housing without personal aid, or free housing: benefit in kind valued at the forfait (R. 844-3)";
+    when situation_logement_retenue(d, mois, NATURE) and forfait_logement_du_mois(d, mois, f);
+    then logement_ressource_mois(d, mois, f);
+}
+
+@source(
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27)
+rule LogementSans(d: Demandeur, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ni aide personnelle au logement ni avantage en nature : aucun élément de logement dans les ressources (R. 844-3, R. 844-4 I)";
+    label en unofficial "neither personal housing aid nor benefit in kind: no housing item in the resources (R. 844-3, R. 844-4 I)";
+    when situation_logement_retenue(d, mois, SANS);
+    then logement_ressource_mois(d, mois, 0 EUR);
+}
+
+@source(
+    CSS_L842_4_ED2021_01_01,
+    CSS_L842_4_ED2021_03_25,
+    CSS_L842_4_ED2021_06_01,
+    CSS_L842_4_ED2022_03_21,
+    CSS_L842_4_ED2023_12_31,
+    CSS_L842_4_ED2024_01_01,
+    CSS_L842_4_ED2024_07_01,
+    CSS_L842_4_ED2025_01_01,
+    CSS_L842_4_ED2025_02_28,
+    CSS_L842_4_ED2025_03_31,
+    CSS_L842_4_ED2026_04_01,
+    CSS_L842_4_ED2026_06_27)
+rule RessourcesFoyerTotalRetenu(d: Demandeur, mois: Date, r: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total des ressources du mois déjà retenu, forfait logement inclus, pris tel quel (L. 842-3 2°, L. 842-4)";
+    label en unofficial "month resources total already retained, housing forfait included, used as is (L. 842-3 2, L. 842-4)";
+    when revenus_mensuels_retenus(d, mois, r);
+    then ressources_foyer_mois(d, mois, r);
+}
+
+@source(
+    CSS_L842_4_ED2021_01_01,
+    CSS_L842_4_ED2021_03_25,
+    CSS_L842_4_ED2021_06_01,
+    CSS_L842_4_ED2022_03_21,
+    CSS_L842_4_ED2023_12_31,
+    CSS_L842_4_ED2024_01_01,
+    CSS_L842_4_ED2024_07_01,
+    CSS_L842_4_ED2025_01_01,
+    CSS_L842_4_ED2025_02_28,
+    CSS_L842_4_ED2025_03_31,
+    CSS_L842_4_ED2026_04_01,
+    CSS_L842_4_ED2026_06_27,
+    CSS_R844_3_PRE2024_ED2021_01_01,
+    CSS_R844_3_PRE2024_ED2021_03_25,
+    CSS_R844_3_PRE2024_ED2021_06_01,
+    CSS_R844_3_PRE2024_ED2022_03_21,
+    CSS_R844_3_ED2023_12_31,
+    CSS_R844_3_ED2024_01_01,
+    CSS_R844_3_ED2024_07_01,
+    CSS_R844_3_ED2025_01_01,
+    CSS_R844_3_ED2025_02_28,
+    CSS_R844_3_ED2025_03_31,
+    CSS_R844_3_ED2026_04_01,
+    CSS_R844_3_ED2026_06_27,
+    CSS_R844_4_ED2021_01_01,
+    CSS_R844_4_ED2021_03_25,
+    CSS_R844_4_ED2021_06_01,
+    CSS_R844_4_ED2022_03_21,
+    CSS_R844_4_ED2023_12_31,
+    CSS_R844_4_ED2024_01_01,
+    CSS_R844_4_ED2024_07_01,
+    CSS_R844_4_ED2025_01_01,
+    CSS_R844_4_ED2025_02_28,
+    CSS_R844_4_ED2025_03_31,
+    CSS_R844_4_ED2026_04_01,
+    CSS_R844_4_ED2026_06_27)
+rule RessourcesFoyerComposees(d: Demandeur, mois: Date, r: Money, l: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ressources du mois : ressources hors logement augmentées de l'élément de logement (L. 842-4, R. 844-3, R. 844-4 I)";
+    label en unofficial "month resources: resources without housing plus the housing item (L. 842-4, R. 844-3, R. 844-4 I)";
+    when ressources_hors_logement_retenues(d, mois, r) and logement_ressource_mois(d, mois, l);
+    then ressources_foyer_mois(d, mois, r + l);
+}

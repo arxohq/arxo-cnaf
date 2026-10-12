@@ -1,0 +1,28 @@
+// Corrected schedule (PC-R05-03/04/05): built 3 000, works 800, art 20 000 (3 % = 600) with date+evidence, clubs 800, capital 500; vehicles 5 000 and equipment 500 under thresholds yield no apport - total 5 700 EUR (R. 553-3-1).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-bareme-corrige" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-bareme-corrige-01": batie_bien_valeur(entity_ref("urn:fr:pf:case:corrige"), entity_ref("urn:fr:pf:case:bien-1"), 3000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-bareme-corrige-03": depenses_travaux(entity_ref("urn:fr:pf:case:corrige"), 1000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-bareme-corrige-05": vehicule_bien_valeur(entity_ref("urn:fr:pf:case:corrige"), entity_ref("urn:fr:pf:case:auto-1"), 5000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-bareme-corrige-05d": vehicule_bien_date(entity_ref("urn:fr:pf:case:corrige"), entity_ref("urn:fr:pf:case:auto-1"), @2026-01-10) { origin case_input; }
+        assert "tdv-bareme-corrige-05p": vehicule_bien_sans_preuve(entity_ref("urn:fr:pf:case:corrige"), entity_ref("urn:fr:pf:case:auto-1")) { origin case_input; }
+        assert "tdv-bareme-corrige-06": depenses_equipement(entity_ref("urn:fr:pf:case:corrige"), 500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-bareme-corrige-07": art_bien_valeur(entity_ref("urn:fr:pf:case:corrige"), entity_ref("urn:fr:pf:case:art-1"), 20000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-bareme-corrige-07d": art_bien_date(entity_ref("urn:fr:pf:case:corrige"), entity_ref("urn:fr:pf:case:art-1"), @2026-01-12) { origin case_input; }
+        assert "tdv-bareme-corrige-07p": art_bien_sans_preuve(entity_ref("urn:fr:pf:case:corrige"), entity_ref("urn:fr:pf:case:art-1")) { origin case_input; }
+        assert "tdv-bareme-corrige-09": depenses_clubs(entity_ref("urn:fr:pf:case:corrige"), 1000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-bareme-corrige-10": capitaux_fin_periode(entity_ref("urn:fr:pf:case:corrige"), 5000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-bareme-corrige-11": prestation_soumise_section(entity_ref("urn:fr:pf:case:corrige")) { origin case_input; }
+        assert "tdv-bareme-corrige-12": depenses_foyer_periode_reference(entity_ref("urn:fr:pf:case:corrige")) { origin case_input; }
+        assert "tdv-bareme-corrige-15": inventaire_tdv_complet(entity_ref("urn:fr:pf:case:corrige")) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_train_vie(entity_ref("urn:fr:pf:case:corrige"), 5700.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

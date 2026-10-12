@@ -1,0 +1,153 @@
+// AJPP right and duration (L. 544-1 boundary, L. 544-2).
+//
+// The base right (L. 544-1: carer of a gravely ill, disabled or accidented
+// child gets the allowance per leave day) is SANS_OWNER with a future
+// abrogation: boundary quote, never cited. The computation head is grounded
+// on L. 544-2 (detailed certificate + favourable control agreement open the
+// right for the foreseeable period) with the parental leave as the external
+// channel fact (L. 1225-62 travail, out of scope). Special workers (L. 544-8)
+// open the same head through cessation / job-seeking instead of the leave.
+// The re-exam deadline (6 months minimum, 12 then 14 maximum) is checked
+// against the versioned param. All keyed premises arrive bound (per-child
+// keys); the carer link carries no key (multi-carer sharing).
+
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+use self::{
+    CSS_L544_2,
+    CSS_L544_2_PRE2026_ED2020_09,
+    CSS_L544_2_PRE2026_ED2021_11,
+    CSS_L544_2_PRE2026_ED2022_01,
+    CSS_L544_2_PRE2026_ED2022_04,
+    CSS_L544_2_PRE2026_ED2022_07,
+    CSS_L544_2_PRE2026_ED2022_10,
+    CSS_L544_2_PRE2026_ED2023_01,
+    CSS_L544_2_PRE2026_ED2023_07,
+    CSS_L544_2_PRE2026_ED2024_02,
+    CSS_L544_2_PRE2026_ED2024_07,
+    CSS_L544_2_PRE2026_ED2025_12,
+    CSS_L544_2_PRE2026_ED2026_01,
+    CSS_L544_8,
+    CSS_L544_8_ED2026_06,
+    CSS_L544_8_PRE2022_ED2020_09,
+    CSS_L544_8_PRE2022_ED2021_11,
+    CSS_L544_8_PRE2022_ED2022_01,
+    CSS_L544_8_PRE2022_ED2022_04,
+    CSS_L544_8_PRE2026,
+    CSS_L544_8_PRE2026_ED2022_10,
+    CSS_L544_8_PRE2026_ED2023_01,
+    CSS_L544_8_PRE2026_ED2023_07,
+    CSS_L544_8_PRE2026_ED2024_02,
+    CSS_L544_8_PRE2026_ED2024_07,
+    CSS_L544_8_PRE2026_ED2025_12,
+    ajpp_droit_ouvert,
+    avis_favorable_controle,
+    certificat_gravite,
+    cesse_activite_non_salarie,
+    conge_presence_parentale,
+    demandeur_emploi_ajpp,
+    echeance_reexamen,
+    reexamen_conforme,
+};
+
+// --- L. 544-2: right opened by certificate + agreement + leave -----------
+
+@source(
+    CSS_L544_2_PRE2026_ED2020_09,
+    CSS_L544_2_PRE2026_ED2021_11,
+    CSS_L544_2_PRE2026_ED2022_01,
+    CSS_L544_2_PRE2026_ED2022_04,
+    CSS_L544_2_PRE2026_ED2022_07,
+    CSS_L544_2_PRE2026_ED2022_10,
+    CSS_L544_2_PRE2026_ED2023_01,
+    CSS_L544_2_PRE2026_ED2023_07,
+    CSS_L544_2_PRE2026_ED2024_02,
+    CSS_L544_2_PRE2026_ED2024_07,
+    CSS_L544_2_PRE2026_ED2025_12,
+    CSS_L544_2_PRE2026_ED2026_01,
+    CSS_L544_2)
+rule DroitAjppOuvert(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "droit ouvert : certificat détaillé, avis favorable du contrôle médical et congé de présence parentale";
+    label en unofficial "right opened: detailed certificate, favourable medical-control agreement and parental presence leave";
+    when certificat_gravite(e) and avis_favorable_controle(e)
+        and conge_presence_parentale(p, e);
+    then ajpp_droit_ouvert(e);
+}
+
+// --- L. 544-8, para. 1: special workers who stopped working --------------
+
+@source(
+    CSS_L544_8_PRE2022_ED2020_09,
+    CSS_L544_8_PRE2022_ED2021_11,
+    CSS_L544_8_PRE2022_ED2022_01,
+    CSS_L544_8_PRE2022_ED2022_04,
+    CSS_L544_8_PRE2026,
+    CSS_L544_8_PRE2026_ED2022_10,
+    CSS_L544_8_PRE2026_ED2023_01,
+    CSS_L544_8_PRE2026_ED2023_07,
+    CSS_L544_8_PRE2026_ED2024_02,
+    CSS_L544_8_PRE2026_ED2024_07,
+    CSS_L544_8_PRE2026_ED2025_12,
+    CSS_L544_8,
+    CSS_L544_8_ED2026_06)
+rule DroitSpecialNonsalarie(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "personnes visées L. 544-8 ayant cessé leur activité : certificat et avis ouvrent le droit";
+    label en unofficial "L. 544-8 persons who stopped working: certificate and agreement open the right";
+    when certificat_gravite(e) and avis_favorable_controle(e)
+        and cesse_activite_non_salarie(p);
+    then ajpp_droit_ouvert(e);
+}
+
+// --- L. 544-8, para. 2: job-seekers and paid trainees --------------------
+
+@source(
+    CSS_L544_8_PRE2022_ED2020_09,
+    CSS_L544_8_PRE2022_ED2021_11,
+    CSS_L544_8_PRE2022_ED2022_01,
+    CSS_L544_8_PRE2022_ED2022_04,
+    CSS_L544_8_PRE2026,
+    CSS_L544_8_PRE2026_ED2022_10,
+    CSS_L544_8_PRE2026_ED2023_01,
+    CSS_L544_8_PRE2026_ED2023_07,
+    CSS_L544_8_PRE2026_ED2024_02,
+    CSS_L544_8_PRE2026_ED2024_07,
+    CSS_L544_8_PRE2026_ED2025_12,
+    CSS_L544_8,
+    CSS_L544_8_ED2026_06)
+rule DroitDemandeurEmploi(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demandeur d'emploi ou en formation rémunérée : certificat et avis ouvrent le droit";
+    label en unofficial "job-seeker or paid trainee: certificate and agreement open the right";
+    when certificat_gravite(e) and avis_favorable_controle(e)
+        and demandeur_emploi_ajpp(p);
+    then ajpp_droit_ouvert(e);
+}
+
+// --- L. 544-2: re-exam deadline within 6 / 12-14 months ------------------
+
+@source(
+    CSS_L544_2_PRE2026_ED2020_09,
+    CSS_L544_2_PRE2026_ED2021_11,
+    CSS_L544_2_PRE2026_ED2022_01,
+    CSS_L544_2_PRE2026_ED2022_04,
+    CSS_L544_2_PRE2026_ED2022_07,
+    CSS_L544_2_PRE2026_ED2022_10,
+    CSS_L544_2_PRE2026_ED2023_01,
+    CSS_L544_2_PRE2026_ED2023_07,
+    CSS_L544_2_PRE2026_ED2024_02,
+    CSS_L544_2_PRE2026_ED2024_07,
+    CSS_L544_2_PRE2026_ED2025_12,
+    CSS_L544_2_PRE2026_ED2026_01,
+    CSS_L544_2)
+rule ReexamenConforme(e: fr.pf.core::Enfant, delai: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "échéance de réexamen fixée par le médecin dans la fourchette (12 puis 14 mois au plus)";
+    label en unofficial "doctor-set re-examination deadline within the window (12 then 14 months at most)";
+    when ajpp_droit_ouvert(e) and echeance_reexamen(e, delai)
+        and delai >= DelaiReexamenMinMois and delai <= DelaiReexamenMaxMois;
+    then reexamen_conforme(e);
+}

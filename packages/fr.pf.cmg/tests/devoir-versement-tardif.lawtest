@@ -1,0 +1,22 @@
+// Late payment: justification received 2025-10-20, deadline one month
+// later (2025-11-20), payment on 2025-11-25 — versement_tardif holds.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-devoir-versement-tardif" {
+    given {
+        context { deadline_policy CMG_MOIS_CALENDAIRE; decision_time @2025-11-28T12:00:00Z; knowledge_time @2025-11-28T12:00:00Z; legal_time @2025-11-15; timezone "Europe/Paris"; }
+        assert "devoir-tard-01": cmg_verse(entity_ref("urn:fr:pf-cmg:case:devoir-tardif"), entity_ref("urn:fr:pf-cmg:child:devt"), 600 EUR) { origin case_input; }
+        assert "devoir-tard-02": justification_depenses(entity_ref("urn:fr:pf-cmg:case:devoir-tardif"), entity_ref("urn:fr:pf-cmg:child:devt"), @2025-10-20) { origin case_input; }
+        assert "devoir-tard-03": date_versement_cmg(entity_ref("urn:fr:pf-cmg:case:devoir-tardif"), entity_ref("urn:fr:pf-cmg:child:devt"), @2025-11-25) { origin case_input; }
+    }
+    evaluate truth(date_limite_paiement(entity_ref("urn:fr:pf-cmg:case:devoir-tardif"), entity_ref("urn:fr:pf-cmg:child:devt"), @2025-11-20));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(versement_tardif(entity_ref("urn:fr:pf-cmg:case:devoir-tardif"), entity_ref("urn:fr:pf-cmg:child:devt")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

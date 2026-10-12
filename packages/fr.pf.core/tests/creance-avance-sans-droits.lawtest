@@ -1,0 +1,21 @@
+// No advance without established rights: allocataire with assessable solicited benefit but no established rights - no advance (L. 583-2 « dans la limite », PC-R07-25).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-avance-sans-droits" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-avance-sans-droits-01": parent_charge(entity_ref("urn:fr:pf:case:creance-sdr"), entity_ref("urn:fr:pf:case:enfant-sdr")) { origin case_input; }
+        assert "creance-avance-sans-droits-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:creance-sdr"), entity_ref("urn:fr:pf:case:enfant-sdr")) { origin adjudicated; }
+        assert "creance-avance-sans-droits-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-sdr")) { origin case_input; }
+        assert "creance-avance-sans-droits-04": reside_france_stable(entity_ref("urn:fr:pf:case:creance-sdr")) { origin case_input; }
+        assert "creance-avance-sans-droits-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-sdr")) { origin case_input; }
+        assert "creance-avance-sans-droits-06": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:creance-sdr")) { origin case_input; }
+        assert "creance-avance-sans-droits-07": prestation_sollicitee_merites_evaluables(entity_ref("urn:fr:pf:case:creance-sdr")) { origin case_input; }
+        assert "creance-avance-sans-droits-08": not droits_etablis_existant(entity_ref("urn:fr:pf:case:creance-sdr")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(AccorderAvanceFondsSociaux, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

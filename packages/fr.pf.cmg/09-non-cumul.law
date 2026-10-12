@@ -1,0 +1,123 @@
+// Non-cumulation (L. 531-9) and CESU levy minoration (L. 531-8-1).
+//
+// L. 531-9, para. 1 (all three wordings): «Le complément ... n'est pas
+// cumulable avec la prestation partagée d'éducation de l'enfant à taux
+// plein ..., sauf si cette dernière est versée au titre du VI». The
+// 2014 wording's NOTA restricts it to children born/adopted from
+// 01.10.2014 (explicit gate cohorte_l5319_2014, all periods — the 2014
+// reform cohort persists; see package.law). The «sauf si» exception is
+// the affirmative fact prepare_plein_hors_vi (RETURN 2026-10-08).
+// hors_cohorte_l5319_2014 is the affirmative pre-cutoff birth input for
+// the boundary scenarios (FULL RETURN 03); the rules gate on the positive
+// cohort only, so pre-cutoff and unevaluated cases stay silent alike.
+// The 2025-12-31 wording adds: «Il n'est pas non plus cumulable avec
+// l'indemnité journalière mentionnée aux articles L. 331-8-1 et
+// L. 623-2 ... et à l'article L. 732-12-1-1 du code rural ... lorsque
+// ces prestations sont versées au titre du même enfant» — applicable
+// to children born or adopted from 01.01.2026 (NOTA, cohort gate).
+// Both prohibitions conclude as literal heads; the payment exclusion
+// itself needs the versement stage (B-CMG-L531-9-PREPARE).
+// L. 531-9, para. 2 delegates the part-time reduction to decree: the
+// decree halves already execute through D. 531-21 (05/06), no new rule.
+// L. 531-8-1 (both wordings): «le prélèvement ... est minoré à hauteur
+// du montant du complément ... mentionné au troisième alinéa de
+// l'article L. 531-8» — the minoré levy is built (B-CMG-L531-8-MONTANT).
+
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+use self::{
+    CSS_L531_8_1_ED2019_01,
+    CSS_L531_8_1_ED2021_12,
+    CSS_L531_9_ED2014_08,
+    CSS_L531_9_ED2025_09,
+    CSS_L531_9_ED2025_12,
+    beneficie_prepare_plein,
+    cmg_imputable_l5318,
+    cohorte_l5319_2014,
+    cohorte_l5319_2026,
+    cumul_indemnite_interdit,
+    cumul_prepare_plein_interdit,
+    droit_cmg_ouvert,
+    droit_structure_ouvert,
+    indemnite_journaliere_meme_enfant,
+    prepare_plein_hors_vi,
+    prelevement_cesu_base,
+    prelevement_cesu_minore,
+};
+
+// --- L. 531-9, para. 1: no cumulation with full-rate PreParE -----------------
+//
+// The «sauf si … versée au titre du VI» exception is an affirmative
+// established fact prepare_plein_hors_vi (RETURN 2026-10-08: missing
+// evidence must not prove absence); the 2014 NOTA cohort (born/adopted
+// from 01.10.2014) is the explicit gate cohorte_l5319_2014.
+
+@source(CSS_L531_9_ED2014_08, CSS_L531_9_ED2025_09, CSS_L531_9_ED2025_12)
+rule NonCumulPreparePlein(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "droit L. 531-5 et PreParE à taux plein hors VI établie, enfant de la cohorte 2014: cumul interdit (L. 531-9, al. 1)";
+    label en unofficial "L.531-5 right plus established non-VI full-rate PreParE, 2014-cohort child: cumulation barred (L. 531-9, para. 1)";
+    when droit_cmg_ouvert(p, e)
+        and beneficie_prepare_plein(p, e)
+        and prepare_plein_hors_vi(p, e)
+        and cohorte_l5319_2014(e);
+    then cumul_prepare_plein_interdit(p, e);
+}
+
+@source(CSS_L531_9_ED2014_08, CSS_L531_9_ED2025_09, CSS_L531_9_ED2025_12)
+rule NonCumulPreparePleinStructure(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "droit L. 531-6 et PreParE à taux plein hors VI établie, enfant de la cohorte 2014: cumul interdit (L. 531-9, al. 1)";
+    label en unofficial "L.531-6 right plus established non-VI full-rate PreParE, 2014-cohort child: cumulation barred (L. 531-9, para. 1)";
+    when droit_structure_ouvert(p, e)
+        and beneficie_prepare_plein(p, e)
+        and prepare_plein_hors_vi(p, e)
+        and cohorte_l5319_2014(e);
+    then cumul_prepare_plein_interdit(p, e);
+}
+
+// --- L. 531-9, para. 1 (2025-12 wording): no cumulation with daily allowances
+
+@source(CSS_L531_9_ED2025_12)
+rule NonCumulIndemnite(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "droit L. 531-5 et indemnité journalière pour le même enfant de la cohorte 2026: cumul interdit";
+    label en unofficial "L.531-5 right plus daily allowance for the same 2026-cohort child: cumulation barred";
+    when droit_cmg_ouvert(p, e)
+        and indemnite_journaliere_meme_enfant(p, e)
+        and cohorte_l5319_2026(e);
+    then cumul_indemnite_interdit(p, e);
+}
+
+@source(CSS_L531_9_ED2025_12)
+rule NonCumulIndemniteStructure(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "droit L. 531-6 et indemnité journalière pour le même enfant de la cohorte 2026: cumul interdit";
+    label en unofficial "L.531-6 right plus daily allowance for the same 2026-cohort child: cumulation barred";
+    when droit_structure_ouvert(p, e)
+        and indemnite_journaliere_meme_enfant(p, e)
+        and cohorte_l5319_2026(e);
+    then cumul_indemnite_interdit(p, e);
+}
+
+// --- L. 531-8-1: the levy is reduced by the supplement amount ----------------
+
+@source(CSS_L531_8_1_ED2019_01)
+rule PrelevementMinoreAncien(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, base: Money, imputable: Money) strict {
+    effective [@2021-01-01, @2021-12-25);
+    label fr official "prélèvement minoré du montant du complément (L. 531-8-1 éd. 2019)";
+    label en unofficial "levy reduced by the supplement amount (L. 531-8-1 2019 wording)";
+    when prelevement_cesu_base(p, base) and cmg_imputable_l5318(p, e, imputable);
+    then prelevement_cesu_minore(p, e, base - imputable);
+}
+
+@source(CSS_L531_8_1_ED2021_12)
+rule PrelevementMinore(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, base: Money, imputable: Money) strict {
+    effective [@2021-12-25, infinity);
+    label fr official "prélèvement minoré du montant du complément (L. 531-8-1 éd. 2021)";
+    label en unofficial "levy reduced by the supplement amount (L. 531-8-1 2021 wording)";
+    when prelevement_cesu_base(p, base) and cmg_imputable_l5318(p, e, imputable);
+    then prelevement_cesu_minore(p, e, base - imputable);
+}

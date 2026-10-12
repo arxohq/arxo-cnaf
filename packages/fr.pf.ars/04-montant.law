@@ -1,0 +1,168 @@
+// Per-child amounts by age band (D543-1) and the differential (R543-6-1).
+//
+// RESOURCE GATE (D-29(b), F-CH6-ARS-SANS-PLAFOND). The three per-child base
+// rules require ars_droit_ouvert (resources under the R543-5 ceiling and an
+// eligible child): an overrun household takes the differential track only.
+//
+// Bands are read at 31 December of the rentree year: under eleven
+// (89,72 %), eleven to fourteen (94,67 %), fifteen and over (97,95 %),
+// all of the monthly base. The 15 EUR non-payment floor (D543-2)
+// operates on the household total, which the engine cannot fold: with
+// lawful base values every single-child amount exceeds it, so the
+// floor never suppresses payment in the computable domain
+// (B-PFARS-SEUIL). The differential is standalone (no open right
+// needed, L543-2 mirror of the CF track): overrun households compute
+// from the April-1 amounts in force, summed over the three bands with
+// fund-stated band counts, divided by the entitled children.
+
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+use self::{
+    BandeArs,
+    CSS_D543_1,
+    CSS_D543_1_ED2013_06,
+    CSS_D543_1_ED2014_08,
+    CSS_D543_1_ED2016_03,
+    CSS_D543_1_ED2016_10,
+    CSS_D543_1_ED2019_01,
+    CSS_D543_1_ED2022_01,
+    CSS_D543_1_ED2022_02,
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02,
+    CSS_L543_2,
+    CSS_L543_2_ED2002_08,
+    CSS_L543_2_ED2004_01,
+    CSS_L543_2_ED2008_08,
+    CSS_L543_2_ED2012_06,
+    CSS_L543_2_ED2013_06,
+    CSS_L543_2_ED2014_08,
+    CSS_L543_2_ED2016_03,
+    CSS_L543_2_ED2016_10,
+    CSS_L543_2_ED2019_01,
+    CSS_L543_2_ED2022_01,
+    CSS_L543_2_ED2022_02,
+    CSS_R543_6_1,
+    CSS_R543_6_1_ED2014_08,
+    CSS_R543_6_1_ED2016_03,
+    CSS_R543_6_1_ED2016_10,
+    CSS_R543_6_1_ED2019_01,
+    CSS_R543_6_1_ED2022_01,
+    CSS_R543_6_1_ED2022_02,
+    ars_differentiel_du,
+    ars_droit_ouvert,
+    ars_enfant_eligible,
+    ars_montant_du,
+    bmaf_retenu,
+    date_naissance,
+    date_reference_taux,
+    nb_bande,
+    nb_enfants_ars,
+    plafond_ars_applicable,
+    ressources_menage,
+};
+
+@source(
+    CSS_D543_1,
+    CSS_D543_1_ED2013_06,
+    CSS_D543_1_ED2014_08,
+    CSS_D543_1_ED2016_03,
+    CSS_D543_1_ED2016_10,
+    CSS_D543_1_ED2019_01,
+    CSS_D543_1_ED2022_01,
+    CSS_D543_1_ED2022_02,
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02)
+rule ArsMontantMoins11(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, dref: Date, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "moins de onze ans au 31 décembre: 89,72 % de la base mensuelle (D. 543-1)";
+    label en unofficial "under eleven at 31 December: 89.72% of the monthly base (D. 543-1)";
+    when ars_droit_ouvert(p) and ars_enfant_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and date_naissance(e, naissance) and date_reference_taux(dref)
+        and add_calendar_period(naissance, 11 calendar_year) > dref
+        and bmaf_retenu(p, bmaf);
+    then ars_montant_du(e, round(TauxArsMoins11 * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_D543_1,
+    CSS_D543_1_ED2013_06,
+    CSS_D543_1_ED2014_08,
+    CSS_D543_1_ED2016_03,
+    CSS_D543_1_ED2016_10,
+    CSS_D543_1_ED2019_01,
+    CSS_D543_1_ED2022_01,
+    CSS_D543_1_ED2022_02,
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02)
+rule ArsMontant11a14(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, dref: Date, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "onze à quatorze ans au 31 décembre: 94,67 % de la base mensuelle (D. 543-1)";
+    label en unofficial "eleven to fourteen at 31 December: 94.67% of the monthly base (D. 543-1)";
+    when ars_droit_ouvert(p) and ars_enfant_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and date_naissance(e, naissance) and date_reference_taux(dref)
+        and add_calendar_period(naissance, 11 calendar_year) <= dref
+        and add_calendar_period(naissance, 15 calendar_year) > dref
+        and bmaf_retenu(p, bmaf);
+    then ars_montant_du(e, round(TauxArs11a14 * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_D543_1,
+    CSS_D543_1_ED2013_06,
+    CSS_D543_1_ED2014_08,
+    CSS_D543_1_ED2016_03,
+    CSS_D543_1_ED2016_10,
+    CSS_D543_1_ED2019_01,
+    CSS_D543_1_ED2022_01,
+    CSS_D543_1_ED2022_02,
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02)
+rule ArsMontant15Plus(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, dref: Date, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "quinze ans et plus au 31 décembre: 97,95 % de la base mensuelle (D. 543-1)";
+    label en unofficial "fifteen and over at 31 December: 97.95% of the monthly base (D. 543-1)";
+    when ars_droit_ouvert(p) and ars_enfant_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and date_naissance(e, naissance) and date_reference_taux(dref)
+        and add_calendar_period(naissance, 15 calendar_year) <= dref
+        and bmaf_retenu(p, bmaf);
+    then ars_montant_du(e, round(TauxArs15Plus * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L543_2,
+    CSS_L543_2_ED2002_08,
+    CSS_L543_2_ED2004_01,
+    CSS_L543_2_ED2008_08,
+    CSS_L543_2_ED2012_06,
+    CSS_L543_2_ED2013_06,
+    CSS_L543_2_ED2014_08,
+    CSS_L543_2_ED2016_03,
+    CSS_L543_2_ED2016_10,
+    CSS_L543_2_ED2019_01,
+    CSS_L543_2_ED2022_01,
+    CSS_L543_2_ED2022_02,
+    CSS_R543_6_1,
+    CSS_R543_6_1_ED2014_08,
+    CSS_R543_6_1_ED2016_03,
+    CSS_R543_6_1_ED2016_10,
+    CSS_R543_6_1_ED2019_01,
+    CSS_R543_6_1_ED2022_01,
+    CSS_R543_6_1_ED2022_02)
+rule ArsDifferentiel(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, plafond: Money, bmaf: Money, n1: Integer, n2: Integer, n3: Integer, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "dépassement sous la somme des mensualités d'avril: différentiel par enfant, voie autonome (L. 543-2, R. 543-6-1)";
+    label en unofficial "overrun under the sum of the April monthly amounts: differential per child, standalone track (L. 543-2, R. 543-6-1)";
+    when ars_enfant_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and plafond_ars_applicable(p, plafond) and ressources_menage(p, r) and bmaf_retenu(p, bmaf)
+        and nb_bande(p, ARS_MOINS_11, n1) and nb_bande(p, ARS_11_14, n2) and nb_bande(p, ARS_15_PLUS, n3)
+        and nb_enfants_ars(p, n)
+        and r > plafond
+        and r < plafond + TauxArsMoins11 * bmaf * n1 + TauxArs11a14 * bmaf * n2 + TauxArs15Plus * bmaf * n3;
+    then ars_differentiel_du(e, (plafond + TauxArsMoins11 * bmaf * n1 + TauxArs11a14 * bmaf * n2 + TauxArs15Plus * bmaf * n3 - r) / (n * 1.0));
+}

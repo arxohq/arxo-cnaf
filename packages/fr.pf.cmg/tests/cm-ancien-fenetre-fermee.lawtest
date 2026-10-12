@@ -1,0 +1,33 @@
+// Old scale outside its window: the bande-1 setup claimed at reform
+// legal time. The reform rows compute there instead, so no old-law
+// total is derivable for the old part-b relation.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-ancien-fenetre-fermee" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "ancien-ff-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), entity_ref("urn:fr:pf-cmg:child:ff"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "ancien-ff-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre")) { origin case_input; }
+        assert "ancien-ff-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), entity_ref("urn:fr:pf-cmg:child:ff")) { origin case_input; }
+        assert "ancien-ff-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:ff"), 2) { origin case_input; }
+        assert "ancien-ff-05": age_base_ans(entity_ref("urn:fr:pf-cmg:child:ff"), 3) { origin case_input; }
+        assert "ancien-ff-06": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), 1) { origin case_input; }
+        assert "ancien-ff-07-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), 17633 EUR) { origin case_input; }
+        assert "ancien-ff-07-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), 2917 EUR) { origin case_input; }
+        assert "ancien-ff-07-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), 39184 EUR) { origin case_input; }
+        assert "ancien-ff-07-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), 6482 EUR) { origin case_input; }
+        assert "ancien-ff-08": ressources_annuelles(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), 15000 EUR) { origin case_input; }
+        assert "ancien-ff-09": bmaf_retenu(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), 400.00 EUR) { origin case_input; }
+        assert "ancien-ff-10": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), entity_ref("urn:fr:pf-cmg:child:ff"), 600 EUR) { origin case_input; }
+        assert "ancien-ff-11": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), entity_ref("urn:fr:pf-cmg:child:ff"), 50 EUR) { origin case_input; }
+        assert "ancien-ff-12": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), entity_ref("urn:fr:pf-cmg:child:ff"), 150 EUR) { origin case_input; }
+        assert "ancien-ff-13": smic_horaire_retenu(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), 12 EUR) { origin case_input; }
+        assert "ancien-ff-14": jours_remuneres(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), entity_ref("urn:fr:pf-cmg:child:ff"), 20.0) { origin case_input; }
+    }
+    evaluate truth(aide_ancienne_b(entity_ref("urn:fr:pf-cmg:case:ancien-fenetre"), entity_ref("urn:fr:pf-cmg:child:ff"), 456.16 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

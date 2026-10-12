@@ -1,0 +1,38 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+// PA-source carry onto the housing echeance (L. 845-3 al. 3
+// destination "APL et allocations de logement CCH livre VIII",
+// pinned): net 344.00; debt = indu 50.00 + PF 50.00 + RSA 0 +
+// PA 50.00 = 150.00; rate 0.25 -> deduction min(86.00, 150.00) =
+// 86.00; net 258.00.
+
+test "urn:query:fr-pv-rec-logement-report-pa" {
+    given {
+        // D-42 BOUNDARY: the served housing amount is stated (fr.apl.versement::montant_verse),
+        // but the world still holds fr.apl's unresolved D. 823-17 reading group
+        // SensMinimumPp (§156), so an unselected group turns the result into
+        // INTERPRETATION_REQUIRED. Naming the working reading PpPlancherFinal here
+        // needs `pub interpretation PpPlancherFinal` in fr.apl (24-lecture-pp.law,
+        // LDC-E1105 otherwise) — owner change pending; with the amount stated,
+        // neither reading changes this result.
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; interpretation fr.apl::PpPlancherFinal; }
+        assert "brut": fr.apl.versement::montant_verse(entity_ref("urn:fr:pv:case:menage-logement"), 344.00 EUR) { origin case_input; }
+        assert "indu": indu_logement_retenu(entity_ref("urn:fr:pv:case:menage-logement"), 50.00 EUR) { origin case_input; }
+        assert "pf": pf_indu_reporte_sur_logement(entity_ref("urn:fr:pv:case:menage-logement"), 50.00 EUR) { origin case_input; }
+        assert "rsa": rsa_indu_reporte_sur_logement(entity_ref("urn:fr:pv:case:menage-logement"), 0 EUR) { origin case_input; }
+        assert "pa": pa_indu_reporte_sur_logement(entity_ref("urn:fr:pv:case:menage-logement"), 50.00 EUR) { origin case_input; }
+        // D-42: the stated scale rate 0.25 is gone (contract (b), PC-R07-39): the levy
+        // arrives as the Money amount the fund applies; same case, 0.25 x housing amount paid
+        // 344.00 = 86.00 EUR. Carry pairs carry their lawful-carry gate (PC-R07-36).
+        assert "levy": retenue_mensuelle_logement_declaree(entity_ref("urn:fr:pv:case:menage-logement"), 86.00 EUR) { origin case_input; }
+        assert "levy-pf-licite": report_pf_sur_logement_licite(entity_ref("urn:fr:pv:case:menage-logement")) { origin case_input; }
+        assert "levy-rsa-licite": report_rsa_sur_logement_licite(entity_ref("urn:fr:pv:case:menage-logement")) { origin case_input; }
+        assert "levy-pa-licite": report_pa_sur_logement_licite(entity_ref("urn:fr:pv:case:menage-logement")) { origin case_input; }
+    }
+    evaluate truth(net_verse_logement(entity_ref("urn:fr:pv:case:menage-logement"), 258.00 EUR));
+    // D-42 (08.10.2026): working reading selected in context (G-A13, fr.apl PpPlancherFinal now pub).
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

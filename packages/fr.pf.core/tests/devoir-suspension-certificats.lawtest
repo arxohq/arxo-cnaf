@@ -1,0 +1,21 @@
+// Suspension on missing health certificates: allocataire with a pre-school child lacking certificates - the fund may suspend (L. 552-2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-suspension-certificats" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-suspension-certificats-01": parent_charge(entity_ref("urn:fr:pf:case:certificats"), entity_ref("urn:fr:pf:case:enfant-certificats")) { origin case_input; }
+        assert "devoir-suspension-certificats-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:certificats"), entity_ref("urn:fr:pf:case:enfant-certificats")) { origin adjudicated; }
+        assert "devoir-suspension-certificats-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-certificats")) { origin case_input; }
+        assert "devoir-suspension-certificats-04": reside_france_stable(entity_ref("urn:fr:pf:case:certificats")) { origin case_input; }
+        assert "devoir-suspension-certificats-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-certificats")) { origin case_input; }
+        assert "devoir-suspension-certificats-06": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:certificats")) { origin case_input; }
+        assert "devoir-suspension-certificats-07": certificat_sante_manquant(entity_ref("urn:fr:pf:case:enfant-certificats")) { origin case_input; }
+        assert "devoir-suspension-certificats-08": enfant_avant_age_scolaire(entity_ref("urn:fr:pf:case:enfant-certificats")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SuspendreVersementCertificats, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,17 @@
+// Non-expenditure only (PC-R05-05): capital 20000 EUR (10 % = 2000) and one built 3000 EUR (100 %), no spending, no vehicles/art; no period/dates required; total 5000; complete inventory.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-sans-depenses" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tsd-01": batie_bien_valeur(entity_ref("urn:fr:pf:case:sans-depenses"), entity_ref("urn:fr:pf:case:bien-1"), 3000.00 EUR, 1.0) { origin case_input; }
+        assert "tsd-02": capitaux_fin_periode(entity_ref("urn:fr:pf:case:sans-depenses"), 20000.00 EUR, 1.0) { origin case_input; }
+        assert "tsd-03": prestation_soumise_section(entity_ref("urn:fr:pf:case:sans-depenses")) { origin case_input; }
+        assert "tsd-04": inventaire_tdv_complet(entity_ref("urn:fr:pf:case:sans-depenses")) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_train_vie(entity_ref("urn:fr:pf:case:sans-depenses"), 5000.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

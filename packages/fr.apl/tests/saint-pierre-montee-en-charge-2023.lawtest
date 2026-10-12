@@ -1,0 +1,33 @@
+// МОНТАЖ СЕН-ПЬЕР-И-МИКЕЛОНА — ст. 7 декрета № 2021-1750: «le montant mensuel de
+// l'aide due au titre du mois de janvier 2022 jusqu'au mois de décembre 2025 est
+// calculé selon la formule ALspm = ALt × (1 − (2026 − n)/8)», ALt — аида по книге
+// VIII, n — год. Входы дела Catala «Exemple4» AL найма (Сен-Пьер, зона II,
+// одинокий с двумя иждивенцами, наём 500 €, ресурсы 12 500 €).
+//
+// ШАГ: апрель 2023 года, n = 2023: ALt = 369 € (369 после нулевых взносов с
+// округлением к евро) × (1 − 3/8) = 230,625 €. Catala — 230,63 €: то же до сантима.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-saint-pierre-montee-en-charge-2023" {
+    given {
+        context { decision_time @2023-04-15T12:00:00Z; knowledge_time @2023-04-15T12:00:00Z; legal_time @2023-04-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "saint-pierre-montee-en-charge-2023-01": secteur_locatif(entity_ref("urn:fr:apl:case:spm-montee-2023-04")) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-02": aide_demandee(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), ALF) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-03": zone_du_logement(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), ZONE_II) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-04": situation_familiale(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), PERSONNE_SEULE) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-05": personnes_a_charge(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), 2) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-06": loyer_principal(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), 500 EUR) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-07": ressources_du_menage(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), 12500 EUR) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-08": mode_location(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), LOCATION_SEULE) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-09": forme_logement(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), 0 EUR) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), false) { origin case_input; }
+        assert "saint-pierre-montee-en-charge-2023-12": territoire(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), SAINT_PIERRE_ET_MIQUELON) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:spm-montee-2023-04"), 230.625 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

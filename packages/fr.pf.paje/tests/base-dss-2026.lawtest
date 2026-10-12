@@ -1,0 +1,26 @@
+// DSS/2B/2026/46 barème (annexe II.1, pinned in fr.css.revalorisation):
+// allocation de base à taux plein, BMAF 478.16: 0.4165 x 478.16 =
+// 199.1536, rounded to the centime -> 199.15, the published amount
+// (identical to the complément familial). Resources 20000 under the 2026
+// ceiling for one child at full rate (31066, DSS/2B/2025/177 §3.2 =
+// complément-familial table).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-base-dss-2026" {
+    given {
+        context { decision_time @2026-05-15T12:00:00Z; knowledge_time @2026-05-15T12:00:00Z; legal_time @2026-05-15; timezone "Europe/Paris"; }
+        assert "base-dss-01": enfant_en_charge(entity_ref("urn:fr:paje:case:base-dss-2026"), entity_ref("urn:fr:paje:enfant:base-dss-2026")) { origin case_input; }
+        assert "base-dss-02": condition_age_base(entity_ref("urn:fr:paje:enfant:base-dss-2026")) { origin adjudicated; }
+        assert "base-dss-03": cohorte_enfant(entity_ref("urn:fr:paje:enfant:base-dss-2026"), NE_AVANT_AVRIL_2018) { origin adjudicated; }
+        assert "base-dss-04": ressources_annuelles(entity_ref("urn:fr:paje:case:base-dss-2026"), 20000 EUR) { origin case_input; }
+        assert "base-dss-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:base-dss-2026"), 31066 EUR) { origin case_input; }
+        assert "base-dss-06": bmaf_applicable(entity_ref("urn:fr:paje:case:base-dss-2026"), 478.16 EUR) { origin case_input; }
+        assert "base-dss-07": mois_eligible_base(entity_ref("urn:fr:paje:case:base-dss-2026"), entity_ref("urn:fr:paje:enfant:base-dss-2026"), @2026-05-01) { origin adjudicated; }
+    }
+    evaluate truth(base_attribuee(entity_ref("urn:fr:paje:case:base-dss-2026"), entity_ref("urn:fr:paje:enfant:base-dss-2026"), 199.15 EUR, @2026-05-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

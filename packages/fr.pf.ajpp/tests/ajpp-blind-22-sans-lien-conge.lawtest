@@ -1,0 +1,44 @@
+// ajpp-blind-22 contract (D-38 class (c)): the 2018 cumulation
+// refusal carries NO parental-leave premise. The pinned fragment
+// CSS_L544_9_PRE2026_ED2020_09 reads, exactly:
+//
+// «L'allocation journalière de présence parentale n'est pas cumulable,
+// pour un même bénéficiaire, avec : 1° L'indemnisation des congés de
+// maternité, de paternité et d'accueil de l'enfant ou d'adoption ; 2°
+// L'indemnité d'interruption d'activité ou l'allocation de remplacement
+// pour maternité ou paternité, prévues aux articles L. 623-1 et L. 663-1
+// du présent code, aux articles L. 732-10 à L. 732-12-2 du code rural et
+// de la pêche maritime et aux articles L. 5556-9 et L. 5556-10 du code
+// des transports ; 3° L'indemnisation des congés de maladie ou
+// d'accident du travail ; 4° Les indemnités servies aux demandeurs
+// d'emploi ; 5° Un avantage personnel de vieillesse ou d'invalidité ;
+// 6° La prestation partagée d'éducation de l'enfant ; 7° Le complément
+// et la majoration de l'allocation d'éducation de l'enfant handicapé
+// perçus pour le même enfant ; 8° L'allocation aux adultes handicapés ;
+// 9° L'élément de la prestation de compensation mentionné au 1° de
+// l'article L. 245-3 du code de l'action sociale et des familles.
+// Toutefois, l'allocation journalière de présence parentale, lorsqu'elle
+// n'est pas servie pour la totalité des jours prévus à l'article
+// L. 544-4, est cumulable en cours de droit avec l'indemnisation
+// mentionnée au 3° perçue au titre de l'activité exercée à temps
+// partiel.»
+//
+// The refusal attaches «pour un même bénéficiaire» to the motif alone;
+// no leave fact appears in the article. This world asserts a full-time
+// sick-leave motif with NO leave fact anywhere: the refusal holds.
+// (The 2025 rule joins the NOTA birth scope through the core charge
+// link, likewise without any leave premise — see 05-non-cumul.law.)
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-blind-22-sans-lien-conge" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-b22-01": motif_non_cumul_2018(entity_ref("urn:fr:pf-ajpp:case:parent-b22"), MALADIE_AT) { origin case_input; }
+    }
+    evaluate truth(ajpp_cumul_refuse(entity_ref("urn:fr:pf-ajpp:case:parent-b22")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

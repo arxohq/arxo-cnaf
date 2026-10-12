@@ -1,0 +1,43 @@
+// Дело Catala «Exemple1» сектора приобретения по линии аллокаций — ГВАДЕЛУПА.
+// Пара с двумя иждивенцами, зона II, сертификат от 1 октября 2015 года,
+// заявленная мензуальность 450 €, ресурсы 17 500 €, месяц права — март 2023 года.
+//
+// ЭТО ДЕЛО СТАЛО ПРОВЕРЯЕМЫМ ТОЛЬКО С ОХВАТОМ ЗАМОРСКИХ ТЕРРИТОРИЙ. До него оба
+// дела этого сектора лежали вне объёма, и пакет сверяться с ними не мог.
+//
+// ИСПОЛНИМАЯ ГРАНИЦА, А НЕ ЧИСЛО — И ИМЕННО ЗДЕСЬ ЗАКРЫЛСЯ ОТКРЫТЫЙ ВОПРОС.
+// L0 второго абзаца D. 832-26 при N = 3,0 и ресурсах 17 500 € даёт сумму транш
+// 3 214,85752 €, а её двенадцатая часть — 267,90479333… €, десятично
+// непредставимая. Норма делить велит и округления не называет, поэтому §58
+// отказывает.
+//
+// Catala утверждает 267,90 €, и это ровно наш итог, округлённый до цента. До
+// 14.09.2026 мы считали второй абзац ставками ПЕРВОГО и получали 245,09 € —
+// расхождение, которое три дела показывали, а перебор прочтений не закрывал.
+// Редакция ст. 31, применимая с 1 июля 2022 года, расщепила ставки явно
+// («a) Au premier alinéa … b) Au deuxième alinéa»), и у второго абзаца оказались
+// свои пять транш. Это дело — одно из трёх, подтвердивших находку до цента.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-guadeloupe-mensualite-minimale-inexacte" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-01": secteur_accession_allocations(entity_ref("urn:fr:apl:case:outremer-guadeloupe")) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-02": aide_demandee(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), ALF) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-03": zone_du_logement(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), ZONE_II) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-04": situation_familiale(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), COUPLE) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-05": personnes_a_charge(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), 2) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-06": vintage_certificat(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), CERTIFICAT_DEPUIS_01_10_2015) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-07": mode_propriete(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-08": territoire(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), OUTRE_MER) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-09": mensualite_declaree(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), 450 EUR) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-10": ressources_du_menage(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), 17500 EUR) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-11": base_plancher_ressources(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), COEFFICIENT_MENSUALITE) { origin case_input; }
+        assert "outremer-guadeloupe-mensualite-minimale-inexacte-12": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), false) { origin case_input; }
+    }
+    evaluate truth(mensualite_minimale_al(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), 267.90 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}

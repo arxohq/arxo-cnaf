@@ -1,0 +1,55 @@
+// Non-qualifying co-residence controls (PA-R6-01): generic family
+// co-residence without the statutory spouse/PACS/concubin/dependent
+// qualification selects neither R. 846-8 branch. A cohabitant with no
+// recorded qualification leaves both suspension and family examination
+// undetermined; the same cohabitation with an affirmative
+// no-spouse/no-dependent record suspends without examination; the
+// exact qualifying union examines without suspending even when
+// generic co-residence is also recorded.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-incarceration-foyer-non-qualifie-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": incarceration_en_cours(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-generique")) { origin case_input; }
+        assert "ppa-02": deuxieme_reexamen_depasse(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-generique")) { origin case_input; }
+        assert "ppa-03": foyer_avec_famille(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-generique")) { origin case_input; }
+        assert "ppa-04": sans_majo_isolee_avec_enfant(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-generique")) { origin case_input; }
+        assert "ppa-05": incarceration_en_cours(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-sans-lien")) { origin case_input; }
+        assert "ppa-06": deuxieme_reexamen_depasse(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-sans-lien")) { origin case_input; }
+        assert "ppa-07": foyer_avec_famille(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-sans-lien")) { origin case_input; }
+        assert "ppa-08": foyer_sans_conjoint_ni_charge(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-sans-lien")) { origin case_input; }
+        assert "ppa-09": sans_majo_isolee_avec_enfant(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-sans-lien")) { origin case_input; }
+        assert "ppa-10": incarceration_en_cours(entity_ref("urn:fr:ppa:case:incarceration-foyer-qualifie-cohabitant")) { origin case_input; }
+        assert "ppa-11": deuxieme_reexamen_depasse(entity_ref("urn:fr:ppa:case:incarceration-foyer-qualifie-cohabitant")) { origin case_input; }
+        assert "ppa-12": foyer_avec_famille(entity_ref("urn:fr:ppa:case:incarceration-foyer-qualifie-cohabitant")) { origin case_input; }
+        assert "ppa-13": foyer_avec_conjoint_pacs_concubin_ou_charge(entity_ref("urn:fr:ppa:case:incarceration-foyer-qualifie-cohabitant")) { origin case_input; }
+        assert "ppa-14": sans_majo_isolee_avec_enfant(entity_ref("urn:fr:ppa:case:incarceration-foyer-qualifie-cohabitant")) { origin case_input; }
+    }
+    evaluate truth(prime_suspendue_incarceration(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-generique")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droits_reexamines_sans_beneficiaire(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-generique")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(prime_suspendue_incarceration(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-sans-lien")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droits_reexamines_sans_beneficiaire(entity_ref("urn:fr:ppa:case:incarceration-cohabitant-sans-lien")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(prime_suspendue_incarceration(entity_ref("urn:fr:ppa:case:incarceration-foyer-qualifie-cohabitant")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droits_reexamines_sans_beneficiaire(entity_ref("urn:fr:ppa:case:incarceration-foyer-qualifie-cohabitant")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

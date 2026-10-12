@@ -1,0 +1,44 @@
+// Дело Catala «Exemple4» (сектор приобретения, APL): тот же заём и зона, что в
+// «Exemple2», но работы велись на УЖЕ ПРИОБРЕТЁННОМ жилье, а месяц права — май
+// 2022 года.
+//
+// ШАГ: поэтому L0 считается ветвью 2° D. 832-15 — «selon les dispositions du
+// premier alinéa de l'article D. 832-26», то есть шестью траншами сектора фойе
+// с долями N первого пункта D. 832-25 и форфейтом 45,57 € × N. При N = 3,0 и
+// ресурсах 19 000 € это 290,2091 €; Catala утверждает 290,21 €.
+//
+// ВАЖНО ДЛЯ ДВУХ ОСЕЙ: плафон у этого дела берётся по колонке b) ст. 18, а L0 —
+// по ветви 2°. Колонка плафона и ветвь L0 выбираются РАЗНЫМИ признаками, и это
+// дело — свидетель их независимости.
+//
+// ПОБОЧНОЕ СЛЕДСТВИЕ, ИЗМЕРЕННОЕ ЗДЕСЬ. Та же машина транширования, что
+// воспроизводит E0 сектора фойе, воспроизводит и L0 этого дела — значит первый
+// абзац D. 832-26 прочитан верно. Остаток расхождения у L0 сектора аллокаций
+// фойе (307,97 € против нашего 365,7683 €) поэтому лежит НЕ в машине транширования,
+// а в том, какую таблицу N и какой форфейт берёт отсылка D. 842-15 5°.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-accession-04-mensualite-minimale" {
+    given {
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; }
+        assert "accession-04-mensualite-minimale-01": secteur_accession(entity_ref("urn:fr:apl:case:accession-04")) { origin case_input; }
+        assert "accession-04-mensualite-minimale-02": aide_demandee(entity_ref("urn:fr:apl:case:accession-04"), APL) { origin case_input; }
+        assert "accession-04-mensualite-minimale-03": zone_du_logement(entity_ref("urn:fr:apl:case:accession-04"), ZONE_III) { origin case_input; }
+        assert "accession-04-mensualite-minimale-04": situation_familiale(entity_ref("urn:fr:apl:case:accession-04"), COUPLE) { origin case_input; }
+        assert "accession-04-mensualite-minimale-05": personnes_a_charge(entity_ref("urn:fr:apl:case:accession-04"), 2) { origin case_input; }
+        assert "accession-04-mensualite-minimale-06": sous_cas_mensualite(entity_ref("urn:fr:apl:case:accession-04"), PRET_APRES_30_09_2019) { origin case_input; }
+        assert "accession-04-mensualite-minimale-07": finalite_operation(entity_ref("urn:fr:apl:case:accession-04"), LOGEMENT_ACQUIS_AMELIORE) { origin case_input; }
+        assert "accession-04-mensualite-minimale-08": type_travaux(entity_ref("urn:fr:apl:case:accession-04"), TRAVAUX_SUR_LOGEMENT_DEJA_ACQUIS) { origin case_input; }
+        assert "accession-04-mensualite-minimale-09": mode_propriete(entity_ref("urn:fr:apl:case:accession-04"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "accession-04-mensualite-minimale-10": mensualite_declaree(entity_ref("urn:fr:apl:case:accession-04"), 495 EUR) { origin case_input; }
+        assert "accession-04-mensualite-minimale-11": ressources_du_menage(entity_ref("urn:fr:apl:case:accession-04"), 19000 EUR) { origin case_input; }
+        assert "accession-04-mensualite-minimale-12": vintage_pret_depense_nette(entity_ref("urn:fr:apl:case:accession-04"), PRET_DEPUIS_OCTOBRE_1998) { origin case_input; }
+        assert "accession-04-mensualite-minimale-13": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:accession-04"), false) { origin case_input; }
+    }
+    evaluate truth(mensualite_minimale(entity_ref("urn:fr:apl:case:accession-04"), 290.2091 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

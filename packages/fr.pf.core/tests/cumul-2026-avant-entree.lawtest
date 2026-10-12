@@ -1,0 +1,17 @@
+// No 2026 retroactivity: 2026-cohort facts evaluated at legal time 2024 - the 2026 text is not yet effective, no refusal (L. 532-2 I, edition window).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cumul-2026-avant-entree" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "cumul-2026-avant-entree-01": beneficie_prepare(entity_ref("urn:fr:pf:case:prepare-avant"), entity_ref("urn:fr:pf:case:enfant-avant")) { origin case_input; }
+        assert "cumul-2026-avant-entree-02": demande_complement_familial(entity_ref("urn:fr:pf:case:prepare-avant")) { origin case_input; }
+        assert "cumul-2026-avant-entree-03": cohorte_2026(entity_ref("urn:fr:pf:case:enfant-avant")) { origin case_input; }
+    }
+    evaluate truth(cumul_prepare_cf_refuse(entity_ref("urn:fr:pf:case:prepare-avant"), entity_ref("urn:fr:pf:case:enfant-avant")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

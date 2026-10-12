@@ -1,0 +1,34 @@
+// Fenêtre de la loi 2022-1158 (01.07.2022 - 31.03.2023), révision 2023-01 (mois 2022-10..12, ancienne rédaction de R. 843-1), célibataire,
+// revenu 1400.00 par mois (>= 120 x SMIC 11.07 = 1328.40: bonification maximale), AUCUNE base fournie. Sous la lecture
+// ForfaitRevalorisationArrondiCentime: base = round(563.68 x 1.04) = 586.23; fraction 61 % x 1400.00 = 854.00; bonification 29,101 %
+// x 586.23 = 170.5987923; ressources 1400.00 (aucun élément de logement) >= forfait; prime = 586.23 + 854.00 + 170.5987923 - 1400.00 = 210.8287923.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-prime-seul-loi-2022" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2023-01-15T12:00:00Z; knowledge_time @2023-01-15T12:00:00Z; legal_time @2023-01-15; timezone "Europe/Paris"; interpretation ForfaitRevalorisationArrondiCentime; }
+        assert "prime-seul-loi-2022-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-10-01, SEUL) { origin case_input; }
+        assert "prime-seul-loi-2022-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-10-01, 1400.00 EUR) { origin case_input; }
+        assert "prime-seul-loi-2022-03": smic_horaire_retenu(@2022-10-01, 11.07 EUR) { origin case_input; }
+        assert "prime-seul-loi-2022-04": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-10-01, SANS) { origin case_input; }
+        assert "prime-seul-loi-2022-05": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-10-01, 1400.00 EUR) { origin case_input; }
+        assert "prime-seul-loi-2022-06": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-11-01, SEUL) { origin case_input; }
+        assert "prime-seul-loi-2022-07": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-11-01, 1400.00 EUR) { origin case_input; }
+        assert "prime-seul-loi-2022-08": smic_horaire_retenu(@2022-11-01, 11.07 EUR) { origin case_input; }
+        assert "prime-seul-loi-2022-09": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-11-01, SANS) { origin case_input; }
+        assert "prime-seul-loi-2022-10": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-11-01, 1400.00 EUR) { origin case_input; }
+        assert "prime-seul-loi-2022-11": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-12-01, SEUL) { origin case_input; }
+        assert "prime-seul-loi-2022-12": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-12-01, 1400.00 EUR) { origin case_input; }
+        assert "prime-seul-loi-2022-13": smic_horaire_retenu(@2022-12-01, 11.07 EUR) { origin case_input; }
+        assert "prime-seul-loi-2022-14": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-12-01, SANS) { origin case_input; }
+        assert "prime-seul-loi-2022-15": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2022-12-01, 1400.00 EUR) { origin case_input; }
+        assert "prime-seul-loi-2022-16": mois_revue(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), @2023-01-01) { origin case_input; }
+        assert "prime-seul-loi-2022-17": minimum_paiement_retenu(@2023-01-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:prime-seul-loi-2022"), 210.8287923 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

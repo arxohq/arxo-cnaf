@@ -1,0 +1,31 @@
+// Irreversible switch: same figures as the maintenance pair (former 810.00
+// > current 250.00) but maintenance was extinguished in an earlier period
+// (maintien_eteint): the current figure 250.00 is due, the former figure
+// never returns.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-double-calcul-irreversible" {
+    given {
+        context { decision_time @2024-12-15T12:00:00Z; knowledge_time @2024-12-15T12:00:00Z; legal_time @2024-12-15; timezone "Europe/Paris"; }
+        assert "dc3-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:couple-dc3")) { origin adjudicated; }
+        assert "dc3-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:couple-dc3")) { origin case_input; }
+        assert "dc3-03": residence_permanente(entity_ref("urn:fr:css-aah:case:couple-dc3")) { origin case_input; }
+        assert "dc3-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:couple-dc3")) { origin case_input; }
+        assert "dc3-05": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:couple-dc3")) { origin case_input; }
+        assert "dc3-06": en_couple(entity_ref("urn:fr:css-aah:case:couple-dc3")) { origin case_input; }
+        assert "dc3-07": beneficiaire_au_1er_octobre_2023(entity_ref("urn:fr:css-aah:case:couple-dc3")) { origin case_input; }
+        assert "dc3-08": maintien_eteint(entity_ref("urn:fr:css-aah:case:couple-dc3")) { origin case_input; }
+        assert "dc3-09": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "dc3-10": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:couple-dc3"), 9000.00 EUR) { origin case_input; }
+        assert "dc3-11": ressources_conjoint_retenues(entity_ref("urn:fr:css-aah:case:couple-dc3"), 3000.00 EUR) { origin case_input; }
+        assert "dc3-12": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:case:couple-dc3"), 0.00 EUR) { origin case_input; }
+        assert "dc3-13": enfants_charge(0) { origin case_input; }
+        assert "dc3-14": sans_esat(entity_ref("urn:fr:css-aah:case:couple-dc3")) { origin case_input; }
+    }
+    evaluate truth(aah_montant_du(entity_ref("urn:fr:css-aah:case:couple-dc3"), 250.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

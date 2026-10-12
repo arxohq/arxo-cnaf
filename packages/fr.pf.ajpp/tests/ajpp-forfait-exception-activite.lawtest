@@ -1,0 +1,18 @@
+// Flat-rate exception: the job-seeker works occasionally and takes
+// leave — the flat 22 is set aside; payment follows L. 544-1
+// conditions, out of scope (D. 544-8, B-PFAJPP-L544-1-EXCEPTION).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-forfait-exception-activite" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-fea-01": activite_occasionnelle_remuneree(entity_ref("urn:fr:pf-ajpp:case:parent-fea")) { origin case_input; }
+        assert "ajpp-fea-02": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-fea"), entity_ref("urn:fr:pf-ajpp:case:enfant-fea")) { origin case_input; }
+    }
+    evaluate truth(exception_forfait_l544_1(entity_ref("urn:fr:pf-ajpp:case:parent-fea"), entity_ref("urn:fr:pf-ajpp:case:enfant-fea")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

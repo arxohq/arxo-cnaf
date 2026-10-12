@@ -1,0 +1,18 @@
+// 2025 list NOTA scoping: the NEW item (birth leave supplement) recorded
+// without the NOTA link (no leave for a scope-2026 aided person) — no
+// refusal. The items common to both wordings still refuse (see
+// ajpa-noncumul-2025-commun-sans-scope).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-noncumul-2025-sans-scope" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-ns-01": motif_non_cumul_2025(entity_ref("urn:fr:css:ajpa:case:aidant-ns"), NAISSANCE_SUPPLEMENTAIRE) { origin case_input; }
+    }
+    evaluate truth(ajpa_cumul_refuse(entity_ref("urn:fr:css:ajpa:case:aidant-ns")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,39 @@
+// Дело Catala «CasTest2» (logement-foyer, аллокация), месяц права — апрель 2022 года.
+//
+// ЧТО ЗДЕСЬ ЗАКРЕПЛЕНО: ОТКАЗ, и он квалифицирует расхождение с их моделью.
+//
+// L0 аллокаций считается по ВТОРОМУ абзацу D. 832-26, а собственные транши этого
+// абзаца закреплённый текст называет лишь редакцией ст. 31, применимой с 1 июля
+// 2022 года («a) Au premier alinéa … b) Au deuxième alinéa»). До этой даты
+// статья давала один набор ставок на всю D. 832-26, и второго набора в тексте не
+// существовало. Поэтому на апреле 2022 года параметр отсутствует и оценка
+// отвечает MISSING_PARAMETER_VALUE — а не значением нормы, вступившей позже.
+//
+// Catala на этом деле утверждает 307,97 €, и это ровно то число, которое даёт
+// расщеплённая редакция: мы проверили — её транши воспроизводят 307,97 € до
+// цента. То есть их модель применяет к апрелю 2022 года значения, названные
+// текстом лишь с 1 июля 2022 года. Класс (б), дефект их модели относительно
+// текста, и он измерен, а не предположен: те же транши воспроизводят и два дела
+// заморских территорий (267,90 € и 296,96 €), где месяц права 2023-й и
+// применимость сомнений не вызывает.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-foyer-al-02-loyer-minimal-hors-couverture" {
+    given {
+        context { decision_time @2022-04-23T12:00:00Z; knowledge_time @2022-04-23T12:00:00Z; legal_time @2022-04-23; timezone "Europe/Paris"; }
+        assert "foyer-al-02-hors-couverture-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-al-02")) { origin case_input; }
+        assert "foyer-al-02-hors-couverture-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-al-02"), ALF) { origin case_input; }
+        assert "foyer-al-02-hors-couverture-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-al-02"), ZONE_III) { origin case_input; }
+        assert "foyer-al-02-hors-couverture-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-al-02"), COUPLE) { origin case_input; }
+        assert "foyer-al-02-hors-couverture-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-al-02"), 0) { origin case_input; }
+        assert "foyer-al-02-hors-couverture-06": categorie_equivalence_loyer(entity_ref("urn:fr:apl:case:foyer-al-02"), PERSONNES_AGEES) { origin case_input; }
+        assert "foyer-al-02-hors-couverture-07": redevance(entity_ref("urn:fr:apl:case:foyer-al-02"), 360 EUR) { origin case_input; }
+        assert "foyer-al-02-hors-couverture-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-al-02"), 15000 EUR) { origin case_input; }
+        assert "foyer-al-02-hors-couverture-09": territoire(entity_ref("urn:fr:apl:case:foyer-al-02"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(loyer_minimal(entity_ref("urn:fr:apl:case:foyer-al-02"), 307.97 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}

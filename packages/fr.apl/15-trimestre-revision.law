@@ -1,0 +1,343 @@
+// Quarterly calculation and revision (R. 823-6/6-1/7): the three-month
+// period on the July-prior-year rent (or accession instalment) base,
+// quarterly re-exam, nine-month continuation without a new request and the
+// new-request duty after it, RSA/prime-d'activite/AAH quarter alignment by
+// statutory priority (plus the spouse/member quarterly benefit at lowest
+// priority, adopted reading), and the move/addendum revision triggers with
+// the R. 823-7 reserve on the quarter. The R. 822-7 a R. 822-17 and R. 832-9
+// reserves are recorded, not modelled (resources section beyond the 08
+// slice; APL-accession revision unpinned).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_R823_6,
+    CCH_R823_6_1_ED2021_01,
+    CCH_R823_6_1_ED2023_04,
+    CCH_R823_6_1_ED2023_09,
+    CCH_R823_6_1_ED2023_12,
+    CCH_R823_6_1_ED2026_07,
+    CCH_R823_6_ED2019_12,
+    CCH_R823_6_ED2020_01,
+    CCH_R823_6_ED2021_01,
+    CCH_R823_6_ED2023_04,
+    CCH_R823_6_ED2023_09,
+    CCH_R823_6_ED2023_12,
+    CCH_R823_6_ED2026_07,
+    CCH_R823_7,
+    CCH_R823_7_ED2019_12,
+    CCH_R823_7_ED2020_01,
+    CCH_R823_7_ED2021_01,
+    CCH_R823_7_ED2023_04,
+    CCH_R823_7_ED2023_09,
+    CCH_R823_7_ED2023_12,
+    CCH_R823_7_ED2026_07,
+    Menage,
+    Organisme,
+    date_conditions_reunies,
+    organisme_debiteur,
+    secteur_accession,
+    secteur_accession_allocations,
+    secteur_locatif,
+    secteur_logement_foyer,
+};
+
+deadline policy APL_TRIMESTRE {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+pub relation periode_calcul_trimestre(m: Menage, debut: Date, fin: Date) kind institutional {
+    label fr official "periode trimestrielle de calcul depuis les conditions d'ouverture";
+    label en unofficial "quarterly calculation period from the opening conditions";
+}
+
+pub relation prochain_reexamen_trimestriel(m: Menage, d: Date) kind institutional {
+    label fr official "prochain reexamen trimestriel du droit et de son montant";
+    label en unofficial "next quarterly re-exam of the right and its amount";
+}
+
+pub relation versement_nul_neuf_mois(m: Menage) kind empirical {
+    label fr official "neuf mois consecutifs de versement nul ou sous le seuil apres reexamen (constat)";
+    label en unofficial "nine straight months of nil or below-threshold payment after re-exam (finding)";
+}
+
+pub relation droit_maintenu_sans_demande(m: Menage) kind institutional {
+    label fr official "droit maintenu neuf mois sans nouvelle demande R. 823-6";
+    label en unofficial "right kept nine months with no new request under R. 823-6";
+}
+
+pub relation delai_neuf_mois_expire(m: Menage) kind empirical {
+    label fr official "expiration du delai de neuf mois R. 823-6 (constat)";
+    label en unofficial "R. 823-6 nine-month period expired (finding)";
+}
+
+pub relation nouvelle_demande_deposee(m: Menage) kind empirical {
+    label fr official "nouvelle demande d'aide deposee apres neuf mois (execution)";
+    label en unofficial "new aid request filed after nine months (performance)";
+}
+
+@source(CCH_R823_6, CCH_R823_6_ED2019_12, CCH_R823_6_ED2020_01,
+        CCH_R823_6_ED2021_01, CCH_R823_6_ED2023_04, CCH_R823_6_ED2023_09,
+        CCH_R823_6_ED2023_12, CCH_R823_6_ED2026_07)
+rule PeriodeCalculTrimestre(m: Menage, conditions: Date) strict {
+    label fr official "aide calculee pour trois mois depuis les conditions d'ouverture";
+    label en unofficial "aid computed for three months from the opening conditions";
+    effective [@2021-01-01, infinity);
+    when date_conditions_reunies(m, conditions);
+    then periode_calcul_trimestre(m, conditions, add_calendar_period(conditions, 3 calendar_month));
+}
+
+pub relation loyer_juillet_annee_precedente(m: Menage, v: Money) kind empirical {
+    label fr official "loyer effectivement paye de juillet de l'annee precedente (fait de dossier R. 823-6 al. 2)";
+    label en unofficial "July prior-year rent actually paid (R. 823-6 al. 2 case fact)";
+}
+
+pub relation mensualite_accession_charges(m: Menage, v: Money) kind empirical {
+    label fr official "mensualite de remboursement d'accession payee au titre des charges (fait de dossier R. 823-6 al. 2)";
+    label en unofficial "accession repayment instalment paid for charges (R. 823-6 al. 2 case fact)";
+}
+
+pub relation base_calcul_trimestre(m: Menage, v: Money) kind institutional {
+    label fr official "base de calcul du trimestre R. 823-6 al. 2 : loyer de juillet ou mensualite d'accession";
+    label en unofficial "quarterly computation base R. 823-6 al. 2: July rent or accession instalment";
+}
+
+pub relation revision_trimestre_applicable(m: Menage) kind institutional {
+    label fr official "trimestre recalcule sous reserve de revision R. 823-7 (demenagement ou avenant)";
+    label en unofficial "quarter recomputed subject to R. 823-7 revision (move or addendum)";
+}
+
+@source(CCH_R823_6, CCH_R823_6_ED2019_12, CCH_R823_6_ED2020_01,
+        CCH_R823_6_ED2021_01, CCH_R823_6_ED2023_04, CCH_R823_6_ED2023_09,
+        CCH_R823_6_ED2023_12, CCH_R823_6_ED2026_07)
+rule BaseCalculTrimestreLoyerJuilletLocatif(m: Menage, v: Money) strict {
+    label fr official "R. 823-6 al. 2 : en secteur locatif, calcul sur le loyer de juillet de l'annee precedente";
+    label en unofficial "R. 823-6 al. 2: in the rental sector, computation on the July prior-year rent";
+    effective [@2021-01-01, infinity);
+    when loyer_juillet_annee_precedente(m, v) and secteur_locatif(m);
+    then base_calcul_trimestre(m, v);
+}
+
+@source(CCH_R823_6, CCH_R823_6_ED2019_12, CCH_R823_6_ED2020_01,
+        CCH_R823_6_ED2021_01, CCH_R823_6_ED2023_04, CCH_R823_6_ED2023_09,
+        CCH_R823_6_ED2023_12, CCH_R823_6_ED2026_07)
+rule BaseCalculTrimestreLoyerJuilletFoyer(m: Menage, v: Money) strict {
+    label fr official "R. 823-6 al. 2 : en logement-foyer, calcul sur le loyer de juillet de l'annee precedente";
+    label en unofficial "R. 823-6 al. 2: in hostel dwellings, computation on the July prior-year rent";
+    effective [@2021-01-01, infinity);
+    when loyer_juillet_annee_precedente(m, v) and secteur_logement_foyer(m);
+    then base_calcul_trimestre(m, v);
+}
+
+@source(CCH_R823_6, CCH_R823_6_ED2019_12, CCH_R823_6_ED2020_01,
+        CCH_R823_6_ED2021_01, CCH_R823_6_ED2023_04, CCH_R823_6_ED2023_09,
+        CCH_R823_6_ED2023_12, CCH_R823_6_ED2026_07)
+rule BaseCalculTrimestreLoyerJuilletAccessionAllocations(m: Menage, v: Money) strict {
+    label fr official "R. 823-6 al. 2 : en accession-allocations, calcul sur le loyer de juillet de l'annee precedente";
+    label en unofficial "R. 823-6 al. 2: in allocation accession, computation on the July prior-year rent";
+    effective [@2021-01-01, infinity);
+    when loyer_juillet_annee_precedente(m, v) and secteur_accession_allocations(m);
+    then base_calcul_trimestre(m, v);
+}
+
+@source(CCH_R823_6, CCH_R823_6_ED2019_12, CCH_R823_6_ED2020_01,
+        CCH_R823_6_ED2021_01, CCH_R823_6_ED2023_04, CCH_R823_6_ED2023_09,
+        CCH_R823_6_ED2023_12, CCH_R823_6_ED2026_07)
+rule BaseCalculTrimestreAccession(m: Menage, v: Money) strict {
+    label fr official "R. 823-6 al. 2 : en accession, calcul sur la mensualite de remboursement payee";
+    label en unofficial "R. 823-6 al. 2: in accession, computation on the paid repayment instalment";
+    effective [@2021-01-01, infinity);
+    when mensualite_accession_charges(m, v) and secteur_accession(m);
+    then base_calcul_trimestre(m, v);
+}
+
+@source(CCH_R823_6, CCH_R823_6_ED2019_12, CCH_R823_6_ED2020_01,
+        CCH_R823_6_ED2021_01, CCH_R823_6_ED2023_04, CCH_R823_6_ED2023_09,
+        CCH_R823_6_ED2023_12, CCH_R823_6_ED2026_07)
+rule ReexamenTrimestriel(m: Menage, conditions: Date) strict {
+    label fr official "droit et montant reexamines tous les trois mois";
+    label en unofficial "right and amount re-examined every three months";
+    effective [@2021-01-01, infinity);
+    when date_conditions_reunies(m, conditions);
+    then prochain_reexamen_trimestriel(m, add_calendar_period(conditions, 3 calendar_month));
+}
+
+@source(CCH_R823_6, CCH_R823_6_ED2019_12, CCH_R823_6_ED2020_01,
+        CCH_R823_6_ED2021_01, CCH_R823_6_ED2023_04, CCH_R823_6_ED2023_09,
+        CCH_R823_6_ED2023_12, CCH_R823_6_ED2026_07)
+rule MaintienNeufMoisSansDemande(m: Menage) strict {
+    label fr official "versement nul neuf mois : maintien sans nouvelle demande";
+    label en unofficial "nil payment for nine months: kept with no new request";
+    effective [@2021-01-01, infinity);
+    when versement_nul_neuf_mois(m);
+    then droit_maintenu_sans_demande(m);
+}
+
+@source(CCH_R823_6, CCH_R823_6_ED2019_12, CCH_R823_6_ED2020_01,
+        CCH_R823_6_ED2021_01, CCH_R823_6_ED2023_04, CCH_R823_6_ED2023_09,
+        CCH_R823_6_ED2023_12, CCH_R823_6_ED2026_07)
+rule DevoirNouvelleDemandeNeufMois(m: Menage, o: Organisme) strict {
+    label fr official "apres neuf mois, une nouvelle demande doit etre deposee";
+    label en unofficial "after nine months, a new request must be filed";
+    effective [@2021-01-01, infinity);
+    when delai_neuf_mois_expire(m) and organisme_debiteur(o, m);
+    then duty DeposerNouvelleDemande {
+        bearer m;
+        beneficiary o;
+        maintain nouvelle_demande_deposee(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation echeance_trimestre_rsa(m: Menage, d: Date) kind empirical {
+    label fr official "echeance trimestrielle RSA du menage (dossier, pont minima a venir)";
+    label en unofficial "household RSA quarter end (file, future minima bridge)";
+}
+
+pub relation echeance_trimestre_aah(m: Menage, d: Date) kind empirical {
+    label fr official "echeance trimestrielle AAH du menage (dossier, pont minima a venir)";
+    label en unofficial "household AAH quarter end (file, future minima bridge)";
+}
+
+pub relation echeance_rsa_absente(m: Menage) kind empirical {
+    label fr official "pas d'echeance trimestrielle RSA applicable (fait de dossier)";
+    label en unofficial "no applicable RSA quarter end (case fact)";
+}
+
+pub relation echeance_trimestre_pa(m: Menage, d: Date) kind empirical {
+    label fr official "echeance trimestrielle de prime d'activite du menage (dossier, pont minima a venir)";
+    label en unofficial "household prime d'activite quarter end (file, future minima bridge)";
+}
+
+pub relation echeance_pa_absente(m: Menage) kind empirical {
+    label fr official "pas d'echeance trimestrielle de prime d'activite applicable (fait de dossier)";
+    label en unofficial "no applicable prime d'activite quarter end (case fact)";
+}
+
+pub relation echeance_aah_absente(m: Menage) kind empirical {
+    label fr official "pas d'echeance trimestrielle AAH applicable (fait de dossier)";
+    label en unofficial "no applicable AAH quarter end (case fact)";
+}
+
+pub relation echeance_prestation_trimestrielle_membre(m: Menage, d: Date) kind empirical {
+    label fr official "echeance d'une prestation trimestrielle du conjoint ou d'un autre membre du menage (constat R. 823-6-1 al. 2)";
+    label en unofficial "quarterly benefit end of the spouse or another household member (R. 823-6-1 al. 2 finding)";
+}
+
+pub relation echeance_trimestre_apl(m: Menage, d: Date) kind institutional {
+    label fr official "echeance trimestrielle APL alignee R. 823-6-1";
+    label en unofficial "aligned APL quarter end under R. 823-6-1";
+}
+
+@source(CCH_R823_6_1_ED2021_01, CCH_R823_6_1_ED2023_04, CCH_R823_6_1_ED2023_09,
+        CCH_R823_6_1_ED2023_12, CCH_R823_6_1_ED2026_07)
+rule AlignementEcheanceRSA(m: Menage, d: Date) strict {
+    label fr official "alignement prioritaire sur l'echeance RSA";
+    label en unofficial "alignment on the RSA end first";
+    effective [@2021-01-01, infinity);
+    when echeance_trimestre_rsa(m, d);
+    then echeance_trimestre_apl(m, d);
+}
+
+@source(CCH_R823_6_1_ED2021_01, CCH_R823_6_1_ED2023_04, CCH_R823_6_1_ED2023_09,
+        CCH_R823_6_1_ED2023_12, CCH_R823_6_1_ED2026_07)
+rule AlignementEcheancePA(m: Menage, d: Date) strict {
+    label fr official "sans RSA, alignement sur l'echeance de prime d'activite";
+    label en unofficial "with no RSA, alignment on the prime d'activite end";
+    effective [@2021-01-01, infinity);
+    when echeance_trimestre_pa(m, d) and echeance_rsa_absente(m);
+    then echeance_trimestre_apl(m, d);
+}
+
+@source(CCH_R823_6_1_ED2021_01, CCH_R823_6_1_ED2023_04, CCH_R823_6_1_ED2023_09,
+        CCH_R823_6_1_ED2023_12, CCH_R823_6_1_ED2026_07)
+rule AlignementEcheanceAAH(m: Menage, d: Date) strict {
+    label fr official "sans RSA ni prime d'activite, alignement sur l'echeance AAH";
+    label en unofficial "with neither RSA nor prime d'activite, alignment on the AAH end";
+    effective [@2021-01-01, infinity);
+    when echeance_trimestre_aah(m, d) and echeance_rsa_absente(m)
+        and echeance_pa_absente(m);
+    then echeance_trimestre_apl(m, d);
+}
+
+@source(CCH_R823_6_1_ED2021_01, CCH_R823_6_1_ED2023_04, CCH_R823_6_1_ED2023_09,
+        CCH_R823_6_1_ED2023_12, CCH_R823_6_1_ED2026_07)
+rule AlignementEcheanceMembreTrimestriel(m: Menage, d: Date) strict {
+    label fr official "R. 823-6-1 al. 2 : sans RSA, prime d'activite ni AAH, alignement sur la prestation trimestrielle du membre";
+    label en unofficial "R. 823-6-1 al. 2: with no RSA, prime d'activite or AAH, alignment on the member quarterly benefit";
+    effective [@2021-01-01, infinity);
+    when echeance_prestation_trimestrielle_membre(m, d) and echeance_rsa_absente(m)
+        and echeance_pa_absente(m) and echeance_aah_absente(m);
+    then echeance_trimestre_apl(m, d);
+}
+
+pub relation demenagement_nouveau_loyer(m: Menage, d: Date) kind empirical {
+    label fr official "demenagement avec nouveau loyer a la date visee (fait de dossier)";
+    label en unofficial "move with a new rent at the cited date (case fact)";
+}
+
+pub relation revision_demenagement(m: Menage) kind institutional {
+    label fr official "revision sur le nouveau loyer apres demenagement R. 823-7";
+    label en unofficial "revision on the new rent after a move under R. 823-7";
+}
+
+pub relation avenant_convention_apl(m: Menage) kind empirical {
+    label fr official "avenant a la convention APL modifiant le loyer (fait de dossier)";
+    label en unofficial "APL convention addendum changing the rent (case fact)";
+}
+
+pub relation fait_en_cours_periode_paiement_r823_7(m: Menage) kind empirical {
+    label fr official "evenement survenu en cours de periode de paiement (constat R. 823-7)";
+    label en unofficial "event during the payment period (R. 823-7 finding)";
+}
+
+pub relation revision_avenant(m: Menage) kind institutional {
+    label fr official "revision sur avenant a la convention R. 823-7";
+    label en unofficial "revision on a convention addendum under R. 823-7";
+}
+
+@source(CCH_R823_7, CCH_R823_7_ED2019_12, CCH_R823_7_ED2020_01,
+        CCH_R823_7_ED2021_01, CCH_R823_7_ED2023_04, CCH_R823_7_ED2023_09,
+        CCH_R823_7_ED2023_12, CCH_R823_7_ED2026_07)
+rule RevisionDemenagement(m: Menage, d: Date) strict {
+    label fr official "demenagement en cours de periode de paiement : declencheur de revision sur le nouveau loyer";
+    label en unofficial "move during the payment period: revision trigger on the new rent";
+    when demenagement_nouveau_loyer(m, d) and fait_en_cours_periode_paiement_r823_7(m);
+    then revision_demenagement(m);
+}
+
+@source(CCH_R823_7, CCH_R823_7_ED2019_12, CCH_R823_7_ED2020_01,
+        CCH_R823_7_ED2021_01, CCH_R823_7_ED2023_04, CCH_R823_7_ED2023_09,
+        CCH_R823_7_ED2023_12, CCH_R823_7_ED2026_07)
+rule RevisionAvenant(m: Menage) strict {
+    label fr official "avenant en cours de periode de paiement : declencheur de revision";
+    label en unofficial "addendum during the payment period: revision trigger";
+    when avenant_convention_apl(m) and fait_en_cours_periode_paiement_r823_7(m);
+    then revision_avenant(m);
+}
+
+@source(CCH_R823_6, CCH_R823_6_ED2019_12, CCH_R823_6_ED2020_01,
+        CCH_R823_6_ED2021_01, CCH_R823_6_ED2023_04, CCH_R823_6_ED2023_09,
+        CCH_R823_6_ED2023_12, CCH_R823_6_ED2026_07)
+rule ReserveRevisionDemenagement(m: Menage) strict {
+    label fr official "R. 823-6 sous reserve R. 823-7 : demenagement, trimestre a recalculer";
+    label en unofficial "R. 823-6 subject to R. 823-7: move, quarter to recompute";
+    effective [@2021-01-01, infinity);
+    when revision_demenagement(m);
+    then revision_trimestre_applicable(m);
+}
+
+@source(CCH_R823_6, CCH_R823_6_ED2019_12, CCH_R823_6_ED2020_01,
+        CCH_R823_6_ED2021_01, CCH_R823_6_ED2023_04, CCH_R823_6_ED2023_09,
+        CCH_R823_6_ED2023_12, CCH_R823_6_ED2026_07)
+rule ReserveRevisionAvenant(m: Menage) strict {
+    label fr official "R. 823-6 sous reserve R. 823-7 : avenant, trimestre a recalculer";
+    label en unofficial "R. 823-6 subject to R. 823-7: addendum, quarter to recompute";
+    effective [@2021-01-01, infinity);
+    when revision_avenant(m);
+    then revision_trimestre_applicable(m);
+}

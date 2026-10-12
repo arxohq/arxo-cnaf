@@ -1,0 +1,17 @@
+// Non-salaried: president-set annual 12000.00 -> quarterly 3000.00
+// (R.262-22, 25 %; reference years and IPC on the evaluated figure,
+// B-MINRES-TNS-REFERENCE).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-tns-trimestre" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "tns-01": tns_evalue_annuel(entity_ref("urn:fr:minima-ressources:case:tns-trimestre"), 12000.00 EUR) { origin case_input; }
+    }
+    evaluate truth(tns_trimestre(entity_ref("urn:fr:minima-ressources:case:tns-trimestre"), 3000.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

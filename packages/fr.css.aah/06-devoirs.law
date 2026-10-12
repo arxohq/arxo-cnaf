@@ -1,0 +1,192 @@
+// Deontic layer: fund duty to pay (D1), CDAPH attribution power (P1),
+// recipient duties to report and to declare quarterly (D2/D3).
+//
+// D1. «L'allocation ... est servie comme une prestation familiale»
+// (L. 821-5, para. 1); management by the family-benefit bodies (L. 821-7,
+// bearer). The duty triggers on aah_montant_du (right + computed amount);
+// performance is the empirical fact aah_versee.
+// P1. «L'allocation ... est accordée ... sur décision de la commission
+// ... appréciant le niveau d'incapacité» (L. 821-4): holder the
+// commission, exercise attribution_prononcee, window the coverage window.
+// D2. «Le bénéficiaire ... est tenu de faire connaître à l'organisme
+// débiteur ... toutes informations relatives à sa résidence, à sa
+// situation de famille et ses activités professionnelles ... ainsi que
+// celles de son conjoint ...; il doit faire connaître ... tout
+// changement» (R. 821-4-5, I).
+// D3. «Le bénéficiaire dont les ressources sont appréciées conformément
+// à l'article R. 821-4-1 est tenu de retourner ... une déclaration
+// trimestrielle de ressources» (R. 821-4-5, II).
+//
+// Scenarios: tests/devoirs-*.lawtest (positions: ACTIVE / power
+// exercisable / no right — no position).
+
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+use self::{
+    CSS_L821_4_ED2021_01_01,
+    CSS_L821_4_ED2021_05_01,
+    CSS_L821_4_ED2021_12_03,
+    CSS_L821_4_ED2022_01_01,
+    CSS_L821_4_ED2022_01_21,
+    CSS_L821_4_ED2022_06_17,
+    CSS_L821_4_ED2023_01_01,
+    CSS_L821_4_ED2023_09_01,
+    CSS_L821_4_ED2023_10_01,
+    CSS_L821_4_ED2024_12_01,
+    CSS_L821_4_ED2025_08_28,
+    CSS_L821_4_ED2026_01_01,
+    CSS_L821_4_ED2026_06_28,
+    CSS_L821_4_ED2026_07_23,
+    CSS_L821_5_ED2021_01_01,
+    CSS_L821_5_ED2021_05_01,
+    CSS_L821_5_ED2021_12_03,
+    CSS_L821_5_ED2022_01_01,
+    CSS_L821_5_ED2022_01_21,
+    CSS_L821_5_ED2022_06_17,
+    CSS_L821_5_ED2023_01_01,
+    CSS_L821_5_ED2023_09_01,
+    CSS_L821_5_ED2023_10_01,
+    CSS_L821_5_ED2024_12_01,
+    CSS_L821_5_ED2025_08_28,
+    CSS_L821_5_ED2026_01_01,
+    CSS_L821_5_ED2026_06_28,
+    CSS_L821_5_ED2026_07_23,
+    CSS_R821_4_5_ED2021_01_01,
+    CSS_R821_4_5_ED2021_05_01,
+    CSS_R821_4_5_ED2021_12_03,
+    CSS_R821_4_5_ED2022_01_01,
+    CSS_R821_4_5_ED2022_01_21,
+    CSS_R821_4_5_ED2022_06_17,
+    CSS_R821_4_5_ED2023_01_01,
+    CSS_R821_4_5_ED2023_09_01,
+    CSS_R821_4_5_ED2023_10_01,
+    CSS_R821_4_5_ED2024_12_01,
+    CSS_R821_4_5_ED2025_08_28,
+    CSS_R821_4_5_ED2026_01_01,
+    CSS_R821_4_5_ED2026_06_28,
+    CSS_R821_4_5_ED2026_07_23,
+    CommissionCdaph,
+    Organisme,
+    Personne,
+    aah_droit_calcule,
+    aah_montant_du,
+    aah_versee,
+    attribution_prend_effet,
+    attribution_prononcee,
+    changement_signale,
+    commission_competente,
+    declaration_trimestrielle,
+    organisme_debiteur_aah,
+    percoit_revenu_activite,
+};
+
+@source(
+    CSS_L821_5_ED2021_01_01,
+    CSS_L821_5_ED2021_05_01,
+    CSS_L821_5_ED2021_12_03,
+    CSS_L821_5_ED2022_01_01,
+    CSS_L821_5_ED2022_01_21,
+    CSS_L821_5_ED2022_06_17,
+    CSS_L821_5_ED2023_01_01,
+    CSS_L821_5_ED2023_09_01,
+    CSS_L821_5_ED2023_10_01,
+    CSS_L821_5_ED2024_12_01,
+    CSS_L821_5_ED2025_08_28,
+    CSS_L821_5_ED2026_01_01,
+    CSS_L821_5_ED2026_06_28,
+    CSS_L821_5_ED2026_07_23)
+rule DevoirVerserAah(o: Organisme, p: Personne, montant: Money) strict {
+    label fr official "le montant AAH dû est versé au bénéficiaire — devoir de l'organisme";
+    label en unofficial "the due AAH amount is paid to the payee — duty of the fund";
+    when aah_montant_du(p, montant) and organisme_debiteur_aah(o, p);
+    then duty VerserAahDue {
+        bearer o;
+        beneficiary p;
+        maintain aah_versee(p, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_L821_4_ED2021_01_01,
+    CSS_L821_4_ED2021_05_01,
+    CSS_L821_4_ED2021_12_03,
+    CSS_L821_4_ED2022_01_01,
+    CSS_L821_4_ED2022_01_21,
+    CSS_L821_4_ED2022_06_17,
+    CSS_L821_4_ED2023_01_01,
+    CSS_L821_4_ED2023_09_01,
+    CSS_L821_4_ED2023_10_01,
+    CSS_L821_4_ED2024_12_01,
+    CSS_L821_4_ED2025_08_28,
+    CSS_L821_4_ED2026_01_01,
+    CSS_L821_4_ED2026_06_28,
+    CSS_L821_4_ED2026_07_23)
+rule PouvoirAttributionCdaph(c: CommissionCdaph, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la commission accorde l'allocation en appréciant le niveau d'incapacité";
+    label en unofficial "the commission awards the allowance by assessing the incapacity level";
+    when aah_droit_calcule(p) and commission_competente(c, p);
+    then power AttributionCdaph {
+        holder c;
+        exercise attribution_prononcee(p);
+        valid_when (commission_competente(c, p) and aah_droit_calcule(p));
+        effect attribution_prend_effet(p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R821_4_5_ED2021_01_01,
+    CSS_R821_4_5_ED2021_05_01,
+    CSS_R821_4_5_ED2021_12_03,
+    CSS_R821_4_5_ED2022_01_01,
+    CSS_R821_4_5_ED2022_01_21,
+    CSS_R821_4_5_ED2022_06_17,
+    CSS_R821_4_5_ED2023_01_01,
+    CSS_R821_4_5_ED2023_09_01,
+    CSS_R821_4_5_ED2023_10_01,
+    CSS_R821_4_5_ED2024_12_01,
+    CSS_R821_4_5_ED2025_08_28,
+    CSS_R821_4_5_ED2026_01_01,
+    CSS_R821_4_5_ED2026_06_28,
+    CSS_R821_4_5_ED2026_07_23)
+rule DevoirSignalerChangements(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le bénéficiaire signale résidence, situation de famille, activités et tout changement — devoir";
+    label en unofficial "the payee reports residence, family situation, activities and any change — duty";
+    when aah_droit_calcule(p);
+    then duty SignalerChangements {
+        bearer p;
+        beneficiary p;
+        maintain changement_signale(p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R821_4_5_ED2021_01_01,
+    CSS_R821_4_5_ED2021_05_01,
+    CSS_R821_4_5_ED2021_12_03,
+    CSS_R821_4_5_ED2022_01_01,
+    CSS_R821_4_5_ED2022_01_21,
+    CSS_R821_4_5_ED2022_06_17,
+    CSS_R821_4_5_ED2023_01_01,
+    CSS_R821_4_5_ED2023_09_01,
+    CSS_R821_4_5_ED2023_10_01,
+    CSS_R821_4_5_ED2024_12_01,
+    CSS_R821_4_5_ED2025_08_28,
+    CSS_R821_4_5_ED2026_01_01,
+    CSS_R821_4_5_ED2026_06_28,
+    CSS_R821_4_5_ED2026_07_23)
+rule DevoirDeclarationTrimestrielle(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "régime trimestriel: le bénéficiaire retourne la déclaration trimestrielle — devoir";
+    label en unofficial "quarterly track: the payee returns the quarterly declaration — duty";
+    when aah_droit_calcule(p) and percoit_revenu_activite(p);
+    then duty DeclarationTrimestrielle {
+        bearer p;
+        beneficiary p;
+        maintain declaration_trimestrielle(p) during [@2021-01-01, infinity);
+    };
+}

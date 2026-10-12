@@ -1,0 +1,16 @@
+// Foreign benefits below French ones: only the 300 EUR differential allowance is paid (L. 512-5).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-allocataire-differentielle-etranger" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "allocataire-differentielle-etranger-01": montant_prestations_fr(entity_ref("urn:fr:pf:case:allocataire-diff"), 500 EUR) { origin case_input; }
+        assert "allocataire-differentielle-etranger-02": montant_prestations_etrangeres(entity_ref("urn:fr:pf:case:allocataire-diff"), 200 EUR) { origin case_input; }
+    }
+    evaluate truth(allocation_differentielle(entity_ref("urn:fr:pf:case:allocataire-diff"), 300 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

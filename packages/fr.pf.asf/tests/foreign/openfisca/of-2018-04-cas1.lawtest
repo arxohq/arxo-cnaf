@@ -1,0 +1,25 @@
+// OpenFisca 2018-04 lone parent, period shaped to 2021, ground shaped to single default with carence: eligible, 112.52. Their 115.87 embeds their April 2018 BMAF: class (b).
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-of-2018-04-cas1" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "of1-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas1"), entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas1-e1")) { origin case_input; }
+        assert "of1-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas1-e1")) { origin case_input; }
+        assert "of1-03": motif_asf(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas1-e1"), DEFAUT_SIMPLE) { origin case_input; }
+        assert "of1-04": demande_asf(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas1-e1")) { origin case_input; }
+        assert "of1-05": manquement_debiteur(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas1-e1"), @2021-03-01) { origin case_input; }
+        assert "of1-06": mois_ouverture_asf(@2021-04-01) { origin case_input; }
+        assert "of1-07": bmaf_retenu(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas1"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(asf_enfant_eligible(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas1-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_montant_du(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas1-e1"), 112.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

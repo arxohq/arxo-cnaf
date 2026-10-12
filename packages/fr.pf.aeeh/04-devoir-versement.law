@@ -1,0 +1,43 @@
+// Deontic layer: duty of the fund to pay the computed AEEH total
+// (D1, see the map in package.law).
+//
+// D1. The duty triggers on aeeh_montant_total (right + computed amount).
+// The paying fund is the empirical debtor body: the texts name only
+// «a droit» / «est attribué», never the debtor (L. 541-5 names the bodies
+// as serving for the CNSA — same empirical bearer). Performance is the
+// empirical fact aeeh_versee. Window [@2021-01-01, ∞) is the package
+// coverage window.
+// D2. No «not due» exceptions beyond the upstream internat defeater
+// (fr.pf.core#AeehExclusionInternat): no defeaters here; the «without
+// right» pair shows the absence of a position via the missing total.
+//
+// Scenarios: tests/devoir-versement-*.lawtest (positions: ACTIVE /
+// no right — no position).
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+use self::{
+    CSS_L541_1_ED2021_01,
+    CSS_L541_1_ED2022_01,
+    CSS_L541_1_ED2026_04,
+    CSS_L541_5,
+    CSS_L541_5_ED2022_01,
+    CSS_L541_5_ED2026_04,
+    aeeh_montant_total,
+    aeeh_versee,
+};
+
+@source(CSS_L541_1_ED2021_01, CSS_L541_1_ED2022_01, CSS_L541_1_ED2026_04, CSS_L541_5, CSS_L541_5_ED2022_01, CSS_L541_5_ED2026_04)
+rule DevoirVerserAeeh(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) strict {
+    label fr official "le total AEEH attribué est versé à la personne qui assume la charge";
+    label en unofficial "the awarded AEEH total is paid to the carer — duty of the fund";
+    when aeeh_montant_total(e, montant) and fr.pf.core::parent_charge(p, e)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty VerserAeehDue {
+        bearer o;
+        beneficiary p;
+        maintain aeeh_versee(p, e, montant) during [@2021-01-01, infinity);
+    };
+}

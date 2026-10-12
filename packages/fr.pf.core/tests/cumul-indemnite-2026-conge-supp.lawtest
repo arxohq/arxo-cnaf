@@ -1,0 +1,17 @@
+// 2026 cohort: full-rate PreParE plus the supplementary birth-leave indemnity - no cumulation under the 2026-only 1 item (L. 532-2 II 1 réd. 2026).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cumul-indemnite-2026-conge-supp" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "cumul-indemnite-2026-conge-supp-01": beneficie_prepare_taux_plein(entity_ref("urn:fr:pf:case:prepare-conge-supp"), entity_ref("urn:fr:pf:case:enfant-2026")) { origin case_input; }
+        assert "cumul-indemnite-2026-conge-supp-02": percoit_conge_supplementaire_naissance(entity_ref("urn:fr:pf:case:prepare-conge-supp")) { origin case_input; }
+        assert "cumul-indemnite-2026-conge-supp-03": cohorte_2026(entity_ref("urn:fr:pf:case:enfant-2026")) { origin case_input; }
+    }
+    evaluate truth(cumul_prepare_indemnite_refuse(entity_ref("urn:fr:pf:case:prepare-conge-supp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

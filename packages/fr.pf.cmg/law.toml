@@ -1,0 +1,125 @@
+# Manifest §10 — package root marker (DECISION-0033). Normative headings per §22
+# live in the .law files themselves; the manifest must match them (LDC-E1109, lawc check).
+[package]
+name = "fr.pf.cmg"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:pf-cmg"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after editing .law files run
+# `law fix imports <package>`; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Catalog metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-pf-cmg"
+title = "CMG, complément de libre choix du mode de garde: right, 2025 reform formula (hourly cap, reference cost, effort rate), old scale, structure aid, cumulation, shared residence; wave 3"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française; texte codifié (LEGI DILA)"
+verifiedAgainstSource = true
+
+# Upstream premises: child in care and the debtor body are established by
+# fr.pf.core (parallel lane W1-PFCORE). Worlds below include both
+# packages; cross-package institutional facts arrive as case inputs.
+[dependencies]
+"fr.pf.core" = "0.1.0"
+
+# Own families (DECISION-0127): regression = false until the ratchet is registered.
+[[tests]]
+family = "fr.pf.cmg#formule"
+regression = false
+suites = [
+    "tests/cm-formule-assmat.lawtest",
+    "tests/cm-formule-domicile.lawtest",
+    "tests/cm-formule-plafond-atteint.lawtest",
+    "tests/cm-formule-plancher.lawtest",
+    "tests/cm-formule-taux-enfants.lawtest",
+    "tests/cm-formule-aeeh.lawtest",
+]
+world = ["fr.pf.cmg", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.cmg#ancien-bareme"
+regression = false
+suites = [
+    "tests/cm-ancien-bande1.lawtest",
+    "tests/cm-ancien-bande3.lawtest",
+    "tests/cm-ancien-fenetre-fermee.lawtest",
+    "tests/cm-ancien-moitie-3-6.lawtest",
+    "tests/cm-ancien-centime-3ans.lawtest",
+    "tests/cm-ancien-centime-oct.lawtest",
+    "tests/cm-ancien-six-ans.lawtest",
+    "tests/cm-ancien-trois-plein-aout.lawtest",
+    "tests/cm-ancien-trois-plein-fevrier.lawtest",
+    "tests/cm-ancien-trois-reduit-sept.lawtest",
+]
+world = ["fr.pf.cmg", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.cmg#structure"
+regression = false
+suites = [
+    "tests/cm-structure-montant.lawtest",
+    "tests/cm-structure-dss-2026.lawtest",
+    "tests/cm-structure-seize-heures.lawtest",
+    "tests/cm-isole-40-publie.lawtest",
+    "tests/cm-trois-structure-plein-juin.lawtest",
+    "tests/cm-structure-tiers-payant.lawtest",
+    "tests/cm-structure-eaje.lawtest",
+]
+world = ["fr.pf.cmg", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.cmg#cumul-alternance"
+regression = false
+suites = [
+    "tests/cm-alternance-deux-parents.lawtest",
+    "tests/cm-alternance-fenetre-fermee.lawtest",
+    "tests/cm-cumul-plafond.lawtest",
+    "tests/cm-differentiel-ouvert.lawtest",
+    "tests/cm-differentiel-sans-perte.lawtest",
+]
+world = ["fr.pf.cmg", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.cmg#devoir-versement"
+regression = false
+suites = [
+    "tests/devoir-versement-actif.lawtest",
+    "tests/devoir-versement-sans-droit.lawtest",
+    "tests/devoir-versement-tardif.lawtest",
+    "tests/devoir-versement-recouvrement.lawtest",
+]
+world = ["fr.pf.cmg", "fr.pf.core"]
+
+# FINISH paje-cmg: L. 531-9 non-cumulation markers and L. 531-8-1 levy
+# minoration (09-non-cumul.law). Awaiting fragment generation
+# (GENERATED_OUTPUT_PENDING in 01-sources.law); suites prepared, not run.
+[[tests]]
+family = "fr.pf.cmg#non-cumul"
+regression = false
+suites = [
+    "tests/cm-non-cumul-prepare-plein.lawtest",
+    "tests/cm-non-cumul-prepare-vi.lawtest",
+    "tests/cm-non-cumul-prepare-sans-vi-ni-hors-vi.lawtest",
+    "tests/cm-non-cumul-prepare-avant-2014.lawtest",
+    "tests/cm-non-cumul-prepare-2014-limite.lawtest",
+    "tests/cm-non-cumul-prepare-cohorte-non-etablie.lawtest",
+    "tests/cm-non-cumul-prepare-structure.lawtest",
+    "tests/cm-non-cumul-prepare-structure-sans-vi-ni-hors-vi.lawtest",
+    "tests/cm-non-cumul-indemnite.lawtest",
+    "tests/cm-non-cumul-indemnite-avant.lawtest",
+    "tests/cm-non-cumul-indemnite-cohorte.lawtest",
+    "tests/cm-prelevement-minore.lawtest",
+    "tests/cm-prelevement-minore-2019.lawtest",
+]
+world = ["fr.pf.cmg", "fr.pf.core"]

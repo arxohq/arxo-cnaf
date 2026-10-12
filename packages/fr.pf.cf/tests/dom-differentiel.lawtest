@@ -1,0 +1,41 @@
+// DOM differential, one child in Guyane: the overrun 1199.40 is strictly
+// below twelve theoretical DOM monthly amounts (12 x 99.96 = 1199.52), so
+// the differential opens at (25000 + 1199.52 - 26199.40) / 12 = 0.01. The
+// base right stays closed (resources exceed the ceiling): the differential
+// track is standalone from it, keeping only the R755-1 frame premises.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-differentiel" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "ddf-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), entity_ref("urn:fr:pf-cf:case:dom-differentiel-e1")) { origin case_input; }
+        assert "ddf-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-differentiel-e1")) { origin case_input; }
+        assert "ddf-03": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-differentiel-e1"), @2017-03-15) { origin case_input; }
+        assert "ddf-04": mois_droit(@2021-09-01) { origin case_input; }
+        assert "ddf-05": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), 1) { origin case_input; }
+        assert "ddf-06": ressources_menage(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), 26199.40 EUR) { origin case_input; }
+        assert "ddf-07": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), 20000 EUR) { origin case_input; }
+        assert "ddf-07a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), 5000 EUR) { origin case_input; }
+        assert "ddf-07b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), 6000 EUR) { origin case_input; }
+        assert "ddf-07c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), 10000 EUR) { origin case_input; }
+        assert "ddf-07d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), 2500 EUR) { origin case_input; }
+        assert "ddf-07e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), 3000 EUR) { origin case_input; }
+        assert "ddf-08": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-differentiel")) { origin case_input; }
+        assert "ddf-09": territoire(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), GUYANE) { origin case_input; }
+        assert "ddf-10": cadre_cf_dom_remplie(entity_ref("urn:fr:pf-cf:case:dom-differentiel")) { origin case_input; }
+        assert "ddf-11": presence_jeune_dom(entity_ref("urn:fr:pf-cf:case:dom-differentiel")) { origin case_input; }
+        assert "ddf-12": base_dom_retenue(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), 240.00 EUR) { origin case_input; }
+        assert "ddf-13": departement_l751_1(GUYANE) { origin case_input; }
+    }
+    evaluate truth(cf_dom_droit_ouvert(entity_ref("urn:fr:pf-cf:case:dom-differentiel")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_differentiel_du(entity_ref("urn:fr:pf-cf:case:dom-differentiel"), 0.01 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,58 @@
+// Deontic layer of the birth and adoption grant: duty of the fund
+// to pay the awarded grant (D1, see the map in package.law).
+//
+// D1. The duty triggers on prime_attribuee (right + computed amount +
+// examination of the situation). The bearer is the empirical
+// organisme_debiteur: the texts name only «versée», never the debtor.
+// Performance is the empirical fact prime_versee. Window [@2021-01-01,
+// infinity) is the package coverage window.
+// D2. No exceptions in scope (no defeaters): the «without right» pair
+// shows the absence of a position via the resources threshold.
+//
+// Time limits (L. 531-2, para. 2; D. 531-2, II): the deadline date is an
+// established case fact (B-PAJE-DEADLINE-CALC); the VersementTardifConstate
+// rule records lateness by comparing dates. Scenarios:
+// tests/devoir-versement-*.lawtest (family fr.pf.paje#devoir-versement):
+// ACTIVE; without right — no position; lateness — versement_tardif.
+
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+use self::{
+    CSS_D531_2_ED2021_04,
+    CSS_L531_2_ED2020_12,
+    Enfant,
+    Menage,
+    Organisme,
+    date_limite_versement,
+    date_versement_prime,
+    organisme_debiteur,
+    prime_attribuee,
+    prime_versee,
+    versement_tardif,
+};
+
+@source(CSS_L531_2_ED2020_12)
+rule DevoirVerserPrime(o: Organisme, m: Menage, e: Enfant, montant: Money) strict {
+    label fr official "la prime attribuée est versée au ménage";
+    label en unofficial "the awarded grant is paid to the household — duty of the fund";
+    when prime_attribuee(m, e, montant) and organisme_debiteur(o, m);
+    then duty VerserPrimeDue {
+        bearer o;
+        beneficiary m;
+        maintain prime_versee(m, e, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L531_2_ED2020_12, CSS_D531_2_ED2021_04)
+rule VersementTardifConstate(m: Menage, e: Enfant, montant: Money, verse: Date, limite: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "versement après la date limite : tardif";
+    label en unofficial "payment after the deadline — late";
+    when prime_versee(m, e, montant)
+        and date_versement_prime(m, e, verse)
+        and date_limite_versement(m, e, limite)
+        and verse > limite;
+    then versement_tardif(m, e);
+}

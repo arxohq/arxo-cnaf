@@ -1,0 +1,19 @@
+// 2022-2024 renewal derogation, body silence: renewal requested,
+// silence through the third month — the rejection decision stands
+// (R. 544-3 II 2°).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-silence-rejet-2023" {
+    given {
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; }
+        assert "ajpp-srej-01": demande_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-srej")) { origin case_input; }
+        assert "ajpp-srej-02": demande_recue_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-srej"), 10) { origin case_input; }
+        assert "ajpp-srej-03": silence_observe_jusqu_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-srej"), 13) { origin case_input; }
+    }
+    evaluate truth(decision_silence_rejet(entity_ref("urn:fr:pf-ajpp:case:enfant-srej")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

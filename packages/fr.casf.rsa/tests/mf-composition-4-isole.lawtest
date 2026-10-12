@@ -1,0 +1,18 @@
+// Four persons, lone parent: 600 + 300 + 180 + 240 = 1320.00.
+// The 4th person is a child: 40 % (R.262-1; OpenFisca rsa_socle).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-composition-4-isole" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "mfc4i-01": mf_base(entity_ref("urn:fr:rsa:case:mf-composition-4-isole"), 600.00 EUR) { origin case_input; }
+        assert "mfc4i-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-composition-4-isole"), 4) { origin case_input; }
+        assert "mfc4i-03": foyer_nb_parents(entity_ref("urn:fr:rsa:case:mf-composition-4-isole"), 1) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-composition-4-isole"), 1320.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

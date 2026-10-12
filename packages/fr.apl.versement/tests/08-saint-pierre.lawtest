@@ -1,0 +1,26 @@
+language "law.core" version "0.2";
+package fr.apl.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:apl:versement";
+
+// D-42 (08.10.2026): working reading of fr.apl (G-A13, PpPlancherFinal now pub) selected in context.
+test "urn:query:fr-apl-versement-saint-pierre-sans-contribution" {
+    given {
+        context { decision_time @2021-01-15T12:00:00-03:00; knowledge_time @2021-01-15T12:00:00-03:00; legal_time @2021-01-15; timezone "America/Miquelon"; interpretation fr.apl::PpPlancherFinal; }
+        assert "base": fr.apl::aide_mensuelle(entity_ref("urn:fr:apl:versement:spm"), 100.99 EUR) { origin case_input; }
+        assert "territoire": fr.apl::territoire(entity_ref("urn:fr:apl:versement:spm"), fr.apl::SAINT_PIERRE_ET_MIQUELON) { origin case_input; }
+    }
+    evaluate truth(crds_precomptee(entity_ref("urn:fr:apl:versement:spm"), 0 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-versement-saint-pierre-arrondi" {
+    given {
+        context { decision_time @2021-01-15T12:00:00-03:00; knowledge_time @2021-01-15T12:00:00-03:00; legal_time @2021-01-15; timezone "America/Miquelon"; interpretation fr.apl::PpPlancherFinal; }
+        assert "base": fr.apl::aide_mensuelle(entity_ref("urn:fr:apl:versement:spm2"), 100.99 EUR) { origin case_input; }
+        assert "territoire": fr.apl::territoire(entity_ref("urn:fr:apl:versement:spm2"), fr.apl::SAINT_PIERRE_ET_MIQUELON) { origin case_input; }
+    }
+    evaluate truth(montant_verse(entity_ref("urn:fr:apl:versement:spm2"), 100 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

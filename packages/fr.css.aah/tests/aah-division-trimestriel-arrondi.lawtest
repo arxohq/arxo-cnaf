@@ -1,0 +1,104 @@
+// D-82/D-83: tiers D. 821-2 al. 3 (R. 821-4-1, квартальный трек) под прочтением DouziemeTiersArrondiCentime.
+// Ожидания — независимая реплика на дробях (HALF_UP) по закреплённым числам:
+//   div-q1 M = 1000,00, плафон 3 x 1000 = 3000, r = 1000: 2000 / 3 = 666,6666… -> 666,67;
+//   div-q2 сумма декрета 2024-397 1 016,05, плафон 3 x 1016,05 = 3048,15, r = 1500: 1548,15 / 3 = 516,05 ровно -> 516,05;
+//   div-q3 то же, r = 1000,01: 2048,14 / 3 = 682,7133… -> 682,71;
+//   div-q4 прежние правила (30.09.2023), одинокий: M = 1000, r = 1001: 1999 / 3 = 666,3333… -> 666,33;
+//   div-q5 прежние правила, пара: плафон 3 x 1000 x 1,81 = 5430; r1 + r2 = 3000,50: 2429,50 / 3 = 809,8333… -> 809,83.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-division-trimestriel-inexact" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-q1-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-q1")) { origin adjudicated; }
+        assert "div-q1-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-q1")) { origin case_input; }
+        assert "div-q1-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-q1")) { origin case_input; }
+        assert "div-q1-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-q1")) { origin case_input; }
+        assert "div-q1-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-q1")) { origin case_input; }
+        assert "div-q1-06": percoit_revenu_activite(entity_ref("urn:fr:css-aah:case:div-q1")) { origin case_input; }
+        assert "div-q1-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-q1-08": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:case:div-q1"), 1000.00 EUR) { origin case_input; }
+        assert "div-q1-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-q1"), 666.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-trimestriel-decret-2024-exact" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-q2-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-q2")) { origin adjudicated; }
+        assert "div-q2-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-q2")) { origin case_input; }
+        assert "div-q2-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-q2")) { origin case_input; }
+        assert "div-q2-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-q2")) { origin case_input; }
+        assert "div-q2-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-q2")) { origin case_input; }
+        assert "div-q2-06": percoit_revenu_activite(entity_ref("urn:fr:css-aah:case:div-q2")) { origin case_input; }
+        assert "div-q2-07": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:case:div-q2"), 1500.00 EUR) { origin case_input; }
+        assert "div-q2-08": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-q2"), 516.05 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-trimestriel-decret-2024-inexact" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-q3-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-q3")) { origin adjudicated; }
+        assert "div-q3-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-q3")) { origin case_input; }
+        assert "div-q3-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-q3")) { origin case_input; }
+        assert "div-q3-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-q3")) { origin case_input; }
+        assert "div-q3-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-q3")) { origin case_input; }
+        assert "div-q3-06": percoit_revenu_activite(entity_ref("urn:fr:css-aah:case:div-q3")) { origin case_input; }
+        assert "div-q3-07": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:case:div-q3"), 1000.01 EUR) { origin case_input; }
+        assert "div-q3-08": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:div-q3"), 682.71 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-trimestriel-ancien-seul" {
+    given {
+        context { decision_time @2023-09-30T12:00:00Z; knowledge_time @2023-09-30T12:00:00Z; legal_time @2023-09-30; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-q4-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-q4")) { origin adjudicated; }
+        assert "div-q4-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-q4")) { origin case_input; }
+        assert "div-q4-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-q4")) { origin case_input; }
+        assert "div-q4-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-q4")) { origin case_input; }
+        assert "div-q4-05": personne_seule(entity_ref("urn:fr:css-aah:case:div-q4")) { origin case_input; }
+        assert "div-q4-06": percoit_revenu_activite(entity_ref("urn:fr:css-aah:case:div-q4")) { origin case_input; }
+        assert "div-q4-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-q4-08": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:case:div-q4"), 1001.00 EUR) { origin case_input; }
+        assert "div-q4-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_ancien(entity_ref("urn:fr:css-aah:case:div-q4"), 666.33 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-division-trimestriel-ancien-couple" {
+    given {
+        context { decision_time @2023-09-30T12:00:00Z; knowledge_time @2023-09-30T12:00:00Z; legal_time @2023-09-30; timezone "Europe/Paris"; interpretation DouziemeTiersArrondiCentime; }
+        assert "div-q5-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:div-q5")) { origin adjudicated; }
+        assert "div-q5-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:div-q5")) { origin case_input; }
+        assert "div-q5-03": residence_permanente(entity_ref("urn:fr:css-aah:case:div-q5")) { origin case_input; }
+        assert "div-q5-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:div-q5")) { origin case_input; }
+        assert "div-q5-05": en_couple(entity_ref("urn:fr:css-aah:case:div-q5")) { origin case_input; }
+        assert "div-q5-06": percoit_revenu_activite(entity_ref("urn:fr:css-aah:case:div-q5")) { origin case_input; }
+        assert "div-q5-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "div-q5-08": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:case:div-q5"), 2000.00 EUR) { origin case_input; }
+        assert "div-q5-09": ressources_conjoint_retenues(entity_ref("urn:fr:css-aah:case:div-q5"), 1000.50 EUR) { origin case_input; }
+        assert "div-q5-10": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_ancien(entity_ref("urn:fr:css-aah:case:div-q5"), 809.83 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

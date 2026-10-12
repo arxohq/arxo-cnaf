@@ -1,0 +1,41 @@
+// D-86: on the third birthday the old maximum is halved; D-82 reading rounds 43.14% × 466.44 / 2 to 100.61.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-ancien-centime-3ans" {
+    given {
+        context { deadline_policy CMG_MOIS_CALENDAIRE; decision_time @2024-09-20T12:00:00Z; knowledge_time @2024-09-20T12:00:00Z; legal_time @2024-09-15; timezone "Europe/Paris"; interpretation ArrondiMaximumCmgCentime; }
+        assert "ancien-centime-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), entity_ref("urn:fr:pf-cmg:child:b3"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "ancien-centime-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans")) { origin case_input; }
+        assert "ancien-centime-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), entity_ref("urn:fr:pf-cmg:child:b3")) { origin case_input; }
+        assert "ancien-centime-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:b3"), 3) { origin case_input; }
+        assert "ancien-centime-dob": date_naissance(entity_ref("urn:fr:pf-cmg:child:b3"), @2021-09-01) { origin case_input; }
+        assert "ancien-centime-month": mois_droit(@2024-09-01) { origin case_input; }
+        assert "ancien-centime-05": age_base_ans(entity_ref("urn:fr:pf-cmg:child:b3"), 3) { origin case_input; }
+        assert "ancien-centime-06": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), 1) { origin case_input; }
+        assert "ancien-centime-07-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), 19572 EUR) { origin case_input; }
+        assert "ancien-centime-07-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), 3237 EUR) { origin case_input; }
+        assert "ancien-centime-07-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), 43491 EUR) { origin case_input; }
+        assert "ancien-centime-07-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), 7195 EUR) { origin case_input; }
+        assert "ancien-centime-08": ressources_annuelles(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), 58806.50 EUR) { origin case_input; }
+        assert "ancien-centime-09": bmaf_retenu(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), 466.44 EUR) { origin case_input; }
+        assert "ancien-centime-10": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), entity_ref("urn:fr:pf-cmg:child:b3"), 600 EUR) { origin case_input; }
+        assert "ancien-centime-11": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), entity_ref("urn:fr:pf-cmg:child:b3"), 50 EUR) { origin case_input; }
+        assert "ancien-centime-12": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), entity_ref("urn:fr:pf-cmg:child:b3"), 150 EUR) { origin case_input; }
+        assert "ancien-centime-13": smic_horaire_retenu(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), 12 EUR) { origin case_input; }
+        assert "ancien-centime-14": jours_remuneres(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), entity_ref("urn:fr:pf-cmg:child:b3"), 20.0) { origin case_input; }
+    }
+    evaluate truth(maximum_ancien_b(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), entity_ref("urn:fr:pf-cmg:child:b3"), 100.61 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond2_applicable(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), 50686 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_cmg_du(entity_ref("urn:fr:pf-cmg:case:ancien-centime-3ans"), entity_ref("urn:fr:pf-cmg:child:b3"), 250.61 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

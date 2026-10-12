@@ -1,0 +1,15 @@
+// AJPP past the 310-day cap: 311 daily allowances paid - outside the limit (L. 544-3).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-renvoi-ajpp-depassement-310" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "renvoi-ajpp-depassement-310-01": jours_ajpp_verses(entity_ref("urn:fr:pf:case:enfant-ajpp-311"), 311) { origin case_input; }
+    }
+    evaluate truth(ajpp_dans_limite(entity_ref("urn:fr:pf:case:enfant-ajpp-311")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

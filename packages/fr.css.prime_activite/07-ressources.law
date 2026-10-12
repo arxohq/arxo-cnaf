@@ -1,0 +1,2827 @@
+// Counted resources: professional income (R. 844-1), replacement
+// income (R. 844-2), housing/CF/ASF forfaits (R. 844-4), excluded
+// benefits (R. 844-5), non-salaried income (R. 845-1/2/3).
+//
+// «Ont le caractère de revenus professionnels ou en tiennent lieu»
+// (R. 844-1 I): ten listed items, 9° abrogated (no value, no rule),
+// 5° birth leave from 2026-06-27 applicable 2026-07-01 (NOTA);
+// 6° daily allowances only within three months of the work stoppage
+// (derived from the retained stoppage date). «sont pris en compte
+// pour un montant égal à la différence entre» gross and social
+// charges (R. 844-1 II, from 2023-12-31; no II before): non-salaried
+// 1° income excluded, computed under R. 845-1/2; the formula needs
+// a positively classified covered flux (PA-R4-06). Gross arrives net
+// of the II exclusions (employer guarantees, chèques-vacances,
+// L. 7233-4 financing: retained convention).
+// «Ont le caractère de revenus de remplacement» (R. 844-2): seven
+// items; 4° daily allowances only past three months after stoppage
+// (mirror of R. 844-1 6°).
+// «dans la limite d'un forfait calculé selon les modalités fixées
+// aux 1°, 2° et 3° de l'article R. 844-3» (R. 844-4 I): the APL
+// forfait value arrives retained net of non-APL persons (R. 844-3
+// is owned by CNAF-PPA but outside the FINISH pa 38: same-line
+// convergence pending). «à hauteur d'un forfait égal à 41,65 % de
+// la base mensuelle» (II, CF majoré L. 522-3); «30 % ... 22,5 % ...
+// pour chaque enfant» (III, ASF L. 523-1 per L. 523-3 1°/2° slots):
+// BMAF euros arrive retained (bridge request: no public neighbour
+// relation).
+// «Sont exclues des ressources» (R. 844-5): 39 listed items + 21°bis;
+// 2° only in L. 842-7 situations with a child under three months
+// (retained marker), 10° only where a non-household third party is
+// paid (retained marker), 14° irregularity/insertion purpose through
+// the organ judgment channel (DECISION-0194); 18°/21°/29°/30°..39°
+// carry their introduction windows (2021-03-25, 2022-03-21,
+// 2023-12-31). Each declared category claims its qualifying facts;
+// AUTRE_* values have no rule (documented negative space).
+// «des bénéfices de l'avant-dernière année ..., ou ceux de la
+// dernière année s'ils sont connus, pourvu qu'ils correspondent à
+// une année complète d'activité» (R. 845-1/2 al. 1): N-1 known with
+// a full activity year overrides N-2 (base_n_1 institutional
+// marker; N-2 blocked by its safe negation); full-year markers are
+// year-specific; /12. «Lorsque les bénéfices n'ont pas été
+// imposés, ou ne correspondent pas à une année complète d'activité»
+// (fallback): organ computes a third of M-4..M-2 receipts/turnover
+// (preceding quarter under the old wording) minus the CGI abatement
+// (64bis al. 2 / 50-0/102ter rates retained; bridge request); R. 845-2
+// adds the special independent categories (L. 613-7, L. 642-4-2,
+// L. 382-3, L. 382-15). Old/new computation wordings are selected by
+// the shared NOTA gates (general 2025-03-01, MSA order date; PA-M4).
+// Option on request within the CGI ceilings (12-month and quarterly
+// tests), tacit renewal as a standing retained request, joint RSA
+// request + CD president agreement as an institutional flag (RSA
+// computation stays with RSA).
+// «avant déduction des frais professionnels» (R. 845-3, CGI art. 62):
+// retained pre-deduction amounts counted as such.
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_R844_1_ED2026_06_27,
+    CSS_R844_1_W2020_ED2021_01_01,
+    CSS_R844_1_W2020_ED2021_03_25,
+    CSS_R844_1_W2020_ED2021_06_01,
+    CSS_R844_1_W2020_ED2022_03_21,
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_2_ED2021_01_01,
+    CSS_R844_2_ED2021_03_25,
+    CSS_R844_2_ED2021_06_01,
+    CSS_R844_2_ED2022_03_21,
+    CSS_R844_2_ED2023_12_31,
+    CSS_R844_2_ED2024_01_01,
+    CSS_R844_2_ED2024_07_01,
+    CSS_R844_2_ED2025_01_01,
+    CSS_R844_2_ED2025_02_28,
+    CSS_R844_2_ED2025_03_31,
+    CSS_R844_2_ED2026_04_01,
+    CSS_R844_2_ED2026_06_27,
+    CSS_R844_4_ED2021_01_01,
+    CSS_R844_4_ED2021_03_25,
+    CSS_R844_4_ED2021_06_01,
+    CSS_R844_4_ED2022_03_21,
+    CSS_R844_4_ED2023_12_31,
+    CSS_R844_4_ED2024_01_01,
+    CSS_R844_4_ED2024_07_01,
+    CSS_R844_4_ED2025_01_01,
+    CSS_R844_4_ED2025_02_28,
+    CSS_R844_4_ED2025_03_31,
+    CSS_R844_4_ED2026_04_01,
+    CSS_R844_4_ED2026_06_27,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27,
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27,
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01,
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27,
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01,
+    CSS_R845_3_ED2021_01_01,
+    CSS_R845_3_ED2021_03_25,
+    CSS_R845_3_ED2021_06_01,
+    CSS_R845_3_ED2022_03_21,
+    CSS_R845_3_ED2023_12_31,
+    CSS_R845_3_ED2024_01_01,
+    CSS_R845_3_ED2024_07_01,
+    CSS_R845_3_ED2025_01_01,
+    CSS_R845_3_ED2025_02_28,
+    CSS_R845_3_ED2025_03_31,
+    CSS_R845_3_ED2026_04_01,
+    CSS_R845_3_ED2026_06_27,
+    Demandeur,
+    Organisme,
+    dispositions_anciennes_2025,
+    dispositions_nouvelles_2025,
+};
+
+pub enum CategorieRevenuPro {
+    label fr official "rubrique de revenus professionnels R. 844-1 I (9° abrogé: sans valeur)";
+    label en unofficial "professional income item R. 844-1 I (9° repealed: no value)";
+    ITEM_01_ACTIVITE,
+    ITEM_02_STAGES,
+    ITEM_03_VOLONTARIAT_ARMEES,
+    ITEM_04_CHOMAGE_PARTIEL,
+    ITEM_05_CONGES_MAT_PAT_ADOPT,
+    ITEM_05BIS_CONGE_NAISSANCE,
+    ITEM_06_IJ_3_MOIS,
+    ITEM_07_ESAT,
+    ITEM_08_ADAPTATION_VIE_ACTIVE,
+    ITEM_10_INSERTION_COMMUNAUTAIRE,
+    AUTRE_REVENU_PRO
+}
+
+pub enum CategorieRevenuRemplacement {
+    label fr official "rubrique de revenus de remplacement R. 844-2";
+    label en unofficial "replacement income item R. 844-2";
+    ITEM_01_VIEILLESSE_INVALIDITE,
+    ITEM_02_ALLOCATIONS_CHOMAGE,
+    ITEM_03_CESSATION_ANTICIPEE,
+    ITEM_04_IJ_APRES_3_MOIS,
+    ITEM_05_PRESTATION_COMPENSATOIRE,
+    ITEM_06_PENSIONS_ALIMENTAIRES,
+    ITEM_07_RENTES_AT_MP,
+    AUTRE_REVENU_REMPLACEMENT
+}
+
+pub relation revenu_pro_declare(d: Demandeur, mois: Date, flux: Integer, cat: CategorieRevenuPro, montant: Money) kind empirical {
+    key(d, mois, flux, cat);
+    label fr official "revenu déclaré à la rubrique R. 844-1 (faits qualifiants compris; fait retenu)";
+    label en unofficial "income declared under an R. 844-1 item (qualifying facts included; retained fact)";
+}
+
+pub relation revenu_pro_retenu(d: Demandeur, mois: Date, flux: Integer, cat: CategorieRevenuPro, montant: Money) kind institutional {
+    key(d, mois, flux, cat);
+    label fr official "revenu à caractère professionnel au sens de R. 844-1";
+    label en unofficial "income of professional character within the meaning of R. 844-1";
+}
+
+pub relation arret_travail(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "arrêt de travail ouvrant les indemnités journalières (R. 844-1 6°/R. 844-2 4°; fait retenu)";
+    label en unofficial "work stoppage opening daily allowances (R. 844-1 6°/R. 844-2 4°; retained fact)";
+}
+
+@source(
+    CSS_R844_1_W2020_ED2021_01_01,
+    CSS_R844_1_W2020_ED2021_03_25,
+    CSS_R844_1_W2020_ED2021_06_01,
+    CSS_R844_1_W2020_ED2022_03_21,
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProItem01(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "1° revenus d'activité salariée ou non salariée (R. 844-1)";
+    label en unofficial "1° salaried or non-salaried activity income (R. 844-1)";
+    when revenu_pro_declare(d, mois, flux, ITEM_01_ACTIVITE, m);
+    then revenu_pro_retenu(d, mois, flux, ITEM_01_ACTIVITE, m);
+}
+
+@source(
+    CSS_R844_1_W2020_ED2021_01_01,
+    CSS_R844_1_W2020_ED2021_03_25,
+    CSS_R844_1_W2020_ED2021_06_01,
+    CSS_R844_1_W2020_ED2022_03_21,
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProItem02(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "2° stages de formation professionnelle (R. 844-1)";
+    label en unofficial "2° vocational training placements (R. 844-1)";
+    when revenu_pro_declare(d, mois, flux, ITEM_02_STAGES, m);
+    then revenu_pro_retenu(d, mois, flux, ITEM_02_STAGES, m);
+}
+
+@source(
+    CSS_R844_1_W2020_ED2021_01_01,
+    CSS_R844_1_W2020_ED2021_03_25,
+    CSS_R844_1_W2020_ED2021_06_01,
+    CSS_R844_1_W2020_ED2022_03_21,
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProItem03(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "3° volontariat dans les armées (R. 844-1)";
+    label en unofficial "3° armed forces volunteering (R. 844-1)";
+    when revenu_pro_declare(d, mois, flux, ITEM_03_VOLONTARIAT_ARMEES, m);
+    then revenu_pro_retenu(d, mois, flux, ITEM_03_VOLONTARIAT_ARMEES, m);
+}
+
+@source(
+    CSS_R844_1_W2020_ED2021_01_01,
+    CSS_R844_1_W2020_ED2021_03_25,
+    CSS_R844_1_W2020_ED2021_06_01,
+    CSS_R844_1_W2020_ED2022_03_21,
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProItem04(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "4° aide au chômage partiel (R. 844-1)";
+    label en unofficial "4° partial-unemployment aid (R. 844-1)";
+    when revenu_pro_declare(d, mois, flux, ITEM_04_CHOMAGE_PARTIEL, m);
+    then revenu_pro_retenu(d, mois, flux, ITEM_04_CHOMAGE_PARTIEL, m);
+}
+
+@source(
+    CSS_R844_1_W2020_ED2021_01_01,
+    CSS_R844_1_W2020_ED2021_03_25,
+    CSS_R844_1_W2020_ED2021_06_01,
+    CSS_R844_1_W2020_ED2022_03_21,
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProItem05(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "5° congés maternité, paternité, adoption (R. 844-1)";
+    label en unofficial "5° maternity, paternity, adoption leave (R. 844-1)";
+    when revenu_pro_declare(d, mois, flux, ITEM_05_CONGES_MAT_PAT_ADOPT, m);
+    then revenu_pro_retenu(d, mois, flux, ITEM_05_CONGES_MAT_PAT_ADOPT, m);
+}
+
+@source(CSS_R844_1_ED2026_06_27)
+rule ProItem05Naissance(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2026-07-01, infinity);
+    label fr official "5° congé supplémentaire de naissance, NOTA 2026-07-01 (R. 844-1)";
+    label en unofficial "5° supplementary birth leave, NOTA 2026-07-01 (R. 844-1)";
+    when revenu_pro_declare(d, mois, flux, ITEM_05BIS_CONGE_NAISSANCE, m);
+    then revenu_pro_retenu(d, mois, flux, ITEM_05BIS_CONGE_NAISSANCE, m);
+}
+
+@source(
+    CSS_R844_1_W2020_ED2021_01_01,
+    CSS_R844_1_W2020_ED2021_03_25,
+    CSS_R844_1_W2020_ED2021_06_01,
+    CSS_R844_1_W2020_ED2022_03_21,
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProItem06(d: Demandeur, mois: Date, flux: Integer, m: Money, a: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "6° IJ dans les trois mois de l'arrêt (R. 844-1)";
+    label en unofficial "6° daily allowances within three months of stoppage (R. 844-1)";
+    when revenu_pro_declare(d, mois, flux, ITEM_06_IJ_3_MOIS, m)
+        and arret_travail(d, a) and mois <= add_calendar_period(a, 3 calendar_month);
+    then revenu_pro_retenu(d, mois, flux, ITEM_06_IJ_3_MOIS, m);
+}
+
+@source(
+    CSS_R844_1_W2020_ED2021_01_01,
+    CSS_R844_1_W2020_ED2021_03_25,
+    CSS_R844_1_W2020_ED2021_06_01,
+    CSS_R844_1_W2020_ED2022_03_21,
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProItem07(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "7° rémunération garantie ESAT (R. 844-1)";
+    label en unofficial "7° ESAT guaranteed pay (R. 844-1)";
+    when revenu_pro_declare(d, mois, flux, ITEM_07_ESAT, m);
+    then revenu_pro_retenu(d, mois, flux, ITEM_07_ESAT, m);
+}
+
+@source(
+    CSS_R844_1_W2020_ED2021_01_01,
+    CSS_R844_1_W2020_ED2021_03_25,
+    CSS_R844_1_W2020_ED2021_06_01,
+    CSS_R844_1_W2020_ED2022_03_21,
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProItem08(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "8° adaptation à la vie active R. 345-3 CASF (R. 844-1)";
+    label en unofficial "8° adaptation to active life (R. 844-1)";
+    when revenu_pro_declare(d, mois, flux, ITEM_08_ADAPTATION_VIE_ACTIVE, m);
+    then revenu_pro_retenu(d, mois, flux, ITEM_08_ADAPTATION_VIE_ACTIVE, m);
+}
+
+@source(
+    CSS_R844_1_W2020_ED2021_01_01,
+    CSS_R844_1_W2020_ED2021_03_25,
+    CSS_R844_1_W2020_ED2021_06_01,
+    CSS_R844_1_W2020_ED2022_03_21,
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProItem10(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "10° insertion communautaire L. 265-1 CASF (R. 844-1)";
+    label en unofficial "10° community insertion work (R. 844-1)";
+    when revenu_pro_declare(d, mois, flux, ITEM_10_INSERTION_COMMUNAUTAIRE, m);
+    then revenu_pro_retenu(d, mois, flux, ITEM_10_INSERTION_COMMUNAUTAIRE, m);
+}
+
+pub relation revenu_pro_elements(d: Demandeur, mois: Date, flux: Integer, cat: CategorieRevenuPro, brut: Money, cotis: Money) kind empirical {
+    key(d, mois, flux, cat);
+    label fr official "brut net des exclusions II et cotisations salariales du revenu (R. 844-1 II; fait retenu)";
+    label en unofficial "gross net of II exclusions and employee charges of the income (R. 844-1 II; retained fact)";
+}
+
+pub relation activite_non_salariee(d: Demandeur, mois: Date, flux: Integer) kind empirical {
+    key(d, mois, flux);
+    label fr official "revenu 1° tiré d'une activité non salariée, calcul R. 845-1/2 (R. 844-1 II; fait retenu)";
+    label en unofficial "item-1° income from non-salaried activity, R. 845-1/2 computation (R. 844-1 II; retained fact)";
+}
+
+pub relation activite_hors_non_salarie(d: Demandeur, mois: Date, flux: Integer) kind empirical {
+    key(d, mois, flux);
+    label fr official "revenu ne relevant pas d'une activité non salariée, calcul brut moins cotisations applicable (R. 844-1 II; fait retenu)";
+    label en unofficial "income outside non-salaried activity, gross-minus-charges computation applying (R. 844-1 II; retained fact)";
+}
+
+pub relation revenu_pro_montant_retenu(d: Demandeur, mois: Date, flux: Integer, cat: CategorieRevenuPro, net: Money) kind institutional {
+    key(d, mois, flux, cat);
+    label fr official "revenu professionnel retenu: brut moins cotisations (R. 844-1 II)";
+    label en unofficial "counted professional income: gross minus charges (R. 844-1 II)";
+}
+
+@source(
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProMontantNet(d: Demandeur, mois: Date, flux: Integer, cat: CategorieRevenuPro, brut: Money, cotis: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "II: brut moins cotisations, hors non-salarié (R. 844-1)";
+    label en unofficial "II: gross minus charges, non-salaried out (R. 844-1)";
+    when revenu_pro_elements(d, mois, flux, cat, brut, cotis)
+        and activite_hors_non_salarie(d, mois, flux)
+        and not_known(activite_non_salariee(d, mois, flux));
+    then revenu_pro_montant_retenu(d, mois, flux, cat, brut - cotis);
+}
+
+// D-42: «à l'exception des revenus tirés d'une activité non salariée
+// mentionnés au 1° du I et définis aux articles R. 845-1 et R. 845-2»
+// (R. 844-1 II): a classified non-salaried flux is the affirmative
+// contrary of the gross-minus-charges amount (the not_known guard
+// alone only leaves NEITHER).
+@source(
+    CSS_R844_1_W2023_ED2023_12_31,
+    CSS_R844_1_W2023_ED2024_01_01,
+    CSS_R844_1_W2023_ED2024_07_01,
+    CSS_R844_1_W2023_ED2025_01_01,
+    CSS_R844_1_W2023_ED2025_02_28,
+    CSS_R844_1_W2023_ED2025_03_31,
+    CSS_R844_1_W2023_ED2026_04_01,
+    CSS_R844_1_ED2026_06_27)
+rule ProMontantNetRefuteNonSalarie(d: Demandeur, mois: Date, flux: Integer, cat: CategorieRevenuPro, brut: Money, cotis: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "II: revenu non salarié exclu du calcul brut moins cotisations (R. 844-1)";
+    label en unofficial "II: non-salaried income excluded from gross minus charges (R. 844-1)";
+    when revenu_pro_elements(d, mois, flux, cat, brut, cotis)
+        and activite_non_salariee(d, mois, flux);
+    then not revenu_pro_montant_retenu(d, mois, flux, cat, brut - cotis);
+}
+
+pub relation revenu_rempl_declare(d: Demandeur, mois: Date, flux: Integer, cat: CategorieRevenuRemplacement, montant: Money) kind empirical {
+    key(d, mois, flux, cat);
+    label fr official "revenu déclaré à la rubrique R. 844-2 (faits qualifiants compris; fait retenu)";
+    label en unofficial "income declared under an R. 844-2 item (qualifying facts included; retained fact)";
+}
+
+pub relation revenu_remplacement_retenu(d: Demandeur, mois: Date, flux: Integer, cat: CategorieRevenuRemplacement, montant: Money) kind institutional {
+    key(d, mois, flux, cat);
+    label fr official "revenu de remplacement au sens de R. 844-2";
+    label en unofficial "replacement income within the meaning of R. 844-2";
+}
+
+@source(
+    CSS_R844_2_ED2021_01_01,
+    CSS_R844_2_ED2021_03_25,
+    CSS_R844_2_ED2021_06_01,
+    CSS_R844_2_ED2022_03_21,
+    CSS_R844_2_ED2023_12_31,
+    CSS_R844_2_ED2024_01_01,
+    CSS_R844_2_ED2024_07_01,
+    CSS_R844_2_ED2025_01_01,
+    CSS_R844_2_ED2025_02_28,
+    CSS_R844_2_ED2025_03_31,
+    CSS_R844_2_ED2026_04_01,
+    CSS_R844_2_ED2026_06_27)
+rule RemplItem01(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "1° vieillesse ou invalidité, régime obligatoire (R. 844-2)";
+    label en unofficial "1° old-age or disability, compulsory scheme (R. 844-2)";
+    when revenu_rempl_declare(d, mois, flux, ITEM_01_VIEILLESSE_INVALIDITE, m);
+    then revenu_remplacement_retenu(d, mois, flux, ITEM_01_VIEILLESSE_INVALIDITE, m);
+}
+
+@source(
+    CSS_R844_2_ED2021_01_01,
+    CSS_R844_2_ED2021_03_25,
+    CSS_R844_2_ED2021_06_01,
+    CSS_R844_2_ED2022_03_21,
+    CSS_R844_2_ED2023_12_31,
+    CSS_R844_2_ED2024_01_01,
+    CSS_R844_2_ED2024_07_01,
+    CSS_R844_2_ED2025_01_01,
+    CSS_R844_2_ED2025_02_28,
+    CSS_R844_2_ED2025_03_31,
+    CSS_R844_2_ED2026_04_01,
+    CSS_R844_2_ED2026_06_27)
+rule RemplItem02(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "2° allocations chômage code du travail (R. 844-2)";
+    label en unofficial "2° unemployment allowances (R. 844-2)";
+    when revenu_rempl_declare(d, mois, flux, ITEM_02_ALLOCATIONS_CHOMAGE, m);
+    then revenu_remplacement_retenu(d, mois, flux, ITEM_02_ALLOCATIONS_CHOMAGE, m);
+}
+
+@source(
+    CSS_R844_2_ED2021_01_01,
+    CSS_R844_2_ED2021_03_25,
+    CSS_R844_2_ED2021_06_01,
+    CSS_R844_2_ED2022_03_21,
+    CSS_R844_2_ED2023_12_31,
+    CSS_R844_2_ED2024_01_01,
+    CSS_R844_2_ED2024_07_01,
+    CSS_R844_2_ED2025_01_01,
+    CSS_R844_2_ED2025_02_28,
+    CSS_R844_2_ED2025_03_31,
+    CSS_R844_2_ED2026_04_01,
+    CSS_R844_2_ED2026_06_27)
+rule RemplItem03(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "3° cessation anticipée amiante LFSS 1999 art. 41 (R. 844-2)";
+    label en unofficial "3° early asbestos cessation (R. 844-2)";
+    when revenu_rempl_declare(d, mois, flux, ITEM_03_CESSATION_ANTICIPEE, m);
+    then revenu_remplacement_retenu(d, mois, flux, ITEM_03_CESSATION_ANTICIPEE, m);
+}
+
+@source(
+    CSS_R844_2_ED2021_01_01,
+    CSS_R844_2_ED2021_03_25,
+    CSS_R844_2_ED2021_06_01,
+    CSS_R844_2_ED2022_03_21,
+    CSS_R844_2_ED2023_12_31,
+    CSS_R844_2_ED2024_01_01,
+    CSS_R844_2_ED2024_07_01,
+    CSS_R844_2_ED2025_01_01,
+    CSS_R844_2_ED2025_02_28,
+    CSS_R844_2_ED2025_03_31,
+    CSS_R844_2_ED2026_04_01,
+    CSS_R844_2_ED2026_06_27)
+rule RemplItem04(d: Demandeur, mois: Date, flux: Integer, m: Money, a: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "4° IJ au-delà de trois mois après l'arrêt (R. 844-2)";
+    label en unofficial "4° daily allowances past three months after stoppage (R. 844-2)";
+    when revenu_rempl_declare(d, mois, flux, ITEM_04_IJ_APRES_3_MOIS, m)
+        and arret_travail(d, a) and mois > add_calendar_period(a, 3 calendar_month);
+    then revenu_remplacement_retenu(d, mois, flux, ITEM_04_IJ_APRES_3_MOIS, m);
+}
+
+@source(
+    CSS_R844_2_ED2021_01_01,
+    CSS_R844_2_ED2021_03_25,
+    CSS_R844_2_ED2021_06_01,
+    CSS_R844_2_ED2022_03_21,
+    CSS_R844_2_ED2023_12_31,
+    CSS_R844_2_ED2024_01_01,
+    CSS_R844_2_ED2024_07_01,
+    CSS_R844_2_ED2025_01_01,
+    CSS_R844_2_ED2025_02_28,
+    CSS_R844_2_ED2025_03_31,
+    CSS_R844_2_ED2026_04_01,
+    CSS_R844_2_ED2026_06_27)
+rule RemplItem05(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "5° prestation compensatoire C. civ. 270 (R. 844-2)";
+    label en unofficial "5° compensatory allowance (R. 844-2)";
+    when revenu_rempl_declare(d, mois, flux, ITEM_05_PRESTATION_COMPENSATOIRE, m);
+    then revenu_remplacement_retenu(d, mois, flux, ITEM_05_PRESTATION_COMPENSATOIRE, m);
+}
+
+@source(
+    CSS_R844_2_ED2021_01_01,
+    CSS_R844_2_ED2021_03_25,
+    CSS_R844_2_ED2021_06_01,
+    CSS_R844_2_ED2022_03_21,
+    CSS_R844_2_ED2023_12_31,
+    CSS_R844_2_ED2024_01_01,
+    CSS_R844_2_ED2024_07_01,
+    CSS_R844_2_ED2025_01_01,
+    CSS_R844_2_ED2025_02_28,
+    CSS_R844_2_ED2025_03_31,
+    CSS_R844_2_ED2026_04_01,
+    CSS_R844_2_ED2026_06_27)
+rule RemplItem06(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "6° pensions alimentaires C. civ. 205/212/276/371-2 (R. 844-2)";
+    label en unofficial "6° support payments (R. 844-2)";
+    when revenu_rempl_declare(d, mois, flux, ITEM_06_PENSIONS_ALIMENTAIRES, m);
+    then revenu_remplacement_retenu(d, mois, flux, ITEM_06_PENSIONS_ALIMENTAIRES, m);
+}
+
+@source(
+    CSS_R844_2_ED2021_01_01,
+    CSS_R844_2_ED2021_03_25,
+    CSS_R844_2_ED2021_06_01,
+    CSS_R844_2_ED2022_03_21,
+    CSS_R844_2_ED2023_12_31,
+    CSS_R844_2_ED2024_01_01,
+    CSS_R844_2_ED2024_07_01,
+    CSS_R844_2_ED2025_01_01,
+    CSS_R844_2_ED2025_02_28,
+    CSS_R844_2_ED2025_03_31,
+    CSS_R844_2_ED2026_04_01,
+    CSS_R844_2_ED2026_06_27)
+rule RemplItem07(d: Demandeur, mois: Date, flux: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "7° rentes AT-MP livre IV (R. 844-2)";
+    label en unofficial "7° work-accident annuities (R. 844-2)";
+    when revenu_rempl_declare(d, mois, flux, ITEM_07_RENTES_AT_MP, m);
+    then revenu_remplacement_retenu(d, mois, flux, ITEM_07_RENTES_AT_MP, m);
+}
+
+pub relation apl_foyer(d: Demandeur, mois: Date) kind empirical {
+    key(d, mois);
+    label fr official "foyer bénéficiaire d'une aide personnelle au logement (R. 844-4 I; fait retenu)";
+    label en unofficial "household receiving personal housing aid (R. 844-4 I; retained fact)";
+}
+
+pub relation forfait_logement_r844_3(d: Demandeur, mois: Date, montant: Money) kind empirical {
+    key(d, mois);
+    label fr official "forfait R. 844-3 1°/2°/3° net des personnes hors APL (R. 844-4 I; fait retenu, convergence R. 844-3 pendante)";
+    label en unofficial "R. 844-3 1°/2°/3° flat amount net of non-APL persons (R. 844-4 I; retained fact, R. 844-3 convergence pending)";
+}
+
+pub relation cf_majore_foyer(d: Demandeur, mois: Date) kind empirical {
+    key(d, mois);
+    label fr official "foyer bénéficiaire du complément familial majoré L. 522-3 (R. 844-4 II; fait retenu)";
+    label en unofficial "household receiving the increased family supplement (R. 844-4 II; retained fact)";
+}
+
+pub relation bmaf_retenue(mois: Date, montant: Money) kind empirical {
+    key(mois);
+    label fr official "BMAF L. 551-1 en euros (R. 844-4; fait retenu, passerelle revalorisation)";
+    label en unofficial "BMAF euros (R. 844-4; retained fact, revalorisation bridge)";
+}
+
+pub relation nb_enfants_asf(d: Demandeur, mois: Date, slot: Integer, n: Integer) kind empirical {
+    key(d, mois, slot);
+    label fr official "nombre d'enfants ASF L. 523-3, rubrique 1 ou 2 (R. 844-4 III; fait retenu)";
+    label en unofficial "ASF child count, L. 523-3 slot 1 or 2 (R. 844-4 III; retained fact)";
+}
+
+pub relation forfait_apl(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "forfait logement APL dans les ressources (R. 844-4 I)";
+    label en unofficial "APL housing flat amount in resources (R. 844-4 I)";
+}
+
+pub relation forfait_cf_majore(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "forfait complément familial majoré 41,65 % BMAF (R. 844-4 II)";
+    label en unofficial "increased-supplement flat amount 41.65% BMAF (R. 844-4 II)";
+}
+
+pub relation forfait_asf(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "forfait ASF 30 % / 22,5 % BMAF par enfant (R. 844-4 III)";
+    label en unofficial "ASF flat amount 30% / 22.5% BMAF per child (R. 844-4 III)";
+}
+
+@source(
+    CSS_R844_4_ED2021_01_01,
+    CSS_R844_4_ED2021_03_25,
+    CSS_R844_4_ED2021_06_01,
+    CSS_R844_4_ED2022_03_21,
+    CSS_R844_4_ED2023_12_31,
+    CSS_R844_4_ED2024_01_01,
+    CSS_R844_4_ED2024_07_01,
+    CSS_R844_4_ED2025_01_01,
+    CSS_R844_4_ED2025_02_28,
+    CSS_R844_4_ED2025_03_31,
+    CSS_R844_4_ED2026_04_01,
+    CSS_R844_4_ED2026_06_27)
+rule ForfaitAPL(d: Demandeur, mois: Date, f: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "I: APL incluses au forfait R. 844-3 (R. 844-4)";
+    label en unofficial "I: APL included at the R. 844-3 flat amount (R. 844-4)";
+    when apl_foyer(d, mois) and forfait_logement_r844_3(d, mois, f);
+    then forfait_apl(d, mois, f);
+}
+
+@source(
+    CSS_R844_4_ED2021_01_01,
+    CSS_R844_4_ED2021_03_25,
+    CSS_R844_4_ED2021_06_01,
+    CSS_R844_4_ED2022_03_21,
+    CSS_R844_4_ED2023_12_31,
+    CSS_R844_4_ED2024_01_01,
+    CSS_R844_4_ED2024_07_01,
+    CSS_R844_4_ED2025_01_01,
+    CSS_R844_4_ED2025_02_28,
+    CSS_R844_4_ED2025_03_31,
+    CSS_R844_4_ED2026_04_01,
+    CSS_R844_4_ED2026_06_27)
+rule ForfaitCFMajore(d: Demandeur, mois: Date, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "II: CF majoré à 41,65 % BMAF (R. 844-4)";
+    label en unofficial "II: increased supplement at 41.65% BMAF (R. 844-4)";
+    when cf_majore_foyer(d, mois) and bmaf_retenue(mois, bmaf);
+    then forfait_cf_majore(d, mois, bmaf * 0.4165);
+}
+
+@source(
+    CSS_R844_4_ED2021_01_01,
+    CSS_R844_4_ED2021_03_25,
+    CSS_R844_4_ED2021_06_01,
+    CSS_R844_4_ED2022_03_21,
+    CSS_R844_4_ED2023_12_31,
+    CSS_R844_4_ED2024_01_01,
+    CSS_R844_4_ED2024_07_01,
+    CSS_R844_4_ED2025_01_01,
+    CSS_R844_4_ED2025_02_28,
+    CSS_R844_4_ED2025_03_31,
+    CSS_R844_4_ED2026_04_01,
+    CSS_R844_4_ED2026_06_27)
+rule ForfaitASF(d: Demandeur, mois: Date, n1: Integer, n2: Integer, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "III: ASF 30 % / 22,5 % BMAF par enfant (R. 844-4)";
+    label en unofficial "III: ASF 30% / 22.5% BMAF per child (R. 844-4)";
+    when nb_enfants_asf(d, mois, 1, n1) and nb_enfants_asf(d, mois, 2, n2)
+        and bmaf_retenue(mois, bmaf);
+    then forfait_asf(d, mois, bmaf * (0.30 * n1 + 0.225 * n2));
+}
+
+pub enum CategorieExclue {
+    label fr official "prestation exclue des ressources R. 844-5 (18°/21° dédoublés par rédaction)";
+    label en unofficial "resource-excluded benefit R. 844-5 (18°/21° split by wording)";
+    ITEM_01_PRIME_NAISSANCE_ADOPTION,
+    ITEM_02_ALLOCATION_BASE_L8427,
+    ITEM_03_MAJO_AGE_AF_FORFAITAIRE,
+    ITEM_04_ARS,
+    ITEM_05_CMG,
+    ITEM_06_AEEH,
+    ITEM_07_AJPP,
+    ITEM_08_PRIMES_DEMENAGEMENT,
+    ITEM_09_PCH,
+    ITEM_10_ACTP_TIERS,
+    ITEM_11_PRESTATIONS_NATURE,
+    ITEM_12_INDEMNITES_REMPLACEMENT,
+    ITEM_13_PRIME_REEDUCATION_PRET_HONNEUR,
+    ITEM_14_AIDES_SECOURS,
+    ITEM_15_PRIME_RETOUR_EMPLOI,
+    ITEM_16_BOURSES_DIVERSITE,
+    ITEM_17_FRAIS_FUNERAIRES,
+    ITEM_18_CAPITAL_DECES,
+    ITEM_18BIS_ARE_CONJOINT_DECES,
+    ITEM_19_FONDS_SOLIDARITE_ACAFN,
+    ITEM_20_AIDE_CONJOINTS_SUPPLETIFS,
+    ITEM_21_1999_RECONNAISSANCE,
+    ITEM_21_2005_RECONNAISSANCE,
+    ITEM_21BIS_ALLOCATION_VIAGERE,
+    ITEM_22_ORPHELINS_ANTISEMITISME,
+    ITEM_23_ORPHELINS_BARBARIE,
+    ITEM_24_RSO,
+    ITEM_25_RSA,
+    ITEM_26_GRATIFICATIONS_STAGES,
+    ITEM_27_DEDOMMAGEMENT_AIDANT,
+    ITEM_28_ALLOCATION_L168_8,
+    ITEM_29_ALLOCATION_DECES_ENFANT,
+    ITEM_30_INDEMNITES_ENTRETIEN_ENFANT,
+    ITEM_31_APA,
+    ITEM_32_MAJO_TIERCE_PERSONNE_L355_1,
+    ITEM_33_PCRTP_L434_2,
+    ITEM_34_MAJO_TIERCE_PERSONNE_PENSIONS,
+    ITEM_35_MAJO_D712_15,
+    ITEM_36_MAJO_INVALIDITE_MILITAIRE,
+    ITEM_37_MAJO_INVALIDITE_INDEPENDANTS,
+    ITEM_38_AJAP,
+    ITEM_39_AIDE_VICTIMES_VIOLENCES,
+    AUTRE_PRESTATION
+}
+
+pub relation prestation_declaree(d: Demandeur, mois: Date, cat: CategorieExclue, montant: Money) kind empirical {
+    key(d, mois, cat);
+    label fr official "prestation déclarée à la rubrique R. 844-5 (faits qualifiants compris; fait retenu)";
+    label en unofficial "benefit declared under an R. 844-5 item (qualifying facts included; retained fact)";
+}
+
+pub relation prestation_exclue(d: Demandeur, mois: Date, cat: CategorieExclue, montant: Money) kind institutional {
+    key(d, mois, cat);
+    label fr official "prestation exclue des ressources (R. 844-5)";
+    label en unofficial "resource-excluded benefit (R. 844-5)";
+}
+
+pub relation allocation_base_l8427_jeune(d: Demandeur, mois: Date) kind empirical {
+    key(d, mois);
+    label fr official "allocation de base en situation L. 842-7, enfant de moins de trois mois (R. 844-5 2°; fait retenu)";
+    label en unofficial "base allowance in an L. 842-7 situation, child under three months (R. 844-5 2°; retained fact)";
+}
+
+pub relation tiers_hors_foyer_remunere(d: Demandeur, mois: Date) kind empirical {
+    key(d, mois);
+    label fr official "PCH/ACTP servant à rémunérer un tiers hors foyer (R. 844-5 9°/10°; fait retenu)";
+    label en unofficial "PCH/ACTP paying a non-household third party (R. 844-5 9°/10°; retained fact)";
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+pub external judgment relation aide_secours_14(d: Demandeur, mois: Date) {
+    authority Organisme;
+    label fr official "aide/secours sans caractère régulier ou affecté à l'insertion (R. 844-5 14°; appréciation de l'organisme)";
+    label en unofficial "irregular or insertion-purposed aid (R. 844-5 14°; organ assessment)";
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu01(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "1° prime naissance/adoption L. 531-2 (R. 844-5)";
+    label en unofficial "1° birth/adoption grant (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_01_PRIME_NAISSANCE_ADOPTION, m);
+    then prestation_exclue(d, mois, ITEM_01_PRIME_NAISSANCE_ADOPTION, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu02(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "2° allocation de base L. 842-7, enfant de moins de trois mois (R. 844-5)";
+    label en unofficial "2° base allowance, L. 842-7 situation, young child (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_02_ALLOCATION_BASE_L8427, m)
+        and allocation_base_l8427_jeune(d, mois);
+    then prestation_exclue(d, mois, ITEM_02_ALLOCATION_BASE_L8427, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu03(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "3° majoration âge AF / allocation forfaitaire L. 521-1 (R. 844-5)";
+    label en unofficial "3° age supplement / flat allowance (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_03_MAJO_AGE_AF_FORFAITAIRE, m);
+    then prestation_exclue(d, mois, ITEM_03_MAJO_AGE_AF_FORFAITAIRE, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu04(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "4° allocation de rentrée scolaire (R. 844-5)";
+    label en unofficial "4° back-to-school allowance (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_04_ARS, m);
+    then prestation_exclue(d, mois, ITEM_04_ARS, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu05(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "5° CMG L. 531-5..9 (R. 844-5)";
+    label en unofficial "5° childcare supplement (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_05_CMG, m);
+    then prestation_exclue(d, mois, ITEM_05_CMG, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu06(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "6° AEEH L. 541-1/4 (R. 844-5)";
+    label en unofficial "6° disabled-child allowance (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_06_AEEH, m);
+    then prestation_exclue(d, mois, ITEM_06_AEEH, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu07(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "7° AJPP L. 544-1 (R. 844-5)";
+    label en unofficial "7° parental-presence allowance (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_07_AJPP, m);
+    then prestation_exclue(d, mois, ITEM_07_AJPP, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu08(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "8° primes de déménagement CCH L. 821-4 (R. 844-5)";
+    label en unofficial "8° moving grants (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_08_PRIMES_DEMENAGEMENT, m);
+    then prestation_exclue(d, mois, ITEM_08_PRIMES_DEMENAGEMENT, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu09(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "9° PCH CASF L. 245-1/3 (R. 844-5)";
+    label en unofficial "9° disability compensation benefit (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_09_PCH, m);
+    then prestation_exclue(d, mois, ITEM_09_PCH, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu10(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "10° ACTP rémunérant un tiers hors foyer (R. 844-5)";
+    label en unofficial "10° third-party allowance paying outside the household (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_10_ACTP_TIERS, m)
+        and tiers_hors_foyer_remunere(d, mois);
+    then prestation_exclue(d, mois, ITEM_10_ACTP_TIERS, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu11(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "11° prestations en nature maladie/maternité/AT-MP/AME (R. 844-5)";
+    label en unofficial "11° in-kind health benefits (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_11_PRESTATIONS_NATURE, m);
+    then prestation_exclue(d, mois, ITEM_11_PRESTATIONS_NATURE, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu12(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "12° indemnités de remplacement L. 663-1/2, CRPM L. 732-10..12-2 (R. 844-5)";
+    label en unofficial "12° replacement allowances (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_12_INDEMNITES_REMPLACEMENT, m);
+    then prestation_exclue(d, mois, ITEM_12_INDEMNITES_REMPLACEMENT, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu13(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "13° prime de rééducation, prêt d'honneur R. 432-10 (R. 844-5)";
+    label en unofficial "13° rehabilitation grant, honour loan (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_13_PRIME_REEDUCATION_PRET_HONNEUR, m);
+    then prestation_exclue(d, mois, ITEM_13_PRIME_REEDUCATION_PRET_HONNEUR, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu14(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "14° aides/secours irréguliers ou d'insertion, appréciation organe (R. 844-5)";
+    label en unofficial "14° irregular or insertion aid, organ assessment (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_14_AIDES_SECOURS, m)
+        and aide_secours_14(d, mois);
+    then prestation_exclue(d, mois, ITEM_14_AIDES_SECOURS, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu15(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "15° prime/APRE retour à l'emploi, allocation L. 5131-6 C. trav. (R. 844-5)";
+    label en unofficial "15° return-to-work grants (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_15_PRIME_RETOUR_EMPLOI, m);
+    then prestation_exclue(d, mois, ITEM_15_PRIME_RETOUR_EMPLOI, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu16(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "16° bourses d'études, allocation diversité fonction publique (R. 844-5)";
+    label en unofficial "16° study grants, civil-service diversity allowance (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_16_BOURSES_DIVERSITE, m);
+    then prestation_exclue(d, mois, ITEM_16_BOURSES_DIVERSITE, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu17(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "17° frais funéraires L. 435-1 (R. 844-5)";
+    label en unofficial "17° funeral costs (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_17_FRAIS_FUNERAIRES, m);
+    then prestation_exclue(d, mois, ITEM_17_FRAIS_FUNERAIRES, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu18(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "18° capital décès régime de sécurité sociale (R. 844-5)";
+    label en unofficial "18° social-security death benefit (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_18_CAPITAL_DECES, m);
+    then prestation_exclue(d, mois, ITEM_18_CAPITAL_DECES, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu18ARE(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "18° allocation conjoint de l'ARE, décret 2019-797 ann. A art. 36 (R. 844-5)";
+    label en unofficial "18° spouse allowance on ARE death (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_18BIS_ARE_CONJOINT_DECES, m);
+    then prestation_exclue(d, mois, ITEM_18BIS_ARE_CONJOINT_DECES, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu19(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "19° fonds de solidarité ACAFN, LF 1992 art. 125 (R. 844-5)";
+    label en unofficial "19° North-Africa veterans solidarity fund (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_19_FONDS_SOLIDARITE_ACAFN, m);
+    then prestation_exclue(d, mois, ITEM_19_FONDS_SOLIDARITE_ACAFN, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu20(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "20° aide conjoints supplétifs, loi 94-488 art. 10 (R. 844-5)";
+    label en unofficial "20° auxiliary-spouses aid (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_20_AIDE_CONJOINTS_SUPPLETIFS, m);
+    then prestation_exclue(d, mois, ITEM_20_AIDE_CONJOINTS_SUPPLETIFS, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01)
+rule Exclu21_1999(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, @2022-03-21);
+    label fr official "ancien 21° reconnaissance, loi 99-1173 art. 47 (R. 844-5)";
+    label en unofficial "old 21° recognition allowance 1999 (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_21_1999_RECONNAISSANCE, m);
+    then prestation_exclue(d, mois, ITEM_21_1999_RECONNAISSANCE, m);
+}
+
+@source(
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu21_2005(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2022-03-21, infinity);
+    label fr official "21° reconnaissance, loi 2005-158 art. 6 (R. 844-5)";
+    label en unofficial "21° recognition allowance 2005 (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_21_2005_RECONNAISSANCE, m);
+    then prestation_exclue(d, mois, ITEM_21_2005_RECONNAISSANCE, m);
+}
+
+@source(
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu21bis(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2022-03-21, infinity);
+    label fr official "21°bis allocation viagère, LF 2016 art. 133 (R. 844-5)";
+    label en unofficial "21°bis life annuity (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_21BIS_ALLOCATION_VIAGERE, m);
+    then prestation_exclue(d, mois, ITEM_21BIS_ALLOCATION_VIAGERE, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu22(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "22° orphelins persécutions antisémites, décret 2000-657 (R. 844-5)";
+    label en unofficial "22° orphans reparation 2000 (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_22_ORPHELINS_ANTISEMITISME, m);
+    then prestation_exclue(d, mois, ITEM_22_ORPHELINS_ANTISEMITISME, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu23(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "23° orphelins barbarie, décret 2004-751 (R. 844-5)";
+    label en unofficial "23° orphans reparation 2004 (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_23_ORPHELINS_BARBARIE, m);
+    then prestation_exclue(d, mois, ITEM_23_ORPHELINS_BARBARIE, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu24(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "24° revenu de solidarité outre-mer CASF L. 522-14 (R. 844-5)";
+    label en unofficial "24° overseas solidarity income (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_24_RSO, m);
+    then prestation_exclue(d, mois, ITEM_24_RSO, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu25(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "25° RSA CASF L. 262-1 (R. 844-5)";
+    label en unofficial "25° RSA (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_25_RSA, m);
+    then prestation_exclue(d, mois, ITEM_25_RSA, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu26(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "26° gratifications de stages C. éduc. L. 124-1 (R. 844-5)";
+    label en unofficial "26° internship grants (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_26_GRATIFICATIONS_STAGES, m);
+    then prestation_exclue(d, mois, ITEM_26_GRATIFICATIONS_STAGES, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu27(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "27° dédommagement aidant familial CASF R. 245-7 (R. 844-5)";
+    label en unofficial "27° family-carer compensation (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_27_DEDOMMAGEMENT_AIDANT, m);
+    then prestation_exclue(d, mois, ITEM_27_DEDOMMAGEMENT_AIDANT, m);
+}
+
+@source(
+    CSS_R844_5_W2020_ED2021_01_01,
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu28(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "28° allocation L. 168-8 (R. 844-5)";
+    label en unofficial "28° L. 168-8 allowance (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_28_ALLOCATION_L168_8, m);
+    then prestation_exclue(d, mois, ITEM_28_ALLOCATION_L168_8, m);
+}
+
+@source(
+    CSS_R844_5_W2021_ED2021_03_25,
+    CSS_R844_5_W2021_ED2021_06_01,
+    CSS_R844_5_W2022_ED2022_03_21,
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu29(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "29° allocation décès d'enfant L. 545-1 (R. 844-5)";
+    label en unofficial "29° child-death allowance (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_29_ALLOCATION_DECES_ENFANT, m);
+    then prestation_exclue(d, mois, ITEM_29_ALLOCATION_DECES_ENFANT, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu30(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "30° indemnités entretien enfant CASF L. 423-4 (R. 844-5)";
+    label en unofficial "30° child-maintenance allowances (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_30_INDEMNITES_ENTRETIEN_ENFANT, m);
+    then prestation_exclue(d, mois, ITEM_30_INDEMNITES_ENTRETIEN_ENFANT, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu31(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "31° APA CASF L. 232-1 (R. 844-5)";
+    label en unofficial "31° autonomy allowance (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_31_APA, m);
+    then prestation_exclue(d, mois, ITEM_31_APA, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu32(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "32° majoration tierce personne L. 355-1 (R. 844-5)";
+    label en unofficial "32° third-party care supplement (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_32_MAJO_TIERCE_PERSONNE_L355_1, m);
+    then prestation_exclue(d, mois, ITEM_32_MAJO_TIERCE_PERSONNE_L355_1, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu33(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "33° PCRTP L. 434-2 al. 3 (R. 844-5)";
+    label en unofficial "33° third-party top-up (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_33_PCRTP_L434_2, m);
+    then prestation_exclue(d, mois, ITEM_33_PCRTP_L434_2, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu34(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "34° majoration tierce personne pensions (R. 844-5)";
+    label en unofficial "34° pension third-party supplement (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_34_MAJO_TIERCE_PERSONNE_PENSIONS, m);
+    then prestation_exclue(d, mois, ITEM_34_MAJO_TIERCE_PERSONNE_PENSIONS, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu35(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "35° majoration D. 712-15 / décret 60-58 (R. 844-5)";
+    label en unofficial "35° local-staff supplement (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_35_MAJO_D712_15, m);
+    then prestation_exclue(d, mois, ITEM_35_MAJO_D712_15, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu36(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "36° majoration invalidité militaire (R. 844-5)";
+    label en unofficial "36° military-disability supplement (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_36_MAJO_INVALIDITE_MILITAIRE, m);
+    then prestation_exclue(d, mois, ITEM_36_MAJO_INVALIDITE_MILITAIRE, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu37(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "37° majoration invalidité indépendants (R. 844-5)";
+    label en unofficial "37° self-employed disability supplement (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_37_MAJO_INVALIDITE_INDEPENDANTS, m);
+    then prestation_exclue(d, mois, ITEM_37_MAJO_INVALIDITE_INDEPENDANTS, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu38(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "38° AJAP L. 168-1 (R. 844-5)";
+    label en unofficial "38° end-of-life accompaniment allowance (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_38_AJAP, m);
+    then prestation_exclue(d, mois, ITEM_38_AJAP, m);
+}
+
+@source(
+    CSS_R844_5_ED2023_12_31,
+    CSS_R844_5_ED2024_01_01,
+    CSS_R844_5_ED2024_07_01,
+    CSS_R844_5_ED2025_01_01,
+    CSS_R844_5_ED2025_02_28,
+    CSS_R844_5_ED2025_03_31,
+    CSS_R844_5_ED2026_04_01,
+    CSS_R844_5_ED2026_06_27)
+rule Exclu39(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "39° aide victimes violences conjugales CASF L. 214-9 (R. 844-5)";
+    label en unofficial "39° domestic-violence emergency aid (R. 844-5)";
+    when prestation_declaree(d, mois, ITEM_39_AIDE_VICTIMES_VIOLENCES, m);
+    then prestation_exclue(d, mois, ITEM_39_AIDE_VICTIMES_VIOLENCES, m);
+}
+
+pub relation benefices_agri_n_2(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices agricoles de l'avant-dernière année (R. 845-1; fait retenu)";
+    label en unofficial "farm profits of year N-2 (R. 845-1; retained fact)";
+}
+
+pub relation n_2_agri_connu(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices agricoles N-2 connus (R. 845-1; fait retenu)";
+    label en unofficial "N-2 farm profits known (R. 845-1; retained fact)";
+}
+
+pub relation benefices_agri_n_1(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices agricoles de la dernière année (R. 845-1; fait retenu)";
+    label en unofficial "farm profits of year N-1 (R. 845-1; retained fact)";
+}
+
+pub relation annee_agri_complete(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices agricoles N-2 d'une année complète d'activité (R. 845-1; fait retenu)";
+    label en unofficial "N-2 farm profits of a full activity year (R. 845-1; retained fact)";
+}
+
+pub relation annee_agri_incomplete(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices agricoles ne correspondant pas à une année complète d'activité (R. 845-1; fait retenu)";
+    label en unofficial "farm profits not matching a full activity year (R. 845-1; retained fact)";
+}
+
+pub relation n_1_agri_connu(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices agricoles N-1 connus (R. 845-1; fait retenu)";
+    label en unofficial "N-1 farm profits known (R. 845-1; retained fact)";
+}
+
+pub relation annee_agri_n_1_complete(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices agricoles N-1 d'une année complète d'activité (R. 845-1; fait retenu)";
+    label en unofficial "N-1 farm profits of a full activity year (R. 845-1; retained fact)";
+}
+
+pub relation base_n_1_agri(d: Demandeur, revue: Date) kind institutional {
+    key(d, revue);
+    label fr official "base N-1 applicable: dernière année connue et complète, primant N-2 (R. 845-1)";
+    label en unofficial "N-1 base applying: known full last year, overriding N-2 (R. 845-1)";
+}
+
+pub relation benefices_agri_non_imposes(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices agricoles non imposés (R. 845-1; fait retenu)";
+    label en unofficial "untaxed farm profits (R. 845-1; retained fact)";
+}
+
+pub relation recettes_agri_trimestre_precedent(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "total des recettes agricoles du trimestre précédant (R. 845-1; fait retenu)";
+    label en unofficial "farm receipts total of the preceding quarter (R. 845-1; retained fact)";
+}
+
+pub relation recettes_agri_m_4_m_2(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "total des recettes agricoles M-4..M-2 (R. 845-1; fait retenu)";
+    label en unofficial "farm receipts total M-4..M-2 (R. 845-1; retained fact)";
+}
+
+pub relation abattement_64bis(d: Demandeur, revue: Date, taux: Decimal) kind empirical {
+    key(d, revue);
+    label fr official "taux CGI 64 bis al. 2 (R. 845-1; fait retenu, passerelle CGI)";
+    label en unofficial "CGI 64bis rate (R. 845-1; retained fact, CGI bridge)";
+}
+
+pub relation demande_option_agri(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "demande du calcul trimestriel, en cours au réexamen (R. 845-1; fait retenu)";
+    label en unofficial "quarterly-computation request standing at review (R. 845-1; retained fact)";
+}
+
+pub relation recettes_agri_12_mois(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "recettes agricoles des douze derniers mois (R. 845-1; fait retenu)";
+    label en unofficial "farm receipts of the last twelve months (R. 845-1; retained fact)";
+}
+
+pub relation plafond_69_I(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "montant CGI 69-I applicable (R. 845-1; fait retenu, passerelle CGI)";
+    label en unofficial "applicable CGI 69-I amount (R. 845-1; retained fact, CGI bridge)";
+}
+
+pub relation recettes_agri_trimestre(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "recettes agricoles trimestrielles déclarées (R. 845-1; fait retenu)";
+    label en unofficial "declared quarterly farm receipts (R. 845-1; retained fact)";
+}
+
+pub relation demande_conjointe_rsa(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "demande conjointe RSA même mode de calcul (R. 845-1/2; fait retenu)";
+    label en unofficial "joint RSA request for the same computation (R. 845-1/2; retained fact)";
+}
+
+pub relation accord_president_cd(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "accord du président du conseil départemental, part RSA (R. 845-1/2; fait retenu)";
+    label en unofficial "departmental council president agreement, RSA part (R. 845-1/2; retained fact)";
+}
+
+pub relation revenu_agri(d: Demandeur, revue: Date, montant: Money) kind institutional {
+    key(d, revue);
+    label fr official "revenu professionnel agricole retenu (R. 845-1)";
+    label en unofficial "counted farm professional income (R. 845-1)";
+}
+
+pub relation option_rsa_conjointe(d: Demandeur, revue: Date) kind institutional {
+    key(d, revue);
+    label fr official "option trimestrielle accueillie pour le RSA (R. 845-1/2)";
+    label en unofficial "quarterly option granted for RSA (R. 845-1/2)";
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01,
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriBaseN2(d: Demandeur, revue: Date, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "agricole: douzième des bénéfices N-2, année complète, sauf base N-1 (R. 845-1)";
+    label en unofficial "farm: twelfth of N-2 profits, full year, unless N-1 base (R. 845-1)";
+    when n_2_agri_connu(d, revue) and benefices_agri_n_2(d, revue, b)
+        and annee_agri_complete(d, revue)
+        and not_known(base_n_1_agri(d, revue))
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_agri(d, revue, b / 12.0);
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01,
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriBaseN1Applicable(d: Demandeur, revue: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "agricole: base N-1 applicable, dernière année connue et complète (R. 845-1)";
+    label en unofficial "farm: N-1 base applying, known full last year (R. 845-1)";
+    when n_1_agri_connu(d, revue) and annee_agri_n_1_complete(d, revue);
+    then base_n_1_agri(d, revue);
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01,
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriBaseN1(d: Demandeur, revue: Date, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "agricole: douzième des bénéfices N-1, primant N-2 (R. 845-1)";
+    label en unofficial "farm: twelfth of N-1 profits, overriding N-2 (R. 845-1)";
+    when base_n_1_agri(d, revue) and benefices_agri_n_1(d, revue, b)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_agri(d, revue, b / 12.0);
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01)
+rule AgriFallbackAncienNonImposes(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, non imposés: tiers du trimestre moins abattement 64bis (R. 845-1; porte NOTA)";
+    label en unofficial "old, untaxed: quarter third minus 64bis abatement (R. 845-1; NOTA gate)";
+    when benefices_agri_non_imposes(d, revue)
+        and dispositions_anciennes_2025(d, revue)
+        and recettes_agri_trimestre_precedent(d, revue, r)
+        and abattement_64bis(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_agri(d, revue, (r / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01)
+rule AgriFallbackAncienIncomplet(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, année incomplète: tiers du trimestre moins abattement (R. 845-1; porte NOTA)";
+    label en unofficial "old, incomplete year: quarter third minus abatement (R. 845-1; NOTA gate)";
+    when annee_agri_incomplete(d, revue)
+        and not_known(annee_agri_complete(d, revue))
+        and dispositions_anciennes_2025(d, revue)
+        and recettes_agri_trimestre_precedent(d, revue, r)
+        and abattement_64bis(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_agri(d, revue, (r / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriFallbackNouveauNonImposes(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "non imposés: tiers M-4..M-2 moins abattement 64bis (R. 845-1; porte NOTA)";
+    label en unofficial "untaxed: M-4..M-2 third minus 64bis abatement (R. 845-1; NOTA gate)";
+    when benefices_agri_non_imposes(d, revue)
+        and dispositions_nouvelles_2025(d, revue)
+        and recettes_agri_m_4_m_2(d, revue, r)
+        and abattement_64bis(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_agri(d, revue, (r / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriFallbackNouveauIncomplet(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "année incomplète: tiers M-4..M-2 moins abattement (R. 845-1; porte NOTA)";
+    label en unofficial "incomplete year: M-4..M-2 third minus abatement (R. 845-1; NOTA gate)";
+    when annee_agri_incomplete(d, revue)
+        and not_known(annee_agri_complete(d, revue))
+        and dispositions_nouvelles_2025(d, revue)
+        and recettes_agri_m_4_m_2(d, revue, r)
+        and abattement_64bis(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_agri(d, revue, (r / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01)
+rule AgriOptionAncienne(d: Demandeur, revue: Date, r12: Money, p: Money, rt: Money, rp: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancienne option: plafonds 69-I, calcul trimestre précédent (R. 845-1; porte NOTA)";
+    label en unofficial "old option: 69-I ceilings, preceding-quarter computation (R. 845-1; NOTA gate)";
+    when demande_option_agri(d, revue) and recettes_agri_12_mois(d, revue, r12)
+        and dispositions_anciennes_2025(d, revue)
+        and plafond_69_I(d, revue, p) and r12 <= p
+        and recettes_agri_trimestre(d, revue, rt) and rt <= p / 4.0
+        and recettes_agri_trimestre_precedent(d, revue, rp)
+        and abattement_64bis(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_agri(d, revue, (rp / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriOptionNouvelle(d: Demandeur, revue: Date, r12: Money, p: Money, rt: Money, rp: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "option: plafonds 69-I, calcul M-4..M-2 (R. 845-1; porte NOTA)";
+    label en unofficial "option: 69-I ceilings, M-4..M-2 computation (R. 845-1; NOTA gate)";
+    when demande_option_agri(d, revue) and recettes_agri_12_mois(d, revue, r12)
+        and dispositions_nouvelles_2025(d, revue)
+        and plafond_69_I(d, revue, p) and r12 <= p
+        and recettes_agri_trimestre(d, revue, rt) and rt <= p / 4.0
+        and recettes_agri_m_4_m_2(d, revue, rp)
+        and abattement_64bis(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_agri(d, revue, (rp / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01,
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriOptionRSA(d: Demandeur, revue: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande RSA conjointe accueillie avec l'accord du président CD (R. 845-1)";
+    label en unofficial "joint RSA request granted with council president agreement (R. 845-1)";
+    when demande_option_agri(d, revue) and demande_conjointe_rsa(d, revue)
+        and accord_president_cd(d, revue);
+    then option_rsa_conjointe(d, revue);
+}
+
+pub relation benefices_bic_n_2(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices BIC/BNC de l'avant-dernière année (R. 845-2; fait retenu)";
+    label en unofficial "BIC/BNC profits of year N-2 (R. 845-2; retained fact)";
+}
+
+pub relation n_2_bic_connu(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices BIC/BNC N-2 connus (R. 845-2; fait retenu)";
+    label en unofficial "N-2 BIC/BNC profits known (R. 845-2; retained fact)";
+}
+
+pub relation benefices_bic_n_1(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices BIC/BNC de la dernière année (R. 845-2; fait retenu)";
+    label en unofficial "BIC/BNC profits of year N-1 (R. 845-2; retained fact)";
+}
+
+pub relation annee_bic_complete(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices BIC/BNC N-2 d'une année complète d'activité (R. 845-2; fait retenu)";
+    label en unofficial "N-2 BIC/BNC profits of a full activity year (R. 845-2; retained fact)";
+}
+
+pub relation annee_bic_incomplete(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices BIC/BNC ne correspondant pas à une année complète d'activité (R. 845-2; fait retenu)";
+    label en unofficial "BIC/BNC profits not matching a full activity year (R. 845-2; retained fact)";
+}
+
+pub relation n_1_bic_connu(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices BIC/BNC N-1 connus (R. 845-2; fait retenu)";
+    label en unofficial "N-1 BIC/BNC profits known (R. 845-2; retained fact)";
+}
+
+pub relation annee_bic_n_1_complete(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices BIC/BNC N-1 d'une année complète d'activité (R. 845-2; fait retenu)";
+    label en unofficial "N-1 BIC/BNC profits of a full activity year (R. 845-2; retained fact)";
+}
+
+pub relation base_n_1_bic(d: Demandeur, revue: Date) kind institutional {
+    key(d, revue);
+    label fr official "base N-1 applicable: dernière année connue et complète, primant N-2 (R. 845-2)";
+    label en unofficial "N-1 base applying: known full last year, overriding N-2 (R. 845-2)";
+}
+
+pub relation benefices_bic_non_imposes(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "bénéfices BIC/BNC non imposés (R. 845-2; fait retenu)";
+    label en unofficial "untaxed BIC/BNC profits (R. 845-2; retained fact)";
+}
+
+pub relation indep_special_bic(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "indépendant L. 613-7/L. 642-4-2/L. 382-3/L. 382-15 hors TS (R. 845-2; fait retenu)";
+    label en unofficial "special independent worker (R. 845-2; retained fact)";
+}
+
+pub relation ca_bic_trimestre_precedent(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "chiffre d'affaires/recettes BIC du trimestre précédant (R. 845-2; fait retenu)";
+    label en unofficial "BIC turnover/receipts of the preceding quarter (R. 845-2; retained fact)";
+}
+
+pub relation ca_bic_m_4_m_2(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "chiffre d'affaires/recettes BIC M-4..M-2 (R. 845-2; fait retenu)";
+    label en unofficial "BIC turnover/receipts M-4..M-2 (R. 845-2; retained fact)";
+}
+
+pub relation abattement_50_0_102ter(d: Demandeur, revue: Date, taux: Decimal) kind empirical {
+    key(d, revue);
+    label fr official "taux CGI 50-0/102 ter par catégorie (R. 845-2; fait retenu, passerelle CGI)";
+    label en unofficial "CGI 50-0/102ter rate per category (R. 845-2; retained fact, CGI bridge)";
+}
+
+pub relation demande_option_bic(d: Demandeur, revue: Date) kind empirical {
+    key(d, revue);
+    label fr official "demande du calcul trimestriel BIC, en cours au réexamen (R. 845-2; fait retenu)";
+    label en unofficial "BIC quarterly-computation request standing at review (R. 845-2; retained fact)";
+}
+
+pub relation ca_bic_12_mois(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "chiffre d'affaires BIC des douze derniers mois (R. 845-2; fait retenu)";
+    label en unofficial "BIC turnover of the last twelve months (R. 845-2; retained fact)";
+}
+
+pub relation plafond_50_0_102ter(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "montant CGI 50-0/102 ter applicable par nature (R. 845-2; fait retenu, passerelle CGI)";
+    label en unofficial "applicable CGI 50-0/102ter amount (R. 845-2; retained fact, CGI bridge)";
+}
+
+pub relation ca_bic_trimestre(d: Demandeur, revue: Date, montant: Money) kind empirical {
+    key(d, revue);
+    label fr official "chiffre d'affaires BIC trimestriel déclaré (R. 845-2; fait retenu)";
+    label en unofficial "declared quarterly BIC turnover (R. 845-2; retained fact)";
+}
+
+pub relation revenu_bic(d: Demandeur, revue: Date, montant: Money) kind institutional {
+    key(d, revue);
+    label fr official "revenu professionnel BIC/BNC retenu (R. 845-2)";
+    label en unofficial "counted BIC/BNC professional income (R. 845-2)";
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01,
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicBaseN2(d: Demandeur, revue: Date, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "BIC: douzième des bénéfices N-2, année complète, sauf base N-1 (R. 845-2)";
+    label en unofficial "BIC: twelfth of N-2 profits, full year, unless N-1 base (R. 845-2)";
+    when n_2_bic_connu(d, revue) and benefices_bic_n_2(d, revue, b)
+        and annee_bic_complete(d, revue)
+        and not_known(base_n_1_bic(d, revue))
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_bic(d, revue, b / 12.0);
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01,
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicBaseN1Applicable(d: Demandeur, revue: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "BIC: base N-1 applicable, dernière année connue et complète (R. 845-2)";
+    label en unofficial "BIC: N-1 base applying, known full last year (R. 845-2)";
+    when n_1_bic_connu(d, revue) and annee_bic_n_1_complete(d, revue);
+    then base_n_1_bic(d, revue);
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01,
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicBaseN1(d: Demandeur, revue: Date, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "BIC: douzième des bénéfices N-1, primant N-2 (R. 845-2)";
+    label en unofficial "BIC: twelfth of N-1 profits, overriding N-2 (R. 845-2)";
+    when base_n_1_bic(d, revue) and benefices_bic_n_1(d, revue, b)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_bic(d, revue, b / 12.0);
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01)
+rule BicFallbackAncienNonImposes(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, non imposés: tiers du trimestre moins abattement (R. 845-2; porte NOTA)";
+    label en unofficial "old, untaxed: quarter third minus abatement (R. 845-2; NOTA gate)";
+    when benefices_bic_non_imposes(d, revue)
+        and dispositions_anciennes_2025(d, revue)
+        and ca_bic_trimestre_precedent(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_bic(d, revue, (r / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01)
+rule BicFallbackAncienIncomplet(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, année incomplète: tiers du trimestre moins abattement (R. 845-2; porte NOTA)";
+    label en unofficial "old, incomplete year: quarter third minus abatement (R. 845-2; NOTA gate)";
+    when annee_bic_incomplete(d, revue)
+        and not_known(annee_bic_complete(d, revue))
+        and dispositions_anciennes_2025(d, revue)
+        and ca_bic_trimestre_precedent(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_bic(d, revue, (r / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01)
+rule BicFallbackAncienSpecial(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, indépendant spécial: tiers du trimestre moins abattement (R. 845-2; porte NOTA)";
+    label en unofficial "old, special independent: quarter third minus abatement (R. 845-2; NOTA gate)";
+    when indep_special_bic(d, revue)
+        and dispositions_anciennes_2025(d, revue)
+        and ca_bic_trimestre_precedent(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_bic(d, revue, (r / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicFallbackNouveauNonImposes(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "non imposés: tiers M-4..M-2 moins abattement (R. 845-2; porte NOTA)";
+    label en unofficial "untaxed: M-4..M-2 third minus abatement (R. 845-2; NOTA gate)";
+    when benefices_bic_non_imposes(d, revue)
+        and dispositions_nouvelles_2025(d, revue)
+        and ca_bic_m_4_m_2(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_bic(d, revue, (r / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicFallbackNouveauIncomplet(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "année incomplète: tiers M-4..M-2 moins abattement (R. 845-2; porte NOTA)";
+    label en unofficial "incomplete year: M-4..M-2 third minus abatement (R. 845-2; NOTA gate)";
+    when annee_bic_incomplete(d, revue)
+        and not_known(annee_bic_complete(d, revue))
+        and dispositions_nouvelles_2025(d, revue)
+        and ca_bic_m_4_m_2(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_bic(d, revue, (r / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicFallbackNouveauSpecial(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "indépendant spécial: tiers M-4..M-2 moins abattement (R. 845-2; porte NOTA)";
+    label en unofficial "special independent: M-4..M-2 third minus abatement (R. 845-2; NOTA gate)";
+    when indep_special_bic(d, revue)
+        and dispositions_nouvelles_2025(d, revue)
+        and ca_bic_m_4_m_2(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_bic(d, revue, (r / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01)
+rule BicOptionAncienne(d: Demandeur, revue: Date, c12: Money, p: Money, ct: Money, cp: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancienne option BIC: plafonds 50-0/102ter, calcul trimestre précédent (R. 845-2; porte NOTA)";
+    label en unofficial "old BIC option: 50-0/102ter ceilings, preceding-quarter computation (R. 845-2; NOTA gate)";
+    when demande_option_bic(d, revue) and ca_bic_12_mois(d, revue, c12)
+        and dispositions_anciennes_2025(d, revue)
+        and plafond_50_0_102ter(d, revue, p) and c12 <= p
+        and ca_bic_trimestre(d, revue, ct) and ct <= p / 4.0
+        and ca_bic_trimestre_precedent(d, revue, cp)
+        and abattement_50_0_102ter(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_bic(d, revue, (cp / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicOptionNouvelle(d: Demandeur, revue: Date, c12: Money, p: Money, ct: Money, cp: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "option BIC: plafonds 50-0/102ter, calcul M-4..M-2 (R. 845-2; porte NOTA)";
+    label en unofficial "BIC option: 50-0/102ter ceilings, M-4..M-2 computation (R. 845-2; NOTA gate)";
+    when demande_option_bic(d, revue) and ca_bic_12_mois(d, revue, c12)
+        and dispositions_nouvelles_2025(d, revue)
+        and plafond_50_0_102ter(d, revue, p) and c12 <= p
+        and ca_bic_trimestre(d, revue, ct) and ct <= p / 4.0
+        and ca_bic_m_4_m_2(d, revue, cp)
+        and abattement_50_0_102ter(d, revue, t)
+        and not_known(lecture_ressources_fractions_arrondies());
+    then revenu_bic(d, revue, (cp / 3.0) * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01,
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicOptionRSA(d: Demandeur, revue: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande RSA conjointe BIC accueillie avec l'accord du président CD (R. 845-2)";
+    label en unofficial "joint BIC RSA request granted with council president agreement (R. 845-2)";
+    when demande_option_bic(d, revue) and demande_conjointe_rsa(d, revue)
+        and accord_president_cd(d, revue);
+    then option_rsa_conjointe(d, revue);
+}
+
+pub relation revenus_art62_avant_deduction(d: Demandeur, mois: Date, montant: Money) kind empirical {
+    key(d, mois);
+    label fr official "revenus CGI art. 62 avant déduction des frais professionnels (R. 845-3; fait retenu)";
+    label en unofficial "CGI art. 62 income before professional-expense deduction (R. 845-3; retained fact)";
+}
+
+pub relation revenus_art62_retenus(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "revenus CGI art. 62 retenus avant déduction (R. 845-3)";
+    label en unofficial "CGI art. 62 income counted before deduction (R. 845-3)";
+}
+
+@source(
+    CSS_R845_3_ED2021_01_01,
+    CSS_R845_3_ED2021_03_25,
+    CSS_R845_3_ED2021_06_01,
+    CSS_R845_3_ED2022_03_21,
+    CSS_R845_3_ED2023_12_31,
+    CSS_R845_3_ED2024_01_01,
+    CSS_R845_3_ED2024_07_01,
+    CSS_R845_3_ED2025_01_01,
+    CSS_R845_3_ED2025_02_28,
+    CSS_R845_3_ED2025_03_31,
+    CSS_R845_3_ED2026_04_01,
+    CSS_R845_3_ED2026_06_27)
+rule RevenusArt62(d: Demandeur, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "CGI art. 62: retenus avant déduction des frais (R. 845-3)";
+    label en unofficial "CGI art. 62: counted before expense deduction (R. 845-3)";
+    when revenus_art62_avant_deduction(d, mois, m);
+    then revenus_art62_retenus(d, mois, m);
+}
+
+// --- Reading D-82/D-84: twelfths and thirds of non-salaried income (R. 845-1/2) rounded to the centime ---
+//
+// R. 845-1 and R. 845-2 take a twelfth of the profits of year N-2 or N-1 and a third
+// of the receipts of the preceding quarter (before 2025-03-01) or of M-4..M-2 (from it),
+// the third reduced by the CGI abatement; the text states NO rounding. The base rules
+// divide exactly: a quotient that does not terminate makes the document NON_EXECUTABLE
+// (INEXACT_DIVISION, SPEC 50/18: rounding only by an explicit policy). The rounding is
+// not a text of the law but a READING (SPEC 152, owner decisions D-82 / D-84,
+// 08.10.2026), whose basis is the practice of the funds (CNAF): the twelfth and the
+// third, intermediate values, are rounded to the centime, HALF_UP. Outside any group:
+// unselected it executes nothing and changes no answer; selected
+// (context { interpretation fr.css.prime_activite::RessourcesFractionsArrondiesCentime; })
+// it replaces the exact division in the 18 rules below (4 twelfths: N-2 and N-1 of both
+// categories; 14 thirds: untaxed profits, incomplete year, special independent worker
+// and the quarterly option, old and new wording), and the marker silences the
+// exact-division rules (not_known), so revenu_agri / revenu_bic carry ONE value under
+// either choice. It rounds ALWAYS when selected, also where the exact quotient is longer
+// than two places (as the funds do). Only the division is rounded: the product with the
+// complement of the abatement rate (1 - t) stays exact, and the ceiling comparisons
+// (rt <= p / 4, a terminating quotient) are not divisions of this reading.
+
+pub relation lecture_ressources_fractions_arrondies() kind institutional {
+    label fr official "lecture retenue : les douzièmes et tiers de revenus non salariés (R. 845-1/2) sont arrondis au centime (D-82, D-84 ; marqueur de la lecture RessourcesFractionsArrondiesCentime)";
+    label en unofficial "selected reading: the twelfths and thirds of non-salaried income (R. 845-1/2) are rounded to the centime (D-82, D-84; marker of the reading RessourcesFractionsArrondiesCentime)";
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01,
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27,
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01,
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule LectureRessourcesFractionsArrondies() strict {
+    effective [@2021-01-01, infinity);
+    label fr official "lecture retenue : douzièmes et tiers des revenus non salariés (R. 845-1/2) arrondis au centime (marqueur)";
+    label en unofficial "selected reading: twelfths and thirds of non-salaried income (R. 845-1/2) rounded to the centime (marker)";
+    when true;
+    then lecture_ressources_fractions_arrondies();
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01,
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriBaseN2Arrondi(d: Demandeur, revue: Date, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "agricole: douzième des bénéfices N-2, année complète, sauf base N-1 (R. 845-1), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "farm: twelfth of N-2 profits, full year, unless N-1 base (R. 845-1), rounded to the centime (reading D-82/D-84)";
+    when n_2_agri_connu(d, revue) and benefices_agri_n_2(d, revue, b)
+        and annee_agri_complete(d, revue)
+        and not_known(base_n_1_agri(d, revue));
+    then revenu_agri(d, revue, div_round(b, 12.0, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01,
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriBaseN1Arrondi(d: Demandeur, revue: Date, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "agricole: douzième des bénéfices N-1, primant N-2 (R. 845-1), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "farm: twelfth of N-1 profits, overriding N-2 (R. 845-1), rounded to the centime (reading D-82/D-84)";
+    when base_n_1_agri(d, revue) and benefices_agri_n_1(d, revue, b);
+    then revenu_agri(d, revue, div_round(b, 12.0, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01)
+rule AgriFallbackAncienNonImposesArrondi(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, non imposés: tiers du trimestre moins abattement 64bis (R. 845-1; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "old, untaxed: quarter third minus 64bis abatement (R. 845-1; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when benefices_agri_non_imposes(d, revue)
+        and dispositions_anciennes_2025(d, revue)
+        and recettes_agri_trimestre_precedent(d, revue, r)
+        and abattement_64bis(d, revue, t);
+    then revenu_agri(d, revue, div_round(r, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01)
+rule AgriFallbackAncienIncompletArrondi(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, année incomplète: tiers du trimestre moins abattement (R. 845-1; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "old, incomplete year: quarter third minus abatement (R. 845-1; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when annee_agri_incomplete(d, revue)
+        and not_known(annee_agri_complete(d, revue))
+        and dispositions_anciennes_2025(d, revue)
+        and recettes_agri_trimestre_precedent(d, revue, r)
+        and abattement_64bis(d, revue, t);
+    then revenu_agri(d, revue, div_round(r, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriFallbackNouveauNonImposesArrondi(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "non imposés: tiers M-4..M-2 moins abattement 64bis (R. 845-1; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "untaxed: M-4..M-2 third minus 64bis abatement (R. 845-1; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when benefices_agri_non_imposes(d, revue)
+        and dispositions_nouvelles_2025(d, revue)
+        and recettes_agri_m_4_m_2(d, revue, r)
+        and abattement_64bis(d, revue, t);
+    then revenu_agri(d, revue, div_round(r, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriFallbackNouveauIncompletArrondi(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "année incomplète: tiers M-4..M-2 moins abattement (R. 845-1; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "incomplete year: M-4..M-2 third minus abatement (R. 845-1; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when annee_agri_incomplete(d, revue)
+        and not_known(annee_agri_complete(d, revue))
+        and dispositions_nouvelles_2025(d, revue)
+        and recettes_agri_m_4_m_2(d, revue, r)
+        and abattement_64bis(d, revue, t);
+    then revenu_agri(d, revue, div_round(r, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01)
+rule AgriOptionAncienneArrondi(d: Demandeur, revue: Date, r12: Money, p: Money, rt: Money, rp: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancienne option: plafonds 69-I, calcul trimestre précédent (R. 845-1; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "old option: 69-I ceilings, preceding-quarter computation (R. 845-1; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when demande_option_agri(d, revue) and recettes_agri_12_mois(d, revue, r12)
+        and dispositions_anciennes_2025(d, revue)
+        and plafond_69_I(d, revue, p) and r12 <= p
+        and recettes_agri_trimestre(d, revue, rt) and rt <= p / 4.0
+        and recettes_agri_trimestre_precedent(d, revue, rp)
+        and abattement_64bis(d, revue, t);
+    then revenu_agri(d, revue, div_round(rp, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27)
+rule AgriOptionNouvelleArrondi(d: Demandeur, revue: Date, r12: Money, p: Money, rt: Money, rp: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "option: plafonds 69-I, calcul M-4..M-2 (R. 845-1; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "option: 69-I ceilings, M-4..M-2 computation (R. 845-1; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when demande_option_agri(d, revue) and recettes_agri_12_mois(d, revue, r12)
+        and dispositions_nouvelles_2025(d, revue)
+        and plafond_69_I(d, revue, p) and r12 <= p
+        and recettes_agri_trimestre(d, revue, rt) and rt <= p / 4.0
+        and recettes_agri_m_4_m_2(d, revue, rp)
+        and abattement_64bis(d, revue, t);
+    then revenu_agri(d, revue, div_round(rp, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01,
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicBaseN2Arrondi(d: Demandeur, revue: Date, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "BIC: douzième des bénéfices N-2, année complète, sauf base N-1 (R. 845-2), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "BIC: twelfth of N-2 profits, full year, unless N-1 base (R. 845-2), rounded to the centime (reading D-82/D-84)";
+    when n_2_bic_connu(d, revue) and benefices_bic_n_2(d, revue, b)
+        and annee_bic_complete(d, revue)
+        and not_known(base_n_1_bic(d, revue));
+    then revenu_bic(d, revue, div_round(b, 12.0, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01,
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicBaseN1Arrondi(d: Demandeur, revue: Date, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "BIC: douzième des bénéfices N-1, primant N-2 (R. 845-2), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "BIC: twelfth of N-1 profits, overriding N-2 (R. 845-2), rounded to the centime (reading D-82/D-84)";
+    when base_n_1_bic(d, revue) and benefices_bic_n_1(d, revue, b);
+    then revenu_bic(d, revue, div_round(b, 12.0, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01)
+rule BicFallbackAncienNonImposesArrondi(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, non imposés: tiers du trimestre moins abattement (R. 845-2; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "old, untaxed: quarter third minus abatement (R. 845-2; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when benefices_bic_non_imposes(d, revue)
+        and dispositions_anciennes_2025(d, revue)
+        and ca_bic_trimestre_precedent(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t);
+    then revenu_bic(d, revue, div_round(r, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01)
+rule BicFallbackAncienIncompletArrondi(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, année incomplète: tiers du trimestre moins abattement (R. 845-2; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "old, incomplete year: quarter third minus abatement (R. 845-2; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when annee_bic_incomplete(d, revue)
+        and not_known(annee_bic_complete(d, revue))
+        and dispositions_anciennes_2025(d, revue)
+        and ca_bic_trimestre_precedent(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t);
+    then revenu_bic(d, revue, div_round(r, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01)
+rule BicFallbackAncienSpecialArrondi(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancien, indépendant spécial: tiers du trimestre moins abattement (R. 845-2; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "old, special independent: quarter third minus abatement (R. 845-2; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when indep_special_bic(d, revue)
+        and dispositions_anciennes_2025(d, revue)
+        and ca_bic_trimestre_precedent(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t);
+    then revenu_bic(d, revue, div_round(r, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicFallbackNouveauNonImposesArrondi(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "non imposés: tiers M-4..M-2 moins abattement (R. 845-2; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "untaxed: M-4..M-2 third minus abatement (R. 845-2; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when benefices_bic_non_imposes(d, revue)
+        and dispositions_nouvelles_2025(d, revue)
+        and ca_bic_m_4_m_2(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t);
+    then revenu_bic(d, revue, div_round(r, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicFallbackNouveauIncompletArrondi(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "année incomplète: tiers M-4..M-2 moins abattement (R. 845-2; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "incomplete year: M-4..M-2 third minus abatement (R. 845-2; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when annee_bic_incomplete(d, revue)
+        and not_known(annee_bic_complete(d, revue))
+        and dispositions_nouvelles_2025(d, revue)
+        and ca_bic_m_4_m_2(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t);
+    then revenu_bic(d, revue, div_round(r, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicFallbackNouveauSpecialArrondi(d: Demandeur, revue: Date, r: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "indépendant spécial: tiers M-4..M-2 moins abattement (R. 845-2; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "special independent: M-4..M-2 third minus abatement (R. 845-2; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when indep_special_bic(d, revue)
+        and dispositions_nouvelles_2025(d, revue)
+        and ca_bic_m_4_m_2(d, revue, r)
+        and abattement_50_0_102ter(d, revue, t);
+    then revenu_bic(d, revue, div_round(r, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01)
+rule BicOptionAncienneArrondi(d: Demandeur, revue: Date, c12: Money, p: Money, ct: Money, cp: Money, t: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ancienne option BIC: plafonds 50-0/102ter, calcul trimestre précédent (R. 845-2; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "old BIC option: 50-0/102ter ceilings, preceding-quarter computation (R. 845-2; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when demande_option_bic(d, revue) and ca_bic_12_mois(d, revue, c12)
+        and dispositions_anciennes_2025(d, revue)
+        and plafond_50_0_102ter(d, revue, p) and c12 <= p
+        and ca_bic_trimestre(d, revue, ct) and ct <= p / 4.0
+        and ca_bic_trimestre_precedent(d, revue, cp)
+        and abattement_50_0_102ter(d, revue, t);
+    then revenu_bic(d, revue, div_round(cp, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+rule BicOptionNouvelleArrondi(d: Demandeur, revue: Date, c12: Money, p: Money, ct: Money, cp: Money, t: Decimal) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "option BIC: plafonds 50-0/102ter, calcul M-4..M-2 (R. 845-2; porte NOTA), arrondi au centime (lecture D-82/D-84)";
+    label en unofficial "BIC option: 50-0/102ter ceilings, M-4..M-2 computation (R. 845-2; NOTA gate), rounded to the centime (reading D-82/D-84)";
+    when demande_option_bic(d, revue) and ca_bic_12_mois(d, revue, c12)
+        and dispositions_nouvelles_2025(d, revue)
+        and plafond_50_0_102ter(d, revue, p) and c12 <= p
+        and ca_bic_trimestre(d, revue, ct) and ct <= p / 4.0
+        and ca_bic_m_4_m_2(d, revue, cp)
+        and abattement_50_0_102ter(d, revue, t);
+    then revenu_bic(d, revue, div_round(cp, 3.0, 2, "HALF_UP") * (1.0 - t));
+}
+
+@source(
+    CSS_R845_1_PRE2025_ED2021_01_01,
+    CSS_R845_1_PRE2025_ED2021_03_25,
+    CSS_R845_1_PRE2025_ED2021_06_01,
+    CSS_R845_1_PRE2025_ED2022_03_21,
+    CSS_R845_1_PRE2025_ED2023_12_31,
+    CSS_R845_1_PRE2025_ED2024_01_01,
+    CSS_R845_1_PRE2025_ED2024_07_01,
+    CSS_R845_1_PRE2025_ED2025_01_01,
+    CSS_R845_1_ED2025_02_28,
+    CSS_R845_1_ED2025_03_31,
+    CSS_R845_1_ED2026_04_01,
+    CSS_R845_1_ED2026_06_27,
+    CSS_R845_2_PRE2025_ED2021_01_01,
+    CSS_R845_2_PRE2025_ED2021_03_25,
+    CSS_R845_2_PRE2025_ED2021_06_01,
+    CSS_R845_2_PRE2025_ED2022_03_21,
+    CSS_R845_2_PRE2025_ED2023_12_31,
+    CSS_R845_2_PRE2025_ED2024_01_01,
+    CSS_R845_2_PRE2025_ED2024_07_01,
+    CSS_R845_2_PRE2025_ED2025_01_01,
+    CSS_R845_2_ED2025_02_28,
+    CSS_R845_2_ED2025_03_31,
+    CSS_R845_2_ED2026_04_01,
+    CSS_R845_2_ED2026_06_27)
+pub interpretation RessourcesFractionsArrondiesCentime of CSS_R845_1_ED2026_06_27 {
+    status disputed;
+    label fr official "lecture : les douzièmes (bénéfices N-2 ou N-1) et tiers (recettes du trimestre précédent ou de M-4..M-2) de revenus non salariés de la R. 845-1 et de la R. 845-2, si la division n'est pas exacte, sont arrondis au centime, demi vers le haut — pratique des caisses (CNAF) ; les textes de la R. 845-1 et de la R. 845-2 ne fixent aucun arrondi";
+    label en unofficial "reading: the twelfths (N-2 or N-1 profits) and thirds (receipts of the preceding quarter or of M-4..M-2) of non-salaried income in R. 845-1 and R. 845-2, where the division is not exact, are rounded to the centime, half up - fund (CNAF) practice; the texts of R. 845-1 and R. 845-2 state no rounding";
+    include LectureRessourcesFractionsArrondies;
+    include AgriBaseN2Arrondi;
+    include AgriBaseN1Arrondi;
+    include AgriFallbackAncienNonImposesArrondi;
+    include AgriFallbackAncienIncompletArrondi;
+    include AgriFallbackNouveauNonImposesArrondi;
+    include AgriFallbackNouveauIncompletArrondi;
+    include AgriOptionAncienneArrondi;
+    include AgriOptionNouvelleArrondi;
+    include BicBaseN2Arrondi;
+    include BicBaseN1Arrondi;
+    include BicFallbackAncienNonImposesArrondi;
+    include BicFallbackAncienIncompletArrondi;
+    include BicFallbackAncienSpecialArrondi;
+    include BicFallbackNouveauNonImposesArrondi;
+    include BicFallbackNouveauIncompletArrondi;
+    include BicFallbackNouveauSpecialArrondi;
+    include BicOptionAncienneArrondi;
+    include BicOptionNouvelleArrondi;
+}

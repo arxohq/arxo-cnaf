@@ -1,0 +1,38 @@
+// Job-seeker flat days: 22 flat days at 60.00 in March 2024 =
+// 1320.00. The count is the pinned decree figure («Le nombre
+// d'allocations journalières de présence parentale versées
+// mensuellement aux personnes mentionnées au deuxième alinéa de
+// l'article L. 544-8 est égal à 22», D. 544-8
+// LEGIARTI000042389611, 2020-09-30 through 2024-07-01), not an
+// asserted 15. The source 1320 contradicts 900; the model derives
+// 1320 and stays silent on 900 (no amount refutation is
+// constructed — NEITHER, run-verified).
+// F05-01: envelope history qualifies the 1320 (44 days, 1 year).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-special-demandeur-emploi" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-de-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-de")) { origin adjudicated; }
+        assert "ajpp-de-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-de")) { origin adjudicated; }
+        assert "ajpp-de-03": demandeur_emploi_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-de")) { origin case_input; }
+        assert "ajpp-de-04": jours_forfaitaires(entity_ref("urn:fr:pf-ajpp:case:enfant-de"), @2024-03-01, 22) { origin case_input; }
+        assert "ajpp-de-05": montant_journalier_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-de"), 60.00 EUR) { origin case_input; }
+        assert "ajpp-de-06": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-de"), 44) { origin case_input; }
+        assert "ajpp-de-07": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-de"), MALADIE, 1) { origin case_input; }
+    }
+    evaluate truth(ajpp_droit_ouvert(entity_ref("urn:fr:pf-ajpp:case:enfant-de")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-de"), @2024-03-01, 1320.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-de"), @2024-03-01, 900.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

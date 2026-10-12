@@ -1,0 +1,33 @@
+// Reading MoyenneArrondieCentime, rounding up (R.262-7_PRE2025, II 1°).
+// Declared 100.00 + 100.00 + 102.00 = 302.00; 302/3 = 100.6666...; the centime
+// HALF_UP gives 100.67 (not 100.66). MF 600.00: intermediate 499.33 each
+// month, amount due 499.33.
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-moyenne-arrondie-ancien-hausse" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-01-15T12:00:00Z; knowledge_time @2025-01-15T12:00:00Z; legal_time @2025-01-15; timezone "Europe/Paris"; interpretation MoyenneArrondieCentime; }
+        assert "arr-hau-01": foyer_du_cas(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse")) { origin case_input; }
+        assert "arr-hau-02": mois_demande(@2025-01-01) { origin case_input; }
+        assert "arr-hau-03": mois_reference(@2024-10-01, @2024-11-01, @2024-12-01) { origin case_input; }
+        assert "arr-hau-04": mf_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), @2024-10-01, 600.00 EUR) { origin case_input; }
+        assert "arr-hau-05": mf_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), @2024-11-01, 600.00 EUR) { origin case_input; }
+        assert "arr-hau-06": mf_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), @2024-12-01, 600.00 EUR) { origin case_input; }
+        assert "arr-hau-07": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), @2024-10-01, 100.00 EUR) { origin case_input; }
+        assert "arr-hau-08": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), @2024-11-01, 100.00 EUR) { origin case_input; }
+        assert "arr-hau-09": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), @2024-12-01, 102.00 EUR) { origin case_input; }
+        assert "arr-hau-10": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), @2024-10-01, 0 EUR) { origin case_input; }
+        assert "arr-hau-11": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "arr-hau-12": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), @2024-12-01, 0 EUR) { origin case_input; }
+    }
+    evaluate truth(moyenne_declaree(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), 100.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_du_trimestre(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-ancien-hausse"), 499.33 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

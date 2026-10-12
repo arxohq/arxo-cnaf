@@ -1,0 +1,27 @@
+// Словарь пакета: годовой плафон социального страхования (PASS) из закреплённых arrêtés.
+// Значения выводят правила `02-serie.law` из закреплённых фрагментов (`01-sources.law`);
+// делом приходит только календарный год (ключ), даты дела (legal_time) пакет не читает.
+//
+// Модульная карта:
+//   01-sources.law  - источники, редакции, публикации и фрагменты arrêtés (порождено build_pass.py)
+//   02-serie.law    - ряд PASS по годам и построение годового значения (порождено build_pass.py)
+//
+// РЯД 2015–2026 непрерывен: годы 2015, 2016 закреплены из глобального дампа LEGI, 2017–2025 — из глобального
+// дампа JORF, 2026 — из суточного архива JORF (граница B-PASS-2017 снята). Год вне ряда не даёт значения:
+// потребитель предъявляет плафон делом (fr.pf.cf: pass_annuel). Подробности — README, «Источники».
+
+language "law.core" version "0.2";
+package fr.css.pass version "0.1.0";
+namespace "urn:fr:corpus:clir:pass";
+
+pub relation pass_mensuel_arrete(annee: Integer, montant: Money) kind institutional {
+    key(annee);
+    label fr official "valeur mensuelle du plafond de la sécurité sociale de l'année civile, telle que fixée par l'arrêté annuel (D. 242-17)";
+    label ru unofficial "месячное значение потолка социального страхования (PASS) календарного года по годовому приказу (D. 242-17)";
+}
+
+pub relation pass_annuel_arrete(annee: Integer, montant: Money) kind institutional {
+    key(annee);
+    label fr official "plafond annuel de la sécurité sociale de l'année civile : douze fois la valeur mensuelle de l'arrêté (D. 242-17)";
+    label ru unofficial "годовой PASS календарного года: 12 × месячное значение приказа (D. 242-17)";
+}

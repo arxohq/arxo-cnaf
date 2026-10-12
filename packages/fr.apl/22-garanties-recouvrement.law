@@ -1,0 +1,308 @@
+// Guarantees and recovery (L. 821-6, L. 823-4, R. 823-23): the aid's
+// immunity from assignment and seizure with its three exception channels,
+// the October bareme indexation list with the Q2-IRL selector (2022+), and
+// the tenant-side recovery routing. L. 821-7/8, L. 823-9, R. 823-24,
+// L. 832-3, L. 823-5, R. 822-24 and D. 822-21 carry declared despite
+// entries (bridges, renvois and builder meta-norms, not case rules).
+// The L. 821-6 immunity effect (aide_protegee_saisie) holds positionally;
+// see the 19 header note if LDC flags producer-less relations.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    Bailleur,
+    CCH_L821_6,
+    CCH_L821_6_ED2019_12,
+    CCH_L821_6_ED2020_01,
+    CCH_L821_6_ED2021_01,
+    CCH_L821_6_ED2023_04,
+    CCH_L821_6_ED2023_09,
+    CCH_L821_6_ED2023_12,
+    CCH_L821_6_ED2026_07,
+    CCH_L823_4,
+    CCH_L823_4_ED2019_12,
+    CCH_L823_4_ED2020_01,
+    CCH_L823_4_ED2021_01,
+    CCH_L823_4_ED2023_04,
+    CCH_L823_4_ED2023_09,
+    CCH_L823_4_ED2023_12,
+    CCH_L823_4_ED2026_07,
+    CCH_R823_23,
+    CCH_R823_23_ED2019_12,
+    CCH_R823_23_ED2020_01,
+    CCH_R823_23_ED2021_01,
+    CCH_R823_23_ED2023_04,
+    CCH_R823_23_ED2023_09,
+    CCH_R823_23_ED2023_12,
+    CCH_R823_23_ED2026_07,
+    Menage,
+    ModeLocation,
+    RoleTiers,
+    TypeAide,
+    aide_attribuee,
+    aide_demandee,
+    bailleur_du_menage,
+    destinataire_aide,
+    mode_location,
+    role_tiers,
+    secteur_accession,
+    secteur_accession_allocations,
+};
+
+pub entity Creancier {
+    label fr official "creancier poursuivant saisie sur l'aide";
+    label en unofficial "creditor seeking seizure of the aid";
+}
+
+pub relation creancier_poursuivant(c: Creancier, m: Menage) kind empirical {
+    label fr official "creancier poursuivant saisie sur l'aide du menage (fait de dossier)";
+    label en unofficial "creditor seeking seizure of the household aid (case fact)";
+}
+
+pub relation aide_protegee_saisie(m: Menage) kind institutional {
+    label fr official "aide insaisissable et incessible (effet d'immunite L. 821-6)";
+    label en unofficial "aid unseizable and unassignable (L. 821-6 immunity effect)";
+}
+
+@source(CCH_L821_6, CCH_L821_6_ED2019_12, CCH_L821_6_ED2020_01,
+        CCH_L821_6_ED2021_01, CCH_L821_6_ED2023_04, CCH_L821_6_ED2023_09,
+        CCH_L821_6_ED2023_12, CCH_L821_6_ED2026_07)
+rule ImmuniteInsaisissabilite(m: Menage, c: Creancier, t: TypeAide) defeasible {
+    label fr official "l'aide attribuee est incessible et insaisissable sauf les trois canaux L. 821-6";
+    label en unofficial "the attributed aid is unassignable and unseizable bar the three L. 821-6 channels";
+    when aide_attribuee(m, t) and creancier_poursuivant(c, m);
+    unless saisie_exception_autorisee(m, RECOUVREMENT_ORGANISME_L553_2) and creancier_poursuivant(c, m);
+    unless saisie_exception_autorisee(m, VERSEMENT_TIERS_PAYANT) and creancier_poursuivant(c, m);
+    unless saisie_exception_autorisee(m, CREANCES_L581) and creancier_poursuivant(c, m);
+    then immunity InsaisissabiliteAide {
+        holder m;
+        against c;
+        protected_effect aide_protegee_saisie(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L821_6, CCH_L821_6_ED2019_12, CCH_L821_6_ED2020_01,
+        CCH_L821_6_ED2021_01, CCH_L821_6_ED2023_04, CCH_L821_6_ED2023_09,
+        CCH_L821_6_ED2023_12, CCH_L821_6_ED2026_07)
+pub enum CanalExceptionSaisie {
+    label fr official "canaux d'exception a l'insaisissabilite (art. L. 821-6)";
+    label en unofficial "unseizability exception channels (art. L. 821-6)";
+    RECOUVREMENT_ORGANISME_L553_2, VERSEMENT_TIERS_PAYANT, CREANCES_L581
+}
+
+pub relation recouvrement_organisme_l553_2(m: Menage) kind empirical {
+    label fr official "recouvrement par l'organisme payeur des prestations indument versees L. 821-6 1 (fait de dossier)";
+    label en unofficial "paying-body recovery of unduly paid benefits under L. 821-6 1 (case fact)";
+}
+
+pub relation creance_l581_recouvrement(m: Menage) kind empirical {
+    label fr official "recouvrement des creances L. 581-1 et L. 581-3 dues par le beneficiaire L. 821-6 3 (fait de dossier)";
+    label en unofficial "recovery of L. 581-1 and L. 581-3 claims owed by the recipient under L. 821-6 3 (case fact)";
+}
+
+pub relation saisie_exception_autorisee(m: Menage, canal: CanalExceptionSaisie) kind institutional {
+    label fr official "saisie autorisee par un canal d'exception L. 821-6";
+    label en unofficial "seizure allowed through an L. 821-6 exception channel";
+}
+
+@source(CCH_L821_6, CCH_L821_6_ED2019_12, CCH_L821_6_ED2020_01,
+        CCH_L821_6_ED2021_01, CCH_L821_6_ED2023_04, CCH_L821_6_ED2023_09,
+        CCH_L821_6_ED2023_12, CCH_L821_6_ED2026_07)
+rule ExceptionRecouvrementOrganisme(m: Menage) strict {
+    label fr official "recouvrement de l'organisme : exception a l'insaisissabilite";
+    label en unofficial "body recovery: unseizability exception";
+    when recouvrement_organisme_l553_2(m);
+    then saisie_exception_autorisee(m, RECOUVREMENT_ORGANISME_L553_2);
+}
+
+@source(CCH_L821_6, CCH_L821_6_ED2019_12, CCH_L821_6_ED2020_01,
+        CCH_L821_6_ED2021_01, CCH_L821_6_ED2023_04, CCH_L821_6_ED2023_09,
+        CCH_L821_6_ED2023_12, CCH_L821_6_ED2026_07)
+rule ExceptionVersementTiersBailleur(m: Menage, b: Bailleur) defeasible {
+    label fr official "versement au bailleur : exception a l'insaisissabilite L. 821-6 2";
+    label en unofficial "payment to the landlord: unseizability exception L. 821-6 2";
+    when destinataire_aide(m, b) and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR);
+    then saisie_exception_autorisee(m, VERSEMENT_TIERS_PAYANT);
+}
+
+@source(CCH_L821_6, CCH_L821_6_ED2019_12, CCH_L821_6_ED2020_01,
+        CCH_L821_6_ED2021_01, CCH_L821_6_ED2023_04, CCH_L821_6_ED2023_09,
+        CCH_L821_6_ED2023_12, CCH_L821_6_ED2026_07)
+rule ExceptionVersementTiersEtablissement(m: Menage, b: Bailleur) defeasible {
+    label fr official "versement a l'etablissement habilite : exception a l'insaisissabilite L. 821-6 2";
+    label en unofficial "payment to the approved body: unseizability exception L. 821-6 2";
+    when destinataire_aide(m, b) and bailleur_du_menage(b, m)
+        and role_tiers(b, ETABLISSEMENT_HABILITE);
+    then saisie_exception_autorisee(m, VERSEMENT_TIERS_PAYANT);
+}
+
+@source(CCH_L821_6, CCH_L821_6_ED2019_12, CCH_L821_6_ED2020_01,
+        CCH_L821_6_ED2021_01, CCH_L821_6_ED2023_04, CCH_L821_6_ED2023_09,
+        CCH_L821_6_ED2023_12, CCH_L821_6_ED2026_07)
+rule ExceptionVersementTiersGestionnaire(m: Menage, b: Bailleur) defeasible {
+    label fr official "versement au gestionnaire de foyer : exception a l'insaisissabilite L. 821-6 2";
+    label en unofficial "payment to the hostel manager: unseizability exception L. 821-6 2";
+    when destinataire_aide(m, b) and bailleur_du_menage(b, m)
+        and role_tiers(b, GESTIONNAIRE_FOYER);
+    then saisie_exception_autorisee(m, VERSEMENT_TIERS_PAYANT);
+}
+
+@source(CCH_L821_6, CCH_L821_6_ED2019_12, CCH_L821_6_ED2020_01,
+        CCH_L821_6_ED2021_01, CCH_L821_6_ED2023_04, CCH_L821_6_ED2023_09,
+        CCH_L821_6_ED2023_12, CCH_L821_6_ED2026_07)
+rule ExceptionCreancesL581(m: Menage) strict {
+    label fr official "creances L. 581 : exception a l'insaisissabilite";
+    label en unofficial "L. 581 claims: unseizability exception";
+    when creance_l581_recouvrement(m);
+    then saisie_exception_autorisee(m, CREANCES_L581);
+}
+
+@source(CCH_L823_4, CCH_L823_4_ED2019_12, CCH_L823_4_ED2020_01,
+        CCH_L823_4_ED2021_01, CCH_L823_4_ED2023_04, CCH_L823_4_ED2023_09,
+        CCH_L823_4_ED2023_12, CCH_L823_4_ED2026_07)
+pub enum ElementIndexeIRL {
+    label fr official "elements du bareme revises sur l'IRL au 1er octobre (art. L. 823-4 1 a 5)";
+    label en unofficial "bareme elements revised on the IRL each 1 October (art. L. 823-4 1-5)";
+    PLAFONDS_LOYER, FORFAIT_CHARGES, PLAFONDS_CHARGES_REMBOURSEMENT_PRETS,
+    EQUIVALENCES_LOYER_CHARGES, TERME_P0
+}
+
+pub relation element_indexe_irl(m: Menage, e: ElementIndexeIRL) kind institutional {
+    label fr official "element du bareme indexe sur l'IRL pour le dossier";
+    label en unofficial "bareme element indexed on the IRL for the case";
+}
+
+pub relation pret_signe_apres_revision_bareme(m: Menage) kind empirical {
+    label fr official "contrat de pret signe apres la date de revision du bareme (constat L. 823-4 3)";
+    label en unofficial "loan contract signed after the bareme revision date (L. 823-4 3 finding)";
+}
+
+@source(CCH_L823_4, CCH_L823_4_ED2019_12, CCH_L823_4_ED2020_01,
+        CCH_L823_4_ED2021_01, CCH_L823_4_ED2023_04, CCH_L823_4_ED2023_09,
+        CCH_L823_4_ED2023_12, CCH_L823_4_ED2026_07)
+rule IndexePlafondsRemboursementPrets(m: Menage, t: TypeAide) strict {
+    label fr official "L. 823-4 3 : plafonds des charges de remboursement, prets signes apres la revision";
+    label en unofficial "L. 823-4 3: repayment-charge ceilings for loans signed after the revision";
+    when aide_demandee(m, t) and pret_signe_apres_revision_bareme(m);
+    then element_indexe_irl(m, PLAFONDS_CHARGES_REMBOURSEMENT_PRETS);
+}
+
+@source(CCH_L823_4, CCH_L823_4_ED2019_12, CCH_L823_4_ED2020_01,
+        CCH_L823_4_ED2021_01, CCH_L823_4_ED2023_04, CCH_L823_4_ED2023_09,
+        CCH_L823_4_ED2023_12, CCH_L823_4_ED2026_07)
+rule IndexePlafondsLoyer(m: Menage, t: TypeAide) strict {
+    label fr official "plafonds de loyer : revises au 1er octobre sur l'IRL";
+    label en unofficial "rent ceilings: revised each 1 October on the IRL";
+    when aide_demandee(m, t);
+    then element_indexe_irl(m, PLAFONDS_LOYER);
+}
+
+@source(CCH_L823_4, CCH_L823_4_ED2019_12, CCH_L823_4_ED2020_01,
+        CCH_L823_4_ED2021_01, CCH_L823_4_ED2023_04, CCH_L823_4_ED2023_09,
+        CCH_L823_4_ED2023_12, CCH_L823_4_ED2026_07)
+rule IndexeForfaitCharges(m: Menage, t: TypeAide) strict {
+    label fr official "forfait de charges : revise au 1er octobre sur l'IRL";
+    label en unofficial "charges flat rate: revised each 1 October on the IRL";
+    when aide_demandee(m, t);
+    then element_indexe_irl(m, FORFAIT_CHARGES);
+}
+
+@source(CCH_L823_4, CCH_L823_4_ED2019_12, CCH_L823_4_ED2020_01,
+        CCH_L823_4_ED2021_01, CCH_L823_4_ED2023_04, CCH_L823_4_ED2023_09,
+        CCH_L823_4_ED2023_12, CCH_L823_4_ED2026_07)
+rule IndexeEquivalencesLoyer(m: Menage, t: TypeAide) strict {
+    label fr official "L. 823-4 4 : equivalences de loyer et de charges locatives";
+    label en unofficial "L. 823-4 4: rent and rental-charge equivalences";
+    when aide_demandee(m, t);
+    then element_indexe_irl(m, EQUIVALENCES_LOYER_CHARGES);
+}
+
+@source(CCH_L823_4, CCH_L823_4_ED2019_12, CCH_L823_4_ED2020_01,
+        CCH_L823_4_ED2021_01, CCH_L823_4_ED2023_04, CCH_L823_4_ED2023_09,
+        CCH_L823_4_ED2023_12, CCH_L823_4_ED2026_07)
+rule IndexeTermeP0(m: Menage, t: TypeAide) strict {
+    label fr official "terme constant P0 : revise au 1er octobre sur l'IRL";
+    label en unofficial "constant term P0: revised each 1 October on the IRL";
+    when aide_demandee(m, t);
+    then element_indexe_irl(m, TERME_P0);
+}
+
+pub relation indice_revision_irl_trimestre2(m: Menage) kind institutional {
+    label fr official "revision sur l'IRL du deuxieme trimestre de l'annee en cours (18.08.2022)";
+    label en unofficial "revision on the current-year Q2 IRL (18.08.2022)";
+}
+
+@source(CCH_L823_4, CCH_L823_4_ED2019_12, CCH_L823_4_ED2020_01,
+        CCH_L823_4_ED2021_01, CCH_L823_4_ED2023_04, CCH_L823_4_ED2023_09,
+        CCH_L823_4_ED2023_12, CCH_L823_4_ED2026_07)
+rule SelecteurIRLT2(m: Menage, t: TypeAide) strict {
+    label fr official "l'indice de revision est celui du deuxieme trimestre de l'annee en cours";
+    label en unofficial "the revision index is the current-year second-quarter one";
+    effective [@2022-08-18, infinity);
+    when aide_demandee(m, t);
+    then indice_revision_irl_trimestre2(m);
+}
+
+pub relation trop_percu_deduit_bailleur(m: Menage, montant: Money) kind empirical {
+    label fr official "trop-percu deduit par le bailleur a recuperer (mesure)";
+    label en unofficial "landlord-deducted overpayment to recover (measured)";
+}
+
+pub relation contestation_recouvrement(m: Menage, oui: Boolean) kind empirical {
+    label fr official "contestation du caractere indu par le locataire ou l'emprunteur, etat a l'appreciation (fait explicite R. 823-23)";
+    label en unofficial "tenant/borrower dispute of the undue character, state at appreciation (explicit R. 823-23 fact)";
+}
+
+pub relation justification_deduction_indu(m: Menage) kind empirical {
+    label fr official "le bailleur ou l'etablissement habilite justifie la deduction conforme aux art. L. 832-2 et L. 842-1 (preuve R. 823-23)";
+    label en unofficial "the landlord or approved body proves conforming deduction under L. 832-2/L. 842-1 (R. 823-23 proof)";
+}
+
+pub relation trop_percu_deduit_etablissement(m: Menage, montant: Money) kind empirical {
+    label fr official "trop-percu deduit par l'etablissement habilite a recuperer (mesure)";
+    label en unofficial "approved-body-deducted overpayment to recover (measured)";
+}
+
+pub relation recouvrement_aupres_locataire(m: Menage, montant: Money) kind institutional {
+    label fr official "recouvrement aupres du locataire ou de l'emprunteur R. 823-23 (pont V)";
+    label en unofficial "recovery from the tenant or borrower under R. 823-23 (V bridge)";
+}
+
+@source(CCH_R823_23, CCH_R823_23_ED2019_12, CCH_R823_23_ED2020_01,
+        CCH_R823_23_ED2021_01, CCH_R823_23_ED2023_04, CCH_R823_23_ED2023_09,
+        CCH_R823_23_ED2023_12, CCH_R823_23_ED2026_07)
+rule CibleRecouvrementLocataire(m: Menage, montant: Money, b: Bailleur, mode: ModeLocation) strict {
+    label fr official "trop-percu deduit par le bailleur justifie sans contestation : recouvre aupres du locataire (mecanique V)";
+    label en unofficial "landlord-deducted overpayment proven and undisputed: recovered from the tenant (V mechanics)";
+    when trop_percu_deduit_bailleur(m, montant) and contestation_recouvrement(m, false)
+        and justification_deduction_indu(m) and bailleur_du_menage(b, m)
+        and role_tiers(b, BAILLEUR) and mode_location(m, mode);
+    then recouvrement_aupres_locataire(m, montant);
+}
+
+@source(CCH_R823_23, CCH_R823_23_ED2019_12, CCH_R823_23_ED2020_01,
+        CCH_R823_23_ED2021_01, CCH_R823_23_ED2023_04, CCH_R823_23_ED2023_09,
+        CCH_R823_23_ED2023_12, CCH_R823_23_ED2026_07)
+rule CibleRecouvrementEmprunteurAPL(m: Menage, montant: Money, b: Bailleur) strict {
+    label fr official "trop-percu deduit par l'etablissement habilite justifie sans contestation : recouvre aupres de l'emprunteur APL (mecanique V)";
+    label en unofficial "approved-body-deducted overpayment proven and undisputed: recovered from the APL borrower (V mechanics)";
+    when trop_percu_deduit_etablissement(m, montant) and contestation_recouvrement(m, false)
+        and justification_deduction_indu(m) and bailleur_du_menage(b, m)
+        and role_tiers(b, ETABLISSEMENT_HABILITE) and secteur_accession(m);
+    then recouvrement_aupres_locataire(m, montant);
+}
+
+@source(CCH_R823_23, CCH_R823_23_ED2019_12, CCH_R823_23_ED2020_01,
+        CCH_R823_23_ED2021_01, CCH_R823_23_ED2023_04, CCH_R823_23_ED2023_09,
+        CCH_R823_23_ED2023_12, CCH_R823_23_ED2026_07)
+rule CibleRecouvrementEmprunteurAllocations(m: Menage, montant: Money, b: Bailleur) strict {
+    label fr official "trop-percu deduit par l'etablissement habilite justifie sans contestation : recouvre aupres de l'emprunteur en allocations (mecanique V)";
+    label en unofficial "approved-body-deducted overpayment proven and undisputed: recovered from the allocation borrower (V mechanics)";
+    when trop_percu_deduit_etablissement(m, montant) and contestation_recouvrement(m, false)
+        and justification_deduction_indu(m) and bailleur_du_menage(b, m)
+        and role_tiers(b, ETABLISSEMENT_HABILITE) and secteur_accession_allocations(m);
+    then recouvrement_aupres_locataire(m, montant);
+}

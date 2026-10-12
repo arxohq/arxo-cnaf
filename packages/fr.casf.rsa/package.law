@@ -1,0 +1,1128 @@
+// Shared surface of the package: case facts and predicates for the RSA
+// right, the flat-rate amount, the lone-parent increase, duties,
+// suspension and recovery. The quarterly amount due (monthly intermediate
+// amounts averaged per R. 262-7 I) is computed by fr.minima.ressources
+// (same wave 4 lane) and arrives qualified as montant_du_trimestre; it
+// is consumed here AS the due, never subtracted again (D-26, D-44).
+// NOTHING owned by a neighbour package is redefined here.
+//
+// Module map:
+//   01-sources.law    - CASF / Code du travail / decree 2025-478 sources,
+//                       the six MF revaluation decrees 2020-2025 (art. 1) and
+//                       art. 9 of law 2022-1158 (coefficient 1.04),
+//                       back-to-back editions, fragments (generated)
+//   02-montant.law    - L.262-2/3/4/5/6/9, R.262-1/2/39: right, MF base built
+//                       from the pinned decrees, MF by composition,
+//                       lone-parent increase, allocation, MF written into
+//                       fr.minima.ressources (mf_mois, mf_composition)
+//   03-devoirs.law    - L.262-27/28/29/30/31/34, C.trav. L.5411-6: contract,
+//                       15 hours, registration, orientation
+//   04-suspension.law - L.262-37/38/39, R.262-68(-1..-7)/69(-1..-8), decree
+//                       2025-478 art.12: scales, procedure, end of right
+//   05-recouvrement.law - L.262-45/46/47, R.262-88/89/90/92/92-1/93/94/94-1:
+//                       prescription, recovery, appeals
+//   06-jeunes-activite.law - D.262-25-1/25-2/25-3/25-4: young-worker hours
+//                       condition (18-25, L.262-7-1 scope)
+//   07-demandes-instruction.law - D.262-26/27/28/29/30: filing venues,
+//                       France Travail instruction, free instruction,
+//                       quality engagement, delegation scope
+//   08-conventions.law - D.262-61/62/63/64: department-body conventions,
+//                       monthly advances, control plan, no-convention
+//                       fallback (rate, deadlines)
+//   09-devoirs-insertion.law - D.262-65/65-2/65-2-1/73: 500 EUR duties
+//                       limb, France Travail orientation, 12-month
+//                       extension, re-orientation proposal
+//   10-controle-recours.law - D.262-77/94-2: professional-assets ceiling,
+//                       recovery bridge to CSS D.553
+//   11-statistiques.law - D.262-95/96/97/98/100: annual, quarterly and
+//                       L.262-55 data transmissions, regular publication
+//                       (D.262-99 ministerial lists: boundary,
+//                       B-RSA-ARRETE-LISTES)
+//   bareme/*.lawparam.json - percentages and euro thresholds (generated)
+//
+// SCOPE BOUNDARY. Metropolitan France and the DOM collectivities under
+// the same text; L.542-/R.542- adaptations are wave 7 (SANS_OWNER).
+// Outside: DSN extraction, the L.262-2 euro base outside the pinned decree
+// series (from 2026-04-01: B-RSA-MF-EURO, DSS_PENDING; a case-supplied mf_base
+// stays the input there; the window 2022-07..2023-03 is bridged by art. 9 of law
+// 2022-1158 under the reading MfJuillet2022ArrondiCentime), the experiment
+// of décret 2024-693 (B-RSA-EXPERIMENTATION-2024), the housing-aid euro figure
+// (APL-FORFAIT-PENDING), PF benefit amounts (B-RSA-PF-CASCADE), the PA
+// quarter (CNAF-PPA), Mayotte specifics (wave 7). Full list - README.
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+import fr.minima.ressources version "0.1.0";
+
+// The household reference person is fr.minima.ressources::Personne (same
+// wave 4 lane: the RSA amount runs on the quarterly resources computed
+// there; pf-cf pattern: downstream reuses the upstream entity, nothing
+// owned by the neighbour is redefined here).
+
+// --- Amount case inputs (empirical) ---
+
+pub relation mf_base(p: fr.minima.ressources::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "base mensuelle personne seule L. 262-2 retenue pour l'espèce, décret et revalorisation du 1er avril pré-appliqués par la caisse (B-RSA-MF-EURO, DSS_PENDING)";
+    label en unofficial "monthly single-person L. 262-2 base retained for the case, decree and 1 April revaluation pre-applied by the fund (B-RSA-MF-EURO, DSS_PENDING)";
+}
+
+pub relation foyer_nb_personnes(p: fr.minima.ressources::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "nombre de personnes comptées pour le montant forfaitaire (R. 262-1)";
+    label en unofficial "number of persons counted for the flat-rate amount (R. 262-1)";
+}
+
+pub relation foyer_nb_parents(p: fr.minima.ressources::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "nombre de parents dans le foyer, 1 ou 2 (distingue le taux de la 4e personne, R. 262-1)";
+    label en unofficial "number of parents in the household, 1 or 2 (sets the 4th-person rate, R. 262-1)";
+}
+
+pub relation foyer_sup_taux40(p: fr.minima.ressources::Personne, k: Integer) kind institutional {
+    key(p);
+    label fr official "parmi les personnes de rang 5 et au-delà, nombre d'enfants ou de moins de 25 ans ouvrant droit à 40 % (R. 262-1 ; les autres, à 30 %, vont à foyer_sup_taux30 ; k + m = n - 4)";
+    label en unofficial "among persons ranked 5th and above, number of children or under-25s entitled to 40 % (R. 262-1; the rest at 30 % go to foyer_sup_taux30; k + m = n - 4)";
+}
+
+pub relation foyer_sup_taux30(p: fr.minima.ressources::Personne, m: Integer) kind institutional {
+    key(p);
+    label fr official "parmi les personnes de rang 5 et au-delà, nombre de personnes à 30 % (R. 262-1 ; m + k = n - 4 avec foyer_sup_taux40)";
+    label en unofficial "among persons ranked 5th and above, number of persons at 30 % (R. 262-1; m + k = n - 4 with foyer_sup_taux40)";
+}
+
+pub relation foyer_membre_rang(p: fr.minima.ressources::Personne, membre: fr.minima.ressources::Personne, rang: Integer) kind empirical {
+    key(p, membre);
+    label fr official "membre compté dans le foyer et son rang établi pour le barème R. 262-1";
+    label en unofficial "counted household member and established rank for the R. 262-1 scale";
+}
+
+pub relation foyer_enfant_charge(p: fr.minima.ressources::Personne, enfant: fr.minima.ressources::Personne) kind empirical {
+    label fr official "enfant à charge du foyer compté dans le barème R. 262-1";
+    label en unofficial "dependent child counted in the household under R. 262-1";
+}
+
+pub relation foyer_autre_charge(p: fr.minima.ressources::Personne, personne: fr.minima.ressources::Personne) kind empirical {
+    label fr official "autre personne à charge du foyer comptée dans le barème R. 262-1";
+    label en unofficial "other dependent person counted in the household under R. 262-1";
+}
+
+pub relation foyer_naissance(p: fr.minima.ressources::Personne, personne: fr.minima.ressources::Personne, jour: Date) kind empirical {
+    key(p, personne);
+    label fr official "date de naissance établie de la personne à charge pour la limite de vingt-cinq ans (R. 262-1)";
+    label en unofficial "established dependent person's birth date for the age-25 limit (R. 262-1)";
+}
+
+// --- Lone-parent increase case inputs (empirical) ---
+
+pub relation isole_majore(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "personne isolée au sens de L. 262-9 (veuve, divorcée, séparée ou célibataire, ne vivant pas notoirement et durablement en couple) assumant la charge d'enfants ou enceinte déclarée";
+    label en unofficial "lone person under L. 262-9 (widowed, divorced, separated or single, not living as a couple) with dependent children or declared pregnancy";
+}
+
+pub relation majore_nb_enfants(p: fr.minima.ressources::Personne, n: Integer) kind institutional {
+    key(p);
+    label fr official "nombre d'enfants et autres personnes à charge pour le supplément majoré de 42,804 % (R. 262-1 al. 2 ; grossesse sans enfant : 0)";
+    label en unofficial "number of children and other dependent persons for the 42.804 % increase supplement (R. 262-1 para. 2; pregnancy without a child: 0)";
+}
+
+pub relation majore_retard_mois(p: fr.minima.ressources::Personne, r: Integer) kind empirical {
+    key(p);
+    label fr official "mois de retard de la demande majorée au-delà du délai de six mois du fait générateur (R. 262-2 al. 1 ; 0 si dans les délais)";
+    label en unofficial "months by which the increased-amount claim missed the six-month window from the triggering event (R. 262-2 al. 1; 0 if on time)";
+}
+
+pub relation majore_prolonge_3ans(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "prolongation de la majoration jusqu'aux trois ans du plus jeune enfant (R. 262-2 al. 2)";
+    label en unofficial "extension of the increase until the youngest child's third birthday (R. 262-2 al. 2)";
+}
+
+pub relation majore_terme_3ans(p: fr.minima.ressources::Personne, terme: Date) kind institutional {
+    key(p);
+    label fr official "terme de la prolongation : mois des trois ans du plus jeune enfant (R. 262-2 al. 2)";
+    label en unofficial "end of the extension: month of the youngest child's third birthday (R. 262-2 al. 2)";
+}
+
+// --- Right case inputs (empirical) ---
+
+pub relation mois_droit(p: fr.minima.ressources::Personne, mois: Date) kind empirical {
+    key(p, mois);
+    label fr official "mois du droit examiné (pf-cf pattern : le mois lie les règles mensuelles)";
+    label en unofficial "month of right under examination (pf-cf pattern: the month binds the monthly rules)";
+}
+
+pub relation residence_stable(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "résidence stable et effective en France (L. 262-2 ; R. 262-5 : séjours hors de France n'excédant pas trois mois)";
+    label en unofficial "stable and effective residence in France (L. 262-2; R. 262-5: stays abroad up to three months)";
+}
+
+pub relation age_charge_condition(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "plus de 25 ans ou charge d'enfants nés ou à naître (L. 262-4, 1°)";
+    label en unofficial "over 25 or with dependent born or unborn children (L. 262-4, 1°)";
+}
+
+pub relation sejour_travail_condition(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "conditions de nationalité, séjour et travail remplies, cas d'exemption inclus : L. 262-4 2° (cinq ans, réfugiés, protection subsidiaire, apatrides, résidents), régularité L. 512-2 pour les majorés, et L. 262-6 pour les UE/EEE/Suisse (droit au séjour, trois mois, exceptions d'activité, exclusion du chercheur d'emploi entré à ce titre)";
+    label en unofficial "nationality, residence and work conditions met, exemptions included: L. 262-4 2° (five years, refugees, subsidiary protection, stateless, residents), L. 512-2 regularity for increased-amount cases, and L. 262-6 for EU/EEA/Swiss nationals (right of residence, three months, activity exceptions, jobseeker-entry exclusion)";
+}
+
+pub relation etudiant_conge(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "élève, étudiant, stagiaire, ou en congé parental/sabbatique/sans solde/disponibilité (L. 262-4, 3°-4°, sauf majoration L. 262-9)";
+    label en unofficial "pupil, student, trainee, or on parental/sabbatical/unpaid leave (L. 262-4, 3°-4°, except L. 262-9 increase)";
+}
+
+pub relation conjoint_enfants_comptes(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "conjoint/concubin/partenaire remplit les 2° et 4° de L. 262-4 et enfants étrangers la régularité L. 512-2 CSS (L. 262-5)";
+    label en unofficial "spouse/partner meets L. 262-4 2° and 4° and foreign children meet CSS L. 512-2 regularity (L. 262-5)";
+}
+
+pub relation isolement_constate(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "absence de vie en couple notoire et permanente établie pour la personne (L. 262-9)";
+    label en unofficial "person's absence of a public and lasting couple established (L. 262-9)";
+}
+
+pub relation majore_demande_mois(p: fr.minima.ressources::Personne, mois: Date) kind empirical {
+    key(p);
+    label fr official "mois de dépôt de la demande de majoration, établi par la caisse (R. 262-2)";
+    label en unofficial "month when the claim for the increase was filed, established by the fund (R. 262-2)";
+}
+
+pub relation majore_debut_mois(p: fr.minima.ressources::Personne, debut: Date) kind institutional {
+    key(p);
+    label fr official "premier mois de service de l'allocation majorée (point de départ de la durée R. 262-2)";
+    label en unofficial "first month of increased-allowance service (start of the R. 262-2 duration)";
+}
+
+// --- Duties case inputs (empirical) ---
+
+pub relation contrat_signe(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "contrat d'engagement L. 5411-6 / L. 262-34 élaboré et signé avec l'organisme référent";
+    label en unofficial "L. 5411-6 / L. 262-34 engagement contract drawn up and signed with the referring body";
+}
+
+pub relation contrat_heures(p: fr.minima.ressources::Personne, h: Integer) kind empirical {
+    key(p);
+    label fr official "durée hebdomadaire d'activité du plan d'action en heures (L. 5411-6, II 3° : au moins quinze, minorable sans être nulle, absente sur demande motivée)";
+    label en unofficial "weekly activity hours of the action plan (L. 5411-6, II 3°: at least fifteen, reducible but not zero, waived on reasoned request)";
+}
+
+pub relation dispense_heures(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "plan d'action sans durée hebdomadaire sur demande : santé, handicap, invalidité ou parent isolé sans garde d'enfant de moins de douze ans (L. 5411-6, II 3°)";
+    label en unofficial "action plan without weekly hours on request: health, disability, invalidity or lone parent with no childcare for a child under twelve (L. 5411-6, II 3°)";
+}
+
+pub relation minoration_justifiee(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "minoration de la durée hebdomadaire justifiée par la situation individuelle au vu du diagnostic global (L. 5411-6, II 3°)";
+    label en unofficial "weekly-hours reduction justified by the individual situation in light of the global diagnosis (L. 5411-6, II 3°)";
+}
+
+pub relation inscrit_france_travail(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "inscription sur la liste des demandeurs d'emploi auprès de France Travail (L. 262-27 al. 2)";
+    label en unofficial "registration on the jobseeker list with France Travail (L. 262-27 al. 2)";
+}
+
+pub relation tenu_obligations_262_28(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "tenu aux obligations de l'article L. 262-28 (sanctionnable au titre de R. 262-68 à R. 262-68-2 ; R. 262-68-7 a contrario)";
+    label en unofficial "bound by the L. 262-28 obligations (sanctionable under R. 262-68 to R. 262-68-2; R. 262-68-7 a contrario)";
+}
+
+pub relation motif_legitime(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "motif légitime du manquement (fait obstacle aux sanctions L. 262-37 et R. 262-68 à R. 262-68-3)";
+    label en unofficial "legitimate reason for the breach (bars the L. 262-37 and R. 262-68 to R. 262-68-3 sanctions)";
+}
+
+// --- Sanction case inputs (empirical) ---
+
+pub enum MotifSanction {
+    label fr official "manquement fondant une sanction (L. 262-37)";
+    label en unofficial "breach founding a sanction (L. 262-37)";
+    REFUS_CONTRAT,
+    NON_RESPECT_CONTRAT,
+    REFUS_CONTROLE,
+    REFUS_OFFRE_RAISONNABLE
+}
+
+pub relation manquement(p: fr.minima.ressources::Personne, motif: MotifSanction) kind empirical {
+    label fr official "manquement constaté aux obligations du contrat ou aux contrôles (le motif légitime, s'il est établi, fait obstacle aux sanctions ; L. 262-37, I-II)";
+    label en unofficial "breach of the contract obligations or controls found (an established legitimate reason bars the sanctions; L. 262-37, I-II)";
+}
+
+pub relation suspension_duree_mois(p: fr.minima.ressources::Personne, d: Integer) kind empirical {
+    key(p);
+    label fr official "durée de la suspension fixée par la décision, en mois (L. 262-37, I ; R. 262-68 à R. 262-68-1 : un à deux mois, un à quatre en persistance ou réitération)";
+    label en unofficial "suspension length set by the decision, in months (L. 262-37, I; R. 262-68 to R. 262-68-1: one to two months, one to four on persistence or repetition)";
+}
+
+pub relation suppression_totale_4mois(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "suppression totale de l'allocation pour quatre mois décidée (R. 262-68 à R. 262-68-3 : proposition de radiation et fin du droit à défaut de mise en conformité)";
+    label en unofficial "total four-month removal of the allowance decided (R. 262-68 to R. 262-68-3: removal proposal and end of entitlement absent compliance)";
+}
+
+pub relation radiation_sans_versement(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "période définie par décret sans versement écoulée (L. 262-38 al. 1 : radiation de la liste)";
+    label en unofficial "decree-defined payment-free period elapsed (L. 262-38 al. 1: removal from the list)";
+}
+
+pub relation proposition_france_travail(p: fr.minima.ressources::Personne, motif: MotifSanction) kind empirical {
+    label fr official "proposition de suspension ou suppression transmise par l'opérateur France Travail, organisme référent (L. 262-37, IV ; R. 262-69-7)";
+    label en unofficial "suspension or removal proposal sent by France Travail as referring body (L. 262-37, IV; R. 262-69-7)";
+}
+
+pub relation notification_ft(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "information de l'opérateur France Travail sur les faits, la sanction et la proposition, observations recueillies (L. 262-37, IV ; R. 262-69-5)";
+    label en unofficial "France Travail notice of the facts, sanction and proposal, observations collected (L. 262-37, IV; R. 262-69-5)";
+}
+
+pub relation reprise_president(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "le président du conseil départemental entend statuer lui-même dans les quinze jours de la proposition (L. 262-37, IV ; R. 262-69-6)";
+    label en unofficial "the departmental council president takes the case over within fifteen days of the proposal (L. 262-37, IV; R. 262-69-6)";
+}
+
+pub relation sanction_allocation_reference(p: fr.minima.ressources::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "allocation à verser au titre du dernier mois du trimestre de référence, assiette transitoire de la sanction (décret 2025-478 art. 12, I)";
+    label en unofficial "allowance due for the last month of the reference quarter, transitional sanction base (decree 2025-478 art. 12, I)";
+}
+
+pub relation manquement_persiste(p: fr.minima.ressources::Personne, motif: MotifSanction) kind empirical {
+    label fr official "persistance du manquement au terme de la suspension (L. 262-37, II 1° ; R. 262-68-4)";
+    label en unofficial "persistence of the breach at the end of the suspension (L. 262-37, II 1°; R. 262-68-4)";
+}
+
+pub relation manquement_reitere(p: fr.minima.ressources::Personne, motif: MotifSanction) kind empirical {
+    label fr official "réitération dans les vingt-quatre mois de la notification de la première sanction (L. 262-37, II 2° ; R. 262-68-4)";
+    label en unofficial "repeated breach within twenty-four months of the first sanction notice (L. 262-37, II 2°; R. 262-68-4)";
+}
+
+pub relation suspension_duree_conforme(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "durée de suspension dans les bornes du décret (un à deux mois, un à quatre en cas de persistance ou réitération ; R. 262-68 ; R. 262-68-1)";
+    label en unofficial "suspension duration within the decree bounds (one to two months, one to four on persistence or repetition; R. 262-68; R. 262-68-1)";
+}
+
+pub relation notification_10j(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "notification préalable des faits, de la sanction envisagée et du délai de dix jours pour observations (R. 262-69-1)";
+    label en unofficial "prior notice of the facts, the planned sanction and the ten-day window for observations (R. 262-69-1)";
+}
+
+pub relation audition_equipe(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "possibilité d'être entendu par l'équipe pluridisciplinaire offerte, délai d'un mois (R. 262-69-2, suppression)";
+    label en unofficial "hearing by the multidisciplinary team offered, one-month window (R. 262-69-2, removal)";
+}
+
+pub relation avis_equipe(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "avis de l'équipe pluridisciplinaire recueilli avant suppression (L. 262-37, III ; L. 262-39)";
+    label en unofficial "multidisciplinary team opinion obtained before removal (L. 262-37, III; L. 262-39)";
+}
+
+pub relation mise_en_conformite(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "bénéficiaire mis en conformité avant le terme de la suspension (fin de suspension, L. 262-37, I ; R. 262-68/68-1)";
+    label en unofficial "claimant back in compliance before the suspension ends (suspension lifted, L. 262-37, I; R. 262-68/68-1)";
+}
+
+pub relation sanction_taux(p: fr.minima.ressources::Personne, taux: Decimal) kind empirical {
+    key(p);
+    label fr official "taux de suspension ou suppression fixé par la décision de sanction (au moins 30 %, R. 262-68 ; 50 % maximum en foyer pluripersonnel, R. 262-68-6 ; période transitoire décret 2025-478 art. 12)";
+    label en unofficial "suspension or removal rate set by the sanction decision (at least 30 %, R. 262-68; 50 % cap in multi-person households, R. 262-68-6; decree 2025-478 art. 12 transition)";
+}
+
+// --- Recovery case inputs (empirical) ---
+
+pub relation indu_montant(p: fr.minima.ressources::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant de l'allocation indûment versée dont le recouvrement est envisagé (L. 262-46 ; R. 262-92-1)";
+    label en unofficial "amount of the unduly paid allowance whose recovery is considered (L. 262-46; R. 262-92-1)";
+}
+
+pub relation indu_fraude(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "indu résultant d'une fraude ou fausse déclaration (pas de prescription biennale, L. 262-45 ; indemnité 10 %, L. 262-46)";
+    label en unofficial "overpayment from fraud or false declaration (no two-year limit, L. 262-45; 10 % indemnity, L. 262-46)";
+}
+
+pub relation prescription_cours(p: fr.minima.ressources::Personne, annees: Integer) kind empirical {
+    key(p);
+    label fr official "années écoulées depuis le paiement indu (prescription biennale, L. 262-45 al. 1)";
+    label en unofficial "years since the undue payment (two-year limitation, L. 262-45 al. 1)";
+}
+
+pub relation interruption_prescription(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "cause d'interruption de la prescription : code civil ou recommandé avec avis de réception (L. 262-45 al. 2)";
+    label en unofficial "ground interrupting the limitation: civil-code cause or registered letter with acknowledgement (L. 262-45 al. 2)";
+}
+
+pub relation recours_suspensif(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "réclamation, remise, recours administratif ou contentieux en cours contre la récupération (caractère suspensif, L. 262-46 al. 2 ; recours préalable L. 262-47, R. 262-88)";
+    label en unofficial "ongoing claim, remission request, administrative or court appeal against the recovery (suspensive, L. 262-46 al. 2; prior appeal L. 262-47, R. 262-88)";
+}
+
+pub relation notification_indu(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "notification d'indu avec nature, date, montant, motif, voies de recours et délai de rectification de vingt jours (R. 262-92-1, I)";
+    label en unofficial "overpayment notice with nature, date, amount, reason, appeal routes and twenty-day rectification window (R. 262-92-1, I)";
+}
+
+// --- Derived outputs (institutional) ---
+
+pub relation mf_menage(p: fr.minima.ressources::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant forfaitaire du foyer, composition R. 262-1 appliquée à la base (hors majoration isolement)";
+    label en unofficial "household flat-rate amount, R. 262-1 composition applied to the base (before the lone-parent increase)";
+}
+
+pub relation majore_ouvert_mois(p: fr.minima.ressources::Personne, mois: Date) kind institutional {
+    key(p, mois);
+    label fr official "majoration servie pour le mois : dans la durée R. 262-2 ou la prolongation trois ans";
+    label en unofficial "increase in service for the month: within the R. 262-2 duration or the three-year extension";
+}
+
+pub relation mf_applicable_mois(p: fr.minima.ressources::Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "montant forfaitaire applicable au mois : majoré si ouvert, composition sinon (L. 262-2)";
+    label en unofficial "flat-rate amount for the month: increased if open, composition otherwise (L. 262-2)";
+}
+
+pub relation mf_composition(p: fr.minima.ressources::Personne, taille: Integer, montant: Money) kind institutional {
+    key(p, taille);
+    label fr official "montant forfaitaire par taille de foyer (R. 262-1), repris par fr.minima.ressources ; contrat d'entrée (1, 2, 3 ou plus)";
+    label en unofficial "flat-rate amount by household size (R. 262-1), reused by fr.minima.ressources; input contract (1, 2, 3 or more)";
+}
+
+pub relation mf_majore(p: fr.minima.ressources::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant forfaitaire majoré personne isolée (128,412 % + 42,804 % par enfant, R. 262-1 al. 2 ; L. 262-9)";
+    label en unofficial "increased lone-parent flat-rate amount (128.412 % + 42.804 % per child, R. 262-1 al. 2; L. 262-9)";
+}
+
+pub relation majore_duree_mois(p: fr.minima.ressources::Personne, duree: Integer) kind institutional {
+    key(p);
+    label fr official "durée de service de l'allocation majorée en mois : douze moins le retard au-delà de six mois (R. 262-2 al. 1), sauf prolongation trois ans (R. 262-2 al. 2)";
+    label en unofficial "months of increased-allowance service: twelve minus the delay beyond six months (R. 262-2 al. 1), unless extended to three years (R. 262-2 al. 2)";
+}
+
+pub relation droit_rsa(p: fr.minima.ressources::Personne, mois: Date) kind institutional {
+    label fr official "droit au revenu de solidarité active ouvert pour le mois (montant dû trimestriel positif, conditions L. 262-2 et L. 262-4 à L. 262-6 ; dû > 0 vaut ressources < MF, R. 262-7 I)";
+    label en unofficial "RSA entitlement open for the month (positive quarterly amount due, L. 262-2 and L. 262-4 to L. 262-6 conditions; due > 0 stands for resources < MF, R. 262-7 I)";
+}
+
+pub relation allocation_mensuelle(p: fr.minima.ressources::Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "allocation mensuelle : montant dû du trimestre de référence (L. 262-2 al. 2 ; R. 262-7 I), servie à partir de 6 € (R. 262-39)";
+    label en unofficial "monthly allowance: amount due for the reference quarter (L. 262-2 al. 2; R. 262-7 I), paid from 6 euros up (R. 262-39)";
+}
+
+pub relation allocation_non_versee(p: fr.minima.ressources::Personne, mois: Date) kind institutional {
+    label fr official "allocation calculée sous 6 € : non versée (R. 262-39)";
+    label en unofficial "allowance computed below 6 euros: not paid (R. 262-39)";
+}
+
+pub relation contrat_heures_conforme(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "durée hebdomadaire du plan d'action conforme : au moins quinze heures ou minoration/dispense applicable (L. 5411-6, II 3°)";
+    label en unofficial "action-plan weekly hours compliant: at least fifteen hours or an applicable reduction/waiver (L. 5411-6, II 3°)";
+}
+
+pub relation accompagnement_adapte(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "droit à un accompagnement social et professionnel adapté, référent unique (L. 262-27 al. 1 ; L. 262-30)";
+    label en unofficial "right to adapted social and professional support with a single referrer (L. 262-27 al. 1; L. 262-30)";
+}
+
+pub relation sanction_taux_conforme(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "taux de sanction régulier : au moins 30 % (R. 262-68), au plus 50 % en foyer pluripersonnel ou majoré (R. 262-68-6)";
+    label en unofficial "regular sanction rate: at least 30 % (R. 262-68), at most 50 % in a multi-person or increased-amount household (R. 262-68-6)";
+}
+
+pub relation sanction_montant_mensuel(p: fr.minima.ressources::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant mensuel suspendu ou supprimé en période transitoire : taux appliqué à l'allocation du dernier mois du trimestre de référence (décret 2025-478 art. 12, I)";
+    label en unofficial "monthly amount suspended or removed in the transition: rate applied to the last reference-quarter month's allowance (decree 2025-478 art. 12, I)";
+}
+
+pub relation sanction_suspension(p: fr.minima.ressources::Personne, motif: MotifSanction) kind institutional {
+    label fr official "suspension du versement décidée, en tout ou partie (L. 262-37, I ; R. 262-68/68-1 ; taux plancher 30 %, plafond 50 % en foyer pluripersonnel)";
+    label en unofficial "payment suspension decided, in whole or part (L. 262-37, I; R. 262-68/68-1; 30 % floor, 50 % cap in multi-person households)";
+}
+
+pub relation sanction_suppression(p: fr.minima.ressources::Personne, motif: MotifSanction) kind institutional {
+    label fr official "suppression du versement décidée, en tout ou partie (L. 262-37, II ; R. 262-68-3 ; avis d'équipe et audition préalables)";
+    label en unofficial "payment removal decided, in whole or part (L. 262-37, II; R. 262-68-3; prior team opinion and hearing)";
+}
+
+pub relation sommes_reverses_3mois(p: fr.minima.ressources::Personne, plafond_mois: Integer) kind institutional {
+    key(p);
+    label fr official "sommes retenues reversées sur mise en conformité : durée de suspension, trois derniers mois si elle excède trois mois (L. 262-37, VI ; 3 ou durée)";
+    label en unofficial "withheld sums repaid on compliance: suspension length, last three months if longer (L. 262-37, VI; 3 or length)";
+}
+
+pub relation radiation_liste(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "radiation de la liste des bénéficiaires (L. 262-38 ; R. 262-68/68-1/68-3, suppression totale de quatre mois sans mise en conformité)";
+    label en unofficial "removal from the beneficiary list (L. 262-38; R. 262-68/68-1/68-3, four-month total removal without compliance)";
+}
+
+pub relation indu_recouvrable(p: fr.minima.ressources::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "indu recouvrable : 77 € ou plus, prescription non acquise, aucun recours suspensif (L. 262-45 ; L. 262-46 ; R. 262-92)";
+    label en unofficial "recoverable overpayment: 77 euros or more, limitation not reached, no suspensive appeal (L. 262-45; L. 262-46; R. 262-92)";
+}
+
+pub relation indu_non_recupere(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "indu non récupéré : sous 77 € (R. 262-92), prescrit (L. 262-45), recours suspensif ou remise (L. 262-46)";
+    label en unofficial "overpayment not recovered: below 77 euros (R. 262-92), time-barred (L. 262-45), suspensive appeal or remission (L. 262-46)";
+}
+
+pub relation remboursement_unique(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "bénéficiaire optant pour le remboursement de l'indu en une seule fois (L. 262-46 al. 3)";
+    label en unofficial "claimant opting for one-shot overpayment repayment (L. 262-46 al. 3)";
+}
+
+pub relation remise_president(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "remise ou réduction de la créance par le président en cas de bonne foi ou précarité, hors fraude (L. 262-46)";
+    label en unofficial "debt remission or reduction by the president for good faith or hardship, fraud excluded (L. 262-46)";
+}
+
+pub relation indemnite_fraude(p: fr.minima.ressources::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "indemnité de 10 % des sommes réclamées en cas de fraude (L. 262-46 al. 1, depuis 2024-01-01)";
+    label en unofficial "10 % indemnity on the sums claimed in case of fraud (L. 262-46 al. 1, from 2024-01-01)";
+}
+
+pub relation recouvrement_retenues_echeoir(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "recouvrement par retenues sur les montants à échoir (L. 262-46 al. 3 ; R. 262-93/94)";
+    label en unofficial "recovery by withholding from future payable amounts (L. 262-46 al. 3; R. 262-93/94)";
+}
+
+// --- Finish wave: administrative actors (06-11) ---
+
+pub entity Organisme {
+    label fr official "organisme administratif : service instructeur ou payeur (CAF, MSA), CCAS/CIAS, association déléguée, opérateur France Travail, caisse nationale, service statistique (rôle par relation)";
+    label en unofficial "administrative body: instructing or paying service (CAF, MSA), CCAS/CIAS, delegated association, France Travail operator, national fund, statistical service (role per relation)";
+}
+
+pub entity Departement {
+    label fr official "département, y compris son président du conseil départemental agissant pour lui (D. 262-29/30/61/63/64/95/98)";
+    label en unofficial "department, including its departmental council president acting for it (D. 262-29/30/61/63/64/95/98)";
+}
+
+pub entity Referent {
+    label fr official "référent unique du bénéficiaire (D. 262-73 ; L. 262-30)";
+    label en unofficial "claimant's single referrer (D. 262-73; L. 262-30)";
+}
+
+pub entity Prefet {
+    label fr official "représentant de l'Etat dans le département (D. 262-95)";
+    label en unofficial "State representative in the department, the prefect (D. 262-95)";
+}
+
+// Case anchors: bind administrative bodies to the examined case.
+pub relation organisme_competent(o: Organisme, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "organisme compétent pour le dossier de la personne (ancrage du cas)";
+    label en unofficial "body competent for the person's case (case anchor)";
+}
+
+pub relation departement_competent(d: Departement, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "département compétent pour le dossier de la personne (ancrage du cas)";
+    label en unofficial "department competent for the person's case (case anchor)";
+}
+
+pub relation referent_attribue(r: Referent, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "référent attribué à la personne (D. 262-73)";
+    label en unofficial "referrer assigned to the person (D. 262-73)";
+}
+
+pub relation prefet_du_departement(f: Prefet, d: Departement) kind empirical {
+    label fr official "représentant de l'Etat dans le département destinataire des données annuelles (D. 262-95)";
+    label en unofficial "State representative in the department receiving the annual data (D. 262-95)";
+}
+
+// Body roles (empirical).
+
+pub relation est_ccas(o: Organisme) kind empirical {
+    label fr official "centre communal ou intercommunal d'action sociale (D. 262-26 a))";
+    label en unofficial "communal or intercommunal social action centre (D. 262-26 a))";
+}
+
+pub relation est_association_deleguee(o: Organisme) kind empirical {
+    label fr official "association ou organisme à but non lucratif délégué (D. 262-26 c))";
+    label en unofficial "delegated non-profit association or body (D. 262-26 c))";
+}
+
+pub relation est_organisme_service(o: Organisme) kind empirical {
+    label fr official "organisme chargé du service du RSA, article L. 262-16 (D. 262-26 d))";
+    label en unofficial "RSA service body, article L. 262-16 (D. 262-26 d))";
+}
+
+pub relation est_france_travail(o: Organisme) kind empirical {
+    label fr official "opérateur France Travail, Pôle emploi avant le 01.07.2024 (D. 262-26 e), D. 262-27)";
+    label en unofficial "France Travail operator, Pôle emploi before 01.07.2024 (D. 262-26 e), D. 262-27)";
+}
+
+pub relation est_caisse_nationale(o: Organisme) kind empirical {
+    label fr official "Caisse nationale des allocations familiales ou Caisse centrale de la mutualité sociale agricole (D. 262-96/97/100)";
+    label en unofficial "National family allowances fund or central agricultural mutual fund (D. 262-96/97/100)";
+}
+
+pub relation est_service_statistique(o: Organisme) kind empirical {
+    label fr official "service statistique des ministères chargés de l'action sociale et de l'emploi (D. 262-95/96/97/98/100)";
+    label en unofficial "statistical service of the social action and employment ministries (D. 262-95/96/97/98/100)";
+}
+
+// --- 06 jeunes travailleurs (D. 262-25-1 à D. 262-25-4) ---
+
+pub relation jeune_18_25(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "demandeur âgé de dix-huit à vingt-cinq ans, champ du paragraphe 4 (L. 262-7-1)";
+    label en unofficial "claimant aged eighteen to twenty-five, paragraph 4 scope (L. 262-7-1)";
+}
+
+pub relation heures_travail_reference(p: fr.minima.ressources::Personne, h: Decimal) kind empirical {
+    key(p);
+    label fr official "heures de travail sur la période de référence effective de trois ans, hors périodes de prestations exclues et, sur le parcours mixte, hors heures couvertes par l'assimilation TNS ou agricole (D. 262-25-1 al. 2 ; D. 262-25-4)";
+    label en unofficial "hours worked over the effective three-year reference period, outside excluded benefit periods and, on the mixed path, outside hours covered by the self-employed or agricultural deeming (D. 262-25-1 al. 2; D. 262-25-4)";
+}
+
+pub relation heures_annuelles_reference(p: fr.minima.ressources::Personne, h: Decimal) kind empirical {
+    key(p);
+    label fr official "heures annuelles du troisième alinéa de C. trav. L. 3121-41 retenues pour l'espèce (B-RSA-CTRAV-HORAIRES)";
+    label en unofficial "annual hours of C. trav. L. 3121-41 al. 3 retained for the case (B-RSA-CTRAV-HORAIRES)";
+}
+
+pub relation mois_prestations_exclus(p: fr.minima.ressources::Personne, m: Integer) kind empirical {
+    key(p);
+    label fr official "mois exclus de la période de référence au titre des allocations chômage ou assimilées, chiffre plafonné à six mois par la caisse (D. 262-25-1 al. 2)";
+    label en unofficial "months excluded from the reference period for unemployment or equivalent benefits, figure capped at six months by the fund (D. 262-25-1 al. 2)";
+}
+
+pub relation heures_occasionnelles(p: fr.minima.ressources::Personne, h: Decimal) kind empirical {
+    key(p);
+    label fr official "heures d'activité occasionnelle ou réduite ouvrant droit aux allocations, comptées dans le minimum (D. 262-25-1 al. 2 in fine ; 0 si aucune)";
+    label en unofficial "occasional or reduced-activity hours conferring benefit entitlement, counted toward the minimum (D. 262-25-1 al. 2 in fine; 0 if none)";
+}
+
+pub relation tns_non_agricole(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "travailleur non salarié des professions non agricoles (D. 262-25-2)";
+    label en unofficial "self-employed worker in non-agricultural occupations (D. 262-25-2)";
+}
+
+pub relation tns_immatriculation_rne(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "immatriculation au registre national des entreprises prévu à l'article L. 123-36 du code de commerce, depuis 2023 (D. 262-25-2 1° en vigueur)";
+    label en unofficial "national business register entry under C. com. L. 123-36, since 2023 (D. 262-25-2 1° in force)";
+}
+
+pub relation artiste_auteur_affilie(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "affiliation au régime général de sécurité sociale dans les conditions prévues aux articles L. 382-1 et R. 382-1 du code de la sécurité sociale, pour les artistes auteurs (D. 262-25-2 1°)";
+    label en unofficial "general social-security scheme affiliation under CSS L. 382-1 and R. 382-1, for artist-authors (D. 262-25-2 1°)";
+}
+
+pub relation tns_immatriculation_ancienne(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "immatriculation RCS, répertoire des métiers ou registre des entreprises, ou activité déclarée (CFE ou, depuis le 2021-04-01, service informatique C. com. R. 123-30-14), avant 2023 (D. 262-25-2 1° prédécesseur)";
+    label en unofficial "trade, craft or business register entry, or declared activity (CFE or, since 2021-04-01, the C. com. R. 123-30-14 online service), before 2023 (D. 262-25-2 1° predecessor)";
+}
+
+pub relation tns_duree_activite_mois(p: fr.minima.ressources::Personne, m: Integer) kind empirical {
+    key(p);
+    label fr official "durée d'activité non salariée en mois, deux ans minimum (D. 262-25-2)";
+    label en unofficial "self-employment duration in months, two years minimum (D. 262-25-2)";
+}
+
+pub relation tns_chiffre_affaires(p: fr.minima.ressources::Personne, annee: Integer, ca: Money) kind empirical {
+    key(p, annee);
+    label fr official "chiffre d'affaires non agricole de l'année considérée (D. 262-25-2 2°)";
+    label en unofficial "non-agricultural turnover of the year considered (D. 262-25-2 2°)";
+}
+
+pub relation mf_reference_ca(p: fr.minima.ressources::Personne, annee: Integer, mf: Money) kind empirical {
+    key(p, annee);
+    label fr official "montant forfaitaire mensuel personne seule en vigueur au 1er janvier de l'année du chiffre d'affaires, retenu pour l'espèce (B-RSA-MF-EURO)";
+    label en unofficial "monthly single-person flat-rate amount in force at 1 January of the turnover year, retained for the case (B-RSA-MF-EURO)";
+}
+
+pub relation agricole_l722_1(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "personne relevant du régime de C. rural L. 722-1 (D. 262-25-3)";
+    label en unofficial "person under the C. rural L. 722-1 scheme (D. 262-25-3)";
+}
+
+pub relation agricole_affiliation(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "affiliation au régime de C. rural L. 722-1 (D. 262-25-3 1°)";
+    label en unofficial "affiliation to the C. rural L. 722-1 scheme (D. 262-25-3 1°)";
+}
+
+pub relation agricole_duree_mois(p: fr.minima.ressources::Personne, m: Integer) kind empirical {
+    key(p);
+    label fr official "durée d'activité agricole en mois, deux ans minimum (D. 262-25-3)";
+    label en unofficial "agricultural activity duration in months, two years minimum (D. 262-25-3)";
+}
+
+pub relation agricole_chiffre_affaires(p: fr.minima.ressources::Personne, annee: Integer, ca: Money) kind empirical {
+    key(p, annee);
+    label fr official "chiffre d'affaires agricole de l'année considérée (D. 262-25-3 2°)";
+    label en unofficial "agricultural turnover of the year considered (D. 262-25-3 2°)";
+}
+
+pub relation equivalent_tns_prorata(p: fr.minima.ressources::Personne, h: Decimal) kind empirical {
+    key(p);
+    label fr official "équivalent-heures de la part non salariée ou agricole au prorata, établi par la caisse, méthode de proratisation hors texte (D. 262-25-4)";
+    label en unofficial "hours-equivalent of the self-employed or agricultural share pro rata, fund-established, proration method outside the text (D. 262-25-4)";
+}
+
+pub relation condition_ca_prorata(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "condition de chiffre d'affaires proratisée remplie, établie par la caisse (D. 262-25-4 in fine)";
+    label en unofficial "prorated turnover condition met, fund-established (D. 262-25-4 in fine)";
+}
+
+pub relation condition_heures_jeune(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "condition d'activité des jeunes remplie : heures directes, assimilation TNS ou agricole, ou parcours mixte (D. 262-25-1 à D. 262-25-4)";
+    label en unofficial "young-worker activity condition met: direct hours, self-employed or agricultural deeming, or mixed path (D. 262-25-1 to D. 262-25-4)";
+}
+
+// --- 07 demandes et instruction (D. 262-26 à D. 262-30) ---
+
+pub relation demande_rsa_deposee(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "demande de RSA déposée par la personne (ancrage D. 262-26/28)";
+    label en unofficial "RSA claim filed by the person (D. 262-26/28 anchor)";
+}
+
+pub relation demande_deposee_aupres(o: Organisme, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "demande de la personne déposée auprès de l'organisme destinataire, identité du destinataire établie pour l'espèce (D. 262-28 : « auprès desquels elles ont été déposées »)";
+    label en unofficial "person's claim filed with the recipient body, recipient identity established for the case (D. 262-28: the services or bodies with which filed)";
+}
+
+pub relation demande_deposee_aupres_dept(d: Departement, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "demande de la personne déposée auprès des services du département destinataire, identité du destinataire établie pour l'espèce (D. 262-28)";
+    label en unofficial "person's claim filed with the recipient department services, recipient identity established for the case (D. 262-28)";
+}
+
+pub relation decision_ca_instruire(o: Organisme) kind empirical {
+    label fr official "décision de l'organe délibérant ou du conseil d'administration de se charger de l'instruction (D. 262-26 a)/e), D. 262-27)";
+    label en unofficial "deliberating organ or board decision to take on instruction (D. 262-26 a)/e), D. 262-27)";
+}
+
+pub relation delegation_instruction(o: Organisme) kind empirical {
+    label fr official "délégation d'instruction du président à l'association ou à l'organisme (L. 262-15 ; D. 262-26 c))";
+    label en unofficial "instruction delegation from the president to the association or body (L. 262-15; D. 262-26 c))";
+}
+
+pub relation convention_modalites_ft(o: Organisme) kind empirical {
+    label fr official "convention sur les modalités d'instruction de France Travail conclue avec la CNAF et la CCMSA (D. 262-27 al. 2)";
+    label en unofficial "convention on France Travail instruction modalities concluded with CNAF and CCMSA (D. 262-27 al. 2)";
+}
+
+pub relation instruction_effectuee(o: Organisme, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "instruction de la demande de la personne effectuée par l'organisme (D. 262-28)";
+    label en unofficial "instruction of the person's claim performed by the body (D. 262-28)";
+}
+
+pub relation instruction_effectuee_dept(d: Departement, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "instruction de la demande de la personne effectuée par les services du département (D. 262-26 b), D. 262-28)";
+    label en unofficial "instruction of the person's claim performed by department services (D. 262-26 b), D. 262-28)";
+}
+
+pub relation ft_habilite_instruire(o: Organisme) kind institutional {
+    label fr official "France Travail habilité à instruire : décision du conseil d'administration et convention de modalités (D. 262-27)";
+    label en unofficial "France Travail empowered to instruct: board decision and modalities convention (D. 262-27)";
+}
+
+// Liberty actions: filing the claim at each venue (D. 262-26 a) à e)).
+
+pub relation depot_demande_ccas(p: fr.minima.ressources::Personne, o: Organisme) kind empirical {
+    label fr official "action : dépôt de la demande au CCAS ou CIAS chargé de l'instruction";
+    label en unofficial "action: filing the claim at the instructing CCAS or CIAS";
+}
+
+pub relation depot_demande_services(p: fr.minima.ressources::Personne, d: Departement) kind empirical {
+    label fr official "action : dépôt de la demande aux services du département";
+    label en unofficial "action: filing the claim at department services";
+}
+
+pub relation depot_demande_association(p: fr.minima.ressources::Personne, o: Organisme) kind empirical {
+    label fr official "action : dépôt de la demande à l'association déléguée";
+    label en unofficial "action: filing the claim at the delegated association";
+}
+
+pub relation depot_demande_organisme(p: fr.minima.ressources::Personne, o: Organisme) kind empirical {
+    label fr official "action : dépôt de la demande à l'organisme chargé du service";
+    label en unofficial "action: filing the claim at the service body";
+}
+
+pub relation depot_demande_ft(p: fr.minima.ressources::Personne, o: Organisme) kind empirical {
+    label fr official "action : dépôt de la demande à France Travail chargé de l'instruction";
+    label en unofficial "action: filing the claim at the instructing France Travail";
+}
+
+pub relation decider_instruction_ft(o: Organisme) kind empirical {
+    label fr official "action : décision du conseil d'administration de France Travail de se charger de l'instruction (D. 262-27 al. 1)";
+    label en unofficial "action: France Travail board decision to take on instruction (D. 262-27 al. 1)";
+}
+
+pub relation exiger_frais_instruction(o: Organisme, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "action interdite : exiger des frais pour l'instruction gratuite (D. 262-28)";
+    label en unofficial "prohibited action: charging for the free instruction (D. 262-28)";
+}
+
+pub relation exiger_frais_instruction_dept(d: Departement, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "action interdite : exiger des frais pour l'instruction gratuite des services du département (D. 262-28)";
+    label en unofficial "prohibited action: charging for the free instruction by department services (D. 262-28)";
+}
+
+pub relation engagement_qualite_defini(o: Organisme, d: Departement) kind empirical {
+    label fr official "engagement de qualité de l'instruction défini en commun par l'organisme et le président (D. 262-29)";
+    label en unofficial "instruction quality commitment jointly defined by the body and the president (D. 262-29)";
+}
+
+pub relation ressort_delegation_fixe(o: Organisme, d: Departement) kind empirical {
+    label fr official "ressort territorial de la délégation d'instruction fixé dans la délégation (D. 262-30)";
+    label en unofficial "territorial scope of the instruction delegation fixed in the delegation (D. 262-30)";
+}
+
+// --- 08 conventions département-organismes (D. 262-61 à D. 262-64) ---
+
+pub relation convention_service(d: Departement, o: Organisme) kind empirical {
+    label fr official "convention de gestion conclue entre le département et l'organisme (D. 262-61 à D. 262-63)";
+    label en unofficial "management convention concluded between the department and the body (D. 262-61 to D. 262-63)";
+}
+
+pub relation absence_convention(d: Departement, o: Organisme) kind empirical {
+    label fr official "absence de convention entre le département et l'organisme, régime supplétif (D. 262-64)";
+    label en unofficial "no convention between the department and the body, fallback regime (D. 262-64)";
+}
+
+// Convention clauses, established from the signed text (D. 262-61/63).
+
+pub relation clause_acomptes(d: Departement, o: Organisme) kind empirical {
+    label fr official "clause des acomptes mensuels et de la régularisation de fin d'exercice (D. 262-61 1°)";
+    label en unofficial "monthly advances and year-end settlement clause (D. 262-61 1°)";
+}
+
+pub relation clause_modalites_remboursement(d: Departement, o: Organisme) kind empirical {
+    label fr official "clause des modalités de remboursement des charges financières (D. 262-61 2°)";
+    label en unofficial "financial-charges reimbursement modalities clause (D. 262-61 2°)";
+}
+
+pub relation clause_plan_indus(d: Departement, o: Organisme) kind empirical {
+    label fr official "clause du plan d'action sur les indus : délai, missions, modalités de transmission (D. 262-61 3°)";
+    label en unofficial "overpayment action-plan clause: delay, missions, transmission modalities (D. 262-61 3°)";
+}
+
+pub relation clause_plan_controle(d: Departement, o: Organisme) kind empirical {
+    label fr official "clause détaillant les diligences du plan départemental de contrôle (D. 262-63 1°)";
+    label en unofficial "clause detailing the departmental control-plan steps (D. 262-63 1°)";
+}
+
+pub relation clause_delais_decisions(d: Departement, o: Organisme) kind empirical {
+    label fr official "clause des délais de prise et de communication des décisions (D. 262-63 2°)";
+    label en unofficial "decision-taking and communication delays clause (D. 262-63 2°)";
+}
+
+pub relation clause_modalites_transmissions(d: Departement, o: Organisme) kind empirical {
+    label fr official "clause des modalités des transmissions prévues (D. 262-63 3°)";
+    label en unofficial "prescribed transmissions modalities clause (D. 262-63 3°)";
+}
+
+pub relation convention_financiere_complete(d: Departement, o: Organisme) kind institutional {
+    label fr official "convention financièrement complète : acomptes, remboursement, plan indus (D. 262-61 1° à 3°)";
+    label en unofficial "financially complete convention: advances, reimbursement, overpayment plan (D. 262-61 1° to 3°)";
+}
+
+pub relation convention_controle_complete(d: Departement, o: Organisme) kind institutional {
+    label fr official "convention complète sur le contrôle : diligences, délais, transmissions (D. 262-63 1° à 3°)";
+    label en unofficial "control-complete convention: steps, delays, transmissions (D. 262-63 1° to 3°)";
+}
+
+// Monthly advances, annual settlement, reimbursement (D. 262-61).
+
+pub relation depenses_comptabilisees(o: Organisme, mois: Date, m: Money) kind empirical {
+    key(o, mois);
+    label fr official "dépenses d'allocations comptabilisées par l'organisme pour le mois (D. 262-61 1°)";
+    label en unofficial "allowance expenditure booked by the body for the month (D. 262-61 1°)";
+}
+
+pub relation acompte_verse(d: Departement, o: Organisme, mois: Date, m: Money) kind empirical {
+    label fr official "acompte mensuel versé par le département à l'organisme au plus tard le dernier jour du mois (D. 262-61 1°)";
+    label en unofficial "monthly advance paid by the department to the body by the last day of the month (D. 262-61 1°)";
+}
+
+pub relation exercice_comptable(d: Departement, o: Organisme, n: Integer) kind empirical {
+    label fr official "exercice comptable concerné par la régularisation et le remboursement annuel (D. 262-61 1°/2°)";
+    label en unofficial "accounting year concerned by the settlement and annual reimbursement (D. 262-61 1°/2°)";
+}
+
+pub relation regularisation_effectuee(d: Departement, o: Organisme, n: Integer) kind empirical {
+    label fr official "régularisation des acomptes effectuée à la fin de l'exercice (D. 262-61 1°)";
+    label en unofficial "advance settlement performed at year end (D. 262-61 1°)";
+}
+
+pub relation charges_retard_acomptes(d: Departement, o: Organisme, n: Integer, m: Money) kind empirical {
+    key(d, o, n);
+    label fr official "charges financières supportées par l'organisme du fait des retards de versement des acomptes mensuels par le département, pour l'exercice (D. 262-61 2°)";
+    label en unofficial "financial charges borne by the body from the department's late monthly-advance payments, for the accounting year (D. 262-61 2°)";
+}
+
+pub relation remboursement_charges_effectue(d: Departement, o: Organisme, n: Integer) kind empirical {
+    label fr official "remboursement annuel des charges financières supportées par l'organisme (D. 262-61 2°)";
+    label en unofficial "annual reimbursement of the financial charges borne by the body (D. 262-61 2°)";
+}
+
+pub relation delai_transmission_indus_expire(o: Organisme, d: Departement) kind empirical {
+    label fr official "délai conventionnel écoulé avec des indus non recouvrés à transmettre au département (D. 262-61 3° ; L. 262-46)";
+    label en unofficial "convention delay elapsed with unrecovered overpayments to transmit to the department (D. 262-61 3°; L. 262-46)";
+}
+
+pub relation indus_transmis_departement(o: Organisme, d: Departement) kind empirical {
+    label fr official "indus non recouvrés transmis au président pour recouvrement (D. 262-61 3°)";
+    label en unofficial "unrecovered overpayments transmitted to the president for recovery (D. 262-61 3°)";
+}
+
+// Remuneration (D. 262-62).
+
+pub relation remuneration_ouvrable(o: Organisme) kind empirical {
+    label fr official "compétences déléguées hors gestion ou actions supplémentaires demandées, ouvrant rémunération (D. 262-62)";
+    label en unofficial "delegated off-management competences or requested extra actions opening remuneration (D. 262-62)";
+}
+
+pub relation remuneration_fixee_convention(o: Organisme) kind empirical {
+    label fr official "rémunération fixée dans la convention de gestion (D. 262-62 in fine)";
+    label en unofficial "remuneration fixed in the management convention (D. 262-62 in fine)";
+}
+
+pub relation percevoir_remuneration(o: Organisme) kind empirical {
+    label fr official "action : perception de la rémunération conventionnelle par l'organisme";
+    label en unofficial "action: receipt of the conventional remuneration by the body";
+}
+
+// No-convention fallback (D. 262-64).
+
+pub relation instruction_service_sans_convention(o: Organisme, d: Departement) kind empirical {
+    label fr official "instruction et service de l'allocation assurés par l'organisme pour le compte du département sans convention (D. 262-64 1°)";
+    label en unofficial "instruction and payment of the allowance provided by the body for the department without a convention (D. 262-64 1°)";
+}
+
+pub relation controle_plan_national(o: Organisme) kind empirical {
+    label fr official "contrôle assuré en application des mesures du plan national de maîtrise des risques (D. 262-64 1° in fine)";
+    label en unofficial "control provided under the national risk-control plan measures (D. 262-64 1° in fine)";
+}
+
+pub relation financement_sans_convention(d: Departement, o: Organisme) kind empirical {
+    label fr official "financement par le département selon D. 262-61 1° et 2° sans convention (D. 262-64 2°)";
+    label en unofficial "financing by the department per D. 262-61 1° and 2° without a convention (D. 262-64 2°)";
+}
+
+pub relation trimestre_civil_fin(t: Date) kind empirical {
+    label fr official "fin du trimestre civil dont les charges sont remboursées le mois suivant (D. 262-64 2°)";
+    label en unofficial "end of the calendar quarter whose charges are reimbursed the next month (D. 262-64 2°)";
+}
+
+pub relation taux_marche_monetaire(t: Decimal) kind empirical {
+    label fr official "taux moyen pondéré du marché monétaire au jour le jour en euro, retenu pour l'espèce (B-RSA-TAUX-MARCHE)";
+    label en unofficial "euro overnight money-market weighted average rate retained for the case (B-RSA-TAUX-MARCHE)";
+}
+
+pub relation taux_interet_sans_convention(d: Departement, o: Organisme, taux: Decimal) kind institutional {
+    label fr official "taux d'intérêt supplétif : taux du marché plus un point (D. 262-64 2°)";
+    label en unofficial "fallback interest rate: market rate plus one point (D. 262-64 2°)";
+}
+
+pub relation charges_trimestre_sans_convention(d: Departement, o: Organisme, t: Date, m: Money) kind empirical {
+    key(d, o, t);
+    label fr official "charges financières éventuelles du trimestre civil sans convention, calculées au taux supplétif (D. 262-64 2°)";
+    label en unofficial "possible financial charges of the calendar quarter without a convention, computed at the fallback rate (D. 262-64 2°)";
+}
+
+pub relation remboursement_charges_sans_convention(d: Departement, o: Organisme, taux: Decimal) kind empirical {
+    label fr official "remboursement trimestriel des charges avec intérêts au taux supplétif, dans le mois suivant le trimestre (D. 262-64 2°)";
+    label en unofficial "quarterly charge reimbursement with interest at the fallback rate, within the month after the quarter (D. 262-64 2°)";
+}
+
+// --- 09 devoirs et orientation (D. 262-65/65-2/65-2-1/73) ---
+
+pub relation revenus_pro_mois(p: fr.minima.ressources::Personne, mois: Date, m: Money) kind empirical {
+    key(p, mois);
+    label fr official "revenus du mois tirés de l'exercice d'une activité professionnelle, établis pour l'espèce sans exclusion extérieure au texte (D. 262-65)";
+    label en unofficial "income of the month from professional activity, established for the case with no exclusion from outside the text (D. 262-65)";
+}
+
+pub relation mois_trimestre_reference(p: fr.minima.ressources::Personne, m1: Date, m2: Date, m3: Date) kind empirical {
+    label fr official "les trois mois du trimestre de référence des devoirs, établis pour l'espèce (mécanique trimestrielle : fr.minima.ressources)";
+    label en unofficial "the three months of the duties reference quarter, established for the case (quarter mechanics: fr.minima.ressources)";
+}
+
+pub relation condition_revenus_l262_28(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "branche revenus des devoirs L. 262-28 : moyenne mensuelle sous 500 € (D. 262-65 ; la synthèse reste à la caisse, tenu_obligations_262_28)";
+    label en unofficial "income limb of the L. 262-28 duties: monthly average below 500 EUR (D. 262-65; synthesis stays with the fund, tenu_obligations_262_28)";
+}
+
+pub relation info_orientation_recue(d: Departement, p: fr.minima.ressources::Personne, date: Date) kind empirical {
+    label fr official "services du président informés de l'ouverture ou du transfert du droit à la date (D. 262-65-2)";
+    label en unofficial "president's services informed of the opening or transfer of the right on the date (D. 262-65-2)";
+}
+
+pub relation orientation_president_effectuee(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "orientation décidée par le président dans les six semaines (D. 262-65-2 ; fait positif, distinct de l'absence établie, les deux s'excluent)";
+    label en unofficial "orientation decided by the president within six weeks (D. 262-65-2; positive fact, distinct from the established absence, the two exclude each other)";
+}
+
+pub relation absence_orientation_president_six_semaines(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "absence d'orientation par le président dans les six semaines de la réception, établie pour l'espèce (D. 262-65-2 : « En l'absence d'orientation ... dans un délai de six semaines » ; fait négatif établi, distinct de l'inconnu)";
+    label en unofficial "absence of presidential orientation within six weeks of receipt, established for the case (D. 262-65-2; established negative fact, distinct from unknown)";
+}
+
+pub relation delai_six_semaines_expire(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "délai de six semaines écoulé depuis la réception de l'information, établi pour l'espèce (D. 262-65-2 ; condition temporelle, distincte de l'absence établie)";
+    label en unofficial "six-week period elapsed since receipt of the information, established for the case (D. 262-65-2; temporal condition, distinct from the established absence)";
+}
+
+pub relation echeance_orientation_ft(p: fr.minima.ressources::Personne, e: Date) kind institutional {
+    label fr official "échéance des six semaines : information plus quarante-deux jours (D. 262-65-2)";
+    label en unofficial "six-week deadline: information plus forty-two days (D. 262-65-2)";
+}
+
+pub relation orientation_ft_effectuee(o: Organisme, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "orientation du bénéficiaire effectuée par France Travail (D. 262-65-2 ; L. 262-29 al. 2)";
+    label en unofficial "claimant orientation performed by France Travail (D. 262-65-2; L. 262-29 al. 2)";
+}
+
+pub enum MotifVulnerabilite {
+    SANTE,
+    HANDICAP,
+    INVALIDITE,
+    LOGEMENT,
+    FAMILLE_AIDANT,
+}
+
+pub relation vulnerabilite_constatee(p: fr.minima.ressources::Personne, motif: MotifVulnerabilite) kind empirical {
+    label fr official "vulnérabilité ou difficulté particulière identifiée dans le diagnostic global ou l'accompagnement (D. 262-65-2-1 1° à 5°)";
+    label en unofficial "vulnerability or particular difficulty identified in the global diagnostic or support (D. 262-65-2-1 1° to 5°)";
+}
+
+pub relation diagnostic_global(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "diagnostic global des besoins réalisé ou accompagnement en cours (D. 262-65-2-1)";
+    label en unofficial "global needs diagnostic performed or support under way (D. 262-65-2-1)";
+}
+
+pub relation obstacle_engagement_emploi(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "vulnérabilités constituant un obstacle à l'engagement dans une démarche de recherche d'emploi, établi au diagnostic (D. 262-65-2-1)";
+    label en unofficial "vulnerabilities constituting an obstacle to engaging in job seeking, diagnostic-established (D. 262-65-2-1)";
+}
+
+pub relation duree_accompagnement_mois(p: fr.minima.ressources::Personne, m: Integer) kind empirical {
+    key(p);
+    label fr official "durée d'accompagnement social ou d'insertion préalable requise en mois, plus de six mois (D. 262-65-2-1)";
+    label en unofficial "required prior social or insertion support duration in months, over six months (D. 262-65-2-1)";
+}
+
+pub relation delai_porte_12_mois(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "délai d'orientation porté à douze mois pour vulnérabilités (D. 262-65-2-1)";
+    label en unofficial "orientation period extended to twelve months for vulnerabilities (D. 262-65-2-1)";
+}
+
+pub relation duree_radiation_mois(p: fr.minima.ressources::Personne, m: Integer) kind empirical {
+    key(p);
+    label fr official "durée de radiation écoulée en mois, au-delà de deux mois (D. 262-73)";
+    label en unofficial "elapsed removal duration in months, beyond two months (D. 262-73)";
+}
+
+pub relation proposition_orientation(r: Referent, p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "proposition de nouvelle orientation adressée au président par le référent (D. 262-73)";
+    label en unofficial "new orientation proposal sent to the president by the referrer (D. 262-73)";
+}
+
+// --- 10 contrôle et recouvrement (D. 262-77/94-2) ---
+
+pub relation patrimoine_pro_foyer(p: fr.minima.ressources::Personne, m: Money) kind empirical {
+    key(p);
+    label fr official "patrimoine à caractère professionnel du foyer (D. 262-77 ; L. 262-41)";
+    label en unofficial "household professional assets (D. 262-77; L. 262-41)";
+}
+
+pub relation plafond_secu_retenu(p: fr.minima.ressources::Personne, m: Money) kind empirical {
+    key(p);
+    label fr official "plafond mensuel de la sécurité sociale retenu pour l'espèce (B-RSA-PLAFOND-SECU)";
+    label en unofficial "monthly social-security ceiling retained for the case (B-RSA-PLAFOND-SECU)";
+}
+
+pub relation patrimoine_pro_exclu(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "patrimoine professionnel sous plafond, exclu de l'appréciation du train de vie (D. 262-77 ; L. 262-41, couture documentée)";
+    label en unofficial "below-ceiling professional assets, excluded from the lifestyle assessment (D. 262-77; L. 262-41, documented seam)";
+}
+
+pub relation recouvrement_suit_d553(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "recouvrement de l'indu RSA suivant CSS D. 553-1/2/4/5, modalités externes (D. 262-94-2 ; B-RSA-D553-MODALITES, groupe payment-core)";
+    label en unofficial "RSA overpayment recovery following CSS D. 553-1/2/4/5, external modalities (D. 262-94-2; B-RSA-D553-MODALITES, payment-core group)";
+}
+
+// --- 11 statistiques (D. 262-95/96/97/98/100 ; D. 262-99 : frontière) ---
+
+pub relation annee_donnees_fin(d: Departement, fin: Date) kind empirical {
+    label fr official "fin de l'année sur laquelle portent les données annuelles (D. 262-95/97)";
+    label en unofficial "end of the year covered by the annual data (D. 262-95/97)";
+}
+
+pub relation trimestre_donnees_fin(t: Date) kind empirical {
+    label fr official "fin du trimestre sur lequel portent les données trimestrielles (D. 262-96)";
+    label en unofficial "end of the quarter covered by the quarterly data (D. 262-96)";
+}
+
+pub relation trimestre_courant_fin(t: Date) kind empirical {
+    label fr official "fin du trimestre courant, échéance trimestrielle avant 2025 (D. 262-96 prédécesseur)";
+    label en unofficial "end of the current quarter, pre-2025 quarterly deadline (D. 262-96 predecessor)";
+}
+
+pub relation donnees_annuelles_transmises(d: Departement, s: Organisme, fin: Date) kind empirical {
+    label fr official "données annuelles transmises aux services statistiques avant la fin du premier trimestre (D. 262-95 en vigueur, conjoint inclus)";
+    label en unofficial "annual data transmitted to the statistical services before the end of the first quarter (D. 262-95 in force, spouse included)";
+}
+
+pub relation donnees_annuelles_transmises_pre2025(d: Departement, s: Organisme, fin: Date) kind empirical {
+    label fr official "données annuelles transmises aux services statistiques avant 2025, bénéficiaires seuls (D. 262-95 prédécesseur)";
+    label en unofficial "annual data transmitted to the statistical services before 2025, claimants only (D. 262-95 predecessor)";
+}
+
+pub relation donnees_annuelles_transmises_prefet(d: Departement, f: Prefet, fin: Date) kind empirical {
+    label fr official "données annuelles transmises au représentant de l'Etat dans le département avant la fin du premier trimestre (D. 262-95 en vigueur, conjoint inclus)";
+    label en unofficial "annual data transmitted to the State representative in the department before the end of the first quarter (D. 262-95 in force, spouse included)";
+}
+
+pub relation donnees_annuelles_transmises_prefet_pre2025(d: Departement, f: Prefet, fin: Date) kind empirical {
+    label fr official "données annuelles transmises au représentant de l'Etat dans le département avant 2025, bénéficiaires seuls (D. 262-95 prédécesseur)";
+    label en unofficial "annual data transmitted to the State representative in the department before 2025, claimants only (D. 262-95 predecessor)";
+}
+
+pub relation effectifs_trimestre_transmis(o: Organisme, s: Organisme, t: Date) kind empirical {
+    label fr official "effectifs de fin de mois transmis avant la fin du deuxième mois du trimestre (D. 262-96 en vigueur)";
+    label en unofficial "month-end headcounts transmitted before the end of the second month of the quarter (D. 262-96 in force)";
+}
+
+pub relation donnees_trimestre_transmises_pre2025(o: Organisme, s: Organisme, t: Date) kind empirical {
+    label fr official "données trimestrielles en quatre rubriques transmises avant la fin du trimestre (D. 262-96 prédécesseur)";
+    label en unofficial "quarterly data in four items transmitted before quarter end (D. 262-96 predecessor)";
+}
+
+pub relation effectifs_annuels_transmis(o: Organisme, s: Organisme, fin: Date) kind empirical {
+    label fr official "effectifs et caractéristiques au 31 décembre transmis avant la fin du troisième trimestre (D. 262-97 en vigueur)";
+    label en unofficial "31 December headcounts and characteristics transmitted before the end of the third quarter (D. 262-97 in force)";
+}
+
+pub relation donnees_annuelles_transmises_caisses_pre2025(o: Organisme, s: Organisme, fin: Date) kind empirical {
+    label fr official "données annuelles en cinq rubriques transmises avant la fin du premier trimestre, avant 2025 (D. 262-97 prédécesseur)";
+    label en unofficial "annual data in five items transmitted before the end of the first quarter, before 2025 (D. 262-97 predecessor)";
+}
+
+pub relation echantillon_l262_55(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "personne physique dont les informations sont destinées à la constitution d'échantillons statistiquement représentatifs (L. 262-55 via D. 262-98)";
+    label en unofficial "natural person whose information is destined for statistically representative samples (L. 262-55 via D. 262-98)";
+}
+
+pub relation infos_l262_55_transmises_organisme(o: Organisme, s: Organisme) kind empirical {
+    label fr official "informations L. 262-55 transmises par l'organisme aux services statistiques (D. 262-98)";
+    label en unofficial "L. 262-55 information transmitted by the body to the statistical services (D. 262-98)";
+}
+
+pub relation infos_l262_55_transmises_dept(d: Departement, s: Organisme) kind empirical {
+    label fr official "informations L. 262-55 transmises par le département aux services statistiques (D. 262-98)";
+    label en unofficial "L. 262-55 information transmitted by the department to the statistical services (D. 262-98)";
+}
+
+pub relation publication_services_assuree(s: Organisme) kind empirical {
+    label fr official "publication régulière des résultats assurée par les services statistiques (D. 262-100)";
+    label en unofficial "regular publication of results ensured by the statistical services (D. 262-100)";
+}
+
+pub relation publication_caisses_assuree(o: Organisme) kind empirical {
+    label fr official "publication régulière des résultats assurée par la caisse nationale (D. 262-100)";
+    label en unofficial "regular publication of results ensured by the national fund (D. 262-100)";
+}

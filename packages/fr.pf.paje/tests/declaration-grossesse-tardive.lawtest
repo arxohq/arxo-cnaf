@@ -1,0 +1,19 @@
+// D. 532-1: the declaration sent 2025-04-20, after the fourteen-week
+// deadline (2025-04-14), is late. Control — declaration-grossesse-en-delai.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-declaration-tardive" {
+    given {
+        context { decision_time @2025-04-25T12:00:00Z; knowledge_time @2025-04-25T12:00:00Z; legal_time @2025-04-25; timezone "Europe/Paris"; }
+        assert "decl-tard-01": attente_naissance(entity_ref("urn:fr:paje:case:decl-tard"), entity_ref("urn:fr:paje:enfant:decl-tard")) { origin case_input; }
+        assert "decl-tard-02": debut_grossesse(entity_ref("urn:fr:paje:case:decl-tard"), entity_ref("urn:fr:paje:enfant:decl-tard"), @2025-01-06) { origin adjudicated; }
+        assert "decl-tard-03": date_limite_declaration(entity_ref("urn:fr:paje:case:decl-tard"), entity_ref("urn:fr:paje:enfant:decl-tard"), @2025-04-14) { origin adjudicated; }
+        assert "decl-tard-04": declaration_grossesse_adressee(entity_ref("urn:fr:paje:case:decl-tard"), entity_ref("urn:fr:paje:enfant:decl-tard"), @2025-04-20) { origin adjudicated; }
+    }
+    evaluate truth(declaration_grossesse_tardive(entity_ref("urn:fr:paje:case:decl-tard"), entity_ref("urn:fr:paje:enfant:decl-tard")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

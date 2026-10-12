@@ -1,0 +1,34 @@
+// DSS/2B/2026/46 barème (annexe III.4, pinned in fr.css.revalorisation):
+// AEEH base allowance without supplement, BMAF 478.16: 0.32 x 478.16 =
+// 153.0112 exact (base and total, OpenFisca-compatible); the served amount
+// rounds to the centime -> 153.01, the published base amount.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-base-dss-2026" {
+    given {
+        context { decision_time @2026-04-15T12:00:00Z; knowledge_time @2026-04-15T12:00:00Z; legal_time @2026-04-15; timezone "Europe/Paris"; }
+        assert "aeeh-dss-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:couple-dss-2026"), entity_ref("urn:fr:pf-aeeh:case:enfant-dss-2026")) { origin case_input; }
+        assert "aeeh-dss-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-dss-2026")) { origin adjudicated; }
+        assert "aeeh-dss-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-dss-2026"), 478.16 EUR) { origin case_input; }
+        assert "aeeh-dss-04": sans_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-dss-2026")) { origin case_input; }
+        assert "aeeh-dss-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-dss-2026")) { origin case_input; }
+    }
+    evaluate truth(aeeh_droit_calcule(entity_ref("urn:fr:pf-aeeh:case:enfant-dss-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_base(entity_ref("urn:fr:pf-aeeh:case:enfant-dss-2026"), 153.0112 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_total(entity_ref("urn:fr:pf-aeeh:case:enfant-dss-2026"), 153.0112 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_servi(entity_ref("urn:fr:pf-aeeh:case:enfant-dss-2026"), 153.01 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

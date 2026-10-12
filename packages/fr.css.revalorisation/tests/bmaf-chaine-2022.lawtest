@@ -1,0 +1,24 @@
+// BMAF 2022 chain (DSS/2B/2022/82, COEFF fragment): previous base
+// 414.81, coefficient 1.018 -> 414.81 x 1.018 = 422.27658, rounded to the
+// centime -> 422.28, the published 1 April 2022 base. Coefficient 1.018 is
+// at/above one, retained nominally.
+language "law.core" version "0.2";
+package fr.css.revalorisation version "0.1.0";
+namespace "urn:fr:corpus:clir:revalorisation";
+
+test "urn:query:fr-revalorisation-bmaf-chaine-2022" {
+    given {
+        context { deadline_policy REVALO_EXERCICE; decision_time @2022-04-01T12:00:00Z; knowledge_time @2022-04-01T12:00:00Z; legal_time @2022-04-01; timezone "Europe/Paris"; }
+        assert "bmaf-01": annee_exercice(entity_ref("urn:fr:revalorisation:exercice:2022"), 2022) { origin case_input; }
+        assert "bmaf-02": bmaf_precedente(entity_ref("urn:fr:revalorisation:exercice:2022"), 414.81 EUR) { origin case_input; }
+        assert "bmaf-03": coefficient_annee(entity_ref("urn:fr:revalorisation:exercice:2022"), 1.018) { origin case_input; }
+    }
+    evaluate truth(coefficient_retenu(entity_ref("urn:fr:revalorisation:exercice:2022"), 1.018));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bmaf_revalorisee(entity_ref("urn:fr:revalorisation:exercice:2022"), 422.28 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

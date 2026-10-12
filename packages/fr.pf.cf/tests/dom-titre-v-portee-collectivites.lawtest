@@ -1,0 +1,59 @@
+// Title V statutory scope across the six L. 751-1 collectivities (D-76):
+// households in Guadeloupe, Guyane, Martinique, Réunion,
+// Saint-Barthélemy and Saint-Martin get cf_titre_v_portee; households in
+// METROPOLE, MAYOTTE or AUTRE stay silent (exclusion triple). Scope only:
+// no award frame and no amount is asserted here.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-titre-v-portee-collectivites" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "dtp-01": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-gua"), GUADELOUPE) { origin case_input; }
+        assert "dtp-02": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-guy"), GUYANE) { origin case_input; }
+        assert "dtp-03": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-mar"), MARTINIQUE) { origin case_input; }
+        assert "dtp-04": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-reu"), REUNION) { origin case_input; }
+        assert "dtp-05": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-sb"), SAINT_BARTHELEMY) { origin case_input; }
+        assert "dtp-06": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-sm"), SAINT_MARTIN) { origin case_input; }
+        assert "dtp-07": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-met"), METROPOLE) { origin case_input; }
+        assert "dtp-08": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-may"), MAYOTTE) { origin case_input; }
+        assert "dtp-09": territoire(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-aut"), AUTRE) { origin case_input; }
+    }
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-gua")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-guy")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-mar")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-reu")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-sb")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-sm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-met")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-may")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_titre_v_portee(entity_ref("urn:fr:pf-cf:case:dom-tv-portee-aut")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

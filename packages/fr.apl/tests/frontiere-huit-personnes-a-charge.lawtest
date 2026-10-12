@@ -1,0 +1,28 @@
+// СВЕРХ ШЕСТИ ИЖДИВЕНЦЕВ: у TF надбавка −0,06 % за каждое лицо свыше шести,
+// у R0 — 311 €, а плафон растёт на 58,95 € за каждое лицо свыше первого.
+// Восемь иждивенцев: TF = 1,61 %, R0 = 10 061 €, точный итог — 491.4606472 €.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-huit-personnes-a-charge" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frontiere-huit-personnes-a-charge-01": secteur_locatif(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge")) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-02": zone_du_logement(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), ZONE_I) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-03": aide_demandee(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), APL) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-04": situation_familiale(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), COUPLE) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-05": personnes_a_charge(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), 8) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-06": loyer_principal(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), 700 EUR) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-07": ressources_du_menage(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), 25000 EUR) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-08": mode_location(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), LOCATION_SEULE) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-09": forme_logement(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), 0 EUR) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), false) { origin case_input; }
+        assert "frontiere-huit-personnes-a-charge-12": territoire(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:frontiere-huit-personnes-a-charge"), 491.4606472 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

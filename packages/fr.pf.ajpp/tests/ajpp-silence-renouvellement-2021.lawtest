@@ -1,0 +1,23 @@
+// Renewal silence before 2022-04-30: the text then covers only the
+// initial request — neither generation fires
+// (B-PFAJPP-SILENCE-RENOUVELLEMENT-AVANT-2022).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-silence-renouvellement-2021" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ajpp-sr1-01": demande_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-sr1")) { origin case_input; }
+        assert "ajpp-sr1-02": demande_recue_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-sr1"), 10) { origin case_input; }
+        assert "ajpp-sr1-03": silence_observe_jusqu_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-sr1"), 13) { origin case_input; }
+    }
+    evaluate truth(avis_silence_repute_defavorable(entity_ref("urn:fr:pf-ajpp:case:enfant-sr1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(avis_silence_repute_favorable(entity_ref("urn:fr:pf-ajpp:case:enfant-sr1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

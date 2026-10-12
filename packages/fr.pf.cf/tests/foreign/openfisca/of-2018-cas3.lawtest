@@ -1,0 +1,49 @@
+// OpenFisca cf_2018 Cas 3 (2018-01): 5 children (12, 10, 7, 5, 3),
+// N-2 35000. The 3-year-old (born 2014-06-01) reaches 3 before the
+// month, so the count holds at five. Base track under the 48000
+// ceiling. Our brut 133.28; their 169.03. Class (b).
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-of-2018-cas3" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2018-01-15T12:00:00Z; knowledge_time @2018-01-15T12:00:00Z; legal_time @2018-01-15; timezone "Europe/Paris"; }
+        assert "oc3-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e1")) { origin case_input; }
+        assert "oc3-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e2")) { origin case_input; }
+        assert "oc3-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e3")) { origin case_input; }
+        assert "oc3-04": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e4")) { origin case_input; }
+        assert "oc3-05": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e5")) { origin case_input; }
+        assert "oc3-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e1")) { origin case_input; }
+        assert "oc3-07": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e2")) { origin case_input; }
+        assert "oc3-08": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e3")) { origin case_input; }
+        assert "oc3-09": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e4")) { origin case_input; }
+        assert "oc3-10": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e5")) { origin case_input; }
+        assert "oc3-11": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e1"), @2005-06-01) { origin case_input; }
+        assert "oc3-12": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e2"), @2007-06-01) { origin case_input; }
+        assert "oc3-13": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e3"), @2010-06-01) { origin case_input; }
+        assert "oc3-14": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e4"), @2012-06-01) { origin case_input; }
+        assert "oc3-15": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3-e5"), @2014-06-01) { origin case_input; }
+        assert "oc3-16": mois_droit(@2018-01-01) { origin case_input; }
+        assert "oc3-17": nb_enfants_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), 5) { origin case_input; }
+        assert "oc3-18": ressources_menage(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), 35000 EUR) { origin case_input; }
+        assert "oc3-19": plafond_base_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), 20000 EUR) { origin case_input; }
+        assert "oc3-19a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), 5000 EUR) { origin case_input; }
+        assert "oc3-19b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), 6000 EUR) { origin case_input; }
+        assert "oc3-19c": plafond_base_majore(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), 10000 EUR) { origin case_input; }
+        assert "oc3-19d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), 2500 EUR) { origin case_input; }
+        assert "oc3-19e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), 3000 EUR) { origin case_input; }
+        assert "oc3-20": foyer_du_cas(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3")) { origin case_input; }
+        assert "oc3-21": cadre_cf_remplie(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3")) { origin case_input; }
+        assert "oc3-22": bmaf_retenu(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), 320.00 EUR) { origin case_input; }
+    }
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_montant_du(entity_ref("urn:fr:pf-cf:foreign:of-2018-cas3"), 133.28 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,1622 @@
+// Non-decency conservation (L. 843-1..7, R. 843-1..8): the organism keeps
+// the allocation up to 18 months, notifies the owner, the tenant pays a
+// reduced rent under eviction immunity, unconformed sums are lost to the
+// owner, exceptional maintenance on the five R. 843-6 grounds renewable
+// once, new-tenant conservation on a fresh finding (6 months), owner refund
+// of the above-rent excess, hotel/accession derogations with board, prefect
+// and committee notices, and the narrow L. 843-7 qualified-portfolio
+// continuation. Allocation-only (ALF/ALS).
+// Effects without a producer below (non_resiliation_bail_non_decence,
+// non_recours_proprietaire_loyer) hold as immunity effects, not standalone
+// derivations; if LDC flags producer-less relations, the reviewer converts
+// them to empirical case attestations.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    Bailleur,
+    CCH_L843_1,
+    CCH_L843_1_ED2019_12,
+    CCH_L843_1_ED2020_01,
+    CCH_L843_1_ED2021_01,
+    CCH_L843_1_ED2023_04,
+    CCH_L843_1_ED2023_09,
+    CCH_L843_1_ED2023_12,
+    CCH_L843_1_ED2026_07,
+    CCH_L843_2,
+    CCH_L843_2_ED2019_12,
+    CCH_L843_2_ED2020_01,
+    CCH_L843_2_ED2021_01,
+    CCH_L843_2_ED2023_04,
+    CCH_L843_2_ED2023_09,
+    CCH_L843_2_ED2023_12,
+    CCH_L843_2_ED2026_07,
+    CCH_L843_3,
+    CCH_L843_3_ED2019_12,
+    CCH_L843_3_ED2020_01,
+    CCH_L843_3_ED2021_01,
+    CCH_L843_3_ED2023_04,
+    CCH_L843_3_ED2023_09,
+    CCH_L843_3_ED2023_12,
+    CCH_L843_3_ED2026_07,
+    CCH_L843_4,
+    CCH_L843_4_ED2019_12,
+    CCH_L843_4_ED2020_01,
+    CCH_L843_4_ED2021_01,
+    CCH_L843_4_ED2023_04,
+    CCH_L843_4_ED2023_09,
+    CCH_L843_4_ED2023_12,
+    CCH_L843_4_ED2026_07,
+    CCH_L843_5,
+    CCH_L843_5_ED2019_12,
+    CCH_L843_5_ED2020_01,
+    CCH_L843_5_ED2021_01,
+    CCH_L843_5_ED2023_04,
+    CCH_L843_5_ED2023_09,
+    CCH_L843_5_ED2023_12,
+    CCH_L843_5_ED2026_07,
+    CCH_L843_6,
+    CCH_L843_6_ED2019_12,
+    CCH_L843_6_ED2020_01,
+    CCH_L843_6_ED2021_01,
+    CCH_L843_6_ED2023_04,
+    CCH_L843_6_ED2023_09,
+    CCH_L843_6_ED2023_12,
+    CCH_L843_6_ED2026_07,
+    CCH_L843_7,
+    CCH_L843_7_ED2019_12,
+    CCH_L843_7_ED2020_01,
+    CCH_L843_7_ED2021_01,
+    CCH_L843_7_ED2023_04,
+    CCH_L843_7_ED2023_09,
+    CCH_L843_7_ED2023_12,
+    CCH_L843_7_ED2026_07,
+    CCH_R843_1,
+    CCH_R843_1_ED2019_12,
+    CCH_R843_1_ED2020_01,
+    CCH_R843_1_ED2021_01,
+    CCH_R843_1_ED2023_04,
+    CCH_R843_1_ED2023_09,
+    CCH_R843_1_ED2023_12,
+    CCH_R843_1_ED2026_07,
+    CCH_R843_2,
+    CCH_R843_2_ED2019_12,
+    CCH_R843_2_ED2020_01,
+    CCH_R843_2_ED2021_01,
+    CCH_R843_2_ED2023_04,
+    CCH_R843_2_ED2023_09,
+    CCH_R843_2_ED2023_12,
+    CCH_R843_2_ED2026_07,
+    CCH_R843_3,
+    CCH_R843_3_ED2019_12,
+    CCH_R843_3_ED2020_01,
+    CCH_R843_3_ED2021_01,
+    CCH_R843_3_ED2023_04,
+    CCH_R843_3_ED2023_09,
+    CCH_R843_3_ED2023_12,
+    CCH_R843_3_ED2026_07,
+    CCH_R843_4,
+    CCH_R843_4_ED2019_12,
+    CCH_R843_4_ED2020_01,
+    CCH_R843_4_ED2021_01,
+    CCH_R843_4_ED2023_04,
+    CCH_R843_4_ED2023_09,
+    CCH_R843_4_ED2023_12,
+    CCH_R843_4_ED2026_07,
+    CCH_R843_5,
+    CCH_R843_5_ED2019_12,
+    CCH_R843_5_ED2020_01,
+    CCH_R843_5_ED2021_01,
+    CCH_R843_5_ED2023_04,
+    CCH_R843_5_ED2023_09,
+    CCH_R843_5_ED2023_12,
+    CCH_R843_5_ED2026_07,
+    CCH_R843_6,
+    CCH_R843_6_ED2019_12,
+    CCH_R843_6_ED2020_01,
+    CCH_R843_6_ED2021_01,
+    CCH_R843_6_ED2023_04,
+    CCH_R843_6_ED2023_09,
+    CCH_R843_6_ED2023_12,
+    CCH_R843_6_ED2026_07,
+    CCH_R843_7,
+    CCH_R843_7_ED2019_12,
+    CCH_R843_7_ED2020_01,
+    CCH_R843_7_ED2021_01,
+    CCH_R843_7_ED2023_04,
+    CCH_R843_7_ED2023_09,
+    CCH_R843_7_ED2023_12,
+    CCH_R843_7_ED2026_07,
+    CCH_R843_8,
+    CCH_R843_8_ED2019_12,
+    CCH_R843_8_ED2020_01,
+    CCH_R843_8_ED2021_01,
+    CCH_R843_8_ED2023_04,
+    CCH_R843_8_ED2023_09,
+    CCH_R843_8_ED2023_12,
+    CCH_R843_8_ED2026_07,
+    ConseilAdministration,
+    Menage,
+    Organisme,
+    Prefet,
+    RoleTiers,
+    TypeAide,
+    aide_attribuee,
+    bailleur_du_menage,
+    charges_recuperables,
+    conseil_organisme,
+    date_appreciation,
+    derogation_peuplement_expire_le,
+    impaye_depense_logement,
+    loyer_principal,
+    organisme_debiteur,
+    prefet_competent,
+    role_tiers,
+    versement_maintenu_impaye,
+};
+
+deadline policy APL_CONSERVATION_MOIS {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+pub relation constat_non_decence(m: Menage, d: Date) kind empirical {
+    label fr official "constat de non-decence L. 822-9 par l'organisme ou habilite (fait date)";
+    label en unofficial "L. 822-9 non-decency finding by the body or approved agent (dated fact)";
+}
+
+pub relation patrimoine_dix_logements_ou_plus(m: Menage) kind empirical {
+    label fr official "logement dans un patrimoine d'au moins dix logements L. 843-7 (constat)";
+    label en unofficial "dwelling in a ten-dwelling-or-more portfolio under L. 843-7 (finding)";
+}
+
+pub relation proprietaire_gestionnaire_qualifie_843_7(m: Menage) kind empirical {
+    label fr official "proprietaire ou gestionnaire HLM, SEM sociale, agree L. 365-1 ou houilleres Nord-Pas-de-Calais L. 843-7 (constat)";
+    label en unofficial "HLM, social SEM, L. 365-1 approved or Nord-Pas-de-Calais coal-board owner or manager under L. 843-7 (finding)";
+}
+
+pub relation convention_etat_conformite_843_7(m: Menage) kind empirical {
+    label fr official "convention avec l'Etat pour rendre le logement decent dans un delai fixe (fait)";
+    label en unofficial "State convention to make the dwelling decent within a fixed delay (fact)";
+}
+
+pub relation copie_convention_transmise_organisme(m: Menage) kind empirical {
+    label fr official "copie de la convention adressee aux organismes payeurs L. 843-7 (execution)";
+    label en unofficial "convention copy sent to the paying bodies under L. 843-7 (performance)";
+}
+
+pub relation copie_convention_transmise_le(m: Menage, d: Date) kind empirical {
+    label fr official "date de transmission de la convention a l'organisme payeur (dossier)";
+    label en unofficial "convention transmission date to the paying body (case file)";
+}
+
+pub relation continuation_perception_l843_7(m: Menage) kind institutional {
+    label fr official "le bailleur continue de percevoir l'allocation par derogation L. 843-7";
+    label en unofficial "the landlord keeps receiving the allocation by L. 843-7 derogation";
+}
+
+pub relation conservation_en_cours(m: Menage) kind institutional {
+    label fr official "allocation conservee par l'organisme L. 843-1";
+    label en unofficial "allocation kept by the body under L. 843-1";
+}
+
+pub relation allocation_due_conservation(m: Menage, a: Money) kind empirical {
+    label fr official "allocation mensuelle due sous conservation (mesure)";
+    label en unofficial "monthly allocation due under conservation (measured)";
+}
+
+@source(CCH_L843_1, CCH_L843_1_ED2019_12, CCH_L843_1_ED2020_01,
+        CCH_L843_1_ED2021_01, CCH_L843_1_ED2023_04, CCH_L843_1_ED2023_09,
+        CCH_L843_1_ED2023_12, CCH_L843_1_ED2026_07, CCH_L843_7,
+        CCH_L843_7_ED2019_12, CCH_L843_7_ED2020_01, CCH_L843_7_ED2021_01,
+        CCH_L843_7_ED2023_04, CCH_L843_7_ED2023_09, CCH_L843_7_ED2023_12,
+        CCH_L843_7_ED2026_07)
+rule ConservationDeclencheeALF(m: Menage, constat: Date) defeasible {
+    label fr official "constat de non-decense : l'ALF est conservee, sauf continuation L. 843-7";
+    label en unofficial "non-decency finding: ALF is kept, barring L. 843-7 continuation";
+    when constat_non_decence(m, constat) and aide_attribuee(m, ALF);
+    unless continuation_perception_l843_7(m);
+    then conservation_en_cours(m);
+}
+
+@source(CCH_L843_1, CCH_L843_1_ED2019_12, CCH_L843_1_ED2020_01,
+        CCH_L843_1_ED2021_01, CCH_L843_1_ED2023_04, CCH_L843_1_ED2023_09,
+        CCH_L843_1_ED2023_12, CCH_L843_1_ED2026_07, CCH_L843_7,
+        CCH_L843_7_ED2019_12, CCH_L843_7_ED2020_01, CCH_L843_7_ED2021_01,
+        CCH_L843_7_ED2023_04, CCH_L843_7_ED2023_09, CCH_L843_7_ED2023_12,
+        CCH_L843_7_ED2026_07)
+rule ConservationDeclencheeALS(m: Menage, constat: Date) defeasible {
+    label fr official "constat de non-decense : l'ALS est conservee, sauf continuation L. 843-7";
+    label en unofficial "non-decency finding: ALS is kept, barring L. 843-7 continuation";
+    when constat_non_decence(m, constat) and aide_attribuee(m, ALS);
+    unless continuation_perception_l843_7(m);
+    then conservation_en_cours(m);
+}
+
+@source(CCH_L843_7, CCH_L843_7_ED2019_12, CCH_L843_7_ED2020_01,
+        CCH_L843_7_ED2021_01, CCH_L843_7_ED2023_04, CCH_L843_7_ED2023_09,
+        CCH_L843_7_ED2023_12, CCH_L843_7_ED2026_07)
+rule ExceptionContinuationL843_7(m: Menage) strict {
+    label fr official "patrimoine de dix logements, qualifie, convention transmise : le bailleur continue de percevoir";
+    label en unofficial "ten-dwelling portfolio, qualified, convention sent: the landlord keeps receiving";
+    when patrimoine_dix_logements_ou_plus(m) and proprietaire_gestionnaire_qualifie_843_7(m)
+        and convention_etat_conformite_843_7(m) and copie_convention_transmise_organisme(m);
+    then continuation_perception_l843_7(m);
+}
+
+@source(CCH_L843_7, CCH_L843_7_ED2019_12, CCH_L843_7_ED2020_01,
+        CCH_L843_7_ED2021_01, CCH_L843_7_ED2023_04, CCH_L843_7_ED2023_09,
+        CCH_L843_7_ED2023_12, CCH_L843_7_ED2026_07)
+rule TransmissionConventionVautConstat(m: Menage, d: Date) strict {
+    label fr official "la transmission de la convention vaut constat de mise en conformite L. 843-1 a L. 843-4";
+    label en unofficial "the convention transmission counts as a compliance finding for L. 843-1 to L. 843-4";
+    when copie_convention_transmise_organisme(m) and copie_convention_transmise_le(m, d);
+    then mise_en_conformite_etablie(m, d);
+}
+
+@source(CCH_L843_7, CCH_L843_7_ED2019_12, CCH_L843_7_ED2020_01,
+        CCH_L843_7_ED2021_01, CCH_L843_7_ED2023_04, CCH_L843_7_ED2023_09,
+        CCH_L843_7_ED2023_12, CCH_L843_7_ED2026_07)
+rule DevoirAdresserCopieConvention(m: Menage, b: Bailleur, o: Organisme) strict {
+    label fr official "le bailleur adresse une copie de la convention aux organismes payeurs";
+    label en unofficial "the landlord sends a convention copy to the paying bodies";
+    when convention_etat_conformite_843_7(m) and bailleur_du_menage(b, m)
+        and role_tiers(b, BAILLEUR) and organisme_debiteur(o, m);
+    then duty AdresserCopieConvention {
+        bearer b;
+        beneficiary o;
+        maintain copie_convention_transmise_organisme(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation proprietaire_notifie_constat(m: Menage) kind empirical {
+    label fr official "proprietaire notifie du constat et de la mise en conformite requise (execution)";
+    label en unofficial "owner notified of the finding and required compliance (performance)";
+}
+
+@source(CCH_L843_1, CCH_L843_1_ED2019_12, CCH_L843_1_ED2020_01,
+        CCH_L843_1_ED2021_01, CCH_L843_1_ED2023_04, CCH_L843_1_ED2023_09,
+        CCH_L843_1_ED2023_12, CCH_L843_1_ED2026_07)
+rule DevoirNotifierProprietaire(m: Menage, o: Organisme, b: Bailleur) strict {
+    label fr official "l'organisme notifie le constat au proprietaire et l'informe de la conformite requise";
+    label en unofficial "the body notifies the owner of the finding and required compliance";
+    when conservation_en_cours(m) and organisme_debiteur(o, m)
+        and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR);
+    then duty NotifierProprietaireConstat {
+        bearer o;
+        beneficiary b;
+        maintain proprietaire_notifie_constat(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation locataire_informe_montant(m: Menage) kind empirical {
+    label fr official "locataire informe du montant des allocations par l'organisme (execution)";
+    label en unofficial "tenant told the allocation amount by the body (performance)";
+}
+
+pub relation loyer_du_reduit(m: Menage, r: Money) kind institutional {
+    label fr official "loyer et charges diminués du montant des allocations pendant la conservation";
+    label en unofficial "rent and charges minus the allocation amount during conservation";
+}
+
+pub relation non_resiliation_bail_non_decence(m: Menage) kind institutional {
+    label fr official "pas de resiliation pour la diminution legale du loyer (effet d'immunite)";
+    label en unofficial "no termination for the lawful rent reduction (immunity effect)";
+}
+
+@source(CCH_L843_1, CCH_L843_1_ED2019_12, CCH_L843_1_ED2020_01,
+        CCH_L843_1_ED2021_01, CCH_L843_1_ED2023_04, CCH_L843_1_ED2023_09,
+        CCH_L843_1_ED2023_12, CCH_L843_1_ED2026_07)
+rule LoyerReduitConservation(m: Menage, loyer: Money, charges: Money, allocation: Money) defeasible {
+    label fr official "le locataire s'acquitte du loyer et des charges diminues de l'allocation";
+    label en unofficial "the tenant pays rent and charges minus the allocation";
+    when conservation_en_cours(m) and loyer_principal(m, loyer)
+        and charges_recuperables(m, charges) and allocation_due_conservation(m, allocation)
+        and locataire_informe_montant(m);
+    then loyer_du_reduit(m, loyer + charges - allocation);
+}
+
+@source(CCH_L843_1, CCH_L843_1_ED2019_12, CCH_L843_1_ED2020_01,
+        CCH_L843_1_ED2021_01, CCH_L843_1_ED2023_04, CCH_L843_1_ED2023_09,
+        CCH_L843_1_ED2023_12, CCH_L843_1_ED2026_07)
+rule ImmuniteNonResiliation(m: Menage, b: Bailleur, r: Money) strict {
+    label fr official "la diminution legale ne fonde aucune resiliation du bail";
+    label en unofficial "the lawful reduction founds no lease termination";
+    when loyer_du_reduit(m, r) and bailleur_du_menage(b, m);
+    then immunity NonResiliationBailNonDecence {
+        holder m;
+        against b;
+        protected_effect non_resiliation_bail_non_decence(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+pub relation non_decence_persiste(m: Menage) kind empirical {
+    label fr official "logement toujours non decent a l'issue du delai (constat)";
+    label en unofficial "dwelling still non-decent past the deadline (finding)";
+}
+
+pub relation conservation_non_recouvrable(m: Menage) kind institutional {
+    label fr official "allocation conservee non recuperee par le proprietaire L. 843-2";
+    label en unofficial "kept allocation unrecovered by the owner under L. 843-2";
+}
+
+pub relation non_recours_proprietaire_loyer(m: Menage) kind institutional {
+    label fr official "pas de demande au locataire de la part de loyer non percue (effet d'immunite)";
+    label en unofficial "no owner claim on the tenant for the unpaid rent share (immunity effect)";
+}
+
+pub relation travaux_office_police(m: Menage) kind empirical {
+    label fr official "travaux realises d'office par mesure de police L. 843-2 al. 2 (constat)";
+    label en unofficial "works done officially under a police measure (finding)";
+}
+
+@source(CCH_L843_2, CCH_L843_2_ED2019_12, CCH_L843_2_ED2020_01,
+        CCH_L843_2_ED2021_01, CCH_L843_2_ED2023_04, CCH_L843_2_ED2023_09,
+        CCH_L843_2_ED2023_12, CCH_L843_2_ED2026_07, CCH_R843_2,
+        CCH_R843_2_ED2019_12, CCH_R843_2_ED2020_01, CCH_R843_2_ED2021_01,
+        CCH_R843_2_ED2023_04, CCH_R843_2_ED2023_09, CCH_R843_2_ED2023_12,
+        CCH_R843_2_ED2026_07)
+rule NonRecouvrementDelaiExpire(m: Menage, constat: Date, appreciation: Date) defeasible {
+    label fr official "delai de dix-huit mois expire sans conformite : non recupere par le proprietaire";
+    label en unofficial "eighteen months expired unconformed: unrecovered by the owner";
+    when constat_non_decence(m, constat) and date_appreciation(m, appreciation)
+        and appreciation >= add_calendar_period(constat, 18 calendar_month)
+        and non_decence_persiste(m);
+    unless locataire_successeur_843_4(m);
+    then conservation_non_recouvrable(m);
+}
+
+@source(CCH_L843_2, CCH_L843_2_ED2019_12, CCH_L843_2_ED2020_01,
+        CCH_L843_2_ED2021_01, CCH_L843_2_ED2023_04, CCH_L843_2_ED2023_09,
+        CCH_L843_2_ED2023_12, CCH_L843_2_ED2026_07)
+rule NonRecouvrementTravauxOffice(m: Menage) defeasible {
+    label fr official "travaux d'office : meme non recuperation par le proprietaire";
+    label en unofficial "official works: same non-recovery by the owner";
+    when travaux_office_police(m) and conservation_en_cours(m);
+    then conservation_non_recouvrable(m);
+}
+
+@source(CCH_L843_2, CCH_L843_2_ED2019_12, CCH_L843_2_ED2020_01,
+        CCH_L843_2_ED2021_01, CCH_L843_2_ED2023_04, CCH_L843_2_ED2023_09,
+        CCH_L843_2_ED2023_12, CCH_L843_2_ED2026_07)
+rule ImmuniteNonRecoursProprietaire(m: Menage, b: Bailleur) strict {
+    label fr official "le proprietaire ne peut demander au locataire la part non percue";
+    label en unofficial "the owner cannot claim the unpaid share from the tenant";
+    when conservation_non_recouvrable(m) and bailleur_du_menage(b, m);
+    then immunity NonRecoursProprietaireLoyer {
+        holder m;
+        against b;
+        protected_effect non_recours_proprietaire_loyer(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+pub relation preuve_travaux_engages_6mois(m: Menage) kind empirical {
+    label fr official "le proprietaire prouve des travaux engages en vue d'un achevement en six mois R. 843-6 1 (constat)";
+    label en unofficial "the owner proves engaged works toward six-month completion under R. 843-6 1 (finding)";
+}
+
+pub relation preuve_travaux_delai_supplementaire(m: Menage) kind empirical {
+    label fr official "renouvellement 1 : travaux exigeant un delai superieur ou retard non imputable prouve (constat)";
+    label en unofficial "1 renewal: proven longer need or unattributable delay (finding)";
+}
+
+pub relation action_justice_article6_en_cours(m: Menage) kind empirical {
+    label fr official "action en justice du locataire sur l'article 6 de la loi 89-462 toujours en cours R. 843-6 2 (constat)";
+    label en unofficial "tenant court action on 1989 act article 6 still pending under R. 843-6 2 (finding)";
+}
+
+pub relation allocation_hors_charges_843(m: Menage, a: Money) kind empirical {
+    label fr official "allocation hors charges pour le cas R. 843-6 3 (mesure)";
+    label en unofficial "allocation net of charges for the R. 843-6 3 case (measured)";
+}
+
+pub relation dernier_loyer_brut_843(m: Menage, l: Money) kind empirical {
+    label fr official "dernier loyer brut hors charges connu de l'organisme pour le cas R. 843-6 3 (mesure)";
+    label en unofficial "last gross rent net of charges known to the body for the R. 843-6 3 case (measured)";
+}
+
+pub relation preuve_incapacite_demarches_2_5(m: Menage) kind empirical {
+    label fr official "renouvellement 3 : allocataire manifestement hors d'etat d'entreprendre les demarches 2 ou 5 (constat)";
+    label en unofficial "3 renewal: claimant manifestly unable to take the 2 or 5 steps (finding)";
+}
+
+pub relation preuve_recherche_logement_ou_mediation(m: Menage) kind empirical {
+    label fr official "actes positifs recents de recherche ou saisine de la commission de mediation L. 441-2-3 R. 843-6 5 (constat)";
+    label en unofficial "positive recent search acts or L. 441-2-3 mediation seizure under R. 843-6 5 (finding)";
+}
+
+pub relation preuve_incapacite_trouver_logement(m: Menage) kind empirical {
+    label fr official "locataire manifestement hors d'etat de trouver un logement R. 843-6 5 (constat)";
+    label en unofficial "tenant manifestly unable to find a dwelling under R. 843-6 5 (finding)";
+}
+
+pub relation loyer_refixe_juge_843(m: Menage) kind empirical {
+    label fr official "nouveau loyer fixe par le juge pour le recalcul L. 843-3 (constat)";
+    label en unofficial "new judicially fixed rent for the L. 843-3 recalculation (finding)";
+}
+
+pub relation montant_loyer_refixe_juge_843(m: Menage, r: Money) kind empirical {
+    key(m);
+    label fr official "montant du nouveau loyer fixe par le juge pour le recalcul L. 843-3 (mesure)";
+    label en unofficial "amount of the new judicially fixed rent for the L. 843-3 recalculation (measured)";
+}
+
+pub relation allocation_recalculee_loyer_juge_843(m: Menage) kind institutional {
+    label fr official "allocation recalculee sur le loyer fixe par le juge L. 843-3";
+    label en unofficial "allocation recalculated on the judicially fixed rent under L. 843-3";
+}
+
+pub relation renouvellement_maintien_deja_accorde(m: Menage) kind empirical {
+    label fr official "renouvellement du maintien deja accorde une fois L. 843-3 (execution)";
+    label en unofficial "maintenance renewal already granted once under L. 843-3 (performance)";
+}
+
+pub relation renouvellement_maintien_accorde(m: Menage) kind institutional {
+    label fr official "renouvellement unique du maintien de six mois accorde L. 843-3";
+    label en unofficial "single six-month maintenance renewal granted under L. 843-3";
+}
+
+pub relation renouvellement_accorde_le(m: Menage, d: Date) kind empirical {
+    label fr official "date d'effet du renouvellement du maintien (dossier)";
+    label en unofficial "maintenance-renewal start date (case file)";
+}
+
+pub relation maintien_renouvele_expire_le(m: Menage, d: Date) kind institutional {
+    label fr official "echeance du maintien renouvele de six mois";
+    label en unofficial "renewed six-month maintenance expiry";
+}
+
+pub relation allocation_maintenue_exceptionnelle(m: Menage) kind empirical {
+    label fr official "allocation maintenue a titre exceptionnel L. 843-3 (execution)";
+    label en unofficial "allocation exceptionally maintained under L. 843-3 (performance)";
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureMaintienExceptionnelTravaux(m: Menage, o: Organisme) defeasible {
+    label fr official "travaux prouves en vue d'un achevement en six mois : maintien possible une fois R. 843-6 1";
+    label en unofficial "proven works toward six-month completion: maintenance possible once under R. 843-6 1";
+    when conservation_en_cours(m) and preuve_travaux_engages_6mois(m)
+        and organisme_debiteur(o, m)
+        and not_known(allocation_maintenue_exceptionnelle(m));
+    then liberty MaintienExceptionnelTravaux {
+        holder o;
+        action allocation_maintenue_exceptionnelle(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureMaintienExceptionnelActionJustice(m: Menage, o: Organisme) defeasible {
+    label fr official "action en justice sur l'article 6 en cours : maintien possible une fois R. 843-6 2";
+    label en unofficial "pending article-6 court action: maintenance possible once under R. 843-6 2";
+    when conservation_en_cours(m) and action_justice_article6_en_cours(m)
+        and organisme_debiteur(o, m)
+        and not_known(allocation_maintenue_exceptionnelle(m));
+    then liberty MaintienExceptionnelActionJustice {
+        holder o;
+        action allocation_maintenue_exceptionnelle(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureMaintienExceptionnelAllocationPreponderante(m: Menage, o: Organisme, a: Money, l: Money) defeasible {
+    label fr official "allocation hors charges de plus de la moitie du dernier loyer brut : maintien possible une fois R. 843-6 3";
+    label en unofficial "allocation net of charges above half the last gross rent: maintenance possible once under R. 843-6 3";
+    when conservation_en_cours(m) and allocation_hors_charges_843(m, a)
+        and dernier_loyer_brut_843(m, l) and a * 2 > l
+        and organisme_debiteur(o, m)
+        and not_known(allocation_maintenue_exceptionnelle(m));
+    then liberty MaintienExceptionnelAllocationPreponderante {
+        holder o;
+        action allocation_maintenue_exceptionnelle(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureMaintienExceptionnelImpayeL8242(m: Menage, o: Organisme) defeasible {
+    label fr official "impaye constate par l'organisme avec maintien L. 824-2 : maintien possible une fois R. 843-6 4";
+    label en unofficial "organism-established arrears with L. 824-2 maintenance: maintenance possible once under R. 843-6 4";
+    when conservation_en_cours(m) and impaye_depense_logement(m)
+        and versement_maintenu_impaye(m) and organisme_debiteur(o, m)
+        and not_known(allocation_maintenue_exceptionnelle(m));
+    then liberty MaintienExceptionnelImpayeL8242 {
+        holder o;
+        action allocation_maintenue_exceptionnelle(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureMaintienExceptionnelRechercheLogement(m: Menage, o: Organisme) defeasible {
+    label fr official "recherche positive ou mediation saisie : maintien possible une fois R. 843-6 5";
+    label en unofficial "positive search or seized mediation: maintenance possible once under R. 843-6 5";
+    when conservation_en_cours(m) and preuve_recherche_logement_ou_mediation(m)
+        and organisme_debiteur(o, m)
+        and not_known(allocation_maintenue_exceptionnelle(m));
+    then liberty MaintienExceptionnelRechercheLogement {
+        holder o;
+        action allocation_maintenue_exceptionnelle(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureMaintienExceptionnelIncapaciteLogement(m: Menage, o: Organisme) defeasible {
+    label fr official "incapacite manifeste de trouver un logement : maintien possible une fois R. 843-6 5";
+    label en unofficial "manifest inability to find a dwelling: maintenance possible once under R. 843-6 5";
+    when conservation_en_cours(m) and preuve_incapacite_trouver_logement(m)
+        and organisme_debiteur(o, m)
+        and not_known(allocation_maintenue_exceptionnelle(m));
+    then liberty MaintienExceptionnelIncapaciteLogement {
+        holder o;
+        action allocation_maintenue_exceptionnelle(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+pub relation maintien_accorde_le(m: Menage, d: Date) kind empirical {
+    label fr official "date d'effet du maintien exceptionnel L. 843-3 (dossier)";
+    label en unofficial "L. 843-3 exceptional maintenance start date (case file)";
+}
+
+pub relation maintien_expire_le(m: Menage, d: Date) kind institutional {
+    label fr official "echeance des six mois de maintien exceptionnel";
+    label en unofficial "six-month exceptional maintenance expiry";
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07)
+rule EcheanceMaintienSixMois(m: Menage, debut: Date) strict {
+    label fr official "maintien de six mois, renouvelable une fois : echeance calculee";
+    label en unofficial "six maintenance months, renewable once: expiry computed";
+    when allocation_maintenue_exceptionnelle(m) and maintien_accorde_le(m, debut);
+    then maintien_expire_le(m, add_calendar_period(debut, 6 calendar_month));
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07)
+rule RecalculLoyerJuge843(m: Menage) defeasible {
+    label fr official "nouveau loyer fixe par le juge : allocation recalculee L. 843-3";
+    label en unofficial "new judicially fixed rent: allocation recalculated under L. 843-3";
+    when conservation_en_cours(m) and loyer_refixe_juge_843(m);
+    then allocation_recalculee_loyer_juge_843(m);
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07)
+// D-42 BOUNDARY: the judicially fixed rent (an L. 843-3 case finding) feeds
+// the principal rent without re-reading conservation_en_cours: that status
+// depends on aide_attribuee, which depends on the rent, so the premise made a
+// non-stratifiable cycle (§110). The finding itself only exists inside the
+// L. 843-3 procedure.
+rule LoyerPrincipalDepuisLoyerJuge843(m: Menage, r: Money) strict {
+    label fr official "L. 843-3 : le loyer fixe par le juge alimente le loyer principal du recalcul";
+    label en unofficial "L. 843-3: the judicially fixed rent feeds the recalculation's principal rent";
+    when montant_loyer_refixe_juge_843(m, r);
+    then loyer_principal(m, r);
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07)
+rule NonRecouvrementMaintienExpire(m: Menage, echeance: Date, appreciation: Date) strict {
+    label fr official "maintien expire sans conformite : non recupere par le proprietaire L. 843-3";
+    label en unofficial "maintenance expired unconformed: unrecovered by the owner under L. 843-3";
+    when maintien_expire_le(m, echeance) and date_appreciation(m, appreciation)
+        and appreciation >= echeance and non_decence_persiste(m);
+    then conservation_non_recouvrable(m);
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07)
+rule NonRecouvrementMaintienRenouveleExpire(m: Menage, echeance: Date, appreciation: Date) strict {
+    label fr official "maintien renouvele expire sans conformite : non recupere L. 843-3";
+    label en unofficial "renewed maintenance expired unconformed: unrecovered under L. 843-3";
+    when maintien_renouvele_expire_le(m, echeance) and date_appreciation(m, appreciation)
+        and appreciation >= echeance and non_decence_persiste(m);
+    then conservation_non_recouvrable(m);
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureRenouvellementMaintienTravaux(m: Menage, o: Organisme, echeance: Date) defeasible {
+    label fr official "renouvellement 1 : delai superieur ou retard non imputable prouve, une seule fois";
+    label en unofficial "1 renewal: proven longer need or unattributable delay, only once";
+    when allocation_maintenue_exceptionnelle(m) and maintien_expire_le(m, echeance)
+        and preuve_travaux_delai_supplementaire(m) and organisme_debiteur(o, m)
+        and not_known(renouvellement_maintien_deja_accorde(m));
+    then liberty RenouvellementMaintienTravaux {
+        holder o;
+        action renouvellement_maintien_accorde(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureRenouvellementMaintienJustice(m: Menage, o: Organisme, echeance: Date) defeasible {
+    label fr official "renouvellement 2 : action en justice toujours en cours, une seule fois";
+    label en unofficial "2 renewal: court action still pending, only once";
+    when allocation_maintenue_exceptionnelle(m) and maintien_expire_le(m, echeance)
+        and action_justice_article6_en_cours(m) and organisme_debiteur(o, m)
+        and not_known(renouvellement_maintien_deja_accorde(m));
+    then liberty RenouvellementMaintienJustice {
+        holder o;
+        action renouvellement_maintien_accorde(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureRenouvellementMaintienPreponderance(m: Menage, o: Organisme, echeance: Date) defeasible {
+    label fr official "renouvellement 3 : incapacite de demarches 2 ou 5 prouvee, une seule fois";
+    label en unofficial "3 renewal: proven inability to take 2 or 5 steps, only once";
+    when allocation_maintenue_exceptionnelle(m) and maintien_expire_le(m, echeance)
+        and preuve_incapacite_demarches_2_5(m) and organisme_debiteur(o, m)
+        and not_known(renouvellement_maintien_deja_accorde(m));
+    then liberty RenouvellementMaintienPreponderance {
+        holder o;
+        action renouvellement_maintien_accorde(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureRenouvellementMaintienImpaye(m: Menage, o: Organisme, echeance: Date) defeasible {
+    label fr official "renouvellement 4 : maintien impayes toujours en cours, une seule fois";
+    label en unofficial "4 renewal: arrears maintenance still running, only once";
+    when allocation_maintenue_exceptionnelle(m) and maintien_expire_le(m, echeance)
+        and impaye_depense_logement(m) and versement_maintenu_impaye(m)
+        and organisme_debiteur(o, m)
+        and not_known(renouvellement_maintien_deja_accorde(m));
+    then liberty RenouvellementMaintienImpaye {
+        holder o;
+        action renouvellement_maintien_accorde(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L843_3, CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01,
+        CCH_L843_3_ED2021_01, CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09,
+        CCH_L843_3_ED2023_12, CCH_L843_3_ED2026_07, CCH_R843_6,
+        CCH_R843_6_ED2019_12, CCH_R843_6_ED2020_01, CCH_R843_6_ED2021_01,
+        CCH_R843_6_ED2023_04, CCH_R843_6_ED2023_09, CCH_R843_6_ED2023_12,
+        CCH_R843_6_ED2026_07)
+rule OuvertureRenouvellementMaintienRecherche(m: Menage, o: Organisme, echeance: Date) defeasible {
+    label fr official "renouvellement 5 : incapacite de trouver un logement prouvee, une seule fois";
+    label en unofficial "5 renewal: proven inability to find a dwelling, only once";
+    when allocation_maintenue_exceptionnelle(m) and maintien_expire_le(m, echeance)
+        and preuve_incapacite_trouver_logement(m) and organisme_debiteur(o, m)
+        and not_known(renouvellement_maintien_deja_accorde(m));
+    then liberty RenouvellementMaintienRecherche {
+        holder o;
+        action renouvellement_maintien_accorde(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R843_2, CCH_R843_2_ED2019_12, CCH_R843_2_ED2020_01,
+        CCH_R843_2_ED2021_01, CCH_R843_2_ED2023_04, CCH_R843_2_ED2023_09,
+        CCH_R843_2_ED2023_12, CCH_R843_2_ED2026_07)
+rule EcheanceMaintienRenouvele(m: Menage, debut: Date) strict {
+    label fr official "maintien renouvele de six mois R. 843-2 : echeance calculee";
+    label en unofficial "renewed six-month maintenance under R. 843-2: expiry computed";
+    when renouvellement_maintien_accorde(m) and renouvellement_accorde_le(m, debut);
+    then maintien_renouvele_expire_le(m, add_calendar_period(debut, 6 calendar_month));
+}
+
+pub relation succession_logement(m2: Menage, m1: Menage) kind empirical {
+    label fr official "nouveau locataire succedant dans le logement conserve (fait de dossier)";
+    label en unofficial "new tenant succeeding in the kept dwelling (case fact)";
+}
+
+pub relation locataire_successeur_843_4(m2: Menage) kind institutional {
+    label fr official "locataire succedant dans le logement L. 843-4 (marqueur de regime)";
+    label en unofficial "tenant succeeding in the dwelling under L. 843-4 (regime marker)";
+}
+
+pub relation conservation_l843_4_expire_le(m2: Menage, d: Date) kind institutional {
+    label fr official "echeance des six mois de conservation nouveau locataire L. 843-4 R. 843-2";
+    label en unofficial "six-month new-tenant conservation expiry under L. 843-4 R. 843-2";
+}
+
+@source(CCH_L843_4, CCH_L843_4_ED2019_12, CCH_L843_4_ED2020_01,
+        CCH_L843_4_ED2021_01, CCH_L843_4_ED2023_04, CCH_L843_4_ED2023_09,
+        CCH_L843_4_ED2023_12, CCH_L843_4_ED2026_07)
+rule SuccesseurConstate843_4(m2: Menage, m1: Menage) strict {
+    label fr official "changement de locataire : regime successeur L. 843-4";
+    label en unofficial "tenant change: L. 843-4 successor regime";
+    when succession_logement(m2, m1);
+    then locataire_successeur_843_4(m2);
+}
+
+@source(CCH_L843_4, CCH_L843_4_ED2019_12, CCH_L843_4_ED2020_01,
+        CCH_L843_4_ED2021_01, CCH_L843_4_ED2023_04, CCH_L843_4_ED2023_09,
+        CCH_L843_4_ED2023_12, CCH_L843_4_ED2026_07)
+rule ConservationNouveauLocataire843_4(m2: Menage, m1: Menage, t: TypeAide, d2: Date) defeasible {
+    label fr official "nouveau constat de non-decense : l'allocation du successeur est conservee, non versee";
+    label en unofficial "new non-decency finding: the successor allocation is kept, not paid";
+    when succession_logement(m2, m1) and constat_non_decence(m2, d2)
+        and aide_attribuee(m2, t);
+    then conservation_en_cours(m2);
+}
+
+@source(CCH_L843_4, CCH_L843_4_ED2019_12, CCH_L843_4_ED2020_01,
+        CCH_L843_4_ED2021_01, CCH_L843_4_ED2023_04, CCH_L843_4_ED2023_09,
+        CCH_L843_4_ED2023_12, CCH_L843_4_ED2026_07, CCH_R843_2,
+        CCH_R843_2_ED2019_12, CCH_R843_2_ED2020_01, CCH_R843_2_ED2021_01,
+        CCH_R843_2_ED2023_04, CCH_R843_2_ED2023_09, CCH_R843_2_ED2023_12,
+        CCH_R843_2_ED2026_07)
+rule EcheanceConservationL843_4(m2: Menage, m1: Menage, d2: Date) strict {
+    label fr official "conservation successeur : six mois depuis le nouveau constat R. 843-2";
+    label en unofficial "successor conservation: six months from the new finding under R. 843-2";
+    when succession_logement(m2, m1) and constat_non_decence(m2, d2);
+    then conservation_l843_4_expire_le(m2, add_calendar_period(d2, 6 calendar_month));
+}
+
+@source(CCH_L843_4, CCH_L843_4_ED2019_12, CCH_L843_4_ED2020_01,
+        CCH_L843_4_ED2021_01, CCH_L843_4_ED2023_04, CCH_L843_4_ED2023_09,
+        CCH_L843_4_ED2023_12, CCH_L843_4_ED2026_07, CCH_L843_3,
+        CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01, CCH_L843_3_ED2021_01,
+        CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09, CCH_L843_3_ED2023_12,
+        CCH_L843_3_ED2026_07)
+rule NonRecouvrementL843_4Expire(m2: Menage, echeance: Date, appreciation: Date) strict {
+    label fr official "successeur expire sans conformite : renvoi au dernier alinea L. 843-3, non recupere";
+    label en unofficial "successor expired unconformed: L. 843-3 last-alinea referral, unrecovered";
+    when conservation_l843_4_expire_le(m2, echeance) and date_appreciation(m2, appreciation)
+        and appreciation >= echeance and non_decence_persiste(m2);
+    then conservation_non_recouvrable(m2);
+}
+
+pub relation allocation_conservee_totale(m: Menage, c: Money) kind empirical {
+    label fr official "allocation totale conservee sur la periode (mesure)";
+    label en unofficial "total allocation kept over the period (measured)";
+}
+
+pub relation excedent_conservation(m: Menage, e: Money) kind institutional {
+    label fr official "part conservee excedant l'allocation due L. 843-5";
+    label en unofficial "kept share above the due allocation under L. 843-5";
+}
+
+pub relation excedent_conservation_reverse(m: Menage) kind empirical {
+    label fr official "excedent de conservation reverse au locataire (execution)";
+    label en unofficial "conservation excess refunded to the tenant (performance)";
+}
+
+@source(CCH_L843_5, CCH_L843_5_ED2019_12, CCH_L843_5_ED2020_01,
+        CCH_L843_5_ED2021_01, CCH_L843_5_ED2023_04, CCH_L843_5_ED2023_09,
+        CCH_L843_5_ED2023_12, CCH_L843_5_ED2026_07)
+rule ExcedentConservation(m: Menage, conserve: Money, loyer: Money, charges: Money) strict {
+    label fr official "conserve au-dela du loyer et des charges : excedent calcule L. 843-5";
+    label en unofficial "kept above rent plus charges: excess computed under L. 843-5";
+    when allocation_conservee_totale(m, conserve) and loyer_principal(m, loyer)
+        and charges_recuperables(m, charges) and conserve > loyer + charges;
+    then excedent_conservation(m, conserve - loyer - charges);
+}
+
+@source(CCH_L843_5, CCH_L843_5_ED2019_12, CCH_L843_5_ED2020_01,
+        CCH_L843_5_ED2021_01, CCH_L843_5_ED2023_04, CCH_L843_5_ED2023_09,
+        CCH_L843_5_ED2023_12, CCH_L843_5_ED2026_07)
+rule DevoirReverserExcedentConservation(m: Menage, b: Bailleur, e: Money) strict {
+    label fr official "conserve verse au proprietaire : le proprietaire reverse l'excedent au locataire";
+    label en unofficial "kept sum paid to the owner: the owner refunds the excess to the tenant";
+    when excedent_conservation(m, e) and conservee_reversee_proprietaire(m)
+        and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR);
+    then duty ReverserExcedentConservation {
+        bearer b;
+        beneficiary m;
+        maintain excedent_conservation_reverse(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation attestation_decence_manquante(m: Menage) kind empirical {
+    label fr official "attestation du bailleur non produite, cas R. 843-1 (constat)";
+    label en unofficial "landlord certificate missing, R. 843-1 case (finding)";
+}
+
+pub relation circonstance_derogation_decence(m: Menage) kind institutional {
+    label fr official "circonstance de derogation R. 843-1 : non-decence ou attestation manquante";
+    label en unofficial "R. 843-1 derogation circumstance: non-decency or missing certificate";
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule CirconstanceDerogationConstat(m: Menage, constat: Date) strict {
+    label fr official "constat de non-decence : circonstance de derogation";
+    label en unofficial "non-decency finding: derogation circumstance";
+    when constat_non_decence(m, constat);
+    then circonstance_derogation_decence(m);
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule CirconstanceDerogationAttestation(m: Menage) strict {
+    label fr official "attestation manquante : circonstance de derogation";
+    label en unofficial "missing certificate: derogation circumstance";
+    when attestation_decence_manquante(m);
+    then circonstance_derogation_decence(m);
+}
+
+pub relation derogation_decence_hotel(m: Menage) kind empirical {
+    label fr official "derogation hotel meuble ou garni accordee (execution)";
+    label en unofficial "furnished-hotel derogation granted (performance)";
+}
+
+pub relation derogation_decence_accession(m: Menage) kind empirical {
+    label fr official "derogation accession accordee (execution)";
+    label en unofficial "accession derogation granted (performance)";
+}
+
+@source(CCH_L843_6, CCH_L843_6_ED2019_12, CCH_L843_6_ED2020_01,
+        CCH_L843_6_ED2021_01, CCH_L843_6_ED2023_04, CCH_L843_6_ED2023_09,
+        CCH_L843_6_ED2023_12, CCH_L843_6_ED2026_07, CCH_R843_1,
+        CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01, CCH_R843_1_ED2021_01,
+        CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09, CCH_R843_1_ED2023_12,
+        CCH_R843_1_ED2026_07)
+rule DerogationHotelMeuble(m: Menage, o: Organisme) defeasible {
+    label fr official "hotel meuble ou garni : l'allocation peut etre accordee un an, une fois";
+    label en unofficial "furnished hotel: the allocation may be granted one year, once";
+    when circonstance_derogation_decence(m) and hebergement_hotel_meuble(m)
+        and organisme_debiteur(o, m)
+        and not_known(derogation_decence_hotel(m));
+    then liberty AccorderDerogationHotel {
+        holder o;
+        action derogation_decence_hotel(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+pub relation hebergement_hotel_meuble(m: Menage) kind empirical {
+    label fr official "hebergement en hotel meuble ou garni (constat)";
+    label en unofficial "furnished-hotel accommodation (finding)";
+}
+
+pub relation hebergement_etablissement_assimile_hotel(m: Menage) kind empirical {
+    label fr official "hebergement dans un etablissement assimile a l'hotel meuble R. 843-1 1 (constat)";
+    label en unofficial "accommodation in an establishment treated as a furnished hotel R. 843-1 1 (finding)";
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule DerogationEtablissementAssimilie(m: Menage, o: Organisme) defeasible {
+    label fr official "etablissement assimile a l'hotel meuble : l'allocation peut etre accordee un an, une fois";
+    label en unofficial "hotel-assimilated establishment: the allocation may be granted one year, once";
+    when circonstance_derogation_decence(m) and hebergement_etablissement_assimile_hotel(m)
+        and organisme_debiteur(o, m)
+        and not_known(derogation_decence_hotel(m));
+    then liberty AccorderDerogationEtablissementAssimilie {
+        holder o;
+        action derogation_decence_hotel(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L843_6, CCH_L843_6_ED2019_12, CCH_L843_6_ED2020_01,
+        CCH_L843_6_ED2021_01, CCH_L843_6_ED2023_04, CCH_L843_6_ED2023_09,
+        CCH_L843_6_ED2023_12, CCH_L843_6_ED2026_07, CCH_R843_1,
+        CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01, CCH_R843_1_ED2021_01,
+        CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09, CCH_R843_1_ED2023_12,
+        CCH_R843_1_ED2026_07)
+rule DerogationAccession(m: Menage, o: Organisme) defeasible {
+    label fr official "accession : l'allocation peut etre accordee une fois dix-huit mois renouvelables";
+    label en unofficial "purchase: the allocation may be granted once eighteen renewable months";
+    when circonstance_derogation_decence(m) and dossier_accession_derogation(m)
+        and organisme_debiteur(o, m)
+        and not_known(derogation_decence_accession(m));
+    then liberty AccorderDerogationAccession {
+        holder o;
+        action derogation_decence_accession(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+pub relation dossier_accession_derogation(m: Menage) kind empirical {
+    label fr official "personne visee R. 842-5 en accession a la propriete, cas R. 843-1 2 (constat)";
+    label en unofficial "R. 842-5 home-purchase person, R. 843-1 2 case (finding)";
+}
+
+pub relation derogation_accordee_le(m: Menage, d: Date) kind empirical {
+    label fr official "date d'effet de la derogation decence (dossier)";
+    label en unofficial "decency-derogation start date (case file)";
+}
+
+pub relation fenetre_derogation_expire_le(m: Menage, d: Date) kind institutional {
+    label fr official "echeance de la fenetre de derogation decence";
+    label en unofficial "decency-derogation window expiry";
+}
+
+pub relation prorogation_hotel_six_mois(m: Menage) kind empirical {
+    label fr official "prorogation de six mois decidee par le conseil d'administration R. 843-1 1 (fait de dossier)";
+    label en unofficial "six-month extension decided by the board under R. 843-1 1 (case fact)";
+}
+
+pub relation travaux_decides_non_acheves_843_1(m: Menage) kind empirical {
+    label fr official "travaux de mise aux normes decides mais inacheves a un an R. 843-1 1 (constat)";
+    label en unofficial "standard-compliance works decided but unfinished at one year under R. 843-1 1 (finding)";
+}
+
+pub relation relogement_accepte_non_effectif_843_1(m: Menage) kind empirical {
+    label fr official "relogement accepte non encore effectif a un an R. 843-1 1 (constat)";
+    label en unofficial "accepted relodging not yet effective at one year under R. 843-1 1 (finding)";
+}
+
+pub relation renouvellement_accession_deja_accorde(m: Menage) kind empirical {
+    label fr official "renouvellement de la derogation accession deja accorde une fois R. 843-1 2 (execution)";
+    label en unofficial "accession derogation renewal already granted once under R. 843-1 2 (performance)";
+}
+
+pub relation renouvellement_derogation_accession(m: Menage) kind empirical {
+    label fr official "renouvellement de la derogation accession (fait de dossier)";
+    label en unofficial "renewal of the accession derogation (case fact)";
+}
+
+pub relation fenetre_derogation_renouvelee_le(m: Menage, d: Date) kind institutional {
+    label fr official "echeance de la derogation renouvelee ou prorogee";
+    label en unofficial "renewed or extended derogation expiry";
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule FenetreDerogationHotel(m: Menage, debut: Date) strict {
+    label fr official "derogation hotel : fenetre d'un an";
+    label en unofficial "hotel derogation: one-year window";
+    when derogation_decence_hotel(m) and derogation_accordee_le(m, debut);
+    then fenetre_derogation_expire_le(m, add_calendar_period(debut, 1 calendar_year));
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule ProrogationDerogationHotelTravaux(m: Menage, echeance: Date) strict {
+    label fr official "prorogation hotel, travaux decides inacheves : six mois de plus R. 843-1 1";
+    label en unofficial "hotel extension, decided works unfinished: six more months under R. 843-1 1";
+    when fenetre_derogation_expire_le(m, echeance) and prorogation_hotel_six_mois(m)
+        and travaux_decides_non_acheves_843_1(m);
+    then fenetre_derogation_renouvelee_le(m, add_calendar_period(echeance, 6 calendar_month));
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule ProrogationDerogationHotelRelogement(m: Menage, echeance: Date) strict {
+    label fr official "prorogation hotel, relogement accepte non effectif : six mois de plus R. 843-1 1";
+    label en unofficial "hotel extension, accepted relodging ineffective: six more months under R. 843-1 1";
+    when fenetre_derogation_expire_le(m, echeance) and prorogation_hotel_six_mois(m)
+        and relogement_accepte_non_effectif_843_1(m);
+    then fenetre_derogation_renouvelee_le(m, add_calendar_period(echeance, 6 calendar_month));
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule FenetreDerogationAccession(m: Menage, debut: Date) strict {
+    label fr official "derogation accession : fenetre de dix-huit mois";
+    label en unofficial "accession derogation: eighteen-month window";
+    when derogation_decence_accession(m) and derogation_accordee_le(m, debut);
+    then fenetre_derogation_expire_le(m, add_calendar_period(debut, 18 calendar_month));
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule RenouvellementDerogationAccession(m: Menage, echeance: Date) defeasible {
+    label fr official "renouvellement accession, une seule fois : dix-huit mois de plus R. 843-1 2";
+    label en unofficial "accession renewal, only once: eighteen more months under R. 843-1 2";
+    when fenetre_derogation_expire_le(m, echeance) and renouvellement_derogation_accession(m)
+        and not_known(renouvellement_accession_deja_accorde(m));
+    then fenetre_derogation_renouvelee_le(m, add_calendar_period(echeance, 18 calendar_month));
+}
+
+pub entity ComitePlanLocal {
+    label fr official "comite responsable du plan local d'action pour le logement et l'hebergement des personnes defavorisees";
+    label en unofficial "committee in charge of the local disadvantaged-housing action plan";
+}
+
+pub relation comite_plan_competent(c: ComitePlanLocal, m: Menage) kind empirical {
+    label fr official "comite du plan competent pour le dossier (fait de dossier)";
+    label en unofficial "plan committee competent for the case (case fact)";
+}
+
+pub relation conseil_informe_derogation_hotel(m: Menage) kind empirical {
+    label fr official "conseil d'administration informe de la derogation hotel R. 843-1 1 (execution)";
+    label en unofficial "board told of the hotel derogation under R. 843-1 1 (performance)";
+}
+
+pub relation prefet_informe_derogation_hotel(m: Menage) kind empirical {
+    label fr official "prefet informe de la derogation hotel R. 843-1 1 (execution)";
+    label en unofficial "prefect told of the hotel derogation under R. 843-1 1 (performance)";
+}
+
+pub relation organisme_designe_plan_843_1(m: Menage) kind empirical {
+    label fr official "organisme public ou prive designe par le prefet pour amelioration ou relogement R. 843-1 1 (execution)";
+    label en unofficial "public or private body designated by the prefect for improvement or relodging under R. 843-1 1 (performance)";
+}
+
+pub relation refus_derogation_decence(m: Menage) kind empirical {
+    label fr official "refus d'accorder l'allocation a titre derogatoire R. 843-1 1 (fait de dossier)";
+    label en unofficial "refusal to grant the allocation by derogation under R. 843-1 1 (case fact)";
+}
+
+pub relation prefet_informe_refus_derogation(m: Menage) kind empirical {
+    label fr official "prefet informe du refus de derogation R. 843-1 1 (execution)";
+    label en unofficial "prefect told of the derogation refusal under R. 843-1 1 (performance)";
+}
+
+pub relation conseil_informe_derogation_accession(m: Menage) kind empirical {
+    label fr official "conseil d'administration informe de la derogation accession R. 843-1 2 (execution)";
+    label en unofficial "board told of the accession derogation under R. 843-1 2 (performance)";
+}
+
+pub relation prefet_informe_derogation_accession(m: Menage) kind empirical {
+    label fr official "prefet informe de la derogation accession R. 843-1 2 (execution)";
+    label en unofficial "prefect told of the accession derogation under R. 843-1 2 (performance)";
+}
+
+pub relation comite_plan_informe_accession(m: Menage) kind empirical {
+    label fr official "comite du plan informe de la derogation accession R. 843-1 2 (execution)";
+    label en unofficial "plan committee told of the accession derogation under R. 843-1 2 (performance)";
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule DevoirInformerConseilHotel843_1(m: Menage, o: Organisme, ca: ConseilAdministration) strict {
+    label fr official "derogation hotel : l'organisme en informe son conseil d'administration R. 843-1 1";
+    label en unofficial "hotel derogation: the body tells its board under R. 843-1 1";
+    when derogation_decence_hotel(m) and organisme_debiteur(o, m)
+        and conseil_organisme(ca, o);
+    then duty InformerConseilHotel843_1 {
+        bearer o;
+        beneficiary ca;
+        maintain conseil_informe_derogation_hotel(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule DevoirInformerPrefetHotel843_1(m: Menage, o: Organisme, p: Prefet) strict {
+    label fr official "derogation hotel : l'organisme en informe le prefet R. 843-1 1";
+    label en unofficial "hotel derogation: the body tells the prefect under R. 843-1 1";
+    when derogation_decence_hotel(m) and organisme_debiteur(o, m)
+        and prefet_competent(p, m);
+    then duty InformerPrefetHotel843_1 {
+        bearer o;
+        beneficiary p;
+        maintain prefet_informe_derogation_hotel(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule DevoirDesignerOrganismePlan843_1(m: Menage, p: Prefet) strict {
+    label fr official "derogation hotel notifiee : le prefet designe un organisme d'amelioration ou relogement R. 843-1 1";
+    label en unofficial "hotel derogation notified: the prefect designates an improvement-or-relodging body under R. 843-1 1";
+    when prefet_informe_derogation_hotel(m) and prefet_competent(p, m);
+    then duty DesignerOrganismePlan843_1 {
+        bearer p;
+        beneficiary m;
+        maintain organisme_designe_plan_843_1(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule DevoirInformerPrefetRefus843_1(m: Menage, o: Organisme, p: Prefet) strict {
+    label fr official "refus de derogation : le prefet en est informe R. 843-1 1";
+    label en unofficial "derogation refused: the prefect is told of it under R. 843-1 1";
+    when refus_derogation_decence(m) and organisme_debiteur(o, m)
+        and prefet_competent(p, m);
+    then duty InformerPrefetRefus843_1 {
+        bearer o;
+        beneficiary p;
+        maintain prefet_informe_refus_derogation(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule DevoirInformerConseilAccession843_1(m: Menage, o: Organisme, ca: ConseilAdministration) strict {
+    label fr official "derogation accession : l'organisme en informe son conseil d'administration R. 843-1 2";
+    label en unofficial "accession derogation: the body tells its board under R. 843-1 2";
+    when derogation_decence_accession(m) and organisme_debiteur(o, m)
+        and conseil_organisme(ca, o);
+    then duty InformerConseilAccession843_1 {
+        bearer o;
+        beneficiary ca;
+        maintain conseil_informe_derogation_accession(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule DevoirInformerPrefetAccession843_1(m: Menage, o: Organisme, p: Prefet) strict {
+    label fr official "derogation accession : l'organisme en informe le prefet R. 843-1 2";
+    label en unofficial "accession derogation: the body tells the prefect under R. 843-1 2";
+    when derogation_decence_accession(m) and organisme_debiteur(o, m)
+        and prefet_competent(p, m);
+    then duty InformerPrefetAccession843_1 {
+        bearer o;
+        beneficiary p;
+        maintain prefet_informe_derogation_accession(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R843_1, CCH_R843_1_ED2019_12, CCH_R843_1_ED2020_01,
+        CCH_R843_1_ED2021_01, CCH_R843_1_ED2023_04, CCH_R843_1_ED2023_09,
+        CCH_R843_1_ED2023_12, CCH_R843_1_ED2026_07)
+rule DevoirInformerComiteAccession843_1(m: Menage, o: Organisme, c: ComitePlanLocal) strict {
+    label fr official "derogation accession : l'organisme en informe le comite du plan R. 843-1 2";
+    label en unofficial "accession derogation: the body tells the plan committee under R. 843-1 2";
+    when derogation_decence_accession(m) and organisme_debiteur(o, m)
+        and comite_plan_competent(c, m);
+    then duty InformerComiteAccession843_1 {
+        bearer o;
+        beneficiary c;
+        maintain comite_plan_informe_accession(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation delai_conformite_expire_le(m: Menage, d: Date) kind institutional {
+    label fr official "echeance du delai maximal de mise en conformite R. 843-2";
+    label en unofficial "maximum compliance-period expiry under R. 843-2";
+}
+
+@source(CCH_R843_2, CCH_R843_2_ED2019_12, CCH_R843_2_ED2020_01,
+        CCH_R843_2_ED2021_01, CCH_R843_2_ED2023_04, CCH_R843_2_ED2023_09,
+        CCH_R843_2_ED2023_12, CCH_R843_2_ED2026_07)
+rule EcheanceMiseEnConformite(m: Menage, constat: Date) defeasible {
+    label fr official "delai maximal de mise en conformite L. 843-1 : dix-huit mois, hors successeur L. 843-4";
+    label en unofficial "maximum L. 843-1 compliance period: eighteen months, barring L. 843-4 successors";
+    when constat_non_decence(m, constat)
+        and not_known(locataire_successeur_843_4(m));
+    then delai_conformite_expire_le(m, add_calendar_period(constat, 18 calendar_month));
+}
+
+pub relation proprietaire_informe_aides_travaux(m: Menage) kind empirical {
+    label fr official "proprietaire informe des aides et lieux d'information travaux (execution)";
+    label en unofficial "owner told of works aid and advice points (performance)";
+}
+
+pub relation mise_en_demeure_constituee(m: Menage) kind institutional {
+    label fr official "mise en demeure constituee par l'information R. 843-3 (pont recouvrement)";
+    label en unofficial "formal notice constituted by the R. 843-3 information (recovery bridge)";
+}
+
+@source(CCH_R843_4, CCH_R843_4_ED2019_12, CCH_R843_4_ED2020_01,
+        CCH_R843_4_ED2021_01, CCH_R843_4_ED2023_04, CCH_R843_4_ED2023_09,
+        CCH_R843_4_ED2023_12, CCH_R843_4_ED2026_07)
+rule DevoirInformerProprietaireAides(m: Menage, o: Organisme, b: Bailleur) strict {
+    label fr official "l'organisme informe le proprietaire des aides publiques et lieux d'information travaux";
+    label en unofficial "the body tells the owner of public works aid and advice points";
+    when conservation_en_cours(m) and organisme_debiteur(o, m)
+        and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR);
+    then duty InformerProprietaireAides {
+        bearer o;
+        beneficiary b;
+        maintain proprietaire_informe_aides_travaux(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R843_3, CCH_R843_3_ED2019_12, CCH_R843_3_ED2020_01,
+        CCH_R843_3_ED2021_01, CCH_R843_3_ED2023_04, CCH_R843_3_ED2023_09,
+        CCH_R843_3_ED2023_12, CCH_R843_3_ED2026_07)
+rule MiseEnDemeureParInformation(m: Menage) strict {
+    label fr official "information au proprietaire et au locataire, commission saisie : mise en demeure R. 843-3";
+    label en unofficial "information to owner and tenant, commission seized: R. 843-3 formal notice";
+    when proprietaire_informe_obligation_conformite_843(m)
+        and locataire_informe_obligation_conformite_843(m)
+        and saisine_commission_conciliation_843(m);
+    then mise_en_demeure_constituee(m);
+}
+
+pub relation proprietaire_informe_obligation_conformite_843(m: Menage) kind empirical {
+    label fr official "proprietaire informe de l'obligation de mise en conformite R. 843-3 (execution)";
+    label en unofficial "owner told of the compliance obligation under R. 843-3 (performance)";
+}
+
+pub relation locataire_informe_obligation_conformite_843(m: Menage) kind empirical {
+    label fr official "locataire destine de l'information R. 843-3, texte L. 20-1 et adresse de la commission reproduits (execution)";
+    label en unofficial "tenant addressed by the R. 843-3 information, L. 20-1 text and commission address reproduced (performance)";
+}
+
+pub relation saisine_commission_conciliation_843(m: Menage) kind empirical {
+    label fr official "saisine de la commission departementale de conciliation par le locataire (fait)";
+    label en unofficial "seizure of the departmental conciliation commission by the tenant (fact)";
+}
+
+pub relation demande_conformite_locataire_substituee_843(m: Menage) kind institutional {
+    label fr official "l'information tient lieu de demande de mise en conformite par le locataire R. 843-3";
+    label en unofficial "the information stands for the tenant compliance request under R. 843-3";
+}
+
+@source(CCH_R843_3, CCH_R843_3_ED2019_12, CCH_R843_3_ED2020_01,
+        CCH_R843_3_ED2021_01, CCH_R843_3_ED2023_04, CCH_R843_3_ED2023_09,
+        CCH_R843_3_ED2023_12, CCH_R843_3_ED2026_07)
+rule DevoirInformerLocataireConformite843(m: Menage, o: Organisme) strict {
+    label fr official "le locataire est aussi destine de l'information, texte L. 20-1 et commission joints";
+    label en unofficial "the tenant also receives the information, with the L. 20-1 text and commission";
+    when conservation_en_cours(m) and organisme_debiteur(o, m);
+    then duty InformerLocataireConformite843 {
+        bearer o;
+        beneficiary m;
+        maintain locataire_informe_obligation_conformite_843(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R843_3, CCH_R843_3_ED2019_12, CCH_R843_3_ED2020_01,
+        CCH_R843_3_ED2021_01, CCH_R843_3_ED2023_04, CCH_R843_3_ED2023_09,
+        CCH_R843_3_ED2023_12, CCH_R843_3_ED2026_07)
+rule SubstitutionDemandeConformite843(m: Menage) strict {
+    label fr official "proprietaire et locataire informes, commission saisie : l'information vaut demande du locataire";
+    label en unofficial "owner and tenant told, commission seised: the information counts as the tenant request";
+    when proprietaire_notifie_constat(m) and locataire_informe_obligation_conformite_843(m)
+        and saisine_commission_conciliation_843(m);
+    then demande_conformite_locataire_substituee_843(m);
+}
+
+pub relation mise_en_conformite_etablie(m: Menage, d: Date) kind empirical {
+    label fr official "mise en conformite constatee par l'organisme ou habilite (fait date)";
+    label en unofficial "compliance established by the body or approved agent (dated fact)";
+}
+
+pub relation conservee_reversee_proprietaire(m: Menage) kind empirical {
+    label fr official "allocation conservee versee au proprietaire (execution)";
+    label en unofficial "kept allocation paid to the owner (performance)";
+}
+
+@source(CCH_R843_4, CCH_R843_4_ED2019_12, CCH_R843_4_ED2020_01,
+        CCH_R843_4_ED2021_01, CCH_R843_4_ED2023_04, CCH_R843_4_ED2023_09,
+        CCH_R843_4_ED2023_12, CCH_R843_4_ED2026_07, CCH_L843_3,
+        CCH_L843_3_ED2019_12, CCH_L843_3_ED2020_01, CCH_L843_3_ED2021_01,
+        CCH_L843_3_ED2023_04, CCH_L843_3_ED2023_09, CCH_L843_3_ED2023_12,
+        CCH_L843_3_ED2026_07)
+rule DevoirReverserConservee(m: Menage, o: Organisme, b: Bailleur, d: Date) strict {
+    label fr official "conformite etablie : le conserve est verse au proprietaire bailleur R. 843-4, L. 843-3";
+    label en unofficial "compliance established: the kept sum goes to the owner-landlord under R. 843-4, L. 843-3";
+    when mise_en_conformite_etablie(m, d) and organisme_debiteur(o, m)
+        and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR);
+    then duty ReverserConserveeProprietaire {
+        bearer o;
+        beneficiary b;
+        maintain conservee_reversee_proprietaire(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation conformite_energetique_cas(m: Menage) kind empirical {
+    label fr official "mise en conformite portant sur la performance energetique (constat)";
+    label en unofficial "compliance about energy performance (finding)";
+}
+
+pub relation dpe_produit_conformite(m: Menage) kind empirical {
+    label fr official "DPE attestant la performance minimale produit (execution)";
+    label en unofficial "EPC proving minimum performance produced (performance)";
+}
+
+pub relation conformite_energetique_dpe(m: Menage) kind institutional {
+    label fr official "conformite energetique etablie par le DPE produit (01.01.2023)";
+    label en unofficial "energy compliance established by the produced EPC (01.01.2023)";
+}
+
+@source(CCH_R843_4, CCH_R843_4_ED2019_12, CCH_R843_4_ED2020_01,
+        CCH_R843_4_ED2021_01, CCH_R843_4_ED2023_04, CCH_R843_4_ED2023_09,
+        CCH_R843_4_ED2023_12, CCH_R843_4_ED2026_07)
+rule ConformiteEnergetiqueParDPE(m: Menage) strict {
+    label fr official "performance energetique : la preuve par le DPE produit (01.01.2023)";
+    label en unofficial "energy performance: proof by the produced EPC (01.01.2023)";
+    effective [@2023-01-01, infinity);
+    when conformite_energetique_cas(m) and dpe_produit_conformite(m);
+    then conformite_energetique_dpe(m);
+}
+
+pub relation convention_habilitation(o2: Organisme, o: Organisme) kind empirical {
+    label fr official "convention d'habilitation au constat avec l'organisme payeur (fait)";
+    label en unofficial "finding-accreditation convention with the paying body (fact)";
+}
+
+pub relation organisme_droit_public(o2: Organisme) kind empirical {
+    label fr official "organisme de droit public (fait de dossier)";
+    label en unofficial "public-law body (case fact)";
+}
+
+pub relation fiscal_social_en_regle(o2: Organisme) kind empirical {
+    label fr official "en regle fiscale et sociale (constat)";
+    label en unofficial "tax and social obligations current (finding)";
+}
+
+pub relation pas_condamnation_penale_5ans(o2: Organisme) kind empirical {
+    label fr official "sans condamnation penale definitive d'activite depuis cinq ans (constat)";
+    label en unofficial "no final criminal activity conviction for five years (finding)";
+}
+
+pub relation organisme_habilite_constat(o2: Organisme, o: Organisme) kind institutional {
+    label fr official "organisme habilite au constat de non-decence R. 843-5";
+    label en unofficial "body accredited for non-decency findings under R. 843-5";
+}
+
+@source(CCH_R843_5, CCH_R843_5_ED2019_12, CCH_R843_5_ED2020_01,
+        CCH_R843_5_ED2021_01, CCH_R843_5_ED2023_04, CCH_R843_5_ED2023_09,
+        CCH_R843_5_ED2023_12, CCH_R843_5_ED2026_07)
+rule HabilitationOrganismePublic(o2: Organisme, o: Organisme) strict {
+    label fr official "organisme public conventionne : habilite au constat";
+    label en unofficial "conventioned public body: accredited for findings";
+    when convention_habilitation(o2, o) and organisme_droit_public(o2);
+    then organisme_habilite_constat(o2, o);
+}
+
+@source(CCH_R843_5, CCH_R843_5_ED2019_12, CCH_R843_5_ED2020_01,
+        CCH_R843_5_ED2021_01, CCH_R843_5_ED2023_04, CCH_R843_5_ED2023_09,
+        CCH_R843_5_ED2023_12, CCH_R843_5_ED2026_07)
+rule HabilitationOrganismePrive(o2: Organisme, o: Organisme) strict {
+    label fr official "organisme prive en regle et sans condamnation : habilite au constat";
+    label en unofficial "compliant private body with no conviction: accredited for findings";
+    when convention_habilitation(o2, o) and fiscal_social_en_regle(o2)
+        and pas_condamnation_penale_5ans(o2);
+    then organisme_habilite_constat(o2, o);
+}
+
+pub relation procedure_conservation_expiree_843_7(m: Menage) kind institutional {
+    label fr official "procedure de conservation L. 843-1 a L. 843-4 expiree R. 843-7";
+    label en unofficial "L. 843-1 to L. 843-4 conservation procedure expired under R. 843-7";
+}
+
+pub relation periode_derogatoire_peuplement_expiree_843_7(m: Menage) kind institutional {
+    label fr official "periode de benefice derogatoire surpeuplement expiree R. 843-7";
+    label en unofficial "overcrowding derogation benefit period expired under R. 843-7";
+}
+
+pub relation surpeuplement_persiste_843_7(m: Menage) kind empirical {
+    label fr official "logement toujours surpeuple au regard de sa superficie (constat)";
+    label en unofficial "dwelling still overcrowded for its area (finding)";
+}
+
+pub relation allocation_suspendue_843_7(m: Menage) kind institutional {
+    label fr official "allocation suspendue a l'expiration d'une procedure simultanee R. 843-7";
+    label en unofficial "allocation suspended at one simultaneous procedure expiry under R. 843-7";
+}
+
+pub relation conservation_sommes_non_obstacle_843_7(m: Menage) kind institutional {
+    label fr official "le benefice derogatoire surpeuplement ne fait pas obstacle a la conservation R. 843-7";
+    label en unofficial "the overcrowding derogation benefit does not block conservation under R. 843-7";
+}
+
+pub relation bailleur_informe_suspension_843_7(m: Menage) kind empirical {
+    label fr official "bailleur informe de la suspension de l'allocation R. 843-7 (execution)";
+    label en unofficial "landlord told of the allocation suspension under R. 843-7 (performance)";
+}
+
+@source(CCH_R843_7, CCH_R843_7_ED2019_12, CCH_R843_7_ED2020_01,
+        CCH_R843_7_ED2021_01, CCH_R843_7_ED2023_04, CCH_R843_7_ED2023_09,
+        CCH_R843_7_ED2023_12, CCH_R843_7_ED2026_07)
+rule ConservationExpireeBase843_7(m: Menage, echeance: Date, appreciation: Date) defeasible {
+    label fr official "delai de dix-huit mois expire : procedure de conservation expiree R. 843-7 1";
+    label en unofficial "eighteen months expired: conservation procedure expired under R. 843-7 1";
+    when delai_conformite_expire_le(m, echeance) and date_appreciation(m, appreciation)
+        and appreciation >= echeance;
+    then procedure_conservation_expiree_843_7(m);
+}
+
+@source(CCH_R843_7, CCH_R843_7_ED2019_12, CCH_R843_7_ED2020_01,
+        CCH_R843_7_ED2021_01, CCH_R843_7_ED2023_04, CCH_R843_7_ED2023_09,
+        CCH_R843_7_ED2023_12, CCH_R843_7_ED2026_07)
+rule ConservationExpireeMaintien843_7(m: Menage, echeance: Date, appreciation: Date) strict {
+    label fr official "maintien expire : procedure de conservation expiree R. 843-7 1";
+    label en unofficial "maintenance expired: conservation procedure expired under R. 843-7 1";
+    when maintien_expire_le(m, echeance) and date_appreciation(m, appreciation)
+        and appreciation >= echeance;
+    then procedure_conservation_expiree_843_7(m);
+}
+
+@source(CCH_R843_7, CCH_R843_7_ED2019_12, CCH_R843_7_ED2020_01,
+        CCH_R843_7_ED2021_01, CCH_R843_7_ED2023_04, CCH_R843_7_ED2023_09,
+        CCH_R843_7_ED2023_12, CCH_R843_7_ED2026_07)
+rule ConservationExpireeRenouvelee843_7(m: Menage, echeance: Date, appreciation: Date) strict {
+    label fr official "maintien renouvele expire : procedure de conservation expiree R. 843-7 1";
+    label en unofficial "renewed maintenance expired: conservation procedure expired under R. 843-7 1";
+    when maintien_renouvele_expire_le(m, echeance) and date_appreciation(m, appreciation)
+        and appreciation >= echeance;
+    then procedure_conservation_expiree_843_7(m);
+}
+
+@source(CCH_R843_7, CCH_R843_7_ED2019_12, CCH_R843_7_ED2020_01,
+        CCH_R843_7_ED2021_01, CCH_R843_7_ED2023_04, CCH_R843_7_ED2023_09,
+        CCH_R843_7_ED2023_12, CCH_R843_7_ED2026_07)
+rule ConservationExpireeSuccesseur843_7(m: Menage, echeance: Date, appreciation: Date) strict {
+    label fr official "conservation successeur expiree : procedure de conservation expiree R. 843-7 1";
+    label en unofficial "successor conservation expired: conservation procedure expired under R. 843-7 1";
+    when conservation_l843_4_expire_le(m, echeance) and date_appreciation(m, appreciation)
+        and appreciation >= echeance;
+    then procedure_conservation_expiree_843_7(m);
+}
+
+@source(CCH_R843_7, CCH_R843_7_ED2019_12, CCH_R843_7_ED2020_01,
+        CCH_R843_7_ED2021_01, CCH_R843_7_ED2023_04, CCH_R843_7_ED2023_09,
+        CCH_R843_7_ED2023_12, CCH_R843_7_ED2026_07)
+rule PeriodeDerogatoireExpiree843_7(m: Menage, echeance: Date, appreciation: Date) strict {
+    label fr official "deux ans derogatoires expires : periode de benefice expiree R. 843-7 2";
+    label en unofficial "two derogation years expired: benefit period expired under R. 843-7 2";
+    when derogation_peuplement_expire_le(m, echeance) and date_appreciation(m, appreciation)
+        and appreciation >= echeance;
+    then periode_derogatoire_peuplement_expiree_843_7(m);
+}
+
+@source(CCH_R843_7, CCH_R843_7_ED2019_12, CCH_R843_7_ED2020_01,
+        CCH_R843_7_ED2021_01, CCH_R843_7_ED2023_04, CCH_R843_7_ED2023_09,
+        CCH_R843_7_ED2023_12, CCH_R843_7_ED2026_07)
+rule SuspensionNonDecence843_7(m: Menage) defeasible {
+    label fr official "conservation expiree, toujours non decent : suspendue malgre la derogation en cours R. 843-7 1";
+    label en unofficial "conservation expired, still non-decent: suspended despite the running derogation under R. 843-7 1";
+    when procedure_conservation_expiree_843_7(m) and non_decence_persiste(m)
+        and procedure_surpeuplement_r844(m);
+    then allocation_suspendue_843_7(m);
+}
+
+@source(CCH_R843_7, CCH_R843_7_ED2019_12, CCH_R843_7_ED2020_01,
+        CCH_R843_7_ED2021_01, CCH_R843_7_ED2023_04, CCH_R843_7_ED2023_09,
+        CCH_R843_7_ED2023_12, CCH_R843_7_ED2026_07)
+rule SuspensionSurpeuplement843_7(m: Menage) defeasible {
+    label fr official "derogation expiree, toujours surpeuple : suspendue malgre la conservation en cours R. 843-7 2";
+    label en unofficial "derogation expired, still overcrowded: suspended despite the running conservation under R. 843-7 2";
+    when periode_derogatoire_peuplement_expiree_843_7(m) and surpeuplement_persiste_843_7(m)
+        and conservation_en_cours(m);
+    then allocation_suspendue_843_7(m);
+}
+
+@source(CCH_R843_7, CCH_R843_7_ED2019_12, CCH_R843_7_ED2020_01,
+        CCH_R843_7_ED2021_01, CCH_R843_7_ED2023_04, CCH_R843_7_ED2023_09,
+        CCH_R843_7_ED2023_12, CCH_R843_7_ED2026_07)
+rule NonObstacleConservation843_7(m: Menage) defeasible {
+    label fr official "surpeuplement simultane : la conservation des sommes dues se poursuit R. 843-7";
+    label en unofficial "simultaneous overcrowding: conservation of due sums continues under R. 843-7";
+    when conservation_en_cours(m) and procedure_surpeuplement_r844(m);
+    then conservation_sommes_non_obstacle_843_7(m);
+}
+
+@source(CCH_R843_7, CCH_R843_7_ED2019_12, CCH_R843_7_ED2020_01,
+        CCH_R843_7_ED2021_01, CCH_R843_7_ED2023_04, CCH_R843_7_ED2023_09,
+        CCH_R843_7_ED2023_12, CCH_R843_7_ED2026_07)
+rule DevoirInformerBailleurSuspension843_7(m: Menage, o: Organisme, b: Bailleur) strict {
+    label fr official "dans tous les cas, l'organisme informe le bailleur de la suspension R. 843-7";
+    label en unofficial "in every case, the body tells the landlord of the suspension under R. 843-7";
+    when allocation_suspendue_843_7(m) and organisme_debiteur(o, m)
+        and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR);
+    then duty InformerBailleurSuspension843_7 {
+        bearer o;
+        beneficiary b;
+        maintain bailleur_informe_suspension_843_7(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation procedure_impayes_chapitre_iv(m: Menage) kind empirical {
+    label fr official "procedure impayes du chapitre IV du titre II en cours (constat)";
+    label en unofficial "open title-II chapter-IV arrears procedure (finding)";
+}
+
+pub relation fin_procedure_impayes(m: Menage) kind empirical {
+    label fr official "achevement de la procedure impayes (constat)";
+    label en unofficial "arrears procedure completed (finding)";
+}
+
+pub relation conditions_peuplement_decence_non_respectees(m: Menage) kind empirical {
+    label fr official "peuplement et decence toujours non respectes (constat)";
+    label en unofficial "crowding and decency still unmet (finding)";
+}
+
+pub relation delais_conservation_peuplement_expires(m: Menage) kind empirical {
+    label fr official "delais L. 843-1 a L. 843-3 ou R. 844-1/2 expires (constat)";
+    label en unofficial "L. 843-1 to L. 843-3 or R. 844-1/2 periods expired (finding)";
+}
+
+pub relation allocation_maintenue_impayes_concomitants(m: Menage) kind institutional {
+    label fr official "allocation maintenue pendant la procedure impayes concomitante R. 843-8";
+    label en unofficial "allocation kept during the concurrent arrears procedure under R. 843-8";
+}
+
+pub relation versement_suspendu_apres_impayes(m: Menage) kind institutional {
+    label fr official "versement suspendu a l'achevement des impayes, conditions non remplies R. 843-8";
+    label en unofficial "payment suspended at arrears end with unmet conditions under R. 843-8";
+}
+
+pub relation procedure_surpeuplement_r844(m: Menage) kind empirical {
+    label fr official "procedure surpeuplement R. 844-1 et R. 844-2 en cours (constat)";
+    label en unofficial "open R. 844-1/2 overcrowding procedure (finding)";
+}
+
+@source(CCH_R843_8, CCH_R843_8_ED2019_12, CCH_R843_8_ED2020_01,
+        CCH_R843_8_ED2021_01, CCH_R843_8_ED2023_04, CCH_R843_8_ED2023_09,
+        CCH_R843_8_ED2023_12, CCH_R843_8_ED2026_07)
+rule MaintienImpayesNonDecence(m: Menage) defeasible {
+    label fr official "non-decence plus impayes : allocation maintenue jusqu'au bout des impayes";
+    label en unofficial "non-decency plus arrears: allocation kept until arrears end";
+    when conservation_en_cours(m) and procedure_impayes_chapitre_iv(m);
+    then allocation_maintenue_impayes_concomitants(m);
+}
+
+@source(CCH_R843_8, CCH_R843_8_ED2019_12, CCH_R843_8_ED2020_01,
+        CCH_R843_8_ED2021_01, CCH_R843_8_ED2023_04, CCH_R843_8_ED2023_09,
+        CCH_R843_8_ED2023_12, CCH_R843_8_ED2026_07)
+rule MaintienImpayesSurpeuplement(m: Menage) strict {
+    label fr official "surpeuplement plus impayes : allocation maintenue jusqu'au bout des impayes";
+    label en unofficial "overcrowding plus arrears: allocation kept until arrears end";
+    when procedure_surpeuplement_r844(m) and procedure_impayes_chapitre_iv(m);
+    then allocation_maintenue_impayes_concomitants(m);
+}
+
+@source(CCH_R843_8, CCH_R843_8_ED2019_12, CCH_R843_8_ED2020_01,
+        CCH_R843_8_ED2021_01, CCH_R843_8_ED2023_04, CCH_R843_8_ED2023_09,
+        CCH_R843_8_ED2023_12, CCH_R843_8_ED2026_07)
+rule SuspensionApresImpayes(m: Menage) strict {
+    label fr official "impayes acheves, conditions non remplies, delais expires : suspension";
+    label en unofficial "arrears over, conditions unmet, periods expired: suspension";
+    when fin_procedure_impayes(m) and conditions_peuplement_decence_non_respectees(m)
+        and delais_conservation_peuplement_expires(m);
+    then versement_suspendu_apres_impayes(m);
+}

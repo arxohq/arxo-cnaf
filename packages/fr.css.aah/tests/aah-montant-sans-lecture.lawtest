@@ -1,0 +1,37 @@
+// Без чтения: окно закона без суммы (число декрета отсутствует, округление текстами не задано), построенное
+// не выводится, число декрета окна остаётся нормой.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+// 2022-09-15 без чтения: суммы нет
+test "urn:query:fr-css-aah-sans-lecture-loi" {
+    given {
+        context { decision_time @2022-09-15T12:00:00Z; knowledge_time @2022-09-15T12:00:00Z; legal_time @2022-09-15; timezone "Europe/Paris"; }
+        assert "sans-lecture-loi-01": en_couple(entity_ref("urn:fr:css-aah:case:sans-lecture-loi")) { origin case_input; }
+    }
+    evaluate truth(montant_aah_applicable(956.65 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2023-06-15 без чтения: число декрета есть, построенного нет
+test "urn:query:fr-css-aah-sans-lecture-2023" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "sans-lecture-2023-01": en_couple(entity_ref("urn:fr:css-aah:case:sans-lecture-2023")) { origin case_input; }
+    }
+    evaluate truth(montant_aah_applicable(971.37 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aah_montant_construit(971.37 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aah_montant_conforme_publie());
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

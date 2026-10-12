@@ -1,0 +1,16 @@
+// No contribution transmission without a title: debtor body but L. 582-2 conditions unmet - no communication duty (L. 583-5 trigger, PC-R07-27).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-transmettre-sans-titre" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-transmettre-sans-titre-01": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:creance-strfisc")) { origin case_input; }
+        assert "creance-transmettre-sans-titre-02": not demande_conjointe_parents_separes(entity_ref("urn:fr:pf:case:creance-strfisc")) { origin case_input; }
+        assert "creance-transmettre-sans-titre-03": not attestation_absence_creance(entity_ref("urn:fr:pf:case:creance-strfisc")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(TransmettreContributionFisc, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

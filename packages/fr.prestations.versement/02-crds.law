@@ -1,0 +1,600 @@
+// CRDS 0.5% withheld from family benefits (Ord. 96-50 art. 14/19).
+// Module 02-crds.law of fr.prestations.versement (wave 5).
+// Style follows fr.apl.versement (functions + pub relations + strict rules).
+// Effective window [@2021-01-01, infinity): programme coverage (D-01),
+// though art. 14 IV runs from 1997-01-01.
+//
+// COVERAGE. Art. 14 II 8° submits "les prestations visees a l'article
+// L. 511-1 et au chapitre V du titre V du livre VII ..., a l'exception
+// de l'allocation d'education de l'enfant handicape"
+// (fr.apl::ORD9650_ART14_ED2020_01). The second limb is the DOM
+// chapter V (L. 755-11 "le present chapitre V", fr.pf.af pins): DOM AF
+// flows through the covered af_montant_du (pf-af 06-dom), DOM
+// allocation logement (L. 755-21, named in art. 14 IV) through
+// fr.apl.versement — no separate rule needed. L. 511-1
+// (fr.pf.core::CSS_L511_1) lists: PAJE (prime, base, PreParE, CMG),
+// AF, CF, AEEH, ASF, ARS, allocation logement (4°, housing package),
+// the death lump sum, AJPP. Hence this module withholds CRDS from the
+// brut heads of: AF, CF (base/majore/differentiel), ARS
+// (base/differentiel), ASF (base/differentiel), PAJE prime/base/PreParE
+// awards (composition per L. 531-1, cited on each rule), CMG
+// (direct/structure/differentiel), AJPP monthly amount and frais
+// complement. Rate 0.5%: "Le taux des contributions instituees par les
+// articles 14 a 17 est fixe a 0,5 %"
+// (fr.apl::ORD9650_ART19_ED2020_01). The debtor body withholds
+// ("precomptee par l'organisme debiteur", art. 14 III). Only due from
+// 1997-01-01 for 8° benefits (art. 14 IV) -> effective.
+//
+// INPUT CONTRACT (exclusivity). Each Retenue rule fires per stated brut
+// head; alternative tracks of one benefit (CF base/majore/differentiel,
+// ARS base/differentiel, ASF base/differentiel, CMG direct/structure)
+// are assumed mutually exclusive upstream. Where upstream montant
+// rules co-fire, CRDS is withheld per stated head (garbage-in); no
+// in-module guard masks a foreign double-payment
+// (B-PV-UPSTREAM-EXCLUSIVITE, README). Complementary by design and
+// OUTSIDE this contract: PAJE prime/base/PreParE (L. 531-1
+// components that legitimately coincide) and the CMG transitional
+// differential (tops up the new-law amount by design, separate
+// bearer): per-head withholding there is correct behavior.
+//
+// NOT COVERED (with reason, not omission):
+// - AEEH: explicit exception in art. 14 II 8° -> no rule.
+// - AJPA (L. 168-8, Livre I): not a L. 511-1 benefit, so outside
+//   art. 14 II 8°; whether it is a "revenu de remplacement" under
+//   art. 14 I is not established by pinned bytes -> boundary, no rule.
+// - Housing (art. 14 II 7° APL; L. 511-1 4° / L. 542-1 / L. 755-21
+//   allocation logement): owned by fr.apl.versement, not duplicated.
+// - Death lump sum (L. 511-1 8°): no benefit package -> no brut head.
+//
+// BOUNDARIES (pinned text silent):
+// - Rounding of the withheld CRDS: the housing guide p. 23 rounds down
+//   to the centime, but no equivalent is pinned for PF; art. 14 III
+//   points to L. 131-1 CSS, whose bytes are not pinned. This draft
+//   computes brut x 0.5% exactly, with no rounding.
+// - Territory / Saint-Pierre-et-Miquelon: art. 14/19 are silent on
+//   territory. Only fr.pf.af publishes a territoire fact, and its
+//   enum has no SPM variant. No territory premise in this draft; the
+//   SPM carve-out (fr.apl::CGCT_LO6414_1, as used for housing) is left
+//   to the lead.
+// - CMG part a (cotisations paid to URSSAF, tiers-payant to EAJE):
+//   art. 14 covers the prestation as a whole with no part-level
+//   exception, so CRDS runs on the totals; whether the fund withholds
+//   on the URSSAF-bound part is left to the lead.
+// - AF sharing (montant_parent_partage) and ASE splits divide the
+//   household total downstream; the assiette here is af_montant_du only.
+// - ARS is an annual (rentree) payment, not monthly; CRDS still runs
+//   per entitled child.
+// - Pinned Ord. 96-50 coverage starts 2019-09-01; CRDS for earlier
+//   months is outside the pinned window.
+
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+
+const TauxCRDSPF: Decimal = 0.005 {
+    label fr official "taux de la CRDS applicable aux prestations familiales : 0,5 % (ord. 96-50, art. 19)";
+    label en unofficial "CRDS rate on family benefits: 0.5% (Ord. 96-50, Art. 19)";
+}
+
+function crds_pf_calculee(base: Money) -> Money =
+    base * TauxCRDSPF;
+
+// --- Allocations familiales (Personne-keyed household total) ---
+
+pub relation crds_precomptee_af(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "CRDS precomptee sur les allocations familiales dues";
+    label en unofficial "CRDS withheld from the family allowances due";
+}
+
+pub relation montant_net_crds_af(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "allocations familiales nettes de CRDS, avant arrondis et planchers";
+    label en unofficial "family allowances net of CRDS, before rounding and floors";
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1)
+rule RetenueCRDSAF(p: fr.pf.core::Personne, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur les allocations familiales";
+    label en unofficial "CRDS at 0.5% is withheld from family allowances";
+    when fr.pf.af::af_montant_du(p, brut);
+    then crds_precomptee_af(p, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSAF(p: fr.pf.core::Personne, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "les allocations nettes sont le brut diminue de la CRDS precomptee";
+    label en unofficial "net allowances are gross minus withheld CRDS";
+    when fr.pf.af::af_montant_du(p, brut) and crds_precomptee_af(p, crds);
+    then montant_net_crds_af(p, brut - crds);
+}
+
+// --- Complement familial: base, majore, differentiel tracks (Personne) ---
+
+pub relation crds_precomptee_cf(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "CRDS precomptee sur le complement familial de base du";
+    label en unofficial "CRDS withheld from the base family complement due";
+}
+
+pub relation montant_net_crds_cf(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "complement familial de base net de CRDS, avant arrondis et planchers";
+    label en unofficial "base family complement net of CRDS, before rounding and floors";
+}
+
+pub relation crds_precomptee_cf_majore(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "CRDS precomptee sur le complement familial majore du";
+    label en unofficial "CRDS withheld from the increased family complement due";
+}
+
+pub relation montant_net_crds_cf_majore(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "complement familial majore net de CRDS, avant arrondis et planchers";
+    label en unofficial "increased family complement net of CRDS, before rounding and floors";
+}
+
+pub relation crds_precomptee_cf_differentiel(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "CRDS precomptee sur le differentiel de complement familial du";
+    label en unofficial "CRDS withheld from the family complement differential due";
+}
+
+pub relation montant_net_crds_cf_differentiel(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "differentiel de complement familial net de CRDS, avant arrondis et planchers";
+    label en unofficial "family complement differential net of CRDS, before rounding and floors";
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1)
+rule RetenueCRDSCf(p: fr.pf.core::Personne, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur le complement familial de base";
+    label en unofficial "CRDS at 0.5% is withheld from the base family complement";
+    when fr.pf.cf::cf_montant_du(p, brut);
+    then crds_precomptee_cf(p, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSCf(p: fr.pf.core::Personne, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le complement de base net est le brut diminue de la CRDS precomptee";
+    label en unofficial "net base complement is gross minus withheld CRDS";
+    when fr.pf.cf::cf_montant_du(p, brut) and crds_precomptee_cf(p, crds);
+    then montant_net_crds_cf(p, brut - crds);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1)
+rule RetenueCRDSCfMajore(p: fr.pf.core::Personne, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur le complement familial majore";
+    label en unofficial "CRDS at 0.5% is withheld from the increased family complement";
+    when fr.pf.cf::cf_majore_du(p, brut);
+    then crds_precomptee_cf_majore(p, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSCfMajore(p: fr.pf.core::Personne, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le complement majore net est le brut diminue de la CRDS precomptee";
+    label en unofficial "net increased complement is gross minus withheld CRDS";
+    when fr.pf.cf::cf_majore_du(p, brut) and crds_precomptee_cf_majore(p, crds);
+    then montant_net_crds_cf_majore(p, brut - crds);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1)
+rule RetenueCRDSCfDifferentiel(p: fr.pf.core::Personne, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur le differentiel de complement familial";
+    label en unofficial "CRDS at 0.5% is withheld from the family complement differential";
+    when fr.pf.cf::cf_differentiel_du(p, brut);
+    then crds_precomptee_cf_differentiel(p, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSCfDifferentiel(p: fr.pf.core::Personne, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le differentiel net est le brut diminue de la CRDS precomptee";
+    label en unofficial "net differential is gross minus withheld CRDS";
+    when fr.pf.cf::cf_differentiel_du(p, brut) and crds_precomptee_cf_differentiel(p, crds);
+    then montant_net_crds_cf_differentiel(p, brut - crds);
+}
+
+// --- Allocation de rentree scolaire: annual, per child ---
+
+pub relation crds_precomptee_ars(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "CRDS precomptee sur l'allocation de rentree scolaire due";
+    label en unofficial "CRDS withheld from the school-start allowance due";
+}
+
+pub relation montant_net_crds_ars(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "allocation de rentree scolaire nette de CRDS, avant arrondis et planchers";
+    label en unofficial "school-start allowance net of CRDS, before rounding and floors";
+}
+
+pub relation crds_precomptee_ars_differentiel(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "CRDS precomptee sur le differentiel d'allocation de rentree scolaire du";
+    label en unofficial "CRDS withheld from the school-start allowance differential due";
+}
+
+pub relation montant_net_crds_ars_differentiel(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "differentiel d'allocation de rentree scolaire net de CRDS, avant arrondis et planchers";
+    label en unofficial "school-start allowance differential net of CRDS, before rounding and floors";
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1)
+rule RetenueCRDSArs(e: fr.pf.core::Enfant, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur l'allocation de rentree scolaire";
+    label en unofficial "CRDS at 0.5% is withheld from the school-start allowance";
+    when fr.pf.ars::ars_montant_du(e, brut);
+    then crds_precomptee_ars(e, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSArs(e: fr.pf.core::Enfant, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'allocation nette est le brut diminue de la CRDS precomptee";
+    label en unofficial "net allowance is gross minus withheld CRDS";
+    when fr.pf.ars::ars_montant_du(e, brut) and crds_precomptee_ars(e, crds);
+    then montant_net_crds_ars(e, brut - crds);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1)
+rule RetenueCRDSArsDifferentiel(e: fr.pf.core::Enfant, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur le differentiel d'allocation de rentree scolaire";
+    label en unofficial "CRDS at 0.5% is withheld from the school-start allowance differential";
+    when fr.pf.ars::ars_differentiel_du(e, brut);
+    then crds_precomptee_ars_differentiel(e, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSArsDifferentiel(e: fr.pf.core::Enfant, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le differentiel net est le brut diminue de la CRDS precomptee";
+    label en unofficial "net differential is gross minus withheld CRDS";
+    when fr.pf.ars::ars_differentiel_du(e, brut) and crds_precomptee_ars_differentiel(e, crds);
+    then montant_net_crds_ars_differentiel(e, brut - crds);
+}
+
+// --- Allocation de soutien familial: base and differentiel, per child ---
+
+pub relation crds_precomptee_asf(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "CRDS precomptee sur l'allocation de soutien familial due";
+    label en unofficial "CRDS withheld from the family support allowance due";
+}
+
+pub relation montant_net_crds_asf(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "allocation de soutien familial nette de CRDS, avant arrondis et planchers";
+    label en unofficial "family support allowance net of CRDS, before rounding and floors";
+}
+
+pub relation crds_precomptee_asf_differentiel(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "CRDS precomptee sur le differentiel d'allocation de soutien familial du";
+    label en unofficial "CRDS withheld from the family support allowance differential due";
+}
+
+pub relation montant_net_crds_asf_differentiel(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "differentiel d'allocation de soutien familial net de CRDS, avant arrondis et planchers";
+    label en unofficial "family support allowance differential net of CRDS, before rounding and floors";
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1)
+rule RetenueCRDSAsf(e: fr.pf.core::Enfant, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur l'allocation de soutien familial";
+    label en unofficial "CRDS at 0.5% is withheld from the family support allowance";
+    when fr.pf.asf::asf_montant_du(e, brut);
+    then crds_precomptee_asf(e, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSAsf(e: fr.pf.core::Enfant, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'allocation nette est le brut diminue de la CRDS precomptee";
+    label en unofficial "net allowance is gross minus withheld CRDS";
+    when fr.pf.asf::asf_montant_du(e, brut) and crds_precomptee_asf(e, crds);
+    then montant_net_crds_asf(e, brut - crds);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1)
+rule RetenueCRDSAsfDifferentiel(e: fr.pf.core::Enfant, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur le differentiel d'allocation de soutien familial";
+    label en unofficial "CRDS at 0.5% is withheld from the family support allowance differential";
+    when fr.pf.asf::asf_differentiel_du(e, brut);
+    then crds_precomptee_asf_differentiel(e, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSAsfDifferentiel(e: fr.pf.core::Enfant, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le differentiel net est le brut diminue de la CRDS precomptee";
+    label en unofficial "net differential is gross minus withheld CRDS";
+    when fr.pf.asf::asf_differentiel_du(e, brut) and crds_precomptee_asf_differentiel(e, crds);
+    then montant_net_crds_asf_differentiel(e, brut - crds);
+}
+
+// --- PAJE: prime (lump sum), base and PreParE (monthly awards) ---
+// PAJE keys are package-local entities (Menage, Enfant, Beneficiaire),
+// not fr.pf.core concepts.
+
+pub relation crds_precomptee_prime(m: fr.pf.paje::Menage, e: fr.pf.paje::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "CRDS precomptee sur la prime de naissance ou d'adoption attribuee";
+    label en unofficial "CRDS withheld from the awarded birth or adoption grant";
+}
+
+pub relation montant_net_crds_prime(m: fr.pf.paje::Menage, e: fr.pf.paje::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "prime attribuee nette de CRDS, avant arrondis et planchers";
+    label en unofficial "awarded grant net of CRDS, before rounding and floors";
+}
+
+pub relation crds_precomptee_base(m: fr.pf.paje::Menage, e: fr.pf.paje::Enfant, mois: Date, montant: Money) kind institutional {
+    key(m, e, mois);
+    label fr official "CRDS precomptee sur l'allocation de base attribuee au mois";
+    label en unofficial "CRDS withheld from the base allowance awarded for the month";
+}
+
+pub relation montant_net_crds_base(m: fr.pf.paje::Menage, e: fr.pf.paje::Enfant, mois: Date, montant: Money) kind institutional {
+    key(m, e, mois);
+    label fr official "allocation de base attribuee nette de CRDS, avant arrondis et planchers";
+    label en unofficial "awarded base allowance net of CRDS, before rounding and floors";
+}
+
+pub relation crds_precomptee_prepare(b: fr.pf.paje::Beneficiaire, e: fr.pf.paje::Enfant, mois: Date, montant: Money) kind institutional {
+    key(b, e, mois);
+    label fr official "CRDS precomptee sur la PreParE attribuee au mois";
+    label en unofficial "CRDS withheld from the PreParE awarded for the month";
+}
+
+pub relation montant_net_crds_prepare(b: fr.pf.paje::Beneficiaire, e: fr.pf.paje::Enfant, mois: Date, montant: Money) kind institutional {
+    key(b, e, mois);
+    label fr official "PreParE attribuee nette de CRDS, avant arrondis et planchers";
+    label en unofficial "awarded PreParE net of CRDS, before rounding and floors";
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1, fr.pf.paje::CSS_L531_1_ED2014_08)
+rule RetenueCRDSPrime(m: fr.pf.paje::Menage, e: fr.pf.paje::Enfant, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur la prime attribuee";
+    label en unofficial "CRDS at 0.5% is withheld from the awarded grant";
+    when fr.pf.paje::prime_attribuee(m, e, brut);
+    then crds_precomptee_prime(m, e, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSPrime(m: fr.pf.paje::Menage, e: fr.pf.paje::Enfant, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la prime nette est le brut diminue de la CRDS precomptee";
+    label en unofficial "net grant is gross minus withheld CRDS";
+    when fr.pf.paje::prime_attribuee(m, e, brut) and crds_precomptee_prime(m, e, crds);
+    then montant_net_crds_prime(m, e, brut - crds);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1, fr.pf.paje::CSS_L531_1_ED2014_08)
+rule RetenueCRDSBase(m: fr.pf.paje::Menage, e: fr.pf.paje::Enfant, brut: Money, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur l'allocation de base attribuee";
+    label en unofficial "CRDS at 0.5% is withheld from the awarded base allowance";
+    when fr.pf.paje::base_attribuee(m, e, brut, mois);
+    then crds_precomptee_base(m, e, mois, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSBase(m: fr.pf.paje::Menage, e: fr.pf.paje::Enfant, brut: Money, mois: Date, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'allocation de base nette est le brut diminue de la CRDS precomptee";
+    label en unofficial "net base allowance is gross minus withheld CRDS";
+    when fr.pf.paje::base_attribuee(m, e, brut, mois) and crds_precomptee_base(m, e, mois, crds);
+    then montant_net_crds_base(m, e, mois, brut - crds);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1, fr.pf.paje::CSS_L531_1_ED2014_08)
+rule RetenueCRDSPrepare(b: fr.pf.paje::Beneficiaire, e: fr.pf.paje::Enfant, brut: Money, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur la PreParE attribuee";
+    label en unofficial "CRDS at 0.5% is withheld from the awarded PreParE";
+    when fr.pf.paje::prepare_attribuee(b, e, brut, mois);
+    then crds_precomptee_prepare(b, e, mois, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSPrepare(b: fr.pf.paje::Beneficiaire, e: fr.pf.paje::Enfant, brut: Money, mois: Date, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la PreParE nette est le brut diminue de la CRDS precomptee";
+    label en unofficial "net PreParE is gross minus withheld CRDS";
+    when fr.pf.paje::prepare_attribuee(b, e, brut, mois) and crds_precomptee_prepare(b, e, mois, crds);
+    then montant_net_crds_prepare(b, e, mois, brut - crds);
+}
+
+// --- CMG: direct (L. 531-5), structure (L. 531-6), transitional
+// differentiel. Only the three duty-triggering brut totals are
+// assiettes; the cumulation intermediates (montant_cumul_5315,
+// montant_cumul_total) are not separate assiettes.
+
+pub relation crds_precomptee_cmg_direct(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "CRDS precomptee sur le complement direct du (L. 531-5)";
+    label en unofficial "CRDS withheld from the direct supplement due (L. 531-5)";
+}
+
+pub relation montant_net_crds_cmg_direct(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "complement direct net de CRDS, avant arrondis et planchers";
+    label en unofficial "direct supplement net of CRDS, before rounding and floors";
+}
+
+pub relation crds_precomptee_cmg_structure(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "CRDS precomptee sur l'aide structure due (L. 531-6)";
+    label en unofficial "CRDS withheld from the structure aid due (L. 531-6)";
+}
+
+pub relation montant_net_crds_cmg_structure(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "aide structure nette de CRDS, avant arrondis et planchers";
+    label en unofficial "structure aid net of CRDS, before rounding and floors";
+}
+
+pub relation crds_precomptee_cmg_differentiel(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "CRDS precomptee sur le differentiel transitoire du (decret 2025-515, art. 3)";
+    label en unofficial "CRDS withheld from the transitional differential due (Decree 2025-515, Art. 3)";
+}
+
+pub relation montant_net_crds_cmg_differentiel(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(m, e);
+    label fr official "differentiel transitoire net de CRDS, avant arrondis et planchers";
+    label en unofficial "transitional differential net of CRDS, before rounding and floors";
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1, fr.pf.paje::CSS_L531_1_ED2014_08)
+rule RetenueCRDSCmgDirect(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur le complement direct du";
+    label en unofficial "CRDS at 0.5% is withheld from the direct supplement due";
+    when fr.pf.cmg::montant_cmg_du(m, e, brut);
+    then crds_precomptee_cmg_direct(m, e, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSCmgDirect(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le complement direct net est le brut diminue de la CRDS precomptee";
+    label en unofficial "net direct supplement is gross minus withheld CRDS";
+    when fr.pf.cmg::montant_cmg_du(m, e, brut) and crds_precomptee_cmg_direct(m, e, crds);
+    then montant_net_crds_cmg_direct(m, e, brut - crds);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1, fr.pf.paje::CSS_L531_1_ED2014_08)
+rule RetenueCRDSCmgStructure(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur l'aide structure due";
+    label en unofficial "CRDS at 0.5% is withheld from the structure aid due";
+    when fr.pf.cmg::montant_structure_du(m, e, brut);
+    then crds_precomptee_cmg_structure(m, e, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSCmgStructure(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'aide structure nette est le brut diminue de la CRDS precomptee";
+    label en unofficial "net structure aid is gross minus withheld CRDS";
+    when fr.pf.cmg::montant_structure_du(m, e, brut) and crds_precomptee_cmg_structure(m, e, crds);
+    then montant_net_crds_cmg_structure(m, e, brut - crds);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1, fr.pf.paje::CSS_L531_1_ED2014_08)
+rule RetenueCRDSCmgDifferentiel(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur le differentiel transitoire du";
+    label en unofficial "CRDS at 0.5% is withheld from the transitional differential due";
+    when fr.pf.cmg::montant_differentiel(m, e, brut);
+    then crds_precomptee_cmg_differentiel(m, e, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSCmgDifferentiel(m: fr.pf.core::Personne, e: fr.pf.core::Enfant, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le differentiel net est le brut diminue de la CRDS precomptee";
+    label en unofficial "net differential is gross minus withheld CRDS";
+    when fr.pf.cmg::montant_differentiel(m, e, brut) and crds_precomptee_cmg_differentiel(m, e, crds);
+    then montant_net_crds_cmg_differentiel(m, e, brut - crds);
+}
+
+// --- AJPP: monthly daily-allowance total and frais complement ---
+// AJPP is L. 511-1 9°, so art. 14 II 8° covers the prestation as a
+// whole; the text names no component-level exception for the frais
+// complement. No AEEH rule: explicit exception in art. 14 II 8°.
+// No AJPA rule: L. 168-8 is outside L. 511-1 (see header).
+
+pub relation crds_precomptee_ajpp(e: fr.pf.core::Enfant, mois: Date, montant: Money) kind institutional {
+    key(e, mois);
+    label fr official "CRDS precomptee sur le total mensuel d'AJPP du";
+    label en unofficial "CRDS withheld from the monthly AJPP total due";
+}
+
+pub relation montant_net_crds_ajpp(e: fr.pf.core::Enfant, mois: Date, montant: Money) kind institutional {
+    key(e, mois);
+    label fr official "total mensuel d'AJPP net de CRDS, avant arrondis et planchers";
+    label en unofficial "monthly AJPP total net of CRDS, before rounding and floors";
+}
+
+pub relation crds_precomptee_ajpp_complement(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "CRDS precomptee sur le complement pour frais d'AJPP";
+    label en unofficial "CRDS withheld from the AJPP expense top-up";
+}
+
+pub relation montant_net_crds_ajpp_complement(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "complement pour frais d'AJPP net de CRDS, avant arrondis et planchers";
+    label en unofficial "AJPP expense top-up net of CRDS, before rounding and floors";
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1)
+rule RetenueCRDSAjpp(e: fr.pf.core::Enfant, mois: Date, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur le total mensuel d'AJPP";
+    label en unofficial "CRDS at 0.5% is withheld from the monthly AJPP total";
+    when fr.pf.ajpp::ajpp_montant_mois(e, mois, brut);
+    then crds_precomptee_ajpp(e, mois, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSAjpp(e: fr.pf.core::Enfant, mois: Date, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le total mensuel net est le brut diminue de la CRDS precomptee";
+    label en unofficial "net monthly total is gross minus withheld CRDS";
+    when fr.pf.ajpp::ajpp_montant_mois(e, mois, brut) and crds_precomptee_ajpp(e, mois, crds);
+    then montant_net_crds_ajpp(e, mois, brut - crds);
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01,
+    fr.pf.core::CSS_L511_1)
+rule RetenueCRDSAjppComplement(e: fr.pf.core::Enfant, brut: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la CRDS au taux de 0,5 % est precomptee sur le complement pour frais d'AJPP";
+    label en unofficial "CRDS at 0.5% is withheld from the AJPP expense top-up";
+    when fr.pf.ajpp::ajpp_montant_complement(e, brut);
+    then crds_precomptee_ajpp_complement(e, crds_pf_calculee(brut));
+}
+
+@source(fr.apl::ORD9650_ART14_ED2020_01)
+rule NetApresCRDSAjppComplement(e: fr.pf.core::Enfant, brut: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le complement net est le brut diminue de la CRDS precomptee";
+    label en unofficial "net top-up is gross minus withheld CRDS";
+    when fr.pf.ajpp::ajpp_montant_complement(e, brut) and crds_precomptee_ajpp_complement(e, crds);
+    then montant_net_crds_ajpp_complement(e, brut - crds);
+}

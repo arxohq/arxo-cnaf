@@ -1,0 +1,168 @@
+// Recovery duty, withholding powers and recourse-information duty
+// (L. 168-13, L. 168-14).
+//
+// D2. «Tout paiement indu ... est récupéré sur les allocations à venir ou
+// par remboursement intégral» — the paying body recovers the recorded
+// undue payment.
+// P1. «A défaut, et sous réserve que l'assuré ne conteste pas le caractère
+// indu et n'opte pas pour le remboursement en un ou plusieurs versements
+// ..., l'organisme payeur peut procéder à la récupération de l'indu par
+// retenues sur les échéances à venir dues au titre des prestations
+// familiales, de la prime d'activité, du RSA ou des aides au logement» —
+// a statutory power (holder the paying body): the «A défaut» branch plus
+// the two recorded reserves plus the recorded target class (four
+// statutory groups) are the validity conditions, the body's withholding
+// act on that target the exercise.
+// P2. «Lorsque l'indu notifié ne peut être récupéré sur les prestations
+// mentionnées au premier alinéa ..., la récupération peut être opérée,
+// sous les réserves indiquées au même premier alinéa, et si l'assuré
+// n'opte pas pour le remboursement en un seul versement, par retenue sur
+// les prestations mentionnées à l'avant-dernier alinéa de l'article
+// L. 553-2» — the subsidiary statutory power: the recorded
+// non-recoverability plus the block-1 reserves plus the separately
+// recorded single-payment non-option are the validity conditions
+// («premier alinéa» is the article's first block: AJPA future allocations
+// plus the four listed échéance families, mirror XML
+// LEGIARTI000039787624; the single-payment condition is its own premise,
+// never inferred from the instalment non-option). Only the execution
+// detail is external: the decree deadline figure, the L. 553-2 deduction
+// rules and the L. 133-4-1 procedure (B-PFAJPA-D168).
+// D3. «Le bénéficiaire ... est informé, par tout moyen, des modalités de
+// réclamation et de recours» — the debtor body informs the beneficiary of
+// the L. 168-14 claim/appeal steps. Trigger: open right + leave + debtor
+// link. Performance: the recorded information fact.
+
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+use self::{
+    CSS_L168_13,
+    CSS_L168_13_ED2020_12,
+    CSS_L168_13_ED2021_01,
+    CSS_L168_13_ED2022_01,
+    CSS_L168_13_ED2023_07,
+    CSS_L168_13_ED2025_01,
+    CSS_L168_13_ED2025_12,
+    CSS_L168_14,
+    CSS_L168_14_ED2020_12,
+    CSS_L168_14_ED2021_01,
+    CSS_L168_14_ED2022_01,
+    CSS_L168_14_ED2023_07,
+    CSS_L168_14_ED2025_01,
+    CSS_L168_14_ED2025_12,
+    CibleRetenuePrestations,
+    ajpa_droit_ouvert,
+    ajpa_indu_recupere,
+    ajpa_recours_informe,
+    ajpa_retenue_l5532,
+    ajpa_retenue_prestations,
+    conge_proche_aidant,
+    indu_ajpa,
+    indu_non_conteste,
+    indu_non_recupere_allocations,
+    indu_notifie_non_recuperable,
+    indu_sans_option_remboursement,
+    indu_sans_option_versement_unique,
+    retenue_cible_prestations,
+    retenue_l5532_exercee,
+    retenue_prestations_exercee,
+};
+
+@source(
+    CSS_L168_13,
+    CSS_L168_13_ED2020_12,
+    CSS_L168_13_ED2021_01,
+    CSS_L168_13_ED2022_01,
+    CSS_L168_13_ED2023_07,
+    CSS_L168_13_ED2025_01,
+    CSS_L168_13_ED2025_12)
+rule DevoirRecouvrerIndu(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'organisme payeur récupère tout paiement indu d'allocation journalière du proche aidant";
+    label en unofficial "the paying body recovers every undue daily carer allowance payment";
+    when indu_ajpa(p, montant)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty RecouvrerInduAjpa {
+        bearer o;
+        beneficiary p;
+        maintain ajpa_indu_recupere(p, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_L168_13,
+    CSS_L168_13_ED2020_12,
+    CSS_L168_13_ED2021_01,
+    CSS_L168_13_ED2022_01,
+    CSS_L168_13_ED2023_07,
+    CSS_L168_13_ED2025_01,
+    CSS_L168_13_ED2025_12)
+rule PouvoirRecouvrerParRetenues(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money, cible: CibleRetenuePrestations) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'organisme payeur peut procéder à la récupération de l'indu par retenues sur les échéances à venir dues au titre des prestations familiales, de la prime d'activité, du RSA ou des aides au logement";
+    label en unofficial "the paying body may recover the undue payment by withholding on future instalments due as family benefits, activity premium, RSA or housing aid";
+    when indu_ajpa(p, montant)
+        and indu_non_recupere_allocations(p, montant)
+        and indu_non_conteste(p, montant)
+        and indu_sans_option_remboursement(p, montant)
+        and retenue_cible_prestations(p, montant, cible)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then power RecouvrerParRetenues {
+        holder o;
+        over p;
+        exercise retenue_prestations_exercee(o, p, montant, cible);
+        effect create(ajpa_retenue_prestations(p, montant, cible));
+        valid_when (indu_ajpa(p, montant) and indu_non_recupere_allocations(p, montant) and indu_non_conteste(p, montant) and indu_sans_option_remboursement(p, montant) and retenue_cible_prestations(p, montant, cible));
+        window [@2021-01-01, infinity];
+    };
+}
+
+@source(
+    CSS_L168_13,
+    CSS_L168_13_ED2020_12,
+    CSS_L168_13_ED2021_01,
+    CSS_L168_13_ED2022_01,
+    CSS_L168_13_ED2023_07,
+    CSS_L168_13_ED2025_01,
+    CSS_L168_13_ED2025_12)
+rule PouvoirRecouvrerParRetenueL5532(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la récupération peut être opérée par retenue sur les prestations de l'avant-dernier alinéa de l'article L. 553-2";
+    label en unofficial "recovery may be operated by withholding on the benefits of the penultimate paragraph of article L. 553-2";
+    when indu_ajpa(p, montant)
+        and indu_notifie_non_recuperable(p, montant)
+        and indu_non_conteste(p, montant)
+        and indu_sans_option_remboursement(p, montant)
+        and indu_sans_option_versement_unique(p, montant)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then power RecouvrerParRetenueL5532 {
+        holder o;
+        over p;
+        exercise retenue_l5532_exercee(o, p, montant);
+        effect create(ajpa_retenue_l5532(p, montant));
+        valid_when (indu_ajpa(p, montant) and indu_notifie_non_recuperable(p, montant) and indu_non_conteste(p, montant) and indu_sans_option_remboursement(p, montant) and indu_sans_option_versement_unique(p, montant));
+        window [@2021-01-01, infinity];
+    };
+}
+
+@source(
+    CSS_L168_14,
+    CSS_L168_14_ED2020_12,
+    CSS_L168_14_ED2021_01,
+    CSS_L168_14_ED2022_01,
+    CSS_L168_14_ED2023_07,
+    CSS_L168_14_ED2025_01,
+    CSS_L168_14_ED2025_12)
+rule DevoirInformerRecours(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, a: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'organisme débiteur informe le bénéficiaire des modalités de réclamation et de recours";
+    label en unofficial "the debtor body informs the beneficiary of the claim and appeal steps";
+    when ajpa_droit_ouvert(p, a) and conge_proche_aidant(p, a)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty InformerRecoursAjpa {
+        bearer o;
+        beneficiary p;
+        maintain ajpa_recours_informe(p, a) during [@2021-01-01, infinity);
+    };
+}

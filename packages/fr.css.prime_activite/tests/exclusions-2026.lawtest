@@ -1,0 +1,26 @@
+// Exclusions 2026: ARS and APA excluded; unlisted benefit stays
+// silent (R. 844-5).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-exclusions-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": prestation_declaree(entity_ref("urn:fr:ppa:case:exclusions-2026"), @2026-06-01, ITEM_04_ARS, 400.00 EUR) { origin case_input; }
+        assert "ppa-02": prestation_declaree(entity_ref("urn:fr:ppa:case:exclusions-2026"), @2026-06-01, ITEM_31_APA, 500.00 EUR) { origin case_input; }
+        assert "ppa-03": prestation_declaree(entity_ref("urn:fr:ppa:case:exclusions-2026"), @2026-06-01, AUTRE_PRESTATION, 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prestation_exclue(entity_ref("urn:fr:ppa:case:exclusions-2026"), @2026-06-01, ITEM_04_ARS, 400.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(prestation_exclue(entity_ref("urn:fr:ppa:case:exclusions-2026"), @2026-06-01, ITEM_31_APA, 500.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(prestation_exclue(entity_ref("urn:fr:ppa:case:exclusions-2026"), @2026-06-01, AUTRE_PRESTATION, 100.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

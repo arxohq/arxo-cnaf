@@ -1,0 +1,18 @@
+// Art retained publication (PC-R06-01): valeur 20 000 EUR with date, publication reference 20 500 EUR same Bien - retained 20 000, apport 600 EUR (R. 553-3-1 7 + II 2° c).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-art-valeur-retenue-publication" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-art-retenue-publication-01": art_bien_valeur(entity_ref("urn:fr:pf:case:art-retenue-publication"), entity_ref("urn:fr:pf:case:art-1"), 20000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-art-retenue-publication-02": art_bien_date(entity_ref("urn:fr:pf:case:art-retenue-publication"), entity_ref("urn:fr:pf:case:art-1"), @2026-01-12) { origin case_input; }
+        assert "tdv-art-retenue-publication-03": art_bien_preuve_publication(entity_ref("urn:fr:pf:case:art-retenue-publication"), entity_ref("urn:fr:pf:case:art-1"), 20500.00 EUR) { origin case_input; }
+        assert "tdv-art-retenue-publication-04": prestation_soumise_section(entity_ref("urn:fr:pf:case:art-retenue-publication")) { origin case_input; }
+    }
+    evaluate truth(apport_forfaitaire(entity_ref("urn:fr:pf:case:art-retenue-publication"), 600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

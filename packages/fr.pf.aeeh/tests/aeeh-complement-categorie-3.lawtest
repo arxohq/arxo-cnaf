@@ -1,0 +1,30 @@
+// Third-category supplement: couple, one disabled child, CDAPH decision
+// established, category 3 granted, no MPI. BMAF 400.00 stated
+// (B-PFAEEH-BMAF-EURO): base 0.32 x 400.00 = 128.00, supplement
+// 0.92 x 400.00 = 368.00, MPI 0, total 496.00.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-complement-categorie-3" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "aeeh-cat3-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:couple-cat3"), entity_ref("urn:fr:pf-aeeh:case:enfant-cat3")) { origin case_input; }
+        assert "aeeh-cat3-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-cat3")) { origin adjudicated; }
+        assert "aeeh-cat3-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-cat3"), 400.00 EUR) { origin case_input; }
+        assert "aeeh-cat3-04": categorie_attribuee(entity_ref("urn:fr:pf-aeeh:case:enfant-cat3"), CATEGORIE_3) { origin adjudicated; }
+        assert "aeeh-cat3-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-cat3")) { origin case_input; }
+    }
+    evaluate truth(aeeh_montant_base(entity_ref("urn:fr:pf-aeeh:case:enfant-cat3"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-cat3"), 368.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_total(entity_ref("urn:fr:pf-aeeh:case:enfant-cat3"), 496.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

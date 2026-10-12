@@ -1,0 +1,370 @@
+// Shared child-raising benefit (PreParE): the right and the monthly amount
+// are built from the inputs. The case supplies the activity facts (stop,
+// training, prior activity with assimilation, certified or declared share,
+// care-day counts, pay), the age fact, the BMAF and the monthly SMIC and the
+// eligible months; the rules derive the band, the right, the amount and the
+// award.
+//
+// Band paths mirror the articles: employer certificate (D. 531-6 to
+// D. 531-8), care-day ratio (D. 531-10, both wordings — the 2025 change is
+// editorial), forfait-jours ratio (D. 531-11) and declared share with the
+// SMIC income cap (D. 531-9). Ratios are cross-multiplied — no division, so
+// no INEXACT_DIVISION refusal (§50). Couple-wide cumulation (L. 531-4, III;
+// D. 531-4, last para.), durations, switches (R. 531-4), prolongations and
+// the VI return-to-work cumulation stay boundaries (see package.law).
+//
+// Pitfall §5.3: bare parameter names only inside the `function`s below;
+// rule heads have none.
+
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+use self::{
+    BandeQuotite,
+    Beneficiaire,
+    CSS_D531_10_ED2015_01,
+    CSS_D531_10_ED2025_09,
+    CSS_D531_11_ED2017_01,
+    CSS_D531_15_ED2020_05,
+    CSS_D531_15_ED2026_07,
+    CSS_D531_16_1_ED2015_01,
+    CSS_D531_4_ED2015_01,
+    CSS_D531_5_ED2015_01,
+    CSS_D531_6_ED2015_01,
+    CSS_D531_7_ED2015_01,
+    CSS_D531_8_ED2015_01,
+    CSS_D531_9_ED2020_05,
+    CSS_L531_4_ED2015_01,
+    CSS_R531_2_ED2015_01,
+    CSS_R531_3_ED2004_01,
+    Enfant,
+    Menage,
+    activite_anterieure_suffisante,
+    arret_activite,
+    attestation_quotite,
+    bande_activite,
+    bmaf_applicable,
+    categorie_plafond_smic,
+    condition_age_prepare,
+    condition_elu,
+    droit_prepare_partiel,
+    droit_prepare_plein,
+    formation_non_remuneree,
+    jours_accord,
+    jours_contrat,
+    jours_garde,
+    menage_beneficiaire,
+    mois_eligible_prepare,
+    montant_prepare_majore,
+    montant_prepare_partiel,
+    montant_prepare_plein,
+    option_majoree,
+    prepare_attribuee,
+    quotite_declaree,
+    revenu_mensuel_activite,
+    smic_mensuel,
+};
+
+function montant_prepare_calcule(bmaf: Money, taux: Decimal) -> Money {
+    return bmaf * taux;
+}
+
+function plafond_smic_calcule(smic: Money, taux: Decimal) -> Money {
+    return smic * taux;
+}
+
+// --- L. 531-4, I.1 + III + R. 531-2/D. 531-15: full-rate right -------------
+//
+// Full rate for the claimant who stopped working (para. 1) or follows unpaid
+// training, with sufficient prior activity (III + R. 531-2 reference periods
+// and quarters, D. 531-15 assimilation — fund-established, B-PAJE2-ETAT-CIVIL).
+
+@source(CSS_L531_4_ED2015_01, CSS_R531_2_ED2015_01, CSS_D531_15_ED2020_05, CSS_D531_15_ED2026_07)
+rule DroitPreparePleinArret(b: Beneficiaire, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE à taux plein : cessation d'activité et activité antérieure suffisante";
+    label en unofficial "full-rate PreParE: stopped working with sufficient prior activity";
+    when arret_activite(b, e)
+        and activite_anterieure_suffisante(b, e)
+        and condition_age_prepare(e);
+    then droit_prepare_plein(b, e);
+}
+
+@source(CSS_L531_4_ED2015_01, CSS_R531_2_ED2015_01, CSS_D531_15_ED2020_05, CSS_D531_15_ED2026_07)
+rule DroitPreparePleinFormation(b: Beneficiaire, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE à taux plein : formation non rémunérée et activité antérieure suffisante";
+    label en unofficial "full-rate PreParE: unpaid training with sufficient prior activity";
+    when formation_non_remuneree(b, e)
+        and activite_anterieure_suffisante(b, e)
+        and condition_age_prepare(e);
+    then droit_prepare_plein(b, e);
+}
+
+// --- D. 531-5: elected officials --------------------------------------------
+
+@source(CSS_L531_4_ED2015_01, CSS_D531_5_ED2015_01, CSS_R531_2_ED2015_01, CSS_D531_15_ED2020_05, CSS_D531_15_ED2026_07)
+rule DroitPreparePleinElu(b: Beneficiaire, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE à taux plein : élu ayant cessé son activité, indemnités dans la fraction représentative";
+    label en unofficial "full-rate PreParE: elected official who stopped working, allowances within the representative fraction";
+    when condition_elu(b)
+        and activite_anterieure_suffisante(b, e)
+        and condition_age_prepare(e);
+    then droit_prepare_plein(b, e);
+}
+
+// --- Band from the employer certificate (D. 531-6/7/8) ---------------------
+
+@source(CSS_D531_6_ED2015_01, CSS_D531_7_ED2015_01, CSS_D531_8_ED2015_01)
+rule BandeParAttestation(b: Beneficiaire, q: BandeQuotite) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bande de quotité attestée par l'employeur";
+    label en unofficial "employer-certified activity-share band";
+    when attestation_quotite(b, q);
+    then bande_activite(b, q);
+}
+
+// --- Band from care-day counts (D. 531-10, both wordings + R. 531-3) --------
+//
+// «si l'addition des jours ... divisée par le nombre d'enfants ... rapportée
+// au nombre de jours ouvrés ... est au plus égale à 50 %» — cross-multiplied:
+// total × 2 ≤ nb × working days (≤50%), and × 10 ≤ nb × days × 8 with × 2 >
+// (>50%, ≤80%). The counts are the opening month's (R. 531-3 — first month).
+
+@source(CSS_D531_10_ED2015_01, CSS_D531_10_ED2025_09, CSS_R531_3_ED2004_01)
+rule BandeGardeJusqua50(b: Beneficiaire, total: Integer, nb: Integer, jours: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "garde à 50 % au plus : jours cumulés sur enfants et jours ouvrés";
+    label en unofficial "care share at most 50%: summed days over children and working days";
+    when jours_garde(b, total, nb, jours)
+        and total * 2 <= nb * jours;
+    then bande_activite(b, JUSQUA_50);
+}
+
+@source(CSS_D531_10_ED2015_01, CSS_D531_10_ED2025_09, CSS_R531_3_ED2004_01)
+rule BandeGarde50a80(b: Beneficiaire, total: Integer, nb: Integer, jours: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "garde entre 50 % et 80 % : jours cumulés sur enfants et jours ouvrés";
+    label en unofficial "care share between 50% and 80%: summed days over children and working days";
+    when jours_garde(b, total, nb, jours)
+        and total * 2 > nb * jours
+        and total * 10 <= nb * jours * 8;
+    then bande_activite(b, DE_50_A_80);
+}
+
+// --- Band from forfait-jours counts (D. 531-11 + R. 531-3) ------------------
+
+@source(CSS_D531_11_ED2017_01, CSS_R531_3_ED2004_01)
+rule BandeForfaitJours50(b: Beneficiaire, contrat: Integer, accord: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait-jours à 50 % au plus : jours du contrat sur jours autorisés";
+    label en unofficial "forfait-jours share at most 50%: contract days over allowed days";
+    when jours_contrat(b, contrat)
+        and jours_accord(b, accord)
+        and contrat * 2 <= accord;
+    then bande_activite(b, JUSQUA_50);
+}
+
+@source(CSS_D531_11_ED2017_01, CSS_R531_3_ED2004_01)
+rule BandeForfaitJours80(b: Beneficiaire, contrat: Integer, accord: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait-jours entre 50 % et 80 % : jours du contrat sur jours autorisés";
+    label en unofficial "forfait-jours share between 50% and 80%: contract days over allowed days";
+    when jours_contrat(b, contrat)
+        and jours_accord(b, accord)
+        and contrat * 2 > accord
+        and contrat * 10 <= accord * 8;
+    then bande_activite(b, DE_50_A_80);
+}
+
+// --- Band from the declared share (D. 531-9 hours condition) ----------------
+
+@source(CSS_D531_9_ED2020_05)
+rule BandeParQuotiteDeclaree(b: Beneficiaire, q: BandeQuotite) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bande de la quotité déclarée sur l'honneur";
+    label en unofficial "band of the share declared on honour";
+    when quotite_declaree(b, q)
+        and categorie_plafond_smic(b);
+    then bande_activite(b, q);
+}
+
+// --- Part-time right per path ------------------------------------------------
+//
+// Each path carries its own facts, so no rule over-fires into another
+// category: certificate / care days / forfait-jours need no income cap,
+// the D. 531-9 path additionally needs the SMIC ceiling.
+
+@source(CSS_L531_4_ED2015_01, CSS_D531_4_ED2015_01, CSS_D531_6_ED2015_01, CSS_D531_7_ED2015_01, CSS_D531_8_ED2015_01, CSS_R531_2_ED2015_01, CSS_D531_15_ED2020_05, CSS_D531_15_ED2026_07)
+rule DroitPartielAttestation(b: Beneficiaire, e: Enfant, q: BandeQuotite) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE partielle : quotité attestée et activité antérieure suffisante";
+    label en unofficial "part-time PreParE: certified share with sufficient prior activity";
+    when attestation_quotite(b, q)
+        and activite_anterieure_suffisante(b, e)
+        and condition_age_prepare(e);
+    then droit_prepare_partiel(b, e);
+}
+
+@source(CSS_L531_4_ED2015_01, CSS_D531_4_ED2015_01, CSS_D531_10_ED2015_01, CSS_D531_10_ED2025_09, CSS_R531_2_ED2015_01, CSS_D531_15_ED2020_05, CSS_D531_15_ED2026_07)
+rule DroitPartielGarde(b: Beneficiaire, e: Enfant, q: BandeQuotite, total: Integer, nb: Integer, jours: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE partielle : bande des jours de garde et activité antérieure suffisante";
+    label en unofficial "part-time PreParE: care-day band with sufficient prior activity";
+    when bande_activite(b, q)
+        and jours_garde(b, total, nb, jours)
+        and activite_anterieure_suffisante(b, e)
+        and condition_age_prepare(e);
+    then droit_prepare_partiel(b, e);
+}
+
+@source(CSS_L531_4_ED2015_01, CSS_D531_4_ED2015_01, CSS_D531_11_ED2017_01, CSS_R531_2_ED2015_01, CSS_D531_15_ED2020_05, CSS_D531_15_ED2026_07)
+rule DroitPartielForfaitJours(b: Beneficiaire, e: Enfant, q: BandeQuotite, contrat: Integer, accord: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE partielle : bande du forfait-jours et activité antérieure suffisante";
+    label en unofficial "part-time PreParE: forfait-jours band with sufficient prior activity";
+    when bande_activite(b, q)
+        and jours_contrat(b, contrat)
+        and jours_accord(b, accord)
+        and activite_anterieure_suffisante(b, e)
+        and condition_age_prepare(e);
+    then droit_prepare_partiel(b, e);
+}
+
+// --- D. 531-9: part-time right with the SMIC ceiling --------------------------
+//
+// 50% band: pay at most 106.25% of the monthly SMIC; 80% band: at most 170%.
+// The monthly SMIC is a case fact (B-PAJE2-SMIC); the rate is an A3 parameter.
+
+@source(CSS_L531_4_ED2015_01, CSS_D531_4_ED2015_01, CSS_D531_9_ED2020_05, CSS_R531_2_ED2015_01, CSS_D531_15_ED2020_05, CSS_D531_15_ED2026_07)
+rule DroitPartielSmic50(b: Beneficiaire, e: Enfant, m: Menage, revenu: Money, smic: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE partielle 50 % : quotité déclarée et revenu sous 106,25 % du SMIC";
+    label en unofficial "50% part-time PreParE: declared share with income under 106.25% of the SMIC";
+    when bande_activite(b, JUSQUA_50)
+        and categorie_plafond_smic(b)
+        and menage_beneficiaire(b, m)
+        and revenu_mensuel_activite(b, revenu)
+        and smic_mensuel(m, smic)
+        and revenu <= plafond_smic_calcule(smic, TauxSmicPlafond50)
+        and activite_anterieure_suffisante(b, e)
+        and condition_age_prepare(e);
+    then droit_prepare_partiel(b, e);
+}
+
+@source(CSS_L531_4_ED2015_01, CSS_D531_4_ED2015_01, CSS_D531_9_ED2020_05, CSS_R531_2_ED2015_01, CSS_D531_15_ED2020_05, CSS_D531_15_ED2026_07)
+rule DroitPartielSmic80(b: Beneficiaire, e: Enfant, m: Menage, revenu: Money, smic: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE partielle 80 % : quotité déclarée et revenu sous 170 % du SMIC";
+    label en unofficial "80% part-time PreParE: declared share with income under 170% of the SMIC";
+    when bande_activite(b, DE_50_A_80)
+        and categorie_plafond_smic(b)
+        and menage_beneficiaire(b, m)
+        and revenu_mensuel_activite(b, revenu)
+        and smic_mensuel(m, smic)
+        and revenu <= plafond_smic_calcule(smic, TauxSmicPlafond80)
+        and activite_anterieure_suffisante(b, e)
+        and condition_age_prepare(e);
+    then droit_prepare_partiel(b, e);
+}
+
+// --- D. 531-4: amounts ---------------------------------------------------------
+
+@source(CSS_D531_4_ED2015_01)
+rule MontantPreparePlein(b: Beneficiaire, e: Enfant, m: Menage, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant PreParE plein : 96,62 % de la BMAF";
+    label en unofficial "full-rate PreParE amount — 96.62% of the BMAF";
+    when droit_prepare_plein(b, e)
+        and menage_beneficiaire(b, m)
+        and bmaf_applicable(m, bmaf);
+    then montant_prepare_plein(b, e, montant_prepare_calcule(bmaf, TauxPreparePlein));
+}
+
+@source(CSS_D531_4_ED2015_01)
+rule MontantPreparePartiel50(b: Beneficiaire, e: Enfant, m: Menage, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant PreParE partiel 50 % : 62,46 % de la BMAF";
+    label en unofficial "50% part-time PreParE amount — 62.46% of the BMAF";
+    when droit_prepare_partiel(b, e)
+        and bande_activite(b, JUSQUA_50)
+        and menage_beneficiaire(b, m)
+        and bmaf_applicable(m, bmaf);
+    then montant_prepare_partiel(b, e, montant_prepare_calcule(bmaf, TauxPreparePartiel50));
+}
+
+@source(CSS_D531_4_ED2015_01)
+rule MontantPreparePartiel80(b: Beneficiaire, e: Enfant, m: Menage, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant PreParE partiel 80 % : 36,03 % de la BMAF";
+    label en unofficial "80% part-time PreParE amount — 36.03% of the BMAF";
+    when droit_prepare_partiel(b, e)
+        and bande_activite(b, DE_50_A_80)
+        and menage_beneficiaire(b, m)
+        and bmaf_applicable(m, bmaf);
+    then montant_prepare_partiel(b, e, montant_prepare_calcule(bmaf, TauxPreparePartiel80));
+}
+
+// --- L. 531-4, VI, para. 2 + D. 531-4, I, 2° + D. 531-16-1: increased amount --
+//
+// Final option: no activity during the period, three dependent children and
+// the five-year reference (D. 531-16-1) — fund-established in option_majoree.
+
+@source(CSS_L531_4_ED2015_01, CSS_D531_4_ED2015_01, CSS_D531_16_1_ED2015_01)
+rule MontantPrepareMajore(b: Beneficiaire, e: Enfant, m: Menage, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant PreParE majoré : 157,93 % de la BMAF, option définitive trois enfants";
+    label en unofficial "increased PreParE amount — 157.93% of the BMAF, final three-children option";
+    when droit_prepare_plein(b, e)
+        and option_majoree(b, e)
+        and menage_beneficiaire(b, m)
+        and bmaf_applicable(m, bmaf);
+    then montant_prepare_majore(b, e, montant_prepare_calcule(bmaf, TauxPrepareMajore));
+}
+
+// --- Award for the eligible month ----------------------------------------------
+
+@source(CSS_L531_4_ED2015_01)
+rule PreparePleinAttribue(b: Beneficiaire, e: Enfant, montant: Money, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la PreParE à taux plein est attribuée au mois au montant en vigueur";
+    label en unofficial "full-rate PreParE is awarded for the month at the amount in force";
+    when droit_prepare_plein(b, e)
+        and montant_prepare_plein(b, e, montant)
+        and mois_eligible_prepare(b, e, mois)
+        and not_known(option_majoree(b, e));
+    then prepare_attribuee(b, e, round(montant, 2, "HALF_UP"), mois);
+}
+
+// The VI increased amount is a final option (option définitive): once chosen
+// it replaces the plain full award for the same couple-child key — without
+// the gate both awards conclude and §45.1 key-conflicts on prepare_attribuee
+// (B-PAJE2-MAJORE-DOUBLE). `not_known` (not `not`): the option is an empirical
+// case fact, and absence must pass — `not` needs an established negative,
+// which an unasserted empirical tuple never is (pf-cmg pattern). The plain
+// amount still concludes as montant_prepare_plein (intermediate, no key
+// conflict); only the payable is unique.
+
+@source(CSS_L531_4_ED2015_01)
+rule PreparePartielAttribue(b: Beneficiaire, e: Enfant, montant: Money, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la PreParE à taux partiel est attribuée au mois au montant en vigueur";
+    label en unofficial "part-time PreParE is awarded for the month at the amount in force";
+    when droit_prepare_partiel(b, e)
+        and montant_prepare_partiel(b, e, montant)
+        and mois_eligible_prepare(b, e, mois);
+    then prepare_attribuee(b, e, round(montant, 2, "HALF_UP"), mois);
+}
+
+@source(CSS_L531_4_ED2015_01)
+rule PrepareMajoreAttribue(b: Beneficiaire, e: Enfant, montant: Money, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la PreParE majorée est attribuée au mois au montant en vigueur";
+    label en unofficial "increased PreParE is awarded for the month at the amount in force";
+    when droit_prepare_plein(b, e)
+        and montant_prepare_majore(b, e, montant)
+        and mois_eligible_prepare(b, e, mois);
+    then prepare_attribuee(b, e, round(montant, 2, "HALF_UP"), mois);
+}

@@ -1,0 +1,22 @@
+// Conforming report, late reply with grant: report states late reply, grant direction, items and no sanction - conforming (R. 553-3-7 1/2, PC-R03-06).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-compte-rendu-tardive-attribution" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-tardive-attribution-01": compte_rendu_transmis(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf")) { origin case_input; }
+        assert "tdv-tardive-attribution-02": compte_rendu_transmis_sans_delai(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf")) { origin case_input; }
+        assert "tdv-tardive-attribution-03": compte_rendu_anonymise(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:evalue-tardive")) { origin case_input; }
+        assert "tdv-tardive-attribution-04": compte_rendu_reponse_hors_delai(entity_ref("urn:fr:pf:case:evalue-tardive")) { origin case_input; }
+        assert "tdv-tardive-attribution-05": compte_rendu_decision_attribution(entity_ref("urn:fr:pf:case:evalue-tardive")) { origin case_input; }
+        assert "tdv-tardive-attribution-06": compte_rendu_elements_evalues(entity_ref("urn:fr:pf:case:evalue-tardive")) { origin case_input; }
+        assert "tdv-tardive-attribution-07": compte_rendu_aucune_sanction(entity_ref("urn:fr:pf:case:evalue-tardive")) { origin case_input; }
+        assert "tdv-tardive-attribution-08": prestation_soumise_section(entity_ref("urn:fr:pf:case:evalue-tardive")) { origin case_input; }
+    }
+    evaluate truth(compte_rendu_evaluation_conforme(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf"), entity_ref("urn:fr:pf:case:evalue-tardive")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

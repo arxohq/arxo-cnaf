@@ -1,0 +1,135 @@
+# Manifest §10 — package root marker (DECISION-0033). Normative headings per §22
+# live in the .law files themselves; the manifest must match them (LDC-E1109, lawc check).
+[package]
+name = "fr.pf.asf"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:pf-asf"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after editing .law files run
+# `law fix imports` from this directory; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Catalog metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-pf-asf"
+title = "Allocation de soutien familial (ASF): eligibility by ground (L. 523-1, R. 523-1/2), couple cessation (L. 523-2), rates (L. 523-3, R. 523-7) and partial-pension differential, continuation and fourth-month control (R. 523-3/3-1/3-2, D. 523-2), opening dates (D. 523-1/2), fund payment and control duties; wave 3; DOM extension (L. 755-17, D. 755-7/8, FINISH transfer)"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française"
+verifiedAgainstSource = false
+
+[dependencies]
+"fr.pf.core" = "0.1.0"
+
+# Upstream premises: child status and the debtor body are established by
+# fr.pf.core (parallel lane W1-PFCORE). Worlds below include both
+# packages; cross-package institutional facts arrive as case inputs.
+
+# Own families (DECISION-0127): regression = false until the ratchet is registered.
+[[tests]]
+family = "fr.pf.asf#conditions"
+regression = false
+suites = [
+    "tests/asf-orphelin-un-parent.lawtest",
+    "tests/asf-orphelin-deux-parents.lawtest",
+    "tests/asf-defaut-carence.lawtest",
+    "tests/asf-defaut-carence-non-atteinte.lawtest",
+    "tests/asf-defaut-double-2022.lawtest",
+    "tests/asf-defaut-double-montant-pre-2022.lawtest",
+    "tests/asf-defaut-double-montant-2023.lawtest",
+    "tests/asf-pension-partielle.lawtest",
+    "tests/asf-demande-absente.lawtest",
+]
+world = ["fr.pf.asf", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.asf#cessation-couple"
+regression = false
+suites = [
+    "tests/asf-cessation-active.lawtest",
+    "tests/asf-cessation-avant.lawtest",
+]
+world = ["fr.pf.asf", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.asf#montant"
+regression = false
+suites = [
+    "tests/asf-montant-simple.lawtest",
+    "tests/asf-montant-double.lawtest",
+    "tests/asf-montant-double-pre-2022.lawtest",
+    "tests/asf-montant-simple-2022-11.lawtest",
+    "tests/asf-montant-dss-2026.lawtest",
+]
+world = ["fr.pf.asf", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.asf#differentiel"
+regression = false
+suites = [
+    "tests/asf-differentiel-sans-demande.lawtest",
+    "tests/asf-pension-sans-double.lawtest",
+    "tests/asf-differentiel-pension-elevee.lawtest",
+]
+world = ["fr.pf.asf", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.asf#maintien-controle"
+regression = false
+suites = [
+    "tests/asf-maintien-apres-carence.lawtest",
+    "tests/asf-maintien-mois-ouverture.lawtest",
+    "tests/asf-controle-quatrieme-mois.lawtest",
+]
+world = ["fr.pf.asf", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.asf#ouverture-dates"
+regression = false
+suites = [
+    "tests/asf-ouverture-apres-carence.lawtest",
+    "tests/asf-ouverture-hors-etat.lawtest",
+]
+world = ["fr.pf.asf", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.asf#devoir-versement"
+regression = false
+suites = [
+    "tests/asf-devoir-versement-actif.lawtest",
+    "tests/asf-devoir-versement-differentiel.lawtest",
+    "tests/asf-devoir-controle-trimestriel.lawtest",
+]
+world = ["fr.pf.asf", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.asf#dom"
+regression = false
+suites = [
+    "tests/asf-dom-attribution.lawtest",
+    "tests/asf-dom-conditions-decret.lawtest",
+    "tests/asf-dom-avant-2021.lawtest",
+]
+world = ["fr.pf.asf", "fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.asf#foreign-openfisca"
+regression = false
+suites = [
+    "tests/foreign/openfisca/of-seuil-non-versement.lawtest",
+    "tests/foreign/openfisca/of-2015.lawtest",
+    "tests/foreign/openfisca/of-limite-20-ans.lawtest",
+    "tests/foreign/openfisca/of-2018-04-cas1.lawtest",
+    "tests/foreign/openfisca/of-2018-04-cas2.lawtest",
+    "tests/foreign/openfisca/of-2018-04-cas3.lawtest",
+]
+world = ["fr.pf.asf", "fr.pf.core"]

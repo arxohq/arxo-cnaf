@@ -1,0 +1,55 @@
+// Fund payment duty (L. 168-8, L. 168-11, D1).
+//
+// «Une allocation journalière du proche aidant est versée» to carers with
+// an open right; the allowance «est servie et contrôlée par les organismes
+// débiteurs des prestations familiales pour le compte de la» CNSA. The
+// debtor body is the empirical bearer (same pattern as the AEEH fund duty);
+// performance is the recorded payment fact.
+
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+use self::{
+    CSS_L168_8,
+    CSS_L168_8_ED2021_01,
+    CSS_L168_8_ED2022_01,
+    CSS_L168_8_ED2023_07,
+    CSS_L168_8_ED2025_01,
+    CSS_L168_8_ED2025_12,
+    CSS_L168_11,
+    CSS_L168_11_ED2022_01,
+    CSS_L168_11_ED2023_07,
+    CSS_L168_11_ED2025_01,
+    CSS_L168_11_ED2025_12,
+    ajpa_droit_ouvert,
+    ajpa_montant_mois,
+    ajpa_verse,
+    conge_proche_aidant,
+};
+
+@source(
+    CSS_L168_8,
+    CSS_L168_8_ED2021_01,
+    CSS_L168_8_ED2022_01,
+    CSS_L168_8_ED2023_07,
+    CSS_L168_8_ED2025_01,
+    CSS_L168_8_ED2025_12,
+    CSS_L168_11,
+    CSS_L168_11_ED2022_01,
+    CSS_L168_11_ED2023_07,
+    CSS_L168_11_ED2025_01,
+    CSS_L168_11_ED2025_12)
+rule DevoirVerserAjpa(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, a: fr.pf.core::Personne, mois: Date, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'organisme débiteur verse l'allocation journalière du proche aidant due";
+    label en unofficial "the debtor body pays the daily carer allowance due";
+    when ajpa_droit_ouvert(p, a) and conge_proche_aidant(p, a)
+        and ajpa_montant_mois(p, a, mois, montant)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty VerserAjpaDue {
+        bearer o;
+        beneficiary p;
+        maintain ajpa_verse(p, a, mois, montant) during [@2021-01-01, infinity);
+    };
+}

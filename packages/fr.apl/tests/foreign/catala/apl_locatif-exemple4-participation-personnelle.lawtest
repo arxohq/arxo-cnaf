@@ -1,0 +1,31 @@
+// РАВНО ДО САНТИМА: их 1015.68, наше точное 1015.68191. Их модель округляет
+// промежуточные величины до сантима, текст этого не велит — закреплён НАШ ответ.
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_apl_locatif.catala_fr, scope Exemple4.
+// ИХ ОЖИДАНИЕ: participation_personnelle = 1015.68.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-apl_locatif-exemple4-participation-personnelle" {
+    given {
+        context { decision_time @2022-02-19T12:00:00Z; knowledge_time @2022-02-19T12:00:00Z; legal_time @2022-02-19; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "apl_locatif-exemple4-01": secteur_locatif(entity_ref("urn:fr:apl:case:apl_locatif-exemple4")) { origin case_input; }
+        assert "apl_locatif-exemple4-02": aide_demandee(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), APL) { origin case_input; }
+        assert "apl_locatif-exemple4-03": loyer_principal(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), 680 EUR) { origin case_input; }
+        assert "apl_locatif-exemple4-04": zone_du_logement(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), ZONE_I) { origin case_input; }
+        assert "apl_locatif-exemple4-05": situation_familiale(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), COUPLE) { origin case_input; }
+        assert "apl_locatif-exemple4-06": personnes_a_charge(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), 1) { origin case_input; }
+        assert "apl_locatif-exemple4-07": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), 0 EUR) { origin case_input; }
+        assert "apl_locatif-exemple4-08": ressources_du_menage(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), 39500 EUR) { origin case_input; }
+        assert "apl_locatif-exemple4-09": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), false) { origin case_input; }
+        assert "apl_locatif-exemple4-10": territoire(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), METROPOLE) { origin case_input; }
+        assert "apl_locatif-exemple4-11": mode_location(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), LOCATION_SEULE) { origin case_input; }
+        assert "apl_locatif-exemple4-12": forme_logement(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), LOGEMENT_ORDINAIRE) { origin case_input; }
+    }
+    evaluate truth(participation_personnelle(entity_ref("urn:fr:apl:case:apl_locatif-exemple4"), 1015.68191 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

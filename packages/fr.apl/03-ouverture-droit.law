@@ -1,0 +1,129 @@
+// Открытие права на пособие: два условия закреплённого охвата, каждое —
+// своим каналом DECISION-0194, и ни одно не плоским фактом дела.
+//
+//   L. 822-9 «le logement doit répondre à des exigences de décence» — оценка
+//   делегирована: содержание «décence» задаёт другой акт (loi n° 89-462,
+//   ст. 6), а соответствие ему оценивает орган. Канал §47.3: до ответа
+//   NEITHER и типизированный JudgmentRequest.
+//
+//   L. 822-2 II «constituant leur résidence principale» — не оценка, а ФАКТ,
+//   который устанавливается по доказательствам; в деле он приходит с
+//   origin `adjudicated`.
+//
+// ГРАНИЦА, НАЗВАННАЯ ПРЯМО: условие I той же статьи (гражданство) пакет не
+// выражает и никогда не выражал — оно отсылает к ст. L. 512-2 кодекса
+// социального обеспечения, которая в закреплённый охват не входит. С 1 июля
+// 2026 года (закон о финансах 2026 года, ст. 179) условие перестало быть
+// простой отсылкой: 2° оставлен первому абзацу L. 512-2, а новый 3° исключает
+// часть иностранных студентов с долгосрочной визой или видом на жительство
+// (ст. L. 422-1–L. 422-7 CESEDA), не отвечающих условиям социальной стипендии;
+// порядок применения назначен декретом № 2026-552 от 27 июня 2026 года. Обе
+// версии статьи закреплены и названы якорями, но дело о лице из нового 3°
+// лежит ВНЕ модели: ответа «право не открыто» пакет по этому основанию не даёт.
+//
+// И ЭТО НЕ ПРОСТО ПРОБЕЛ ОХВАТА. Решение Конституционного совета
+// № 2026-901 DC от 19 февраля 2026 года («Loi de finances pour 2026»,
+// «Non conformité partielle — réserve») признало 3° пункта I ст. L. 822-2 в
+// редакции ст. 179 закона конституционным ТОЛЬКО ПОД ОГОВОРКОЙ (абз. 223):
+// «Il appartiendra à cet égard au pouvoir réglementaire, sous le contrôle du
+// juge, de fixer ces critères dans le respect des exigences constitutionnelles
+// découlant des dixième et onzième alinéas du Préambule de la Constitution de
+// 1946». То есть норма действует лишь в том прочтении, которое удерживает
+// подзаконный критерий в конституционных рамках, и проверяет это суд.
+// Выразить такое прочтение значило бы вводить оценочный признак чужого акта
+// (каналы DECISION-0194) по тексту, которого пакет не закрепляет.
+//
+// Решение НЕ ЗАКРЕПЛЕНО как источник пакета: оно живёт в собрании CONSTIT со
+// своей DTD, а конвейер закрепления читает статьи LEGI. Найдено обходом
+// CONSTIT (`tools/scan_jorf.py --base …/CONSTIT/ --prefix CONSTIT_`) по тексту,
+// а НЕ по идентификатору: решение вынесено ДО публикации закона и его
+// JORFTEXT не называет.
+//
+// Расчёт главы 02 от открытия права НЕ зависит: D. 823-16 отвечает на вопрос
+// «сколько», а L. 822-* — на вопрос «кому». Их связывает `aide_due`.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_L822_2,
+    CCH_L822_2_ED2019_12,
+    CCH_L822_2_ED2020_01,
+    CCH_L822_2_ED2021_01,
+    CCH_L822_2_ED2023_04,
+    CCH_L822_2_ED2023_09,
+    CCH_L822_2_ED2023_12,
+    CCH_L822_2_ED2026_07,
+    CCH_L822_9,
+    CCH_L822_9_ED2019_12,
+    CCH_L822_9_ED2020_01,
+    CCH_L822_9_ED2021_01,
+    CCH_L822_9_ED2023_04,
+    CCH_L822_9_ED2023_09,
+    CCH_L822_9_ED2023_12,
+    CCH_L822_9_ED2026_07,
+    CCH_L823_1,
+    CCH_L823_1_ED2019_12,
+    CCH_L823_1_ED2020_01,
+    CCH_L823_1_ED2021_01,
+    CCH_L823_1_ED2023_04,
+    CCH_L823_1_ED2023_09,
+    CCH_L823_1_ED2023_12,
+    CCH_L823_1_ED2026_07,
+    Menage,
+    aide_theorique,
+    secteur_locatif,
+};
+
+@source(CCH_L822_9, CCH_L822_9_ED2019_12, CCH_L822_9_ED2020_01,
+        CCH_L822_9_ED2021_01, CCH_L822_9_ED2023_04, CCH_L822_9_ED2023_09,
+        CCH_L822_9_ED2023_12, CCH_L822_9_ED2026_07)
+pub external judgment relation logement_decent(m: Menage) {
+    authority OrganismePayeur;
+    label fr official "le logement répond aux exigences de décence";
+    label ru unofficial "жильё отвечает требованиям пристойности (L. 822-9)";
+}
+
+@source(CCH_L822_2, CCH_L822_2_ED2019_12, CCH_L822_2_ED2020_01,
+        CCH_L822_2_ED2021_01, CCH_L822_2_ED2023_04, CCH_L822_2_ED2023_09,
+        CCH_L822_2_ED2023_12, CCH_L822_2_ED2026_07)
+pub relation occupation_residence_principale(m: Menage) kind empirical {
+    label fr official "le logement constitue la résidence principale du ménage";
+    label ru unofficial "жильё составляет основное место проживания домохозяйства";
+}
+
+pub relation droit_ouvert(m: Menage) kind institutional {
+    label fr official "le droit à l'aide personnelle au logement est ouvert";
+    label ru unofficial "право на пособие открыто";
+}
+
+relation aide_due(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "aide personnelle au logement due au ménage";
+    label ru unofficial "пособие, причитающееся домохозяйству";
+}
+
+@source(CCH_L822_2, CCH_L822_2_ED2019_12, CCH_L822_2_ED2020_01,
+        CCH_L822_2_ED2021_01, CCH_L822_2_ED2023_04, CCH_L822_2_ED2023_09,
+        CCH_L822_2_ED2023_12, CCH_L822_2_ED2026_07, CCH_L822_9,
+        CCH_L822_9_ED2019_12, CCH_L822_9_ED2020_01, CCH_L822_9_ED2021_01,
+        CCH_L822_9_ED2023_04, CCH_L822_9_ED2023_09, CCH_L822_9_ED2023_12,
+        CCH_L822_9_ED2026_07)
+rule DroitOuvert(m: Menage) defeasible {
+    label fr official "Peuvent bénéficier d'une aide personnelle au logement les locataires dont le logement constitue leur résidence principale et répond aux exigences de décence";
+    label ru unofficial "Право открыто нанимателю, чьё жильё — основное место проживания и отвечает требованиям пристойности";
+    when secteur_locatif(m) and occupation_residence_principale(m)
+        and logement_decent(m);
+    then droit_ouvert(m);
+}
+
+@source(CCH_L823_1, CCH_L823_1_ED2019_12, CCH_L823_1_ED2020_01,
+        CCH_L823_1_ED2021_01, CCH_L823_1_ED2023_04, CCH_L823_1_ED2023_09,
+        CCH_L823_1_ED2023_12, CCH_L823_1_ED2026_07)
+rule AideDue(m: Menage, montant: Money) defeasible {
+    label fr official "Le montant des aides personnelles au logement est calculé en fonction d'un barème défini par voie réglementaire";
+    label ru unofficial "Причитающееся пособие — прошедшая порог сумма при открытом праве";
+    when droit_ouvert(m) and aide_theorique(m, montant);
+    then aide_due(m, montant);
+}

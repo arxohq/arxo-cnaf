@@ -1,0 +1,20 @@
+// Proof-on-demand duty does not leak across months (D9): the fund
+// requested the expense proof, the sworn declaration stands for
+// March, but April is the concerned month — no
+// ProduirePiecesDepenses position (a March transmission never
+// satisfies April; pair of ajpp-devoir-pieces-depenses-demande).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-pieces-depenses-mois-manquant" {
+    given {
+        context { decision_time @2024-04-15T12:00:00Z; knowledge_time @2024-04-15T12:00:00Z; legal_time @2024-04-15; timezone "Europe/Paris"; }
+        assert "ajpp-dpmm-01": demande_pieces_organisme(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-dpmm")) { origin case_input; }
+        assert "ajpp-dpmm-02": declaration_depenses_transmise(entity_ref("urn:fr:pf-ajpp:case:parent-dpmm"), entity_ref("urn:fr:pf-ajpp:case:enfant-dpmm"), @2024-03-01) { origin case_input; }
+        assert "ajpp-dpmm-03": mois_concerne_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-dpmm"), @2024-04-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(ProduirePiecesDepenses, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

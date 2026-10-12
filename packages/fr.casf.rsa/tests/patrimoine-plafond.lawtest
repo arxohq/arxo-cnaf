@@ -1,0 +1,17 @@
+// Professional assets exactly at the retained ceiling: "en deçà" is
+// strict, no exclusion (D. 262-77). Pair of patrimoine-exclu.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-patrimoine-plafond" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "pat-01": patrimoine_pro_foyer(entity_ref("urn:fr:rsa:case:patrimoine-plafond"), 3925.00 EUR) { origin case_input; }
+        assert "pat-02": plafond_secu_retenu(entity_ref("urn:fr:rsa:case:patrimoine-plafond"), 3925.00 EUR) { origin case_input; }
+    }
+    evaluate truth(patrimoine_pro_exclu(entity_ref("urn:fr:rsa:case:patrimoine-plafond")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

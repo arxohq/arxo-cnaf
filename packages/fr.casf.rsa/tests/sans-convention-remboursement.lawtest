@@ -1,0 +1,26 @@
+// No convention: quarterly reimbursement of the established charges
+// ("le calcul des éventuelles charges financières ... Le
+// remboursement de ces charges", D. 262-64 2°) with interest at the
+// fallback rate (retained market rate plus one point), within the
+// month after the calendar quarter. Legal time inside the
+// [quarter-end, next-month-end] duty window. The rate value itself
+// (Decimal) is not literally asserted: query Decimal literals lower to
+// Number and do not join Decimal outputs (D-11 class); the chain firing
+// with a retained 0.025 market rate proves the rule applies. The
+// no-charges control is sans-convention-remboursement-sans-charges.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-sans-convention-remboursement" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-04-15T12:00:00Z; knowledge_time @2025-04-15T12:00:00Z; legal_time @2025-04-15; timezone "Europe/Paris"; }
+        assert "sconv-01": absence_convention(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:org:caf")) { origin case_input; }
+        assert "sconv-02": trimestre_civil_fin(@2025-03-31) { origin case_input; }
+        assert "sconv-03": taux_marche_monetaire(0.025) { origin case_input; }
+        assert "sconv-04": charges_trimestre_sans_convention(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:org:caf"), @2025-03-31, 80.00 EUR) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(RembourserChargesSansConvention, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,26 @@
+// DOM plain ceiling, one child, recorded household, neither two-earner
+// nor lone: 20000 + 0.25*20000 = 25000 (R. 755-2 by R. 522-2 tiers, D-36).
+// Builds from the stated nominal alone; the metropolitan rules stay silent
+// below three children, so this head carries the one-child ceiling.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-plafond-un-enfant" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "dpu-01": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-plafond-un-enfant"), 20000 EUR) { origin case_input; }
+        assert "dpu-01a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-plafond-un-enfant"), 5000 EUR) { origin case_input; }
+        assert "dpu-01b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-plafond-un-enfant"), 6000 EUR) { origin case_input; }
+        assert "dpu-01c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-plafond-un-enfant"), 10000 EUR) { origin case_input; }
+        assert "dpu-01d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-plafond-un-enfant"), 2500 EUR) { origin case_input; }
+        assert "dpu-01e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-plafond-un-enfant"), 3000 EUR) { origin case_input; }
+        assert "dpu-02": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-plafond-un-enfant"), 1) { origin case_input; }
+        assert "dpu-03": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-plafond-un-enfant")) { origin case_input; }
+    }
+    evaluate truth(cf_dom_plafond(entity_ref("urn:fr:pf-cf:case:dom-plafond-un-enfant"), 25000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

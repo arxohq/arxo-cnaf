@@ -1,0 +1,66 @@
+// Extension to the youngest child's third birthday: June 2026 lies
+// between the January 2025 start and the January 2028 term (R.262-2 al. 2).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-majore-prolonge" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; }
+        assert "majpr-01": isole_majore(entity_ref("urn:fr:rsa:case:majore-prolonge")) { origin case_input; }
+        assert "majpr-02": majore_prolonge_3ans(entity_ref("urn:fr:rsa:case:majore-prolonge")) { origin case_input; }
+        assert "majpr-03": majore_demande_mois(entity_ref("urn:fr:rsa:case:majore-prolonge"), @2025-01-01) { origin case_input; }
+        assert "majpr-04": majore_terme_3ans(entity_ref("urn:fr:rsa:case:majore-prolonge"), @2028-01-01) { origin case_input; }
+        assert "majpr-05": mois_droit(entity_ref("urn:fr:rsa:case:majore-prolonge"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(majore_ouvert_mois(entity_ref("urn:fr:rsa:case:majore-prolonge"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// R. 262-2 al. 2: a current isolated parent's child is still under three;
+// the 12-month start is unknown, but the extension covers the right month.
+test "urn:query:fr-rsa-majore-enfant-moins3-sans-debut" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "m3-01": isolement_constate(entity_ref("urn:fr:rsa:case:majore-enfant-moins3")) { origin case_input; }
+        assert "m3-02": foyer_nb_parents(entity_ref("urn:fr:rsa:case:majore-enfant-moins3"), 1) { origin case_input; }
+        assert "m3-03": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:majore-enfant-moins3"), 2) { origin case_input; }
+        assert "m3-04": foyer_membre_rang(entity_ref("urn:fr:rsa:case:majore-enfant-moins3"), entity_ref("urn:fr:rsa:case:majore-enfant-moins3:parent"), 1) { origin case_input; }
+        assert "m3-05": foyer_membre_rang(entity_ref("urn:fr:rsa:case:majore-enfant-moins3"), entity_ref("urn:fr:rsa:case:majore-enfant-moins3:child"), 2) { origin case_input; }
+        assert "m3-06": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:majore-enfant-moins3"), entity_ref("urn:fr:rsa:case:majore-enfant-moins3:child")) { origin case_input; }
+        assert "m3-07": foyer_naissance(entity_ref("urn:fr:rsa:case:majore-enfant-moins3"), entity_ref("urn:fr:rsa:case:majore-enfant-moins3:child"), @2023-07-01) { origin case_input; }
+        assert "m3-08": mois_droit(entity_ref("urn:fr:rsa:case:majore-enfant-moins3"), @2025-06-01) { origin case_input; }
+    }
+    evaluate truth(majore_terme_3ans(entity_ref("urn:fr:rsa:case:majore-enfant-moins3"), @2026-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(majore_nb_enfants(entity_ref("urn:fr:rsa:case:majore-enfant-moins3"), 1));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(majore_ouvert_mois(entity_ref("urn:fr:rsa:case:majore-enfant-moins3"), @2025-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// The youngest child turns three on 15 June. At the month's last day
+// (R. 262-4), the extension has ceased; no start of a new 12-month term
+// is asserted.
+test "urn:query:fr-rsa-majore-trois-ans-milieu-mois" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "m3b-01": isolement_constate(entity_ref("urn:fr:rsa:case:majore-trois-ans-milieu-mois")) { origin case_input; }
+        assert "m3b-02": foyer_nb_parents(entity_ref("urn:fr:rsa:case:majore-trois-ans-milieu-mois"), 1) { origin case_input; }
+        assert "m3b-03": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:majore-trois-ans-milieu-mois"), entity_ref("urn:fr:rsa:case:majore-trois-ans-milieu-mois:child")) { origin case_input; }
+        assert "m3b-04": foyer_naissance(entity_ref("urn:fr:rsa:case:majore-trois-ans-milieu-mois"), entity_ref("urn:fr:rsa:case:majore-trois-ans-milieu-mois:child"), @2022-06-15) { origin case_input; }
+        assert "m3b-05": mois_droit(entity_ref("urn:fr:rsa:case:majore-trois-ans-milieu-mois"), @2025-06-01) { origin case_input; }
+    }
+    evaluate truth(majore_ouvert_mois(entity_ref("urn:fr:rsa:case:majore-trois-ans-milieu-mois"), @2025-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

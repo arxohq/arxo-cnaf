@@ -1,0 +1,23 @@
+// Deontics, without right (resources of 40000 € above the L. 531-2 ceiling
+// of 35841.00 €): nothing to award — no VerserBaseDue position.
+// Control — devoir-base-actif.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-devoir-base-sans-droit" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "devoir-bs-01": enfant_en_charge(entity_ref("urn:fr:paje:case:devoir-bs"), entity_ref("urn:fr:paje:enfant:devoir-bs")) { origin case_input; }
+        assert "devoir-bs-02": condition_age_base(entity_ref("urn:fr:paje:enfant:devoir-bs")) { origin adjudicated; }
+        assert "devoir-bs-03": cohorte_enfant(entity_ref("urn:fr:paje:enfant:devoir-bs"), NE_APARTIR_AVRIL_2018) { origin adjudicated; }
+        assert "devoir-bs-04": ressources_annuelles(entity_ref("urn:fr:paje:case:devoir-bs"), 40000 EUR) { origin case_input; }
+        assert "devoir-bs-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:devoir-bs"), 30000 EUR) { origin case_input; }
+        assert "devoir-bs-06": bmaf_applicable(entity_ref("urn:fr:paje:case:devoir-bs"), 400.00 EUR) { origin case_input; }
+        assert "devoir-bs-07": mois_eligible_base(entity_ref("urn:fr:paje:case:devoir-bs"), entity_ref("urn:fr:paje:enfant:devoir-bs"), @2025-07-01) { origin adjudicated; }
+        assert "devoir-bs-08": organisme_debiteur(entity_ref("urn:fr:paje:org:caisse"), entity_ref("urn:fr:paje:case:devoir-bs")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserBaseDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

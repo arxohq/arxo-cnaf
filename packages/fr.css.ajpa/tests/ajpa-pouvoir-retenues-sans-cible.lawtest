@@ -1,0 +1,23 @@
+// Missing target (P1): full branch grounds and a withholding act on
+// the activity premium, but no upcoming premium instalments recorded
+// as the target — ajpa_retenue_prestations is NEITHER (exercise
+// without the recorded target premise, no effect).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-pouvoir-retenues-sans-cible" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-prc-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-prc"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-prc-02": indu_non_recupere_allocations(entity_ref("urn:fr:css:ajpa:case:aidant-prc"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-prc-03": indu_non_conteste(entity_ref("urn:fr:css:ajpa:case:aidant-prc"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-prc-04": indu_sans_option_remboursement(entity_ref("urn:fr:css:ajpa:case:aidant-prc"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-prc-05": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-prc")) { origin case_input; }
+        assert "ajpa-prc-06": retenue_prestations_exercee(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-prc"), 300.00 EUR, PRIME_ACTIVITE) { origin case_input; }
+    }
+    evaluate truth(ajpa_retenue_prestations(entity_ref("urn:fr:css:ajpa:case:aidant-prc"), 300.00 EUR, PRIME_ACTIVITE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

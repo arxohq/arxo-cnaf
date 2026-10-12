@@ -1,0 +1,16 @@
+// Unknown charges: 1 000 + 300 at 25 % = 325 kept (D. 553-1 I.c).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-charges-defaut" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "c-a": revenus_mensuels_a(entity_ref("urn:fr:pv:case:charges"), 1000.00 EUR) { origin case_input; }
+        assert "c-b": prestations_mensuelles_b(entity_ref("urn:fr:pv:case:charges"), 300.00 EUR) { origin case_input; }
+        assert "c-x": charges_logement_inconnues(entity_ref("urn:fr:pv:case:charges")) { origin case_input; }
+    }
+    evaluate truth(charges_retenues(entity_ref("urn:fr:pv:case:charges"), 325.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

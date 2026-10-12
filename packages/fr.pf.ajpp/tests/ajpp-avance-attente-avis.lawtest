@@ -1,0 +1,22 @@
+// Advance pending the agreement (2023 text): certificate established,
+// agreement requested but not yet rendered — the advance is granted
+// although the right itself is not yet open.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-avance-attente-avis" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-ava-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-ava")) { origin adjudicated; }
+        assert "ajpp-ava-02": avis_en_attente(entity_ref("urn:fr:pf-ajpp:case:enfant-ava")) { origin case_input; }
+    }
+    evaluate truth(avance_accordee(entity_ref("urn:fr:pf-ajpp:case:enfant-ava")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_droit_ouvert(entity_ref("urn:fr:pf-ajpp:case:enfant-ava")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

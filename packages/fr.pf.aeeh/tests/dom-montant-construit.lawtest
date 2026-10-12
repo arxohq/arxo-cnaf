@@ -1,0 +1,26 @@
+// D. 755-11 build-first: an entitled child resident in Réunion, BMAF
+// 400.00 stated (B-PFAEEH-BMAF-EURO), no supplement, no MPI. Metro total
+// 128.00 (0.32 x 400.00) is computed from inputs only; the DOM amount is
+// built identical to it.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-dom-montant-construit" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "dom-mc-01": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-mc")) { origin adjudicated; }
+        assert "dom-mc-02": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-mc"), REUNION) { origin case_input; }
+        assert "dom-mc-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-mc"), 400.00 EUR) { origin case_input; }
+        assert "dom-mc-04": sans_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-mc")) { origin case_input; }
+        assert "dom-mc-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-mc")) { origin case_input; }
+    }
+    evaluate truth(aeeh_attribuee_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-mc")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_aeeh_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-mc"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

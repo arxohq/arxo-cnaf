@@ -1,0 +1,19 @@
+// ARS after a June death: child deceased 2026-06-15 - ARS due for the next school year (L. 552-7, D. 552-7).
+// D-42: the context lacked deadline_policy SERVICE_MOIS (B-PFCORE-POLICY-CONTEXT): the R. 552-4
+// gate MaintienOuvertureCondition steps one calendar_month (MISSING_POLICY without it). Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-renvoi-ars-csd-deces-juin" {
+    given {
+        context { decision_time @2026-09-01T12:00:00Z; knowledge_time @2026-09-01T12:00:00Z; legal_time @2026-09-01; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "renvoi-ars-csd-deces-juin-01": deces_le(entity_ref("urn:fr:pf:case:enfant-decede"), @2026-06-15) { origin case_input; }
+        assert "renvoi-ars-csd-deces-juin-02": seuil_juin_rentree(entity_ref("urn:fr:pf:case:enfant-decede"), @2026-06-01) { origin case_input; }
+        assert "renvoi-ars-csd-deces-juin-03": ouverture_droit_mois(entity_ref("urn:fr:pf:case:enfant-decede"), @2025-06-01) { origin case_input; }
+    }
+    evaluate truth(ars_due_exceptionnellement(entity_ref("urn:fr:pf:case:enfant-decede")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

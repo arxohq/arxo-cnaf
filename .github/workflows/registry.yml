@@ -1,0 +1,20 @@
+# Generated file: it is rewritten whenever this set is re-published.
+# registry/ is a copy of the publications of these packages and their closure;
+# the check is the one of the Arxo registry: schema, addressing and hashes.
+name: registry
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python3 -m pip install --disable-pip-version-check jsonschema
+      - run: python3 registry/check_registry.py

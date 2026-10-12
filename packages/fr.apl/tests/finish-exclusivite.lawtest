@@ -1,0 +1,85 @@
+// Attribution and exclusivity (11): APL attribution, the literal APL
+// priority redirect, the dwelling-unicity marker, and the ALS same-purpose
+// difference on the 6.0316618 EUR frontiere case (2.00 already paid).
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-exclu-apl" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fexc-01": cas_apl_l831_1(entity_ref("urn:fr:apl:case:fexc"), APL_LOCATIF_AIDE_ETAT_CONVENTIONNE) { origin case_input; }
+        assert "fexc-02": occupant_apl_r831_1(entity_ref("urn:fr:apl:case:fexc"), OCC_LOCATIF_CONVENTIONNE_2_3_4) { origin case_input; }
+        assert "fexc-03": aide_demandee(entity_ref("urn:fr:apl:case:fexc"), APL) { origin case_input; }
+    }
+    evaluate truth(aide_attribuee(entity_ref("urn:fr:apl:case:fexc"), APL));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-exclu-priorite" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fexp-01": cas_apl_l831_1(entity_ref("urn:fr:apl:case:fexp"), APL_LOCATIF_AIDE_ETAT_CONVENTIONNE) { origin case_input; }
+        assert "fexp-02": occupant_apl_r831_1(entity_ref("urn:fr:apl:case:fexp"), OCC_LOCATIF_CONVENTIONNE_2_3_4) { origin case_input; }
+        assert "fexp-03": percoit_allocations_familiales(entity_ref("urn:fr:apl:case:fexp"), true) { origin case_input; }
+        assert "fexp-04": aide_demandee(entity_ref("urn:fr:apl:case:fexp"), ALF) { origin case_input; }
+    }
+    evaluate truth(aide_attribuee(entity_ref("urn:fr:apl:case:fexp"), ALF));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-exclu-cumul" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fexm-01": cas_apl_l831_1(entity_ref("urn:fr:apl:case:fexm1"), APL_LOCATIF_AIDE_ETAT_CONVENTIONNE) { origin case_input; }
+        assert "fexm-02": occupant_apl_r831_1(entity_ref("urn:fr:apl:case:fexm1"), OCC_LOCATIF_CONVENTIONNE_2_3_4) { origin case_input; }
+        assert "fexm-03": aide_demandee(entity_ref("urn:fr:apl:case:fexm1"), APL) { origin case_input; }
+        assert "fexm-04": aide_demandee(entity_ref("urn:fr:apl:case:fexm2"), ALS) { origin case_input; }
+        assert "fexm-05": partage_logement_avec(entity_ref("urn:fr:apl:case:fexm1"), entity_ref("urn:fr:apl:case:fexm2")) { origin case_input; }
+    }
+    evaluate truth(cumul_logement_interdit(entity_ref("urn:fr:apl:case:fexm1"), entity_ref("urn:fr:apl:case:fexm2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-exclu-difference-als" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fexd-01": secteur_locatif(entity_ref("urn:fr:apl:case:fexd")) { origin case_input; }
+        assert "fexd-02": zone_du_logement(entity_ref("urn:fr:apl:case:fexd"), ZONE_III) { origin case_input; }
+        assert "fexd-03": aide_demandee(entity_ref("urn:fr:apl:case:fexd"), ALS) { origin case_input; }
+        assert "fexd-04": situation_familiale(entity_ref("urn:fr:apl:case:fexd"), PERSONNE_SEULE) { origin case_input; }
+        assert "fexd-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fexd"), 0) { origin case_input; }
+        assert "fexd-06": loyer_principal(entity_ref("urn:fr:apl:case:fexd"), 280 EUR) { origin case_input; }
+        assert "fexd-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fexd"), 12800 EUR) { origin case_input; }
+        assert "fexd-08": mode_location(entity_ref("urn:fr:apl:case:fexd"), LOCATION_SEULE) { origin case_input; }
+        assert "fexd-09": forme_logement(entity_ref("urn:fr:apl:case:fexd"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fexd-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fexd"), 0 EUR) { origin case_input; }
+        assert "fexd-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fexd"), false) { origin case_input; }
+        assert "fexd-12": territoire(entity_ref("urn:fr:apl:case:fexd"), METROPOLE) { origin case_input; }
+        // D-42: L. 841-5 compares the ALS with the same-purpose aid "ainsi du"
+        // (due under another regulation), not with an amount already received;
+        // the model (11 DifferenceALSMemeObjet) reads aide_meme_objet_due. The
+        // case fact is restated as the due amount (same 2.00 EUR).
+        assert "fexd-13": aide_meme_objet_due(entity_ref("urn:fr:apl:case:fexd"), 2.00 EUR) { origin case_input; }
+    }
+    // D-79: L. 841-5 compares with the ALS entitlement (aide_apres_rls,
+    // 6.0316618 EUR), before the D. 823-16 payment threshold, which only stops
+    // payment. Blind expectation unchanged.
+    evaluate truth(difference_als_versee(entity_ref("urn:fr:apl:case:fexd"), 4.0316618 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,26 @@
+// Couple with three children (five persons, the third child at 40 %): 646.52 x
+// (1 + 0.50 + 0.30 + 0.30 + 0.40) = 1616.30 (R.262-1: more than two children, 40 % from the third).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-decret-couple-3-enfants" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "mfdc3e-01": mois_droit(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), @2025-06-01) { origin case_input; }
+        assert "mfdc3e-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), 5) { origin case_input; }
+        assert "mfdc3e-03": foyer_nb_parents(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), 2) { origin case_input; }
+        assert "mfdc3e-rank-1": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants:member-1"), 1) { origin case_input; }
+        assert "mfdc3e-rank-2": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants:member-2"), 2) { origin case_input; }
+        assert "mfdc3e-rank-3": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants:member-3"), 3) { origin case_input; }
+        assert "mfdc3e-child-3": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants:member-3")) { origin case_input; }
+        assert "mfdc3e-rank-4": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants:member-4"), 4) { origin case_input; }
+        assert "mfdc3e-child-4": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants:member-4")) { origin case_input; }
+        assert "mfdc3e-rank-5": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants:member-5"), 5) { origin case_input; }
+        assert "mfdc3e-child-5": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants:member-5")) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-decret-couple-3-enfants"), 1616.30 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

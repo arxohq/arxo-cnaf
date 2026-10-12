@@ -1,0 +1,21 @@
+// Still in compulsory schooling with pay below the ceiling: entitlement opens via 1°; the 2° branch does not apply (post-schooling explicitly denied, L. 512-3, PC-R07-03 overlap preserved).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-enfant-charge-scolarite-avec-remuneration" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; deadline_policy ENFANT_VINGT_ANS; }
+        assert "enfant-charge-scolarite-avec-remuneration-01": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-scol-rem")) { origin case_input; }
+        assert "enfant-charge-scolarite-avec-remuneration-02": not apres_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-scol-rem")) { origin case_input; }
+        assert "enfant-charge-scolarite-avec-remuneration-03": date_naissance(entity_ref("urn:fr:pf:case:enfant-scol-rem"), @2012-09-01) { origin case_input; }
+        assert "enfant-charge-scolarite-avec-remuneration-04": date_reference_enfant(entity_ref("urn:fr:pf:case:enfant-scol-rem"), @2026-03-15) { origin case_input; }
+        assert "enfant-charge-scolarite-avec-remuneration-05": remuneration_mensuelle(entity_ref("urn:fr:pf:case:enfant-scol-rem"), 200 EUR) { origin case_input; }
+        assert "enfant-charge-scolarite-avec-remuneration-06": smic_applicable(entity_ref("urn:fr:pf:case:enfant-scol-rem"), entity_ref("urn:fr:pf:case:travailleur-scol-rem")) { origin case_input; }
+        assert "enfant-charge-scolarite-avec-remuneration-07": fr.travail.smic::territoire_smic(entity_ref("urn:fr:pf:case:travailleur-scol-rem"), fr.travail.smic::METROPOLE_ET_DOM) { origin case_input; }
+    }
+    evaluate truth(enfant_ouvre_droit(entity_ref("urn:fr:pf:case:enfant-scol-rem")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

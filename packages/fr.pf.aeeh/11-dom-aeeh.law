@@ -1,0 +1,164 @@
+// DOM transfer: AEEH attribution in the L. 751-1 collectivities (L. 755-20)
+// and the DOM/metropolitan amount identity (D. 755-11).
+//
+// DEONTIC MAP (pinned text only):
+// - L. 755-20 «est attribuée dans les collectivités mentionnées à
+//   l'article L. 751-1» — institutional attribution status: an entitled
+//   child (aeeh_droit_calcule) resident in a listed collectivity. One
+//   strict rule per collectivity (no `or` across value relations, as in
+//   02-droit-montant and 06-categories). No duty: the sentence names no
+//   bearer and no «doit»; the fund payment duty stays D1 on the computed
+//   total (04-devoir-versement).
+// - L. 755-20 «dans des conditions fixées par décret» — decree
+//   delegation: D. 755-11 is pinned as the operative decree provision
+//   for the amounts; no other decree-set DOM award conditions are
+//   identified in the pinned corpus (B-PFAEEH-DOM-DECRET-CONDITIONS).
+// - D. 755-11 «est identique à celui qui est applicable en métropole» —
+//   institutional computation: build rule (DOM amount from the computed
+//   metropolitan total) plus the DECISION-0452 check mode (presented vs
+//   built). No duty, prohibition, power or liberty: an equality
+//   statement names no act and no actor.
+//
+// READINGS:
+// - The six Territoire values spell the Title V header in force over the
+//   program window (Guadeloupe, Guyane, Martinique, Réunion,
+//   Saint-Barthélemy, Saint-Martin); Mayotte joins Title V only on
+//   2028-01-01, outside the window. The L. 751-1 list itself is not
+//   pinned here (B-PFAEEH-DOM-L751-1); METROPOLE/AUTRE exist for
+//   exclusion tests (pf-af/pf-dom precedent).
+// - No evaluative element: no organ-appointed evaluation (§47.3), no
+//   intent-like established fact, no disputed reading (§152). Premises
+//   are direct case facts (residence, presented amount) and the
+//   in-package institutional total.
+// - No rounding: the texts set none; the identity preserves the exact
+//   Decimal total (B-PFAEEH-ARRONDI).
+//
+// WINDOWS. Both pinned versions cover the whole program window
+// (L. 755-20 since 2015-10-16, D. 755-11 since 2006-01-01), no
+// predecessors; rules open at coverage start 2021-01-01 (D-01).
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+use self::{
+    CSS_D755_11_ED2021_01,
+    CSS_D755_11_ED2022_01,
+    CSS_D755_11_ED2026_04,
+    CSS_L755_20,
+    CSS_L755_20_ED2022_01,
+    CSS_L755_20_ED2026_04,
+    Territoire,
+    aeeh_attribuee_dom,
+    aeeh_droit_calcule,
+    aeeh_montant_total,
+    montant_aeeh_dom,
+    montant_aeeh_dom_presente,
+    montant_aeeh_dom_verifie,
+    residence_enfant,
+};
+
+// --- L. 755-20: attribution in each listed collectivity --------------------
+
+@source(
+    CSS_L755_20,
+    CSS_L755_20_ED2022_01,
+    CSS_L755_20_ED2026_04)
+rule AttributionDomGuadeloupe(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "AEEH attribuée en Guadeloupe : enfant ouvrant droit et résident (L. 755-20)";
+    label en unofficial "AEEH awarded in Guadeloupe: entitled and resident child (L. 755-20)";
+    when aeeh_droit_calcule(e) and residence_enfant(e, GUADELOUPE);
+    then aeeh_attribuee_dom(e);
+}
+
+@source(
+    CSS_L755_20,
+    CSS_L755_20_ED2022_01,
+    CSS_L755_20_ED2026_04)
+rule AttributionDomGuyane(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "AEEH attribuée en Guyane : enfant ouvrant droit et résident (L. 755-20)";
+    label en unofficial "AEEH awarded in Guyane: entitled and resident child (L. 755-20)";
+    when aeeh_droit_calcule(e) and residence_enfant(e, GUYANE);
+    then aeeh_attribuee_dom(e);
+}
+
+@source(
+    CSS_L755_20,
+    CSS_L755_20_ED2022_01,
+    CSS_L755_20_ED2026_04)
+rule AttributionDomMartinique(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "AEEH attribuée en Martinique : enfant ouvrant droit et résident (L. 755-20)";
+    label en unofficial "AEEH awarded in Martinique: entitled and resident child (L. 755-20)";
+    when aeeh_droit_calcule(e) and residence_enfant(e, MARTINIQUE);
+    then aeeh_attribuee_dom(e);
+}
+
+@source(
+    CSS_L755_20,
+    CSS_L755_20_ED2022_01,
+    CSS_L755_20_ED2026_04)
+rule AttributionDomReunion(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "AEEH attribuée à La Réunion : enfant ouvrant droit et résident (L. 755-20)";
+    label en unofficial "AEEH awarded in La Réunion: entitled and resident child (L. 755-20)";
+    when aeeh_droit_calcule(e) and residence_enfant(e, REUNION);
+    then aeeh_attribuee_dom(e);
+}
+
+@source(
+    CSS_L755_20,
+    CSS_L755_20_ED2022_01,
+    CSS_L755_20_ED2026_04)
+rule AttributionDomSaintBarthelemy(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "AEEH attribuée à Saint-Barthélemy : enfant ouvrant droit et résident (L. 755-20)";
+    label en unofficial "AEEH awarded in Saint-Barthélemy: entitled and resident child (L. 755-20)";
+    when aeeh_droit_calcule(e) and residence_enfant(e, SAINT_BARTHELEMY);
+    then aeeh_attribuee_dom(e);
+}
+
+@source(
+    CSS_L755_20,
+    CSS_L755_20_ED2022_01,
+    CSS_L755_20_ED2026_04)
+rule AttributionDomSaintMartin(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "AEEH attribuée à Saint-Martin : enfant ouvrant droit et résident (L. 755-20)";
+    label en unofficial "AEEH awarded in Saint-Martin: entitled and resident child (L. 755-20)";
+    when aeeh_droit_calcule(e) and residence_enfant(e, SAINT_MARTIN);
+    then aeeh_attribuee_dom(e);
+}
+
+// --- D. 755-11: DOM amount built from the metropolitan total --------------
+// «Le montant ... est identique à celui qui est applicable en métropole»:
+// the built DOM amount is the computed metropolitan total (allowance +
+// supplements + MPI carried as zeros where absent).
+
+@source(
+    CSS_D755_11_ED2021_01,
+    CSS_D755_11_ED2022_01,
+    CSS_D755_11_ED2026_04)
+rule MontantDomConstruit(e: fr.pf.core::Enfant, total: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant DOM identique au total métropole calculé (D. 755-11, construction)";
+    label en unofficial "DOM amount identical to the computed metropolitan total (D. 755-11, build)";
+    when aeeh_attribuee_dom(e) and aeeh_montant_total(e, total);
+    then montant_aeeh_dom(e, total);
+}
+
+// --- D. 755-11: presented DOM amount checked against the built value ------
+
+@source(
+    CSS_D755_11_ED2021_01,
+    CSS_D755_11_ED2022_01,
+    CSS_D755_11_ED2026_04)
+rule MontantDomVerifie(e: fr.pf.core::Enfant, construit: Money, presente: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant DOM présenté égal au montant construit (D. 755-11, contrôle)";
+    label en unofficial "presented DOM amount equal to the built amount (D. 755-11, check)";
+    when montant_aeeh_dom(e, construit) and montant_aeeh_dom_presente(e, presente) and presente == construit;
+    then montant_aeeh_dom_verifie(e, presente);
+}

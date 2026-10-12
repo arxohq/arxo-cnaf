@@ -1,0 +1,114 @@
+// Сумма по МЕСЯЦУ расчёта (а не по дате дела): окна декретов о montant forfaitaire PPA, число — статья декрета
+// (sources/montant/). Дата права дела — 2027-02-15, месяцы — середины окон; ожидания читаются из закреплённых
+// текстов (build_forfait_chaine.py).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+// 2020-10-01: forfait_base_du_mois = 553.16 EUR (décret du mois d'avril 2020)
+test "urn:query:fr-ppa-forfait-decret-2020" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "forfait-decret-2020-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-decret-2020"), @2020-10-01, SEUL) { origin case_input; }
+    }
+    evaluate truth(forfait_base_du_mois(@2020-10-01, 553.16 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2021-10-01: forfait_base_du_mois = 553.71 EUR (décret du mois d'avril 2021)
+test "urn:query:fr-ppa-forfait-decret-2021" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "forfait-decret-2021-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-decret-2021"), @2021-10-01, SEUL) { origin case_input; }
+    }
+    evaluate truth(forfait_base_du_mois(@2021-10-01, 553.71 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_base_du_mois(@2021-10-01, 553.16 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2022-05-01: forfait_base_du_mois = 563.68 EUR (décret du mois d'avril 2022)
+test "urn:query:fr-ppa-forfait-decret-2022" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "forfait-decret-2022-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-decret-2022"), @2022-05-01, SEUL) { origin case_input; }
+    }
+    evaluate truth(forfait_base_du_mois(@2022-05-01, 563.68 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_base_du_mois(@2022-05-01, 553.71 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2023-10-01: forfait_base_du_mois = 595.25 EUR (décret du mois d'avril 2023)
+test "urn:query:fr-ppa-forfait-decret-2023" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "forfait-decret-2023-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-decret-2023"), @2023-10-01, SEUL) { origin case_input; }
+    }
+    evaluate truth(forfait_base_du_mois(@2023-10-01, 595.25 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_base_du_mois(@2023-10-01, 563.68 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2024-10-01: forfait_base_du_mois = 622.63 EUR (décret du mois d'avril 2024)
+test "urn:query:fr-ppa-forfait-decret-2024" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "forfait-decret-2024-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-decret-2024"), @2024-10-01, SEUL) { origin case_input; }
+    }
+    evaluate truth(forfait_base_du_mois(@2024-10-01, 622.63 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_base_du_mois(@2024-10-01, 595.25 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2025-10-01: forfait_base_du_mois = 633.21 EUR (décret du mois d'avril 2025)
+test "urn:query:fr-ppa-forfait-decret-2025" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "forfait-decret-2025-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-decret-2025"), @2025-10-01, SEUL) { origin case_input; }
+    }
+    evaluate truth(forfait_base_du_mois(@2025-10-01, 633.21 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_base_du_mois(@2025-10-01, 622.63 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+// 2026-10-01: forfait_base_du_mois = 638.28 EUR (décret du mois d'avril 2026)
+test "urn:query:fr-ppa-forfait-decret-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2027-02-15T12:00:00Z; knowledge_time @2027-02-15T12:00:00Z; legal_time @2027-02-15; timezone "Europe/Paris"; }
+        assert "forfait-decret-2026-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:forfait-decret-2026"), @2026-10-01, SEUL) { origin case_input; }
+    }
+    evaluate truth(forfait_base_du_mois(@2026-10-01, 638.28 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_base_du_mois(@2026-10-01, 633.21 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

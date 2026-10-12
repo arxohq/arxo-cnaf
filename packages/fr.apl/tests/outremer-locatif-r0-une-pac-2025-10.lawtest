@@ -1,0 +1,28 @@
+// Месяц права — ноябрь 2025 года: редакция, применимая «aux prestations dues à
+// compter du 1er octobre 2025». Её версии статей пришли ИНКРЕМЕНТОМ DILA
+// LEGI_20250911-214911 — в глобальный дамп они попасть не могли, он снят
+// 13 июля 2025 года.
+//
+// ШАГ: заморский форфейт R0 одного иждивенца — 8 656 €, то же число, что с
+// 1 января 2025 года: R0 переоценивается в ЯНВАРЕ, а форфейты расходов в
+// октябре. Десятое состояние ст. 46 подтверждает те же два ритма.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-locatif-r0-une-pac-2025-10" {
+    given {
+        context { decision_time @2025-11-15T12:00:00Z; knowledge_time @2025-11-15T12:00:00Z; legal_time @2025-11-15; timezone "Europe/Paris"; }
+        assert "outremer-locatif-r0-une-pac-2025-10-01": secteur_locatif(entity_ref("urn:fr:apl:case:om-loc-2025-10")) { origin case_input; }
+        assert "outremer-locatif-r0-une-pac-2025-10-02": aide_demandee(entity_ref("urn:fr:apl:case:om-loc-2025-10"), APL) { origin case_input; }
+        assert "outremer-locatif-r0-une-pac-2025-10-03": zone_du_logement(entity_ref("urn:fr:apl:case:om-loc-2025-10"), ZONE_II) { origin case_input; }
+        assert "outremer-locatif-r0-une-pac-2025-10-04": situation_familiale(entity_ref("urn:fr:apl:case:om-loc-2025-10"), COUPLE) { origin case_input; }
+        assert "outremer-locatif-r0-une-pac-2025-10-05": personnes_a_charge(entity_ref("urn:fr:apl:case:om-loc-2025-10"), 1) { origin case_input; }
+        assert "outremer-locatif-r0-une-pac-2025-10-06": mode_location(entity_ref("urn:fr:apl:case:om-loc-2025-10"), LOCATION_SEULE) { origin case_input; }
+        assert "outremer-locatif-r0-une-pac-2025-10-07": territoire(entity_ref("urn:fr:apl:case:om-loc-2025-10"), OUTRE_MER) { origin case_input; }
+    }
+    evaluate truth(abattement_r0(entity_ref("urn:fr:apl:case:om-loc-2025-10"), 8656 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,20 @@
+// Deontics, without right (resources above the ceiling): nothing to award —
+// no VerserPrimeDue position. Control — devoir-versement-actif.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-devoir-versement-sans-droit" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "devoir-sans-01": attente_naissance(entity_ref("urn:fr:paje:case:devoir-sans"), entity_ref("urn:fr:paje:enfant:devoir-sans")) { origin case_input; }
+        assert "devoir-sans-02": ressources_annuelles(entity_ref("urn:fr:paje:case:devoir-sans"), 40000 EUR) { origin case_input; }
+        assert "devoir-sans-03": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:devoir-sans"), 30000 EUR) { origin case_input; }
+        assert "devoir-sans-04": bmaf_applicable(entity_ref("urn:fr:paje:case:devoir-sans"), 400.00 EUR) { origin case_input; }
+        assert "devoir-sans-05": date_examen_situation(entity_ref("urn:fr:paje:case:devoir-sans"), entity_ref("urn:fr:paje:enfant:devoir-sans"), @2025-07-01) { origin adjudicated; }
+        assert "devoir-sans-06": organisme_debiteur(entity_ref("urn:fr:paje:org:caisse"), entity_ref("urn:fr:paje:case:devoir-sans")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserPrimeDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

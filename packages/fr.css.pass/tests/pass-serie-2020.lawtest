@@ -1,0 +1,19 @@
+// PASS 2020: valeur mensuelle 3428 € (arrêté du 2019-12-02, SSAS1934384A; sources/pass/arrete-2019-12-02-art1.txt);
+// годовое значение строится 12 × 3428 = 41136 €. Дата дела ни при чём: ключ — год.
+language "law.core" version "0.2";
+package fr.css.pass version "0.1.0";
+namespace "urn:fr:corpus:clir:pass";
+
+test "urn:query:fr-pass-serie-2020" {
+    given {
+        context { decision_time @2020-06-15T12:00:00Z; knowledge_time @2020-06-15T12:00:00Z; legal_time @2020-06-15; timezone "Europe/Paris"; }
+    }
+    evaluate truth(pass_mensuel_arrete(2020, 3428 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(pass_annuel_arrete(2020, 41136 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

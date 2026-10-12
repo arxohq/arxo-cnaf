@@ -1,0 +1,14 @@
+// Fractional gap (345, 346): weighted 345.96 - neither band fires, no levy at the lower-band value 73.74 (D. 553-1 III, B-VERS-D5531-LISIERE-FRACTION).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-lisiere-fraction-345" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "t-pond": revenu_pondere(entity_ref("urn:fr:pv:case:lisiere345"), 345.96 EUR) { origin case_input; }
+    }
+    evaluate truth(prelevement_mensuel(entity_ref("urn:fr:pv:case:lisiere345"), 73.74 EUR));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

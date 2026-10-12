@@ -1,0 +1,22 @@
+// L. 161-25 floor (second paragraph): a 0.995 coefficient is raised to
+// one, so the base passes through unchanged (478.16 -> 478.16).
+language "law.core" version "0.2";
+package fr.css.revalorisation version "0.1.0";
+namespace "urn:fr:corpus:clir:revalorisation";
+
+test "urn:query:fr-revalorisation-bmaf-plancher" {
+    given {
+        context { deadline_policy REVALO_EXERCICE; decision_time @2027-04-01T12:00:00Z; knowledge_time @2027-04-01T12:00:00Z; legal_time @2027-04-01; timezone "Europe/Paris"; }
+        assert "bmaf-01": annee_exercice(entity_ref("urn:fr:revalorisation:exercice:2027"), 2027) { origin case_input; }
+        assert "bmaf-02": bmaf_precedente(entity_ref("urn:fr:revalorisation:exercice:2027"), 478.16 EUR) { origin case_input; }
+        assert "bmaf-03": coefficient_annee(entity_ref("urn:fr:revalorisation:exercice:2027"), 0.995) { origin case_input; }
+    }
+    evaluate truth(coefficient_retenu(entity_ref("urn:fr:revalorisation:exercice:2027"), 1.0));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bmaf_revalorisee(entity_ref("urn:fr:revalorisation:exercice:2027"), 478.16 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

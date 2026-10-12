@@ -1,0 +1,22 @@
+// AEEH attachment: 2° care costs, AEEH benefit - the fund may attach (L. 553-4 I 2, PC-R03-03).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-saisie-aeeh-2degre" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "saisie-aeeh-2degre-01": parent_charge(entity_ref("urn:fr:pf:case:saisie2"), entity_ref("urn:fr:pf:case:enfant-saisie2")) { origin case_input; }
+        assert "saisie-aeeh-2degre-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:saisie2"), entity_ref("urn:fr:pf:case:enfant-saisie2")) { origin adjudicated; }
+        assert "saisie-aeeh-2degre-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-saisie2")) { origin case_input; }
+        assert "saisie-aeeh-2degre-04": reside_france_stable(entity_ref("urn:fr:pf:case:saisie2")) { origin case_input; }
+        assert "saisie-aeeh-2degre-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-saisie2")) { origin case_input; }
+        assert "saisie-aeeh-2degre-06": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:saisie2")) { origin case_input; }
+        assert "saisie-aeeh-2degre-07": saisie_alimentaire_possible(entity_ref("urn:fr:pf:case:saisie2")) { origin case_input; }
+        assert "saisie-aeeh-2degre-08": frais_2degre_soins_hebergement(entity_ref("urn:fr:pf:case:saisie2")) { origin case_input; }
+        assert "saisie-aeeh-2degre-09": prestation_aeeh_2degre(entity_ref("urn:fr:pf:case:saisie2")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SaisieCas2Degre, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

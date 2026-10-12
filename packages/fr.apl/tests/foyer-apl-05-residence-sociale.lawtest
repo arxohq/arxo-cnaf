@@ -1,0 +1,44 @@
+// Дело Catala «CasTest5» (logement-foyer, APL): социальная резиденция, то есть
+// ветвь 2° ст. D. 832-25 — своя таблица долей (N = 1,2), свой множитель cm,
+// свой потолок K (0,90) и форфейт E0 БЕЗ умножения на N.
+//
+// ШАГ: число долей N. Catala утверждает то же: 1,2.
+//
+// РАСХОЖДЕНИЕ РЯДОМ. На E0 этого же дела наш итог по закреплённому тексту —
+// 115,18728 €, а Catala утверждает 124,64 €. Перебор шестнадцати прочтений
+// текста (какая таблица N, какой форфейт, умножается ли он на N,
+// масштабируются ли границы траншей) не дал их числа даже с точностью 3 €:
+// расхождение структурное и по закреплённым байтам не решается. Ветвь 1° при
+// этом совпадает точно на трёх делах. Квалификация открыта — решение владельца.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-foyer-apl-05-residence-sociale" {
+    given {
+        // D-42: G-A13 migration (24-lecture-pp.law) — D. 823-17 "P0 ... ne peut etre
+        // inferieure a un montant minimum" has two readings in group SensMinimumPp
+        // (selection exactly_one); this hand suite selects the working reading, as
+        // the other hand suites do. No expectation changed.
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "foyer-apl-05-residence-sociale-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-05")) { origin case_input; }
+        assert "foyer-apl-05-residence-sociale-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-apl-05"), APL) { origin case_input; }
+        assert "foyer-apl-05-residence-sociale-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-apl-05"), ZONE_I) { origin case_input; }
+        assert "foyer-apl-05-residence-sociale-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-apl-05"), PERSONNE_SEULE) { origin case_input; }
+        assert "foyer-apl-05-residence-sociale-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-apl-05"), 0) { origin case_input; }
+        assert "foyer-apl-05-residence-sociale-06": type_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-05"), JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE) { origin case_input; }
+        assert "foyer-apl-05-residence-sociale-07": redevance(entity_ref("urn:fr:apl:case:foyer-apl-05"), 350 EUR) { origin case_input; }
+        assert "foyer-apl-05-residence-sociale-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-apl-05"), 7500 EUR) { origin case_input; }
+        assert "foyer-apl-05-residence-sociale-09": territoire(entity_ref("urn:fr:apl:case:foyer-apl-05"), METROPOLE) { origin case_input; }
+    }
+    // D-42 BOUNDARY: the derived value is Decimal (barème parameter / Decimal
+    // function), while the query literal in a Decimal slot lowers to Number
+    // (law.core 0.2.7 Number domain) and does not match a Decimal value —
+    // named outside E-0324 ("Вне правки": Decimal slots are a separate errata
+    // candidate). Both lawc and lawref agree; the expectation follows the pinned
+    // text and is kept. Not decidable in the package.
+    evaluate truth(nombre_parts(entity_ref("urn:fr:apl:case:foyer-apl-05"), 1.2));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

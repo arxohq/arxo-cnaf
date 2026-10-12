@@ -1,0 +1,146 @@
+// Moving bonus (L. 823-8, L. 821-4): due when the move, the child rank and
+// the opening delay are established, with no payment-threshold premise BY
+// DESIGN (the article overrides L. 823-7). The rank, the moving period, the
+// opening delay and the bonus AMOUNT are regulatory and unpinned (D. 823-19
+// and the arrete bonus articles have no fragments): the three regulatory
+// findings arrive as established case facts and the amount as a retained
+// input (boundary B-APL-PRIME-PARAMETRES, pin requested). The L. 821-4
+// difference builds from the retained amount (recorded build-first
+// deviation: the regulatory scale is unpinned).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_L821_4,
+    CCH_L821_4_ED2019_12,
+    CCH_L821_4_ED2020_01,
+    CCH_L821_4_ED2021_01,
+    CCH_L821_4_ED2023_04,
+    CCH_L821_4_ED2023_09,
+    CCH_L821_4_ED2023_12,
+    CCH_L821_4_ED2026_07,
+    CCH_L823_8,
+    CCH_L823_8_ED2019_12,
+    CCH_L823_8_ED2020_01,
+    CCH_L823_8_ED2021_01,
+    CCH_L823_8_ED2023_04,
+    CCH_L823_8_ED2023_09,
+    CCH_L823_8_ED2023_12,
+    CCH_L823_8_ED2026_07,
+    Menage,
+    Organisme,
+    organisme_debiteur,
+};
+
+pub relation demenagement_logement_ouvrant_droit(m: Menage, d: Date) kind empirical {
+    label fr official "emmenagement dans un logement ouvrant droit, dans la periode reglementaire (constat)";
+    label en unofficial "move into an aid-opening dwelling within the regulatory period (finding)";
+}
+
+pub relation enfant_rang_prime_satisfait(m: Menage) kind empirical {
+    label fr official "enfant a charge du rang determine pour la prime (constat)";
+    label en unofficial "dependent child of the bonus qualifying rank (finding)";
+}
+
+pub relation droit_ouvert_delai_demenagement(m: Menage) kind empirical {
+    label fr official "droit ouvert dans le delai reglementaire apres l'emmenagement (constat)";
+    label en unofficial "right opened within the regulatory delay after moving in (finding)";
+}
+
+pub relation prime_demenagement_due(m: Menage) kind institutional {
+    label fr official "prime de demenagement due L. 823-8, meme sous le seuil L. 823-7";
+    label en unofficial "moving bonus due under L. 823-8, even below the L. 823-7 threshold";
+}
+
+pub relation prime_demenagement_versee(m: Menage) kind empirical {
+    label fr official "prime de demenagement versee par l'organisme L. 812-1 (execution)";
+    label en unofficial "moving bonus paid by the L. 812-1 body (performance)";
+}
+
+@source(CCH_L823_8, CCH_L823_8_ED2019_12, CCH_L823_8_ED2020_01,
+        CCH_L823_8_ED2021_01, CCH_L823_8_ED2023_04, CCH_L823_8_ED2023_09,
+        CCH_L823_8_ED2023_12, CCH_L823_8_ED2026_07)
+rule PrimeDueDemenagement(m: Menage, d: Date) strict {
+    label fr official "emmenagement, rang et delai etablis : la prime est due sans condition de seuil";
+    label en unofficial "move-in, rank and delay established: the bonus is due with no threshold condition";
+    when demenagement_logement_ouvrant_droit(m, d) and enfant_rang_prime_satisfait(m)
+        and droit_ouvert_delai_demenagement(m);
+    then prime_demenagement_due(m);
+}
+
+@source(CCH_L823_8, CCH_L823_8_ED2019_12, CCH_L823_8_ED2020_01,
+        CCH_L823_8_ED2021_01, CCH_L823_8_ED2023_04, CCH_L823_8_ED2023_09,
+        CCH_L823_8_ED2023_12, CCH_L823_8_ED2026_07)
+rule DevoirVerserPrime(m: Menage, o: Organisme) defeasible {
+    label fr official "l'organisme verse la prime de demenagement due, sauf autre prime de meme objet L. 821-4";
+    label en unofficial "the body pays the due moving bonus, barring another same-purpose bonus L. 821-4";
+    when prime_demenagement_due(m) and organisme_debiteur(o, m);
+    unless autre_prime_meme_objet_constatee(m) and organisme_debiteur(o, m);
+    then duty VerserPrimeDemenagement {
+        bearer o;
+        beneficiary m;
+        maintain prime_demenagement_versee(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation prime_montant_retenu(m: Menage, p: Money) kind empirical {
+    label fr official "montant reglementaire de la prime retenu (entree conservee, bareme non epingle)";
+    label en unofficial "retained regulatory bonus amount (retained input, scale unpinned)";
+}
+
+pub relation autre_prime_meme_objet(m: Menage, a: Money) kind empirical {
+    label fr official "prime au meme objet deja percue (fait de dossier)";
+    label en unofficial "same-purpose bonus already received (case fact)";
+}
+
+pub relation difference_prime_versee(m: Menage, montant: Money) kind institutional {
+    label fr official "difference de prime versee L. 821-4";
+    label en unofficial "bonus difference paid under L. 821-4";
+}
+
+pub relation autre_prime_meme_objet_constatee(m: Menage) kind institutional {
+    label fr official "autre prime de meme objet constatee L. 821-4 (non-cumul)";
+    label en unofficial "another same-purpose bonus established L. 821-4 (non-combination)";
+}
+
+pub relation difference_prime_payee(m: Menage) kind empirical {
+    label fr official "difference de prime payee par l'organisme (execution L. 821-4)";
+    label en unofficial "bonus difference paid by the body (L. 821-4 performance)";
+}
+
+@source(CCH_L821_4, CCH_L821_4_ED2019_12, CCH_L821_4_ED2020_01,
+        CCH_L821_4_ED2021_01, CCH_L821_4_ED2023_04, CCH_L821_4_ED2023_09,
+        CCH_L821_4_ED2023_12, CCH_L821_4_ED2026_07)
+rule AutrePrimeMemeObjetConstatee(m: Menage, autre: Money) strict {
+    label fr official "L. 821-4 : autre prime de meme objet constatee, non-cumul";
+    label en unofficial "L. 821-4: another same-purpose bonus established, non-combination";
+    when autre_prime_meme_objet(m, autre);
+    then autre_prime_meme_objet_constatee(m);
+}
+
+@source(CCH_L821_4, CCH_L821_4_ED2019_12, CCH_L821_4_ED2020_01,
+        CCH_L821_4_ED2021_01, CCH_L821_4_ED2023_04, CCH_L821_4_ED2023_09,
+        CCH_L821_4_ED2023_12, CCH_L821_4_ED2026_07)
+rule DifferencePrimeMemeObjet(m: Menage, prime: Money, autre: Money) strict {
+    label fr official "prime due L. 823-8 non cumulable : la difference est versee si l'autre est inferieure";
+    label en unofficial "due L. 823-8 bonus not combinable: the difference is paid when the other is lower";
+    when prime_demenagement_due(m) and prime_montant_retenu(m, prime)
+        and autre_prime_meme_objet(m, autre) and autre < prime;
+    then difference_prime_versee(m, prime - autre);
+}
+
+@source(CCH_L821_4, CCH_L821_4_ED2019_12, CCH_L821_4_ED2020_01,
+        CCH_L821_4_ED2021_01, CCH_L821_4_ED2023_04, CCH_L821_4_ED2023_09,
+        CCH_L821_4_ED2023_12, CCH_L821_4_ED2026_07)
+rule DevoirVerserDifferencePrime(m: Menage, o: Organisme, d: Money) strict {
+    label fr official "L. 821-4 : l'organisme verse la difference quand l'autre prime est inferieure";
+    label en unofficial "L. 821-4: the body pays the difference when the other bonus is lower";
+    when difference_prime_versee(m, d) and organisme_debiteur(o, m);
+    then duty VerserDifferencePrime {
+        bearer o;
+        beneficiary m;
+        maintain difference_prime_payee(m) during [@2021-01-01, infinity);
+    };
+}

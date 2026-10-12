@@ -1,0 +1,22 @@
+// Old regime, part rate: pre-2018 child, 2021-02, resources of 32000 € —
+// half of the old full rate: 400 × 0.22975 = 91.90 €.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-base-ancien-partiel" {
+    given {
+        context { decision_time @2021-02-15T12:00:00Z; knowledge_time @2021-02-15T12:00:00Z; legal_time @2021-02-15; timezone "Europe/Paris"; }
+        assert "base-ap-01": enfant_en_charge(entity_ref("urn:fr:paje:case:base-ap"), entity_ref("urn:fr:paje:enfant:base-ap")) { origin case_input; }
+        assert "base-ap-02": condition_age_base(entity_ref("urn:fr:paje:enfant:base-ap")) { origin adjudicated; }
+        assert "base-ap-03": cohorte_enfant(entity_ref("urn:fr:paje:enfant:base-ap"), NE_AVANT_AVRIL_2018) { origin adjudicated; }
+        assert "base-ap-04": ressources_annuelles(entity_ref("urn:fr:paje:case:base-ap"), 32000 EUR) { origin case_input; }
+        assert "base-ap-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:base-ap"), 30000 EUR) { origin case_input; }
+        assert "base-ap-06": bmaf_applicable(entity_ref("urn:fr:paje:case:base-ap"), 400.00 EUR) { origin case_input; }
+        assert "base-ap-07": mois_eligible_base(entity_ref("urn:fr:paje:case:base-ap"), entity_ref("urn:fr:paje:enfant:base-ap"), @2021-02-01) { origin adjudicated; }
+    }
+    evaluate truth(base_attribuee(entity_ref("urn:fr:paje:case:base-ap"), entity_ref("urn:fr:paje:enfant:base-ap"), 91.90 EUR, @2021-02-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

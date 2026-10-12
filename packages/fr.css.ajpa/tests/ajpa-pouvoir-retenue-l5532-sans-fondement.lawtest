@@ -1,0 +1,21 @@
+// Exercise without the subsidiary ground (P2): a withholding act with
+// the reserves but without the recorded non-recoverability on the
+// first-paragraph benefits — ajpa_retenue_l5532 is NEITHER.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-pouvoir-retenue-l5532-sans-fondement" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-pls-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-pls"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pls-02": indu_non_conteste(entity_ref("urn:fr:css:ajpa:case:aidant-pls"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pls-03": indu_sans_option_remboursement(entity_ref("urn:fr:css:ajpa:case:aidant-pls"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pls-04": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-pls")) { origin case_input; }
+        assert "ajpa-pls-05": retenue_l5532_exercee(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-pls"), 300.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ajpa_retenue_l5532(entity_ref("urn:fr:css:ajpa:case:aidant-pls"), 300.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,82 @@
+// Resources (13): the 50/80/3 fictive income (2 300.00 EUR), the student
+// flat-rate trigger with the grant-holder reduction, and the May-2021
+// APL-accession window pair.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-fictif-patrimoine" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "ffic-01": secteur_locatif(entity_ref("urn:fr:apl:case:ffic")) { origin case_input; }
+        assert "ffic-02": valeur_patrimoine_total(entity_ref("urn:fr:apl:case:ffic"), 45000 EUR) { origin case_input; }
+        assert "ffic-03": patrimoine_sans_revenus_retenus(entity_ref("urn:fr:apl:case:ffic")) { origin case_input; }
+        assert "ffic-04": vl_immeubles_batis(entity_ref("urn:fr:apl:case:ffic"), 4000 EUR) { origin case_input; }
+        assert "ffic-05": vl_terrains_non_batis(entity_ref("urn:fr:apl:case:ffic"), 0 EUR) { origin case_input; }
+        assert "ffic-06": capitaux_mobiliers_sans_revenus(entity_ref("urn:fr:apl:case:ffic"), 10000 EUR) { origin case_input; }
+        // D-42: R. 822-22: the wealth values are those last declared or known at the
+        // D-42: opening or renewal of the right; the model (13 FictifPatrimoine*) takes
+        // D-42: that provenance finding, omitted by the case.
+        assert "ffic-07": patrimoine_valeurs_dernieres_ouverture_renouvellement(entity_ref("urn:fr:apl:case:ffic")) { origin case_input; }
+    }
+    evaluate truth(revenu_fictif_patrimoine(entity_ref("urn:fr:apl:case:ffic"), 2300.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-forfait-etudiant" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "ffet-01": secteur_locatif(entity_ref("urn:fr:apl:case:ffet")) { origin case_input; }
+        assert "ffet-02": occupe_logement_locatif(entity_ref("urn:fr:apl:case:ffet")) { origin case_input; }
+        assert "ffet-03": conditions_age_bourse(entity_ref("urn:fr:apl:case:ffet")) { origin case_input; }
+        assert "ffet-04": poursuit_etudes(entity_ref("urn:fr:apl:case:ffet")) { origin case_input; }
+        assert "ffet-05": titulaire_bourse_non_imposable(entity_ref("urn:fr:apl:case:ffet")) { origin case_input; }
+    }
+    evaluate truth(forfait_etudiant_applicable(entity_ref("urn:fr:apl:case:ffet")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(forfait_etudiant_minore(entity_ref("urn:fr:apl:case:ffet")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-forfait-avant-mai" {
+    given {
+        context { decision_time @2021-03-15T12:00:00Z; knowledge_time @2021-03-15T12:00:00Z; legal_time @2021-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "ffam-01": secteur_accession(entity_ref("urn:fr:apl:case:ffam")) { origin case_input; }
+        assert "ffam-02": aide_demandee(entity_ref("urn:fr:apl:case:ffam"), APL) { origin case_input; }
+        assert "ffam-03": occupe_logement_locatif(entity_ref("urn:fr:apl:case:ffam")) { origin case_input; }
+        assert "ffam-04": conditions_age_bourse(entity_ref("urn:fr:apl:case:ffam")) { origin case_input; }
+        assert "ffam-05": poursuit_etudes(entity_ref("urn:fr:apl:case:ffam")) { origin case_input; }
+    }
+    evaluate truth(forfait_etudiant_applicable(entity_ref("urn:fr:apl:case:ffam")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-forfait-depuis-mai" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "ffdm-01": secteur_accession(entity_ref("urn:fr:apl:case:ffdm")) { origin case_input; }
+        assert "ffdm-02": aide_demandee(entity_ref("urn:fr:apl:case:ffdm"), APL) { origin case_input; }
+        assert "ffdm-03": occupe_logement_locatif(entity_ref("urn:fr:apl:case:ffdm")) { origin case_input; }
+        assert "ffdm-04": conditions_age_bourse(entity_ref("urn:fr:apl:case:ffdm")) { origin case_input; }
+        assert "ffdm-05": poursuit_etudes(entity_ref("urn:fr:apl:case:ffdm")) { origin case_input; }
+    }
+    evaluate truth(forfait_etudiant_applicable(entity_ref("urn:fr:apl:case:ffdm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

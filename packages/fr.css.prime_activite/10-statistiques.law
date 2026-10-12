@@ -1,0 +1,701 @@
+// Statistical reporting: quarterly/annual transmissions (D. 848-1/2),
+// L. 846-3 information (D. 848-3), publication (D. 848-4), joint
+// arrêtés (D. 848-5), L. 846-2 information (R. 848-1).
+//
+// «Avant la fin de chaque trimestre, la CNAF et la CCMSA
+// transmettent aux services statistiques ... des données agrégées
+// ... portant sur le trimestre précédent» 1°..5° (D. 848-1): duty
+// D10 (emitter owes the stats service); the five items arrive as
+// retained content facts, completeness as an institutional
+// conjunction; timeliness is derived (transmission before the end of
+// the current quarter, i.e. within six months of the reference
+// quarter start; Q4 data through April, i.e. within seven months,
+// on the retained Q4 marker; the ordinary branch needs a positive
+// non-Q4 classification, unknown stays undetermined (PA-R4-02).
+// The duty maintains the
+// timely-and-complete transmission (PA-M8).
+// D10 direction - bearer the emitter, beneficiary the stats service.
+// «Avant la fin du mois d'avril de chaque année ... portant sur
+// l'année précédente» 1°..5° (D. 848-2): duty D11, same shape; the
+// April due date arrives retained (year-to-date arithmetic beyond
+// core 0.2), timeliness is derived against it (PA-M8).
+// «Les informations mentionnées à l'article L. 846-3 sont
+// transmises aux services statistiques» (D. 848-3): duty D12.
+// «Les services statistiques ... ainsi que la CNAF, la CCMSA et
+// [Pôle emploi / France Travail] assurent la publication régulière
+// des résultats» (D. 848-4, operator switch 2024-07-01): literal
+// head (publication has no counterparty); the undertaking attaches
+// to the named actors by law (two windowed rules), never inferred
+// from a publication event (PA-M9); actual publication is a
+// separate performance marker.
+// «Les listes ... sont fixées par des arrêtés conjoints» (D. 848-5):
+// retained arrêté existence maps to applicable lists; list contents
+// are unpinned (no silent invention).
+// «Les informations mentionnées à l'article L. 846-2 sont
+// transmises aux services statistiques» (R. 848-1): duty D14.
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_D848_1_ED2021_01_01,
+    CSS_D848_1_ED2021_03_25,
+    CSS_D848_1_ED2021_06_01,
+    CSS_D848_1_ED2022_03_21,
+    CSS_D848_1_ED2023_12_31,
+    CSS_D848_1_ED2024_01_01,
+    CSS_D848_1_ED2024_07_01,
+    CSS_D848_1_ED2025_01_01,
+    CSS_D848_1_ED2025_02_28,
+    CSS_D848_1_ED2025_03_31,
+    CSS_D848_1_ED2026_04_01,
+    CSS_D848_1_ED2026_06_27,
+    CSS_D848_2_ED2021_01_01,
+    CSS_D848_2_ED2021_03_25,
+    CSS_D848_2_ED2021_06_01,
+    CSS_D848_2_ED2022_03_21,
+    CSS_D848_2_ED2023_12_31,
+    CSS_D848_2_ED2024_01_01,
+    CSS_D848_2_ED2024_07_01,
+    CSS_D848_2_ED2025_01_01,
+    CSS_D848_2_ED2025_02_28,
+    CSS_D848_2_ED2025_03_31,
+    CSS_D848_2_ED2026_04_01,
+    CSS_D848_2_ED2026_06_27,
+    CSS_D848_3_ED2021_01_01,
+    CSS_D848_3_ED2021_03_25,
+    CSS_D848_3_ED2021_06_01,
+    CSS_D848_3_ED2022_03_21,
+    CSS_D848_3_ED2023_12_31,
+    CSS_D848_3_ED2024_01_01,
+    CSS_D848_3_ED2024_07_01,
+    CSS_D848_3_ED2025_01_01,
+    CSS_D848_3_ED2025_02_28,
+    CSS_D848_3_ED2025_03_31,
+    CSS_D848_3_ED2026_04_01,
+    CSS_D848_3_ED2026_06_27,
+    CSS_D848_4_ED2024_07_01,
+    CSS_D848_4_ED2025_01_01,
+    CSS_D848_4_ED2025_02_28,
+    CSS_D848_4_ED2025_03_31,
+    CSS_D848_4_ED2026_04_01,
+    CSS_D848_4_ED2026_06_27,
+    CSS_D848_4_PRE2024_ED2021_01_01,
+    CSS_D848_4_PRE2024_ED2021_03_25,
+    CSS_D848_4_PRE2024_ED2021_06_01,
+    CSS_D848_4_PRE2024_ED2022_03_21,
+    CSS_D848_4_PRE2024_ED2023_12_31,
+    CSS_D848_4_PRE2024_ED2024_01_01,
+    CSS_D848_5_ED2021_01_01,
+    CSS_D848_5_ED2021_03_25,
+    CSS_D848_5_ED2021_06_01,
+    CSS_D848_5_ED2022_03_21,
+    CSS_D848_5_ED2023_12_31,
+    CSS_D848_5_ED2024_01_01,
+    CSS_D848_5_ED2024_07_01,
+    CSS_D848_5_ED2025_01_01,
+    CSS_D848_5_ED2025_02_28,
+    CSS_D848_5_ED2025_03_31,
+    CSS_D848_5_ED2026_04_01,
+    CSS_D848_5_ED2026_06_27,
+    CSS_R848_1_ED2021_01_01,
+    CSS_R848_1_ED2021_03_25,
+    CSS_R848_1_ED2021_06_01,
+    CSS_R848_1_ED2022_03_21,
+    CSS_R848_1_ED2023_12_31,
+    CSS_R848_1_ED2024_01_01,
+    CSS_R848_1_ED2024_07_01,
+    CSS_R848_1_ED2025_01_01,
+    CSS_R848_1_ED2025_02_28,
+    CSS_R848_1_ED2025_03_31,
+    CSS_R848_1_ED2026_04_01,
+    CSS_R848_1_ED2026_06_27,
+    Organisme,
+};
+
+pub relation trimestre_stats_emetteur(o: Organisme, s: Organisme, trimestre: Date) kind empirical {
+    key(o, s, trimestre);
+    label fr official "trimestre clos, émetteur CNAF/CCMSA vers service statistique (D. 848-1; fait retenu)";
+    label en unofficial "closed quarter, CNAF/CCMSA emitter to stats service (D. 848-1; retained fact)";
+}
+
+pub relation stats_trimestre_transmises(o: Organisme, s: Organisme, trimestre: Date) kind institutional {
+    key(o, s, trimestre);
+    label fr official "données trimestrielles transmises à une date d'effet (D. 848-1)";
+    label en unofficial "quarterly data transmitted on a performance date (D. 848-1)";
+}
+
+pub relation trimestre_item1_effectifs(o: Organisme, s: Organisme, t: Date) kind empirical {
+    key(o, s, t);
+    label fr official "T1°: effectifs et caractéristiques des bénéficiaires et ayants droit en fin de trimestre, revenus initiaux et prestations (D. 848-1; fait retenu)";
+    label en unofficial "Q1°: quarter-end beneficiary counts, traits, initial income and benefits (D. 848-1; retained fact)";
+}
+
+pub relation trimestre_item2_mensuels(o: Organisme, s: Organisme, t: Date) kind empirical {
+    key(o, s, t);
+    label fr official "T2°: effectifs des bénéficiaires et ayants droit à la fin de chaque mois du trimestre (D. 848-1; fait retenu)";
+    label en unofficial "Q2°: month-end beneficiary counts of the quarter (D. 848-1; retained fact)";
+}
+
+pub relation trimestre_item3_statut_emploi(o: Organisme, s: Organisme, t: Date) kind empirical {
+    key(o, s, t);
+    label fr official "T3°: effectifs et caractéristiques ayant changé de statut au regard de l'emploi au cours du trimestre (D. 848-1; fait retenu)";
+    label en unofficial "Q3°: counts and traits of employment-status changers of the quarter (D. 848-1; retained fact)";
+}
+
+pub relation trimestre_item4_mouvements(o: Organisme, s: Organisme, t: Date) kind empirical {
+    key(o, s, t);
+    label fr official "T4°: caractéristiques des entrés, suspendus et sortis à chaque fin de mois et motifs de sortie (D. 848-1; fait retenu)";
+    label en unofficial "Q4°: traits of entries, suspensions, exits each month-end and exit reasons (D. 848-1; retained fact)";
+}
+
+pub relation trimestre_item5_depenses(o: Organisme, s: Organisme, t: Date) kind empirical {
+    key(o, s, t);
+    label fr official "T5°: dépenses afférentes à l'allocation de la prime d'activité (D. 848-1; fait retenu)";
+    label en unofficial "Q5°: expenditure on the bonus allocation (D. 848-1; retained fact)";
+}
+
+pub relation donnees_trimestre_completes(o: Organisme, s: Organisme, t: Date) kind institutional {
+    key(o, s, t);
+    label fr official "données trimestrielles complètes: 1°..5° sur le trimestre précédent (D. 848-1)";
+    label en unofficial "complete quarterly data: 1°..5° on the previous quarter (D. 848-1)";
+}
+
+pub relation transmission_trimestre_effectuee(o: Organisme, s: Organisme, t: Date, date: Date) kind empirical {
+    key(o, s, t);
+    label fr official "transmission des données du trimestre effectuée à la date (D. 848-1; fait retenu)";
+    label en unofficial "quarter-data transmission performed on the date (D. 848-1; retained fact)";
+}
+
+pub relation trimestre_q4(t: Date) kind empirical {
+    key(t);
+    label fr official "le trimestre de référence est le dernier de l'année civile (D. 848-1; fait retenu)";
+    label en unofficial "the reference quarter is the last of the civil year (D. 848-1; retained fact)";
+}
+
+pub relation trimestre_non_q4(t: Date) kind empirical {
+    key(t);
+    label fr official "le trimestre de référence n'est pas le dernier de l'année civile (D. 848-1; fait retenu)";
+    label en unofficial "the reference quarter is not the last of the civil year (D. 848-1; retained fact)";
+}
+
+pub relation transmission_trimestre_dans_delai(o: Organisme, s: Organisme, t: Date) kind institutional {
+    key(o, s, t);
+    label fr official "transmission trimestrielle dans le délai légal, T4 jusqu'en avril (D. 848-1)";
+    label en unofficial "quarterly transmission within the statutory deadline, Q4 through April (D. 848-1)";
+}
+
+pub relation transmission_trimestre_conforme(o: Organisme, s: Organisme, t: Date) kind institutional {
+    key(o, s, t);
+    label fr official "transmission trimestrielle conforme: complète et dans le délai (D. 848-1)";
+    label en unofficial "conforming quarterly transmission: complete and timely (D. 848-1)";
+}
+
+@source(
+    CSS_D848_1_ED2021_01_01,
+    CSS_D848_1_ED2021_03_25,
+    CSS_D848_1_ED2021_06_01,
+    CSS_D848_1_ED2022_03_21,
+    CSS_D848_1_ED2023_12_31,
+    CSS_D848_1_ED2024_01_01,
+    CSS_D848_1_ED2024_07_01,
+    CSS_D848_1_ED2025_01_01,
+    CSS_D848_1_ED2025_02_28,
+    CSS_D848_1_ED2025_03_31,
+    CSS_D848_1_ED2026_04_01,
+    CSS_D848_1_ED2026_06_27)
+rule TrimestreTransmisSiEffectue(o: Organisme, s: Organisme, t: Date, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "transmission effectuée vaut données transmises (D. 848-1)";
+    label en unofficial "performed transmission counts as transmitted data (D. 848-1)";
+    when transmission_trimestre_effectuee(o, s, t, date);
+    then stats_trimestre_transmises(o, s, t);
+}
+
+@source(
+    CSS_D848_1_ED2021_01_01,
+    CSS_D848_1_ED2021_03_25,
+    CSS_D848_1_ED2021_06_01,
+    CSS_D848_1_ED2022_03_21,
+    CSS_D848_1_ED2023_12_31,
+    CSS_D848_1_ED2024_01_01,
+    CSS_D848_1_ED2024_07_01,
+    CSS_D848_1_ED2025_01_01,
+    CSS_D848_1_ED2025_02_28,
+    CSS_D848_1_ED2025_03_31,
+    CSS_D848_1_ED2026_04_01,
+    CSS_D848_1_ED2026_06_27)
+rule DonneesTrimestreCompletes(o: Organisme, s: Organisme, t: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "données complètes: 1°..5° établies (D. 848-1)";
+    label en unofficial "complete data: 1°..5° established (D. 848-1)";
+    when trimestre_item1_effectifs(o, s, t) and trimestre_item2_mensuels(o, s, t)
+        and trimestre_item3_statut_emploi(o, s, t)
+        and trimestre_item4_mouvements(o, s, t)
+        and trimestre_item5_depenses(o, s, t);
+    then donnees_trimestre_completes(o, s, t);
+}
+
+@source(
+    CSS_D848_1_ED2021_01_01,
+    CSS_D848_1_ED2021_03_25,
+    CSS_D848_1_ED2021_06_01,
+    CSS_D848_1_ED2022_03_21,
+    CSS_D848_1_ED2023_12_31,
+    CSS_D848_1_ED2024_01_01,
+    CSS_D848_1_ED2024_07_01,
+    CSS_D848_1_ED2025_01_01,
+    CSS_D848_1_ED2025_02_28,
+    CSS_D848_1_ED2025_03_31,
+    CSS_D848_1_ED2026_04_01,
+    CSS_D848_1_ED2026_06_27)
+rule TrimestreDelaiCourant(o: Organisme, s: Organisme, t: Date, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "T1-T3: transmission avant la fin du trimestre en cours (D. 848-1)";
+    label en unofficial "Q1-Q3: transmission before the end of the current quarter (D. 848-1)";
+    when transmission_trimestre_effectuee(o, s, t, date)
+        and trimestre_non_q4(t)
+        and not_known(trimestre_q4(t))
+        and date < add_calendar_period(t, 6 calendar_month);
+    then transmission_trimestre_dans_delai(o, s, t);
+}
+
+@source(
+    CSS_D848_1_ED2021_01_01,
+    CSS_D848_1_ED2021_03_25,
+    CSS_D848_1_ED2021_06_01,
+    CSS_D848_1_ED2022_03_21,
+    CSS_D848_1_ED2023_12_31,
+    CSS_D848_1_ED2024_01_01,
+    CSS_D848_1_ED2024_07_01,
+    CSS_D848_1_ED2025_01_01,
+    CSS_D848_1_ED2025_02_28,
+    CSS_D848_1_ED2025_03_31,
+    CSS_D848_1_ED2026_04_01,
+    CSS_D848_1_ED2026_06_27)
+rule TrimestreDelaiQ4(o: Organisme, s: Organisme, t: Date, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "T4: transmission jusqu'au mois d'avril suivant (D. 848-1)";
+    label en unofficial "Q4: transmission through the following April (D. 848-1)";
+    when transmission_trimestre_effectuee(o, s, t, date)
+        and trimestre_q4(t)
+        and date < add_calendar_period(t, 7 calendar_month);
+    then transmission_trimestre_dans_delai(o, s, t);
+}
+
+@source(
+    CSS_D848_1_ED2021_01_01,
+    CSS_D848_1_ED2021_03_25,
+    CSS_D848_1_ED2021_06_01,
+    CSS_D848_1_ED2022_03_21,
+    CSS_D848_1_ED2023_12_31,
+    CSS_D848_1_ED2024_01_01,
+    CSS_D848_1_ED2024_07_01,
+    CSS_D848_1_ED2025_01_01,
+    CSS_D848_1_ED2025_02_28,
+    CSS_D848_1_ED2025_03_31,
+    CSS_D848_1_ED2026_04_01,
+    CSS_D848_1_ED2026_06_27)
+rule TransmissionTrimestreConforme(o: Organisme, s: Organisme, t: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "transmission conforme: complète et dans le délai (D. 848-1)";
+    label en unofficial "conforming transmission: complete and timely (D. 848-1)";
+    when donnees_trimestre_completes(o, s, t)
+        and transmission_trimestre_dans_delai(o, s, t);
+    then transmission_trimestre_conforme(o, s, t);
+}
+
+@source(
+    CSS_D848_1_ED2021_01_01,
+    CSS_D848_1_ED2021_03_25,
+    CSS_D848_1_ED2021_06_01,
+    CSS_D848_1_ED2022_03_21,
+    CSS_D848_1_ED2023_12_31,
+    CSS_D848_1_ED2024_01_01,
+    CSS_D848_1_ED2024_07_01,
+    CSS_D848_1_ED2025_01_01,
+    CSS_D848_1_ED2025_02_28,
+    CSS_D848_1_ED2025_03_31,
+    CSS_D848_1_ED2026_04_01,
+    CSS_D848_1_ED2026_06_27)
+rule DevoirTransmettreTrimestre(o: Organisme, s: Organisme, t: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "D10: transmission trimestrielle conforme 1°..5° (D. 848-1)";
+    label en unofficial "D10: conforming quarterly 1°..5° transmission (D. 848-1)";
+    when trimestre_stats_emetteur(o, s, t);
+    then duty TransmettreTrimestre {
+        bearer o;
+        beneficiary s;
+        maintain transmission_trimestre_conforme(o, s, t) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation annee_stats_emetteur(o: Organisme, s: Organisme, annee: Integer) kind empirical {
+    key(o, s, annee);
+    label fr official "année close, émetteur vers service statistique (D. 848-2/3, R. 848-1; fait retenu)";
+    label en unofficial "closed year, emitter to stats service (D. 848-2/3, R. 848-1; retained fact)";
+}
+
+pub relation stats_annuel_transmises(o: Organisme, s: Organisme, annee: Integer) kind institutional {
+    key(o, s, annee);
+    label fr official "données annuelles transmises à une date d'effet (D. 848-2)";
+    label en unofficial "annual data transmitted on a performance date (D. 848-2)";
+}
+
+pub relation annuelle_item1_31dec(o: Organisme, s: Organisme, annee: Integer) kind empirical {
+    key(o, s, annee);
+    label fr official "A1°: caractéristiques des bénéficiaires et ayants droit au 31 décembre précédent (D. 848-2; fait retenu)";
+    label en unofficial "Y1°: traits of beneficiaries and dependants on the previous Dec 31 (D. 848-2; retained fact)";
+}
+
+pub relation annuelle_item2_entres(o: Organisme, s: Organisme, annee: Integer) kind empirical {
+    key(o, s, annee);
+    label fr official "A2°: caractéristiques des entrés de l'année précédente toujours présents au 31 décembre (D. 848-2; fait retenu)";
+    label en unofficial "Y2°: traits of previous-year entries still present on Dec 31 (D. 848-2; retained fact)";
+}
+
+pub relation annuelle_item3_depenses(o: Organisme, s: Organisme, annee: Integer) kind empirical {
+    key(o, s, annee);
+    label fr official "A3°: dépenses afférentes à l'allocation de la prime d'activité (D. 848-2; fait retenu)";
+    label en unofficial "Y3°: expenditure on the bonus allocation (D. 848-2; retained fact)";
+}
+
+pub relation annuelle_item4_instruction(o: Organisme, s: Organisme, annee: Integer) kind empirical {
+    key(o, s, annee);
+    label fr official "A4°: suivi de l'instruction administrative des demandes de la prime (D. 848-2; fait retenu)";
+    label en unofficial "Y4°: follow-up of the administrative handling of bonus claims (D. 848-2; retained fact)";
+}
+
+pub relation annuelle_item5_service(o: Organisme, s: Organisme, annee: Integer) kind empirical {
+    key(o, s, annee);
+    label fr official "A5°: mise en œuvre du service de l'allocation (D. 848-2; fait retenu)";
+    label en unofficial "Y5°: implementation of the benefit payment service (D. 848-2; retained fact)";
+}
+
+pub relation donnees_annuelles_completes(o: Organisme, s: Organisme, annee: Integer) kind institutional {
+    key(o, s, annee);
+    label fr official "données annuelles complètes: 1°..5° sur l'année précédente (D. 848-2)";
+    label en unofficial "complete annual data: 1°..5° on the previous year (D. 848-2)";
+}
+
+pub relation transmission_annuelle_effectuee(o: Organisme, s: Organisme, annee: Integer, date: Date) kind empirical {
+    key(o, s, annee);
+    label fr official "transmission des données de l'année effectuée à la date (D. 848-2; fait retenu)";
+    label en unofficial "year-data transmission performed on the date (D. 848-2; retained fact)";
+}
+
+pub relation echeance_avril_stats(annee: Integer, limite: Date) kind empirical {
+    key(annee);
+    label fr official "échéance fin avril suivant l'année de référence, déposée (D. 848-2; fait retenu)";
+    label en unofficial "end-of-April deadline after the reference year, filed (D. 848-2; retained fact)";
+}
+
+pub relation transmission_annuelle_dans_delai(o: Organisme, s: Organisme, annee: Integer) kind institutional {
+    key(o, s, annee);
+    label fr official "transmission annuelle avant la fin du mois d'avril (D. 848-2)";
+    label en unofficial "annual transmission before the end of April (D. 848-2)";
+}
+
+pub relation transmission_annuelle_conforme(o: Organisme, s: Organisme, annee: Integer) kind institutional {
+    key(o, s, annee);
+    label fr official "transmission annuelle conforme: complète et dans le délai (D. 848-2)";
+    label en unofficial "conforming annual transmission: complete and timely (D. 848-2)";
+}
+
+@source(
+    CSS_D848_2_ED2021_01_01,
+    CSS_D848_2_ED2021_03_25,
+    CSS_D848_2_ED2021_06_01,
+    CSS_D848_2_ED2022_03_21,
+    CSS_D848_2_ED2023_12_31,
+    CSS_D848_2_ED2024_01_01,
+    CSS_D848_2_ED2024_07_01,
+    CSS_D848_2_ED2025_01_01,
+    CSS_D848_2_ED2025_02_28,
+    CSS_D848_2_ED2025_03_31,
+    CSS_D848_2_ED2026_04_01,
+    CSS_D848_2_ED2026_06_27)
+rule AnnuelTransmisSiEffectue(o: Organisme, s: Organisme, a: Integer, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "transmission effectuée vaut données transmises (D. 848-2)";
+    label en unofficial "performed transmission counts as transmitted data (D. 848-2)";
+    when transmission_annuelle_effectuee(o, s, a, date);
+    then stats_annuel_transmises(o, s, a);
+}
+
+@source(
+    CSS_D848_2_ED2021_01_01,
+    CSS_D848_2_ED2021_03_25,
+    CSS_D848_2_ED2021_06_01,
+    CSS_D848_2_ED2022_03_21,
+    CSS_D848_2_ED2023_12_31,
+    CSS_D848_2_ED2024_01_01,
+    CSS_D848_2_ED2024_07_01,
+    CSS_D848_2_ED2025_01_01,
+    CSS_D848_2_ED2025_02_28,
+    CSS_D848_2_ED2025_03_31,
+    CSS_D848_2_ED2026_04_01,
+    CSS_D848_2_ED2026_06_27)
+rule DonneesAnnuellesCompletes(o: Organisme, s: Organisme, a: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "données complètes: 1°..5° établies (D. 848-2)";
+    label en unofficial "complete data: 1°..5° established (D. 848-2)";
+    when annuelle_item1_31dec(o, s, a) and annuelle_item2_entres(o, s, a)
+        and annuelle_item3_depenses(o, s, a)
+        and annuelle_item4_instruction(o, s, a)
+        and annuelle_item5_service(o, s, a);
+    then donnees_annuelles_completes(o, s, a);
+}
+
+@source(
+    CSS_D848_2_ED2021_01_01,
+    CSS_D848_2_ED2021_03_25,
+    CSS_D848_2_ED2021_06_01,
+    CSS_D848_2_ED2022_03_21,
+    CSS_D848_2_ED2023_12_31,
+    CSS_D848_2_ED2024_01_01,
+    CSS_D848_2_ED2024_07_01,
+    CSS_D848_2_ED2025_01_01,
+    CSS_D848_2_ED2025_02_28,
+    CSS_D848_2_ED2025_03_31,
+    CSS_D848_2_ED2026_04_01,
+    CSS_D848_2_ED2026_06_27)
+rule AnnuelleDansDelai(o: Organisme, s: Organisme, a: Integer, date: Date, limite: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "transmission annuelle avant la fin du mois d'avril (D. 848-2)";
+    label en unofficial "annual transmission before the end of April (D. 848-2)";
+    when transmission_annuelle_effectuee(o, s, a, date)
+        and echeance_avril_stats(a, limite)
+        and date <= limite;
+    then transmission_annuelle_dans_delai(o, s, a);
+}
+
+@source(
+    CSS_D848_2_ED2021_01_01,
+    CSS_D848_2_ED2021_03_25,
+    CSS_D848_2_ED2021_06_01,
+    CSS_D848_2_ED2022_03_21,
+    CSS_D848_2_ED2023_12_31,
+    CSS_D848_2_ED2024_01_01,
+    CSS_D848_2_ED2024_07_01,
+    CSS_D848_2_ED2025_01_01,
+    CSS_D848_2_ED2025_02_28,
+    CSS_D848_2_ED2025_03_31,
+    CSS_D848_2_ED2026_04_01,
+    CSS_D848_2_ED2026_06_27)
+rule TransmissionAnnuelleConforme(o: Organisme, s: Organisme, a: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "transmission conforme: complète et dans le délai (D. 848-2)";
+    label en unofficial "conforming transmission: complete and timely (D. 848-2)";
+    when donnees_annuelles_completes(o, s, a)
+        and transmission_annuelle_dans_delai(o, s, a);
+    then transmission_annuelle_conforme(o, s, a);
+}
+
+@source(
+    CSS_D848_2_ED2021_01_01,
+    CSS_D848_2_ED2021_03_25,
+    CSS_D848_2_ED2021_06_01,
+    CSS_D848_2_ED2022_03_21,
+    CSS_D848_2_ED2023_12_31,
+    CSS_D848_2_ED2024_01_01,
+    CSS_D848_2_ED2024_07_01,
+    CSS_D848_2_ED2025_01_01,
+    CSS_D848_2_ED2025_02_28,
+    CSS_D848_2_ED2025_03_31,
+    CSS_D848_2_ED2026_04_01,
+    CSS_D848_2_ED2026_06_27)
+rule DevoirTransmettreAnnuel(o: Organisme, s: Organisme, a: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "D11: transmission annuelle conforme 1°..5° (D. 848-2)";
+    label en unofficial "D11: conforming annual 1°..5° transmission (D. 848-2)";
+    when annee_stats_emetteur(o, s, a);
+    then duty TransmettreAnnuel {
+        bearer o;
+        beneficiary s;
+        maintain transmission_annuelle_conforme(o, s, a) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation infos_l8463_transmises(o: Organisme, s: Organisme, annee: Integer) kind empirical {
+    key(o, s, annee);
+    label fr official "informations L. 846-3 transmises (D. 848-3; fait retenu)";
+    label en unofficial "L. 846-3 information transmitted (D. 848-3; retained fact)";
+}
+
+@source(
+    CSS_D848_3_ED2021_01_01,
+    CSS_D848_3_ED2021_03_25,
+    CSS_D848_3_ED2021_06_01,
+    CSS_D848_3_ED2022_03_21,
+    CSS_D848_3_ED2023_12_31,
+    CSS_D848_3_ED2024_01_01,
+    CSS_D848_3_ED2024_07_01,
+    CSS_D848_3_ED2025_01_01,
+    CSS_D848_3_ED2025_02_28,
+    CSS_D848_3_ED2025_03_31,
+    CSS_D848_3_ED2026_04_01,
+    CSS_D848_3_ED2026_06_27)
+rule DevoirTransmettreL8463(o: Organisme, s: Organisme, a: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "D12: informations L. 846-3 transmises (D. 848-3)";
+    label en unofficial "D12: L. 846-3 information transmitted (D. 848-3)";
+    when annee_stats_emetteur(o, s, a);
+    then duty TransmettreL8463 {
+        bearer o;
+        beneficiary s;
+        maintain infos_l8463_transmises(o, s, a) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation resultats_publies(o: Organisme, annee: Integer) kind empirical {
+    key(o, annee);
+    label fr official "résultats d'exploitation publiés par l'organisme (D. 848-4; fait retenu)";
+    label en unofficial "exploitation results published by the organ (D. 848-4; retained fact)";
+}
+
+pub relation acteur_publication_pre2024(o: Organisme) kind empirical {
+    key(o);
+    label fr official "services statistiques ministériels, CNAF, CCMSA ou Pôle emploi (D. 848-4 avant 2024-07-01; fait retenu)";
+    label en unofficial "ministerial stats service, CNAF, CCMSA or Pôle emploi (D. 848-4 before 2024-07-01; retained fact)";
+}
+
+pub relation acteur_publication_2024(o: Organisme) kind empirical {
+    key(o);
+    label fr official "services statistiques ministériels, CNAF, CCMSA ou France Travail (D. 848-4 depuis 2024-07-01; fait retenu)";
+    label en unofficial "ministerial stats service, CNAF, CCMSA or France Travail (D. 848-4 from 2024-07-01; retained fact)";
+}
+
+pub relation exercice_stats_publication(annee: Integer) kind empirical {
+    key(annee);
+    label fr official "année de référence de la publication régulière (D. 848-4; fait retenu)";
+    label en unofficial "reference year of the regular publication (D. 848-4; retained fact)";
+}
+
+pub relation publication_stats_assuree(o: Organisme, annee: Integer) kind institutional {
+    key(o, annee);
+    label fr official "publication régulière assurée par l'acteur désigné par la loi (D. 848-4)";
+    label en unofficial "regular publication ensured by the statute-named actor (D. 848-4)";
+}
+
+pub relation publication_periodique_realisee(o: Organisme, annee: Integer) kind institutional {
+    key(o, annee);
+    label fr official "publication périodique réalisée par l'organisme (D. 848-4)";
+    label en unofficial "periodic publication performed by the organ (D. 848-4)";
+}
+
+@source(
+    CSS_D848_4_PRE2024_ED2021_01_01,
+    CSS_D848_4_PRE2024_ED2021_03_25,
+    CSS_D848_4_PRE2024_ED2021_06_01,
+    CSS_D848_4_PRE2024_ED2022_03_21,
+    CSS_D848_4_PRE2024_ED2023_12_31,
+    CSS_D848_4_PRE2024_ED2024_01_01)
+rule PublicationPoleEmploi(o: Organisme, a: Integer) strict {
+    effective [@2021-01-01, @2024-07-01);
+    label fr official "assurent la publication: services, CNAF, CCMSA, Pôle emploi (D. 848-4)";
+    label en unofficial "ensuring publication: services, CNAF, CCMSA, Pôle emploi (D. 848-4)";
+    when acteur_publication_pre2024(o) and exercice_stats_publication(a);
+    then publication_stats_assuree(o, a);
+}
+
+@source(
+    CSS_D848_4_ED2024_07_01,
+    CSS_D848_4_ED2025_01_01,
+    CSS_D848_4_ED2025_02_28,
+    CSS_D848_4_ED2025_03_31,
+    CSS_D848_4_ED2026_04_01,
+    CSS_D848_4_ED2026_06_27)
+rule PublicationFranceTravail(o: Organisme, a: Integer) strict {
+    effective [@2024-07-01, infinity);
+    label fr official "assurent la publication: services, CNAF, CCMSA, France Travail (D. 848-4)";
+    label en unofficial "ensuring publication: services, CNAF, CCMSA, France Travail (D. 848-4)";
+    when acteur_publication_2024(o) and exercice_stats_publication(a);
+    then publication_stats_assuree(o, a);
+}
+
+@source(
+    CSS_D848_4_ED2024_07_01,
+    CSS_D848_4_ED2025_01_01,
+    CSS_D848_4_ED2025_02_28,
+    CSS_D848_4_ED2025_03_31,
+    CSS_D848_4_ED2026_04_01,
+    CSS_D848_4_ED2026_06_27,
+    CSS_D848_4_PRE2024_ED2021_01_01,
+    CSS_D848_4_PRE2024_ED2021_03_25,
+    CSS_D848_4_PRE2024_ED2021_06_01,
+    CSS_D848_4_PRE2024_ED2022_03_21,
+    CSS_D848_4_PRE2024_ED2023_12_31,
+    CSS_D848_4_PRE2024_ED2024_01_01)
+rule PublicationRealisee(o: Organisme, a: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "résultats publiés: publication réalisée, preuve d'exécution (D. 848-4)";
+    label en unofficial "published results: performed publication, performance evidence (D. 848-4)";
+    when resultats_publies(o, a);
+    then publication_periodique_realisee(o, a);
+}
+
+pub relation arretes_conjoints_stats(annee: Integer) kind empirical {
+    key(annee);
+    label fr official "arrêtés conjoints fixant les listes pris (D. 848-5; fait retenu)";
+    label en unofficial "joint orders setting the lists taken (D. 848-5; retained fact)";
+}
+
+pub relation listes_stats_applicables(annee: Integer) kind institutional {
+    key(annee);
+    label fr official "listes statistiques applicables (D. 848-5)";
+    label en unofficial "applicable statistics lists (D. 848-5)";
+}
+
+@source(
+    CSS_D848_5_ED2021_01_01,
+    CSS_D848_5_ED2021_03_25,
+    CSS_D848_5_ED2021_06_01,
+    CSS_D848_5_ED2022_03_21,
+    CSS_D848_5_ED2023_12_31,
+    CSS_D848_5_ED2024_01_01,
+    CSS_D848_5_ED2024_07_01,
+    CSS_D848_5_ED2025_01_01,
+    CSS_D848_5_ED2025_02_28,
+    CSS_D848_5_ED2025_03_31,
+    CSS_D848_5_ED2026_04_01,
+    CSS_D848_5_ED2026_06_27)
+rule ListesArretesConjoints(a: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "listes fixées par arrêtés conjoints (D. 848-5)";
+    label en unofficial "lists set by joint orders (D. 848-5)";
+    when arretes_conjoints_stats(a);
+    then listes_stats_applicables(a);
+}
+
+pub relation infos_l8462_transmises(o: Organisme, s: Organisme, annee: Integer) kind empirical {
+    key(o, s, annee);
+    label fr official "informations L. 846-2 transmises (R. 848-1; fait retenu)";
+    label en unofficial "L. 846-2 information transmitted (R. 848-1; retained fact)";
+}
+
+@source(
+    CSS_R848_1_ED2021_01_01,
+    CSS_R848_1_ED2021_03_25,
+    CSS_R848_1_ED2021_06_01,
+    CSS_R848_1_ED2022_03_21,
+    CSS_R848_1_ED2023_12_31,
+    CSS_R848_1_ED2024_01_01,
+    CSS_R848_1_ED2024_07_01,
+    CSS_R848_1_ED2025_01_01,
+    CSS_R848_1_ED2025_02_28,
+    CSS_R848_1_ED2025_03_31,
+    CSS_R848_1_ED2026_04_01,
+    CSS_R848_1_ED2026_06_27)
+rule DevoirTransmettreL8462(o: Organisme, s: Organisme, a: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "D14: informations L. 846-2 transmises (R. 848-1)";
+    label en unofficial "D14: L. 846-2 information transmitted (R. 848-1)";
+    when annee_stats_emetteur(o, s, a);
+    then duty TransmettreL8462 {
+        bearer o;
+        beneficiary s;
+        maintain infos_l8462_transmises(o, s, a) during [@2021-01-01, infinity);
+    };
+}

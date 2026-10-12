@@ -1,0 +1,33 @@
+// Single dependent child aged sixteen who is not the eldest
+// (D. 755-5, II): 58.80 + 5.67% x 1 000.00 = 56.70, total due 115.50.
+// Base 1 000.00 EUR is a stated assumption (B-PFAF-BMAF-DOM).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-dom-seize-ans" {
+    given {
+        context { deadline_policy DOM_AGE_ATTEINT; decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "dom16-01": territoire(entity_ref("urn:fr:pf-af:case:dom-seize-ans"), GUYANE) { origin case_input; }
+        assert "dom16-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:dom-seize-ans"), 1) { origin case_input; }
+        assert "dom16-03": base_dom_retenue(entity_ref("urn:fr:pf-af:case:dom-seize-ans"), 1000.00 EUR) { origin case_input; }
+        assert "dom16-04": forfait_total_menage(entity_ref("urn:fr:pf-af:case:dom-seize-ans"), 0 EUR) { origin case_input; }
+        assert "dom16-05": foyer_du_cas(entity_ref("urn:fr:pf-af:case:dom-seize-ans")) { origin case_input; }
+        assert "dom16-06": mois_droit(@2023-06-01) { origin case_input; }
+        assert "dom16-07": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:dom-seize-ans"), entity_ref("urn:fr:pf-af:child:grand-sz")) { origin case_input; }
+        assert "dom16-08": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:dom-seize-ans"), entity_ref("urn:fr:pf-af:child:petit-sz")) { origin case_input; }
+        assert "dom16-09": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:petit-sz")) { origin case_input; }
+        assert "dom16-10": date_naissance(entity_ref("urn:fr:pf-af:child:grand-sz"), @2000-04-01) { origin case_input; }
+        assert "dom16-11": date_naissance(entity_ref("urn:fr:pf-af:child:petit-sz"), @2006-03-01) { origin case_input; }
+        assert "dom16-12": enfant_du_cas(entity_ref("urn:fr:pf-af:child:grand-sz")) { origin case_input; }
+        assert "dom16-13": enfant_du_cas(entity_ref("urn:fr:pf-af:child:petit-sz")) { origin case_input; }
+    }
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:child:petit-sz"), 56.70 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:dom-seize-ans"), 115.50 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

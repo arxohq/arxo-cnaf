@@ -1,0 +1,17 @@
+// No renewal for the same aided person alone: the right stands but
+// no leave for another aided person is recorded — no renewal.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-renouvellement-meme-aide" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-rm-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-rm"), entity_ref("urn:fr:css:ajpa:case:aide-rm")) { origin case_input; }
+        assert "ajpa-rm-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-rm")) { origin adjudicated; }
+    }
+    evaluate truth(renouvellement_accorde(entity_ref("urn:fr:css:ajpa:case:aidant-rm"), entity_ref("urn:fr:css:ajpa:case:aide-rm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

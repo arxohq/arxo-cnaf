@@ -1,0 +1,36 @@
+// MPI boundary at category 1: the isolated carer is eligible (D. 541-3
+// reason met) but D. 541-4 sets no MPI amount for the first category, so
+// no MPI record and no total either way. Boundary of the amount table
+// (B-PFAEEH-MPI-CAT1): the supplement (96.00) is due, the total cannot
+// close. See REPORT.md.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-mpi-categorie-1-sans-montant" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "aeeh-mpi1-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:isole-cat1"), entity_ref("urn:fr:pf-aeeh:case:enfant-mpi1")) { origin case_input; }
+        assert "aeeh-mpi1-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-mpi1")) { origin adjudicated; }
+        assert "aeeh-mpi1-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-mpi1"), 400.00 EUR) { origin case_input; }
+        assert "aeeh-mpi1-04": categorie_attribuee(entity_ref("urn:fr:pf-aeeh:case:enfant-mpi1"), CATEGORIE_1) { origin adjudicated; }
+        assert "aeeh-mpi1-05": personne_isolee(entity_ref("urn:fr:pf-aeeh:case:isole-cat1")) { origin case_input; }
+        assert "aeeh-mpi1-06": complement_contrainte_activite(entity_ref("urn:fr:pf-aeeh:case:enfant-mpi1")) { origin adjudicated; }
+    }
+    evaluate truth(mpi_eligible(entity_ref("urn:fr:pf-aeeh:case:enfant-mpi1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-mpi1"), 96.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-mpi1"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_total(entity_ref("urn:fr:pf-aeeh:case:enfant-mpi1"), 224.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,419 @@
+// Monthly AF by resource band (L521-1 bands, D521-1 rates, D521-3
+// ceilings, D521-4 resource link).
+//
+// DEONTIC MAP: computation only - the articles set calculation bases.
+// No must/must-not positions here; the duty to pay lives in
+// 07-devoir-versement.law. The map records two evaluative channels:
+// - ressources_menage (D521-4 -> R532-3..8 assessment upstream): the euro
+//   figure arrives established (fact with provenance), its unpacking
+//   belongs to fr.tax.income_for_pf (B-PFAF-ABATTEMENTS);
+// - counts (nb_enfants_charge, nb_majorations_*): established by the fund;
+//   the input contract requires consistency with the per-child facts
+//   (B-PFAF-COMPTAGE: the engine has no fold, cf. APL personnes_a_charge).
+//
+// MONEY FORMS. All multiplications are Money x Decimal (bareme fractions
+// 0.32, never "32 %", APL convention) and divisions Money / Decimal
+// ("/ 12.0", APL convention). Money x Integer appears in the ceiling
+// increment and the base formula; if the engine rejects it, the two
+// isolated functions plafond_base_montant / base_af_montant switch to
+// param-backed if-chains (APL parts_applicables pattern).
+//
+// ПЛАФОНЫ (D-81). D. 521-3 III ревалоризует 1 января «les montants des
+// plafonds et de leur majoration respective»: база и надбавка за ребёнка —
+// отдельные суммы, каждая со своим округлением (DSS печатает их порознь:
+// «plafond de base de X € majoré de Y € par enfant à charge»). Плафон
+// строится как база + надбавка × n. До первой ревалоризации (2015-07-01 —
+// 2016-01-01) база и надбавка — суммы самого D. 521-3 I/II (параметры
+// PlafondBaseI/II, MajorationPlafondParEnfant); с 2016-01-01 — входы
+// plafond_base_tranche1/2_publie и majoration_plafond_enfant_publiee:
+// суммы инструкции DSS на 1 января года права (их таблицы — «du 1er
+// janvier N au 31 décembre N»), происхождение — фрагменты PLAFOND_AF
+// пакета fr.css.revalorisation. Прежний путь «номинал × коэффициент»
+// снят: один коэффициент не воспроизводит раздельно округлённые суммы.
+
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+use self::{
+    BandeRessources,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03,
+    CSS_D521_3,
+    CSS_D521_3_ED2026_03,
+    CSS_D521_3_PRE2022,
+    CSS_D521_3_PRE2022_ED2015_10,
+    CSS_D521_3_PRE2022_ED2021_09,
+    CSS_D521_4,
+    CSS_D521_4_ED2015_10,
+    CSS_D521_4_ED2021_09,
+    CSS_D521_4_ED2022_01,
+    CSS_D521_4_ED2026_03,
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    Territoire,
+    af_droit_ouvert,
+    af_montant_du,
+    arrondi_lignes_dss,
+    bande_ressources,
+    bmaf_retenu,
+    complement_degressif,
+    forfait_total_menage,
+    majoration_plafond_enfant_publiee,
+    montant_mensuel_af,
+    nb_enfants_charge,
+    nb_majorations_demi,
+    nb_majorations_pleines,
+    plafond1_applicable,
+    plafond2_applicable,
+    plafond_base_tranche1_publie,
+    plafond_base_tranche2_publie,
+    ressources_menage,
+    territoire,
+};
+
+function taux_rang2(b: BandeRessources) -> Decimal = match b {
+    BANDE_1 => TauxAfRang2Bande1;
+    BANDE_2 => TauxAfRang2Bande2;
+    BANDE_3 => TauxAfRang2Bande3;
+};
+
+function taux_rang3plus(b: BandeRessources) -> Decimal = match b {
+    BANDE_1 => TauxAfRang3PlusBande1;
+    BANDE_2 => TauxAfRang3PlusBande2;
+    BANDE_3 => TauxAfRang3PlusBande3;
+};
+
+function taux_majo(b: BandeRessources) -> Decimal = match b {
+    BANDE_1 => TauxMajorationBande1;
+    BANDE_2 => TauxMajorationBande2;
+    BANDE_3 => TauxMajorationBande3;
+};
+
+function plafond_base_montant(base: Money, incr: Money, n: Integer) -> Money =
+    base + incr * n;
+
+// Exact % x BMAF products (legal formula; OpenFisca-compatible). Served
+// amounts are rounded to the centime at the due rule below (DSS/2B/2026/46
+// annexe: published amounts rounded to the nearest centime).
+// D-83: под прочтением ArrondiLignesDss (08-lecture-arrondi-lignes.law) месячная
+// сумма и douzième считаются по округлённым строкам таблицы DSS; базовые правила
+// MontantMensuel и ComplementPlafond1/2 тогда молчат (not_known маркера).
+function base_af_montant(n: Integer, t2: Decimal, t3: Decimal, bmaf: Money) -> Money =
+    t2 * bmaf + t3 * bmaf * (n - 2);
+
+function majo_montant(kplein: Integer, kdemi: Integer, t: Decimal, bmaf: Money) -> Money =
+    t * bmaf * kplein + t * bmaf * kdemi / 2.0;
+
+@source(
+    CSS_D521_4,
+    CSS_D521_4_ED2015_10,
+    CSS_D521_4_ED2021_09,
+    CSS_D521_4_ED2022_01,
+    CSS_D521_4_ED2026_03)
+rule RessourcesRetenues(p: fr.pf.core::Personne, montant: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "les ressources du ménage sont appréciées dans les conditions des articles R. 532-3 à R. 532-8";
+    label en unofficial "household resources assessed under R. 532-3 to R. 532-8";
+    when ressources_menage(p, montant);
+    then ressources_retenues(p, montant);
+}
+
+relation ressources_retenues(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "ressources retenues pour le barème (D. 521-4)";
+    label en unofficial "resources retained for the scale (D. 521-4)";
+}
+
+@source(
+    CSS_D521_3_PRE2022,
+    CSS_D521_3_PRE2022_ED2015_10)
+rule Plafond1Nominal(p: fr.pf.core::Personne, n: Integer) strict {
+    effective [@2015-07-01, @2016-01-01);
+    label fr official "plafond du I avant la première revalorisation: montants fixés par le I de D. 521-3, majorés par enfant à charge";
+    label en unofficial "I ceiling before the first revaluation: amounts set by D. 521-3 I, raised per dependent child";
+    when nb_enfants_charge(p, n);
+    then plafond1_applicable(p, plafond_base_montant(PlafondBaseI, MajorationPlafondParEnfant, n));
+}
+
+@source(
+    CSS_D521_3_PRE2022,
+    CSS_D521_3_PRE2022_ED2015_10,
+    CSS_D521_3_PRE2022_ED2021_09)
+rule Plafond1Arrete(p: fr.pf.core::Personne, n: Integer, base: Money, majoration: Money) strict {
+    effective [@2016-01-01, @2022-01-01);
+    label fr official "plafond du I applicable avant 2022: plafond de base et majoration par enfant revalorisés par arrêté au 1er janvier, tels que publiés";
+    label en unofficial "pre-2022 applicable I ceiling: base ceiling and per-child increment revalued by arrete on 1 January, as published";
+    when nb_enfants_charge(p, n) and plafond_base_tranche1_publie(p, base)
+        and majoration_plafond_enfant_publiee(p, majoration);
+    then plafond1_applicable(p, plafond_base_montant(base, majoration, n));
+}
+
+@source(
+    CSS_D521_3,
+    CSS_D521_3_ED2026_03)
+rule Plafond1Automatique(p: fr.pf.core::Personne, n: Integer, base: Money, majoration: Money) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "plafond du I applicable: plafond de base et majoration par enfant revalorisés au 1er janvier (III automatique depuis le décret 2021-1955), tels que publiés";
+    label en unofficial "applicable I ceiling: base ceiling and per-child increment revalued on 1 January (automatic III since decree 2021-1955), as published";
+    when nb_enfants_charge(p, n) and plafond_base_tranche1_publie(p, base)
+        and majoration_plafond_enfant_publiee(p, majoration);
+    then plafond1_applicable(p, plafond_base_montant(base, majoration, n));
+}
+
+@source(
+    CSS_D521_3_PRE2022,
+    CSS_D521_3_PRE2022_ED2015_10)
+rule Plafond2Nominal(p: fr.pf.core::Personne, n: Integer) strict {
+    effective [@2015-07-01, @2016-01-01);
+    label fr official "plafond du II avant la première revalorisation: montants fixés par le II de D. 521-3, majorés par enfant à charge";
+    label en unofficial "II ceiling before the first revaluation: amounts set by D. 521-3 II, raised per dependent child";
+    when nb_enfants_charge(p, n);
+    then plafond2_applicable(p, plafond_base_montant(PlafondBaseII, MajorationPlafondParEnfant, n));
+}
+
+@source(
+    CSS_D521_3_PRE2022,
+    CSS_D521_3_PRE2022_ED2015_10,
+    CSS_D521_3_PRE2022_ED2021_09)
+rule Plafond2Arrete(p: fr.pf.core::Personne, n: Integer, base: Money, majoration: Money) strict {
+    effective [@2016-01-01, @2022-01-01);
+    label fr official "plafond du II applicable avant 2022: plafond de base et majoration par enfant revalorisés par arrêté au 1er janvier, tels que publiés";
+    label en unofficial "pre-2022 applicable II ceiling: base ceiling and per-child increment revalued by arrete on 1 January, as published";
+    when nb_enfants_charge(p, n) and plafond_base_tranche2_publie(p, base)
+        and majoration_plafond_enfant_publiee(p, majoration);
+    then plafond2_applicable(p, plafond_base_montant(base, majoration, n));
+}
+
+@source(
+    CSS_D521_3,
+    CSS_D521_3_ED2026_03)
+rule Plafond2Automatique(p: fr.pf.core::Personne, n: Integer, base: Money, majoration: Money) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "plafond du II applicable: plafond de base et majoration par enfant revalorisés au 1er janvier (III automatique depuis le décret 2021-1955), tels que publiés";
+    label en unofficial "applicable II ceiling: base ceiling and per-child increment revalued on 1 January (automatic III since decree 2021-1955), as published";
+    when nb_enfants_charge(p, n) and plafond_base_tranche2_publie(p, base)
+        and majoration_plafond_enfant_publiee(p, majoration);
+    then plafond2_applicable(p, plafond_base_montant(base, majoration, n));
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule Bande1(p: fr.pf.core::Personne, r: Money, p1: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "ressources au plus égales au plafond du I: bande 1 (D. 521-1, I, 1°)";
+    label en unofficial "resources at or below the I ceiling: band 1 (D. 521-1, I, 1°)";
+    when ressources_retenues(p, r) and plafond1_applicable(p, p1) and r <= p1;
+    then bande_ressources(p, BANDE_1);
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule Bande2(p: fr.pf.core::Personne, r: Money, p1: Money, p2: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "ressources entre les deux plafonds: bande 2 (D. 521-1, I, 2°)";
+    label en unofficial "resources between the two ceilings: band 2 (D. 521-1, I, 2°)";
+    when ressources_retenues(p, r) and plafond1_applicable(p, p1)
+        and plafond2_applicable(p, p2) and r > p1 and r <= p2;
+    then bande_ressources(p, BANDE_2);
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule Bande3(p: fr.pf.core::Personne, r: Money, p2: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "ressources au-delà du plafond du II: bande 3 (D. 521-1, I, 3°)";
+    label en unofficial "resources above the II ceiling: band 3 (D. 521-1, I, 3°)";
+    when ressources_retenues(p, r) and plafond2_applicable(p, p2) and r > p2;
+    then bande_ressources(p, BANDE_3);
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03)
+rule DroitOuvertMetropole(p: fr.pf.core::Personne, n: Integer) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "les allocations familiales sont dues à partir du deuxième enfant à charge";
+    label en unofficial "family benefits are due from the second dependent child";
+    when territoire(p, METROPOLE) and nb_enfants_charge(p, n) and n >= 2;
+    then af_droit_ouvert(p);
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule MontantMensuel(p: fr.pf.core::Personne, n: Integer, kp: Integer, kd: Integer, b: BandeRessources, bmaf: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "mensuel brut: taux du rang par la base, majorations à taux plein et demi-taux comprises";
+    label en unofficial "gross monthly: rank rates times the base, full- and half-rate supplements included";
+    when af_droit_ouvert(p) and nb_enfants_charge(p, n) and n >= 2
+        and nb_majorations_pleines(p, kp) and nb_majorations_demi(p, kd)
+        and bande_ressources(p, b) and bmaf_retenu(p, bmaf)
+        and not_known(arrondi_lignes_dss(p));
+    then montant_mensuel_af(p, base_af_montant(n, taux_rang2(b), taux_rang3plus(b), bmaf)
+        + majo_montant(kp, kd, taux_majo(b), bmaf));
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule ComplementPlafond1(p: fr.pf.core::Personne, r: Money, p1: Money, m: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "complément dégressif au franchissement du plafond du I: douzième de (plafond + 12 mensuels - ressources)";
+    label en unofficial "tapering top-up crossing the I ceiling: twelfth of (ceiling + 12 monthlies - resources)";
+    when bande_ressources(p, BANDE_2) and ressources_retenues(p, r)
+        and plafond1_applicable(p, p1) and montant_mensuel_af(p, m)
+        and r - p1 < 12.0 * m
+        and not_known(arrondi_lignes_dss(p));
+    then complement_degressif(p, (p1 + 12.0 * m - r) / 12.0);
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule ComplementPlafond2(p: fr.pf.core::Personne, r: Money, p2: Money, m: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "complément dégressif au franchissement du plafond du II: douzième de (plafond + 12 mensuels - ressources)";
+    label en unofficial "tapering top-up crossing the II ceiling: twelfth of (ceiling + 12 monthlies - resources)";
+    when bande_ressources(p, BANDE_3) and ressources_retenues(p, r)
+        and plafond2_applicable(p, p2) and montant_mensuel_af(p, m)
+        and r - p2 < 12.0 * m
+        and not_known(arrondi_lignes_dss(p));
+    then complement_degressif(p, (p2 + 12.0 * m - r) / 12.0);
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule ComplementZeroBande1(p: fr.pf.core::Personne) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "bande 1: aucun dépassement de plafond, complément nul";
+    label en unofficial "band 1: no ceiling crossed, zero top-up";
+    when bande_ressources(p, BANDE_1);
+    then complement_degressif(p, 0 EUR);
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule ComplementZeroEcart(p: fr.pf.core::Personne, r: Money, p1: Money, m: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "dépassement au-delà de douze mensuels: complément éteint (bande 2)";
+    label en unofficial "overshoot beyond twelve monthlies: top-up extinguished (band 2)";
+    when bande_ressources(p, BANDE_2) and ressources_retenues(p, r)
+        and plafond1_applicable(p, p1) and montant_mensuel_af(p, m)
+        and r - p1 >= 12.0 * m;
+    then complement_degressif(p, 0 EUR);
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule ComplementZeroEcart2(p: fr.pf.core::Personne, r: Money, p2: Money, m: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "dépassement au-delà de douze mensuels: complément éteint (bande 3)";
+    label en unofficial "overshoot beyond twelve monthlies: top-up extinguished (band 3)";
+    when bande_ressources(p, BANDE_3) and ressources_retenues(p, r)
+        and plafond2_applicable(p, p2) and montant_mensuel_af(p, m)
+        and r - p2 >= 12.0 * m;
+    then complement_degressif(p, 0 EUR);
+}
+
+@source(
+    CSS_L521_1,
+    CSS_L521_1_ED2015_10,
+    CSS_L521_1_ED2021_09,
+    CSS_L521_1_ED2022_01,
+    CSS_L521_1_ED2026_03)
+rule MontantDu(p: fr.pf.core::Personne, m: Money, c: Money, f: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "total mensuel dû: mensuel + complément + forfait du ménage (brut, avant CRDS)";
+    label en unofficial "total monthly due: monthly + top-up + household forfait (gross, before CRDS)";
+    when montant_mensuel_af(p, m) and complement_degressif(p, c)
+        and forfait_total_menage(p, f);
+    then af_montant_du(p, round(m + c + f, 2, "HALF_UP"));
+}

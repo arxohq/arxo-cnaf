@@ -1,0 +1,35 @@
+// Cas 7: пара с одним иждивенцем, конвенционное жильё, RLS 51,59 €
+// 
+// ИСТОЧНИК ОЖИДАНИЯ: OpenFisca-France, openfisca/openfisca-france@b2ab9943, tests/formulas/aides_logement_reforme_janvier_2021.yaml.
+// ИХ ЧИСЛА ДВА, и они разные: в файле — 195.72 €, а их КОД на
+// закреплённом коммите даёт 195.86 € (замер 13.09.2026, openfisca-france
+// 176.0.9; допуск их теста relative_error_margin 0,01 расхождение файла с
+// собственным кодом скрывает). Сверяться с кодом: tools/compare_openfisca.py.
+// ПРИЧИНА РАСХОЖДЕНИЯ С НАМИ: шаг CRDS и порядок вычета RLS (README, «Квалификация расхождений»).
+// НАШ ТОЧНЫЙ ИТОГ: 196.6788203 € (округлений сверх трёх предписанных текстом
+// пакет не делает — см. шапку 02-calcul-locatif.law).
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-openfisca-07" {
+    given {
+        context { decision_time @2021-01-15T12:00:00Z; knowledge_time @2021-01-15T12:00:00Z; legal_time @2021-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "openfisca-07-01": secteur_locatif(entity_ref("urn:fr:apl:case:openfisca-07")) { origin case_input; }
+        assert "openfisca-07-02": zone_du_logement(entity_ref("urn:fr:apl:case:openfisca-07"), ZONE_III) { origin case_input; }
+        assert "openfisca-07-03": aide_demandee(entity_ref("urn:fr:apl:case:openfisca-07"), APL) { origin case_input; }
+        assert "openfisca-07-04": situation_familiale(entity_ref("urn:fr:apl:case:openfisca-07"), COUPLE) { origin case_input; }
+        assert "openfisca-07-05": personnes_a_charge(entity_ref("urn:fr:apl:case:openfisca-07"), 1) { origin case_input; }
+        assert "openfisca-07-06": loyer_principal(entity_ref("urn:fr:apl:case:openfisca-07"), 527.37 EUR) { origin case_input; }
+        assert "openfisca-07-07": ressources_du_menage(entity_ref("urn:fr:apl:case:openfisca-07"), 11500 EUR) { origin case_input; }
+        assert "openfisca-07-08": mode_location(entity_ref("urn:fr:apl:case:openfisca-07"), LOCATION_SEULE) { origin case_input; }
+        assert "openfisca-07-09": forme_logement(entity_ref("urn:fr:apl:case:openfisca-07"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "openfisca-07-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:openfisca-07"), 51.59 EUR) { origin case_input; }
+        assert "openfisca-07-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:openfisca-07"), false) { origin case_input; }
+        assert "openfisca-07-12": territoire(entity_ref("urn:fr:apl:case:openfisca-07"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:openfisca-07"), 196.6788203 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

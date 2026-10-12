@@ -1,0 +1,17 @@
+// Service ends at settlement: transfer regularised 15 April, appreciation 1 May - no service on the original scheme (R. 552-1, PC-R03-08).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-service-apres-regularisation" {
+    given {
+        context { decision_time @2026-05-15T12:00:00Z; knowledge_time @2026-05-15T12:00:00Z; legal_time @2026-05-15; timezone "Europe/Paris"; }
+        assert "service-apres-reg-01": transfert_regime(entity_ref("urn:fr:pf:case:transfere-apres")) { origin case_input; }
+        assert "service-apres-reg-02": regularisation_administrative_le(entity_ref("urn:fr:pf:case:transfere-apres"), @2026-04-15) { origin case_input; }
+        assert "service-apres-reg-03": date_appreciation(entity_ref("urn:fr:pf:case:transfere-apres"), @2026-05-01) { origin case_input; }
+    }
+    evaluate truth(service_incombe_regime_primitif(entity_ref("urn:fr:pf:case:transfere-apres")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

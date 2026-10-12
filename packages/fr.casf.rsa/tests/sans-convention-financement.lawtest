@@ -1,0 +1,18 @@
+// No-convention financing: without a convention the department
+// finances per D. 262-61 1° and 2° (D. 262-64 2°). The fallback
+// interest rate (market rate plus one point) and the quarterly
+// reimbursement with interest are tested by
+// sans-convention-remboursement.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-sans-convention-financement" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "scf-01": absence_convention(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:org:caf")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(FinancerSansConvention, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

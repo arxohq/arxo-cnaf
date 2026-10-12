@@ -1,0 +1,1073 @@
+// Benefit series - principle level (computation - wave 3-4 packages):
+// CF (L. 522-1/2/3), ASF (L. 523-1/2/3), non-cumul (L. 532-1/2),
+// prime a la naissance (L. 533-1), AEEH (L. 541-1/2/4/5), ARS (L. 543-1/2,
+// D. 552-7 - in scope), AJPP (L. 544-1/2/3/4/6/7/8/9/10), forfait deces
+// (L. 545-1), prets (L. 542-9), maintien apres deces (L. 552-7).
+// Amounts, taux and plafonds - unpinned decrees/arretes: boundaries,
+// computation - fr.pf.* wave 3-4 packages. Here - filter conditions, count limits
+// (310 jours AJPP), dates (ARS apres 1er juin), defeaters, powers.
+//
+// DEONTIC MAP:
+// - L. 541-2 (CDAPH) - decision fact: adjudicated (section 73 channel, as APL R. 822-13).
+// - L. 542-9 "peuvent accorder" - fund liberty (prets).
+// - L. 544-10 - duty to inform (AJPP claimant -> AEEH/PCH).
+// - L. 523-1 III "de plein droit" (RSA L. 262-9) - status, computed by fr.casf.rsa.
+// - L. 552-7 - maintien: structure; decree duree - boundary (case
+//   renvoi-maintien-deces-duree-manquante records the absence of conclusion).
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_L522_1,
+    CSS_L522_1_CSS_ED2021_05,
+    CSS_L522_1_CSS_ED2021_11,
+    CSS_L522_1_CSS_ED2021_12,
+    CSS_L522_1_CSS_ED2022_01,
+    CSS_L522_1_CSS_ED2022_02,
+    CSS_L522_1_CSS_ED2022_03,
+    CSS_L522_1_CSS_ED2022_09,
+    CSS_L522_1_CSS_ED2023_07,
+    CSS_L522_1_CSS_ED2024_01,
+    CSS_L522_1_CSS_ED2025_02,
+    CSS_L522_1_CSS_ED2025_09,
+    CSS_L522_1_CSS_ED2025_12,
+    CSS_L522_1_CSS_ED2026_01,
+    CSS_L522_1_CSS_ED2026_04,
+    CSS_L522_1_CSS_ED2026_06,
+    CSS_L523_1,
+    CSS_L523_1_CSS_ED2022_01,
+    CSS_L523_1_CSS_ED2022_02,
+    CSS_L523_1_CSS_ED2022_03,
+    CSS_L523_1_CSS_ED2022_09,
+    CSS_L523_1_CSS_ED2023_07,
+    CSS_L523_1_CSS_ED2024_01,
+    CSS_L523_1_CSS_ED2025_02,
+    CSS_L523_1_CSS_ED2025_09,
+    CSS_L523_1_CSS_ED2025_12,
+    CSS_L523_1_CSS_ED2026_01,
+    CSS_L523_1_CSS_ED2026_04,
+    CSS_L523_1_CSS_ED2026_06,
+    CSS_L523_1_PREV,
+    CSS_L523_1_PREV_CSS_ED2021_05,
+    CSS_L523_1_PREV_CSS_ED2021_11,
+    CSS_L523_2,
+    CSS_L523_2_CSS_ED2021_05,
+    CSS_L523_2_CSS_ED2021_11,
+    CSS_L523_2_CSS_ED2021_12,
+    CSS_L523_2_CSS_ED2022_01,
+    CSS_L523_2_CSS_ED2022_02,
+    CSS_L523_2_CSS_ED2022_03,
+    CSS_L523_2_CSS_ED2022_09,
+    CSS_L523_2_CSS_ED2023_07,
+    CSS_L523_2_CSS_ED2024_01,
+    CSS_L523_2_CSS_ED2025_02,
+    CSS_L523_2_CSS_ED2025_09,
+    CSS_L523_2_CSS_ED2025_12,
+    CSS_L523_2_CSS_ED2026_01,
+    CSS_L523_2_CSS_ED2026_04,
+    CSS_L523_2_CSS_ED2026_06,
+    CSS_L532_1,
+    CSS_L532_1_CSS_ED2021_05,
+    CSS_L532_1_CSS_ED2021_11,
+    CSS_L532_1_CSS_ED2021_12,
+    CSS_L532_1_CSS_ED2022_01,
+    CSS_L532_1_CSS_ED2022_02,
+    CSS_L532_1_CSS_ED2022_03,
+    CSS_L532_1_CSS_ED2022_09,
+    CSS_L532_1_CSS_ED2023_07,
+    CSS_L532_1_CSS_ED2024_01,
+    CSS_L532_1_CSS_ED2025_02,
+    CSS_L532_1_CSS_ED2025_09,
+    CSS_L532_1_CSS_ED2025_12,
+    CSS_L532_1_CSS_ED2026_01,
+    CSS_L532_1_CSS_ED2026_04,
+    CSS_L532_1_CSS_ED2026_06,
+    CSS_L532_2,
+    CSS_L532_2_CSS_ED2026_01,
+    CSS_L532_2_CSS_ED2026_04,
+    CSS_L532_2_CSS_ED2026_06,
+    CSS_L533_1,
+    CSS_L533_1_CSS_ED2021_05,
+    CSS_L533_1_CSS_ED2021_11,
+    CSS_L533_1_CSS_ED2021_12,
+    CSS_L533_1_CSS_ED2022_01,
+    CSS_L533_1_CSS_ED2022_02,
+    CSS_L533_1_CSS_ED2022_03,
+    CSS_L533_1_CSS_ED2022_09,
+    CSS_L533_1_CSS_ED2023_07,
+    CSS_L533_1_CSS_ED2024_01,
+    CSS_L533_1_CSS_ED2025_02,
+    CSS_L533_1_CSS_ED2025_09,
+    CSS_L533_1_CSS_ED2025_12,
+    CSS_L533_1_CSS_ED2026_01,
+    CSS_L533_1_CSS_ED2026_04,
+    CSS_L533_1_CSS_ED2026_06,
+    CSS_L541_1,
+    CSS_L541_1_CSS_ED2021_05,
+    CSS_L541_1_CSS_ED2021_11,
+    CSS_L541_1_CSS_ED2021_12,
+    CSS_L541_1_CSS_ED2022_01,
+    CSS_L541_1_CSS_ED2022_02,
+    CSS_L541_1_CSS_ED2022_03,
+    CSS_L541_1_CSS_ED2022_09,
+    CSS_L541_1_CSS_ED2023_07,
+    CSS_L541_1_CSS_ED2024_01,
+    CSS_L541_1_CSS_ED2025_02,
+    CSS_L541_1_CSS_ED2025_09,
+    CSS_L541_1_CSS_ED2025_12,
+    CSS_L541_1_CSS_ED2026_01,
+    CSS_L541_1_CSS_ED2026_04,
+    CSS_L541_1_CSS_ED2026_06,
+    CSS_L541_2,
+    CSS_L541_2_CSS_ED2021_05,
+    CSS_L541_2_CSS_ED2021_11,
+    CSS_L541_2_CSS_ED2021_12,
+    CSS_L541_2_CSS_ED2022_01,
+    CSS_L541_2_CSS_ED2022_02,
+    CSS_L541_2_CSS_ED2022_03,
+    CSS_L541_2_CSS_ED2022_09,
+    CSS_L541_2_CSS_ED2023_07,
+    CSS_L541_2_CSS_ED2024_01,
+    CSS_L541_2_CSS_ED2025_02,
+    CSS_L541_2_CSS_ED2025_09,
+    CSS_L541_2_CSS_ED2025_12,
+    CSS_L541_2_CSS_ED2026_01,
+    CSS_L541_2_CSS_ED2026_04,
+    CSS_L541_2_CSS_ED2026_06,
+    CSS_L542_9,
+    CSS_L542_9_CSS_ED2021_05,
+    CSS_L542_9_CSS_ED2021_11,
+    CSS_L542_9_CSS_ED2021_12,
+    CSS_L542_9_CSS_ED2022_01,
+    CSS_L542_9_CSS_ED2022_02,
+    CSS_L542_9_CSS_ED2022_03,
+    CSS_L542_9_CSS_ED2022_09,
+    CSS_L542_9_CSS_ED2023_07,
+    CSS_L542_9_CSS_ED2024_01,
+    CSS_L542_9_CSS_ED2025_02,
+    CSS_L542_9_CSS_ED2025_09,
+    CSS_L542_9_CSS_ED2025_12,
+    CSS_L542_9_CSS_ED2026_01,
+    CSS_L542_9_CSS_ED2026_04,
+    CSS_L542_9_CSS_ED2026_06,
+    CSS_L543_1,
+    CSS_L543_1_CSS_ED2021_05,
+    CSS_L543_1_CSS_ED2021_11,
+    CSS_L543_1_CSS_ED2021_12,
+    CSS_L543_1_CSS_ED2022_01,
+    CSS_L543_1_CSS_ED2022_02,
+    CSS_L543_1_CSS_ED2022_03,
+    CSS_L543_1_CSS_ED2022_09,
+    CSS_L543_1_CSS_ED2023_07,
+    CSS_L543_1_CSS_ED2024_01,
+    CSS_L543_1_CSS_ED2025_02,
+    CSS_L543_1_CSS_ED2025_09,
+    CSS_L543_1_CSS_ED2025_12,
+    CSS_L543_1_CSS_ED2026_01,
+    CSS_L543_1_CSS_ED2026_04,
+    CSS_L543_1_CSS_ED2026_06,
+    CSS_L544_10,
+    CSS_L544_10_CSS_ED2021_05,
+    CSS_L544_10_CSS_ED2021_11,
+    CSS_L544_10_CSS_ED2021_12,
+    CSS_L544_10_CSS_ED2022_01,
+    CSS_L544_10_CSS_ED2022_02,
+    CSS_L544_10_CSS_ED2022_03,
+    CSS_L544_10_CSS_ED2022_09,
+    CSS_L544_10_CSS_ED2023_07,
+    CSS_L544_10_CSS_ED2024_01,
+    CSS_L544_10_CSS_ED2025_02,
+    CSS_L544_10_CSS_ED2025_09,
+    CSS_L544_10_CSS_ED2025_12,
+    CSS_L544_10_CSS_ED2026_01,
+    CSS_L544_10_CSS_ED2026_04,
+    CSS_L544_10_CSS_ED2026_06,
+    CSS_L544_3,
+    CSS_L544_3_CSS_ED2024_01,
+    CSS_L544_3_CSS_ED2025_02,
+    CSS_L544_3_CSS_ED2025_09,
+    CSS_L544_3_CSS_ED2025_12,
+    CSS_L544_3_CSS_ED2026_01,
+    CSS_L544_3_CSS_ED2026_04,
+    CSS_L544_3_CSS_ED2026_06,
+    CSS_L544_9,
+    CSS_L544_9_CSS_ED2026_01,
+    CSS_L544_9_CSS_ED2026_04,
+    CSS_L544_9_CSS_ED2026_06,
+    CSS_L545_1,
+    CSS_L545_1_CSS_ED2021_05,
+    CSS_L545_1_CSS_ED2021_11,
+    CSS_L545_1_CSS_ED2021_12,
+    CSS_L545_1_CSS_ED2022_01,
+    CSS_L545_1_CSS_ED2022_02,
+    CSS_L545_1_CSS_ED2022_03,
+    CSS_L545_1_CSS_ED2022_09,
+    CSS_L545_1_CSS_ED2023_07,
+    CSS_L545_1_CSS_ED2024_01,
+    CSS_L545_1_CSS_ED2025_02,
+    CSS_L545_1_CSS_ED2025_09,
+    CSS_L545_1_CSS_ED2025_12,
+    CSS_L545_1_CSS_ED2026_01,
+    CSS_L545_1_CSS_ED2026_04,
+    CSS_L545_1_CSS_ED2026_06,
+    CSS_L552_7,
+    CSS_L552_7_CSS_ED2022_02,
+    CSS_L552_7_CSS_ED2022_03,
+    CSS_L552_7_CSS_ED2022_09,
+    CSS_L552_7_CSS_ED2023_07,
+    CSS_L552_7_CSS_ED2024_01,
+    CSS_L552_7_CSS_ED2025_02,
+    CSS_L552_7_CSS_ED2025_09,
+    CSS_L552_7_CSS_ED2025_12,
+    CSS_L552_7_CSS_ED2026_01,
+    CSS_L552_7_CSS_ED2026_04,
+    CSS_L552_7_CSS_ED2026_06,
+    CSS_R552_4,
+    CSS_R552_4_CSS_ED2022_02,
+    CSS_R552_4_CSS_ED2022_03,
+    CSS_R552_4_CSS_ED2022_09,
+    CSS_R552_4_CSS_ED2023_07,
+    CSS_R552_4_CSS_ED2024_01,
+    CSS_R552_4_CSS_ED2025_02,
+    CSS_R552_4_CSS_ED2025_09,
+    CSS_R552_4_CSS_ED2025_12,
+    CSS_R552_4_CSS_ED2026_01,
+    CSS_R552_4_CSS_ED2026_04,
+    CSS_R552_4_CSS_ED2026_06,
+    Enfant,
+    Organisme,
+    Personne,
+    charge_effective_permanente,
+    maintien_applicable,
+    organisme_debiteur_pf,
+    parent_charge,
+};
+
+// --- Complement familial (L. 522-1/2/3; computed by fr.pf.cf) ---
+
+relation condition_age_cf_remplie(p: Personne) kind empirical {
+    label fr official "condition d'âge du complément familial (nombre déterminé d'enfants au-dessus de la limite L. 531-1 — hors champ, paquet fr.pf.cf)";
+    label en unofficial "complement familial age condition (number of children above the L. 531-1 limit - out of scope, package fr.pf.cf)";
+}
+
+relation condition_ressources_cf_remplie(p: Personne) kind empirical {
+    label fr official "ressources n'excédant pas le plafond CF (décret/arrêté non épinglé — hors champ)";
+    label en unofficial "resources within the CF ceiling (decree/arrete not pinned - out of scope)";
+}
+
+relation cf_condition_remplie(p: Personne) kind institutional {
+    key(p);
+    label fr official "conditions d'attribution du complément familial réunies (L. 522-1)";
+    label en unofficial "complement familial award conditions met (L. 522-1)";
+}
+
+// --- ASF (L. 523-1/2/3; computed by fr.pf.asf) ---
+
+relation asf_cas_orphelin(e: Enfant) kind empirical {
+    label fr official "enfant orphelin de père ou de mère, ou des deux (L. 523-1 I 1°)";
+    label en unofficial "orphaned child (father/mother/both, L. 523-1 I 1)";
+}
+
+relation asf_cas_filiation(e: Enfant) kind empirical {
+    label fr official "filiation non légalement établie à l'égard de l'un ou des parents (L. 523-1 I 2°)";
+    label en unofficial "filiation not legally established (L. 523-1 I 2)";
+}
+
+relation asf_parent_se_soustrait(e: Enfant) kind empirical {
+    label fr official "parent se soustrayant à l'obligation d'entretien ou au versement de la pension ou contribution (L. 523-1 I 3°, branche défaillance)";
+    label en unofficial "parent evading the maintenance duty or the pension/contribution payment (L. 523-1 I 3, evasion branch)";
+}
+
+relation asf_parent_hors_etat_qualifie(e: Enfant) kind empirical {
+    label fr official "parent considéré hors d'état au regard des conditions fixées par décret, qualification constatée (L. 523-1 I 3°, valeur du décret hors champ)";
+    label en unofficial "parent considered unable under the decree-set conditions, qualification stated (L. 523-1 I 3, decree value out of scope)";
+}
+
+relation asf_parent_hors_etat_non_qualifie(e: Enfant) kind empirical {
+    label fr official "parent allégué hors d'état sans qualification réglementaire constatée (L. 523-1 I 3°, contrôle négatif)";
+    label en unofficial "parent claimed unable with no established regulatory qualification (L. 523-1 I 3, negative control)";
+}
+
+relation asf_cas_pension_faible(e: Enfant, pension: Money) kind empirical {
+    key(e);
+    label fr official "montant de la pension ou contribution versé, inférieur à l'ASF (L. 523-1 I 4°)";
+    label en unofficial "pension or contribution amount paid, below ASF (L. 523-1 I 4)";
+}
+
+relation asf_pension_instrument_qualifie(e: Enfant) kind empirical {
+    key(e);
+    label fr official "pension fixée par décision de justice ou contribution fixée par un acte ou accord du IV acquis force exécutoire, instrument constaté (L. 523-1 I 4° et IV)";
+    label en unofficial "pension set by court decision or contribution set by an enforceable IV act or agreement, instrument stated (L. 523-1 I 4 and IV)";
+}
+
+relation asf_pension_versement_integral(e: Enfant) kind empirical {
+    label fr official "versement intégral de la pension ou contribution acquitté (L. 523-1 I 4° « s'acquittent intégralement »)";
+    label en unofficial "integral payment of the pension or contribution discharged (L. 523-1 I 4 'fully discharge')";
+}
+
+relation asf_ouvre_droit(e: Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant ouvre droit à l'allocation de soutien familial (L. 523-1)";
+    label en unofficial "child opens entitlement to ASF (L. 523-1)";
+}
+
+relation asf_couple_nouveau(p: Personne) kind empirical {
+    label fr official "le titulaire se marie, conclut un pacs ou vit en concubinage (L. 523-2 al. 2)";
+    label en unofficial "holder married, entered a pacs or cohabits (L. 523-2 para. 2)";
+}
+
+// --- Non-cumul (L. 532-1/2, L. 544-9) ---
+
+relation beneficie_allocation_base(p: Personne) kind empirical {
+    label fr official "bénéficie de l'allocation de base PAJE (L. 532-1)";
+    label en unofficial "receives the PAJE allocation de base (L. 532-1)";
+}
+
+relation demande_complement_familial(p: Personne) kind empirical {
+    label fr official "demande le complément familial (L. 522-1)";
+    label en unofficial "claims the complement familial (L. 522-1)";
+}
+
+relation cumul_base_cf_refuse(p: Personne) kind institutional {
+    key(p);
+    label fr official "l'allocation de base n'est pas cumulable avec le complément familial (L. 532-1)";
+    label en unofficial "allocation de base not combined with complement familial (L. 532-1)";
+}
+
+relation beneficie_prepare_temps_plein(p: Personne) kind empirical {
+    label fr official "bénéficie de la PreParE à taux plein (L. 532-2 II)";
+    label en unofficial "receives PreParE at the full rate (L. 532-2 II)";
+}
+
+relation percoit_indemnite_concurrente(p: Personne) kind empirical {
+    label fr official "perçoit l'une des indemnisations du II de l'article L. 532-2 (maternité, maladie, chômage, vieillesse…)";
+    label en unofficial "receives one of the article L. 532-2 II payments (maternity, sickness, unemployment, old age...)";
+}
+
+relation cumul_prepare_indemnite_refuse(p: Personne) kind institutional {
+    key(p);
+    label fr official "PreParE à taux plein non cumulable avec les indemnisations du II (L. 532-2 II)";
+    label en unofficial "full-rate PreParE not combined with II payments (L. 532-2 II)";
+}
+
+relation beneficie_ajpp(p: Personne) kind empirical {
+    label fr official "bénéficie de l'AJPP pour le même bénéficiaire (L. 544-9)";
+    label en unofficial "receives AJPP for the same beneficiary (L. 544-9)";
+}
+
+relation percoit_prepare_concurrente_ajpp(p: Personne) kind empirical {
+    label fr official "perçoit la prestation partagée d'éducation de l'enfant, concurrente AJPP (L. 544-9 I 6°)";
+    label en unofficial "receives the PreParE, concurrent with AJPP (L. 544-9 I 6)";
+}
+
+relation percoit_complement_aeeh_meme_enfant(p: Personne) kind empirical {
+    label fr official "perçoit le complément ou la majoration AEEH pour le même enfant, identité attestée (L. 544-9 I 7°)";
+    label en unofficial "receives the AEEH complement or increase for the same child, identity attested (L. 544-9 I 7)";
+}
+
+relation percoit_aah_concurrente_ajpp(p: Personne) kind empirical {
+    label fr official "perçoit l'allocation aux adultes handicapés, concurrente AJPP (L. 544-9 I 8°)";
+    label en unofficial "receives the AAH, concurrent with AJPP (L. 544-9 I 8)";
+}
+
+relation percoit_pch_element_concurrent_ajpp(p: Personne) kind empirical {
+    label fr official "perçoit l'élément PCH du 1° de L. 245-3 CASF, concurrent AJPP (L. 544-9 I 9°)";
+    label en unofficial "receives the PCH element of 1 of L. 245-3 CASF, concurrent with AJPP (L. 544-9 I 9)";
+}
+
+relation ajpp_cumul_temps_partiel_item3(p: Personne) kind empirical {
+    label fr official "AJPP non servie pour tous les jours L. 544-4 et indemnité 3° au titre du temps partiel, sans autre item concurrent, appréciation complète constatée (L. 544-9 al. final)";
+    label en unofficial "AJPP not paid for all L. 544-4 days with part-time item-3 indemnity, no other concurrent item, complete assessment stated (L. 544-9 final sentence)";
+}
+
+relation cumul_ajpp_refuse(p: Personne) kind institutional {
+    key(p);
+    label fr official "AJPP non cumulable avec les 9 indemnités et prestations du I de L. 544-9";
+    label en unofficial "AJPP not combined with the 9 payments and benefits of I of article L. 544-9";
+}
+
+// --- Prime a la naissance (L. 533-1; computed by fr.pf.paje) ---
+
+relation examen_prenatal_justifie(p: Personne) kind empirical {
+    label fr official "passation du premier examen prénatal justifiée, art. L. 2122-1 CSP (L. 533-1)";
+    label en unofficial "first compulsory prenatal examination evidenced, art. L. 2122-1 CSP (L. 533-1)";
+}
+
+relation prime_naissance_condition_remplie(p: Personne) kind institutional {
+    key(p);
+    label fr official "condition de versement de la prime à la naissance remplie (L. 533-1)";
+    label en unofficial "prime a la naissance payment condition met (L. 533-1)";
+}
+
+// --- AEEH (L. 541-1/2/4/5; computed by fr.pf.aeeh) ---
+
+relation decision_cdaph_favorable(e: Enfant) kind empirical {
+    label fr official "décision de la commission L. 146-9 CASF appréciant que l'état justifie l'attribution (L. 541-2, fait établi — adjudicated)";
+    label en unofficial "L. 146-9 CASF commission decision that the condition warrants award (L. 541-2, established fact)";
+}
+
+relation prise_en_charge_integrale_internat(e: Enfant) kind empirical {
+    label fr official "enfant placé en internat avec prise en charge intégrale (assurance maladie, Etat, aide sociale — L. 541-1 al. 4)";
+    label en unofficial "child in residential care with full cost coverage (health insurance, State, social aid - L. 541-1 para. 4)";
+}
+
+relation periode_conge_suspension_prise_en_charge(e: Enfant) kind empirical {
+    label fr official "période de congés ou de suspension de la prise en charge intégrale, fait daté constaté (L. 541-1 al. 4 « sauf pour les périodes »)";
+    label en unofficial "leave or suspension period of the full coverage, dated stated fact (L. 541-1 para. 4 'except for periods')";
+}
+
+relation aeeh_ouvre_droit(e: Enfant) kind institutional {
+    key(e);
+    label fr official "droit à l'allocation d'éducation de l'enfant handicapé (L. 541-1, taux décret — hors champ)";
+    label en unofficial "AEEH entitlement (L. 541-1, rate by decree - out of scope)";
+}
+
+// --- ARS (L. 543-1/2; computed by fr.pf.ars) + D. 552-7 ---
+
+relation inscription_scolaire(e: Enfant) kind empirical {
+    label fr official "inscription dans un établissement d'enseignement / poursuite d'études / apprentissage (L. 543-1, L. 552-4)";
+    label en unofficial "enrolment in education / continued study / apprenticeship (L. 543-1, L. 552-4)";
+}
+
+relation ars_condition_scolarite(e: Enfant) kind institutional {
+    key(e);
+    label fr official "condition de scolarité de l'allocation de rentrée scolaire remplie (plafond décret — hors champ)";
+    label en unofficial "ARS schooling condition met (ceiling by decree - out of scope)";
+}
+
+relation deces_le(e: Enfant, date: Date) kind empirical {
+    key(e);
+    label fr official "date du décès de l'enfant";
+    label en unofficial "child's date of death";
+}
+
+relation seuil_juin_rentree(e: Enfant, seuil: Date) kind empirical {
+    key(e);
+    label fr official "1er juin précédant la rentrée scolaire considérée (D. 552-7)";
+    label en unofficial "1 June before the school year considered (D. 552-7)";
+}
+
+relation ars_due_exceptionnellement(e: Enfant) kind institutional {
+    key(e);
+    label fr official "ARS due malgré la condition de scolarité non remplie du fait du décès (décès à compter du 1er juin — L. 552-7 al. 4, D. 552-7)";
+    label en unofficial "ARS due despite unmet schooling condition due to death (death on/after 1 June - L. 552-7 para. 4, D. 552-7)";
+}
+
+// --- AJPP (L. 544-1/2/3/4/6/7/8/9/10; computed by fr.pf.ajpp) ---
+
+relation jours_ajpp_verses(e: Enfant, jours: Integer) kind empirical {
+    key(e);
+    label fr official "nombre d'allocations journalières déjà versées pour l'enfant et la pathologie (max 310 — L. 544-3)";
+    label en unofficial "daily allowances already paid for the child and condition (max 310 - L. 544-3)";
+}
+
+relation ajpp_dans_limite(e: Enfant) kind institutional {
+    key(e);
+    label fr official "le nombre d'allocations journalières ne dépasse pas 310 (L. 544-3 al. 1)";
+    label en unofficial "daily allowances do not exceed 310 (L. 544-3 para. 1)";
+}
+
+relation information_ajpp_due(o: Organisme, p: Personne) kind institutional {
+    key(o, p);
+    label fr official "l'organisme doit l'information AEEH/PCH au bénéficiaire ou au demandeur AJPP (L. 544-10)";
+    label en unofficial "the body owes the AEEH/PCH information to the AJPP beneficiary or applicant (L. 544-10)";
+}
+
+relation demandeur_ajpp_informe(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "demandeur/bénéficiaire AJPP informé des critères AEEH et PCH (L. 544-10)";
+    label en unofficial "AJPP claimant/beneficiary informed of AEEH and PCH criteria (L. 544-10)";
+}
+
+relation demande_ajpp_deposee(p: Personne) kind empirical {
+    label fr official "demande d'AJPP déposée, demandeur avant versement (L. 544-10 « le demandeur ou le bénéficiaire »)";
+    label en unofficial "AJPP claim filed, applicant before payment (L. 544-10 'the applicant or beneficiary')";
+}
+
+// --- Allocation forfaitaire deces (L. 545-1; decree scale - boundary) ---
+
+relation forfait_deces_demande(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "allocation forfaitaire décès demandée par la personne qui assumait la charge au moment du décès (L. 545-1)";
+    label en unofficial "lump-sum death benefit claimed by the person with care at the time of death (L. 545-1)";
+}
+
+relation deces_enfant_avant_limite_age(e: Enfant) kind empirical {
+    label fr official "décès de l'enfant intervenu jusqu'à la limite d'âge fixée par décret, fait constaté (L. 545-1, valeur du décret hors champ)";
+    label en unofficial "child death occurred up to the decree age limit, stated fact (L. 545-1, decree value out of scope)";
+}
+
+relation capital_deces_percu_pour_deces(e: Enfant) kind empirical {
+    label fr official "capital-décès L. 361-1 / transports / régimes perçu au titre de ce décès par un ayant droit quelconque (L. 545-1)";
+    label en unofficial "death capital (L. 361-1 / transports / schemes) received in respect of that death by any heir (L. 545-1)";
+}
+
+relation forfait_deces_eligible(p: Personne, e: Enfant) kind institutional {
+    key(p, e);
+    label fr official "forfait décès attribuable (montant selon barème décret indexé IPC hors tabac — hors champ)";
+    label en unofficial "lump-sum death benefit awardable (amount per decree scale indexed on tobacco-free IPC - out of scope)";
+}
+
+// --- Prêts (L. 542-9: pouvoir) ---
+
+relation pret_habitat_demande(p: Personne) kind empirical {
+    label fr official "prêt à l'amélioration de l'habitat ou du lieu d'accueil demandé (L. 542-9 1°-2°)";
+    label en unofficial "home/admission-place improvement loan requested (L. 542-9 1-2)";
+}
+
+relation accorder_pret_action(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "action: accorder le prêt d'amélioration (conditions et limites fixées par décret)";
+    label en unofficial "action: granting the improvement loan (conditions and limits by decree)";
+}
+
+// --- Maintien apres deces (L. 552-7: decree-set period - boundary) ---
+
+relation deces_enfant_charge(e: Enfant) kind empirical {
+    label fr official "décès d'un enfant à charge ouvrant maintien (L. 552-7 al. 1, conditions R. 552-4 — hors champ)";
+    label en unofficial "death of a child in care giving maintien (L. 552-7 para. 1, R. 552-4 conditions - out of scope)";
+}
+
+relation duree_maintien_fixee(e: Enfant) kind empirical {
+    label fr official "durée de maintien fixée par décret (L. 552-7 — décret non épinglé, fait absent)";
+    label en unofficial "maintien period set by decree (L. 552-7 - decree not pinned, fact absent)";
+}
+
+relation forfait_l5211_verse_enfant(e: Enfant) kind empirical {
+    label fr official "allocation forfaitaire L. 521-1 versée au titre de cet enfant (L. 552-7 al. 1, 1er item)";
+    label en unofficial "L. 521-1 lump-sum allowance paid in respect of this child (L. 552-7 para. 1, item 1)";
+}
+
+relation majoration_l5213_versee_enfant(e: Enfant) kind empirical {
+    label fr official "majoration des allocations familiales L. 521-3 versée au titre de cet enfant (L. 552-7 al. 1, 2e item)";
+    label en unofficial "L. 521-3 family-allowance increase paid in respect of this child (L. 552-7 para. 1, item 2)";
+}
+
+relation aeeh_versee_enfant(e: Enfant) kind empirical {
+    label fr official "AEEH versée au titre de cet enfant (L. 552-7 al. 1, 3e item)";
+    label en unofficial "AEEH paid in respect of this child (L. 552-7 para. 1, item 3)";
+}
+
+relation prepare_versee_enfant(e: Enfant) kind empirical {
+    label fr official "PreParE versée au titre de cet enfant (L. 552-7 al. 1, 4e item)";
+    label en unofficial "PreParE paid in respect of this child (L. 552-7 para. 1, item 4)";
+}
+
+relation base_versee_enfant(e: Enfant) kind empirical {
+    label fr official "allocation de base versée au titre de cet enfant (L. 552-7 al. 1, 5e item)";
+    label en unofficial "base allowance paid in respect of this child (L. 552-7 para. 1, item 5)";
+}
+
+relation asf_versee_enfant(e: Enfant) kind empirical {
+    label fr official "ASF versée au titre de cet enfant (L. 552-7 al. 1, 6e item; avance non recouvrée: AsfAvanceAcquise en 10)";
+    label en unofficial "ASF paid in respect of this child (L. 552-7 para. 1, item 6; unrecovered advance: AsfAvanceAcquise in 10)";
+}
+
+relation maintien_forfait_deces(e: Enfant) kind institutional {
+    key(e);
+    label fr official "allocation forfaitaire L. 521-1 maintenue pendant la durée réglementaire (L. 552-7 al. 1)";
+    label en unofficial "L. 521-1 lump-sum allowance maintained for the regulatory period (L. 552-7 para. 1)";
+}
+
+relation maintien_majoration_af(e: Enfant) kind institutional {
+    key(e);
+    label fr official "majoration L. 521-3 maintenue pendant la durée réglementaire (L. 552-7 al. 1)";
+    label en unofficial "L. 521-3 increase maintained for the regulatory period (L. 552-7 para. 1)";
+}
+
+relation maintien_aeeh_deces(e: Enfant) kind institutional {
+    key(e);
+    label fr official "AEEH maintenue pendant la durée réglementaire (L. 552-7 al. 1)";
+    label en unofficial "AEEH maintained for the regulatory period (L. 552-7 para. 1)";
+}
+
+relation maintien_prepare_deces(e: Enfant) kind institutional {
+    key(e);
+    label fr official "PreParE maintenue pendant la durée réglementaire (L. 552-7 al. 1)";
+    label en unofficial "PreParE maintained for the regulatory period (L. 552-7 para. 1)";
+}
+
+relation maintien_base_deces(e: Enfant) kind institutional {
+    key(e);
+    label fr official "allocation de base maintenue pendant la durée réglementaire (L. 552-7 al. 1)";
+    label en unofficial "base allowance maintained for the regulatory period (L. 552-7 para. 1)";
+}
+
+relation maintien_asf_deces(e: Enfant) kind institutional {
+    key(e);
+    label fr official "ASF maintenue pendant la durée réglementaire (L. 552-7 al. 1)";
+    label en unofficial "ASF maintained for the regulatory period (L. 552-7 para. 1)";
+}
+
+relation prestations_maintenues_deces(e: Enfant) kind institutional {
+    key(e);
+    label fr official "au moins une prestation énumérée à l'alinéa 1 maintenue après le décès (L. 552-7, agrégat des six items)";
+    label en unofficial "at least one paragraph-1 listed benefit maintained after death (L. 552-7, six-item rollup)";
+}
+
+@source(CSS_L522_1, CSS_L522_1_CSS_ED2021_05, CSS_L522_1_CSS_ED2021_11, CSS_L522_1_CSS_ED2021_12,
+        CSS_L522_1_CSS_ED2022_01, CSS_L522_1_CSS_ED2022_02, CSS_L522_1_CSS_ED2022_03,
+        CSS_L522_1_CSS_ED2022_09, CSS_L522_1_CSS_ED2023_07, CSS_L522_1_CSS_ED2024_01,
+        CSS_L522_1_CSS_ED2025_02, CSS_L522_1_CSS_ED2025_09, CSS_L522_1_CSS_ED2025_12,
+        CSS_L522_1_CSS_ED2026_01, CSS_L522_1_CSS_ED2026_04, CSS_L522_1_CSS_ED2026_06)
+rule ComplementFamilialConditions(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Complément familial: ressources sous plafond et enfants au-dessus de la limite d'âge";
+    label en unofficial "Complement familial: resources below ceiling, children above the age limit";
+    when condition_ressources_cf_remplie(p) and condition_age_cf_remplie(p);
+    then cf_condition_remplie(p);
+}
+
+@source(CSS_L523_1, CSS_L523_1_CSS_ED2022_01, CSS_L523_1_CSS_ED2022_02, CSS_L523_1_CSS_ED2022_03,
+        CSS_L523_1_CSS_ED2022_09, CSS_L523_1_CSS_ED2023_07, CSS_L523_1_CSS_ED2024_01,
+        CSS_L523_1_CSS_ED2025_02, CSS_L523_1_CSS_ED2025_09, CSS_L523_1_CSS_ED2025_12,
+        CSS_L523_1_CSS_ED2026_01, CSS_L523_1_CSS_ED2026_04, CSS_L523_1_CSS_ED2026_06,
+        CSS_L523_1_PREV, CSS_L523_1_PREV_CSS_ED2021_05, CSS_L523_1_PREV_CSS_ED2021_11)
+rule AsfOrphelin(e: Enfant) defeasible {
+    // D-15: window opens at coverage start, not at the pinned-version debut
+    // (2021-12-25): the predecessor L.523-1 (...1398664, in force 2019-12-28
+    // to 2021-12-25) carries I. 1-4 word-identical — only IV 5 was added.
+    effective [@2021-01-01, infinity);
+    label fr official "Ouvre droit: enfant orphelin (L. 523-1 I 1°)";
+    label en unofficial "Opens entitlement: orphaned child (L. 523-1 I 1)";
+    when asf_cas_orphelin(e);
+    then asf_ouvre_droit(e);
+}
+
+@source(CSS_L523_1, CSS_L523_1_CSS_ED2022_01, CSS_L523_1_CSS_ED2022_02, CSS_L523_1_CSS_ED2022_03,
+        CSS_L523_1_CSS_ED2022_09, CSS_L523_1_CSS_ED2023_07, CSS_L523_1_CSS_ED2024_01,
+        CSS_L523_1_CSS_ED2025_02, CSS_L523_1_CSS_ED2025_09, CSS_L523_1_CSS_ED2025_12,
+        CSS_L523_1_CSS_ED2026_01, CSS_L523_1_CSS_ED2026_04, CSS_L523_1_CSS_ED2026_06,
+        CSS_L523_1_PREV, CSS_L523_1_PREV_CSS_ED2021_05, CSS_L523_1_PREV_CSS_ED2021_11)
+rule AsfFiliation(e: Enfant) defeasible {
+    // D-15: same as AsfOrphelin — I. 2 unchanged across the 2021-12-25 version boundary.
+    effective [@2021-01-01, infinity);
+    label fr official "Ouvre droit: filiation non établie (L. 523-1 I 2°)";
+    label en unofficial "Opens entitlement: filiation not established (L. 523-1 I 2)";
+    when asf_cas_filiation(e);
+    then asf_ouvre_droit(e);
+}
+
+@source(CSS_L523_1, CSS_L523_1_CSS_ED2022_01, CSS_L523_1_CSS_ED2022_02, CSS_L523_1_CSS_ED2022_03,
+        CSS_L523_1_CSS_ED2022_09, CSS_L523_1_CSS_ED2023_07, CSS_L523_1_CSS_ED2024_01,
+        CSS_L523_1_CSS_ED2025_02, CSS_L523_1_CSS_ED2025_09, CSS_L523_1_CSS_ED2025_12,
+        CSS_L523_1_CSS_ED2026_01, CSS_L523_1_CSS_ED2026_04, CSS_L523_1_CSS_ED2026_06,
+        CSS_L523_1_PREV, CSS_L523_1_PREV_CSS_ED2021_05, CSS_L523_1_PREV_CSS_ED2021_11)
+rule AsfDefaillance(e: Enfant) defeasible {
+    // D-15: same as AsfOrphelin — I. 3 unchanged across the 2021-12-25 version boundary.
+    effective [@2021-01-01, infinity);
+    label fr official "Ouvre droit: parent se soustrayant (L. 523-1 I 3°, branche défaillance)";
+    label en unofficial "Opens entitlement: evading parent (L. 523-1 I 3, evasion branch)";
+    when asf_parent_se_soustrait(e);
+    then asf_ouvre_droit(e);
+}
+
+@source(CSS_L523_1, CSS_L523_1_CSS_ED2022_01, CSS_L523_1_CSS_ED2022_02, CSS_L523_1_CSS_ED2022_03,
+        CSS_L523_1_CSS_ED2022_09, CSS_L523_1_CSS_ED2023_07, CSS_L523_1_CSS_ED2024_01,
+        CSS_L523_1_CSS_ED2025_02, CSS_L523_1_CSS_ED2025_09, CSS_L523_1_CSS_ED2025_12,
+        CSS_L523_1_CSS_ED2026_01, CSS_L523_1_CSS_ED2026_04, CSS_L523_1_CSS_ED2026_06,
+        CSS_L523_1_PREV, CSS_L523_1_PREV_CSS_ED2021_05, CSS_L523_1_PREV_CSS_ED2021_11)
+rule AsfHorsEtatQualifie(e: Enfant) defeasible {
+    // D-15: same window as AsfDefaillance — I. 3 unchanged across the 2021-12-25 version boundary.
+    effective [@2021-01-01, infinity);
+    label fr official "Ouvre droit: parent hors d'état au regard des conditions du décret (L. 523-1 I 3°, branche qualifiée)";
+    label en unofficial "Opens entitlement: parent unable under the decree conditions (L. 523-1 I 3, qualified branch)";
+    when asf_parent_hors_etat_qualifie(e);
+    then asf_ouvre_droit(e);
+}
+
+@source(CSS_L523_1, CSS_L523_1_CSS_ED2022_01, CSS_L523_1_CSS_ED2022_02, CSS_L523_1_CSS_ED2022_03,
+        CSS_L523_1_CSS_ED2022_09, CSS_L523_1_CSS_ED2023_07, CSS_L523_1_CSS_ED2024_01,
+        CSS_L523_1_CSS_ED2025_02, CSS_L523_1_CSS_ED2025_09, CSS_L523_1_CSS_ED2025_12,
+        CSS_L523_1_CSS_ED2026_01, CSS_L523_1_CSS_ED2026_04, CSS_L523_1_CSS_ED2026_06,
+        CSS_L523_1_PREV, CSS_L523_1_PREV_CSS_ED2021_05, CSS_L523_1_PREV_CSS_ED2021_11)
+rule AsfDifferentielle(e: Enfant, pension: Money) defeasible {
+    // D-15: same as AsfOrphelin — I. 4 unchanged across the 2021-12-25 version boundary.
+    effective [@2021-01-01, infinity);
+    label fr official "Pension ou contribution qualifiée intégralement versée, montant inférieur à l'ASF: allocation différentielle (L. 523-1 I 4°, instrument du IV requis; contribution non instrumentée: décret, hors champ)";
+    label en unofficial "Qualified pension or contribution paid in full, amount below ASF: differential allowance (L. 523-1 I 4, IV instrument required; uninstrumented contribution: decree, out of scope)";
+    when asf_cas_pension_faible(e, pension) and asf_pension_instrument_qualifie(e)
+        and asf_pension_versement_integral(e);
+    then asf_ouvre_droit(e);
+}
+
+@source(CSS_L523_2, CSS_L523_2_CSS_ED2021_05, CSS_L523_2_CSS_ED2021_11, CSS_L523_2_CSS_ED2021_12,
+        CSS_L523_2_CSS_ED2022_01, CSS_L523_2_CSS_ED2022_02, CSS_L523_2_CSS_ED2022_03,
+        CSS_L523_2_CSS_ED2022_09, CSS_L523_2_CSS_ED2023_07, CSS_L523_2_CSS_ED2024_01,
+        CSS_L523_2_CSS_ED2025_02, CSS_L523_2_CSS_ED2025_09, CSS_L523_2_CSS_ED2025_12,
+        CSS_L523_2_CSS_ED2026_01, CSS_L523_2_CSS_ED2026_04, CSS_L523_2_CSS_ED2026_06)
+rule AsfCessationCouple(p: Personne, e: Enfant) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "Le titulaire se marie, conclut un pacs ou vit en concubinage: la prestation cesse d'être due";
+    label en unofficial "Holder married/entered pacs/cohabits: payment stops - entitlement removed";
+    when parent_charge(p, e) and asf_couple_nouveau(p);
+    defeat asf_ouvre_droit(e);
+}
+
+@source(CSS_L532_1, CSS_L532_1_CSS_ED2021_05, CSS_L532_1_CSS_ED2021_11, CSS_L532_1_CSS_ED2021_12,
+        CSS_L532_1_CSS_ED2022_01, CSS_L532_1_CSS_ED2022_02, CSS_L532_1_CSS_ED2022_03,
+        CSS_L532_1_CSS_ED2022_09, CSS_L532_1_CSS_ED2023_07, CSS_L532_1_CSS_ED2024_01,
+        CSS_L532_1_CSS_ED2025_02, CSS_L532_1_CSS_ED2025_09, CSS_L532_1_CSS_ED2025_12,
+        CSS_L532_1_CSS_ED2026_01, CSS_L532_1_CSS_ED2026_04, CSS_L532_1_CSS_ED2026_06)
+rule NonCumulBaseCf(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'allocation de base n'est pas cumulable avec le complément familial";
+    label en unofficial "Allocation de base not combined with complement familial";
+    when beneficie_allocation_base(p) and demande_complement_familial(p);
+    then cumul_base_cf_refuse(p);
+}
+
+@source(CSS_L532_2, CSS_L532_2_CSS_ED2026_01, CSS_L532_2_CSS_ED2026_04, CSS_L532_2_CSS_ED2026_06)
+rule NonCumulPrepareIndemnites(p: Personne) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "PreParE à taux plein non cumulable avec les indemnisations du II (dans leur rédaction applicable aux enfants nés à compter du 01.01.2026 — NOTA L. 532-2)";
+    label en unofficial "Full-rate PreParE not combined with II payments (version for children born from 01.01.2026 - NOTA L. 532-2)";
+    when beneficie_prepare_temps_plein(p) and percoit_indemnite_concurrente(p);
+    then cumul_prepare_indemnite_refuse(p);
+}
+
+@source(CSS_L544_9, CSS_L544_9_CSS_ED2026_01, CSS_L544_9_CSS_ED2026_04, CSS_L544_9_CSS_ED2026_06)
+rule NonCumulAjpp(p: Personne) defeasible {
+    effective [@2025-12-31, infinity);
+    label fr official "AJPP non cumulable avec les indemnités 1°-5° du I (liste L. 532-2 II)";
+    label en unofficial "AJPP not combined with I items 1-5 (L. 532-2 II list)";
+    when beneficie_ajpp(p) and percoit_indemnite_concurrente(p);
+    then cumul_ajpp_refuse(p);
+}
+
+@source(CSS_L544_9, CSS_L544_9_CSS_ED2026_01, CSS_L544_9_CSS_ED2026_04, CSS_L544_9_CSS_ED2026_06)
+rule NonCumulAjppPrepare(p: Personne) defeasible {
+    effective [@2025-12-31, infinity);
+    label fr official "AJPP non cumulable avec la PreParE (L. 544-9 I 6°)";
+    label en unofficial "AJPP not combined with PreParE (L. 544-9 I 6)";
+    when beneficie_ajpp(p) and percoit_prepare_concurrente_ajpp(p);
+    then cumul_ajpp_refuse(p);
+}
+
+@source(CSS_L544_9, CSS_L544_9_CSS_ED2026_01, CSS_L544_9_CSS_ED2026_04, CSS_L544_9_CSS_ED2026_06)
+rule NonCumulAjppComplementAeeh(p: Personne) defeasible {
+    effective [@2025-12-31, infinity);
+    label fr official "AJPP non cumulable avec le complément ou la majoration AEEH du même enfant (L. 544-9 I 7°)";
+    label en unofficial "AJPP not combined with the same-child AEEH complement or increase (L. 544-9 I 7)";
+    when beneficie_ajpp(p) and percoit_complement_aeeh_meme_enfant(p);
+    then cumul_ajpp_refuse(p);
+}
+
+@source(CSS_L544_9, CSS_L544_9_CSS_ED2026_01, CSS_L544_9_CSS_ED2026_04, CSS_L544_9_CSS_ED2026_06)
+rule NonCumulAjppAah(p: Personne) defeasible {
+    effective [@2025-12-31, infinity);
+    label fr official "AJPP non cumulable avec l'AAH (L. 544-9 I 8°)";
+    label en unofficial "AJPP not combined with AAH (L. 544-9 I 8)";
+    when beneficie_ajpp(p) and percoit_aah_concurrente_ajpp(p);
+    then cumul_ajpp_refuse(p);
+}
+
+@source(CSS_L544_9, CSS_L544_9_CSS_ED2026_01, CSS_L544_9_CSS_ED2026_04, CSS_L544_9_CSS_ED2026_06)
+rule NonCumulAjppPch(p: Personne) defeasible {
+    effective [@2025-12-31, infinity);
+    label fr official "AJPP non cumulable avec l'élément PCH du 1° de L. 245-3 CASF (L. 544-9 I 9°)";
+    label en unofficial "AJPP not combined with the PCH element of 1 of L. 245-3 CASF (L. 544-9 I 9)";
+    when beneficie_ajpp(p) and percoit_pch_element_concurrent_ajpp(p);
+    then cumul_ajpp_refuse(p);
+}
+
+@source(CSS_L544_9, CSS_L544_9_CSS_ED2026_01, CSS_L544_9_CSS_ED2026_04, CSS_L544_9_CSS_ED2026_06)
+rule CumulAjppTempsPartielItem3(p: Personne) defeater {
+    effective [@2025-12-31, infinity);
+    label fr official "AJPP partielle cumulable en cours de droit avec l'indemnité 3° du temps partiel, sans autre item (L. 544-9 al. final)";
+    label en unofficial "Partial AJPP combined during entitlement with the part-time item-3 indemnity, no other item (L. 544-9 final sentence)";
+    when beneficie_ajpp(p) and ajpp_cumul_temps_partiel_item3(p);
+    defeat cumul_ajpp_refuse(p);
+}
+
+@source(CSS_L533_1, CSS_L533_1_CSS_ED2021_05, CSS_L533_1_CSS_ED2021_11, CSS_L533_1_CSS_ED2021_12,
+        CSS_L533_1_CSS_ED2022_01, CSS_L533_1_CSS_ED2022_02, CSS_L533_1_CSS_ED2022_03,
+        CSS_L533_1_CSS_ED2022_09, CSS_L533_1_CSS_ED2023_07, CSS_L533_1_CSS_ED2024_01,
+        CSS_L533_1_CSS_ED2025_02, CSS_L533_1_CSS_ED2025_09, CSS_L533_1_CSS_ED2025_12,
+        CSS_L533_1_CSS_ED2026_01, CSS_L533_1_CSS_ED2026_04, CSS_L533_1_CSS_ED2026_06)
+rule PrimeNaissanceCondition(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Le versement de la prime à la naissance est subordonné au premier examen prénatal (décret: modalités — hors champ)";
+    label en unofficial "Prime a la naissance conditional on the first prenatal examination (procedure by decree - out of scope)";
+    when examen_prenatal_justifie(p);
+    then prime_naissance_condition_remplie(p);
+}
+
+@source(CSS_L541_1, CSS_L541_1_CSS_ED2021_05, CSS_L541_1_CSS_ED2021_11, CSS_L541_1_CSS_ED2021_12,
+        CSS_L541_1_CSS_ED2022_01, CSS_L541_1_CSS_ED2022_02, CSS_L541_1_CSS_ED2022_03,
+        CSS_L541_1_CSS_ED2022_09, CSS_L541_1_CSS_ED2023_07, CSS_L541_1_CSS_ED2024_01,
+        CSS_L541_1_CSS_ED2025_02, CSS_L541_1_CSS_ED2025_09, CSS_L541_1_CSS_ED2025_12,
+        CSS_L541_1_CSS_ED2026_01, CSS_L541_1_CSS_ED2026_04, CSS_L541_1_CSS_ED2026_06, CSS_L541_2,
+        CSS_L541_2_CSS_ED2021_05, CSS_L541_2_CSS_ED2021_11, CSS_L541_2_CSS_ED2021_12,
+        CSS_L541_2_CSS_ED2022_01, CSS_L541_2_CSS_ED2022_02, CSS_L541_2_CSS_ED2022_03,
+        CSS_L541_2_CSS_ED2022_09, CSS_L541_2_CSS_ED2023_07, CSS_L541_2_CSS_ED2024_01,
+        CSS_L541_2_CSS_ED2025_02, CSS_L541_2_CSS_ED2025_09, CSS_L541_2_CSS_ED2025_12,
+        CSS_L541_2_CSS_ED2026_01, CSS_L541_2_CSS_ED2026_04, CSS_L541_2_CSS_ED2026_06)
+rule AeehDecisionCdaph(e: Enfant) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "Allocation et complément attribués au vu de la décision CDAPH (taux décret — hors champ, paquet fr.pf.aeeh)";
+    label en unofficial "Allowance and supplement - by CDAPH decision (rate by decree - out of scope, package fr.pf.aeeh)";
+    when decision_cdaph_favorable(e);
+    then aeeh_ouvre_droit(e);
+}
+
+@source(CSS_L541_1, CSS_L541_1_CSS_ED2021_05, CSS_L541_1_CSS_ED2021_11, CSS_L541_1_CSS_ED2021_12,
+        CSS_L541_1_CSS_ED2022_01, CSS_L541_1_CSS_ED2022_02, CSS_L541_1_CSS_ED2022_03,
+        CSS_L541_1_CSS_ED2022_09, CSS_L541_1_CSS_ED2023_07, CSS_L541_1_CSS_ED2024_01,
+        CSS_L541_1_CSS_ED2025_02, CSS_L541_1_CSS_ED2025_09, CSS_L541_1_CSS_ED2025_12,
+        CSS_L541_1_CSS_ED2026_01, CSS_L541_1_CSS_ED2026_04, CSS_L541_1_CSS_ED2026_06)
+rule AeehExclusionInternat(e: Enfant) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "Pas d'allocation en cas de placement en internat avec prise en charge intégrale, hors périodes de congés ou de suspension";
+    label en unofficial "No allowance for full-cover residential care, outside leave or suspension periods - entitlement removed";
+    when prise_en_charge_integrale_internat(e) and not periode_conge_suspension_prise_en_charge(e);
+    defeat aeeh_ouvre_droit(e);
+}
+
+@source(CSS_L543_1, CSS_L543_1_CSS_ED2021_05, CSS_L543_1_CSS_ED2021_11, CSS_L543_1_CSS_ED2021_12,
+        CSS_L543_1_CSS_ED2022_01, CSS_L543_1_CSS_ED2022_02, CSS_L543_1_CSS_ED2022_03,
+        CSS_L543_1_CSS_ED2022_09, CSS_L543_1_CSS_ED2023_07, CSS_L543_1_CSS_ED2024_01,
+        CSS_L543_1_CSS_ED2025_02, CSS_L543_1_CSS_ED2025_09, CSS_L543_1_CSS_ED2025_12,
+        CSS_L543_1_CSS_ED2026_01, CSS_L543_1_CSS_ED2026_04, CSS_L543_1_CSS_ED2026_06)
+rule ArsScolarite(e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ARS attribuée pour chaque enfant inscrit / en études / en apprentissage (plafond et montant décret et arrêté — hors champ, paquet fr.pf.ars)";
+    label en unofficial "ARS for each enrolled/pupil/apprentice child (ceiling and amount by decree and arrete - out of scope, package fr.pf.ars)";
+    when inscription_scolaire(e);
+    then ars_condition_scolarite(e);
+}
+
+@source(CSS_L552_7, CSS_L552_7_CSS_ED2022_02, CSS_L552_7_CSS_ED2022_03, CSS_L552_7_CSS_ED2022_09,
+        CSS_L552_7_CSS_ED2023_07, CSS_L552_7_CSS_ED2024_01, CSS_L552_7_CSS_ED2025_02,
+        CSS_L552_7_CSS_ED2025_09, CSS_L552_7_CSS_ED2025_12, CSS_L552_7_CSS_ED2026_01,
+        CSS_L552_7_CSS_ED2026_04, CSS_L552_7_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule ArsDecesApresJuin(e: Enfant, deces: Date, seuil: Date) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "ARS due au titre de la rentrée postérieure lorsque le décès est intervenu à compter du 1er juin précédent, droit ouvert avant le mois du décès (D. 552-7, R. 552-4)";
+    label en unofficial "ARS for the following school year where death occurred on/after the preceding 1 June, right opened before the death month (D. 552-7, R. 552-4)";
+    when deces_le(e, deces) and seuil_juin_rentree(e, seuil) and deces >= seuil
+        and maintien_applicable(e);
+    then ars_due_exceptionnellement(e);
+}
+
+@source(CSS_L544_3, CSS_L544_3_CSS_ED2024_01, CSS_L544_3_CSS_ED2025_02, CSS_L544_3_CSS_ED2025_09,
+        CSS_L544_3_CSS_ED2025_12, CSS_L544_3_CSS_ED2026_01, CSS_L544_3_CSS_ED2026_04,
+        CSS_L544_3_CSS_ED2026_06)
+rule AjppPlafond310(e: Enfant, jours: Integer) strict {
+    effective [@2023-07-21, infinity);
+    label fr official "Le nombre maximum d'allocations journalières versées au cours de la période est égal à 310";
+    label en unofficial "Maximum daily allowances for the period - 310";
+    when jours_ajpp_verses(e, jours) and jours <= 310;
+    then ajpp_dans_limite(e);
+}
+
+@source(CSS_L544_10, CSS_L544_10_CSS_ED2021_05, CSS_L544_10_CSS_ED2021_11,
+        CSS_L544_10_CSS_ED2021_12, CSS_L544_10_CSS_ED2022_01, CSS_L544_10_CSS_ED2022_02,
+        CSS_L544_10_CSS_ED2022_03, CSS_L544_10_CSS_ED2022_09, CSS_L544_10_CSS_ED2023_07,
+        CSS_L544_10_CSS_ED2024_01, CSS_L544_10_CSS_ED2025_02, CSS_L544_10_CSS_ED2025_09,
+        CSS_L544_10_CSS_ED2025_12, CSS_L544_10_CSS_ED2026_01, CSS_L544_10_CSS_ED2026_04,
+        CSS_L544_10_CSS_ED2026_06)
+rule DevoirInformerAjpp(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'organisme est tenu d'informer le bénéficiaire AJPP des critères AEEH et PCH et des modalités de demande (L. 544-10, branche bénéficiaire)";
+    label en unofficial "The body must inform the AJPP beneficiary of AEEH and PCH criteria and claim procedure (L. 544-10, beneficiary branch)";
+    when organisme_debiteur_pf(o, p) and beneficie_ajpp(p);
+    then information_ajpp_due(o, p);
+}
+
+@source(CSS_L544_10, CSS_L544_10_CSS_ED2021_05, CSS_L544_10_CSS_ED2021_11,
+        CSS_L544_10_CSS_ED2021_12, CSS_L544_10_CSS_ED2022_01, CSS_L544_10_CSS_ED2022_02,
+        CSS_L544_10_CSS_ED2022_03, CSS_L544_10_CSS_ED2022_09, CSS_L544_10_CSS_ED2023_07,
+        CSS_L544_10_CSS_ED2024_01, CSS_L544_10_CSS_ED2025_02, CSS_L544_10_CSS_ED2025_09,
+        CSS_L544_10_CSS_ED2025_12, CSS_L544_10_CSS_ED2026_01, CSS_L544_10_CSS_ED2026_04,
+        CSS_L544_10_CSS_ED2026_06)
+rule DevoirInformerDemandeurAjpp(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'organisme est tenu d'informer le demandeur AJPP (avant versement) des critères AEEH et PCH et des modalités de demande (L. 544-10, branche demandeur)";
+    label en unofficial "The body must inform the AJPP applicant (before payment) of AEEH and PCH criteria and claim procedure (L. 544-10, applicant branch)";
+    when organisme_debiteur_pf(o, p) and demande_ajpp_deposee(p);
+    then information_ajpp_due(o, p);
+}
+
+// D-42 (08.10.2026): one norm per position name (LDC-E1338: two rules may not
+// generate the same template StableId); the branches above derive information_ajpp_due.
+@source(CSS_L544_10, CSS_L544_10_CSS_ED2021_05, CSS_L544_10_CSS_ED2021_11, CSS_L544_10_CSS_ED2021_12,
+        CSS_L544_10_CSS_ED2022_01, CSS_L544_10_CSS_ED2022_02, CSS_L544_10_CSS_ED2022_03, CSS_L544_10_CSS_ED2022_09,
+        CSS_L544_10_CSS_ED2023_07, CSS_L544_10_CSS_ED2024_01, CSS_L544_10_CSS_ED2025_02, CSS_L544_10_CSS_ED2025_09,
+        CSS_L544_10_CSS_ED2025_12, CSS_L544_10_CSS_ED2026_01, CSS_L544_10_CSS_ED2026_04, CSS_L544_10_CSS_ED2026_06)
+rule DevoirInformerAjppEtDemandeur(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'organisme informe le bénéficiaire ou le demandeur AJPP des critères AEEH et PCH (L. 544-10)";
+    label en unofficial "the body informs the AJPP beneficiary or applicant of AEEH and PCH criteria (L. 544-10)";
+    when information_ajpp_due(o, p);
+    then duty InformerDemandeurAjpp {
+        bearer o;
+        beneficiary p;
+        maintain demandeur_ajpp_informe(o, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L545_1, CSS_L545_1_CSS_ED2021_05, CSS_L545_1_CSS_ED2021_11, CSS_L545_1_CSS_ED2021_12,
+        CSS_L545_1_CSS_ED2022_01, CSS_L545_1_CSS_ED2022_02, CSS_L545_1_CSS_ED2022_03,
+        CSS_L545_1_CSS_ED2022_09, CSS_L545_1_CSS_ED2023_07, CSS_L545_1_CSS_ED2024_01,
+        CSS_L545_1_CSS_ED2025_02, CSS_L545_1_CSS_ED2025_09, CSS_L545_1_CSS_ED2025_12,
+        CSS_L545_1_CSS_ED2026_01, CSS_L545_1_CSS_ED2026_04, CSS_L545_1_CSS_ED2026_06)
+rule ForfaitDecesEligible(p: Personne, e: Enfant) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "Allocation forfaitaire attribuée à qui assumait la charge effective et permanente au moment du décès, décès jusqu'à la limite d'âge (barème et limite décret — hors champ)";
+    label en unofficial "Lump-sum payment to whoever had care at the time of death, death up to the age limit (scale and limit by decree - out of scope)";
+    when forfait_deces_demande(p, e) and charge_effective_permanente(p, e)
+        and deces_enfant_avant_limite_age(e);
+    then forfait_deces_eligible(p, e);
+}
+
+@source(CSS_L545_1, CSS_L545_1_CSS_ED2021_05, CSS_L545_1_CSS_ED2021_11, CSS_L545_1_CSS_ED2021_12,
+        CSS_L545_1_CSS_ED2022_01, CSS_L545_1_CSS_ED2022_02, CSS_L545_1_CSS_ED2022_03,
+        CSS_L545_1_CSS_ED2022_09, CSS_L545_1_CSS_ED2023_07, CSS_L545_1_CSS_ED2024_01,
+        CSS_L545_1_CSS_ED2025_02, CSS_L545_1_CSS_ED2025_09, CSS_L545_1_CSS_ED2025_12,
+        CSS_L545_1_CSS_ED2026_01, CSS_L545_1_CSS_ED2026_04, CSS_L545_1_CSS_ED2026_06)
+rule ForfaitDecesCapitalExclut(p: Personne, e: Enfant) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "Capital-décès perçu au titre de ce décès par un ayant droit quelconque: l'allocation forfaitaire n'est pas versée";
+    label en unofficial "Death capital received in respect of that death by any heir: no lump-sum payment - entitlement removed";
+    when forfait_deces_demande(p, e) and capital_deces_percu_pour_deces(e);
+    defeat forfait_deces_eligible(p, e);
+}
+
+@source(CSS_L542_9, CSS_L542_9_CSS_ED2021_05, CSS_L542_9_CSS_ED2021_11, CSS_L542_9_CSS_ED2021_12,
+        CSS_L542_9_CSS_ED2022_01, CSS_L542_9_CSS_ED2022_02, CSS_L542_9_CSS_ED2022_03,
+        CSS_L542_9_CSS_ED2022_09, CSS_L542_9_CSS_ED2023_07, CSS_L542_9_CSS_ED2024_01,
+        CSS_L542_9_CSS_ED2025_02, CSS_L542_9_CSS_ED2025_09, CSS_L542_9_CSS_ED2025_12,
+        CSS_L542_9_CSS_ED2026_01, CSS_L542_9_CSS_ED2026_04, CSS_L542_9_CSS_ED2026_06)
+rule PretHabitat(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Les régimes peuvent accorder des prêts à l'amélioration (conditions et limites fixées par décret — hors champ)";
+    label en unofficial "Schemes may grant improvement loans (conditions and limits by decree - out of scope)";
+    when organisme_debiteur_pf(o, p) and pret_habitat_demande(p);
+    then liberty AccorderPretAmelioration {
+        holder o;
+        action accorder_pret_action(o, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L552_7, CSS_L552_7_CSS_ED2022_02, CSS_L552_7_CSS_ED2022_03, CSS_L552_7_CSS_ED2022_09,
+        CSS_L552_7_CSS_ED2023_07, CSS_L552_7_CSS_ED2024_01, CSS_L552_7_CSS_ED2025_02,
+        CSS_L552_7_CSS_ED2025_09, CSS_L552_7_CSS_ED2025_12, CSS_L552_7_CSS_ED2026_01,
+        CSS_L552_7_CSS_ED2026_04, CSS_L552_7_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule MaintienForfaitDeces(e: Enfant) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "Décès: allocation forfaitaire L. 521-1 versée au titre de l'enfant maintenue pendant la durée du décret, droit ouvert avant le mois du décès (L. 552-7 al. 1, R. 552-4)";
+    label en unofficial "Death: L. 521-1 lump-sum allowance paid for the child maintained for the decree period, right opened before the death month (L. 552-7 para. 1, R. 552-4)";
+    when deces_enfant_charge(e) and duree_maintien_fixee(e) and forfait_l5211_verse_enfant(e)
+        and maintien_applicable(e);
+    then maintien_forfait_deces(e);
+}
+
+@source(CSS_L552_7, CSS_L552_7_CSS_ED2022_02, CSS_L552_7_CSS_ED2022_03, CSS_L552_7_CSS_ED2022_09,
+        CSS_L552_7_CSS_ED2023_07, CSS_L552_7_CSS_ED2024_01, CSS_L552_7_CSS_ED2025_02,
+        CSS_L552_7_CSS_ED2025_09, CSS_L552_7_CSS_ED2025_12, CSS_L552_7_CSS_ED2026_01,
+        CSS_L552_7_CSS_ED2026_04, CSS_L552_7_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule MaintienMajorationAfDeces(e: Enfant) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "Décès: majoration L. 521-3 versée au titre de l'enfant maintenue pendant la durée du décret, droit ouvert avant le mois du décès (L. 552-7 al. 1, R. 552-4)";
+    label en unofficial "Death: L. 521-3 increase paid for the child maintained for the decree period, right opened before the death month (L. 552-7 para. 1, R. 552-4)";
+    when deces_enfant_charge(e) and duree_maintien_fixee(e) and majoration_l5213_versee_enfant(e)
+        and maintien_applicable(e);
+    then maintien_majoration_af(e);
+}
+
+@source(CSS_L552_7, CSS_L552_7_CSS_ED2022_02, CSS_L552_7_CSS_ED2022_03, CSS_L552_7_CSS_ED2022_09,
+        CSS_L552_7_CSS_ED2023_07, CSS_L552_7_CSS_ED2024_01, CSS_L552_7_CSS_ED2025_02,
+        CSS_L552_7_CSS_ED2025_09, CSS_L552_7_CSS_ED2025_12, CSS_L552_7_CSS_ED2026_01,
+        CSS_L552_7_CSS_ED2026_04, CSS_L552_7_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule MaintienAeehDeces(e: Enfant) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "Décès: AEEH versée au titre de l'enfant maintenue pendant la durée du décret, droit ouvert avant le mois du décès (L. 552-7 al. 1, R. 552-4)";
+    label en unofficial "Death: AEEH paid for the child maintained for the decree period, right opened before the death month (L. 552-7 para. 1, R. 552-4)";
+    when deces_enfant_charge(e) and duree_maintien_fixee(e) and aeeh_versee_enfant(e)
+        and maintien_applicable(e);
+    then maintien_aeeh_deces(e);
+}
+
+@source(CSS_L552_7, CSS_L552_7_CSS_ED2022_02, CSS_L552_7_CSS_ED2022_03, CSS_L552_7_CSS_ED2022_09,
+        CSS_L552_7_CSS_ED2023_07, CSS_L552_7_CSS_ED2024_01, CSS_L552_7_CSS_ED2025_02,
+        CSS_L552_7_CSS_ED2025_09, CSS_L552_7_CSS_ED2025_12, CSS_L552_7_CSS_ED2026_01,
+        CSS_L552_7_CSS_ED2026_04, CSS_L552_7_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule MaintienPrepareDeces(e: Enfant) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "Décès: PreParE versée au titre de l'enfant maintenue pendant la durée du décret, droit ouvert avant le mois du décès (L. 552-7 al. 1, R. 552-4)";
+    label en unofficial "Death: PreParE paid for the child maintained for the decree period, right opened before the death month (L. 552-7 para. 1, R. 552-4)";
+    when deces_enfant_charge(e) and duree_maintien_fixee(e) and prepare_versee_enfant(e)
+        and maintien_applicable(e);
+    then maintien_prepare_deces(e);
+}
+
+@source(CSS_L552_7, CSS_L552_7_CSS_ED2022_02, CSS_L552_7_CSS_ED2022_03, CSS_L552_7_CSS_ED2022_09,
+        CSS_L552_7_CSS_ED2023_07, CSS_L552_7_CSS_ED2024_01, CSS_L552_7_CSS_ED2025_02,
+        CSS_L552_7_CSS_ED2025_09, CSS_L552_7_CSS_ED2025_12, CSS_L552_7_CSS_ED2026_01,
+        CSS_L552_7_CSS_ED2026_04, CSS_L552_7_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule MaintienBaseDeces(e: Enfant) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "Décès: allocation de base versée au titre de l'enfant maintenue pendant la durée du décret, droit ouvert avant le mois du décès (L. 552-7 al. 1, R. 552-4)";
+    label en unofficial "Death: base allowance paid for the child maintained for the decree period, right opened before the death month (L. 552-7 para. 1, R. 552-4)";
+    when deces_enfant_charge(e) and duree_maintien_fixee(e) and base_versee_enfant(e)
+        and maintien_applicable(e);
+    then maintien_base_deces(e);
+}
+
+@source(CSS_L552_7, CSS_L552_7_CSS_ED2022_02, CSS_L552_7_CSS_ED2022_03, CSS_L552_7_CSS_ED2022_09,
+        CSS_L552_7_CSS_ED2023_07, CSS_L552_7_CSS_ED2024_01, CSS_L552_7_CSS_ED2025_02,
+        CSS_L552_7_CSS_ED2025_09, CSS_L552_7_CSS_ED2025_12, CSS_L552_7_CSS_ED2026_01,
+        CSS_L552_7_CSS_ED2026_04, CSS_L552_7_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule MaintienAsfDeces(e: Enfant) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "Décès: ASF versée au titre de l'enfant maintenue pendant la durée du décret, droit ouvert avant le mois du décès (L. 552-7 al. 1, R. 552-4)";
+    label en unofficial "Death: ASF paid for the child maintained for the decree period, right opened before the death month (L. 552-7 para. 1, R. 552-4)";
+    when deces_enfant_charge(e) and duree_maintien_fixee(e) and asf_versee_enfant(e)
+        and maintien_applicable(e);
+    then maintien_asf_deces(e);
+}
+
+@source(CSS_L552_7, CSS_L552_7_CSS_ED2022_02, CSS_L552_7_CSS_ED2022_03, CSS_L552_7_CSS_ED2022_09,
+        CSS_L552_7_CSS_ED2023_07, CSS_L552_7_CSS_ED2024_01, CSS_L552_7_CSS_ED2025_02,
+        CSS_L552_7_CSS_ED2025_09, CSS_L552_7_CSS_ED2025_12, CSS_L552_7_CSS_ED2026_01,
+        CSS_L552_7_CSS_ED2026_04, CSS_L552_7_CSS_ED2026_06)
+rule MaintienDecesAgregat(e: Enfant) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "Agrégat: au moins un des six items maintenu (forfait, majoration, AEEH, PreParE, base, ASF)";
+    label en unofficial "Rollup: at least one of the six items maintained (lump sum, increase, AEEH, PreParE, base, ASF)";
+    when maintien_forfait_deces(e) or maintien_majoration_af(e) or maintien_aeeh_deces(e)
+        or maintien_prepare_deces(e) or maintien_base_deces(e) or maintien_asf_deces(e);
+    then prestations_maintenues_deces(e);
+}

@@ -1,0 +1,52 @@
+// СВОЙ сценарий, выведенный из закреплённого текста главы VI: дела Catala этого
+// сектора заданы для заморских территорий, и их числа проверяются отдельными
+// сценариями `*-guadeloupe-*` и `*-saint-pierre-*`.
+//
+// ШАГ: коэффициент третьего абзаца D. 842-11 (ст. 38 2°) — 0,0234, один на все
+// случаи, в отличие от трёх случаев ст. 25 у APL-ветви.//
+// ПОЧЕМУ В ЭТОМ ДЕЛЕ НЕТ ФАКТА РЕСУРСОВ. Этому шагу они не нужны, и поданы
+// намеренно не были: с ними дело считает ещё и L0, а его отказ (непредставимое
+// частное либо отсутствие транш второго абзаца до 1 июля 2022 года) поражает ВЕСЬ
+// evaluation-документ. Измерено 14.09.2026: с фактом ресурсов сценарий краснеет
+// не потому, что его шаг неверен, а потому, что документ целиком неисполним.
+// L0 закреплён своими сценариями.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-al-accession-coefficient-depense-nette" {
+    given {
+        // D-42: G-A13 migration (24-lecture-pp.law) — D. 823-17 "P0 ... ne peut etre
+        // inferieure a un montant minimum" has two readings in group SensMinimumPp
+        // (selection exactly_one); this hand suite selects the working reading, as
+        // the other hand suites do. No expectation changed.
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frontiere-al-accession-coefficient-depense-nette-01": secteur_accession_allocations(entity_ref("urn:fr:apl:case:al-accession-a")) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-02": aide_demandee(entity_ref("urn:fr:apl:case:al-accession-a"), ALF) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-03": zone_du_logement(entity_ref("urn:fr:apl:case:al-accession-a"), ZONE_II) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-04": situation_familiale(entity_ref("urn:fr:apl:case:al-accession-a"), COUPLE) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-05": personnes_a_charge(entity_ref("urn:fr:apl:case:al-accession-a"), 2) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-06": vintage_certificat(entity_ref("urn:fr:apl:case:al-accession-a"), CERTIFICAT_DEPUIS_01_10_2019) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-07": mode_propriete(entity_ref("urn:fr:apl:case:al-accession-a"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-08": territoire(entity_ref("urn:fr:apl:case:al-accession-a"), METROPOLE) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-09": mensualite_declaree(entity_ref("urn:fr:apl:case:al-accession-a"), 500 EUR) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-10": base_plancher_ressources(entity_ref("urn:fr:apl:case:al-accession-a"), COEFFICIENT_MENSUALITE) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-11": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:al-accession-a"), false) { origin case_input; }
+        // D-42: D. 842-11 al. 3 applies "dans le cas mentionne au 1° de l'article
+        // R. 842-5, lorsque le contrat de pret a ete signe apres le 1er juillet 1999";
+        // the model (06 CoefficientDepenseNetteALAccession) asks for both facts.
+        // Case: home-ownership loan signed with the 2019-10 certificate vintage.
+        assert "frontiere-al-accession-coefficient-depense-nette-12": dette_accession_allocation(entity_ref("urn:fr:apl:case:al-accession-a"), DETTE_ACCESSION_PROPRIETE) { origin case_input; }
+        assert "frontiere-al-accession-coefficient-depense-nette-13": pret_allocation_date_signature(entity_ref("urn:fr:apl:case:al-accession-a"), @2019-10-01) { origin case_input; }
+    }
+    // D-42 BOUNDARY: the derived value is Decimal (barème parameter / Decimal
+    // function), while the query literal in a Decimal slot lowers to Number
+    // (law.core 0.2.7 Number domain) and does not match a Decimal value —
+    // named outside E-0324 ("Вне правки": Decimal slots are a separate errata
+    // candidate). Both lawc and lawref agree; the expectation follows the pinned
+    // text and is kept. Not decidable in the package.
+    evaluate truth(coefficient_depense_nette_al(entity_ref("urn:fr:apl:case:al-accession-a"), 0.0234));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

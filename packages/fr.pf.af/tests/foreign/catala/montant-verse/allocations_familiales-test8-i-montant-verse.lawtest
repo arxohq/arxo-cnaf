@@ -1,0 +1,44 @@
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, allocations_familiales/tests/tests_allocations_familiales.catala_fr, scope Test8.
+// ИХ ОЖИДАНИЕ: i_montant_versé = 197.90.
+// ПЕРЕНОС: метрополия, 01.01.2021, двое детей 2004 и 2005, ресурсы 69 945 € — выше плафона I на 12 €: полоса 2 и complément dégressif D. 521-1 II; цель — af_montant_du
+// ДЕТИ: e0 — 17 лет, заработка нет: L. 512-3 2°, R. 512-2; e1 — 16 лет ровно (обязательное обучение «jusqu'à l'âge de seize ans»): до конца обязательного обучения (16 лет) — L. 512-3 1° (pf-core/sources/css/L512-3.txt:3).
+// СУММЫ: BMAF и плафоны D. 521-3 — закреплённые фрагменты fr.css.revalorisation
+// (tools/openfisca_hook.py); счёт надбавок и forfait — пробы этого же пакета.
+// Файл порождён corpus/tools/foreign/catala_tests.py (режим af-interface) по
+// tools/foreign-map.json — правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-allocations_familiales-test8-i-montant-verse" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-01-01T12:00:00Z; knowledge_time @2021-01-01T12:00:00Z; legal_time @2021-01-01; timezone "Europe/Paris"; interpretation ArrondiLignesDss; }
+        assert "allocations_familiales-test8-01": territoire(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), METROPOLE) { origin case_input; }
+        assert "allocations_familiales-test8-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 2) { origin case_input; }
+        assert "allocations_familiales-test8-03": ressources_menage(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 69945 EUR) { origin case_input; }
+        assert "allocations_familiales-test8-04": bmaf_retenu(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 414.4 EUR) { origin case_input; }
+        assert "allocations_familiales-test8-05": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 58279 EUR) { origin case_input; }
+        assert "allocations_familiales-test8-06": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 81558 EUR) { origin case_input; }
+        assert "allocations_familiales-test8-07": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 5827 EUR) { origin case_input; }
+        assert "allocations_familiales-test8-08": nb_majorations_pleines(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 1) { origin case_input; }
+        assert "allocations_familiales-test8-09": nb_majorations_demi(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 0) { origin case_input; }
+        assert "allocations_familiales-test8-10": forfait_total_menage(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 0 EUR) { origin case_input; }
+        assert "allocations_familiales-test8-11": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 0) { origin case_input; }
+        assert "allocations_familiales-test8-12": foyer_du_cas(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8")) { origin case_input; }
+        assert "allocations_familiales-test8-13": mois_droit(@2021-01-01) { origin case_input; }
+        assert "allocations_familiales-test8-14": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8-e0")) { origin case_input; }
+        assert "allocations_familiales-test8-15": date_naissance(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8-e0"), @2004-01-01) { origin case_input; }
+        assert "allocations_familiales-test8-16": enfant_du_cas(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8-e0")) { origin case_input; }
+        assert "allocations_familiales-test8-17": garde(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8-e0"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "allocations_familiales-test8-18": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8-e0")) { origin case_input; }
+        assert "allocations_familiales-test8-19": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8-e1")) { origin case_input; }
+        assert "allocations_familiales-test8-20": date_naissance(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8-e1"), @2005-01-01) { origin case_input; }
+        assert "allocations_familiales-test8-21": enfant_du_cas(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8-e1")) { origin case_input; }
+        assert "allocations_familiales-test8-22": garde(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8-e1"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "allocations_familiales-test8-23": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8-e1")) { origin case_input; }
+    }
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:catala:allocations_familiales-test8"), 197.9 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

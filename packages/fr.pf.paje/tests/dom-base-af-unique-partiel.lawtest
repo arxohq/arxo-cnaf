@@ -1,0 +1,23 @@
+// L. 755-19, para. 2, part-rate variant: Guyane household, part-rate base
+// right open (32000 € above the 30000 € full ceiling but within the built
+// 35841 € L. 531-2 ceiling), single-child family allowances served — the
+// base/AF cumulation is barred.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-base-af-unique-partiel" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-afpa-01": territoire(entity_ref("urn:fr:paje:case:dom-afpa"), GUYANE) { origin case_input; }
+        assert "dom-afpa-02": enfant_en_charge(entity_ref("urn:fr:paje:case:dom-afpa"), entity_ref("urn:fr:paje:enfant:dom-afpa")) { origin case_input; }
+        assert "dom-afpa-03": condition_age_base(entity_ref("urn:fr:paje:enfant:dom-afpa")) { origin adjudicated; }
+        assert "dom-afpa-04": ressources_annuelles(entity_ref("urn:fr:paje:case:dom-afpa"), 32000 EUR) { origin case_input; }
+        assert "dom-afpa-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:dom-afpa"), 30000 EUR) { origin case_input; }
+        assert "dom-afpa-06": af_enfant_unique_servies(entity_ref("urn:fr:paje:case:dom-afpa"), entity_ref("urn:fr:paje:enfant:dom-afpa")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_base_af_unique_interdit(entity_ref("urn:fr:paje:case:dom-afpa"), entity_ref("urn:fr:paje:enfant:dom-afpa")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

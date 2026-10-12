@@ -1,0 +1,1950 @@
+// RSA right and flat-rate amount (L.262-2/3/4/5, R.262-1/2/39).
+//
+// DEONTIC MAP: computation only (no must/must-not here):
+// - the L.262-2 euro base of a single person is BUILT from the pinned
+//   revaluation decrees 2020-490, 2021-530, 2022-699, 2023-340, 2024-396 and
+//   2025-293 (article 1; bareme parameter MontantForfaitaireDecret, read at
+//   the legal time of the case; DECISION-0452: the amount is constructed, not
+//   substituted). The window 2022-07-01..2023-03-31 belongs to law 2022-1158
+//   art. 9 (coefficient 1.04 on every amount revalued under L. 161-25, which
+//   L. 262-3 al. 1 says of the montant forfaitaire): there the base is BUILT
+//   as the amount of decree 2022-699 x 1.04 rounded to the centime HALF_UP
+//   (rule MfBaseLoi2022). The rounding is not in the text of art. 9, of
+//   L. 161-25 or of L. 262-3, so it is a READING (SPEC 152, owner decision
+//   08.10.2026, basis: practice of the funds): interpretation
+//   MfJuillet2022ArrondiCentime, selected in the context of the case; unselected
+//   the window stays without a built base. Outside the pinned series (from
+//   2026-04-01, the next 1 April, not pinned) the base stays a case input
+//   (mf_base; B-RSA-MF-EURO, DSS_PENDING), and a supplied mf_base wins over
+//   the decree (the fund-retained base of the case);
+// - the household flat-rate follows from that base and the composition by
+//   R.262-1 (rank scale below); the MF of the right month (increase included,
+//   mf_applicable_mois) is carried to the three months of the reference
+//   quarter as fr.minima.ressources::mf_mois, and the size-class amounts as
+//   fr.minima.ressources::mf_composition (B-RSA-MF-INPUT-CONTRACT closed from
+//   this side: a case no longer supplies them);
+// - the quarterly amount DUE arrives from fr.minima.ressources
+//   (montant_du_trimestre = average of the monthly intermediate amounts,
+//   R.262-7 I, same lane) and is consumed AS the due: droit holds when
+//   the due is positive (due > 0 stands for resources < MF, L.262-2
+//   al.1) and the allowance EQUALS the due (L.262-2 al.2); never
+//   subtract it from the MF again (D-26, D-44: the W4 consumer-side
+//   double subtraction, repaired here);
+// - L.262-6 EU specifics and the L.262-4 2° exemption list arrive inside
+//   sejour_travail_condition (fund-established, README);
+// - in a household made of one or two parents and their dependent children,
+//   ranks 5+ are built from the counted persons; no rate-class input is needed.
+// The 50/30/40 person-rank scale follows the pinned R.262-1 (+50 % for the
+// second person, +30 % for each further dependant, +40 % from the third
+// child or under-25 dependant); the foreign reference (OpenFisca rsa_socle)
+// only corroborates it.
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+use self::{
+    CASF_L262_2,
+    CASF_L262_20,
+    CASF_L262_20_ED2021_03,
+    CASF_L262_20_ED2021_04,
+    CASF_L262_20_ED2023_01,
+    CASF_L262_20_ED2024_01,
+    CASF_L262_20_ED2024_07,
+    CASF_L262_20_ED2025_01,
+    CASF_L262_20_ED2025_06,
+    CASF_L262_20_ED2026_06,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06,
+    CASF_L262_4,
+    CASF_L262_4_ED2021_03,
+    CASF_L262_4_ED2021_04,
+    CASF_L262_4_ED2023_01,
+    CASF_L262_4_ED2024_01,
+    CASF_L262_4_ED2024_07,
+    CASF_L262_4_ED2025_01,
+    CASF_L262_4_ED2025_06,
+    CASF_L262_4_ED2026_06,
+    CASF_L262_5,
+    CASF_L262_5_ED2021_03,
+    CASF_L262_5_ED2021_04,
+    CASF_L262_5_ED2023_01,
+    CASF_L262_5_ED2024_01,
+    CASF_L262_5_ED2024_07,
+    CASF_L262_5_ED2025_01,
+    CASF_L262_5_ED2025_06,
+    CASF_L262_5_ED2026_06,
+    CASF_L262_9,
+    CASF_L262_9_ED2021_03,
+    CASF_L262_9_ED2021_04,
+    CASF_L262_9_ED2023_01,
+    CASF_L262_9_ED2024_01,
+    CASF_L262_9_ED2024_07,
+    CASF_L262_9_ED2025_01,
+    CASF_L262_9_ED2025_06,
+    CASF_L262_9_ED2026_06,
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06,
+    CASF_R262_39,
+    CASF_R262_39_ED2021_03,
+    CASF_R262_39_ED2021_04,
+    CASF_R262_39_ED2023_01,
+    CASF_R262_39_ED2024_01,
+    CASF_R262_39_ED2024_07,
+    CASF_R262_39_ED2025_01,
+    CASF_R262_39_ED2025_06,
+    CASF_R262_39_ED2026_06,
+    DEC2020_490_ART1,
+    DEC2021_530_ART1,
+    DEC2022_699_ART1,
+    DEC2023_340_ART1,
+    DEC2024_396_ART1,
+    DEC2025_293_ART1,
+    LOI_2022_1158_ART9,
+    age_charge_condition,
+    allocation_mensuelle,
+    allocation_non_versee,
+    conjoint_enfants_comptes,
+    droit_rsa,
+    etudiant_conge,
+    foyer_autre_charge,
+    foyer_enfant_charge,
+    foyer_membre_rang,
+    foyer_naissance,
+    foyer_nb_parents,
+    foyer_nb_personnes,
+    foyer_sup_taux30,
+    foyer_sup_taux40,
+    isole_majore,
+    isolement_constate,
+    majore_debut_mois,
+    majore_demande_mois,
+    majore_duree_mois,
+    majore_nb_enfants,
+    majore_ouvert_mois,
+    majore_prolonge_3ans,
+    majore_retard_mois,
+    majore_terme_3ans,
+    mf_applicable_mois,
+    mf_base,
+    mf_composition,
+    mf_majore,
+    mf_menage,
+    mois_droit,
+    residence_stable,
+    sejour_travail_condition,
+};
+
+deadline policy RSA_MOIS {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+};
+
+// --- Module-local intermediates: the single-person base ---
+
+relation mf_base_saisie(p: fr.minima.ressources::Personne) kind institutional {
+    label fr official "une base mensuelle personne seule est fournie pour l'espèce (mf_base)";
+    label en unofficial "a single-person monthly base is supplied for the case (mf_base)";
+}
+
+relation mf_base_retenue(p: fr.minima.ressources::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "base mensuelle personne seule L. 262-2 retenue pour le calcul : montant du décret de revalorisation épinglé, ou base fournie pour l'espèce hors de la série épinglée";
+    label en unofficial "single-person L. 262-2 monthly base used in the computation: pinned revaluation decree amount, or the case-supplied base outside the pinned series";
+}
+
+// --- Base amount (L.262-2): pinned revaluation decrees, case base as override ---
+//
+// MontantForfaitaireDecret (bareme/, generated from the pinned decrees by
+// tools/build_bareme.py) is read at the legal time of the case. A bare
+// parameter name in a head argument stays an unresolved const_ref value;
+// the product with 1.0 is the read (identity scaling, no adjustment).
+
+@source(
+    DEC2020_490_ART1,
+    DEC2021_530_ART1,
+    DEC2022_699_ART1,
+    DEC2023_340_ART1,
+    DEC2024_396_ART1,
+    DEC2025_293_ART1)
+rule MfBaseDecret(p: fr.minima.ressources::Personne, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "base L. 262-2 d'une personne seule construite du décret de revalorisation en vigueur (article 1er des décrets 2020-490, 2021-530, 2022-699, 2023-340, 2024-396 et 2025-293)";
+    label en unofficial "single-person L. 262-2 base built from the revaluation decree in force (article 1 of decrees 2020-490, 2021-530, 2022-699, 2023-340, 2024-396 and 2025-293)";
+    when mois_droit(p, mois)
+        and not_known(mf_base_saisie(p));
+    then mf_base_retenue(p, MontantForfaitaireDecret * 1.0);
+}
+
+// --- Window 2022-07..2023-03: art. 9 of law 2022-1158 (reading, rounding to the centime) ---
+//
+// Art. 9 I: the amounts of the allocations that undergo an annual revaluation
+// under L. 161-25 CSS are revalued on 1 July 2022 by a coefficient equal to
+// 1.04; L. 262-3 al. 1 CASF says of the montant forfaitaire that it is
+// revalued each 1 April by that L. 161-25 coefficient, so art. 9 covers it
+// (the limb of the same sentence on the elements entering the calculation too).
+// The base is therefore the amount of the last decree (2022-699, 575.52 from
+// April 2022) times 1.04. Neither art. 9 nor L. 161-25 nor L. 262-3 states a
+// rounding of the product (575.52 x 1.04 = 598.5408 exactly): the centime
+// rounding HALF_UP is the practice of the funds, i.e. a READING, not the text.
+// Both factors are bareme parameters valid exactly in the window
+// (MontantForfaitaireBaseLoi2022 anchored to the decree fragment,
+// CoefficientLoi2022 anchored to the art. 9 fragment); the product is built
+// here, never typed in. The 1 April 2023 decree 2023-340 sets 607.75 outright,
+// so the window ends there. The disputed interpretation stays outside any
+// group: unselected it executes nothing and changes no answer.
+
+@source(
+    LOI_2022_1158_ART9,
+    DEC2022_699_ART1,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01)
+rule MfBaseLoi2022(p: fr.minima.ressources::Personne, mois: Date) strict {
+    effective [@2022-07-01, @2023-04-01);
+    label fr official "base L. 262-2 d'une personne seule du 1er juillet 2022 : montant du décret 2022-699 multiplié par le coefficient 1,04 de l'article 9 de la loi 2022-1158, arrondi au centime (lecture)";
+    label en unofficial "single-person L. 262-2 base from 1 July 2022: decree 2022-699 amount times the 1.04 coefficient of article 9 of Act 2022-1158, rounded to the centime (reading)";
+    when mois_droit(p, mois)
+        and not_known(mf_base_saisie(p));
+    then mf_base_retenue(p, round(MontantForfaitaireBaseLoi2022 * CoefficientLoi2022, 2, "HALF_UP"));
+}
+
+@source(LOI_2022_1158_ART9, CASF_L262_3)
+pub interpretation MfJuillet2022ArrondiCentime of LOI_2022_1158_ART9 {
+    status disputed;
+    label fr official "lecture : le produit du montant forfaitaire du décret 2022-699 par le coefficient 1,04 de l'article 9 de la loi 2022-1158 est arrondi au centime, demi vers le haut — pratique des caisses ; ni l'article 9 ni la L. 161-25 ni la L. 262-3 ne fixent d'arrondi";
+    label en unofficial "reading: the product of the decree 2022-699 flat-rate amount and the 1.04 coefficient of article 9 of Act 2022-1158 is rounded to the centime, half up - fund practice; neither article 9 nor L. 161-25 nor L. 262-3 states a rounding";
+    include MfBaseLoi2022;
+}
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06)
+rule MfBaseSaisieMarque(p: fr.minima.ressources::Personne, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "une base fournie pour l'espèce écarte la base du décret (hors série épinglée ou base retenue par la caisse)";
+    label en unofficial "a case-supplied base displaces the decree base (outside the pinned series or fund-retained base)";
+    when mf_base(p, base);
+    then mf_base_saisie(p);
+}
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06)
+rule MfBaseSaisie(p: fr.minima.ressources::Personne, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "base mensuelle personne seule fournie pour l'espèce, retenue telle quelle (B-RSA-MF-EURO)";
+    label en unofficial "single-person monthly base supplied for the case, used as is (B-RSA-MF-EURO)";
+    when mf_base(p, base);
+    then mf_base_retenue(p, base);
+}
+
+// --- Composition (R.262-1): household flat-rate from the base ---
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06)
+rule MfTaille1(p: fr.minima.ressources::Personne, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "foyer d'une personne : montant forfaitaire de base (R. 262-1)";
+    label en unofficial "one-person household: base flat-rate amount (R. 262-1)";
+    when mf_base_retenue(p, base)
+        and foyer_nb_personnes(p, 1);
+    then mf_menage(p, base);
+}
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06)
+rule MfTaille2(p: fr.minima.ressources::Personne, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "deux personnes : base majorée de 50 % (R. 262-1)";
+    label en unofficial "two persons: base increased by 50 % (R. 262-1)";
+    when mf_base_retenue(p, base)
+        and foyer_nb_personnes(p, 2);
+    then mf_menage(p, base + base * TauxCompositionDeux);
+}
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06)
+rule MfTaille3(p: fr.minima.ressources::Personne, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "trois personnes : +50 % et +30 % (R. 262-1)";
+    label en unofficial "three persons: +50 % and +30 % (R. 262-1)";
+    when mf_base_retenue(p, base)
+        and foyer_nb_personnes(p, 3);
+    then mf_menage(p, base + base * TauxCompositionDeux + base * TauxCompositionSupp);
+}
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06)
+rule MfTaille4Couple(p: fr.minima.ressources::Personne, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "quatre personnes, deux parents : +50 %, +30 %, +30 % (R. 262-1)";
+    label en unofficial "four persons, two parents: +50 %, +30 %, +30 % (R. 262-1)";
+    when mf_base_retenue(p, base)
+        and foyer_nb_personnes(p, 4)
+        and foyer_nb_parents(p, 2);
+    then mf_menage(p, base + base * TauxCompositionDeux + base * TauxCompositionSupp + base * TauxCompositionSupp);
+}
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06)
+rule MfTaille4Isole(p: fr.minima.ressources::Personne, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "quatre personnes, parent isolé : la 4e personne est un enfant, +40 % (R. 262-1)";
+    label en unofficial "four persons, lone parent: the 4th person is a child, +40 % (R. 262-1)";
+    when mf_base_retenue(p, base)
+        and foyer_nb_personnes(p, 4)
+        and foyer_nb_parents(p, 1);
+    then mf_menage(p, base + base * TauxCompositionDeux + base * TauxCompositionSupp + base * TauxCompositionEnfant3Plus);
+}
+
+// R. 262-4 fixes household composition at the last day of each month
+// (pinned fr.minima.ressources/sources/casf/R262-4-PRE2025.txt:5 and
+// R262-4.txt:2). R. 262-1 classifies each dependent from the third child or under-25
+// dependent onward. An established household rank remains a fact about a
+// person; the percentage class and its count are conclusions of these rules.
+relation membre_compte(p: fr.minima.ressources::Personne, personne: fr.minima.ressources::Personne) kind institutional {
+    label fr official "personne comptée dans le foyer pour le barème R. 262-1";
+    label en unofficial "person counted in the household under R. 262-1";
+}
+relation rang_valide(p: fr.minima.ressources::Personne, rang: Integer) kind institutional {
+    label fr official "rang entier de un à la taille du foyer établi pour R. 262-1";
+    label en unofficial "established rank from one to the household size under R. 262-1";
+}
+relation rang_avant(p: fr.minima.ressources::Personne, avant: fr.minima.ressources::Personne, apres: fr.minima.ressources::Personne) kind institutional {
+    label fr official "personne de rang antérieur dans le même foyer (R. 262-1)";
+    label en unofficial "person with an earlier rank in the same household (R. 262-1)";
+}
+relation personne_40(p: fr.minima.ressources::Personne, personne: fr.minima.ressources::Personne) kind institutional {
+    label fr official "enfant ou personne de moins de vingt-cinq ans à charge (R. 262-1)";
+    label en unofficial "dependent child or dependent person under age 25 (R. 262-1)";
+}
+relation rang_5_plus_40(p: fr.minima.ressources::Personne, personne: fr.minima.ressources::Personne) kind institutional {
+    label fr official "personne de rang cinq ou suivant ouvrant droit à 40 % (R. 262-1)";
+    label en unofficial "rank-five-or-later person entitled to 40 % (R. 262-1)";
+}
+relation rang_5_plus_30(p: fr.minima.ressources::Personne, personne: fr.minima.ressources::Personne) kind institutional {
+    label fr official "personne de rang cinq ou suivant ouvrant droit à 30 % (R. 262-1)";
+    label en unofficial "rank-five-or-later person entitled to 30 % (R. 262-1)";
+}
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule MembreCompte(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne, r: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "un rang établi identifie un membre compté du foyer";
+    label en unofficial "an established rank identifies a counted household member";
+    when foyer_membre_rang(p, x, r);
+    then membre_compte(p, x);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule RangValide(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne, r: Integer, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "rang établi entre un et la taille du foyer";
+    label en unofficial "established rank between one and household size";
+    when foyer_membre_rang(p, x, r) and foyer_nb_personnes(p, n) and r >= 1 and r <= n;
+    then rang_valide(p, r);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule RangAvant(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne, y: fr.minima.ressources::Personne, rx: Integer, ry: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ordre établi des personnes du foyer";
+    label en unofficial "established order of household persons";
+    when foyer_membre_rang(p, x, rx) and foyer_membre_rang(p, y, ry) and rx < ry;
+    then rang_avant(p, x, y);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule Personne40Enfant(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant à charge ouvrant la catégorie de 40 % à partir du troisième";
+    label en unofficial "dependent child eligible for the 40 % class from the third such dependent";
+    when foyer_enfant_charge(p, x);
+    then personne_40(p, x);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    fr.minima.ressources::CASF_R262_4_PRE2025,
+    fr.minima.ressources::CASF_R262_4_PRE2025_ED2021_03,
+    fr.minima.ressources::CASF_R262_4_PRE2025_ED2022_03,
+    fr.minima.ressources::CASF_R262_4_PRE2025_ED2023_12,
+    fr.minima.ressources::CASF_R262_4,
+    fr.minima.ressources::CASF_R262_4_ED2025_06,
+    fr.minima.ressources::CASF_R262_4_ED2026_06)
+rule Personne40Jeune(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne, birth: Date, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "autre personne à charge de moins de vingt-cinq ans au dernier jour du mois";
+    label en unofficial "other dependent person under 25 on the month's last day";
+    when foyer_autre_charge(p, x) and foyer_naissance(p, x, birth) and mois_droit(p, mois)
+        and add_calendar_period(birth, 25 calendar_year) >= add_calendar_period(mois, 1 calendar_month);
+    then personne_40(p, x);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule Rang40(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne, r: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "troisième enfant ou jeune à charge, de rang cinq ou suivant : 40 %";
+    label en unofficial "third dependent child or young person, rank five or later: 40 %";
+    when foyer_membre_rang(p, x, r) and r >= 5 and personne_40(p, x)
+        and count(collect y: fr.minima.ressources::Personne where rang_avant(p, y, x) and personne_40(p, y)) >= 2;
+    then rang_5_plus_40(p, x);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule Rang30AvantTroisieme(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne, r: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant ou jeune à charge avant le troisième, de rang cinq ou suivant : 30 %";
+    label en unofficial "dependent child or young person before the third, rank five or later: 30 %";
+    when foyer_membre_rang(p, x, r) and r >= 5 and personne_40(p, x)
+        and count(collect y: fr.minima.ressources::Personne where rang_avant(p, y, x) and personne_40(p, y)) < 2;
+    then rang_5_plus_30(p, x);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    fr.minima.ressources::CASF_R262_4_PRE2025,
+    fr.minima.ressources::CASF_R262_4_PRE2025_ED2021_03,
+    fr.minima.ressources::CASF_R262_4_PRE2025_ED2022_03,
+    fr.minima.ressources::CASF_R262_4_PRE2025_ED2023_12,
+    fr.minima.ressources::CASF_R262_4,
+    fr.minima.ressources::CASF_R262_4_ED2025_06,
+    fr.minima.ressources::CASF_R262_4_ED2026_06)
+rule Rang30Autre25(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne, r: Integer, birth: Date, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "autre personne à charge de vingt-cinq ans révolus, rang cinq ou suivant : 30 %";
+    label en unofficial "other dependent person age 25 or older, rank five or later: 30 %";
+    when foyer_membre_rang(p, x, r) and r >= 5 and foyer_autre_charge(p, x)
+        and foyer_naissance(p, x, birth) and mois_droit(p, mois)
+        and add_calendar_period(birth, 25 calendar_year) < add_calendar_period(mois, 1 calendar_month);
+    then rang_5_plus_30(p, x);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule Rangs5Plus40(p: fr.minima.ressources::Personne, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "nombre des personnes de rang cinq et suivants au taux de 40 %";
+    label en unofficial "count of rank-five-or-later persons at the 40 % rate";
+    when foyer_nb_personnes(p, n) and n >= 5
+        and count(collect x: fr.minima.ressources::Personne where membre_compte(p, x)) == n
+        and count(collect r: Integer where rang_valide(p, r)) == n
+        and count(collect x: fr.minima.ressources::Personne where rang_5_plus_40(p, x)) + count(collect x: fr.minima.ressources::Personne where rang_5_plus_30(p, x)) == n - 4;
+    then foyer_sup_taux40(p, count(collect x: fr.minima.ressources::Personne where rang_5_plus_40(p, x)));
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule Rangs5Plus30(p: fr.minima.ressources::Personne, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "nombre des personnes de rang cinq et suivants au taux de 30 %";
+    label en unofficial "count of rank-five-or-later persons at the 30 % rate";
+    when foyer_nb_personnes(p, n) and n >= 5
+        and count(collect x: fr.minima.ressources::Personne where membre_compte(p, x)) == n
+        and count(collect r: Integer where rang_valide(p, r)) == n
+        and count(collect x: fr.minima.ressources::Personne where rang_5_plus_40(p, x)) + count(collect x: fr.minima.ressources::Personne where rang_5_plus_30(p, x)) == n - 4;
+    then foyer_sup_taux30(p, count(collect x: fr.minima.ressources::Personne where rang_5_plus_30(p, x)));
+}
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06)
+rule MfTaille5PlusCouple(p: fr.minima.ressources::Personne, base: Money, n: Integer, k: Integer, m: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "cinq personnes ou plus, deux parents : rangs 5+ à 40 % (k) ou 30 % (m) (R. 262-1)";
+    label en unofficial "five or more persons, two parents: ranks 5+ at 40 % (k) or 30 % (m) (R. 262-1)";
+    when mf_base_retenue(p, base)
+        and foyer_nb_personnes(p, n)
+        and n >= 5
+        and foyer_nb_parents(p, 2)
+        and foyer_sup_taux40(p, k)
+        and foyer_sup_taux30(p, m);
+    then mf_menage(p, base + base * TauxCompositionDeux + base * TauxCompositionSupp + base * TauxCompositionSupp + base * TauxCompositionEnfant3Plus * k + base * TauxCompositionSupp * m);
+}
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06)
+rule MfTaille5PlusIsole(p: fr.minima.ressources::Personne, base: Money, n: Integer, k: Integer, m: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "cinq personnes ou plus, parent isolé : rangs 5+ à 40 % (k) ou 30 % (m) (R. 262-1)";
+    label en unofficial "five or more persons, lone parent: ranks 5+ at 40 % (k) or 30 % (m) (R. 262-1)";
+    when mf_base_retenue(p, base)
+        and foyer_nb_personnes(p, n)
+        and n >= 5
+        and foyer_nb_parents(p, 1)
+        and foyer_sup_taux40(p, k)
+        and foyer_sup_taux30(p, m);
+    then mf_menage(p, base + base * TauxCompositionDeux + base * TauxCompositionSupp + base * TauxCompositionEnfant3Plus + base * TauxCompositionEnfant3Plus * k + base * TauxCompositionSupp * m);
+}
+
+// --- Minima contract: composition MF by size class (1, 2, 3+) ---
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06)
+rule MfComposition1(p: fr.minima.ressources::Personne, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "contrat minima : composition taille 1 (R. 262-1)";
+    label en unofficial "minima contract: size-1 composition (R. 262-1)";
+    when mf_menage(p, m)
+        and foyer_nb_personnes(p, 1);
+    then mf_composition(p, 1, m);
+}
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06)
+rule MfComposition2(p: fr.minima.ressources::Personne, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "contrat minima : composition taille 2 (R. 262-1)";
+    label en unofficial "minima contract: size-2 composition (R. 262-1)";
+    when mf_menage(p, m)
+        and foyer_nb_personnes(p, 2);
+    then mf_composition(p, 2, m);
+}
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06,
+    CASF_L262_3,
+    CASF_L262_3_ED2021_03,
+    CASF_L262_3_ED2021_04,
+    CASF_L262_3_ED2023_01,
+    CASF_L262_3_ED2024_01,
+    CASF_L262_3_ED2024_07,
+    CASF_L262_3_ED2025_01,
+    CASF_L262_3_ED2025_06,
+    CASF_L262_3_ED2026_06)
+rule MfComposition3(p: fr.minima.ressources::Personne, m: Money, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "contrat minima : composition taille 3 ou plus (R. 262-1)";
+    label en unofficial "minima contract: size-3-or-more composition (R. 262-1)";
+    when mf_menage(p, m)
+        and foyer_nb_personnes(p, n)
+        and n >= 3;
+    then mf_composition(p, 3, m);
+}
+
+// L. 262-9 and R. 262-2: an isolated parent caring for a child under
+// three has the extended majoration until that child's third birthday.
+relation enfant_ne_apres(p: fr.minima.ressources::Personne, plus_jeune: fr.minima.ressources::Personne, autre: fr.minima.ressources::Personne) kind institutional {
+    label fr official "enfant à charge né après un autre enfant du foyer";
+    label en unofficial "dependent child born later than another child in the household";
+}
+relation enfant_naissance_etablie(p: fr.minima.ressources::Personne, enfant: fr.minima.ressources::Personne) kind institutional {
+    label fr official "date de naissance établie pour cet enfant à charge";
+    label en unofficial "birth date established for this dependent child";
+}
+relation supplement_charge(p: fr.minima.ressources::Personne, personne: fr.minima.ressources::Personne) kind institutional {
+    label fr official "enfant ou autre personne à charge ouvrant supplément majoré (R. 262-1 al. 2)";
+    label en unofficial "child or other dependent person entitled to the increased-amount supplement (R. 262-1 para. 2)";
+}
+relation dernier_enfant(p: fr.minima.ressources::Personne, enfant: fr.minima.ressources::Personne) kind institutional {
+    label fr official "plus jeune enfant à charge déterminant le terme des trois ans";
+    label en unofficial "youngest dependent child determining the third-birthday end";
+}
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule EnfantNeApres(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne, y: fr.minima.ressources::Personne, bx: Date, by: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ordre de naissance des enfants à charge du foyer";
+    label en unofficial "birth order of dependent children in the household";
+    when foyer_enfant_charge(p, x) and foyer_enfant_charge(p, y)
+        and foyer_naissance(p, x, bx) and foyer_naissance(p, y, by) and bx > by;
+    then enfant_ne_apres(p, x, y);
+}
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule EnfantNaissanceEtablie(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne, birth: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "naissance d'un enfant à charge connue pour la prolongation";
+    label en unofficial "dependent child's birth known for the extension";
+    when foyer_enfant_charge(p, x) and foyer_naissance(p, x, birth);
+    then enfant_naissance_etablie(p, x);
+}
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule DernierEnfant(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "plus jeune enfant à charge du foyer";
+    label en unofficial "youngest dependent child in the household";
+    when foyer_enfant_charge(p, x)
+        and enfant_naissance_etablie(p, x)
+        and count(collect y: fr.minima.ressources::Personne where foyer_enfant_charge(p, y)) == count(collect y: fr.minima.ressources::Personne where enfant_naissance_etablie(p, y))
+        and count(collect y: fr.minima.ressources::Personne where enfant_ne_apres(p, y, x)) == 0;
+    then dernier_enfant(p, x);
+}
+@source(
+    CASF_L262_9,
+    CASF_L262_9_ED2021_03,
+    CASF_L262_9_ED2021_04,
+    CASF_L262_9_ED2023_01,
+    CASF_L262_9_ED2024_01,
+    CASF_L262_9_ED2024_07,
+    CASF_L262_9_ED2025_01,
+    CASF_L262_9_ED2025_06,
+    CASF_L262_9_ED2026_06,
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule IsoleAvecEnfant(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "parent isolé avec enfant à charge : condition personnelle de majoration";
+    label en unofficial "isolated parent with a dependent child: personal condition for the increase";
+    when isolement_constate(p) and foyer_nb_parents(p, 1) and foyer_enfant_charge(p, x);
+    then isole_majore(p);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule SupplementEnfant(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant à charge ouvrant le supplément de majoration";
+    label en unofficial "dependent child entitled to the increase supplement";
+    when foyer_enfant_charge(p, x);
+    then supplement_charge(p, x);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule SupplementAutreCharge(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "autre personne à charge ouvrant le même supplément de majoration";
+    label en unofficial "other dependent person entitled to the same increase supplement";
+    when foyer_autre_charge(p, x);
+    then supplement_charge(p, x);
+}
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule MajoreNbEnfantsPersonnes(p: fr.minima.ressources::Personne, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "suppléments majorés : enfants et autres personnes à charge du foyer (R. 262-1 al. 2)";
+    label en unofficial "increased-amount supplements: children and other dependent persons (R. 262-1 para. 2)";
+    when isole_majore(p) and foyer_nb_personnes(p, n)
+        and count(collect x: fr.minima.ressources::Personne where membre_compte(p, x)) == n;
+    then majore_nb_enfants(p, count(collect x: fr.minima.ressources::Personne where supplement_charge(p, x)));
+}
+@source(
+    CASF_L262_9,
+    CASF_L262_9_ED2021_03,
+    CASF_L262_9_ED2021_04,
+    CASF_L262_9_ED2023_01,
+    CASF_L262_9_ED2024_01,
+    CASF_L262_9_ED2024_07,
+    CASF_L262_9_ED2025_01,
+    CASF_L262_9_ED2025_06,
+    CASF_L262_9_ED2026_06,
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreTermeEnfant3Ans(p: fr.minima.ressources::Personne, x: fr.minima.ressources::Personne, birth: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "terme de la prolongation : mois où le plus jeune enfant atteint trois ans";
+    label en unofficial "extension end: month in which the youngest child turns three";
+    when dernier_enfant(p, x) and foyer_naissance(p, x, birth) and isole_majore(p);
+    then majore_terme_3ans(p, add_calendar_period(birth, 3 calendar_year));
+}
+@source(
+    CASF_L262_9,
+    CASF_L262_9_ED2021_03,
+    CASF_L262_9_ED2021_04,
+    CASF_L262_9_ED2023_01,
+    CASF_L262_9_ED2024_01,
+    CASF_L262_9_ED2024_07,
+    CASF_L262_9_ED2025_01,
+    CASF_L262_9_ED2025_06,
+    CASF_L262_9_ED2026_06,
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreProlongeEnfant3Ans(p: fr.minima.ressources::Personne, terme: Date, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée prolongée tant que le plus jeune enfant n'a pas trois ans";
+    label en unofficial "increased period extended while the youngest child is under three";
+    when isole_majore(p) and majore_terme_3ans(p, terme) and mois_droit(p, mois)
+        and add_calendar_period(mois, 1 calendar_month) <= terme;
+    then majore_prolonge_3ans(p);
+}
+
+// --- Lone-parent increase: amount (L.262-9, R.262-1 al.2) ---
+
+@source(
+    CASF_L262_9,
+    CASF_L262_9_ED2021_03,
+    CASF_L262_9_ED2021_04,
+    CASF_L262_9_ED2023_01,
+    CASF_L262_9_ED2024_01,
+    CASF_L262_9_ED2024_07,
+    CASF_L262_9_ED2025_01,
+    CASF_L262_9_ED2025_06,
+    CASF_L262_9_ED2026_06,
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule MfMajore(p: fr.minima.ressources::Personne, base: Money, e: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoré : 128,412 % de la base + 42,804 % par enfant à charge (R. 262-1 al. 2 ; L. 262-9)";
+    label en unofficial "increased amount: 128.412 % of the base + 42.804 % per dependent child (R. 262-1 al. 2; L. 262-9)";
+    when isole_majore(p)
+        and mf_base_retenue(p, base)
+        and majore_nb_enfants(p, e);
+    then mf_majore(p, base * TauxMajoreIsole + base * TauxMajoreEnfant * e);
+}
+
+// The service period starts with the established month of the increased
+// allowance claim. The generating event and filing delay remain distinct facts.
+@source(
+    CASF_L262_9,
+    CASF_L262_9_ED2021_03,
+    CASF_L262_9_ED2021_04,
+    CASF_L262_9_ED2023_01,
+    CASF_L262_9_ED2024_01,
+    CASF_L262_9_ED2024_07,
+    CASF_L262_9_ED2025_01,
+    CASF_L262_9_ED2025_06,
+    CASF_L262_9_ED2026_06,
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDebutDemande(p: fr.minima.ressources::Personne, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "début de service de la majoration au mois de sa demande établie (L. 262-9, R. 262-2)";
+    label en unofficial "increased amount starts in the established claim month (L. 262-9, R. 262-2)";
+    when isole_majore(p)
+        and majore_demande_mois(p, mois);
+    then majore_debut_mois(p, mois);
+}
+
+// --- Increase duration (R.262-2): twelve months minus the delay ---
+//
+// Integer arithmetic is not available in rule heads (12 - r leaves
+// the Integer domain and poisons the predicate), so the twelve
+// durations are spelled as literal rules: retard r gives 12 - r months.
+// A retard of twelve months or more leaves no duration at all.
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR0(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 12 mois pour un retard de 0 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 12 months for a 0-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 0)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 12);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR1(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 11 mois pour un retard de 1 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 11 months for a 1-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 1)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 11);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR2(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 10 mois pour un retard de 2 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 10 months for a 2-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 2)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 10);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR3(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 9 mois pour un retard de 3 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 9 months for a 3-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 3)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 9);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR4(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 8 mois pour un retard de 4 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 8 months for a 4-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 4)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 8);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR5(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 7 mois pour un retard de 5 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 7 months for a 5-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 5)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 7);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR6(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 6 mois pour un retard de 6 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 6 months for a 6-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 6)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 6);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR7(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 5 mois pour un retard de 7 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 5 months for a 7-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 7)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 5);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR8(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 4 mois pour un retard de 8 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 4 months for a 8-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 8)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 4);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR9(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 3 mois pour un retard de 9 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 3 months for a 9-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 9)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 3);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR10(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 2 mois pour un retard de 10 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 2 months for a 10-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 10)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 2);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreDureeR11(p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée majorée de 1 mois pour un retard de 11 mois (R. 262-2 al. 1)";
+    label en unofficial "increased-amount duration of 1 months for a 11-month delay (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_retard_mois(p, 11)
+        and not_known(majore_prolonge_3ans(p));
+    then majore_duree_mois(p, 1);
+}
+
+// --- Increase in service for the month (R.262-2) ---
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois0(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 0e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 0 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 0
+        and mois_droit(p, mois)
+        and mois == d0;
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois1(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 1e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 1 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 1
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 1 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois2(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 2e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 2 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 2
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 2 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois3(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 3e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 3 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 3
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 3 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois4(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 4e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 4 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 4
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 4 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois5(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 5e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 5 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 5
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 5 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois6(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 6e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 6 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 6
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 6 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois7(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 7e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 7 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 7
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 7 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois8(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 8e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 8 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 8
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 8 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois9(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 9e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 9 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 9
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 9 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois10(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 10e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 10 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 10
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 10 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertMois11(p: fr.minima.ressources::Personne, d0: Date, d: Integer, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie au 11e mois après le début dans la limite de la durée (R. 262-2 al. 1)";
+    label en unofficial "increase in service in month 11 after the start within the duration (R. 262-2 al. 1)";
+    when isole_majore(p)
+        and majore_debut_mois(p, d0)
+        and majore_duree_mois(p, d)
+        and d > 11
+        and mois_droit(p, mois)
+        and mois == add_calendar_period(d0, 11 calendar_month);
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertProlonge(p: fr.minima.ressources::Personne, d0: Date, terme: Date, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration servie jusqu'aux trois ans du plus jeune enfant (R. 262-2 al. 2)";
+    label en unofficial "increase in service until the youngest child's third birthday (R. 262-2 al. 2)";
+    when isole_majore(p)
+        and majore_prolonge_3ans(p)
+        and majore_debut_mois(p, d0)
+        and majore_terme_3ans(p, terme)
+        and mois_droit(p, mois)
+        and d0 <= mois
+        and mois <= terme;
+    then majore_ouvert_mois(p, mois);
+}
+
+@source(
+    CASF_L262_9,
+    CASF_L262_9_ED2021_03,
+    CASF_L262_9_ED2021_04,
+    CASF_L262_9_ED2023_01,
+    CASF_L262_9_ED2024_01,
+    CASF_L262_9_ED2024_07,
+    CASF_L262_9_ED2025_01,
+    CASF_L262_9_ED2025_06,
+    CASF_L262_9_ED2026_06,
+    CASF_R262_2,
+    CASF_R262_2_ED2021_03,
+    CASF_R262_2_ED2021_04,
+    CASF_R262_2_ED2023_01,
+    CASF_R262_2_ED2024_01,
+    CASF_R262_2_ED2024_07,
+    CASF_R262_2_ED2025_01,
+    CASF_R262_2_ED2025_06,
+    CASF_R262_2_ED2026_06)
+rule MajoreOuvertEnfantMoins3(p: fr.minima.ressources::Personne, terme: Date, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration du parent isolé pour le mois où le plus jeune enfant est encore âgé de moins de trois ans";
+    label en unofficial "isolated parent's increase in a month when the youngest child is still under three";
+    when isole_majore(p) and majore_prolonge_3ans(p) and majore_terme_3ans(p, terme)
+        and mois_droit(p, mois) and add_calendar_period(mois, 1 calendar_month) <= terme;
+    then majore_ouvert_mois(p, mois);
+}
+
+// --- Applicable MF for the month (L.262-2) ---
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06)
+rule MfApplicableMajore(p: fr.minima.ressources::Personne, mois: Date, mm: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "MF du mois : majoré servi (L. 262-2 ; L. 262-9)";
+    label en unofficial "month's flat-rate: increase in service (L. 262-2; L. 262-9)";
+    when mois_droit(p, mois)
+        and majore_ouvert_mois(p, mois)
+        and mf_majore(p, mm);
+    then mf_applicable_mois(p, mois, mm);
+}
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06)
+rule MfApplicableNormal(p: fr.minima.ressources::Personne, mois: Date, mm: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "MF du mois : composition hors majoration (L. 262-2)";
+    label en unofficial "month's flat-rate: composition without the increase (L. 262-2)";
+    when mois_droit(p, mois)
+        and mf_menage(p, mm)
+        and not_known(majore_ouvert_mois(p, mois));
+    then mf_applicable_mois(p, mois, mm);
+}
+
+// --- Entitlement (L.262-2, L.262-4, L.262-5) ---
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06,
+    CASF_L262_4,
+    CASF_L262_4_ED2021_03,
+    CASF_L262_4_ED2021_04,
+    CASF_L262_4_ED2023_01,
+    CASF_L262_4_ED2024_01,
+    CASF_L262_4_ED2024_07,
+    CASF_L262_4_ED2025_01,
+    CASF_L262_4_ED2025_06,
+    CASF_L262_4_ED2026_06,
+    CASF_L262_5,
+    CASF_L262_5_ED2021_03,
+    CASF_L262_5_ED2021_04,
+    CASF_L262_5_ED2023_01,
+    CASF_L262_5_ED2024_01,
+    CASF_L262_5_ED2024_07,
+    CASF_L262_5_ED2025_01,
+    CASF_L262_5_ED2025_06,
+    CASF_L262_5_ED2026_06)
+rule DroitRsa(p: fr.minima.ressources::Personne, mois: Date, du: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "droit ouvert : résidence stable, âge/charge, séjour-travail, conjoint/enfants comptés, pas d'études ni congé, montant dû positif (L. 262-2 via R. 262-7 I ; L. 262-4 ; L. 262-5 ; D-44)";
+    label en unofficial "entitlement open: stable residence, age/dependants, residence-work status, spouse/children counted, no studies or leave, positive amount due (L. 262-2 via R. 262-7 I; L. 262-4; L. 262-5; D-44)";
+    when mois_droit(p, mois)
+        and residence_stable(p)
+        and age_charge_condition(p)
+        and sejour_travail_condition(p)
+        and conjoint_enfants_comptes(p)
+        and not_known(etudiant_conge(p))
+        and fr.minima.ressources::montant_du_trimestre(p, du)
+        and du > 0.00 EUR;
+    then droit_rsa(p, mois);
+}
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06,
+    CASF_L262_4,
+    CASF_L262_4_ED2021_03,
+    CASF_L262_4_ED2021_04,
+    CASF_L262_4_ED2023_01,
+    CASF_L262_4_ED2024_01,
+    CASF_L262_4_ED2024_07,
+    CASF_L262_4_ED2025_01,
+    CASF_L262_4_ED2025_06,
+    CASF_L262_4_ED2026_06,
+    CASF_L262_5,
+    CASF_L262_5_ED2021_03,
+    CASF_L262_5_ED2021_04,
+    CASF_L262_5_ED2023_01,
+    CASF_L262_5_ED2024_01,
+    CASF_L262_5_ED2024_07,
+    CASF_L262_5_ED2025_01,
+    CASF_L262_5_ED2025_06,
+    CASF_L262_5_ED2026_06)
+rule DroitRsaMajoreEtudiant(p: fr.minima.ressources::Personne, mois: Date, du: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "étudiant ou en congé avec majoration : le 3°-4° de L. 262-4 ne s'applique pas, montant dû positif (L. 262-4 ; L. 262-9 ; L. 262-2 via R. 262-7 I ; D-44)";
+    label en unofficial "student or on leave with the increase: L. 262-4 3°-4° does not apply, positive amount due (L. 262-4; L. 262-9; L. 262-2 via R. 262-7 I; D-44)";
+    when mois_droit(p, mois)
+        and residence_stable(p)
+        and age_charge_condition(p)
+        and sejour_travail_condition(p)
+        and conjoint_enfants_comptes(p)
+        and etudiant_conge(p)
+        and isole_majore(p)
+        and fr.minima.ressources::montant_du_trimestre(p, du)
+        and du > 0.00 EUR;
+    then droit_rsa(p, mois);
+}
+
+// --- Monthly allowance (L.262-2 al.2) and the 6 euro floor (R.262-39) ---
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06,
+    CASF_L262_20,
+    CASF_L262_20_ED2021_03,
+    CASF_L262_20_ED2021_04,
+    CASF_L262_20_ED2023_01,
+    CASF_L262_20_ED2024_01,
+    CASF_L262_20_ED2024_07,
+    CASF_L262_20_ED2025_01,
+    CASF_L262_20_ED2025_06,
+    CASF_L262_20_ED2026_06,
+    CASF_R262_39,
+    CASF_R262_39_ED2021_03,
+    CASF_R262_39_ED2021_04,
+    CASF_R262_39_ED2023_01,
+    CASF_R262_39_ED2024_01,
+    CASF_R262_39_ED2024_07,
+    CASF_R262_39_ED2025_01,
+    CASF_R262_39_ED2025_06,
+    CASF_R262_39_ED2026_06)
+rule AllocVersee(p: fr.minima.ressources::Personne, mois: Date, du: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "allocation servie : montant dû, à partir de 6 € (L. 262-2 al. 2 via R. 262-7 I ; L. 262-20 ; R. 262-39 ; D-44)";
+    label en unofficial "allowance paid: amount due, from 6 euros up (L. 262-2 al. 2 via R. 262-7 I; R. 262-39; D-44)";
+    when droit_rsa(p, mois)
+        and fr.minima.ressources::montant_du_trimestre(p, du)
+        and du >= SeuilNonVersement;
+    then allocation_mensuelle(p, mois, du);
+}
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06,
+    CASF_L262_20,
+    CASF_L262_20_ED2021_03,
+    CASF_L262_20_ED2021_04,
+    CASF_L262_20_ED2023_01,
+    CASF_L262_20_ED2024_01,
+    CASF_L262_20_ED2024_07,
+    CASF_L262_20_ED2025_01,
+    CASF_L262_20_ED2025_06,
+    CASF_L262_20_ED2026_06,
+    CASF_R262_39,
+    CASF_R262_39_ED2021_03,
+    CASF_R262_39_ED2021_04,
+    CASF_R262_39_ED2023_01,
+    CASF_R262_39_ED2024_01,
+    CASF_R262_39_ED2024_07,
+    CASF_R262_39_ED2025_01,
+    CASF_R262_39_ED2025_06,
+    CASF_R262_39_ED2026_06)
+rule AllocNonVersee(p: fr.minima.ressources::Personne, mois: Date, du: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant dû sous 6 € : non versé (L. 262-2 al. 2 via R. 262-7 I ; L. 262-20 ; R. 262-39 ; D-44)";
+    label en unofficial "amount due below 6 euros: not paid (L. 262-2 al. 2 via R. 262-7 I; R. 262-39; D-44)";
+    when droit_rsa(p, mois)
+        and fr.minima.ressources::montant_du_trimestre(p, du)
+        and du < SeuilNonVersement;
+    then allocation_non_versee(p, mois);
+}
+
+// --- Minima contract: the household MF reaches fr.minima.ressources ---
+//
+// fr.minima.ressources::mf_composition (size classes 1, 2, 3+ for the housing
+// flat-rate, R.262-9) and ::mf_mois (the MF of each month of the reference
+// quarter, R.262-7 I) were case inputs "equal to the fr.casf.rsa computation"
+// (B-RSA-MF-INPUT-CONTRACT). The heads below are the neighbour's own
+// relations (a foreign head, E-0126): this package, which owns R.262-1,
+// writes the computed amounts into them. R.262-7 I (pinned by the neighbour)
+// does not say which monthly flat-rate enters each of the three intermediate
+// amounts; the model carries the MF of the month of right (increase
+// included, L.262-2/L.262-9) to all three months of the reference quarter.
+
+@source(
+    CASF_R262_1,
+    CASF_R262_1_ED2021_03,
+    CASF_R262_1_ED2021_04,
+    CASF_R262_1_ED2023_01,
+    CASF_R262_1_ED2024_01,
+    CASF_R262_1_ED2024_07,
+    CASF_R262_1_ED2025_01,
+    CASF_R262_1_ED2025_06,
+    CASF_R262_1_ED2026_06)
+rule MfCompositionMinima(p: fr.minima.ressources::Personne, k: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire par taille de foyer transmis à fr.minima.ressources (R. 262-1)";
+    label en unofficial "flat-rate amount by household size passed to fr.minima.ressources (R. 262-1)";
+    when mf_composition(p, k, m);
+    then fr.minima.ressources::mf_composition(p, k, m);
+}
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06)
+rule MfMoisReference1(p: fr.minima.ressources::Personne, md: Date, m1: Date, m2: Date, m3: Date, mm: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire du foyer au mois n° 1 du trimestre de référence : celui du mois du droit, majoration comprise (L. 262-2 ; L. 262-9)";
+    label en unofficial "household flat-rate for reference-quarter month no. 1: that of the month of right, increase included (L. 262-2; L. 262-9)";
+    when mois_droit(p, md)
+        and fr.minima.ressources::trimestre_reference(p, m1, m2, m3)
+        and mf_applicable_mois(p, md, mm);
+    then fr.minima.ressources::mf_mois(p, m1, mm);
+}
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06)
+rule MfMoisReference2(p: fr.minima.ressources::Personne, md: Date, m1: Date, m2: Date, m3: Date, mm: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire du foyer au mois n° 2 du trimestre de référence : celui du mois du droit, majoration comprise (L. 262-2 ; L. 262-9)";
+    label en unofficial "household flat-rate for reference-quarter month no. 2: that of the month of right, increase included (L. 262-2; L. 262-9)";
+    when mois_droit(p, md)
+        and fr.minima.ressources::trimestre_reference(p, m1, m2, m3)
+        and mf_applicable_mois(p, md, mm);
+    then fr.minima.ressources::mf_mois(p, m2, mm);
+}
+
+@source(
+    CASF_L262_2,
+    CASF_L262_2_ED2021_03,
+    CASF_L262_2_ED2021_04,
+    CASF_L262_2_ED2023_01,
+    CASF_L262_2_ED2024_01,
+    CASF_L262_2_ED2024_07,
+    CASF_L262_2_ED2025_01,
+    CASF_L262_2_ED2025_06,
+    CASF_L262_2_ED2026_06)
+rule MfMoisReference3(p: fr.minima.ressources::Personne, md: Date, m1: Date, m2: Date, m3: Date, mm: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire du foyer au mois n° 3 du trimestre de référence : celui du mois du droit, majoration comprise (L. 262-2 ; L. 262-9)";
+    label en unofficial "household flat-rate for reference-quarter month no. 3: that of the month of right, increase included (L. 262-2; L. 262-9)";
+    when mois_droit(p, md)
+        and fr.minima.ressources::trimestre_reference(p, m1, m2, m3)
+        and mf_applicable_mois(p, md, mm);
+    then fr.minima.ressources::mf_mois(p, m3, mm);
+}

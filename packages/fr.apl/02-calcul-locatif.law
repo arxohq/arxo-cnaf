@@ -1,0 +1,1268 @@
+// Расчёт месячного пособия в секторе найма: Af = L + C − Pp (D. 823-16),
+// Pp = P0 + Tp × (R − R0) (D. 823-17); значения — глава III арретэ от
+// 27 сентября 2019 года, параметрами A3 в `bareme/`.
+//
+// ОКРУГЛЕНИЙ ЗДЕСЬ РОВНО ТРИ, и каждое названо текстом:
+//   1) RL — «arrondi à la deuxième décimale» в процентах (ст. 14 2°), то есть
+//      четвёртый знак доли;
+//   2) TL — «arrondi à la troisième décimale» в процентах, пятый знак доли;
+//   3) сумма после минорации — «arrondi à l'euro inférieur» в вилке взносов
+//      (D. 823-16, предпоследний абзац).
+// Больше нигде текст округлять не велит, и пакет не округляет: ни P0
+// (8,5 % × (L + C) — точное произведение), ни Pp, ни итог. Обратное было бы
+// правдоподобным числом, а не нормой: сам арретэ, когда имеет в виду сантимы,
+// говорит это прямо («arrondis au centime d'euro le plus proche», ст. 8 и 16).
+// Поэтому итог имеет больше двух знаков, и чужое ожидание в сантимах есть
+// наш итог, округлённый до цента, а не наш итог.
+//
+// ПОЧЕМУ RL СЧИТАЕТСЯ ТЕРМОМ ПОЛИТИКИ. RL = L / LR — деление денег на деньги:
+// §58 (errata E-0083) даёт точное БЕЗРАЗМЕРНОЕ частное, но при не-10-гладком
+// знаменателе это `Rational`, которого `round` §50 не берёт. Округление,
+// предписанное ст. 14 2° арретэ, выражает `div_round(L, LR, 4, "HALF_UP")`:
+// пара `Money / Money` названа делимой под явной политикой erratой E-0170,
+// частное безразмерно, и вид его от значения не зависит — всегда `Decimal`.
+//
+// До E-0170 та же норма считалась через вырожденный отрезок §259.2
+// (`bounds::round(bounds::exact(L / LR, 1), 4, "HALF_UP")`): исполнимо и точно,
+// но говорит о сертификате границ там, где норма говорит о делении с
+// округлением, и не помещается внутрь `function` (термы §259.2 не имеют effect
+// descriptor, `LDC-E2403`). Поэтому шаг стоял в голове правила, а не рядом с
+// остальными вычислениями. Теперь стоит рядом: `rapport_loyers_calcule` —
+// такая же функция, как соседние, и числа у обеих форм тождественны
+// (408,00 € / 461,96 € = 0,8832 у той и у другой).
+//
+// ЧТО ДЕЛАЮТ ФУНКЦИИ, А ЧТО — ПРАВИЛА. Функции ниже считают; правила
+// заключают. Каждый шаг текста — своё правило со своим якорем, чтобы
+// proof-граф читался статьями, а не одним вызовом; значения барема несут
+// якоря сами (строки `anchors` в `bareme/*.lawparam.json`).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    ARR_ART07_ED2019_10,
+    ARR_ART07_ED2020_01,
+    ARR_ART07_ED2020_10,
+    ARR_ART07_ED2021_01,
+    ARR_ART07_ED2021_10,
+    ARR_ART07_ED2022_01,
+    ARR_ART07_ED2025_10,
+    ARR_ART07_ED2026_10,
+    ARR_ART08_ED2019_10,
+    ARR_ART08_ED2020_01,
+    ARR_ART08_ED2020_10,
+    ARR_ART08_ED2021_01,
+    ARR_ART08_ED2021_10,
+    ARR_ART08_ED2022_01,
+    ARR_ART08_ED2025_10,
+    ARR_ART08_ED2026_10,
+    ARR_ART09_ED2019_10,
+    ARR_ART09_ED2020_01,
+    ARR_ART09_ED2020_10,
+    ARR_ART09_ED2021_01,
+    ARR_ART09_ED2021_10,
+    ARR_ART09_ED2022_01,
+    ARR_ART09_ED2022_07,
+    ARR_ART09_ED2023_01,
+    ARR_ART09_ED2025_10,
+    ARR_ART09_ED2026_10,
+    ARR_ART10_ED2019_10,
+    ARR_ART10_ED2020_01,
+    ARR_ART10_ED2020_10,
+    ARR_ART10_ED2021_01,
+    ARR_ART10_ED2021_10,
+    ARR_ART10_ED2022_01,
+    ARR_ART10_ED2022_07,
+    ARR_ART10_ED2023_01,
+    ARR_ART10_ED2023_10,
+    ARR_ART10_ED2024_01,
+    ARR_ART10_ED2024_10,
+    ARR_ART10_ED2025_01,
+    ARR_ART10_ED2025_10,
+    ARR_ART11_ED2019_10,
+    ARR_ART11_ED2020_01,
+    ARR_ART11_ED2020_10,
+    ARR_ART11_ED2021_01,
+    ARR_ART11_ED2021_10,
+    ARR_ART11_ED2022_01,
+    ARR_ART11_ED2022_07,
+    ARR_ART11_ED2023_01,
+    ARR_ART11_ED2023_10,
+    ARR_ART11_ED2024_01,
+    ARR_ART11_ED2024_10,
+    ARR_ART11_ED2025_01,
+    ARR_ART11_ED2025_10,
+    ARR_ART12_ED2019_10,
+    ARR_ART12_ED2020_01,
+    ARR_ART12_ED2020_10,
+    ARR_ART12_ED2021_01,
+    ARR_ART12_ED2021_10,
+    ARR_ART12_ED2022_01,
+    ARR_ART12_ED2022_07,
+    ARR_ART12_ED2023_01,
+    ARR_ART12_ED2023_10,
+    ARR_ART12_ED2024_01,
+    ARR_ART12_ED2024_10,
+    ARR_ART12_ED2025_01,
+    ARR_ART12_ED2025_10,
+    ARR_ART13_ED2019_10,
+    ARR_ART13_ED2020_01,
+    ARR_ART13_ED2020_10,
+    ARR_ART13_ED2021_01,
+    ARR_ART13_ED2021_10,
+    ARR_ART13_ED2022_01,
+    ARR_ART13_ED2025_10,
+    ARR_ART13_ED2026_10,
+    ARR_ART14_ED2019_10,
+    ARR_ART14_ED2020_01,
+    ARR_ART14_ED2020_10,
+    ARR_ART14_ED2021_01,
+    ARR_ART14_ED2021_10,
+    ARR_ART14_ED2022_01,
+    ARR_ART14_ED2022_07,
+    ARR_ART14_ED2023_01,
+    ARR_ART14_ED2025_10,
+    ARR_ART14_ED2026_10,
+    ARR_ART15_ED2019_10,
+    ARR_ART15_ED2020_01,
+    ARR_ART15_ED2020_10,
+    ARR_ART15_ED2021_01,
+    ARR_ART15_ED2021_10,
+    ARR_ART15_ED2022_01,
+    ARR_ART15_ED2022_07,
+    ARR_ART15_ED2023_01,
+    ARR_ART15_ED2023_10,
+    ARR_ART15_ED2025_01,
+    ARR_ART15_ED2025_10,
+    ARR_ART16_ED2019_10,
+    ARR_ART16_ED2020_01,
+    ARR_ART16_ED2020_10,
+    ARR_ART16_ED2021_01,
+    ARR_ART16_ED2021_10,
+    ARR_ART16_ED2022_01,
+    ARR_ART16_ED2022_07,
+    ARR_ART16_ED2023_01,
+    ARR_ART16_ED2025_10,
+    ARR_ART16_ED2026_10,
+    ARR_ART46_ED2019_10,
+    ARR_ART46_ED2020_01,
+    ARR_ART46_ED2020_10,
+    ARR_ART46_ED2021_01,
+    ARR_ART46_ED2021_10,
+    ARR_ART46_ED2022_01,
+    ARR_ART46_ED2022_07,
+    ARR_ART46_ED2023_01,
+    ARR_ART46_ED2023_10,
+    ARR_ART46_ED2024_01,
+    ARR_ART46_ED2024_10,
+    ARR_ART46_ED2025_01,
+    ARR_ART46_ED2025_10,
+    ARR_ART46_ED2026_10,
+    ARR_ART47_ED2023_01,
+    ARR_ART47_ED2023_10,
+    ARR_ART47_ED2024_01,
+    ARR_ART47_ED2024_10,
+    ARR_ART47_ED2025_01,
+    ARR_ART47_ED2025_10,
+    ARR_ART47_ED2026_10,
+    CCH_D823_16,
+    CCH_D823_16_ED2019_12,
+    CCH_D823_16_ED2020_01,
+    CCH_D823_16_ED2021_01,
+    CCH_D823_16_ED2023_04,
+    CCH_D823_16_ED2023_09,
+    CCH_D823_16_ED2023_12,
+    CCH_D823_16_ED2026_07,
+    CCH_D823_17,
+    CCH_D823_17_ED2019_12,
+    CCH_D823_17_ED2020_01,
+    CCH_D823_17_ED2021_01,
+    CCH_D823_17_ED2023_04,
+    CCH_D823_17_ED2023_09,
+    CCH_D823_17_ED2023_12,
+    CCH_D823_17_ED2026_07,
+    CGCT_LO6414_1,
+    DEC20211750_ART6,
+    DEC20211750_ART7,
+    FormeLogement,
+    Menage,
+    ModeLocation,
+    ORD9650_ART19_ED2019_09,
+    ORD9650_ART19_ED2020_01,
+    SituationFamiliale,
+    Territoire,
+    TypeAide,
+    Zone,
+    aide_demandee,
+    beneficiaire_aah_ou_aeeh,
+    forme_logement,
+    loyer_principal,
+    mode_location,
+    personnes_a_charge,
+    reduction_loyer_solidarite,
+    ressources_du_menage,
+    secteur_locatif,
+    situation_familiale,
+    territoire,
+    zone_du_logement,
+};
+
+// --- доступ к барему: плафоны найма (ст. 7, 8 и 16 арретэ) ----------------
+//
+// Ветвление внутри `function` идёт ТОЛЬКО по перечислениям: `if` требует
+// формулы (атом либо сравнение упорядоченных видов), а Boolean не упорядочен
+// (LDC-E2108) и атомом в теле функции быть не может — логический параметр в
+// условии отвергается на `check`. Отсюда три перечисления состава, режима
+// найма и формы жилья: они и точнее логических флагов, потому что у комнаты
+// плафон зависит от размещения, а у обычного жилья такого плафона нет.
+
+function plafond_colonne_isole(zone: Zone, mode: ModeLocation) -> Money {
+    let direct: Money = match zone {
+        ZONE_I => PlafondLoyerZone1Isole;
+        ZONE_II => PlafondLoyerZone2Isole;
+        ZONE_III => PlafondLoyerZone3Isole;
+    };
+    let colocataire: Money = match zone {
+        ZONE_I => PlafondColocZone1Isole;
+        ZONE_II => PlafondColocZone2Isole;
+        ZONE_III => PlafondColocZone3Isole;
+    };
+    return match mode {
+        LOCATION_SEULE => direct;
+        COLOCATION => colocataire;
+    };
+}
+
+function plafond_colonne_couple(zone: Zone, mode: ModeLocation) -> Money {
+    let direct: Money = match zone {
+        ZONE_I => PlafondLoyerZone1Couple;
+        ZONE_II => PlafondLoyerZone2Couple;
+        ZONE_III => PlafondLoyerZone3Couple;
+    };
+    let colocataire: Money = match zone {
+        ZONE_I => PlafondColocZone1Couple;
+        ZONE_II => PlafondColocZone2Couple;
+        ZONE_III => PlafondColocZone3Couple;
+    };
+    return match mode {
+        LOCATION_SEULE => direct;
+        COLOCATION => colocataire;
+    };
+}
+
+function plafond_colonne_une_pac(zone: Zone, mode: ModeLocation) -> Money {
+    let direct: Money = match zone {
+        ZONE_I => PlafondLoyerZone1UnePac;
+        ZONE_II => PlafondLoyerZone2UnePac;
+        ZONE_III => PlafondLoyerZone3UnePac;
+    };
+    let colocataire: Money = match zone {
+        ZONE_I => PlafondColocZone1UnePac;
+        ZONE_II => PlafondColocZone2UnePac;
+        ZONE_III => PlafondColocZone3UnePac;
+    };
+    return match mode {
+        LOCATION_SEULE => direct;
+        COLOCATION => colocataire;
+    };
+}
+
+function plafond_colonne_majoration(zone: Zone, mode: ModeLocation) -> Money {
+    let direct: Money = match zone {
+        ZONE_I => PlafondLoyerZone1ParPacSup;
+        ZONE_II => PlafondLoyerZone2ParPacSup;
+        ZONE_III => PlafondLoyerZone3ParPacSup;
+    };
+    let colocataire: Money = match zone {
+        ZONE_I => PlafondColocZone1ParPacSup;
+        ZONE_II => PlafondColocZone2ParPacSup;
+        ZONE_III => PlafondColocZone3ParPacSup;
+    };
+    return match mode {
+        LOCATION_SEULE => direct;
+        COLOCATION => colocataire;
+    };
+}
+
+function plafond_hors_chambre(zone: Zone, mode: ModeLocation,
+                              situation: SituationFamiliale,
+                              pac: Integer) -> Money {
+    let sans_pac: Money = match situation {
+        PERSONNE_SEULE => plafond_colonne_isole(zone, mode);
+        COUPLE => plafond_colonne_couple(zone, mode);
+    };
+    let avec_pac: Money = plafond_colonne_une_pac(zone, mode)
+        + plafond_colonne_majoration(zone, mode) * max(0, pac - 1);
+    return if pac >= 1 then avec_pac else sans_pac;
+}
+
+function plafond_loyer_applicable(zone: Zone, mode: ModeLocation,
+                                  situation: SituationFamiliale, pac: Integer,
+                                  forme: FormeLogement) -> Money {
+    let ordinaire: Money = plafond_hors_chambre(zone, mode, situation, pac);
+    let chambre: Money = match zone {
+        ZONE_I => PlafondChambreZone1;
+        ZONE_II => PlafondChambreZone2;
+        ZONE_III => PlafondChambreZone3;
+    };
+    let chambre_onereux: Money = match zone {
+        ZONE_I => PlafondChambreOnereuxZone1;
+        ZONE_II => PlafondChambreOnereuxZone2;
+        ZONE_III => PlafondChambreOnereuxZone3;
+    };
+    return match forme {
+        LOGEMENT_ORDINAIRE => ordinaire;
+        CHAMBRE => chambre;
+        CHAMBRE_HEBERGEMENT_ONEREUX => chambre_onereux;
+    };
+}
+
+// --- форфейт расходов (ст. 9 и ст. 16 2° арретэ) --------------------------
+
+// Ст. 46 2° заменяет форфейт расходов ст. 9 (a) и суммы колокаторов ст. 16 2° (b)
+// одними и теми же заморскими значениями: 37,67 / 9,69 и 19,38 / 37,67 / 9,69.
+// Одна пара параметров обслуживает и наём, и колокацию, и фойе, и приобретение —
+// так устроена сама статья, перечисляющая арт. 9, 34 и 40 вместе.
+function forfait_charges_applicable(mode: ModeLocation,
+                                    situation: SituationFamiliale,
+                                    pac: Integer,
+                                    zone_geo: Territoire) -> Money {
+    let metropole: Money = match mode {
+        LOCATION_SEULE => ForfaitChargesBase + ForfaitChargesParPacSup * pac;
+        COLOCATION => (match situation {
+            PERSONNE_SEULE => ForfaitChargesColocIsole;
+            COUPLE => ForfaitChargesColocCouple;
+        }) + ForfaitChargesColocParPac * pac;
+    };
+    return match zone_geo {
+        METROPOLE => metropole;
+        OUTRE_MER => match mode {
+            LOCATION_SEULE => ForfaitChargesBaseOutreMer
+                + ForfaitChargesParPacSupOutreMer * pac;
+            COLOCATION => (match situation {
+                PERSONNE_SEULE => ForfaitChargesPartageIsoleOutreMer;
+                COUPLE => ForfaitChargesPartageCoupleOutreMer;
+            }) + ForfaitChargesPartageMajorationOutreMer * pac;
+        };
+        SAINT_PIERRE_ET_MIQUELON => metropole;
+    };
+}
+
+// --- P0, TF, LR, TL, R, R0, Pp -------------------------------------------
+
+function participation_minimale_calculee(loyer: Money, charges: Money) -> Money =
+    max((loyer + charges) * TauxParticipationMinimale,
+        PlancherParticipationMinimale);
+
+// ОСЬ ТЕРРИТОРИИ. Ст. 46 3° арретэ даёт заморским территориям СВОЮ таблицу TF, и
+// в ней есть строка СЕМИ иждивенцев, которой у метрополии нет вовсе: метропольная
+// кончается шестью и дальше идёт надбавкой. Поэтому ветви не сводятся к общей
+// арифметике с разными числами — у них разная длина перечисления, и это сама
+// норма, а не оформление. Сен-Пьер-и-Микелон в ст. 46 не входит, а ст. 47 о TF
+// не говорит, поэтому он считает по метрополии.
+//
+// Ветви стоят ВНУТРИ `match`, а не в `let`: привязка `let` вычисляется жадно, и
+// функция, читающая параметр невыбранной ветви, требует его покрытия на месяце
+// права дела (измерено 14.09.2026 — дело метрополии 2022 года падало на
+// заморских параметрах, закреплённых лишь с 2023-го).
+
+function taux_famille_applicable(situation: SituationFamiliale, pac: Integer,
+                                 zone_geo: Territoire) -> Decimal {
+    let metropole: Decimal = (if pac == 0 then (match situation {
+            PERSONNE_SEULE => TauxFamilleIsole;
+            COUPLE => TauxFamilleCouple;
+        })
+        else if pac == 1 then TauxFamille1Pac
+        else if pac == 2 then TauxFamille2Pac
+        else if pac == 3 then TauxFamille3Pac
+        else if pac == 4 then TauxFamille4Pac
+        else if pac == 5 then TauxFamille5Pac
+        else TauxFamille6Pac) + TauxFamilleMajoration * max(0, pac - 6);
+    return match zone_geo {
+        METROPOLE => metropole;
+        OUTRE_MER => (if pac == 0 then (match situation {
+                PERSONNE_SEULE => TauxFamilleIsoleOutreMer;
+                COUPLE => TauxFamilleCoupleOutreMer;
+            })
+            else if pac == 1 then TauxFamille1PacOutreMer
+            else if pac == 2 then TauxFamille2PacOutreMer
+            else if pac == 3 then TauxFamille3PacOutreMer
+            else if pac == 4 then TauxFamille4PacOutreMer
+            else if pac == 5 then TauxFamille5PacOutreMer
+            else if pac == 6 then TauxFamille6PacOutreMer
+            else TauxFamille7PacOutreMer)
+            + TauxFamilleMajorationOutreMer * max(0, pac - 7);
+        SAINT_PIERRE_ET_MIQUELON => metropole;
+    };
+}
+
+function loyer_reference_applicable(situation: SituationFamiliale,
+                                    pac: Integer) -> Money {
+    let sans_pac: Money = match situation {
+        PERSONNE_SEULE => LoyerReferenceIsole;
+        COUPLE => LoyerReferenceCouple;
+    };
+    let avec_pac: Money = LoyerReference1Pac
+        + LoyerReferenceMajoration * max(0, pac - 1);
+    return if pac >= 1 then avec_pac else sans_pac;
+}
+
+// R0 И ДВА РАЗНЫХ ВИДА ЗАМЕНЫ. Ст. 46 1° заменяет РОВНО ОДНУ строку таблицы —
+// домохозяйство с одним иждивенцем (8 181 €); остальные составы заморские
+// территории считают по метрополии. Ст. 47 же даёт Сен-Пьеру-и-Микелону СВОЮ
+// таблицу целиком, все девять строк. Свести оба изъятия к одному приёму нельзя:
+// в первом случае заменено одно значение, во втором — весь барем составов.
+//
+// Ст. 46 4° добавляет: с 1 января 2022 года форфейт R0 Майотты равен заморскому.
+// Майотта входит в список ст. 46 и отдельным членом перечисления не заведена —
+// различать её незачем, пока текст не назовёт для неё иных значений.
+
+function abattement_r0_metropole(situation: SituationFamiliale, pac: Integer) -> Money =
+    (if pac == 0 then (match situation {
+            PERSONNE_SEULE => AbattementR0Isole;
+            COUPLE => AbattementR0Couple;
+        })
+        else if pac == 1 then AbattementR01Pac
+        else if pac == 2 then AbattementR02Pac
+        else if pac == 3 then AbattementR03Pac
+        else if pac == 4 then AbattementR04Pac
+        else if pac == 5 then AbattementR05Pac
+        else AbattementR06Pac) + AbattementR0Majoration * max(0, pac - 6);
+
+function abattement_r0_outre_mer(situation: SituationFamiliale, pac: Integer) -> Money =
+    if pac == 1 then AbattementR0UnePacOutreMer else abattement_r0_metropole(situation, pac);
+
+// Ст. 47 даёт Сен-Пьер-и-Микелону свою таблицу R0 только с состояния 1 января
+// 2023 года; до него архипелаг считается общими правилами D. 823-17 (замер
+// 14.09.2026 конвертером дел OpenFisca: их R0 июля 2022 года для Сен-Пьера —
+// 8 322 €, число ст. 15, а у нас вывода не было).
+function abattement_r0_saint_pierre(situation: SituationFamiliale, pac: Integer) -> Money =
+    (if pac == 0 then (match situation {
+            PERSONNE_SEULE => AbattementR0IsoleSaintPierre;
+            COUPLE => AbattementR0CoupleSaintPierre;
+        })
+        else if pac == 1 then AbattementR01PacSaintPierre
+        else if pac == 2 then AbattementR02PacSaintPierre
+        else if pac == 3 then AbattementR03PacSaintPierre
+        else if pac == 4 then AbattementR04PacSaintPierre
+        else if pac == 5 then AbattementR05PacSaintPierre
+        else AbattementR06PacSaintPierre)
+        + AbattementR0MajorationSaintPierre * max(0, pac - 6);
+
+// Ст. 14 2° арретэ: «RL est exprimé en pourcentage et arrondi à la deuxième
+// décimale» — второй знак процента есть четвёртый знак доли. Деление и
+// округление здесь ОДНА операция над точным частным (§50, errata E-0036 и
+// E-0170), а не композиция двух: `round` §50 `Rational` не берёт, и
+// композиция была бы невыразима с обеих сторон.
+function rapport_loyers_calcule(loyer: Money, lr: Money) -> Decimal =
+    div_round(loyer, lr, 4, "HALF_UP");
+
+function taux_loyer_calcule(rapport: Decimal) -> Decimal {
+    let tranche_basse: Decimal =
+        round(TauxRLTrancheBasse * (rapport - SeuilBasRL), 5, "HALF_UP");
+    let tranche_haute: Decimal =
+        round(TauxRLTrancheBasse * (SeuilHautRL - SeuilBasRL)
+              + TauxRLTrancheHaute * (rapport - SeuilHautRL), 5, "HALF_UP");
+    return if rapport < SeuilBasRL then 0.0
+        else if rapport < SeuilHautRL then tranche_basse
+        else tranche_haute;
+}
+
+function ressources_retenues_calculees(ressources: Money) -> Money =
+    div_round(ressources, 100.0, 0, "CEILING") * 100;
+
+function participation_personnelle_calculee(minimale: Money, taux: Decimal,
+                                            ressources: Money,
+                                            abattement: Money) -> Money =
+    max(minimale, minimale + (ressources - abattement) * taux);
+
+// --- дегрессивность и вилка взносов ---------------------------------------
+
+function coefficient_degressivite(zone: Zone) -> Decimal = match zone {
+    ZONE_I => CoefDegressiviteZone1;
+    ZONE_II => CoefDegressiviteZone2;
+    ZONE_III => CoefDegressiviteZone3;
+};
+
+function coefficient_suppression(zone: Zone) -> Decimal = match zone {
+    ZONE_I => CoefSuppressionZone1;
+    ZONE_II => CoefSuppressionZone2;
+    ZONE_III => CoefSuppressionZone3;
+};
+
+function aide_apres_contributions_calculee(aide: Money) -> Money =
+    round(aide - aide * TauxCRDS, 0, "FLOOR") + aide * TauxCRDS;
+
+// СЕН-ПЬЕР-И-МИКЕЛОН: ВЗНОСОВ НЕТ. Ст. 14 ордонанса 96-50 учреждает CRDS «dans les
+// mêmes conditions» для аид на жильё; условия — те же, что у CSG (L. 136-1 CSS:
+// лица, домицилированные во Франции для налога). Ст. LO 6414-1 II 1° CGCT
+// отдаёт коллективности Сен-Пьер-и-Микелон правила «impôts, droits et taxes»,
+// и CRDS там не взимается (Catala: то же чтение, подтверждено письмом
+// DGALN/DHUP/FE4 от 21.04.2023). Шаг D. 823-16 при этом НЕ исчезает: «diminué
+// d'un montant représentatif des contributions sociales qui s'y appliquent,
+// arrondi à l'euro inférieur, puis majoré de ce montant» — вычитается ноль,
+// остаток округляется к нижнему евро, ноль возвращается. Catala считает так же
+// (arrondi de (aide − 0 − 0,50)), и его 230,63 € для Сен-Пьера — это
+// 369 × 0,625 = 230,625 до сантима.
+function contributions_selon_territoire(aide: Money, zone_geo: Territoire) -> Money =
+    match zone_geo {
+        METROPOLE => aide_apres_contributions_calculee(aide);
+        OUTRE_MER => aide_apres_contributions_calculee(aide);
+        SAINT_PIERRE_ET_MIQUELON => round(aide, 0, "FLOOR");
+    };
+
+// --- шаги расчёта как заключения норм ------------------------------------
+
+// ЧИСЛО ИЖДИВЕНЦЕВ, ПРИНИМАЕМОЕ В РАСЧЁТ. До 30 декабря 2022 года ст. 46 1°
+// арретэ ограничивала надбавку за иждивенца ШЕСТЬЮ лицами на заморских
+// территориях и прямо перечисляла, каких семейств параметров это касается:
+// плафоны найма (ст. 7), форфейты расходов (ст. 9, 34 и 40), эталонный наём LR
+// (ст. 14), форфейт R0 (ст. 15) и плафоны мензуальности (ст. 33). С 30 декабря
+// 2022 года правило из текста ИСЧЕЗЛО.
+//
+// Поэтому предел вынесен в отдельное заключение, а окно действия несёт САМА
+// НОРМА (`effective`), а не ось значений: ось A3 держит значения по окнам, а
+// здесь меняется форма расчёта — есть предел или нет его. Четыре нормы вместо
+// одной с ветвями: у параметра предела строки существуют только до 2023 года, и
+// функция, читающая его в невыбранной ветви, потребовала бы покрытия на любом
+// месяце права (привязка `let` вычисляется ЖАДНО, замер 14.09.2026).
+//
+// Ставка TF в перечень ст. 46 1° НЕ входит, и это не упущение: её заморская
+// таблица тех лет сама кончалась строкой «6 enfants ou 6 personnes et plus», то
+// есть достигала того же своей формой.
+pub relation personnes_a_charge_retenues(m: Menage, retenues: Integer) kind institutional {
+    key(m);
+    label fr official "nombre de personnes à charge prises en compte pour la majoration";
+    label ru unofficial "число иждивенцев, принимаемое в расчёт надбавки";
+}
+
+@source(ARR_ART46_ED2019_10, ARR_ART46_ED2020_01, ARR_ART46_ED2020_10,
+        ARR_ART46_ED2021_01, ARR_ART46_ED2021_10, ARR_ART46_ED2022_01,
+        ARR_ART46_ED2022_07, ARR_ART46_ED2025_10)
+rule PersonnesAChargeRetenuesOutreMerLimitees(m: Menage, pac: Integer) strict {
+    effective [@2019-10-02, @2023-01-01);
+    label fr official "la majoration pour personne à charge est limitée à 6 personnes";
+    label ru unofficial "надбавка за иждивенца ограничена шестью лицами (заморские территории до 2023 года)";
+    when personnes_a_charge(m, pac) and territoire(m, OUTRE_MER);
+    then personnes_a_charge_retenues(m, min(pac, LimitePacOutreMer));
+}
+
+// Якорь перечисляет ВСЕ редакции ст. 46 с 2023 года, а не только первую: по
+// errata E-0095 правило, привязанное лишь к ЗАКРЫТОЙ редакции, после её окна
+// мертво. Замер 14.09.2026: с одним якорем `ARR_ART46_ED2023` семь сценариев
+// 2024–2025 годов краснели, потому что редакция закрыта 28 сентября 2023 года.
+@source(ARR_ART46_ED2023_01, ARR_ART46_ED2023_10, ARR_ART46_ED2024_01,
+        ARR_ART46_ED2024_10, ARR_ART46_ED2025_01, ARR_ART46_ED2025_10,
+        ARR_ART46_ED2026_10)
+rule PersonnesAChargeRetenuesOutreMer(m: Menage, pac: Integer) strict {
+    effective [@2023-01-01, infinity);
+    label fr official "à compter du 30 décembre 2022 la limitation de la majoration à six personnes à charge ne figure plus à l'article 46";
+    label ru unofficial "с 30 декабря 2022 года предела шести иждивенцев в ст. 46 нет";
+    when personnes_a_charge(m, pac) and territoire(m, OUTRE_MER);
+    then personnes_a_charge_retenues(m, pac);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule PersonnesAChargeRetenuesMetropole(m: Menage, pac: Integer) strict {
+    label fr official "en métropole la majoration pour personne à charge n'est pas limitée";
+    label ru unofficial "в метрополии надбавка за иждивенца не ограничена";
+    when personnes_a_charge(m, pac) and territoire(m, METROPOLE);
+    then personnes_a_charge_retenues(m, pac);
+}
+
+@source(ARR_ART47_ED2023_01, ARR_ART47_ED2023_10, ARR_ART47_ED2024_01,
+        ARR_ART47_ED2024_10, ARR_ART47_ED2025_01, ARR_ART47_ED2025_10,
+        ARR_ART47_ED2026_10)
+rule PersonnesAChargeRetenuesSaintPierre(m: Menage, pac: Integer) strict {
+    effective [@2023-01-01, infinity);
+    label fr official "l'article 47 ne limite pas la majoration pour personne à charge à Saint-Pierre-et-Miquelon";
+    label ru unofficial "ст. 47 предела надбавки для Сен-Пьера-и-Микелона не вводит";
+    when personnes_a_charge(m, pac) and territoire(m, SAINT_PIERRE_ET_MIQUELON);
+    then personnes_a_charge_retenues(m, pac);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule PersonnesAChargeRetenuesSaintPierreAvant2023(m: Menage, pac: Integer) strict {
+    effective [@2019-10-02, @2023-01-01);
+    label fr official "avant 2023 Saint-Pierre-et-Miquelon relève des règles communes: la majoration pour personne à charge n'est pas limitée";
+    label ru unofficial "до 2023 года Сен-Пьер-и-Микелон — общие правила: надбавка за иждивенца не ограничена";
+    when personnes_a_charge(m, pac) and territoire(m, SAINT_PIERRE_ET_MIQUELON);
+    then personnes_a_charge_retenues(m, pac);
+}
+
+pub relation plafond_loyer(m: Menage, plafond: Money) kind institutional {
+    key(m);
+    label fr official "plafond de loyer applicable au ménage";
+    label ru unofficial "применимый к домохозяйству плафон найма";
+}
+
+relation loyer_eligible(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "L : loyer éligible, loyer principal retenu dans la limite du plafond";
+    label ru unofficial "L: учитываемый наём в пределах плафона";
+}
+
+pub relation forfait_charges(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "C : montant forfaitaire au titre des charges";
+    label ru unofficial "C: форфейтная сумма расходов";
+}
+
+pub relation participation_minimale(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "P0 : participation minimale du ménage";
+    label ru unofficial "P0: минимальное участие домохозяйства";
+}
+
+pub relation taux_composition_familiale(m: Menage, taux: Decimal) kind institutional {
+    key(m);
+    label fr official "TF : taux fonction de la taille de la famille";
+    label ru unofficial "TF: ставка по составу семьи";
+}
+
+relation loyer_reference(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "LR : loyer de référence";
+    label ru unofficial "LR: эталонный наём";
+}
+
+relation rapport_loyers(m: Menage, rapport: Decimal) kind institutional {
+    key(m);
+    label fr official "RL : rapport entre le loyer éligible et le loyer de référence";
+    label ru unofficial "RL: отношение учитываемого найма к эталонному";
+}
+
+relation taux_loyer_eligible(m: Menage, taux: Decimal) kind institutional {
+    key(m);
+    label fr official "TL : taux complémentaire fonction du rapport RL";
+    label ru unofficial "TL: дополнительная ставка по отношению RL";
+}
+
+relation taux_participation(m: Menage, taux: Decimal) kind institutional {
+    key(m);
+    label fr official "Tp : taux de prise en compte des ressources du ménage";
+    label ru unofficial "Tp: ставка учёта ресурсов домохозяйства";
+}
+
+pub relation ressources_retenues(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "R : ressources arrondies à la centaine d'euros supérieure";
+    label ru unofficial "R: ресурсы, округлённые до верхней сотни евро";
+}
+
+pub relation abattement_r0(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "R0 : abattement forfaitaire appliqué aux ressources";
+    label ru unofficial "R0: форфейтная скидка с ресурсов";
+}
+
+pub relation participation_personnelle(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "Pp : participation personnelle du ménage";
+    label ru unofficial "Pp: личное участие домохозяйства";
+}
+
+relation aide_formule(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "Af : aide mensuelle résultant de la formule de calcul";
+    label ru unofficial "Af: пособие по формуле расчёта";
+}
+
+relation plafond_degressivite(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "plafond de dégressivité";
+    label ru unofficial "плафон дегрессивности";
+}
+
+relation plafond_suppression(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "plafond de suppression";
+    label ru unofficial "плафон прекращения";
+}
+
+relation aide_apres_degressivite(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "aide après application de la dégressivité";
+    label ru unofficial "пособие после дегрессивности";
+}
+
+// Политика промежуточного округления (D-82, 08.10.2026, прочтение §152). Голову
+// выводит ТОЛЬКО правило прочтения ArrondiCentimeHalfUp (27-lecture-arrondi-centime.law):
+// без выбора прочтения голова не выводится, и правила неточного деления ниже
+// (DegressiviteProportionnelle здесь, E0 «divisé par douze» в 04-calcul-foyer.law)
+// работают как прежде — отказом INEXACT_DIVISION. Под выбранным прочтением их
+// охранное условие not_known(…) ложно, и то же место считает правило прочтения.
+relation arrondi_intermediaire_centime(m: Menage) kind institutional {
+    label fr official "pratique de l'organisme payeur : valeur intermédiaire d'un quotient inexact arrondie au centime (demi supérieur)";
+    label ru unofficial "политика D-82: неточное промежуточное значение округляется до сантима (HALF_UP)";
+}
+
+relation aide_apres_minoration(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "aide après minoration forfaitaire";
+    label ru unofficial "пособие после форфейтной минорации";
+}
+
+pub relation aide_apres_contributions(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "aide après l'arrondi à l'euro inférieur du montant net de contributions";
+    label ru unofficial "пособие после округления к нижнему евро суммы за вычетом взносов";
+}
+
+pub relation aide_apres_rls(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "aide après déduction de 98 % de la réduction de loyer de solidarité";
+    label ru unofficial "пособие после вычета 98 % RLS";
+}
+
+relation aide_theorique(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "ALt : aide mensuelle théorique calculée en application des dispositions du livre VIII";
+    label ru unofficial "ALt: теоретическая месячная аида по книге VIII (до монтажа Сен-Пьера)";
+}
+
+pub relation aide_mensuelle(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "montant mensuel de l'aide après RLS, contributions représentatives incluses";
+    label ru unofficial "месячная сумма после RLS с представительной суммой взносов";
+}
+
+pub relation aide_non_versee(m: Menage) kind institutional {
+    label fr official "il n'est pas procédé au versement de l'aide";
+    label ru unofficial "выплата пособия не производится";
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART07_ED2019_10,
+        ARR_ART07_ED2020_01, ARR_ART07_ED2020_10, ARR_ART07_ED2021_01,
+        ARR_ART07_ED2021_10, ARR_ART07_ED2022_01, ARR_ART08_ED2019_10,
+        ARR_ART08_ED2020_01, ARR_ART08_ED2020_10, ARR_ART08_ED2021_01,
+        ARR_ART08_ED2021_10, ARR_ART08_ED2022_01, ARR_ART16_ED2019_10,
+        ARR_ART16_ED2020_01, ARR_ART16_ED2020_10, ARR_ART16_ED2021_01,
+        ARR_ART16_ED2021_10, ARR_ART16_ED2022_01, ARR_ART07_ED2025_10,
+        ARR_ART08_ED2025_10, ARR_ART16_ED2025_10,
+        ARR_ART07_ED2026_10, ARR_ART08_ED2026_10, ARR_ART16_ED2026_10)
+rule PlafondLoyerApplicable(
+    m: Menage, z: Zone, mode: ModeLocation, situation: SituationFamiliale,
+    pac: Integer, forme: FormeLogement,
+) strict {
+    label fr official "L est le loyer principal pris en compte dans la limite d'un plafond fixé par arrêté en fonction de la zone géographique et, sauf dans le cas où le logement occupé est une chambre, de la composition familiale";
+    label ru unofficial "Плафон найма: строка барема по зоне и составу семьи; у комнаты состав семьи не учитывается";
+    when secteur_locatif(m) and zone_du_logement(m, z) and mode_location(m, mode)
+        and situation_familiale(m, situation) and personnes_a_charge_retenues(m, pac)
+        and forme_logement(m, forme);
+    then plafond_loyer(m, plafond_loyer_applicable(z, mode, situation, pac, forme));
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule LoyerEligible(m: Menage, loyer: Money, plafond: Money) strict {
+    label fr official "L est le loyer principal pris en compte dans la limite d'un plafond";
+    label ru unofficial "L: основная плата за наём, учитываемая в пределах плафона";
+    when loyer_principal(m, loyer) and plafond_loyer(m, plafond);
+    then loyer_eligible(m, min(loyer, plafond));
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART09_ED2019_10,
+        ARR_ART09_ED2020_01, ARR_ART09_ED2020_10, ARR_ART09_ED2021_01,
+        ARR_ART09_ED2021_10, ARR_ART09_ED2022_01, ARR_ART09_ED2022_07,
+        ARR_ART09_ED2023_01, ARR_ART16_ED2019_10, ARR_ART16_ED2020_01,
+        ARR_ART16_ED2020_10, ARR_ART16_ED2021_01, ARR_ART16_ED2021_10,
+        ARR_ART16_ED2022_01, ARR_ART16_ED2022_07, ARR_ART16_ED2023_01,
+        ARR_ART46_ED2023_01, ARR_ART09_ED2025_10, ARR_ART16_ED2025_10,
+        ARR_ART46_ED2025_10,
+        ARR_ART09_ED2026_10, ARR_ART16_ED2026_10, ARR_ART46_ED2026_10)
+rule ForfaitCharges(m: Menage, mode: ModeLocation,
+                    situation: SituationFamiliale, pac: Integer,
+                    zone_geo: Territoire) strict {
+    label fr official "C est le montant forfaitaire au titre des charges, fixé par arrêté en fonction de la composition familiale";
+    label ru unofficial "C: форфейт расходов по составу семьи";
+    when secteur_locatif(m) and mode_location(m, mode)
+        and situation_familiale(m, situation) and personnes_a_charge_retenues(m, pac)
+        and territoire(m, zone_geo);
+    then forfait_charges(m, forfait_charges_applicable(mode, situation, pac, zone_geo));
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+        CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07, ARR_ART13_ED2019_10,
+        ARR_ART13_ED2020_01, ARR_ART13_ED2020_10, ARR_ART13_ED2021_01,
+        ARR_ART13_ED2021_10, ARR_ART13_ED2022_01, ARR_ART13_ED2025_10,
+        ARR_ART13_ED2026_10)
+rule ParticipationMinimale(m: Menage, loyer: Money, charges: Money) strict {
+    label fr official "P0 est la participation minimale calculée selon des modalités précisées par arrêté et qui ne peut être inférieure à un montant minimum défini par arrêté";
+    label ru unofficial "P0: большее из доли суммы (L + C) и объявленного минимума";
+    when loyer_eligible(m, loyer) and forfait_charges(m, charges);
+    then participation_minimale(m, participation_minimale_calculee(loyer, charges));
+}
+
+// СЕКТОРНЫЕ ВОРОТА ОБЯЗАТЕЛЬНЫ, И ЭТО ИЗМЕРЕНО. Три нормы ниже (TF, LR и R0
+// статьи D. 823-17) до 14.09.2026 стояли без условия `secteur_locatif`: их
+// посылками были только состав домохозяйства и число иждивенцев. Пока все дела
+// были наёмными, это не проявлялось; с появлением секторов фойе и приобретения
+// правила начали срабатывать на ЧУЖИХ делах, а на месяце права, где барем главы
+// III не закреплён, давали MISSING_PARAMETER_VALUE — и отказ поражал ВЕСЬ
+// evaluation-документ чужого сектора. Норма сектора не имеет права заключать о
+// деле другого сектора, даже когда её арифметика совпадает.
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+        CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07, ARR_ART14_ED2019_10,
+        ARR_ART14_ED2020_01, ARR_ART14_ED2020_10, ARR_ART14_ED2021_01,
+        ARR_ART14_ED2021_10, ARR_ART14_ED2022_01, ARR_ART14_ED2022_07,
+        ARR_ART14_ED2023_01, ARR_ART46_ED2023_01, ARR_ART14_ED2025_10,
+        ARR_ART46_ED2025_10, ARR_ART14_ED2026_10, ARR_ART46_ED2026_10)
+rule TauxCompositionFamiliale(m: Menage, situation: SituationFamiliale, pac: Integer,
+                              zone_geo: Territoire) strict {
+    label fr official "TF représente un taux fonction de la taille de la famille";
+    label ru unofficial "TF: ставка состава семьи по территории, сверх верхней строки — с надбавкой";
+    when secteur_locatif(m) and situation_familiale(m, situation)
+        and personnes_a_charge(m, pac) and territoire(m, zone_geo);
+    then taux_composition_familiale(m, taux_famille_applicable(situation, pac, zone_geo));
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+        CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07, ARR_ART14_ED2019_10,
+        ARR_ART14_ED2020_01, ARR_ART14_ED2020_10, ARR_ART14_ED2021_01,
+        ARR_ART14_ED2021_10, ARR_ART14_ED2022_01, ARR_ART14_ED2025_10,
+        ARR_ART14_ED2026_10)
+rule LoyerReference(m: Menage, situation: SituationFamiliale, pac: Integer) strict {
+    label fr official "le second taux est obtenu par l'application de taux progressifs à des tranches successives du loyer éligible, exprimé en proportion d'un loyer de référence en fonction de la composition familiale";
+    label ru unofficial "LR: эталонный наём по составу домохозяйства";
+    when secteur_locatif(m) and situation_familiale(m, situation)
+        and personnes_a_charge_retenues(m, pac);
+    then loyer_reference(m, loyer_reference_applicable(situation, pac));
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+        CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07, ARR_ART14_ED2019_10,
+        ARR_ART14_ED2020_01, ARR_ART14_ED2020_10, ARR_ART14_ED2021_01,
+        ARR_ART14_ED2021_10, ARR_ART14_ED2022_01, ARR_ART14_ED2025_10,
+        ARR_ART14_ED2026_10)
+rule RapportLoyers(m: Menage, loyer: Money, lr: Money) strict {
+    label fr official "RL = L / LR ; RL est exprimé en pourcentage et arrondi à la deuxième décimale";
+    label ru unofficial "RL = L / LR с округлением до второго знака процента";
+    when loyer_eligible(m, loyer) and loyer_reference(m, lr);
+    then rapport_loyers(m, rapport_loyers_calcule(loyer, lr));
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+        CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07, ARR_ART14_ED2019_10,
+        ARR_ART14_ED2020_01, ARR_ART14_ED2020_10, ARR_ART14_ED2021_01,
+        ARR_ART14_ED2021_10, ARR_ART14_ED2022_01, ARR_ART14_ED2025_10,
+        ARR_ART14_ED2026_10)
+rule TauxLoyerEligible(m: Menage, rapport: Decimal) strict {
+    label fr official "TL représente un taux complémentaire fixé en fonction de la valeur du rapport RL";
+    label ru unofficial "TL: ступень отношения RL с округлением до третьего знака процента";
+    when rapport_loyers(m, rapport);
+    then taux_loyer_eligible(m, taux_loyer_calcule(rapport));
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+        CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07)
+rule TauxParticipation(m: Menage, tf: Decimal, tl: Decimal) strict {
+    label fr official "Tp est égal à la somme d'un premier taux et d'un second taux";
+    label ru unofficial "Tp = TF + TL";
+    when taux_composition_familiale(m, tf) and taux_loyer_eligible(m, tl);
+    then taux_participation(m, tf + tl);
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+        CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07)
+rule RessourcesRetenues(m: Menage, ressources: Money) strict {
+    label fr official "R représente les ressources du ménage arrondies à la centaine d'euros supérieure";
+    label ru unofficial "R: ресурсы, округлённые ВВЕРХ до сотни евро (плоский факт; взаимоисключимо с рассчитанными — дело даёт один источник)";
+    when ressources_du_menage(m, ressources);
+    then ressources_retenues(m, ressources_retenues_calculees(ressources));
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04,
+        CCH_D823_17_ED2023_09, CCH_D823_17_ED2023_12,
+        CCH_D823_17_ED2026_07, ARR_ART15_ED2020_01, ARR_ART15_ED2019_10,
+        ARR_ART15_ED2020_10, ARR_ART15_ED2021_01, ARR_ART15_ED2021_10,
+        ARR_ART15_ED2022_01, ARR_ART15_ED2022_07, ARR_ART15_ED2023_01,
+        ARR_ART15_ED2023_10, ARR_ART15_ED2025_01, ARR_ART15_ED2025_10)
+rule AbattementR0Metropole(m: Menage, situation: SituationFamiliale, pac: Integer) strict {
+    label fr official "R0 est un abattement forfaitaire appliqué aux ressources du ménage, fixé par arrêté en fonction de la composition familiale";
+    label ru unofficial "R0: форфейтная скидка по составу семьи (метрополия)";
+    when secteur_locatif(m) and situation_familiale(m, situation)
+        and personnes_a_charge_retenues(m, pac) and territoire(m, METROPOLE);
+    then abattement_r0(m, abattement_r0_metropole(situation, pac));
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04,
+        CCH_D823_17_ED2023_09, CCH_D823_17_ED2023_12,
+        CCH_D823_17_ED2026_07, ARR_ART15_ED2020_01, ARR_ART15_ED2019_10,
+        ARR_ART15_ED2020_10, ARR_ART15_ED2021_01, ARR_ART15_ED2021_10,
+        ARR_ART15_ED2022_01, ARR_ART15_ED2022_07, ARR_ART15_ED2023_01,
+        ARR_ART15_ED2023_10, ARR_ART15_ED2025_01, ARR_ART15_ED2025_10,
+        ARR_ART46_ED2019_10, ARR_ART46_ED2020_01, ARR_ART46_ED2020_10,
+        ARR_ART46_ED2021_01, ARR_ART46_ED2021_10, ARR_ART46_ED2022_01,
+        ARR_ART46_ED2022_07, ARR_ART46_ED2023_01, ARR_ART46_ED2023_10,
+        ARR_ART46_ED2024_01, ARR_ART46_ED2024_10, ARR_ART46_ED2025_01,
+        ARR_ART46_ED2025_10, ARR_ART46_ED2026_10)
+rule AbattementR0OutreMer(m: Menage, situation: SituationFamiliale, pac: Integer) strict {
+    label fr official "R0 est un abattement forfaitaire appliqué aux ressources du ménage; dans les départements d'outre-mer le montant pour une personne à charge est fixé par l'article 46";
+    label ru unofficial "R0: форфейтная скидка по составу семьи; в заморских департаментах одного иждивенца называет ст. 46";
+    when secteur_locatif(m) and situation_familiale(m, situation)
+        and personnes_a_charge_retenues(m, pac) and territoire(m, OUTRE_MER);
+    then abattement_r0(m, abattement_r0_outre_mer(situation, pac));
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04,
+        CCH_D823_17_ED2023_09, CCH_D823_17_ED2023_12,
+        CCH_D823_17_ED2026_07, ARR_ART47_ED2023_01, ARR_ART47_ED2023_10,
+        ARR_ART47_ED2024_01, ARR_ART47_ED2024_10, ARR_ART47_ED2025_01,
+        ARR_ART47_ED2025_10)
+rule AbattementR0SaintPierre(m: Menage, situation: SituationFamiliale, pac: Integer) strict {
+    label fr official "à Saint-Pierre-et-Miquelon les montants de l'abattement R0 sont fixés par l'article 47";
+    label ru unofficial "R0 для Сен-Пьер-и-Микелона — таблица ст. 47 (с 1 января 2023 года)";
+    effective [@2023-01-01, infinity);
+    when secteur_locatif(m) and situation_familiale(m, situation)
+        and personnes_a_charge_retenues(m, pac) and territoire(m, SAINT_PIERRE_ET_MIQUELON);
+    then abattement_r0(m, abattement_r0_saint_pierre(situation, pac));
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04,
+        CCH_D823_17_ED2023_09, CCH_D823_17_ED2023_12,
+        CCH_D823_17_ED2026_07, ARR_ART15_ED2020_01, ARR_ART15_ED2019_10,
+        ARR_ART15_ED2020_10, ARR_ART15_ED2021_01, ARR_ART15_ED2021_10,
+        ARR_ART15_ED2022_01, ARR_ART15_ED2022_07, ARR_ART15_ED2023_01,
+        ARR_ART15_ED2023_10, ARR_ART15_ED2025_01, ARR_ART15_ED2025_10)
+rule AbattementR0SaintPierreAvant2023(m: Menage, situation: SituationFamiliale, pac: Integer) strict {
+    label fr official "avant le 1er janvier 2023 l'arrêté ne prévoit pas de montants particuliers pour Saint-Pierre-et-Miquelon: les règles communes de l'article D. 823-17 s'appliquent";
+    label ru unofficial "до 1 января 2023 года у Сен-Пьер-и-Микелона своей таблицы R0 нет — общие правила D. 823-17";
+    effective [@2019-10-02, @2023-01-01);
+    when secteur_locatif(m) and situation_familiale(m, situation)
+        and personnes_a_charge_retenues(m, pac) and territoire(m, SAINT_PIERRE_ET_MIQUELON);
+    then abattement_r0(m, abattement_r0_metropole(situation, pac));
+}
+
+// «Participation MINIMALE» названа минимальной самим 2° D. 823-17: участия
+// ниже P0 норма не знает, и при ресурсах ниже R0 второе слагаемое формулы
+// участие не уменьшает. Иначе слово «минимальная» ничего бы не значило.
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+        CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+        CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07)
+rule ParticipationPersonnelle(
+    m: Menage, p0: Money, taux: Decimal, ressources: Money, abattement: Money,
+) strict {
+    label fr official "Pp = P0 + Tp × (R − R0)";
+    label ru unofficial "Pp = P0 + Tp × (R − R0), но не ниже минимального участия P0";
+    when participation_minimale(m, p0) and taux_participation(m, taux)
+        and ressources_retenues(m, ressources) and abattement_r0(m, abattement);
+    then participation_personnelle(m,
+        participation_personnelle_calculee(p0, taux, ressources, abattement));
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule AideFormule(m: Menage, loyer: Money, charges: Money, participation: Money) strict {
+    label fr official "Af = L + C − Pp";
+    label ru unofficial "Af = L + C − Pp";
+    when loyer_eligible(m, loyer) and forfait_charges(m, charges)
+        and participation_personnelle(m, participation);
+    then aide_formule(m, loyer + charges - participation);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART10_ED2019_10,
+        ARR_ART10_ED2020_01, ARR_ART10_ED2020_10, ARR_ART10_ED2021_01,
+        ARR_ART10_ED2021_10, ARR_ART10_ED2022_01, ARR_ART10_ED2022_07,
+        ARR_ART10_ED2023_01, ARR_ART10_ED2023_10, ARR_ART10_ED2024_01,
+        ARR_ART10_ED2024_10, ARR_ART10_ED2025_01, ARR_ART10_ED2025_10)
+rule PlafondDegressivite(m: Menage, z: Zone, plafond: Money) strict {
+    label fr official "Le montant de ces plafonds est obtenu par l'application de coefficients multiplicateurs, fixés par arrêté en fonction de la zone géographique, au montant du plafond de loyer";
+    label ru unofficial "Плафон дегрессивности: коэффициент зоны на плафон найма";
+    when zone_du_logement(m, z) and plafond_loyer(m, plafond);
+    then plafond_degressivite(m, plafond * coefficient_degressivite(z));
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART10_ED2019_10,
+        ARR_ART10_ED2020_01, ARR_ART10_ED2020_10, ARR_ART10_ED2021_01,
+        ARR_ART10_ED2021_10, ARR_ART10_ED2022_01, ARR_ART10_ED2022_07,
+        ARR_ART10_ED2023_01, ARR_ART10_ED2023_10, ARR_ART10_ED2024_01,
+        ARR_ART10_ED2024_10, ARR_ART10_ED2025_01, ARR_ART10_ED2025_10)
+rule PlafondSuppression(m: Menage, z: Zone, plafond: Money) strict {
+    label fr official "de telle sorte qu'il soit nul lorsqu'il atteint un plafond de suppression";
+    label ru unofficial "Плафон прекращения: второй коэффициент зоны на плафон найма";
+    when zone_du_logement(m, z) and plafond_loyer(m, plafond);
+    then plafond_suppression(m, plafond * coefficient_suppression(z));
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule PasDeDegressivite(m: Menage, aide: Money, loyer: Money, plafond: Money) strict {
+    label fr official "Le montant ainsi calculé est diminué lorsque le loyer principal dépasse un plafond de dégressivité";
+    label ru unofficial "Наём не выше плафона дегрессивности — уменьшения нет";
+    when aide_formule(m, aide) and loyer_principal(m, loyer)
+        and plafond_degressivite(m, plafond) and loyer <= plafond;
+    then aide_apres_degressivite(m, aide);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule DegressiviteEcartee(m: Menage, aide: Money, loyer: Money, plafond: Money) strict {
+    label fr official "cette diminution ne s'applique pas lorsque le demandeur ou son conjoint est bénéficiaire de l'allocation aux adultes handicapés ou de l'allocation d'éducation de l'enfant handicapé";
+    label ru unofficial "Дегрессивность не применяется к получателю AAH либо AEEH";
+    when aide_formule(m, aide) and loyer_principal(m, loyer)
+        and plafond_degressivite(m, plafond) and loyer > plafond
+        and beneficiaire_aah_ou_aeeh(m, true);
+    then aide_apres_degressivite(m, aide);
+}
+
+// Норма предписывает пропорциональное уменьшение и НЕ называет политики
+// округления. Частное двух денежных сумм точно (§58, errata E-0083), но
+// произведение денег на не-10-гладкую долю §50 вычислять отказывается
+// (INEXACT_DIVISION): норма исполнима ровно там, где её пропорция представима,
+// и молчаливого округления здесь нет по построению. Граница объявлена в
+// README и проверяется сценарием tests/openfisca-02.lawtest.
+//
+// D-82 (08.10.2026): владелец принял прочтение §152 «неточное деление без
+// политики в тексте округляется до сантима, HALF_UP» (практика CNAF, не текст).
+// Прочтение ArrondiCentimeHalfUp (27-lecture-arrondi-centime.law) выводит
+// arrondi_intermediaire_centime(m) и считает ту же пропорцию правилом
+// DegressiviteProportionnelleArrondie; охранное условие not_known(…) ниже
+// гасит это правило именно под выбранным прочтением. Без выбора поведение
+// прежнее — отказ.
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule DegressiviteProportionnelle(
+    m: Menage, aide: Money, loyer: Money, plafond: Money, suppression: Money,
+) strict {
+    label fr official "Il décroît proportionnellement au dépassement de ce plafond, de telle sorte qu'il soit nul lorsqu'il atteint un plafond de suppression";
+    label ru unofficial "Пропорциональное уменьшение между плафоном дегрессивности и плафоном прекращения";
+    when aide_formule(m, aide) and loyer_principal(m, loyer)
+        and plafond_degressivite(m, plafond) and plafond_suppression(m, suppression)
+        and beneficiaire_aah_ou_aeeh(m, false)
+        and loyer > plafond and loyer < suppression
+        and not_known(arrondi_intermediaire_centime(m));
+    then aide_apres_degressivite(m,
+        aide * ((suppression - loyer) / (suppression - plafond)));
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule AideNulleAuPlafondDeSuppression(
+    m: Menage, aide: Money, loyer: Money, suppression: Money,
+) strict {
+    label fr official "de telle sorte qu'il soit nul lorsqu'il atteint un plafond de suppression";
+    label ru unofficial "На плафоне прекращения и выше пособие по формуле обнуляется";
+    when aide_formule(m, aide) and loyer_principal(m, loyer)
+        and plafond_suppression(m, suppression)
+        and beneficiaire_aah_ou_aeeh(m, false) and loyer >= suppression;
+    then aide_apres_degressivite(m, 0 EUR);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART11_ED2019_10,
+        ARR_ART11_ED2020_01, ARR_ART11_ED2020_10, ARR_ART11_ED2021_01,
+        ARR_ART11_ED2021_10, ARR_ART11_ED2022_01, ARR_ART11_ED2022_07,
+        ARR_ART11_ED2023_01, ARR_ART11_ED2023_10, ARR_ART11_ED2024_01,
+        ARR_ART11_ED2024_10, ARR_ART11_ED2025_01, ARR_ART11_ED2025_10)
+rule MinorationForfaitaireAppliquee(m: Menage, aide: Money) strict {
+    label fr official "Le résultat ainsi obtenu est minoré d'un montant fixé forfaitairement par arrêté";
+    label ru unofficial "Из полученного вычитается форфейтная минорация";
+    when aide_apres_degressivite(m, aide);
+    then aide_apres_minoration(m, aide - MinorationForfaitaire);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ORD9650_ART19_ED2019_09, ORD9650_ART19_ED2020_01,
+        CGCT_LO6414_1)
+rule ArrondiContributionsSociales(m: Menage, aide: Money, zone_geo: Territoire) strict {
+    label fr official "Le montant qui en résulte est diminué d'un montant représentatif des contributions sociales qui s'y appliquent, arrondi à l'euro inférieur, puis majoré de ce montant représentatif";
+    label ru unofficial "Сумма за вычетом взносов округляется к нижнему евро, затем взносы возвращаются";
+    when aide_apres_minoration(m, aide) and territoire(m, zone_geo);
+    then aide_apres_contributions(m, contributions_selon_territoire(aide, zone_geo));
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule DeductionReductionLoyerSolidarite(m: Menage, aide: Money, rls: Money) strict {
+    label fr official "Pour les locataires qui bénéficient de la réduction de loyer de solidarité, ce résultat est réduit d'un montant égal à 98 % de la réduction de loyer de solidarité";
+    label ru unofficial "У получателей RLS результат уменьшается на 98 % её размера";
+    when aide_apres_contributions(m, aide) and reduction_loyer_solidarite(m, rls);
+    then aide_apres_rls(m, aide - rls * PartRLSDeduite);
+}
+
+// --- ст. 7 декрета 2021-1750: монтаж Сен-Пьер-и-Микелона ---------------------
+//
+// «Le montant mensuel de l'aide due au titre du mois de janvier 2022 jusqu'au
+// mois de décembre 2025 est calculé selon la formule suivante : ALspm = ALt ×
+// (1 − (2026 − n)/8)», где ALt — аида по книге VIII, n — год месяца права.
+// Коэффициент — параметр A3 по годам: 2022 → 0,5; 2023 → 0,625; 2024 → 0,75;
+// 2025 → 0,875 (значения формулы текста при n = 2022…2025). Вне окна и вне
+// Сен-Пьера выплата равна теоретической аиде. Первоначальная формула JORF
+// шла без «−» после «1»; исправление — JORFTEXT000044807163 (ректификатив).
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule AideMensuelleMetropole(m: Menage, aide: Money) strict {
+    label fr official "hors Saint-Pierre-et-Miquelon l'aide mensuelle est le résultat du livre VIII";
+    label ru unofficial "вне Сен-Пьера месячная аида равна результату книги VIII (метрополия)";
+    when aide_theorique(m, aide) and territoire(m, METROPOLE);
+    then aide_mensuelle(m, aide);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07)
+rule AideMensuelleOutreMer(m: Menage, aide: Money) strict {
+    label fr official "hors Saint-Pierre-et-Miquelon l'aide mensuelle est le résultat du livre VIII";
+    label ru unofficial "вне Сен-Пьера месячная аида равна результату книги VIII (заморские департаменты)";
+    when aide_theorique(m, aide) and territoire(m, OUTRE_MER);
+    then aide_mensuelle(m, aide);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, DEC20211750_ART7)
+rule AideMensuelleSaintPierreMonteeEnCharge(m: Menage, aide: Money) strict {
+    label fr official "à Saint-Pierre-et-Miquelon, de janvier 2022 à décembre 2025, ALspm = ALt × (1 − (2026 − n)/8)";
+    label ru unofficial "Сен-Пьер, январь 2022 — декабрь 2025: аида = ALt × (1 − (2026 − n)/8)";
+    effective [@2022-01-01, @2026-01-01);
+    when aide_theorique(m, aide) and territoire(m, SAINT_PIERRE_ET_MIQUELON);
+    then aide_mensuelle(m, aide * CoefficientMonteeEnChargeSaintPierre);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, DEC20211750_ART6)
+rule AideMensuelleSaintPierreAvant2022(m: Menage, aide: Money) strict {
+    label fr official "avant le 1er janvier 2022 le décret n° 2021-1750 ne s'applique pas: l'aide mensuelle est le résultat du livre VIII";
+    label ru unofficial "Сен-Пьер до 1 января 2022 года: декрет 2021-1750 не применяется";
+    effective [@2019-10-02, @2022-01-01);
+    when aide_theorique(m, aide) and territoire(m, SAINT_PIERRE_ET_MIQUELON);
+    then aide_mensuelle(m, aide);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, DEC20211750_ART7)
+rule AideMensuelleSaintPierreDepuis2026(m: Menage, aide: Money) strict {
+    label fr official "à compter de janvier 2026 la montée en charge est achevée: l'aide mensuelle est le résultat du livre VIII";
+    label ru unofficial "Сен-Пьер с января 2026 года: монтаж завершён, аида равна результату книги VIII";
+    effective [@2026-01-01, infinity);
+    when aide_theorique(m, aide) and territoire(m, SAINT_PIERRE_ET_MIQUELON);
+    then aide_mensuelle(m, aide);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART12_ED2019_10,
+        ARR_ART12_ED2020_01, ARR_ART12_ED2020_10, ARR_ART12_ED2021_01,
+        ARR_ART12_ED2021_10, ARR_ART12_ED2022_01, ARR_ART12_ED2022_07,
+        ARR_ART12_ED2023_01, ARR_ART12_ED2023_10, ARR_ART12_ED2024_01,
+        ARR_ART12_ED2024_10, ARR_ART12_ED2025_01, ARR_ART12_ED2025_10)
+rule AideVerseeAPL(m: Menage, aide: Money) strict {
+    label fr official "l'aide personnalisée au logement est versée lorsque le résultat atteint le seuil fixé par arrêté";
+    label ru unofficial "APL выплачивается, когда итог не ниже порога APL";
+    when aide_demandee(m, APL) and aide_apres_rls(m, aide)
+        and aide >= SeuilVersementAPL;
+    then aide_theorique(m, aide);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART12_ED2019_10,
+        ARR_ART12_ED2020_01, ARR_ART12_ED2020_10, ARR_ART12_ED2021_01,
+        ARR_ART12_ED2021_10, ARR_ART12_ED2022_01, ARR_ART12_ED2022_07,
+        ARR_ART12_ED2023_01, ARR_ART12_ED2023_10, ARR_ART12_ED2024_01,
+        ARR_ART12_ED2024_10, ARR_ART12_ED2025_01, ARR_ART12_ED2025_10)
+rule AideNonVerseeAPL(m: Menage, aide: Money) strict {
+    label fr official "Lorsque ce dernier résultat est inférieur à un montant fixé par arrêté, il n'est pas procédé à son versement";
+    label ru unofficial "Итог ниже порога APL — выплата не производится";
+    when aide_demandee(m, APL) and aide_apres_rls(m, aide)
+        and aide < SeuilVersementAPL;
+    then aide_non_versee(m);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART12_ED2019_10,
+        ARR_ART12_ED2020_01, ARR_ART12_ED2020_10, ARR_ART12_ED2021_01,
+        ARR_ART12_ED2021_10, ARR_ART12_ED2022_01, ARR_ART12_ED2022_07,
+        ARR_ART12_ED2023_01, ARR_ART12_ED2023_10, ARR_ART12_ED2024_01,
+        ARR_ART12_ED2024_10, ARR_ART12_ED2025_01, ARR_ART12_ED2025_10)
+rule AideVerseeAllocationFamiliale(m: Menage, aide: Money) strict {
+    label fr official "l'allocation de logement familiale est versée lorsque le résultat atteint le seuil fixé par arrêté";
+    label ru unofficial "ALF выплачивается, когда итог не ниже порога аллокаций";
+    when aide_demandee(m, ALF) and aide_apres_rls(m, aide)
+        and aide >= SeuilVersementAllocationLogement;
+    then aide_theorique(m, aide);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART12_ED2019_10,
+        ARR_ART12_ED2020_01, ARR_ART12_ED2020_10, ARR_ART12_ED2021_01,
+        ARR_ART12_ED2021_10, ARR_ART12_ED2022_01, ARR_ART12_ED2022_07,
+        ARR_ART12_ED2023_01, ARR_ART12_ED2023_10, ARR_ART12_ED2024_01,
+        ARR_ART12_ED2024_10, ARR_ART12_ED2025_01, ARR_ART12_ED2025_10)
+rule AideNonVerseeAllocationFamiliale(m: Menage, aide: Money) strict {
+    label fr official "il n'est pas procédé au versement de l'allocation de logement familiale inférieure au seuil";
+    label ru unofficial "Итог ниже порога аллокаций — ALF не выплачивается";
+    when aide_demandee(m, ALF) and aide_apres_rls(m, aide)
+        and aide < SeuilVersementAllocationLogement;
+    then aide_non_versee(m);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART12_ED2019_10,
+        ARR_ART12_ED2020_01, ARR_ART12_ED2020_10, ARR_ART12_ED2021_01,
+        ARR_ART12_ED2021_10, ARR_ART12_ED2022_01, ARR_ART12_ED2022_07,
+        ARR_ART12_ED2023_01, ARR_ART12_ED2023_10, ARR_ART12_ED2024_01,
+        ARR_ART12_ED2024_10, ARR_ART12_ED2025_01, ARR_ART12_ED2025_10)
+rule AideVerseeAllocationSociale(m: Menage, aide: Money) strict {
+    label fr official "l'allocation de logement sociale est versée lorsque le résultat atteint le seuil fixé par arrêté";
+    label ru unofficial "ALS выплачивается, когда итог не ниже порога аллокаций";
+    when aide_demandee(m, ALS) and aide_apres_rls(m, aide)
+        and aide >= SeuilVersementAllocationLogement;
+    then aide_theorique(m, aide);
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART12_ED2019_10,
+        ARR_ART12_ED2020_01, ARR_ART12_ED2020_10, ARR_ART12_ED2021_01,
+        ARR_ART12_ED2021_10, ARR_ART12_ED2022_01, ARR_ART12_ED2022_07,
+        ARR_ART12_ED2023_01, ARR_ART12_ED2023_10, ARR_ART12_ED2024_01,
+        ARR_ART12_ED2024_10, ARR_ART12_ED2025_01, ARR_ART12_ED2025_10)
+rule AideNonVerseeAllocationSociale(m: Menage, aide: Money) strict {
+    label fr official "il n'est pas procédé au versement de l'allocation de logement sociale inférieure au seuil";
+    label ru unofficial "Итог ниже порога аллокаций — ALS не выплачивается";
+    when aide_demandee(m, ALS) and aide_apres_rls(m, aide)
+        and aide < SeuilVersementAllocationLogement;
+    then aide_non_versee(m);
+}

@@ -1,0 +1,18 @@
+// 2025 monthly cap exceeded: 23 days against 22, no record either way.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-mensuel-2025-depassement" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-md25-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-md25"), entity_ref("urn:fr:css:ajpa:case:aide-md25")) { origin case_input; }
+        assert "ajpa-md25-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-md25")) { origin adjudicated; }
+        assert "ajpa-md25-03": jours_ajpa_mois(entity_ref("urn:fr:css:ajpa:case:aidant-md25"), entity_ref("urn:fr:css:ajpa:case:aide-md25"), @2026-03-01, 23) { origin case_input; }
+        assert "ajpa-md25-04": plafond_mensuel_retenu(entity_ref("urn:fr:css:ajpa:case:aidant-md25"), 22) { origin case_input; }
+    }
+    evaluate truth(mensuel_dans_limite(entity_ref("urn:fr:css:ajpa:case:aidant-md25"), entity_ref("urn:fr:css:ajpa:case:aide-md25"), @2026-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

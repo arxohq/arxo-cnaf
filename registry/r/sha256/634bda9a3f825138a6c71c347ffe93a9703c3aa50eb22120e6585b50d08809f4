@@ -1,0 +1,183 @@
+{
+  "$comment": "Каталог предусмотренных запросов пакета fr.apl.versement (DECISION-0190). Карточка описывает проверенный запрос, а не заранее положительный ответ; границы дословно повторяют package-info.json.",
+  "format": "law.package-questions/0.1",
+  "package": "fr.apl.versement",
+  "tasks": [
+    {
+      "id": "versement",
+      "title": "Финализация фактически выплачиваемой суммы",
+      "source_units": [
+        "GUIDE_P22_DEGRESSIVITE_RLS",
+        "GUIDE_P23_CRDS_ARRONDI",
+        "GUIDE_P24_EXEMPLE",
+        "GUIDE_P50_ARRONDIS"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "assiette-crds",
+      "task": "versement",
+      "question": "Какая сумма после RLS и представительных взносов служит базой удержания CRDS перед выплатой?",
+      "kind": "truth",
+      "predicate": "assiette_crds",
+      "parameters": [
+        {
+          "name": "m",
+          "type": "Menage",
+          "role": "bound"
+        },
+        {
+          "name": "montant",
+          "type": "Money",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(assiette_crds(m: <m>, montant: <montant>));",
+      "tests": [
+        "urn:query:fr-apl-versement-base-bridge"
+      ],
+      "branches": [
+        {
+          "summary": "l'assiette mesurée dans OpenFisca est isolée pour reproduire les deux cas de l'audit",
+          "rule": "AssietteAuditOpenFisca"
+        },
+        {
+          "summary": "la somme après RLS et contributions représentatives entre dans la finalisation du versement",
+          "rule": "AssietteDepuisAideMensuelle"
+        }
+      ],
+      "source_units": [
+        "GUIDE_P22_DEGRESSIVITE_RLS",
+        "GUIDE_P23_CRDS_ARRONDI"
+      ]
+    },
+    {
+      "id": "crds-precomptee",
+      "task": "versement",
+      "question": "Какова удерживаемая CRDS с учётом территории и усечения до нижнего сантима?",
+      "kind": "truth",
+      "predicate": "crds_precomptee",
+      "parameters": [
+        {
+          "name": "m",
+          "type": "Menage",
+          "role": "bound"
+        },
+        {
+          "name": "montant",
+          "type": "Money",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(crds_precomptee(m: <m>, montant: <montant>));",
+      "tests": [
+        "urn:query:fr-apl-versement-retenue-crds",
+        "urn:query:fr-apl-versement-saint-pierre-sans-contribution"
+      ],
+      "branches": [
+        {
+          "summary": "la CRDS au taux de 0,5 % est précomptée et arrondie au centime inférieur",
+          "rule": "RetenueCRDSMetropole"
+        },
+        {
+          "summary": "la CRDS au taux de 0,5 % est précomptée et arrondie au centime inférieur",
+          "rule": "RetenueCRDSOutreMer"
+        },
+        {
+          "summary": "à Saint-Pierre-et-Miquelon aucune contribution n'est précomptée dans ce calcul",
+          "rule": "SansCRDSSaintPierre"
+        }
+      ],
+      "source_units": [
+        "GUIDE_P23_CRDS_ARRONDI",
+        "GUIDE_P50_ARRONDIS"
+      ]
+    },
+    {
+      "id": "montant-verse",
+      "task": "versement",
+      "question": "Какова фактически выплачиваемая сумма после удержания CRDS и округления вниз до евро?",
+      "kind": "truth",
+      "predicate": "montant_verse",
+      "parameters": [
+        {
+          "name": "m",
+          "type": "Menage",
+          "role": "bound"
+        },
+        {
+          "name": "montant",
+          "type": "Money",
+          "role": "bound"
+        }
+      ],
+      "template": "evaluate truth(montant_verse(m: <m>, montant: <montant>));",
+      "tests": [
+        "urn:query:fr-apl-versement-arrondi-euro",
+        "urn:query:fr-apl-versement-cas-10-audit",
+        "urn:query:fr-apl-versement-cas-8-audit",
+        "urn:query:fr-apl-versement-exemple-officiel",
+        "urn:query:fr-apl-versement-rls-non-nulle",
+        "urn:query:fr-apl-versement-saint-pierre-arrondi"
+      ],
+      "source_units": [
+        "GUIDE_P23_CRDS_ARRONDI",
+        "GUIDE_P24_EXEMPLE",
+        "GUIDE_P50_ARRONDIS"
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "id": "statut-guide-ministeriel",
+      "task": "versement",
+      "question": "Являются ли правила округления на страницах 23–24 и 50 самостоятельной нормой закона?",
+      "reason_kind": "open_reading",
+      "limitation": "Порядок удержания и округления взят из министерского Guide des aides au logement 2021 как из канона исполнения, а не выдан за текст закона; нормативные акты закрепляют ставку CRDS и территориальную применимость, но найденный корпус закона не содержит той же полной последовательности округлений.",
+      "source_units": [
+        "GUIDE_P23_CRDS_ARRONDI",
+        "GUIDE_P24_EXEMPLE",
+        "GUIDE_P50_ARRONDIS"
+      ],
+      "related_question": "montant-verse"
+    },
+    {
+      "id": "rasxozhdenie-oficialnogo-primera",
+      "task": "versement",
+      "question": "Как согласовать напечатанный промежуточный итог 346,53 евро с арифметическим итогом приведённых слагаемых 346,69420 евро?",
+      "reason_kind": "open_reading",
+      "limitation": "Официальный пример на странице 24 печатает 346,53 EUR до CRDS, тогда как сложение приведённых там слагаемых даёт 346,69420 EUR; пакет проверяет напечатанный результат как вход стадии выплаты и не выдумывает отсутствующую операцию согласования.",
+      "source_units": [
+        "GUIDE_P24_EXEMPLE"
+      ],
+      "related_question": "montant-verse"
+    },
+    {
+      "id": "granica-vxodnoj-bazy",
+      "task": "versement",
+      "question": "Верно ли рассчитана входная сумма пособия до удержания CRDS?",
+      "reason_kind": "source_delegates",
+      "limitation": "Пакет отвечает только за стадию выплаты: расчёт входной суммы после RLS остаётся обязанностью fr.apl; отдельный эмпирический вход assiette_crds_auditee_openfisca существует лишь для воспроизведения аудита и не приписывается CAF/MSA.",
+      "source_units": [
+        "GUIDE_P22_DEGRESSIVITE_RLS",
+        "GUIDE_P23_CRDS_ARRONDI"
+      ],
+      "related_question": "assiette-crds"
+    }
+  ],
+  "internal": [
+    {
+      "predicate": "decision_non_versement",
+      "reason": "Решение импортирует результат aide_non_versee расчётного пакета и проверено отдельным сценарием; самостоятельного локального источника стадии выплаты у него нет."
+    },
+    {
+      "predicate": "decision_versement",
+      "reason": "Служебное решение выводится из проверяемого montant_verse; отдельный вопрос дублировал бы итоговую карточку выплаты."
+    },
+    {
+      "predicate": "montant_net_crds",
+      "reason": "Промежуточное звено между проверяемыми crds_precomptee и montant_verse; собственная бизнес-операция отсутствует."
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+// Reopening outside the decree delay: relapse 40 months after
+// opening — no decree reopening.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reouverture-hors-delai" {
+    given {
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; }
+        assert "ajpp-roh-01": ouverture_droit_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-roh"), 200) { origin case_input; }
+        assert "ajpp-roh-02": rechute_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-roh"), 240) { origin case_input; }
+        assert "ajpp-roh-03": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-roh"), 100) { origin case_input; }
+        assert "ajpp-roh-04": rechute_pathologie(entity_ref("urn:fr:pf-ajpp:case:enfant-roh")) { origin case_input; }
+        assert "ajpp-roh-05": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-roh")) { origin adjudicated; }
+        assert "ajpp-roh-06": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-roh")) { origin adjudicated; }
+    }
+    evaluate truth(reouverture_dans_delai(entity_ref("urn:fr:pf-ajpp:case:enfant-roh")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

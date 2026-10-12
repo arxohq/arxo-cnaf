@@ -1,0 +1,26 @@
+// Свой сценарий заморского найма: наёмных дел заморских территорий нет ни у
+// Catala, ни у OpenFisca. Факты скупые нарочно — этому шагу ни найма, ни ресурсов
+// не нужно, а с ними отказ любого другого звена поразил бы весь документ.
+//
+// ШАГ: заморский форфейт расходов редакции 2024 года: 38,99 € + 10,03 € = 49,02 €
+// (метрополия того же месяца: 58,08 € + 13,17 € = 71,25 €).
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-locatif-forfait-charges-2024" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "outremer-locatif-forfait-charges-2024-01": secteur_locatif(entity_ref("urn:fr:apl:case:om-loc-2024")) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2024-02": aide_demandee(entity_ref("urn:fr:apl:case:om-loc-2024"), APL) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2024-03": zone_du_logement(entity_ref("urn:fr:apl:case:om-loc-2024"), ZONE_II) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2024-04": situation_familiale(entity_ref("urn:fr:apl:case:om-loc-2024"), COUPLE) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2024-05": personnes_a_charge(entity_ref("urn:fr:apl:case:om-loc-2024"), 1) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2024-06": mode_location(entity_ref("urn:fr:apl:case:om-loc-2024"), LOCATION_SEULE) { origin case_input; }
+        assert "outremer-locatif-forfait-charges-2024-07": territoire(entity_ref("urn:fr:apl:case:om-loc-2024"), OUTRE_MER) { origin case_input; }
+    }
+    evaluate truth(forfait_charges(entity_ref("urn:fr:apl:case:om-loc-2024"), 49.02 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

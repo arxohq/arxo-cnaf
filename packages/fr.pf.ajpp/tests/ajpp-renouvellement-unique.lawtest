@@ -1,0 +1,28 @@
+// Exceptional once-renewal: maximum reached (310), new certificate and
+// control agreement before the initial term ends. The renewal envelope
+// (50 days) is within the ceiling.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-renouvellement-unique" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-ren-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-ren")) { origin adjudicated; }
+        assert "ajpp-ren-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-ren")) { origin adjudicated; }
+        assert "ajpp-ren-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-ren"), entity_ref("urn:fr:pf-ajpp:case:enfant-ren")) { origin case_input; }
+        assert "ajpp-ren-04": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-ren"), 310) { origin case_input; }
+        assert "ajpp-ren-05": nouveau_certificat(entity_ref("urn:fr:pf-ajpp:case:enfant-ren")) { origin adjudicated; }
+        assert "ajpp-ren-06": accord_controle_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-ren")) { origin adjudicated; }
+        assert "ajpp-ren-07": avant_terme_initial(entity_ref("urn:fr:pf-ajpp:case:enfant-ren")) { origin case_input; }
+        assert "ajpp-ren-08": jours_ajpp_second_enveloppe(entity_ref("urn:fr:pf-ajpp:case:enfant-ren"), 50) { origin case_input; }
+    }
+    evaluate truth(renouvellement_accorde(entity_ref("urn:fr:pf-ajpp:case:enfant-ren")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_dans_limite(entity_ref("urn:fr:pf-ajpp:case:enfant-ren")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

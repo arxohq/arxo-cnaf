@@ -1,0 +1,1278 @@
+// Recovery scale and payment mechanics (D. 553-1 to D. 553-5, R. 553-1):
+// the decree bareme behind L. 553-2 withholdings - monthly income R,
+// family parts N, organ-stated weighted income, marginal tranches,
+// deemed income, 20 % recalculation, seizure referrals, overflow onto
+// other benefits, the fixed 50 % fraud uplift, monthly settlement.
+//
+// Fragments live in fr.pf.core (D-19 pattern: this package holds no
+// source rows); all @source anchors below are qualified. Norms stay
+// connected: the 50 % fraud uplift (D. 553-5 I) is pinned and
+// 04-recouvrement applies it as the fixed x1.50 factor (PC-R07-38; no
+// stated uplift input remains). 04 reads this module's
+// prelevement_mensuel as the PF levy: pinned tranches up to 2022,
+// fund-stated amount from 2023 (D-42, B-VERS-D5531-REVALO).
+//
+// DEONTIC MAP: computational (institutional statuses) + two organ
+// liberties (D. 553-4 direct-payment priority, tiers-payant levy) and
+// one organ duty (D. 553-1 information on recovery bases).
+//
+// INPUT CONTRACTS (extension of the 04 contract):
+// - revenus_mensuels_a arrives monthly: the /3 and /12 divisions of
+//   I.a are caller-side (the decree names no rounding for them).
+// - prestations_mensuelles_b arrives with the I.b exclusions
+//   (ARS, birth/adoption premiums and bonuses, moving premiums,
+//   removals, loans, back-to-work premiums) already applied.
+// - WEIGHTED INCOME (PC-A01, B-VERS-D5531-PONDERE-FORMULE): the pinned
+//   D. 553-1 II shows "R", "Ce revenu est pondéré selon la formule :",
+//   "N" as separate paragraphs with no operator or expression, so no
+//   R/N (or any) weighting formula is computed here. revenu_pondere
+//   arrives only as organ-stated (revenu_pondere_calcule_organisme),
+//   deemed 1 096 EUR, or last-known quarterly weighted income; R and N
+//   stay independently derived and feed no division. The tranche band
+//   constructor below applies to that typed retained weighted input.
+// - pond_trimestriel_connu arrives as the last-known weighted income;
+//   the fund re-runs the same chain on older data.
+// - PC-R02-01 gates (D. 553-1 III al. 6): last-known quarterly income
+//   and both deemed bases apply only while the current information is
+//   still absent (ressources_inconnues / ressources_trimestrielles_
+//   inconnues) and the income-amount declaration is not received
+//   (declaration_montant_revenus_non_recue); recovery on those bases
+//   stops once current information or the declaration arrives. The
+//   inform duty covers quarterly-unknown cases too ("Dans ces deux cas,
+//   l'organisme ... en informe l'allocataire").
+// - PC-R05-02 (D. 553-1 III al. 6): quarterly-right state is explicit
+//   (not droit_trimestriel_ouvert for the hors-droit branch, positive
+//   for the quarterly branches); the four-month last-known period is a
+//   dated clock (delai_4_mois_depart_le + date_appreciation_revenus,
+//   en_cours before +4 months, expire at/after). Unknown quarterly state
+//   or missing dates yield no weighted income (NEITHER).
+// - Tranche values are the pinned 2022 euros; revalorised post-2022
+//   values are unpinned (tranches and the 1 096 EUR deeming stop at
+//   2023-01-01, boundary B-VERS-D5531-REVALO).
+// - The (690, 691] gap is literal: no tranche covers it, no rule fires
+//   (boundary B-VERS-D5531-TRANCHE-691, paired scenarios).
+// - Multi-indu ordering (PC-R04-03, PC-R05-01): the dated-amount ledger
+//   (indu_constate_le + indu_solde_restant) feeds the institutional
+//   ordering (oldest first, smallest first on same-date ties, transitive
+//   closure); the single monthly retention (prelevement_mensuel) is
+//   allocated across indus in that order, capped at each remaining balance
+//   with the remainder carried to the next (allocation_indu via
+//   indu_total_anterieur). Allocation requires the complete ledger
+//   (registre_indus_complet). Same-date same-amount ties have no source
+//   order (genuine gap, no allocation for the tied pair).
+// - D. 553-5 II (D. 133-2-3 2/3/4) is an external renvoi: no rule.
+//
+// ENGINE RISK (flagged for reviewer lawref, no-run authoring):
+// - parts_isole/parts_menage mix Decimal and Integer (0.5 x count);
+//   no corpus precedent for mixed arithmetic was found. If the engine
+//   refuses, the fallback is a stated-parts input contract
+//   (B-VERS-D5531-PARTS-CALCUL) and these two rules are reworked.
+//   (Former Money/Decimal division risk retired with PC-A01: no
+//   weighting division is computed anymore.)
+
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+use self::{
+    Indu,
+};
+
+relation revenus_mensuels_a(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "revenus mensuels du I.a de D. 553-1, divisions par 3 et 12 appliquées (D. 553-1 I.a)";
+    label en unofficial "monthly I.a incomes of D. 553-1, /3 and /12 applied (D. 553-1 I.a)";
+}
+
+relation prestations_mensuelles_b(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "prestations du premier mois, exclusions du I.b appliquées (D. 553-1 I.b)";
+    label en unofficial "first-month benefits, I.b exclusions applied (D. 553-1 I.b)";
+}
+
+relation charges_logement_c(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "charges de logement retenues du I.c, connues (D. 553-1 I.c)";
+    label en unofficial "I.c housing charges kept, known (D. 553-1 I.c)";
+}
+
+relation charges_logement_inconnues(p: fr.pf.core::Personne) kind empirical {
+    label fr official "charges de logement inconnues: forfait de 25 % (D. 553-1 I.c)";
+    label en unofficial "housing charges unknown: 25% allowance (D. 553-1 I.c)";
+}
+
+relation charges_retenues(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "charges de logement retenues (D. 553-1 I.c)";
+    label en unofficial "housing charges kept (D. 553-1 I.c)";
+}
+
+relation revenu_mensuel_r(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "revenu mensuel R = a + b - c (D. 553-1 III)";
+    label en unofficial "monthly income R = a + b - c (D. 553-1 III)";
+}
+
+relation personne_seule(p: fr.pf.core::Personne) kind empirical {
+    label fr official "personne seule: 1,5 part (D. 553-1 II)";
+    label en unofficial "single person: 1.5 parts (D. 553-1 II)";
+}
+
+relation menage(p: fr.pf.core::Personne) kind empirical {
+    label fr official "ménage: 2 parts (D. 553-1 II)";
+    label en unofficial "household: 2 parts (D. 553-1 II)";
+}
+
+relation nb_enfants_charge(p: fr.pf.core::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "nombre d'enfants à charge et assimilés: 0,5 part chacun (D. 553-1 II)";
+    label en unofficial "number of dependent and assimilated children: 0.5 parts each (D. 553-1 II)";
+}
+
+relation parts_famille_n(p: fr.pf.core::Personne, n: Decimal) kind institutional {
+    key(p);
+    label fr official "nombre de parts N de la famille (D. 553-1 II)";
+    label en unofficial "family parts count N (D. 553-1 II)";
+}
+
+relation revenu_pondere(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "revenu mensuel pondéré du II, formule non épinglée: constaté, réputé ou calculé par l'organisme (D. 553-1 II-III)";
+    label en unofficial "weighted monthly income of II, formula unpinned: stated, deemed or organ-computed (D. 553-1 II-III)";
+}
+
+relation revenu_pondere_calcule_organisme(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "revenu mensuel pondéré calculé et attesté par l'organisme débiteur, formule du II non épinglée (entrée constatée — D. 553-1 II)";
+    label en unofficial "weighted monthly income computed and stated by the debtor body, II formula unpinned (stated input - D. 553-1 II)";
+}
+
+relation ressources_inconnues(p: fr.pf.core::Personne) kind empirical {
+    label fr official "ressources inconnues de l'organisme (D. 553-1 III al. 6)";
+    label en unofficial "resources unknown to the body (D. 553-1 III para. 6)";
+}
+
+relation droit_trimestriel_ouvert(p: fr.pf.core::Personne) kind empirical {
+    label fr official "droit trimestriel ouvert (D. 553-1 III al. 6)";
+    label en unofficial "quarterly right open (D. 553-1 III para. 6)";
+}
+
+relation pond_trimestriel_connu(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "pondéré des dernières ressources trimestrielles connues (D. 553-1 III al. 6)";
+    label en unofficial "weighted income from the last known quarterly resources (D. 553-1 III para. 6)";
+}
+
+relation delai_4_mois_depart_le(p: fr.pf.core::Personne, depart: Date) kind empirical {
+    key(p);
+    label fr official "point de départ du délai de quatre mois sur dernières ressources trimestrielles connues, date attestée (D. 553-1 III al. 6)";
+    label en unofficial "start of the four-month last-known-quarterly-resources period, attested date (D. 553-1 III para. 6)";
+}
+
+relation date_appreciation_revenus(p: fr.pf.core::Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "date d'appréciation des revenus pour le calcul du pondéré (D. 553-1 III al. 6)";
+    label en unofficial "income appreciation date for the weighted calculation (D. 553-1 III para. 6)";
+}
+
+relation delai_4_mois_en_cours(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "délai de quatre mois sur ressources trimestrielles en cours, date d'appréciation avant échéance (D. 553-1 III al. 6)";
+    label en unofficial "four-month quarterly-resources period running, appreciation date before expiry (D. 553-1 III para. 6)";
+}
+
+relation delai_4_mois_expire(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "délai de quatre mois sur ressources trimestrielles expiré, date d'appréciation à échéance ou après (D. 553-1 III al. 6)";
+    label en unofficial "four-month last-known-resources period expired, appreciation date at or after expiry (D. 553-1 III para. 6)";
+}
+
+relation ressources_trimestrielles_inconnues(p: fr.pf.core::Personne) kind empirical {
+    label fr official "informations relatives aux ressources trimestrielles non en possession de l'organisme (D. 553-1 III al. 6)";
+    label en unofficial "quarterly resource information not held by the body (D. 553-1 III para. 6)";
+}
+
+relation declaration_montant_revenus_non_recue(p: fr.pf.core::Personne) kind empirical {
+    label fr official "déclaration du montant des revenus non reçue: le recouvrement est poursuivi sur les bases estimées (D. 553-1 III al. 6)";
+    label en unofficial "income-amount declaration not received: recovery continues on the estimated bases (D. 553-1 III para. 6)";
+}
+
+relation bases_recouvrement_communiquees(o: fr.pf.core::Organisme, p: fr.pf.core::Personne) kind empirical {
+    key(o, p);
+    label fr official "l'allocataire est informé des bases du recouvrement (D. 553-1 III al. 6)";
+    label en unofficial "the allocataire is informed of the recovery bases (D. 553-1 III para. 6)";
+}
+
+relation prelevement_mensuel(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant mensuel du prélèvement sur les prestations (D. 553-1 III)";
+    label en unofficial "monthly levy amount on benefits (D. 553-1 III)";
+}
+
+// D-42 (08.10.2026), B-VERS-D5531-REVALO input contract: from 2023-01-01
+// the revalorised tranche and deeming values are unpinned, so the
+// tranche rules stop and the D. 553-1 levy arrives as the Money amount
+// the fund applies — the same fund-stated contract as the non-PF levies
+// of 04 (retenue_mensuelle_*_declaree, DSS_PENDING). Never a rate: no
+// installment x rate product is derived (PC-R07-39).
+pub relation prelevement_mensuel_declare(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant mensuel du prélèvement appliqué par la caisse selon le barème D. 553-1 revalorisé (valeurs postérieures à 2022 non épinglées : B-VERS-D5531-REVALO)";
+    label en unofficial "monthly levy amount applied by the fund under the revalorised D. 553-1 scale (post-2022 values unpinned: B-VERS-D5531-REVALO)";
+}
+
+relation renouvellement_annuel(p: fr.pf.core::Personne) kind empirical {
+    label fr official "renouvellement au 1er janvier des droits aux prestations (D. 553-2)";
+    label en unofficial "1 January renewal of benefit rights (D. 553-2)";
+}
+
+relation changement_situation_ressources(p: fr.pf.core::Personne) kind empirical {
+    label fr official "modification de situation ayant une incidence sur les ressources du I.a (D. 553-2)";
+    label en unofficial "situation change affecting I.a resources (D. 553-2)";
+}
+
+relation changement_droits(p: fr.pf.core::Personne) kind empirical {
+    label fr official "modification des droits aux prestations ou de leur montant (D. 553-2)";
+    label en unofficial "change in benefit rights or their amount (D. 553-2)";
+}
+
+relation nouveau_calcul_requis(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "nouveau calcul de la mensualité de remboursement requis (D. 553-2)";
+    label en unofficial "recalculation of the monthly overpayment instalment required (D. 553-2)";
+}
+
+relation mensualite_precedente(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "mensualité de remboursement précédente (D. 553-2)";
+    label en unofficial "previous repayment instalment (D. 553-2)";
+}
+
+relation recouvrement_nouvelles_bases(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "le recouvrement est poursuivi sur les nouvelles bases, écart d'au moins 20 % (D. 553-2)";
+    label en unofficial "recovery continues on the new bases, at least 20% apart (D. 553-2)";
+}
+
+relation prelevements_saisie_bareme(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "prélèvements de la saisie L. 553-4 selon D. 553-1/2 (D. 553-3)";
+    label en unofficial "L. 553-4 seizure levies under D. 553-1/2 (D. 553-3)";
+}
+
+relation prestation_source_cessee_ou_insuffisante(p: fr.pf.core::Personne) kind empirical {
+    label fr official "la prestation source de la retenue cesse ou ne suffit plus (D. 553-4)";
+    label en unofficial "the levy source benefit ends or no longer covers it (D. 553-4)";
+}
+
+relation retenue_report_autres_prestations(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "la retenue est opérée sur les autres prestations servies (D. 553-4)";
+    label en unofficial "the levy is taken from the other benefits served (D. 553-4)";
+}
+
+relation versement_direct_prioritaire_action(o: fr.pf.core::Organisme, p: fr.pf.core::Personne) kind empirical {
+    key(o, p);
+    label fr official "action: opérer prioritairement la retenue sur les prestations à versement direct";
+    label en unofficial "action: taking the levy first from direct-payment benefits";
+}
+
+relation indu_source_tiers_payant_a_echoir(p: fr.pf.core::Personne) kind empirical {
+    key(p);
+    label fr official "indu constitué au titre d'une prestation versée en tiers payant et la prestation est toujours à échoir (D. 553-4 al. 2)";
+    label en unofficial "overpayment on a third-party-paid benefit that is still payable in future (D. 553-4 para 2)";
+}
+
+relation indus_multiples(p: fr.pf.core::Personne) kind empirical {
+    label fr official "plusieurs indus en recouvrement (D. 553-4 al. 3)";
+    label en unofficial "several overpayments in recovery (D. 553-4 para. 3)";
+}
+
+relation retenue_unique_indus_multiples(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "une seule retenue mensuelle sur les prestations servies (D. 553-4 al. 3)";
+    label en unofficial "a single monthly levy on the benefits served (D. 553-4 para. 3)";
+}
+
+relation indu_constate_le(i: Indu, p: fr.pf.core::Personne, date: Date, montant: Money) kind empirical {
+    key(i);
+    label fr official "indu constaté à une date pour un montant, entrée du registre des dettes (D. 553-4 al. 3 « par ordre d'ancienneté », « constatés à la même date », « montant le plus faible »)";
+    label en unofficial "overpayment established on a date for an amount, debt-ledger entry (D. 553-4 para. 3 'par ordre d'anciennete', 'constates a la meme date', 'montant le plus faible')";
+}
+
+relation indu_solde_restant(i: Indu, p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(i);
+    label fr official "solde restant dû sur l'indu, état du registre amont (D. 553-4 al. 3 « jusqu'à l'extinction de chacune des créances »)";
+    label en unofficial "remaining balance owed on the overpayment, upstream ledger state (D. 553-4 para. 3 'jusqu'a l'extinction de chacune des creances')";
+}
+
+relation indu_recouvre_avant(a: Indu, b: Indu, p: fr.pf.core::Personne) kind institutional {
+    key(a, b, p);
+    label fr official "l'indu a se recouvre avant l'indu b, ordre d'ancienneté puis montant (D. 553-4 al. 3)";
+    label en unofficial "overpayment a recovers before overpayment b, seniority then amount order (D. 553-4 para. 3)";
+}
+
+relation registre_indus_complet(p: fr.pf.core::Personne) kind empirical {
+    label fr official "le registre des indus est complet pour l'allocataire, aucun indu en recouvrement n'est omis (D. 553-4 al. 3)";
+    label en unofficial "the overpayment ledger is complete for the allocataire, no indu in recovery is omitted (D. 553-4 para. 3)";
+}
+
+relation indu_egalite_parfaite(a: Indu, b: Indu, p: fr.pf.core::Personne) kind institutional {
+    key(a, b, p);
+    label fr official "indus distincts constatés à la même date pour le même montant, ordre source silencieux (D. 553-4 al. 3)";
+    label en unofficial "distinct overpayments established on the same date for the same amount, source order silent (D. 553-4 para. 3)";
+}
+
+relation indu_bloque_par_anterieur(b: Indu, p: fr.pf.core::Personne) kind institutional {
+    key(b, p);
+    label fr official "l'indu b est précédé d'un indu non éteint, il n'est pas premier (D. 553-4 al. 3)";
+    label en unofficial "overpayment b is preceded by a non-extinguished overpayment, it is not first (D. 553-4 para. 3)";
+}
+
+relation indu_concurrent_egalite_parfaite(i: Indu, p: fr.pf.core::Personne) kind institutional {
+    key(i, p);
+    label fr official "l'indu a un concurrent en égalité parfaite non éteint, ordre indéterminé (D. 553-4 al. 3)";
+    label en unofficial "the overpayment has a non-extinguished perfect-tie competitor, order undetermined (D. 553-4 para. 3)";
+}
+
+relation indu_premier_non_eteint(i: Indu, p: fr.pf.core::Personne) kind institutional {
+    key(i, p);
+    label fr official "l'indu est le premier non éteint du registre complet, sans égalité parfaite (D. 553-4 al. 3)";
+    label en unofficial "the overpayment is the first non-extinguished one of the complete ledger, without perfect tie (D. 553-4 para. 3)";
+}
+
+relation indu_total_anterieur(i: Indu, p: fr.pf.core::Personne, total: Money) kind institutional {
+    key(i, p);
+    label fr official "somme des soldes des indus précédant i dans l'ordre de recouvrement (D. 553-4 al. 3)";
+    label en unofficial "sum of the balances of the overpayments preceding i in the recovery order (D. 553-4 para. 3)";
+}
+
+relation retenue_affectee_montant(i: Indu, p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(i, p);
+    label fr official "part de la retenue mensuelle unique affectée à l'indu, plafonnée au solde restant (D. 553-4 al. 3)";
+    label en unofficial "share of the single monthly levy allocated to the overpayment, capped at the remaining balance (D. 553-4 para. 3)";
+}
+
+relation retenue_affectee_indu(i: Indu, p: fr.pf.core::Personne) kind institutional {
+    key(i, p);
+    label fr official "la retenue mensuelle unique est affectée à l'indu, part positive dans l'ordre de recouvrement (D. 553-4 al. 3)";
+    label en unofficial "the single monthly levy is allocated to the overpayment, positive share in the recovery order (D. 553-4 para. 3)";
+}
+
+const ZeroSoldeIndu: Money = 0.00 EUR {
+    label fr official "solde nul: créance éteinte (D. 553-4 al. 3)";
+    label en unofficial "zero balance: claim extinguished (D. 553-4 para. 3)";
+}
+
+relation taux_majoration_fraude_fixee(p: fr.pf.core::Personne, taux: Decimal) kind institutional {
+    key(p);
+    label fr official "taux de majoration de la retenue en cas de fraude, fixé à 50 % (D. 553-5 I)";
+    label en unofficial "fraud-case levy uplift rate, fixed at 50% (D. 553-5 I)";
+}
+
+relation reglement_mensuel(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "le règlement des prestations a lieu mensuellement (R. 553-1 al. 1)";
+    label en unofficial "benefits are settled monthly (R. 553-1 para. 1)";
+}
+
+relation prestations_terme_echu(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "prestations payables à terme échu, date fixée par arrêté (R. 553-1 al. 2)";
+    label en unofficial "benefits payable in arrears on the arrete date (R. 553-1 para. 2)";
+}
+
+relation date_paiement_arrete(p: fr.pf.core::Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "date de paiement fixée par arrêté interministériel (arrêté non épinglé — R. 553-1)";
+    label en unofficial "payment date set by interministerial arrete (arrete unpinned - R. 553-1)";
+}
+
+relation cmg_payable_a_compter(p: fr.pf.core::Personne, date: Date) kind institutional {
+    key(p);
+    label fr official "CMG payable à compter de la date fixée par arrêté (R. 553-1 al. 3)";
+    label en unofficial "CMG payable from the arrete date (R. 553-1 para. 3)";
+}
+
+const TauxPrelevement25: Decimal = 0.25 {
+    label fr official "25 % sur la tranche 231-345 euros (D. 553-1 III)";
+    label en unofficial "25% on the EUR 231-345 band (D. 553-1 III)";
+}
+
+const TauxPrelevement35: Decimal = 0.35 {
+    label fr official "35 % sur la tranche 346-516 euros (D. 553-1 III)";
+    label en unofficial "35% on the EUR 346-516 band (D. 553-1 III)";
+}
+
+const TauxPrelevement45: Decimal = 0.45 {
+    label fr official "45 % sur la tranche 517-690 euros (D. 553-1 III)";
+    label en unofficial "45% on the EUR 517-690 band (D. 553-1 III)";
+}
+
+const TauxPrelevement60: Decimal = 0.60 {
+    label fr official "60 % sur la tranche supérieure à 691 euros (D. 553-1 III)";
+    label en unofficial "60% on the band above EUR 691 (D. 553-1 III)";
+}
+
+const ForfaitPrelevement: Money = 45.00 EUR {
+    label fr official "retenue forfaitaire de 45 euros sous 231 euros (D. 553-1 III)";
+    label en unofficial "EUR 45 flat levy below EUR 231 (D. 553-1 III)";
+}
+
+const RevenuRepute: Money = 1096.00 EUR {
+    label fr official "revenu pondéré réputé de 1 096 euros, ressources inconnues (D. 553-1 III)";
+    label en unofficial "deemed weighted income of EUR 1,096, resources unknown (D. 553-1 III)";
+}
+
+const TauxChargesLogement25: Decimal = 0.25 {
+    label fr official "forfait de 25 % des revenus et prestations, charges inconnues (D. 553-1 I.c)";
+    label en unofficial "25% of income and benefits, charges unknown (D. 553-1 I.c)";
+}
+
+const TauxMajorationFraude50: Decimal = 0.50 {
+    label fr official "taux de majoration de 50 % en cas de fraude (D. 553-5 I)";
+    label en unofficial "50% uplift rate in fraud cases (D. 553-5 I)";
+}
+
+const Tranche231: Money = 231.00 EUR {
+    label fr official "plancher de 231 euros (D. 553-1 III)";
+    label en unofficial "EUR 231 floor (D. 553-1 III)";
+}
+
+const Tranche345: Money = 345.00 EUR {
+    label fr official "plafond de 345 euros (D. 553-1 III)";
+    label en unofficial "EUR 345 ceiling (D. 553-1 III)";
+}
+
+const Tranche346: Money = 346.00 EUR {
+    label fr official "plancher de 346 euros (D. 553-1 III)";
+    label en unofficial "EUR 346 floor (D. 553-1 III)";
+}
+
+const Tranche516: Money = 516.00 EUR {
+    label fr official "plafond de 516 euros (D. 553-1 III)";
+    label en unofficial "EUR 516 ceiling (D. 553-1 III)";
+}
+
+const Tranche517: Money = 517.00 EUR {
+    label fr official "plancher de 517 euros (D. 553-1 III)";
+    label en unofficial "EUR 517 floor (D. 553-1 III)";
+}
+
+const Tranche690: Money = 690.00 EUR {
+    label fr official "plafond de 690 euros (D. 553-1 III)";
+    label en unofficial "EUR 690 ceiling (D. 553-1 III)";
+}
+
+const Tranche691: Money = 691.00 EUR {
+    label fr official "seuil de 691 euros (D. 553-1 III)";
+    label en unofficial "EUR 691 mark (D. 553-1 III)";
+}
+
+const PartsBaseIsole: Decimal = 1.5 {
+    label fr official "1,5 part pour la personne seule (D. 553-1 II)";
+    label en unofficial "1.5 parts for the single person (D. 553-1 II)";
+}
+
+const PartsBaseMenage: Decimal = 2.0 {
+    label fr official "2 parts pour le ménage (D. 553-1 II)";
+    label en unofficial "2 parts for the household (D. 553-1 II)";
+}
+
+const PartsParEnfant: Decimal = 0.5 {
+    label fr official "0,5 part par enfant à charge ou assimilé (D. 553-1 II)";
+    label en unofficial "0.5 parts per dependent or assimilated child (D. 553-1 II)";
+}
+
+function charges_defaut_25(revenus: Money, prestations: Money) -> Money =
+    (revenus + prestations) * TauxChargesLogement25;
+
+function revenu_total_r(revenus: Money, prestations: Money, charges: Money) -> Money =
+    revenus + prestations - charges;
+
+function parts_isole(enfants: Integer) -> Decimal =
+    PartsBaseIsole + PartsParEnfant * enfants;
+
+function parts_menage(enfants: Integer) -> Decimal =
+    PartsBaseMenage + PartsParEnfant * enfants;
+
+// PC-A01: no weighting function. The pinned D. 553-1 II exposes R, the
+// sentence "Ce revenu est pondéré selon la formule :" and N as separate
+// paragraphs with no operator or expression (B-VERS-D5531-PONDERE-FORMULE),
+// so no R/N or alternative formula is inferred here.
+
+function prelevement_tranche1(x: Money) -> Money =
+    ForfaitPrelevement + (x - Tranche231) * TauxPrelevement25;
+
+function prelevement_tranche2(x: Money) -> Money = ForfaitPrelevement + (Tranche345 - Tranche231) * TauxPrelevement25 + (x - Tranche346) * TauxPrelevement35;
+
+function prelevement_tranche3(x: Money) -> Money = ForfaitPrelevement + (Tranche345 - Tranche231) * TauxPrelevement25 + (Tranche516 - Tranche346) * TauxPrelevement35 + (x - Tranche517) * TauxPrelevement45;
+
+function prelevement_tranche4(x: Money) -> Money = ForfaitPrelevement + (Tranche345 - Tranche231) * TauxPrelevement25 + (Tranche516 - Tranche346) * TauxPrelevement35 + (Tranche690 - Tranche517) * TauxPrelevement45 + (x - Tranche691) * TauxPrelevement60;
+
+function seuil_hausse_20(ancien: Money) -> Money =
+    ancien * 1.2;
+
+function seuil_baisse_20(ancien: Money) -> Money =
+    ancien * 0.8;
+
+function allocation_indu(retenue: Money, anterieur: Money, solde: Money) -> Money =
+    if retenue <= anterieur then 0.00 EUR else if retenue - anterieur <= solde then retenue - anterieur else solde;
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule ChargesConnues(p: fr.pf.core::Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Charges de logement connues retenues";
+    label en unofficial "Known housing charges kept";
+    when charges_logement_c(p, montant);
+    then charges_retenues(p, montant);
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule ChargesInconnues25(p: fr.pf.core::Personne, revenus: Money, prestations: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Charges inconnues: forfait de 25 % des revenus et des prestations";
+    label en unofficial "Unknown charges: 25% of income and benefits";
+    when charges_logement_inconnues(p) and revenus_mensuels_a(p, revenus)
+        and prestations_mensuelles_b(p, prestations);
+    then charges_retenues(p, charges_defaut_25(revenus, prestations));
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule RevenuMensuelR(p: fr.pf.core::Personne, revenus: Money, prestations: Money, charges: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Revenu mensuel R: revenus et prestations diminués des charges de logement";
+    label en unofficial "Monthly income R: income and benefits minus housing charges";
+    when revenus_mensuels_a(p, revenus) and prestations_mensuelles_b(p, prestations)
+        and charges_retenues(p, charges);
+    then revenu_mensuel_r(p, revenu_total_r(revenus, prestations, charges));
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule PartsIsole(p: fr.pf.core::Personne, enfants: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Personne seule: 1,5 part plus 0,5 par enfant";
+    label en unofficial "Single person: 1.5 parts plus 0.5 per child";
+    when personne_seule(p) and nb_enfants_charge(p, enfants);
+    then parts_famille_n(p, parts_isole(enfants));
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule PartsMenage(p: fr.pf.core::Personne, enfants: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Ménage: 2 parts plus 0,5 par enfant";
+    label en unofficial "Household: 2 parts plus 0.5 per child";
+    when menage(p) and nb_enfants_charge(p, enfants);
+    then parts_famille_n(p, parts_menage(enfants));
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule RevenuPondereCalculeOrganisme(p: fr.pf.core::Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Revenu mensuel pondéré retenu tel que calculé par l'organisme (formule du II non épinglée)";
+    label en unofficial "Weighted monthly income kept as computed by the body (II formula unpinned)";
+    when revenu_pondere_calcule_organisme(p, montant);
+    then revenu_pondere(p, montant);
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule RevenuRepute1096(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, @2023-01-01);
+    label fr official "Ressources inconnues hors droit trimestriel, déclaration non reçue: pondéré réputé de 1 096 euros";
+    label en unofficial "Unknown resources outside quarterly rights, declaration not received: deemed weighted income of EUR 1,096";
+    when ressources_inconnues(p) and not droit_trimestriel_ouvert(p)
+        and declaration_montant_revenus_non_recue(p);
+    then revenu_pondere(p, RevenuRepute);
+}
+
+// D-42 (08.10.2026): calendar-month step of the four-month clock
+// (D. 553-1 III al. 6). add_calendar_period reads the context policy
+// (§86, errata E-0029: include_end true, no_roll); scenarios on this
+// clock bind BAREME_DELAI_MOIS in their context.
+deadline policy BAREME_DELAI_MOIS {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule Delai4MoisEnCoursConstate(p: fr.pf.core::Personne, depart: Date, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Délai de quatre mois en cours: appréciation avant l'échéance des quatre mois";
+    label en unofficial "Four-month period running: appreciation before the four-month expiry";
+    when delai_4_mois_depart_le(p, depart) and date_appreciation_revenus(p, date)
+        and date < add_calendar_period(depart, 4 calendar_month);
+    then delai_4_mois_en_cours(p);
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule Delai4MoisExpireConstate(p: fr.pf.core::Personne, depart: Date, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Délai de quatre mois expiré: appréciation à l'échéance ou après";
+    label en unofficial "Four-month period expired: appreciation at or after expiry";
+    when delai_4_mois_depart_le(p, depart) and date_appreciation_revenus(p, date)
+        and date >= add_calendar_period(depart, 4 calendar_month);
+    then delai_4_mois_expire(p);
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule PondTrimestrielConnu(p: fr.pf.core::Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Droit trimestriel, informations trimestrielles toujours inconnues, déclaration non reçue: quatre mois sur les dernières ressources connues";
+    label en unofficial "Quarterly right, quarterly information still unknown, declaration not received: four months on the last known resources";
+    when droit_trimestriel_ouvert(p) and pond_trimestriel_connu(p, montant)
+        and ressources_trimestrielles_inconnues(p) and declaration_montant_revenus_non_recue(p)
+        and delai_4_mois_en_cours(p);
+    then revenu_pondere(p, montant);
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule RevenuReputeApres4Mois(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, @2023-01-01);
+    label fr official "Droit trimestriel après quatre mois, informations toujours inconnues, déclaration non reçue: pondéré réputé de 1 096 euros";
+    label en unofficial "Quarterly right after four months, information still unknown, declaration not received: deemed weighted income of EUR 1,096";
+    when droit_trimestriel_ouvert(p) and delai_4_mois_expire(p)
+        and ressources_trimestrielles_inconnues(p) and declaration_montant_revenus_non_recue(p);
+    then revenu_pondere(p, RevenuRepute);
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule InformerBases(o: fr.pf.core::Organisme, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'allocataire aux ressources inconnues, aux ressources trimestrielles inconnues ou aux charges de logement inconnues (forfait 25 %) est informé des bases du recouvrement";
+    label en unofficial "The allocataire with unknown resources, unknown quarterly resources or unknown housing charges (25% allowance) is informed of the recovery bases";
+    when (ressources_inconnues(p) or charges_logement_inconnues(p) or ressources_trimestrielles_inconnues(p)) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty InformerBasesRecouvrement {
+        bearer o;
+        beneficiary p;
+        maintain bases_recouvrement_communiquees(o, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule PrelevementForfait(p: fr.pf.core::Personne, x: Money) strict {
+    effective [@2021-01-01, @2023-01-01);
+    label fr official "Pondéré inférieur à 231 euros: retenue forfaitaire de 45 euros";
+    label en unofficial "Weighted income below EUR 231: EUR 45 flat levy";
+    when revenu_pondere(p, x) and x < Tranche231;
+    then prelevement_mensuel(p, ForfaitPrelevement);
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule PrelevementTranche1(p: fr.pf.core::Personne, x: Money) strict {
+    effective [@2021-01-01, @2023-01-01);
+    label fr official "Pondéré de 231 à 345 euros: 45 euros plus 25 % de la tranche";
+    label en unofficial "Weighted income EUR 231-345: EUR 45 plus 25% of the band";
+    when revenu_pondere(p, x) and x >= Tranche231 and x <= Tranche345;
+    then prelevement_mensuel(p, prelevement_tranche1(x));
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule PrelevementTranche2(p: fr.pf.core::Personne, x: Money) strict {
+    effective [@2021-01-01, @2023-01-01);
+    label fr official "Pondéré de 346 à 516 euros: 73,50 euros plus 35 % de la tranche";
+    label en unofficial "Weighted income EUR 346-516: EUR 73.50 plus 35% of the band";
+    when revenu_pondere(p, x) and x >= Tranche346 and x <= Tranche516;
+    then prelevement_mensuel(p, prelevement_tranche2(x));
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule PrelevementTranche3(p: fr.pf.core::Personne, x: Money) strict {
+    effective [@2021-01-01, @2023-01-01);
+    label fr official "Pondéré de 517 à 690 euros: 133 euros plus 45 % de la tranche";
+    label en unofficial "Weighted income EUR 517-690: EUR 133 plus 45% of the band";
+    when revenu_pondere(p, x) and x >= Tranche517 and x <= Tranche690;
+    then prelevement_mensuel(p, prelevement_tranche3(x));
+}
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule PrelevementTranche4(p: fr.pf.core::Personne, x: Money) strict {
+    effective [@2021-01-01, @2023-01-01);
+    label fr official "Pondéré supérieur à 691 euros: 210,85 euros plus 60 % de la tranche";
+    label en unofficial "Weighted income above EUR 691: EUR 210.85 plus 60% of the band";
+    when revenu_pondere(p, x) and x > Tranche691;
+    then prelevement_mensuel(p, prelevement_tranche4(x));
+}
+
+// D-42 BOUNDARY (B-VERS-D5531-REVALO): the pinned D. 553-1 III still
+// orders a monthly levy after 2022, but its revalorised euro values are
+// not pinned; the levy the fund applies is taken as stated. The window
+// starts where the pinned tranche rules end, so the two never overlap.
+
+@source(fr.pf.core::CSS_D553_1, fr.pf.core::CSS_D553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_1_CSS_ED2022_03, fr.pf.core::CSS_D553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2023_07, fr.pf.core::CSS_D553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_02, fr.pf.core::CSS_D553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_1_CSS_ED2025_12, fr.pf.core::CSS_D553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_1_CSS_ED2026_04, fr.pf.core::CSS_D553_1_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_1_PREV)
+rule PrelevementMensuelDeclare(p: fr.pf.core::Personne, montant: Money) strict {
+    effective [@2023-01-01, infinity);
+    label fr official "Barème revalorisé non épinglé: le prélèvement mensuel est celui appliqué par la caisse";
+    label en unofficial "Revalorised scale unpinned: the monthly levy is the one applied by the fund";
+    when prelevement_mensuel_declare(p, montant);
+    then prelevement_mensuel(p, montant);
+}
+
+@source(fr.pf.core::CSS_D553_2, fr.pf.core::CSS_D553_2_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_2_CSS_ED2021_11, fr.pf.core::CSS_D553_2_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_2_CSS_ED2022_01, fr.pf.core::CSS_D553_2_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_2_CSS_ED2022_03, fr.pf.core::CSS_D553_2_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_2_CSS_ED2023_07, fr.pf.core::CSS_D553_2_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_2_CSS_ED2025_02, fr.pf.core::CSS_D553_2_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_2_CSS_ED2025_12, fr.pf.core::CSS_D553_2_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_2_CSS_ED2026_04, fr.pf.core::CSS_D553_2_CSS_ED2026_06)
+rule NouveauCalculRenouvellement(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Renouvellement annuel: nouveau calcul de la mensualité";
+    label en unofficial "Annual renewal: instalment recalculated";
+    when renouvellement_annuel(p);
+    then nouveau_calcul_requis(p);
+}
+
+@source(fr.pf.core::CSS_D553_2, fr.pf.core::CSS_D553_2_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_2_CSS_ED2021_11, fr.pf.core::CSS_D553_2_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_2_CSS_ED2022_01, fr.pf.core::CSS_D553_2_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_2_CSS_ED2022_03, fr.pf.core::CSS_D553_2_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_2_CSS_ED2023_07, fr.pf.core::CSS_D553_2_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_2_CSS_ED2025_02, fr.pf.core::CSS_D553_2_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_2_CSS_ED2025_12, fr.pf.core::CSS_D553_2_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_2_CSS_ED2026_04, fr.pf.core::CSS_D553_2_CSS_ED2026_06)
+rule NouveauCalculSituation(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Situation modifiée: nouveau calcul de la mensualité";
+    label en unofficial "Changed situation: instalment recalculated";
+    when changement_situation_ressources(p);
+    then nouveau_calcul_requis(p);
+}
+
+@source(fr.pf.core::CSS_D553_2, fr.pf.core::CSS_D553_2_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_2_CSS_ED2021_11, fr.pf.core::CSS_D553_2_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_2_CSS_ED2022_01, fr.pf.core::CSS_D553_2_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_2_CSS_ED2022_03, fr.pf.core::CSS_D553_2_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_2_CSS_ED2023_07, fr.pf.core::CSS_D553_2_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_2_CSS_ED2025_02, fr.pf.core::CSS_D553_2_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_2_CSS_ED2025_12, fr.pf.core::CSS_D553_2_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_2_CSS_ED2026_04, fr.pf.core::CSS_D553_2_CSS_ED2026_06)
+rule NouveauCalculDroits(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Droits modifiés: nouveau calcul de la mensualité";
+    label en unofficial "Changed rights: instalment recalculated";
+    when changement_droits(p);
+    then nouveau_calcul_requis(p);
+}
+
+@source(fr.pf.core::CSS_D553_2, fr.pf.core::CSS_D553_2_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_2_CSS_ED2021_11, fr.pf.core::CSS_D553_2_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_2_CSS_ED2022_01, fr.pf.core::CSS_D553_2_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_2_CSS_ED2022_03, fr.pf.core::CSS_D553_2_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_2_CSS_ED2023_07, fr.pf.core::CSS_D553_2_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_2_CSS_ED2025_02, fr.pf.core::CSS_D553_2_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_2_CSS_ED2025_12, fr.pf.core::CSS_D553_2_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_2_CSS_ED2026_04, fr.pf.core::CSS_D553_2_CSS_ED2026_06)
+rule NouvellesBasesHausse(p: fr.pf.core::Personne, ancien: Money, nouveau: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Mensualité supérieure d'au moins 20 %: recouvrement sur les nouvelles bases";
+    label en unofficial "Instalment at least 20% higher: recovery on the new bases";
+    when nouveau_calcul_requis(p) and mensualite_precedente(p, ancien)
+        and prelevement_mensuel(p, nouveau) and nouveau >= seuil_hausse_20(ancien);
+    then recouvrement_nouvelles_bases(p);
+}
+
+@source(fr.pf.core::CSS_D553_2, fr.pf.core::CSS_D553_2_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_2_CSS_ED2021_11, fr.pf.core::CSS_D553_2_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_2_CSS_ED2022_01, fr.pf.core::CSS_D553_2_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_2_CSS_ED2022_03, fr.pf.core::CSS_D553_2_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_2_CSS_ED2023_07, fr.pf.core::CSS_D553_2_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_2_CSS_ED2025_02, fr.pf.core::CSS_D553_2_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_2_CSS_ED2025_12, fr.pf.core::CSS_D553_2_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_2_CSS_ED2026_04, fr.pf.core::CSS_D553_2_CSS_ED2026_06)
+rule NouvellesBasesBaisse(p: fr.pf.core::Personne, ancien: Money, nouveau: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Mensualité inférieure d'au moins 20 %: recouvrement sur les nouvelles bases";
+    label en unofficial "Instalment at least 20% lower: recovery on the new bases";
+    when nouveau_calcul_requis(p) and mensualite_precedente(p, ancien)
+        and prelevement_mensuel(p, nouveau) and nouveau <= seuil_baisse_20(ancien);
+    then recouvrement_nouvelles_bases(p);
+}
+
+@source(fr.pf.core::CSS_L553_4, fr.pf.core::CSS_L553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_L553_4_CSS_ED2021_11, fr.pf.core::CSS_L553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_L553_4_CSS_ED2022_01, fr.pf.core::CSS_L553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_L553_4_CSS_ED2022_03, fr.pf.core::CSS_L553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_L553_4_CSS_ED2023_07, fr.pf.core::CSS_L553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_L553_4_CSS_ED2025_02, fr.pf.core::CSS_L553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_L553_4_CSS_ED2025_12, fr.pf.core::CSS_L553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_L553_4_CSS_ED2026_04, fr.pf.core::CSS_L553_4_CSS_ED2026_06)
+rule PrelevementsSaisieFraude(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indu frauduleux: la saisie autorisée par L. 553-4 I (manoeuvre frauduleuse) suit le barème D. 553-1/2";
+    label en unofficial "Fraudulent overpayment: seizure allowed by L. 553-4 I (fraudulent scheme) follows the D. 553-1/2 scale";
+    when fr.pf.core::indu_frauduleux(p);
+    then prelevements_saisie_bareme(p);
+}
+
+@source(fr.pf.core::CSS_L553_4, fr.pf.core::CSS_L553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_L553_4_CSS_ED2021_11, fr.pf.core::CSS_L553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_L553_4_CSS_ED2022_01, fr.pf.core::CSS_L553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_L553_4_CSS_ED2022_03, fr.pf.core::CSS_L553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_L553_4_CSS_ED2023_07, fr.pf.core::CSS_L553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_L553_4_CSS_ED2025_02, fr.pf.core::CSS_L553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_L553_4_CSS_ED2025_12, fr.pf.core::CSS_L553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_L553_4_CSS_ED2026_04, fr.pf.core::CSS_L553_4_CSS_ED2026_06)
+rule PrelevementsSaisieFausseDeclaration(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indu sur fausse déclaration: la saisie autorisée par L. 553-4 I (seconde branche) suit le barème D. 553-1/2";
+    label en unofficial "False-declaration overpayment: seizure allowed by L. 553-4 I (second branch) follows the D. 553-1/2 scale";
+    when fr.pf.core::indu_fausse_declaration(p);
+    then prelevements_saisie_bareme(p);
+}
+
+@source(fr.pf.core::CSS_D553_3, fr.pf.core::CSS_D553_3_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_3_CSS_ED2021_11, fr.pf.core::CSS_D553_3_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_3_CSS_ED2022_01, fr.pf.core::CSS_D553_3_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_3_CSS_ED2022_03, fr.pf.core::CSS_D553_3_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_3_CSS_ED2023_07, fr.pf.core::CSS_D553_3_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_3_CSS_ED2025_02, fr.pf.core::CSS_D553_3_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_3_CSS_ED2025_12, fr.pf.core::CSS_D553_3_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_3_CSS_ED2026_04, fr.pf.core::CSS_D553_3_CSS_ED2026_06)
+rule PrelevementsSaisieAlimentaire(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Cas saisissable alimentaire: la saisie L. 553-4 suit le barème D. 553-1/2";
+    label en unofficial "Seizable maintenance case: the L. 553-4 seizure follows the D. 553-1/2 scale";
+    when fr.pf.core::saisie_alimentaire_possible(p);
+    then prelevements_saisie_bareme(p);
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule ReportAutresPrestations(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Source épuisée: la retenue est opérée sur les autres prestations servies";
+    label en unofficial "Source exhausted: the levy is taken from the other benefits served";
+    when prestation_source_cessee_ou_insuffisante(p);
+    then retenue_report_autres_prestations(p);
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule PrioriteDirect(o: fr.pf.core::Organisme, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "La retenue reportée peut être opérée prioritairement sur les prestations à versement direct";
+    label en unofficial "The carried levy may be taken first from direct-payment benefits";
+    when retenue_report_autres_prestations(p) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then liberty PrioriteVersementDirect {
+        holder o;
+        action versement_direct_prioritaire_action(o, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule PrelevementTiers(o: fr.pf.core::Organisme, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indu sur prestation en tiers payant toujours à échoir: la retenue peut être opérée prioritairement sur les prestations versées directement à l'allocataire";
+    label en unofficial "Overpayment on a still-payable third-party-paid benefit: the levy may be taken first from benefits paid directly to the allocataire";
+    when indu_source_tiers_payant_a_echoir(p) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then liberty PrioriteDirectSourceTiersPayant {
+        holder o;
+        action versement_direct_prioritaire_action(o, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule RetenueUniqueIndusMultiples(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indus multiples: une seule retenue mensuelle sur les prestations servies";
+    label en unofficial "Multiple overpayments: a single monthly levy on the benefits served";
+    when indus_multiples(p);
+    then retenue_unique_indus_multiples(p);
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule InduOrdreAnciennete(a: Indu, b: Indu, p: fr.pf.core::Personne, da: Date, db: Date, ma: Money, mb: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indus multiples: l'indu le plus ancien se recouvre en premier, par ordre d'ancienneté";
+    label en unofficial "Multiple overpayments: the oldest overpayment recovers first, by seniority order";
+    when indus_multiples(p) and indu_constate_le(a, p, da, ma) and indu_constate_le(b, p, db, mb)
+        and da < db;
+    then indu_recouvre_avant(a, b, p);
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule InduOrdreEgaliteMontant(a: Indu, b: Indu, p: fr.pf.core::Personne, d: Date, ma: Money, mb: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indus constatés à la même date: l'indu au montant le plus faible se recouvre en priorité";
+    label en unofficial "Overpayments established on the same date: the smallest-amount overpayment recovers first";
+    when indus_multiples(p) and indu_constate_le(a, p, d, ma) and indu_constate_le(b, p, d, mb)
+        and ma < mb;
+    then indu_recouvre_avant(a, b, p);
+}
+
+// D-42 (08.10.2026): no transitive closure rule. InduOrdreAnciennete and
+// InduOrdreEgaliteMontant compare EVERY pair directly (date, then amount at
+// equal dates), so the order is already total and transitive; a recursive
+// InduOrdreTransitif made the program non-stratifiable (LDC-E4102, §110/§191).
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule InduEgaliteParfaite(a: Indu, b: Indu, p: fr.pf.core::Personne, d: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indus distincts à même date et même montant: ordre source silencieux";
+    label en unofficial "Distinct overpayments on the same date for the same amount: source order silent";
+    when indus_multiples(p) and indu_constate_le(a, p, d, m) and indu_constate_le(b, p, d, m)
+        and a != b;
+    then indu_egalite_parfaite(a, b, p);
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule InduBloqueParAnterieur(a: Indu, b: Indu, p: fr.pf.core::Personne, sa: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indu précédé d'un indu non éteint: il n'est pas premier";
+    label en unofficial "Overpayment preceded by a non-extinguished overpayment: it is not first";
+    when indu_recouvre_avant(a, b, p) and indu_solde_restant(a, p, sa)
+        and sa > ZeroSoldeIndu;
+    then indu_bloque_par_anterieur(b, p);
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule InduConcurrentEgaliteParfaite(i: Indu, j: Indu, p: fr.pf.core::Personne, sj: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indu avec concurrent en égalité parfaite non éteint: ordre indéterminé";
+    label en unofficial "Overpayment with a non-extinguished perfect-tie competitor: order undetermined";
+    when indu_egalite_parfaite(i, j, p) and indu_solde_restant(j, p, sj)
+        and sj > ZeroSoldeIndu;
+    then indu_concurrent_egalite_parfaite(i, p);
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule InduPremierNonEteint(i: Indu, p: fr.pf.core::Personne, si: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Premier indu non éteint du registre complet, sans égalité parfaite";
+    label en unofficial "First non-extinguished overpayment of the complete ledger, without perfect tie";
+    when indus_multiples(p) and registre_indus_complet(p)
+        and indu_solde_restant(i, p, si) and si > ZeroSoldeIndu
+        and not_known(indu_bloque_par_anterieur(i, p))
+        and not_known(indu_concurrent_egalite_parfaite(i, p));
+    then indu_premier_non_eteint(i, p);
+}
+
+// D-42 (08.10.2026): the first indu in the order has no predecessor, so
+// its anterior total is the empty sum, 0 EUR by D. 553-4 al. 3 itself
+// ("par ordre d'ancienneté": nothing is recovered before it). The empty
+// policy is explicit (§59); without it the oldest indu got EMPTY_AGGREGATE.
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule InduTotalAnterieur(i: Indu, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Total antérieur: somme des soldes des indus précédant i dans l'ordre";
+    label en unofficial "Anterior total: sum of the balances of the overpayments preceding i in the order";
+    when indus_multiples(p) and registre_indus_complet(p) and indu_solde_restant(i, p, _);
+    then indu_total_anterieur(i, p, sum(collect all m: Money, a: Indu where indu_recouvre_avant(a, i, p) and indu_solde_restant(a, p, m), empty: 0.00 EUR));
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule RetenueAffecteeMontant(i: Indu, p: fr.pf.core::Personne, retenue: Money, anterieur: Money, si: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Retenue unique répartie dans l'ordre, plafonnée à chaque solde restant, reliquat reporté";
+    label en unofficial "Single levy shared in order, capped at each remaining balance, remainder carried";
+    when indus_multiples(p) and retenue_unique_indus_multiples(p) and registre_indus_complet(p)
+        and prelevement_mensuel(p, retenue) and indu_solde_restant(i, p, si)
+        and indu_total_anterieur(i, p, anterieur)
+        and not_known(indu_concurrent_egalite_parfaite(i, p));
+    then retenue_affectee_montant(i, p, allocation_indu(retenue, anterieur, si));
+}
+
+@source(fr.pf.core::CSS_D553_4, fr.pf.core::CSS_D553_4_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_4_CSS_ED2021_11, fr.pf.core::CSS_D553_4_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_01, fr.pf.core::CSS_D553_4_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_4_CSS_ED2022_03, fr.pf.core::CSS_D553_4_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2023_07, fr.pf.core::CSS_D553_4_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_02, fr.pf.core::CSS_D553_4_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_4_CSS_ED2025_12, fr.pf.core::CSS_D553_4_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_4_CSS_ED2026_04, fr.pf.core::CSS_D553_4_CSS_ED2026_06)
+rule RetenueAffecteeSiAllocation(i: Indu, p: fr.pf.core::Personne, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indu destinataire de la retenue unique: part positive allouée";
+    label en unofficial "Overpayment receiving the single levy: positive share allocated";
+    when retenue_affectee_montant(i, p, m) and m > ZeroSoldeIndu;
+    then retenue_affectee_indu(i, p);
+}
+
+@source(fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule TauxMajorationFixe50(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Indu frauduleux: le taux de majoration est fixé à 50 %";
+    label en unofficial "Fraudulent overpayment: the uplift rate is fixed at 50%";
+    when fr.pf.core::indu_frauduleux(p);
+    then taux_majoration_fraude_fixee(p, TauxMajorationFraude50);
+}
+
+@source(fr.pf.core::CSS_R553_1, fr.pf.core::CSS_R553_1_CSS_ED2021_05,
+        fr.pf.core::CSS_R553_1_CSS_ED2021_11, fr.pf.core::CSS_R553_1_CSS_ED2021_12,
+        fr.pf.core::CSS_R553_1_CSS_ED2022_01, fr.pf.core::CSS_R553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_R553_1_CSS_ED2022_03, fr.pf.core::CSS_R553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_R553_1_CSS_ED2023_07, fr.pf.core::CSS_R553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_R553_1_CSS_ED2025_02, fr.pf.core::CSS_R553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_R553_1_CSS_ED2025_12, fr.pf.core::CSS_R553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_R553_1_CSS_ED2026_04, fr.pf.core::CSS_R553_1_CSS_ED2026_06)
+rule ReglementMensuel(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Le règlement des prestations familiales a lieu mensuellement";
+    label en unofficial "Family benefits are settled monthly";
+    when fr.pf.core::allocataire(p);
+    then reglement_mensuel(p);
+}
+
+@source(fr.pf.core::CSS_R553_1, fr.pf.core::CSS_R553_1_CSS_ED2021_05,
+        fr.pf.core::CSS_R553_1_CSS_ED2021_11, fr.pf.core::CSS_R553_1_CSS_ED2021_12,
+        fr.pf.core::CSS_R553_1_CSS_ED2022_01, fr.pf.core::CSS_R553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_R553_1_CSS_ED2022_03, fr.pf.core::CSS_R553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_R553_1_CSS_ED2023_07, fr.pf.core::CSS_R553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_R553_1_CSS_ED2025_02, fr.pf.core::CSS_R553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_R553_1_CSS_ED2025_12, fr.pf.core::CSS_R553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_R553_1_CSS_ED2026_04, fr.pf.core::CSS_R553_1_CSS_ED2026_06)
+rule PrestationsTermeEchu(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Prestations payables à terme échu à la date fixée par arrêté";
+    label en unofficial "Benefits payable in arrears on the arrete date";
+    when fr.pf.core::allocataire(p);
+    then prestations_terme_echu(p);
+}
+
+@source(fr.pf.core::CSS_R553_1, fr.pf.core::CSS_R553_1_CSS_ED2021_05,
+        fr.pf.core::CSS_R553_1_CSS_ED2021_11, fr.pf.core::CSS_R553_1_CSS_ED2021_12,
+        fr.pf.core::CSS_R553_1_CSS_ED2022_01, fr.pf.core::CSS_R553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_R553_1_CSS_ED2022_03, fr.pf.core::CSS_R553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_R553_1_CSS_ED2023_07, fr.pf.core::CSS_R553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_R553_1_CSS_ED2025_02, fr.pf.core::CSS_R553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_R553_1_CSS_ED2025_12, fr.pf.core::CSS_R553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_R553_1_CSS_ED2026_04, fr.pf.core::CSS_R553_1_CSS_ED2026_06)
+rule CmgPayableDateArrete(p: fr.pf.core::Personne, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Le CMG peut être versé à compter de la date fixée par arrêté";
+    label en unofficial "The CMG may be paid from the arrete date";
+    when date_paiement_arrete(p, date);
+    then cmg_payable_a_compter(p, date);
+}
+
+// --- D. 755-2: R. 553-1 and D. 553-1..4 applicable in L. 751-1 departments (D73) ---
+
+relation beneficiaire_departements_l7511(p: fr.pf.core::Personne) kind empirical {
+    label fr official "allocataire relevant des départements mentionnés à L. 751-1 (D. 755-2)";
+    label en unofficial "allocataire in the L. 751-1 departments (D. 755-2)";
+}
+
+relation retenues_dom_applicables(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "R. 553-1 et D. 553-1 à D. 553-4 applicables dans les départements L. 751-1 (D. 755-2)";
+    label en unofficial "R. 553-1 and D. 553-1 to D. 553-4 applicable in the L. 751-1 departments (D. 755-2)";
+}
+
+@source(fr.pf.core::CSS_D755_2, fr.pf.core::CSS_D755_2_CSS_ED2021_05,
+        fr.pf.core::CSS_D755_2_CSS_ED2021_11, fr.pf.core::CSS_D755_2_CSS_ED2021_12,
+        fr.pf.core::CSS_D755_2_CSS_ED2022_01, fr.pf.core::CSS_D755_2_CSS_ED2022_02,
+        fr.pf.core::CSS_D755_2_CSS_ED2022_03, fr.pf.core::CSS_D755_2_CSS_ED2022_09,
+        fr.pf.core::CSS_D755_2_CSS_ED2023_07, fr.pf.core::CSS_D755_2_CSS_ED2024_01,
+        fr.pf.core::CSS_D755_2_CSS_ED2025_02, fr.pf.core::CSS_D755_2_CSS_ED2025_09,
+        fr.pf.core::CSS_D755_2_CSS_ED2025_12, fr.pf.core::CSS_D755_2_CSS_ED2026_01,
+        fr.pf.core::CSS_D755_2_CSS_ED2026_04, fr.pf.core::CSS_D755_2_CSS_ED2026_06)
+rule RetenuesDomApplicables(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM L. 751-1: retenues R. 553-1 et barème D. 553-1..4 applicables (D. 755-2)";
+    label en unofficial "L. 751-1 DOM: R. 553-1 withholdings and D. 553-1..4 scale applicable (D. 755-2)";
+    when beneficiaire_departements_l7511(p);
+    then retenues_dom_applicables(p);
+}

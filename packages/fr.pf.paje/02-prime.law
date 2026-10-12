@@ -1,0 +1,258 @@
+// Prime à la naissance ou à l'adoption: the right and the amount are built
+// from the inputs. The case supplies resources, the base ceiling, the BMAF,
+// the family situation and the examination date; the rules derive the right,
+// the payment regime and the amount.
+//
+// Pitfall §5.3: bare parameter names only inside the `function`s below;
+// rule heads have none. No branches carry parameters of unselected wordings:
+// the rates hold across the whole coverage window in a single row.
+
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+use self::{
+    CSS_D531_2_ED2015_01,
+    CSS_D531_2_ED2021_04,
+    CSS_D531_3_1_ED2018_04,
+    CSS_L531_2_ED2020_12,
+    CSS_R531_1_ED2021_04,
+    CSS_R531_1_ED2022_10,
+    Enfant,
+    Menage,
+    RegimeVersement,
+    adoption_arrivee,
+    attente_naissance,
+    bmaf_applicable,
+    condition_age_adoption,
+    date_examen_situation,
+    deces_apres_20_semaines,
+    droit_prime_adoption,
+    droit_prime_naissance,
+    montant_prime_adoption,
+    montant_prime_naissance,
+    montant_primes_adoption_menage,
+    naissance_avant_terme_prevu,
+    plafond_base_taux_plein,
+    plafond_prime,
+    plafond_prime_revalorise,
+    prime_attribuee,
+    regime_versement_naissance,
+    ressources_annuelles,
+};
+
+// --- D. 531-3-1: the grant ceiling builds 119.47% of the base ------------
+//
+// «Le plafond ... est égal à 119,47 % du plafond de ressources de
+// l'allocation de base versée à taux plein.» The rate is A3 parameter
+// TauxPlafondPrime (anchor — fragment below); the base is a case fact
+// (CF ceiling, wave 3 — B-PAJE-PLAFOND).
+
+function plafond_prime_calcule(base: Money) -> Money {
+    return base * TauxPlafondPrime;
+}
+
+@source(CSS_D531_3_1_ED2018_04)
+rule PlafondPrimeConstruit(m: Menage, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le plafond de la prime est égal à 119,47 % du plafond de l'allocation de base à taux plein";
+    label en unofficial "the grant ceiling equals 119.47% of the full-rate base allowance ceiling";
+    when plafond_base_taux_plein(m, base);
+    then plafond_prime(m, plafond_prime_calcule(base));
+}
+
+// --- R. 531-1, para. 3: the revalued grant ceiling ----------------------------
+//
+// «Les plafonds annuels respectifs de ces prestations ... sont revalorisés au
+// 1er janvier de chaque année ... par arrêté.» Each ceiling is revalued from
+// its own previous value (DSS instruction, table 3.1 for the grant), so the
+// published grant ceiling drifts from 119.47% of the published full-rate
+// ceiling (2025: 48 186 € vs 48 182.25 €). The case establishes the revalued
+// ceiling; it is the applicable plafond_prime. Exclusive with the 119.47%
+// construction input in one case (see B-PAJE-PLAFOND in package.law).
+
+@source(CSS_R531_1_ED2021_04, CSS_R531_1_ED2022_10)
+rule PlafondPrimeRevalorise(m: Menage, plafond: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le plafond de la prime est le plafond annuel revalorisé au 1er janvier";
+    label en unofficial "the grant ceiling is the annual ceiling revalued on 1 January";
+    when plafond_prime_revalorise(m, plafond);
+    then plafond_prime(m, plafond);
+}
+
+// --- L. 531-2, para. 1: right to prime naissance --------------------------
+//
+// «La prime à la naissance ... est attribuée et versée au ménage ou à la
+// personne dont les ressources ne dépassent pas un plafond, pour chaque
+// enfant à naître, avant la naissance de l'enfant.»
+
+@source(CSS_L531_2_ED2020_12)
+rule DroitPrimeNaissance(m: Menage, e: Enfant, ressources: Money, plafond: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la prime à la naissance est attribuée au ménage dont les ressources ne dépassent pas le plafond, pour chaque enfant à naître";
+    label en unofficial "the birth grant is awarded to the household whose resources do not exceed the ceiling, for each expected child";
+    when attente_naissance(m, e)
+        and ressources_annuelles(m, ressources)
+        and plafond_prime(m, plafond)
+        and ressources <= plafond;
+    then droit_prime_naissance(m, e);
+}
+
+// --- L. 531-2, para. 2, 1°: birth before term ------------------------------
+//
+// «Par dérogation ..., la prime à la naissance est attribuée ... :
+// 1° Lorsque la naissance intervient avant le sixième mois prévu.»
+// The exact award date is «date fixée par décret» (B-PAJE-DATE-DECRET);
+// the rule opens the right, it does not derive the date.
+
+@source(CSS_L531_2_ED2020_12)
+rule DroitPrimeNaissancePrecoce(m: Menage, e: Enfant, ressources: Money, plafond: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "naissance avant le sixième mois prévu : la prime est attribuée par dérogation";
+    label en unofficial "birth before the sixth expected month: the grant is awarded by way of exception";
+    when naissance_avant_terme_prevu(e)
+        and ressources_annuelles(m, ressources)
+        and plafond_prime(m, plafond)
+        and ressources <= plafond;
+    then droit_prime_naissance(m, e);
+}
+
+// --- L. 531-2, para. 2, 2°: death after the 20th week ------------------------
+
+@source(CSS_L531_2_ED2020_12)
+rule DroitPrimeNaissanceDeces(m: Menage, e: Enfant, ressources: Money, plafond: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "décès au delà de la vingtième semaine : la prime est attribuée par dérogation";
+    label en unofficial "death after the 20th week: the grant is awarded by way of exception";
+    when deces_apres_20_semaines(e)
+        and ressources_annuelles(m, ressources)
+        and plafond_prime(m, plafond)
+        and ressources <= plafond;
+    then droit_prime_naissance(m, e);
+}
+
+// --- L. 531-2, para. 1 + R. 531-1: right to prime adoption ------------------
+//
+// «... ou pour chaque enfant adopté ou accueilli en vue d'adoption ...,
+// à compter de l'arrivée de l'enfant au foyer», including exceeding the
+// L. 531-1 limit within L. 512-3 2° (age thresholds — the
+// condition_age_adoption fact, B-PAJE-AGE-ADOPTION).
+
+@source(CSS_L531_2_ED2020_12)
+rule DroitPrimeAdoption(m: Menage, e: Enfant, ressources: Money, plafond: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la prime à l'adoption est attribuée à compter de l'arrivée de l'enfant au foyer, ressources sous plafond et condition d'âge remplie";
+    label en unofficial "the adoption grant is awarded from the child's arrival in the household where resources do not exceed the ceiling and the age condition is met";
+    when adoption_arrivee(m, e)
+        and condition_age_adoption(e)
+        and ressources_annuelles(m, ressources)
+        and plafond_prime(m, plafond)
+        and ressources <= plafond;
+    then droit_prime_adoption(m, e);
+}
+
+// --- D. 531-2, I: amounts ---------------------------------------------------
+//
+// «Le taux de la prime à la naissance ... est égal à 229,75 % de la base
+// mensuelle... Le taux de la prime à l'adoption ... 459,5 %.»
+// Doubling for adoption is exactly the «majoré en cas d'adoption» of L. 531-2.
+
+function montant_prime_calcule(bmaf: Money, taux: Decimal) -> Money {
+    return bmaf * taux;
+}
+
+@source(CSS_D531_2_ED2015_01, CSS_D531_2_ED2021_04)
+rule MontantPrimeNaissance(m: Menage, e: Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le montant de la prime à la naissance vaut 229,75 % de la BMAF";
+    label en unofficial "birth grant amount — 229.75% of the BMAF";
+    when droit_prime_naissance(m, e)
+        and bmaf_applicable(m, bmaf);
+    then montant_prime_naissance(m, e, montant_prime_calcule(bmaf, TauxPrimeNaissance));
+}
+
+@source(CSS_D531_2_ED2015_01, CSS_D531_2_ED2021_04)
+rule MontantPrimeAdoption(m: Menage, e: Enfant, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le montant de la prime à l'adoption vaut 459,5 % de la BMAF";
+    label en unofficial "adoption grant amount — 459.5% of the BMAF";
+    when droit_prime_adoption(m, e)
+        and bmaf_applicable(m, bmaf);
+    then montant_prime_adoption(m, e, montant_prime_calcule(bmaf, TauxPrimeAdoption));
+}
+
+// --- D. 531-2, II (2015 wording): the «after birth» regime ------------------
+//
+// «La prime à la naissance est due et versée avant la fin du dernier jour
+// du second mois civil suivant la naissance...» — in force until 02.04.2021
+// (removed by Decree 2021-368). Wording pair: 03.2021 case / 05.2021 case.
+
+@source(CSS_D531_2_ED2015_01)
+rule RegimeVersementAncien(m: Menage, e: Enfant) strict {
+    effective [@2021-01-01, @2021-04-02);
+    label fr official "avant le 2 avril 2021 : la prime à la naissance est due et versée après la naissance";
+    label en unofficial "before 02.04.2021: the birth grant is due and paid after birth";
+    when droit_prime_naissance(m, e);
+    then regime_versement_naissance(m, e, APRES_NAISSANCE);
+}
+
+// --- L. 531-2, para. 2 (2020 wording): the «before birth» regime ------------
+//
+// «La prime à la naissance est versée avant le dernier jour du mois civil
+// suivant le sixième mois de la grossesse.»
+
+@source(CSS_L531_2_ED2020_12)
+rule RegimeVersementNouveau(m: Menage, e: Enfant) strict {
+    effective [@2021-04-02, infinity);
+    label fr official "à compter du 2 avril 2021 : la prime à la naissance est versée avant la naissance, dès le septième mois";
+    label en unofficial "from 02.04.2021: the birth grant is paid before birth, from the seventh month";
+    when droit_prime_naissance(m, e);
+    then regime_versement_naissance(m, e, AVANT_NAISSANCE);
+}
+
+// --- R. 531-1: award at the amount of the examination date ------------------
+//
+// «La prime à la naissance ou à l'adoption est attribuée selon le montant
+// en vigueur à la date d'examen de la situation de la famille.»
+// The legal_time axis of the parameters selects the value by the month of
+// the right; the rule requires the examination fact itself (a case without
+// it is not awarded). Both wordings of R. 531-1 are identical for this
+// norm — both anchors.
+
+@source(CSS_R531_1_ED2021_04, CSS_R531_1_ED2022_10)
+rule PrimeNaissanceAttribuee(m: Menage, e: Enfant, montant: Money, examen: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la prime à la naissance est attribuée selon le montant en vigueur à la date d'examen";
+    label en unofficial "the birth grant is awarded at the amount in force on the examination date";
+    when droit_prime_naissance(m, e)
+        and montant_prime_naissance(m, e, montant)
+        and date_examen_situation(m, e, examen);
+    then prime_attribuee(m, e, montant);
+}
+
+@source(CSS_R531_1_ED2021_04, CSS_R531_1_ED2022_10)
+rule PrimeAdoptionAttribuee(m: Menage, e: Enfant, montant: Money, examen: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la prime à l'adoption est attribuée selon le montant en vigueur à la date d'examen";
+    label en unofficial "the adoption grant is awarded at the amount in force on the examination date";
+    when droit_prime_adoption(m, e)
+        and montant_prime_adoption(m, e, montant)
+        and date_examen_situation(m, e, examen);
+    then prime_attribuee(m, e, montant);
+}
+
+// --- L. 531-2, para. 1: household total of adoption grants -------------------
+//
+// «... attribuée et versée au ménage ... pour chaque enfant adopté» — one
+// grant per adopted child, all paid to the household; the total is the sum of
+// the awarded adoption grants (not a new amount rule: each grant keeps
+// D. 531-2, I and R. 531-1).
+
+@source(CSS_L531_2_ED2020_12)
+rule PrimesAdoptionMenage(m: Menage, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total des primes à l'adoption attribuées au ménage, une pour chaque enfant adopté";
+    label en unofficial "total of the adoption grants awarded to the household, one per adopted child";
+    when droit_prime_adoption(m, e) and prime_attribuee(m, e, _);
+    then montant_primes_adoption_menage(m, sum(collect all v: Money, c: Enfant where droit_prime_adoption(m, c) and prime_attribuee(m, c, v)));
+}

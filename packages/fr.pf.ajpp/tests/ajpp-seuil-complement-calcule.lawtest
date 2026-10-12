@@ -1,0 +1,32 @@
+// Computed complement threshold: 27.19 % of the retained BMAF
+// 400.00 builds 108.76; monthly expenses exactly 108.76 meet the
+// decree «supérieures ou égales» test and resources stay under the
+// ceiling — the complement is awarded at the built amount (D. 544-7).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-seuil-complement-calcule" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-sc-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-sc")) { origin adjudicated; }
+        assert "ajpp-sc-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-sc")) { origin adjudicated; }
+        assert "ajpp-sc-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-sc"), entity_ref("urn:fr:pf-ajpp:case:enfant-sc")) { origin case_input; }
+        assert "ajpp-sc-04": bmaf_retenue_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-sc"), 400.00 EUR) { origin case_input; }
+        assert "ajpp-sc-05": ressources_complement(entity_ref("urn:fr:pf-ajpp:case:enfant-sc"), 20000 EUR) { origin case_input; }
+        assert "ajpp-sc-06": plafond_ressources(entity_ref("urn:fr:pf-ajpp:case:enfant-sc"), 30000 EUR) { origin case_input; }
+        assert "ajpp-sc-07": depenses_complement(entity_ref("urn:fr:pf-ajpp:case:enfant-sc"), 108.76 EUR) { origin case_input; }
+    }
+    evaluate truth(seuil_complement_calcule(entity_ref("urn:fr:pf-ajpp:case:enfant-sc"), 108.76 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(complement_frais_attribue(entity_ref("urn:fr:pf-ajpp:case:enfant-sc")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_montant_complement(entity_ref("urn:fr:pf-ajpp:case:enfant-sc"), 108.76 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

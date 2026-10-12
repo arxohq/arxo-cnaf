@@ -1,0 +1,370 @@
+// Department-body conventions (D.262-61/62/63/64).
+//
+// DEONTIC MAP:
+// - the convention CONTENT (D.262-61 1°-3°, D.262-63 1°-3°) is
+//   institutional completeness over established clause facts: the
+//   convention values themselves (amounts, delays, plans) are
+//   convention-established, not computed here;
+// - the CONDUCT is duties: monthly advances with the month-end
+//   deadline (D.262-61 1°), year-end settlement and annual
+//   reimbursement of the established late-payment financial charges
+//   (D.262-61 1°/2°, charges_retard_acomptes), transmission
+//   of unrecovered overpayments after the convention delay (D.262-61
+//   3° with L.262-46), and the no-convention fallback duties
+//   (D.262-64: instruction and service for the department, national
+//   risk-control plan measures, financing, quarterly reimbursement
+//   of the established quarter charges with interest,
+//   charges_trimestre_sans_convention);
+// - the D.262-62 remuneration is a liberty; the D.262-64 fallback rate
+//   is computed (market rate plus one point, market base unpinned,
+//   B-RSA-TAUX-MARCHE).
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+// `use self` is hand-maintained in nochecks authoring (no `law fix
+// imports` until the locks free). Fragment names join the block via the
+// deferred `law fix imports fr.casf.rsa` run after regenerating sources;
+// the bare A3 parameter name (MajorationTauxMarche) stays outside the
+// block, as in 02/04.
+use self::{
+    CASF_D262_61,
+    CASF_D262_61_ED2021_03,
+    CASF_D262_61_ED2021_04,
+    CASF_D262_61_ED2023_01,
+    CASF_D262_61_ED2024_01,
+    CASF_D262_61_ED2024_07,
+    CASF_D262_61_ED2025_01,
+    CASF_D262_61_ED2025_06,
+    CASF_D262_61_ED2026_06,
+    CASF_D262_62,
+    CASF_D262_62_ED2021_03,
+    CASF_D262_62_ED2021_04,
+    CASF_D262_62_ED2023_01,
+    CASF_D262_62_ED2024_01,
+    CASF_D262_62_ED2024_07,
+    CASF_D262_62_ED2025_01,
+    CASF_D262_62_ED2025_06,
+    CASF_D262_62_ED2026_06,
+    CASF_D262_63,
+    CASF_D262_63_ED2021_03,
+    CASF_D262_63_ED2021_04,
+    CASF_D262_63_ED2023_01,
+    CASF_D262_63_ED2024_01,
+    CASF_D262_63_ED2024_07,
+    CASF_D262_63_ED2025_01,
+    CASF_D262_63_ED2025_06,
+    CASF_D262_63_ED2026_06,
+    CASF_D262_64,
+    CASF_D262_64_ED2021_03,
+    CASF_D262_64_ED2021_04,
+    CASF_D262_64_ED2023_01,
+    CASF_D262_64_ED2024_01,
+    CASF_D262_64_ED2024_07,
+    CASF_D262_64_ED2025_01,
+    CASF_D262_64_ED2025_06,
+    CASF_D262_64_ED2026_06,
+    Departement,
+    Organisme,
+    absence_convention,
+    acompte_verse,
+    charges_retard_acomptes,
+    charges_trimestre_sans_convention,
+    clause_acomptes,
+    clause_delais_decisions,
+    clause_modalites_remboursement,
+    clause_modalites_transmissions,
+    clause_plan_controle,
+    clause_plan_indus,
+    controle_plan_national,
+    convention_controle_complete,
+    convention_financiere_complete,
+    convention_service,
+    delai_transmission_indus_expire,
+    depenses_comptabilisees,
+    est_organisme_service,
+    exercice_comptable,
+    financement_sans_convention,
+    indus_transmis_departement,
+    instruction_service_sans_convention,
+    percevoir_remuneration,
+    regularisation_effectuee,
+    remboursement_charges_effectue,
+    remboursement_charges_sans_convention,
+    remuneration_fixee_convention,
+    remuneration_ouvrable,
+    taux_interet_sans_convention,
+    taux_marche_monetaire,
+    trimestre_civil_fin,
+};
+
+@source(
+    CASF_D262_61,
+    CASF_D262_61_ED2021_03,
+    CASF_D262_61_ED2021_04,
+    CASF_D262_61_ED2023_01,
+    CASF_D262_61_ED2024_01,
+    CASF_D262_61_ED2024_07,
+    CASF_D262_61_ED2025_01,
+    CASF_D262_61_ED2025_06,
+    CASF_D262_61_ED2026_06)
+rule ConventionFinanciereComplete(d: Departement, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "convention complète : acomptes et régularisation, remboursement des charges, plan d'action sur les indus (D. 262-61 1° à 3°)";
+    label en unofficial "complete convention: advances and settlement, charge reimbursement, overpayment action plan (D. 262-61 1° to 3°)";
+    when convention_service(d, o)
+        and clause_acomptes(d, o)
+        and clause_modalites_remboursement(d, o)
+        and clause_plan_indus(d, o);
+    then convention_financiere_complete(d, o);
+}
+
+@source(
+    CASF_D262_63,
+    CASF_D262_63_ED2021_03,
+    CASF_D262_63_ED2021_04,
+    CASF_D262_63_ED2023_01,
+    CASF_D262_63_ED2024_01,
+    CASF_D262_63_ED2024_07,
+    CASF_D262_63_ED2025_01,
+    CASF_D262_63_ED2025_06,
+    CASF_D262_63_ED2026_06)
+rule ConventionControleComplete(d: Departement, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "convention complète sur le contrôle : diligences du plan départemental, délais de décision, modalités des transmissions (D. 262-63 1° à 3°)";
+    label en unofficial "control-complete convention: departmental plan steps, decision delays, transmission modalities (D. 262-63 1° to 3°)";
+    when convention_service(d, o)
+        and clause_plan_controle(d, o)
+        and clause_delais_decisions(d, o)
+        and clause_modalites_transmissions(d, o);
+    then convention_controle_complete(d, o);
+}
+
+@source(
+    CASF_D262_61,
+    CASF_D262_61_ED2021_03,
+    CASF_D262_61_ED2021_04,
+    CASF_D262_61_ED2023_01,
+    CASF_D262_61_ED2024_01,
+    CASF_D262_61_ED2024_07,
+    CASF_D262_61_ED2025_01,
+    CASF_D262_61_ED2025_06,
+    CASF_D262_61_ED2026_06)
+rule VerserAcomptes(d: Departement, o: Organisme, mois: Date, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le département verse l'acompte mensuel au plus tard le dernier jour de chaque mois (D. 262-61 1°)";
+    label en unofficial "the department pays the monthly advance by the last day of each month (D. 262-61 1°)";
+    when convention_service(d, o)
+        and depenses_comptabilisees(o, mois, m);
+    then duty VerserAcompteMensuel {
+        bearer d;
+        beneficiary o;
+        maintain acompte_verse(d, o, mois, m) during [mois, month_end_of(mois)];
+    };
+}
+
+@source(
+    CASF_D262_61,
+    CASF_D262_61_ED2021_03,
+    CASF_D262_61_ED2021_04,
+    CASF_D262_61_ED2023_01,
+    CASF_D262_61_ED2024_01,
+    CASF_D262_61_ED2024_07,
+    CASF_D262_61_ED2025_01,
+    CASF_D262_61_ED2025_06,
+    CASF_D262_61_ED2026_06)
+rule RegulariserAcomptes(d: Departement, o: Organisme, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "régularisation des acomptes à la fin de chaque exercice (D. 262-61 1°)";
+    label en unofficial "advance settlement at the end of each accounting year (D. 262-61 1°)";
+    when convention_service(d, o)
+        and exercice_comptable(d, o, n);
+    then duty RegulariserAcomptesExercice {
+        bearer d;
+        beneficiary o;
+        maintain regularisation_effectuee(d, o, n) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_61,
+    CASF_D262_61_ED2021_03,
+    CASF_D262_61_ED2021_04,
+    CASF_D262_61_ED2023_01,
+    CASF_D262_61_ED2024_01,
+    CASF_D262_61_ED2024_07,
+    CASF_D262_61_ED2025_01,
+    CASF_D262_61_ED2025_06,
+    CASF_D262_61_ED2026_06)
+rule RembourserCharges(d: Departement, o: Organisme, n: Integer, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "remboursement annuel par le département des charges financières établies, nées des retards de versement des acomptes (D. 262-61 2°)";
+    label en unofficial "annual reimbursement by the department of the established financial charges from late advance payments (D. 262-61 2°)";
+    when convention_service(d, o)
+        and exercice_comptable(d, o, n)
+        and charges_retard_acomptes(d, o, n, m);
+    then duty RembourserChargesFinancieres {
+        bearer d;
+        beneficiary o;
+        maintain remboursement_charges_effectue(d, o, n) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_61,
+    CASF_D262_61_ED2021_03,
+    CASF_D262_61_ED2021_04,
+    CASF_D262_61_ED2023_01,
+    CASF_D262_61_ED2024_01,
+    CASF_D262_61_ED2024_07,
+    CASF_D262_61_ED2025_01,
+    CASF_D262_61_ED2025_06,
+    CASF_D262_61_ED2026_06)
+rule TransmettreIndus(d: Departement, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'organisme transmet au président les indus non recouvrés dans le délai conventionnel pour recouvrement (D. 262-61 3° ; L. 262-46)";
+    label en unofficial "the body transmits to the president the overpayments unrecovered within the convention delay for recovery (D. 262-61 3°; L. 262-46)";
+    when convention_service(d, o)
+        and delai_transmission_indus_expire(o, d);
+    then duty TransmettreIndusNonRecouvres {
+        bearer o;
+        beneficiary d;
+        maintain indus_transmis_departement(o, d) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_62,
+    CASF_D262_62_ED2021_03,
+    CASF_D262_62_ED2021_04,
+    CASF_D262_62_ED2023_01,
+    CASF_D262_62_ED2024_01,
+    CASF_D262_62_ED2024_07,
+    CASF_D262_62_ED2025_01,
+    CASF_D262_62_ED2025_06,
+    CASF_D262_62_ED2026_06)
+rule RemunerationConvention(o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "les compétences déléguées hors gestion et les actions supplémentaires peuvent donner lieu à une rémunération fixée dans la convention (D. 262-62)";
+    label en unofficial "delegated off-management competences and extra actions may give rise to remuneration fixed in the convention (D. 262-62)";
+    when remuneration_ouvrable(o)
+        and remuneration_fixee_convention(o);
+    then liberty PercevoirRemunerationConvention {
+        holder o;
+        action percevoir_remuneration(o);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_64,
+    CASF_D262_64_ED2021_03,
+    CASF_D262_64_ED2021_04,
+    CASF_D262_64_ED2023_01,
+    CASF_D262_64_ED2024_01,
+    CASF_D262_64_ED2024_07,
+    CASF_D262_64_ED2025_01,
+    CASF_D262_64_ED2025_06,
+    CASF_D262_64_ED2026_06)
+rule InstruireServirSansConventionRule(d: Departement, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "sans convention, l'organisme assure l'instruction et le service de l'allocation pour le compte du département (D. 262-64 1°)";
+    label en unofficial "without a convention, the body provides instruction and payment of the allowance for the department (D. 262-64 1°)";
+    when absence_convention(d, o)
+        and est_organisme_service(o);
+    then duty InstruireServirSansConvention {
+        bearer o;
+        beneficiary d;
+        maintain instruction_service_sans_convention(o, d) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_64,
+    CASF_D262_64_ED2021_03,
+    CASF_D262_64_ED2021_04,
+    CASF_D262_64_ED2023_01,
+    CASF_D262_64_ED2024_01,
+    CASF_D262_64_ED2024_07,
+    CASF_D262_64_ED2025_01,
+    CASF_D262_64_ED2025_06,
+    CASF_D262_64_ED2026_06)
+rule ControlerPlanNationalRule(d: Departement, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "sans convention, le contrôle suit les mesures du plan national de maîtrise des risques (D. 262-64 1° in fine)";
+    label en unofficial "without a convention, control follows the national risk-control plan measures (D. 262-64 1° in fine)";
+    when absence_convention(d, o)
+        and est_organisme_service(o);
+    then duty ControlerPlanNational {
+        bearer o;
+        beneficiary d;
+        maintain controle_plan_national(o) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_64,
+    CASF_D262_64_ED2021_03,
+    CASF_D262_64_ED2021_04,
+    CASF_D262_64_ED2023_01,
+    CASF_D262_64_ED2024_01,
+    CASF_D262_64_ED2024_07,
+    CASF_D262_64_ED2025_01,
+    CASF_D262_64_ED2025_06,
+    CASF_D262_64_ED2026_06)
+rule FinancerSansConventionRule(d: Departement, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "sans convention, le département finance selon D. 262-61 1° et 2° (D. 262-64 2°)";
+    label en unofficial "without a convention, the department finances per D. 262-61 1° and 2° (D. 262-64 2°)";
+    when absence_convention(d, o);
+    then duty FinancerSansConvention {
+        bearer d;
+        beneficiary o;
+        maintain financement_sans_convention(d, o) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_64,
+    CASF_D262_64_ED2021_03,
+    CASF_D262_64_ED2021_04,
+    CASF_D262_64_ED2023_01,
+    CASF_D262_64_ED2024_01,
+    CASF_D262_64_ED2024_07,
+    CASF_D262_64_ED2025_01,
+    CASF_D262_64_ED2025_06,
+    CASF_D262_64_ED2026_06)
+rule TauxInteretSansConvention(d: Departement, o: Organisme, t0: Decimal) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "taux supplétif : taux du marché monétaire plus un point (D. 262-64 2°)";
+    label en unofficial "fallback rate: money-market rate plus one point (D. 262-64 2°)";
+    when absence_convention(d, o)
+        and taux_marche_monetaire(t0);
+    then taux_interet_sans_convention(d, o, t0 + MajorationTauxMarche);
+}
+
+@source(
+    CASF_D262_64,
+    CASF_D262_64_ED2021_03,
+    CASF_D262_64_ED2021_04,
+    CASF_D262_64_ED2023_01,
+    CASF_D262_64_ED2024_01,
+    CASF_D262_64_ED2024_07,
+    CASF_D262_64_ED2025_01,
+    CASF_D262_64_ED2025_06,
+    CASF_D262_64_ED2026_06)
+rule RembourserChargesSansConventionRule(d: Departement, o: Organisme, t: Date, taux: Decimal, m: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "sans convention, remboursement trimestriel des charges établies avec intérêts dans le mois suivant le trimestre civil (D. 262-64 2°)";
+    label en unofficial "without a convention, quarterly reimbursement of the established charges with interest within the month after the calendar quarter (D. 262-64 2°)";
+    when absence_convention(d, o)
+        and trimestre_civil_fin(t)
+        and charges_trimestre_sans_convention(d, o, t, m)
+        and taux_interet_sans_convention(d, o, taux);
+    then duty RembourserChargesSansConvention {
+        bearer d;
+        beneficiary o;
+        maintain remboursement_charges_sans_convention(d, o, taux) during [t, month_end_of(add_calendar_period(t, 1 calendar_month))];
+    };
+}

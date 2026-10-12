@@ -1,0 +1,408 @@
+// Shared surface of the package: case facts and predicates that the AF
+// modules fill in. Upstream premises (child and allocataire status, debtor
+// body) belong to fr.pf.core (parallel lane W1-PFCORE) and arrive as case
+// inputs; NOTHING owned by a neighbour package is redefined here.
+//
+// Module map:
+//   01-sources.law         - sources, back-to-back editions, fragments (generated)
+//   02-allocataire-partage.law - L521-2, R521-2/3/4: designation and sharing
+//   03-montant-bande.law   - L521-1 (bands), D521-1, D521-3, D521-4: monthly AF
+//   04-majoration-age.law   - L521-3, R521-1 (14/18), R521-4: age supplement
+//   05-forfait.law         - L521-1 al. 2, D521-2: lump sum for the 20-year-old
+//   06-dom.law             - L755-11/12, D755-5, D755-5-1: DOM from the first child
+//   07-devoir-versement.law - duty of the fund to pay the computed AF
+//   08-lecture-arrondi-lignes.law - reading ArrondiLignesDss (D-83): amounts
+//                            rounded per DSS scale row, douzième to the centime
+//   bareme/*.lawparam.json - rates and nominal ceilings (generated)
+//
+// SCOPE BOUNDARY. The package computes the monthly AF (brut, before CRDS)
+// for metropolitan France and the DOM collectivities of L751-1. Outside:
+// N-2 resource assessment (R532-3..8, upstream packages), euro BMAF and
+// DOM-base figures (unpinned arretes -> stated-assumption inputs),
+// month mechanics of right opening
+// (R552-2/3, assumed calendar month), Mayotte (wave 7).
+// Full list - README, "Boundaries".
+//
+// ПЛАФОНЫ D. 521-3 (D-81, 08.10.2026). Плафон строится (DECISION-0452):
+// база I/II + надбавка × n детей. До первой ревалоризации (01.01.2016) база
+// и надбавка — суммы самого D. 521-3 (I, II; параметры bareme). С 01.01.2016
+// это входы-факты: база тарифной ступени и надбавка за ребёнка, ОТДЕЛЬНО
+// опубликованные инструкцией DSS на год права (D. 521-3 III ревалоризует
+// «les montants des plafonds et de leur majoration respective», каждый со
+// своим округлением; один общий коэффициент их не воспроизводит). Прежний
+// вход facteur_revalorisation снят; происхождение сумм — фрагменты
+// PLAFOND_AF пакета fr.css.revalorisation (README, «Плафоны»).
+//
+// MIGRATION-REQ-PFAF-01. date_naissance is declared locally ONLY because
+// fr.pf.core does not publish it (parallel lane). When the upstream pub
+// lands, delete the local relation and qualify uses with fr.pf.core::.
+
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+import fr.pf.core version "0.1.0";
+
+pub enum ModeGarde {
+    label fr official "modalités de charge de l'enfant pour les articles L. 521-2 et R. 521-2 à R. 521-4";
+    label en unofficial "child custody modes for articles L. 521-2 and R. 521-2 to R. 521-4";
+    CHARGE_EFFECTIVE_PERMANENTE,
+    RESIDENCE_ALTERNEE_PARTAGE,
+    RESIDENCE_ALTERNEE_ALLOCATAIRE_UNIQUE,
+    CONFIE_ASE_VERSEMENT_SERVICE,
+    CONFIE_ASE_MAINTIEN_FAMILLE
+}
+
+pub enum BandeRessources {
+    label fr official "tranche du barème selon les ressources (D. 521-1, I)";
+    label en unofficial "scale band by resources (D. 521-1, I)";
+    BANDE_1,
+    BANDE_2,
+    BANDE_3
+}
+
+pub enum Territoire {
+    label fr official "territoire de résidence pour les règles DOM (L. 755-11/12)";
+    label en unofficial "residence territory for the DOM rules (L. 755-11/12)";
+    METROPOLE,
+    GUADELOUPE,
+    GUYANE,
+    MARTINIQUE,
+    REUNION,
+    MAYOTTE,
+    AUTRE
+}
+
+// --- Household case inputs (empirical) ---
+
+pub relation bmaf_retenu(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "base mensuelle retenue pour le mois du droit (arrêté, montant non épinglé)";
+    label en unofficial "monthly base retained for the month of right (arrete figure, unpinned)";
+}
+
+pub relation base_dom_retenue(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "base mensuelle de l'article L. 755-3 retenue pour le mois du droit (montant non épinglé)";
+    label en unofficial "monthly base of article L. 755-3 retained for the month of right (unpinned figure)";
+}
+
+pub relation ressources_menage(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "ressources annuelles du ménage appréciées selon R. 532-3 à R. 532-8 (D. 521-4)";
+    label en unofficial "annual household resources assessed per R. 532-3 to R. 532-8 (D. 521-4)";
+}
+
+pub relation plafond_base_tranche1_publie(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "plafond de base de la première tranche revalorisé au 1er janvier de l'année du droit, tel que publié (D. 521-3, I et III)";
+    label en unofficial "first-band base ceiling revalued on 1 January of the year of right, as published (D. 521-3, I and III)";
+}
+
+pub relation plafond_base_tranche2_publie(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "plafond de base de la deuxième tranche revalorisé au 1er janvier de l'année du droit, tel que publié (D. 521-3, II et III)";
+    label en unofficial "second-band base ceiling revalued on 1 January of the year of right, as published (D. 521-3, II and III)";
+}
+
+pub relation majoration_plafond_enfant_publiee(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "majoration du plafond par enfant à charge revalorisée au 1er janvier de l'année du droit, telle que publiée (D. 521-3, III)";
+    label en unofficial "per-dependent-child ceiling increment revalued on 1 January of the year of right, as published (D. 521-3, III)";
+}
+
+pub relation territoire(p: fr.pf.core::Personne, t: Territoire) kind empirical {
+    key(p);
+    label fr official "territoire de résidence du ménage";
+    label en unofficial "household residence territory";
+}
+
+pub relation nb_enfants_charge(p: fr.pf.core::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "nombre d'enfants à charge retenu par la caisse (contrat d'entrée: cohérent avec les faits enfant_ouvre_droit)";
+    label en unofficial "dependent-children count retained by the fund (input contract: consistent with enfant_ouvre_droit facts)";
+}
+
+pub relation nb_enfants_charge_forfait(p: fr.pf.core::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "nombre d'enfants à charge retenu pour le minimum du forfait (contrat d'entrée: inclut l'enfant atteignant la limite d'âge, cohérent avec parent_charge et conditions_hormis_age)";
+    label en unofficial "dependent-children count retained for the forfait minimum (input contract: includes the child reaching the age limit, consistent with parent_charge and conditions_hormis_age facts)";
+}
+
+pub relation nb_majorations_pleines(p: fr.pf.core::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "nombre de majorations pour âge à taux plein comptées pour le mois (contrat d'entrée: cohérent avec les montants par enfant)";
+    label en unofficial "full-rate age-supplement count for the month (input contract: consistent with per-child amounts)";
+}
+
+pub relation nb_majorations_demi(p: fr.pf.core::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "nombre de majorations pour âge à demi-taux (garde alternée, R. 521-4) comptées pour le mois";
+    label en unofficial "half-rate age-supplement count (shared custody, R. 521-4) for the month";
+}
+
+pub relation forfait_total_menage(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "total des allocations forfaitaires du ménage pour le mois (0 en l'absence de forfait)";
+    label en unofficial "household lump-sum total for the month (0 when no forfait applies)";
+}
+
+pub relation mois_droit(mois: Date) kind empirical {
+    label fr official "mois du droit apprécié (vaut normalement le mois de legal_time)";
+    label en unofficial "appreciated month of right (normally the legal_time month)";
+}
+
+// --- Per-child case inputs ---
+
+pub relation date_naissance(e: fr.pf.core::Enfant, naissance: Date) kind empirical {
+    key(e);
+    label fr official "date de naissance de l'enfant (MIGRATION-REQ-PFAF-01: en attente du pub fr.pf.core)";
+    label en unofficial "child birthdate (MIGRATION-REQ-PFAF-01: pending fr.pf.core pub)";
+}
+
+pub relation garde(e: fr.pf.core::Enfant, mode: ModeGarde) kind empirical {
+    key(e);
+    label fr official "modalité de charge de l'enfant retenue par la caisse";
+    label en unofficial "child custody mode retained by the fund";
+}
+
+pub relation conditions_hormis_age(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant remplit les conditions autres que l'âge pour l'ouverture du droit (forfait, L. 521-1 al. 2)";
+    label en unofficial "child meets the non-age conditions for opening the right (forfait, L. 521-1 para. 2)";
+}
+
+pub relation date_limite_age_atteinte(e: fr.pf.core::Enfant, date: Date) kind empirical {
+    key(e);
+    label fr official "date à laquelle l'enfant a atteint la limite d'âge du 2° de L. 512-3 (établie en amont)";
+    label en unofficial "date the child reached the L. 512-3 2° age limit (established upstream)";
+}
+
+pub relation enfants_propres(p: fr.pf.core::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "enfants à charge propres au foyer du parent (partage R. 521-3)";
+    label en unofficial "dependent children of the parent's own household (R. 521-3 sharing)";
+}
+
+pub relation enfants_alternes(n: Integer) kind empirical {
+    label fr official "enfants en résidence alternée communs aux deux foyers (partage R. 521-3)";
+    label en unofficial "shared-custody children common to both households (R. 521-3 sharing)";
+}
+
+// --- Designation inputs (L521-2, R521-2) ---
+
+pub relation demande_conjointe_partage(p1: fr.pf.core::Personne, p2: fr.pf.core::Personne) kind empirical {
+    label fr official "demande conjointe de partage de la charge (R. 521-2, 1°)";
+    label en unofficial "joint sharing request (R. 521-2, 1°)";
+}
+
+pub relation desaccord_designation(p1: fr.pf.core::Personne, p2: fr.pf.core::Personne) kind empirical {
+    label fr official "désaccord des parents sur la désignation de l'allocataire unique (R. 521-2, 2°)";
+    label en unofficial "parents disagree on the single allocataire (R. 521-2, 2°)";
+}
+
+pub relation allocataire_unique_convenu(q: fr.pf.core::Personne) kind empirical {
+    label fr official "allocataire unique désigné d'un commun accord (R. 521-2 al. 1)";
+    label en unofficial "single allocataire designated by mutual agreement (R. 521-2 para. 1)";
+}
+
+pub relation date_choix_modalite(p: fr.pf.core::Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "date du choix des modalités de partage (verrou d'un an, R. 521-2 al. 4)";
+    label en unofficial "date the sharing modality was chosen (one-year lock, R. 521-2 para. 4)";
+}
+
+pub relation modification_residence(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "modification des modalités de résidence de l'enfant (fin anticipée du verrou)";
+    label en unofficial "change of the child residence arrangements (early end of the lock)";
+}
+
+pub relation enfant_confie_ase(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "enfant confié au service d'aide sociale à l'enfance (L. 521-2 al. 4)";
+    label en unofficial "child placed with the child-welfare service (L. 521-2 para. 4)";
+}
+
+pub relation juge_maintien_famille(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "le juge a décidé de maintenir le versement des allocations à la famille (L. 521-2 al. 4)";
+    label en unofficial "the judge kept the benefit payment to the family (L. 521-2 para. 4)";
+}
+
+pub relation juge_saisi(j: fr.pf.core::Juridiction, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "la juridiction est saisie du cas de l'enfant confié (L. 521-2 al. 4)";
+    label en unofficial "the court is seized of the placed child's case (L. 521-2 para. 4)";
+}
+
+pub relation foyer_du_cas(p: fr.pf.core::Personne) kind empirical {
+    label fr official "personne-ancre du ménage décrite par le cas (domaine de clôture §70)";
+    label en unofficial "household anchor person recorded in the case (§70 closure domain)";
+}
+
+pub relation enfant_du_cas(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "enfant décrit par le cas (domaine de clôture §70 pour l'aîné et l'âge)";
+    label en unofficial "child recorded in the case (§70 closure domain for the eldest and the age)";
+}
+
+// --- Institutional conclusions ---
+
+pub relation bande_ressources(p: fr.pf.core::Personne, bande: BandeRessources) kind institutional {
+    key(p);
+    label fr official "tranche du barème applicable au ménage (D. 521-1, I)";
+    label en unofficial "scale band applicable to the household (D. 521-1, I)";
+}
+
+pub relation plafond1_applicable(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "plafond du I de D. 521-3 applicable au ménage (plafond de base majoré par enfant à charge)";
+    label en unofficial "D. 521-3 I ceiling applicable to the household (base ceiling plus the per-child increment)";
+}
+
+pub relation plafond2_applicable(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "plafond du II de D. 521-3 applicable au ménage (plafond de base majoré par enfant à charge)";
+    label en unofficial "D. 521-3 II ceiling applicable to the household (base ceiling plus the per-child increment)";
+}
+
+pub relation montant_mensuel_af(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "allocations familiales mensuelles brutes du ménage, majorations comprises, hors forfait (D. 521-1)";
+    label en unofficial "monthly gross household family benefits including supplements, forfait excluded (D. 521-1)";
+}
+
+pub relation montant_majoration(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "majoration pour âge de l'enfant pour le mois, 0 si non ouverte (L. 521-3)";
+    label en unofficial "child age supplement for the month, 0 when not opened (L. 521-3)";
+}
+
+pub relation complement_degressif(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "complément dégressif mensuel, 0 hors zone d'écrêtement (D. 521-1, II)";
+    label en unofficial "monthly tapering top-up, 0 outside the phase-out zone (D. 521-1, II)";
+}
+
+pub relation montant_forfait(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "allocation forfaitaire mensuelle de l'enfant, 0 si non ouverte (D. 521-2)";
+    label en unofficial "child monthly lump-sum allowance, 0 when not opened (D. 521-2)";
+}
+
+pub relation forfait_ouvert(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "droit au forfait ouvert pour le mois (L. 521-1 al. 2, D. 521-2)";
+    label en unofficial "forfait right open for the month (L. 521-1 para. 2, D. 521-2)";
+}
+
+pub relation forfait_periode(e: fr.pf.core::Enfant, debut: Date, fin: Date) kind institutional {
+    key(e);
+    label fr official "année de versement du forfait: [début, fin) (L. 521-1 al. 2, politique FORFAIT_UN_AN)";
+    label en unofficial "forfait payment year: [start, end) (L. 521-1 para. 2, FORFAIT_UN_AN policy)";
+}
+
+pub relation af_montant_du(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant mensuel total dû au ménage pour le mois (brut, avant CRDS)";
+    label en unofficial "total monthly amount due to the household for the month (gross, before CRDS)";
+}
+
+pub relation af_droit_ouvert(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "droit aux allocations familiales ouvert pour le mois (L. 521-1 al. 1, L. 755-12)";
+    label en unofficial "family-benefit right open for the month (L. 521-1 para. 1, L. 755-12)";
+}
+
+pub relation partage_actif(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "le parent est allocataire en partage (R. 521-2, 1°/2°)";
+    label en unofficial "parent is a sharing allocataire (R. 521-2, 1°/2°)";
+}
+
+pub relation allocataire_unique_af(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "allocataire unique des allocations familiales (désignation ou maintien)";
+    label en unofficial "single family-benefit allocataire (designation or continued payment)";
+}
+
+pub relation coefficient_partage(p: fr.pf.core::Personne, coeff: Decimal) kind institutional {
+    key(p);
+    label fr official "coefficient moyen/total du foyer (R. 521-3)";
+    label en unofficial "household average/total coefficient (R. 521-3)";
+}
+
+pub relation montant_parent_partage(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "prestation due au parent en partage (R. 521-3 al. 1)";
+    label en unofficial "benefit due to the sharing parent (R. 521-3 para. 1)";
+}
+
+pub relation part_versee_service_ase(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "part des allocations de l'enfant versée au service d'aide sociale à l'enfance (L. 521-2 al. 4)";
+    label en unofficial "share of the child benefits paid to the child-welfare service (L. 521-2 para. 4)";
+}
+
+pub relation changement_modalite_possible(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "les modalités de partage peuvent être remises en cause (R. 521-2 al. 4)";
+    label en unofficial "the sharing arrangements may be revised (R. 521-2 para. 4)";
+}
+
+pub relation montant_mensuel_af_dom(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "allocations familiales mensuelles dans les DOM (L. 755-11/12, D. 755-5)";
+    label en unofficial "monthly family benefits in the DOM (L. 755-11/12, D. 755-5)";
+}
+
+pub relation d521_2_applicable_dom(t: Territoire) kind institutional {
+    label fr official "D. 521-2 (forfait) applicable dans le département (D. 755-5-1)";
+    label en unofficial "D. 521-2 (lump sum) applicable in the department (D. 755-5-1)";
+}
+
+pub relation d521_3_applicable_dom(t: Territoire) kind institutional {
+    label fr official "D. 521-3 (plafonds) applicable dans le département (D. 755-5-1)";
+    label en unofficial "D. 521-3 (ceilings) applicable in the department (D. 755-5-1)";
+}
+
+pub relation d521_4_applicable_dom(t: Territoire) kind institutional {
+    label fr official "D. 521-4 (ressources) applicable dans le département (D. 755-5-1)";
+    label en unofficial "D. 521-4 (resources) applicable in the department (D. 755-5-1)";
+}
+
+pub relation complement_forfait(e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "complément dégressif mensuel du forfait, 0 hors zone d'écrêtement (D. 521-2, II)";
+    label en unofficial "monthly tapering top-up of the forfait, 0 outside the phase-out zone (D. 521-2, II)";
+}
+
+pub relation nb_enfants_ase_service(p: fr.pf.core::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "enfants confiés à l'ASE sans maintien à la famille, 0 sinon (L. 521-2 al. 4)";
+    label en unofficial "children placed with ASE without family maintenance, 0 otherwise (L. 521-2 para. 4)";
+}
+
+pub relation famille_participe_prise_en_charge(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "la famille participe à la prise en charge morale ou matérielle de l'enfant confié (L. 521-2 al. 4)";
+    label en unofficial "family takes part in the moral or material care of the placed child (L. 521-2 para. 4)";
+}
+
+pub relation maintenir_versement_action(j: fr.pf.core::Juridiction, e: fr.pf.core::Enfant) kind empirical {
+    label fr official "action: décider le maintien du versement des allocations à la famille (L. 521-2 al. 4)";
+    label en unofficial "action: keep paying the benefits to the family (L. 521-2 para. 4)";
+}
+
+pub relation famille_percoit(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant mensuel effectivement perçu par la famille (brut)";
+    label en unofficial "monthly amount actually received by the family (gross)";
+}
+
+pub relation service_ase_percoit(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant mensuel total versé au service d'aide sociale à l'enfance (brut)";
+    label en unofficial "total monthly amount paid to the child-welfare service (gross)";
+}
+
+pub relation af_verse(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "les allocations dues ont été versées au ménage (exécution; l'organisme figure au porteur)";
+    label en unofficial "the due benefits were paid to the household (performance; the body is the Bearer [REDACTED])";
+}

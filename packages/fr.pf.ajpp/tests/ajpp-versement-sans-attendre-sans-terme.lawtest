@@ -1,0 +1,28 @@
+// Renewal branch without the before-term condition: 310 days, new
+// certificate and control agreement are recorded, but the renewal
+// was not requested before the end of the initially fixed term
+// (L. 544-3 para. 2) — neither the once-renewal nor payment
+// without waiting establishes (both NEITHER).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-versement-sans-attendre-sans-terme" {
+    given {
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; }
+        assert "ajpp-vst-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-vst")) { origin adjudicated; }
+        assert "ajpp-vst-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-vst")) { origin adjudicated; }
+        assert "ajpp-vst-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-vst"), entity_ref("urn:fr:pf-ajpp:case:enfant-vst")) { origin case_input; }
+        assert "ajpp-vst-04": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-vst"), 310) { origin case_input; }
+        assert "ajpp-vst-05": nouveau_certificat(entity_ref("urn:fr:pf-ajpp:case:enfant-vst")) { origin adjudicated; }
+        assert "ajpp-vst-06": accord_controle_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-vst")) { origin adjudicated; }
+    }
+    evaluate truth(renouvellement_accorde(entity_ref("urn:fr:pf-ajpp:case:enfant-vst")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(versement_sans_attendre_fin_max(entity_ref("urn:fr:pf-ajpp:case:enfant-vst")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

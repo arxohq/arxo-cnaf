@@ -1,0 +1,22 @@
+// Forfait-jours manager (D. 531-11): 109 contract days over 218 allowed —
+// 109 × 2 = 218 ≤ 218, share at most 50% → 249.84 €.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-forfait-jours-50" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-fj-01": jours_contrat(entity_ref("urn:fr:paje:benef:prepare-fj"), 109) { origin adjudicated; }
+        assert "prepare-fj-02": jours_accord(entity_ref("urn:fr:paje:benef:prepare-fj"), 218) { origin adjudicated; }
+        assert "prepare-fj-03": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-fj"), entity_ref("urn:fr:paje:enfant:prepare-fj")) { origin adjudicated; }
+        assert "prepare-fj-04": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-fj")) { origin adjudicated; }
+        assert "prepare-fj-05": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-fj"), entity_ref("urn:fr:paje:case:prepare-fj")) { origin case_input; }
+        assert "prepare-fj-06": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-fj"), 400.00 EUR) { origin case_input; }
+        assert "prepare-fj-07": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-fj"), entity_ref("urn:fr:paje:enfant:prepare-fj"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-fj"), entity_ref("urn:fr:paje:enfant:prepare-fj"), 249.84 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

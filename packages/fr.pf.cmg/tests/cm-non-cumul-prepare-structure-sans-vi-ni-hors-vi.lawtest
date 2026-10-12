@@ -1,0 +1,24 @@
+// L. 531-9, para. 1 for the L. 531-6 aid, missing-evidence control (RETURN
+// 2026-10-08): open structure right plus full-rate PreParE, 2014-cohort
+// child, but neither VI nor non-VI status established — unevaluated, no
+// marker. Mirrors cm-non-cumul-prepare-sans-vi-ni-hors-vi for the structure
+// track. Controls — cm-non-cumul-prepare-structure (affirmative hors-VI).
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-non-cumul-prepare-structure-sans-vi-ni-hors-vi" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "ncpsn-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:ncpsn"), entity_ref("urn:fr:pf-cmg:child:ncpsn"), STRUCTURE) { origin case_input; }
+        assert "ncpsn-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:ncpsn")) { origin case_input; }
+        assert "ncpsn-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:ncpsn"), entity_ref("urn:fr:pf-cmg:child:ncpsn")) { origin case_input; }
+        assert "ncpsn-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:ncpsn"), 2) { origin case_input; }
+        assert "ncpsn-05": beneficie_prepare_plein(entity_ref("urn:fr:pf-cmg:case:ncpsn"), entity_ref("urn:fr:pf-cmg:child:ncpsn")) { origin case_input; }
+        assert "ncpsn-06": cohorte_l5319_2014(entity_ref("urn:fr:pf-cmg:child:ncpsn")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_prepare_plein_interdit(entity_ref("urn:fr:pf-cmg:case:ncpsn"), entity_ref("urn:fr:pf-cmg:child:ncpsn")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

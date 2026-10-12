@@ -1,0 +1,27 @@
+// Young self-employed worker before 2023: old-register entry, 30 months
+// of activity, 2021 turnover 26000.00 >= 43 x retained single-person
+// MF 600.00 (= 25800.00) -> deemed to meet the hours condition
+// (D. 262-25-2 predecessor, 2022 legal time). The MF is the 2021
+// figure, the one in force at 1 January of the turnover year ("en
+// vigueur au 1er janvier de l'année de réalisation du chiffre
+// d'affaires considéré"); the amount stays a retained case input
+// (B-RSA-MF-EURO). Edition pair of jeune-tns-2023.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-jeune-tns-pre2023" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "jeun-01": jeune_18_25(entity_ref("urn:fr:rsa:case:jeune-tns-pre2023")) { origin case_input; }
+        assert "jeun-02": tns_non_agricole(entity_ref("urn:fr:rsa:case:jeune-tns-pre2023")) { origin case_input; }
+        assert "jeun-03": tns_immatriculation_ancienne(entity_ref("urn:fr:rsa:case:jeune-tns-pre2023")) { origin case_input; }
+        assert "jeun-04": tns_duree_activite_mois(entity_ref("urn:fr:rsa:case:jeune-tns-pre2023"), 30) { origin case_input; }
+        assert "jeun-05": tns_chiffre_affaires(entity_ref("urn:fr:rsa:case:jeune-tns-pre2023"), 2021, 26000.00 EUR) { origin case_input; }
+        assert "jeun-06": mf_reference_ca(entity_ref("urn:fr:rsa:case:jeune-tns-pre2023"), 2021, 600.00 EUR) { origin case_input; }
+    }
+    evaluate truth(condition_heures_jeune(entity_ref("urn:fr:rsa:case:jeune-tns-pre2023")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

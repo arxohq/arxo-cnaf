@@ -1,0 +1,17 @@
+// AEEH internat exclusion: CDAPH favourable but full-cover residential care outside any leave/suspension period - entitlement removed (L. 541-1 al. 4, PC-R07-14).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-aeeh-exclusion-internat" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "aeeh-exclusion-internat-01": decision_cdaph_favorable(entity_ref("urn:fr:pf:case:aeeh-internat")) { origin case_input; }
+        assert "aeeh-exclusion-internat-02": prise_en_charge_integrale_internat(entity_ref("urn:fr:pf:case:aeeh-internat")) { origin case_input; }
+        assert "aeeh-exclusion-internat-03": not periode_conge_suspension_prise_en_charge(entity_ref("urn:fr:pf:case:aeeh-internat")) { origin case_input; }
+    }
+    evaluate truth(aeeh_ouvre_droit(entity_ref("urn:fr:pf:case:aeeh-internat")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

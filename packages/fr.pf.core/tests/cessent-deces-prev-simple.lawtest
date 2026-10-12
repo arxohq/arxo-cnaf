@@ -1,0 +1,18 @@
+// 2015 text without the L. 531-10 case: death in May 2021 - cessation from 1 June 2021 (R. 552-3 III prev).
+// D-42: the case states "without the L. 531-10 case" but did not assert it: CessentDecesPrevL5310 reads
+// not cas_exception_l531_10, an explicit negative case fact (SPEC 69). Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cessent-deces-prev-simple" {
+    given {
+        context { decision_time @2021-08-15T12:00:00Z; knowledge_time @2021-08-15T12:00:00Z; legal_time @2021-08-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "cessent-deces-prev-simple-01": deces_proche_mois(entity_ref("urn:fr:pf:case:deces-prev"), @2021-05-01) { origin case_input; }
+        assert "cessent-deces-prev-simple-02": not cas_exception_l531_10(entity_ref("urn:fr:pf:case:deces-prev")) { origin case_input; }
+    }
+    evaluate truth(prestations_cessent_a_compter(entity_ref("urn:fr:pf:case:deces-prev"), @2021-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

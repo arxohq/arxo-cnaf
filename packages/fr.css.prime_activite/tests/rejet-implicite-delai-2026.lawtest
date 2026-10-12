@@ -1,0 +1,31 @@
+// Timely rectification (16 days after reception of a date-certain
+// notice), no decision, observed past three months: CRA
+// interruption, II 1° implicit rejection and II 2° recovery all
+// hold (R. 847-1-1 I.2.a, II, III; PA-FE09-03).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-rejet-implicite-delai-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-09-10T12:00:00Z; knowledge_time @2026-09-10T12:00:00Z; legal_time @2026-09-10; timezone "Europe/Paris"; }
+        assert "ppa-01": notification_recouvrement(entity_ref("urn:fr:ppa:case:rejet-implicite-delai-2026"), @2026-05-19) { origin case_input; }
+        assert "ppa-02": reception_notification(entity_ref("urn:fr:ppa:case:rejet-implicite-delai-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-03": demande_rectification(entity_ref("urn:fr:ppa:case:rejet-implicite-delai-2026"), @2026-06-05) { origin case_input; }
+        assert "ppa-04": date_observation_recours(entity_ref("urn:fr:ppa:case:rejet-implicite-delai-2026"), @2026-09-10) { origin case_input; }
+        assert "ppa-05": absence_decision_rectification(entity_ref("urn:fr:ppa:case:rejet-implicite-delai-2026")) { origin case_input; }
+        assert "ppa-06": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:rejet-implicite-delai-2026")) { origin case_input; }
+    }
+    evaluate truth(interruption_delai_cra(entity_ref("urn:fr:ppa:case:rejet-implicite-delai-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_implicite_rectification(entity_ref("urn:fr:ppa:case:rejet-implicite-delai-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recouvrement_apres_demande(entity_ref("urn:fr:ppa:case:rejet-implicite-delai-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,20 @@
+// Tenant receiving aid: no in-kind flat-rate is deducted, but the received
+// aid is still capped by the R.262-9 scale (G-A06). Single tenant, MF 600.00
+// -> scale 72.00, aid 200.00 retained 72.00 (R.262-10).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-aide-locataire-plafonnee" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "aideloct-01": nb_personnes_forfait(entity_ref("urn:fr:minima-ressources:case:aide-locataire"), 1) { origin case_input; }
+        assert "aideloct-02": logement(entity_ref("urn:fr:minima-ressources:case:aide-locataire"), AUTRE) { origin case_input; }
+        assert "aideloct-03": mf_composition(entity_ref("urn:fr:minima-ressources:case:aide-locataire"), 1, 600.00 EUR) { origin case_input; }
+        assert "aideloct-04": aide_logement_percue(entity_ref("urn:fr:minima-ressources:case:aide-locataire"), @2026-04-01, 200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(aide_logement_retenue(entity_ref("urn:fr:minima-ressources:case:aide-locataire"), @2026-04-01, 72.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

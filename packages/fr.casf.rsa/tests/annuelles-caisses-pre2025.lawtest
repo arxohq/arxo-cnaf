@@ -1,0 +1,19 @@
+// Annual data, predecessor wording: before 2025 the national fund
+// transmitted the five-item annual data before the end of the first
+// quarter (D. 262-97 predecessor). Edition pair of
+// effectifs-annuels.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-annuelles-caisses-pre2025" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2023-02-15T12:00:00Z; knowledge_time @2023-02-15T12:00:00Z; legal_time @2023-02-15; timezone "Europe/Paris"; }
+        assert "annp-01": est_caisse_nationale(entity_ref("urn:fr:rsa:org:cnaf")) { origin case_input; }
+        assert "annp-02": est_service_statistique(entity_ref("urn:fr:rsa:org:drees")) { origin case_input; }
+        assert "annp-03": annee_donnees_fin(entity_ref("urn:fr:rsa:dept:nord"), @2022-12-31) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreAnnuellesCaissesPre2025, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

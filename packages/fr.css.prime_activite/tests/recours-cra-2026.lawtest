@@ -1,0 +1,29 @@
+// Refusal challenged in time: CRA appeal admissible; no CRA
+// decision at the R. 142-6 deadline: implicit rejection, TA open.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-recours-cra-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": decision_refus(entity_ref("urn:fr:ppa:case:recours-cra-2026")) { origin case_input; }
+        assert "ppa-02": recours_cra_forme(entity_ref("urn:fr:ppa:case:recours-cra-2026"), @2026-06-05) { origin case_input; }
+        assert "ppa-03": delai_r142_6_expire(entity_ref("urn:fr:ppa:case:recours-cra-2026")) { origin case_input; }
+        assert "ppa-04": delai_recours_cra_en_cours(entity_ref("urn:fr:ppa:case:recours-cra-2026")) { origin case_input; }
+        assert "ppa-05": absence_decision_cra(entity_ref("urn:fr:ppa:case:recours-cra-2026")) { origin case_input; }
+        assert "ppa-06": delai_r421_1_en_cours(entity_ref("urn:fr:ppa:case:recours-cra-2026")) { origin case_input; }
+    }
+    evaluate truth(recours_prealaire_recevable(entity_ref("urn:fr:ppa:case:recours-cra-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_implicite_cra(entity_ref("urn:fr:ppa:case:recours-cra-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recours_ta_ouvert(entity_ref("urn:fr:ppa:case:recours-cra-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

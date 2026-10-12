@@ -1,0 +1,22 @@
+// Prime adoption, inputs → value: arrival in the household, age condition
+// met, resources ≤ ceiling; case BMAF of 400.00 € → 400 × 4.595 = 1838.00 €
+// (doubling — «majoré en cas d'adoption» L. 531-2).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-adoption-montant" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "adoption-montant-01": adoption_arrivee(entity_ref("urn:fr:paje:case:adoption-montant"), entity_ref("urn:fr:paje:enfant:adoption-montant")) { origin adjudicated; }
+        assert "adoption-montant-02": condition_age_adoption(entity_ref("urn:fr:paje:enfant:adoption-montant")) { origin adjudicated; }
+        assert "adoption-montant-03": ressources_annuelles(entity_ref("urn:fr:paje:case:adoption-montant"), 20000 EUR) { origin case_input; }
+        assert "adoption-montant-04": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:adoption-montant"), 30000 EUR) { origin case_input; }
+        assert "adoption-montant-05": bmaf_applicable(entity_ref("urn:fr:paje:case:adoption-montant"), 400.00 EUR) { origin case_input; }
+        assert "adoption-montant-06": date_examen_situation(entity_ref("urn:fr:paje:case:adoption-montant"), entity_ref("urn:fr:paje:enfant:adoption-montant"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prime_attribuee(entity_ref("urn:fr:paje:case:adoption-montant"), entity_ref("urn:fr:paje:enfant:adoption-montant"), 1838.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,262 @@
+// Child in care: R. 512-2 (age 20, ceiling 55% of SMIC x 169 h),
+// L. 512-3 (two branches: end of schooling / age limit + ceiling),
+// R. 512-1 (residence: metropole + sejour rules).
+//
+// DEONTIC MAP (pinned text only):
+// - R. 512-2 "ouvrent droit" - institutional status enfant_ouvre_droit,
+//   no deontic position: entitlement ground, not a duty.
+// - L. 512-3 2 "plafond" - threshold condition, not a sanction.
+// - R. 512-1 "organisent periodiquement le controle" - fund power
+//   (power), not a windowed duty: the text sets no frequency.
+// No evaluative predicates: age and amounts are evidenced facts.
+// "Charge" is not assessed here - L. 513-1 assesses it (module 03).
+//
+// MODULE BOUNDARY. "Fin de l'obligation scolaire" (age 16, Education Code) -
+// external act not pinned: avant_fin_scolarite / apres_fin_scolarite are
+// case facts (PC-R07-03: the 2° branch requires the post-schooling fact).
+// R. 512-2 para. 3 (avantages en nature per social-insurance scales) -
+// scales out of scope: remuneration_mensuelle arrives net of all benefits.
+// Special age limite for CF/logement (L. 512-3 para. 3) - fr.pf.cf and housing packages.
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_L512_1,
+    CSS_L512_1_CSS_ED2021_05,
+    CSS_L512_1_CSS_ED2021_11,
+    CSS_L512_1_CSS_ED2021_12,
+    CSS_L512_1_CSS_ED2022_01,
+    CSS_L512_1_CSS_ED2022_02,
+    CSS_L512_1_CSS_ED2022_03,
+    CSS_L512_1_CSS_ED2022_09,
+    CSS_L512_1_CSS_ED2023_07,
+    CSS_L512_1_CSS_ED2024_01,
+    CSS_L512_1_CSS_ED2025_02,
+    CSS_L512_1_CSS_ED2025_09,
+    CSS_L512_1_CSS_ED2025_12,
+    CSS_L512_1_CSS_ED2026_01,
+    CSS_L512_1_CSS_ED2026_04,
+    CSS_L512_1_CSS_ED2026_06,
+    CSS_L512_3,
+    CSS_L512_3_CSS_ED2021_05,
+    CSS_L512_3_CSS_ED2021_11,
+    CSS_L512_3_CSS_ED2021_12,
+    CSS_L512_3_CSS_ED2022_01,
+    CSS_L512_3_CSS_ED2022_02,
+    CSS_L512_3_CSS_ED2022_03,
+    CSS_L512_3_CSS_ED2022_09,
+    CSS_L512_3_CSS_ED2023_07,
+    CSS_L512_3_CSS_ED2024_01,
+    CSS_L512_3_CSS_ED2025_02,
+    CSS_L512_3_CSS_ED2025_09,
+    CSS_L512_3_CSS_ED2025_12,
+    CSS_L512_3_CSS_ED2026_01,
+    CSS_L512_3_CSS_ED2026_04,
+    CSS_L512_3_CSS_ED2026_06,
+    CSS_R512_1,
+    CSS_R512_1_CSS_ED2021_05,
+    CSS_R512_1_CSS_ED2021_11,
+    CSS_R512_1_CSS_ED2021_12,
+    CSS_R512_1_CSS_ED2022_01,
+    CSS_R512_1_CSS_ED2022_02,
+    CSS_R512_1_CSS_ED2022_03,
+    CSS_R512_1_CSS_ED2022_09,
+    CSS_R512_1_CSS_ED2023_07,
+    CSS_R512_1_CSS_ED2024_01,
+    CSS_R512_1_CSS_ED2025_02,
+    CSS_R512_1_CSS_ED2025_09,
+    CSS_R512_1_CSS_ED2025_12,
+    CSS_R512_1_CSS_ED2026_01,
+    CSS_R512_1_CSS_ED2026_04,
+    CSS_R512_1_CSS_ED2026_06,
+    CSS_R512_2,
+    CSS_R512_2_CSS_ED2021_05,
+    CSS_R512_2_CSS_ED2021_11,
+    CSS_R512_2_CSS_ED2021_12,
+    CSS_R512_2_CSS_ED2022_01,
+    CSS_R512_2_CSS_ED2022_02,
+    CSS_R512_2_CSS_ED2022_03,
+    CSS_R512_2_CSS_ED2022_09,
+    CSS_R512_2_CSS_ED2023_07,
+    CSS_R512_2_CSS_ED2024_01,
+    CSS_R512_2_CSS_ED2025_02,
+    CSS_R512_2_CSS_ED2025_09,
+    CSS_R512_2_CSS_ED2025_12,
+    CSS_R512_2_CSS_ED2026_01,
+    CSS_R512_2_CSS_ED2026_04,
+    CSS_R512_2_CSS_ED2026_06,
+    Enfant,
+    enfant_ouvre_droit,
+};
+
+// Policy for add_calendar_period (section 86) - FORWARD only. "Day stays
+// its own" (step applies to the birth date as is); month_end must be
+// named for calendar_year units, though day suffices for the input.
+// Twenty years: entitlement while date < naissance + 20 ans (R. 512-2
+// "jusqu'a l'age de vingt ans").
+deadline policy ENFANT_VINGT_ANS {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+relation date_naissance(e: Enfant, naissance: Date) kind empirical {
+    key(e);
+    label fr official "date de naissance de l'enfant";
+    label en unofficial "child's date of birth";
+}
+
+relation remuneration_mensuelle(e: Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "rémunération mensuelle de l'enfant, avantages en nature compris";
+    label en unofficial "child's monthly remuneration, benefits in kind included";
+}
+
+relation smic_applicable(e: Enfant, t: fr.travail.smic::Travailleur) kind empirical {
+    key(e);
+    label fr official "rattachement au taux SMIC applicable au lieu d'emploi du jeune (R. 512-2)";
+    label en unofficial "link to the SMIC rate applicable at the young person's place of employment (R. 512-2)";
+}
+
+relation plafond_remuneration(e: Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "plafond de rémunération: 55 % du SMIC multiplié par 169 (R. 512-2 al. 2)";
+    label en unofficial "remuneration ceiling: 55% of SMIC x 169 (R. 512-2 para. 2)";
+}
+
+relation avant_fin_scolarite(e: Enfant) kind empirical {
+    label fr official "l'enfant n'a pas atteint la fin de l'obligation scolaire (L. 512-3 1°)";
+    label en unofficial "child has not reached the end of compulsory schooling (L. 512-3 1)";
+}
+
+relation apres_fin_scolarite(e: Enfant) kind empirical {
+    label fr official "l'enfant a dépassé la fin de l'obligation scolaire, fait constaté (L. 512-3 2° « après la fin de l'obligation scolaire »)";
+    label en unofficial "child is past the end of compulsory schooling, stated fact (L. 512-3 2 'after the end of compulsory schooling')";
+}
+
+relation date_reference_enfant(e: Enfant, repere: Date) kind empirical {
+    key(e);
+    label fr official "mois civil de référence pour l'appréciation du droit de l'enfant";
+    label en unofficial "reference month for assessing the child's entitlement";
+}
+
+relation beneficiaire_personnel(e: Enfant) kind empirical {
+    label fr official "l'enfant est bénéficiaire, à titre personnel, de prestations (réserve L. 512-1)";
+    label en unofficial "child is personally in receipt of benefits (L. 512-1 reservation)";
+}
+
+relation reside_france_metropolitaine(e: Enfant) kind empirical {
+    label fr official "l'enfant vit de façon permanente en France métropolitaine (R. 512-1 al. 2)";
+    label en unofficial "child lives permanently in metropolitan France (R. 512-1 para. 2)";
+}
+
+relation duree_sejours_exterieur_annee(e: Enfant, mois: Integer) kind empirical {
+    key(e);
+    label fr official "durée totale des séjours provisoires hors territoire au cours de l'année civile, en mois";
+    label en unofficial "total provisional stays outside the territory in the calendar year, in months";
+}
+
+relation sejour_justifie_arrete(e: Enfant) kind empirical {
+    label fr official "séjour long justifié dans les conditions de l'arrêté conjoint (études, langue, formation) ou frontalier (R. 512-1 2°-3°)";
+    label en unofficial "long stay justified under the joint arretee (study, language, training) or cross-border (R. 512-1 2-3)";
+}
+
+relation residence_maintenue(e: Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant est réputé résider en France (R. 512-1)";
+    label en unofficial "child is deemed resident in France (R. 512-1)";
+}
+
+function plafond_remuneration_calcule(smic: Money) -> Money =
+    smic * 0.55 * 169;
+
+@source(CSS_R512_2, CSS_R512_2_CSS_ED2021_05, CSS_R512_2_CSS_ED2021_11, CSS_R512_2_CSS_ED2021_12,
+        CSS_R512_2_CSS_ED2022_01, CSS_R512_2_CSS_ED2022_02, CSS_R512_2_CSS_ED2022_03,
+        CSS_R512_2_CSS_ED2022_09, CSS_R512_2_CSS_ED2023_07, CSS_R512_2_CSS_ED2024_01,
+        CSS_R512_2_CSS_ED2025_02, CSS_R512_2_CSS_ED2025_09, CSS_R512_2_CSS_ED2025_12,
+        CSS_R512_2_CSS_ED2026_01, CSS_R512_2_CSS_ED2026_04, CSS_R512_2_CSS_ED2026_06)
+rule PlafondRemuneration(e: Enfant, t: fr.travail.smic::Travailleur, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Le plafond est égal, pour un mois, à 55 % du SMIC multiplié par 169";
+    label en unofficial "Monthly ceiling - 55% of SMIC x 169";
+    when smic_applicable(e, t) and fr.travail.smic::smic_horaire(t, s);
+    then plafond_remuneration(e, plafond_remuneration_calcule(s));
+}
+
+@source(CSS_L512_3, CSS_L512_3_CSS_ED2021_05, CSS_L512_3_CSS_ED2021_11, CSS_L512_3_CSS_ED2021_12,
+        CSS_L512_3_CSS_ED2022_01, CSS_L512_3_CSS_ED2022_02, CSS_L512_3_CSS_ED2022_03,
+        CSS_L512_3_CSS_ED2022_09, CSS_L512_3_CSS_ED2023_07, CSS_L512_3_CSS_ED2024_01,
+        CSS_L512_3_CSS_ED2025_02, CSS_L512_3_CSS_ED2025_09, CSS_L512_3_CSS_ED2025_12,
+        CSS_L512_3_CSS_ED2026_01, CSS_L512_3_CSS_ED2026_04, CSS_L512_3_CSS_ED2026_06)
+rule EnfantScolarite(e: Enfant) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "Ouvre droit tout enfant jusqu'à la fin de l'obligation scolaire";
+    label en unofficial "Every child opens entitlement until the end of compulsory schooling";
+    when avant_fin_scolarite(e);
+    then enfant_ouvre_droit(e);
+}
+
+@source(CSS_L512_3, CSS_L512_3_CSS_ED2021_05, CSS_L512_3_CSS_ED2021_11, CSS_L512_3_CSS_ED2021_12,
+        CSS_L512_3_CSS_ED2022_01, CSS_L512_3_CSS_ED2022_02, CSS_L512_3_CSS_ED2022_03,
+        CSS_L512_3_CSS_ED2022_09, CSS_L512_3_CSS_ED2023_07, CSS_L512_3_CSS_ED2024_01,
+        CSS_L512_3_CSS_ED2025_02, CSS_L512_3_CSS_ED2025_09, CSS_L512_3_CSS_ED2025_12,
+        CSS_L512_3_CSS_ED2026_01, CSS_L512_3_CSS_ED2026_04, CSS_L512_3_CSS_ED2026_06, CSS_R512_2,
+        CSS_R512_2_CSS_ED2021_05, CSS_R512_2_CSS_ED2021_11, CSS_R512_2_CSS_ED2021_12,
+        CSS_R512_2_CSS_ED2022_01, CSS_R512_2_CSS_ED2022_02, CSS_R512_2_CSS_ED2022_03,
+        CSS_R512_2_CSS_ED2022_09, CSS_R512_2_CSS_ED2023_07, CSS_R512_2_CSS_ED2024_01,
+        CSS_R512_2_CSS_ED2025_02, CSS_R512_2_CSS_ED2025_09, CSS_R512_2_CSS_ED2025_12,
+        CSS_R512_2_CSS_ED2026_01, CSS_R512_2_CSS_ED2026_04, CSS_R512_2_CSS_ED2026_06)
+rule EnfantVingtAns(e: Enfant, naissance: Date, repere: Date, salaire: Money, plafond: Money) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "Après la fin de l'obligation scolaire, et jusqu'à vingt ans, l'enfant dont la rémunération n'excède pas le plafond ouvre droit";
+    label en unofficial "After schooling and until age 20, a child whose remuneration does not exceed the ceiling opens entitlement";
+    when date_naissance(e, naissance) and date_reference_enfant(e, repere)
+        and apres_fin_scolarite(e)
+        and repere < add_calendar_period(naissance, 20 calendar_year)
+        and remuneration_mensuelle(e, salaire) and plafond_remuneration(e, plafond)
+        and salaire <= plafond;
+    then enfant_ouvre_droit(e);
+}
+
+@source(CSS_L512_1, CSS_L512_1_CSS_ED2021_05, CSS_L512_1_CSS_ED2021_11, CSS_L512_1_CSS_ED2021_12,
+        CSS_L512_1_CSS_ED2022_01, CSS_L512_1_CSS_ED2022_02, CSS_L512_1_CSS_ED2022_03,
+        CSS_L512_1_CSS_ED2022_09, CSS_L512_1_CSS_ED2023_07, CSS_L512_1_CSS_ED2024_01,
+        CSS_L512_1_CSS_ED2025_02, CSS_L512_1_CSS_ED2025_09, CSS_L512_1_CSS_ED2025_12,
+        CSS_L512_1_CSS_ED2026_01, CSS_L512_1_CSS_ED2026_04, CSS_L512_1_CSS_ED2026_06)
+rule ExclusionBeneficiairePersonnel(e: Enfant) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "sous réserve que l'enfant ne soit pas bénéficiaire, à titre personnel, de prestations";
+    label en unofficial "reservation: the child is not personally in receipt of benefits - entitlement removed";
+    when beneficiaire_personnel(e);
+    defeat enfant_ouvre_droit(e);
+}
+
+@source(CSS_R512_1, CSS_R512_1_CSS_ED2021_05, CSS_R512_1_CSS_ED2021_11, CSS_R512_1_CSS_ED2021_12,
+        CSS_R512_1_CSS_ED2022_01, CSS_R512_1_CSS_ED2022_02, CSS_R512_1_CSS_ED2022_03,
+        CSS_R512_1_CSS_ED2022_09, CSS_R512_1_CSS_ED2023_07, CSS_R512_1_CSS_ED2024_01,
+        CSS_R512_1_CSS_ED2025_02, CSS_R512_1_CSS_ED2025_09, CSS_R512_1_CSS_ED2025_12,
+        CSS_R512_1_CSS_ED2026_01, CSS_R512_1_CSS_ED2026_04, CSS_R512_1_CSS_ED2026_06)
+rule ResidenceSejourCourt(e: Enfant, duree: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "séjours provisoires dont la durée n'excède pas trois mois au cours de l'année civile";
+    label en unofficial "provisional stays of three months or less in the calendar year - residence maintained";
+    when reside_france_metropolitaine(e) and duree_sejours_exterieur_annee(e, duree)
+        and duree <= 3;
+    then residence_maintenue(e);
+}
+
+@source(CSS_R512_1, CSS_R512_1_CSS_ED2021_05, CSS_R512_1_CSS_ED2021_11, CSS_R512_1_CSS_ED2021_12,
+        CSS_R512_1_CSS_ED2022_01, CSS_R512_1_CSS_ED2022_02, CSS_R512_1_CSS_ED2022_03,
+        CSS_R512_1_CSS_ED2022_09, CSS_R512_1_CSS_ED2023_07, CSS_R512_1_CSS_ED2024_01,
+        CSS_R512_1_CSS_ED2025_02, CSS_R512_1_CSS_ED2025_09, CSS_R512_1_CSS_ED2025_12,
+        CSS_R512_1_CSS_ED2026_01, CSS_R512_1_CSS_ED2026_04, CSS_R512_1_CSS_ED2026_06)
+rule ResidenceSejourJustifie(e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "séjour de plus longue durée justifié (études, langue, formation) ou frontalier";
+    label en unofficial "long stay justified (study, language, training) or cross-border";
+    when reside_france_metropolitaine(e) and sejour_justifie_arrete(e);
+    then residence_maintenue(e);
+}

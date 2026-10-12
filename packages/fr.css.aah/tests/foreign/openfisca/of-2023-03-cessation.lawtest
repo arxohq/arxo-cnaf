@@ -1,0 +1,29 @@
+// OpenFisca AAH case (tests/formulas/aah/aah.yaml, period 2023-03):
+// single, activity ceased (inactif in 2023-03, actif before), no children.
+// Their monthly base 696.41 (R. 821-4-4 cessation mechanics — our
+// boundary, fed as retained annual 696.41 x 12 = 8356.92), their rate
+// 956.65 (pre-April-2023), their expectation 260.
+// Ours: (12 x 956.65 - 8356.92) / 12 = 260.24 (their 260 within their
+// margin 1). Their case -> our answer -> class: REPORT.md (OpenFisca, 1).
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-of-2023-03-cessation" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "of0303-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:foreign:of-2023-03")) { origin adjudicated; }
+        assert "of0303-02": age_droit_depasse(entity_ref("urn:fr:css-aah:foreign:of-2023-03")) { origin case_input; }
+        assert "of0303-03": residence_permanente(entity_ref("urn:fr:css-aah:foreign:of-2023-03")) { origin case_input; }
+        assert "of0303-04": sejour_regulier(entity_ref("urn:fr:css-aah:foreign:of-2023-03")) { origin case_input; }
+        assert "of0303-05": sans_revenu_activite(entity_ref("urn:fr:css-aah:foreign:of-2023-03")) { origin case_input; }
+        assert "of0303-06": personne_seule(entity_ref("urn:fr:css-aah:foreign:of-2023-03")) { origin case_input; }
+        assert "of0303-07": montant_mensuel_retenu(956.65 EUR) { origin case_input; }
+        assert "of0303-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:foreign:of-2023-03"), 8356.92 EUR) { origin case_input; }
+        assert "of0303-09": enfants_charge(0) { origin case_input; }
+    }
+    evaluate truth(aah_montant_ancien(entity_ref("urn:fr:css-aah:foreign:of-2023-03"), 260.24 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

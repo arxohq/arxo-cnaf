@@ -1,0 +1,55 @@
+// R. 541-4 III revision liberties and R. 541-5 reexamination: both
+// revision liberties, the aggravation duty, the reexamination duty and
+// the control liberty hold ACTIVE while saisine stays silent. The
+// two-year reexamination deadline is built from the attribution date; a
+// missing reexamination past the deadline is late while an on-time file
+// is not. Persistence across a change of body feeds the computed right
+// directly.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-revision-reexamen" {
+    given {
+        context { deadline_policy AEEH_DUREES; decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-rr-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-rr"), entity_ref("urn:fr:pf-aeeh:case:enfant-rr")) { origin case_input; }
+        assert "r541-rr-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-rr")) { origin adjudicated; }
+        assert "r541-rr-03": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-aeeh:org:caisse"), entity_ref("urn:fr:pf-aeeh:case:parent-rr")) { origin case_input; }
+        assert "r541-rr-04": commission_competente(entity_ref("urn:fr:pf-aeeh:commission:cdaph-75"), entity_ref("urn:fr:pf-aeeh:case:enfant-rr")) { origin case_input; }
+        assert "r541-rr-05": connaissance_aggravation(entity_ref("urn:fr:pf-aeeh:case:enfant-rr")) { origin adjudicated; }
+        assert "r541-rr-06": mesures_particulieres(entity_ref("urn:fr:pf-aeeh:case:enfant-rr")) { origin adjudicated; }
+        assert "r541-rr-07": date_attribution_aeeh(entity_ref("urn:fr:pf-aeeh:case:enfant-rr"), @2022-03-15) { origin case_input; }
+        assert "r541-rr-08": date_appreciation(entity_ref("urn:fr:pf-aeeh:case:enfant-rr"), @2024-03-16) { origin case_input; }
+        assert "r541-rr-09": sans_reexamen(entity_ref("urn:fr:pf-aeeh:case:enfant-rr")) { origin case_input; }
+        assert "r541-rr-10": mesures_particulieres(entity_ref("urn:fr:pf-aeeh:case:enfant-rr-atemps")) { origin adjudicated; }
+        assert "r541-rr-11": date_attribution_aeeh(entity_ref("urn:fr:pf-aeeh:case:enfant-rr-atemps"), @2022-03-15) { origin case_input; }
+        assert "r541-rr-12": date_appreciation(entity_ref("urn:fr:pf-aeeh:case:enfant-rr-atemps"), @2024-03-15) { origin case_input; }
+        assert "r541-rr-13": sans_reexamen(entity_ref("urn:fr:pf-aeeh:case:enfant-rr-atemps")) { origin case_input; }
+        assert "r541-rr-14": decision_cdaph_initiale(entity_ref("urn:fr:pf-aeeh:case:enfant-rr-persist")) { origin adjudicated; }
+        assert "r541-rr-15": changement_organisme_allocataire(entity_ref("urn:fr:pf-aeeh:case:enfant-rr-persist")) { origin case_input; }
+    }
+    evaluate truth(date_limite_reexamen(entity_ref("urn:fr:pf-aeeh:case:enfant-rr"), @2024-03-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(reexamen_en_retard(entity_ref("urn:fr:pf-aeeh:case:enfant-rr")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(reexamen_en_retard(entity_ref("urn:fr:pf-aeeh:case:enfant-rr-atemps")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_droit_calcule(entity_ref("urn:fr:pf-aeeh:case:enfant-rr-persist")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate positions();
+    expect position(DemanderRevisionBeneficiaire, ACTIVE);
+    expect position(DemanderRevisionOrganisme, ACTIVE);
+    expect position(ReexaminerAggravation, ACTIVE);
+    expect position(ReexaminerMesures, ACTIVE);
+    expect position(ControlerEffectivite, ACTIVE);
+    expect not position(SaisirCommission, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

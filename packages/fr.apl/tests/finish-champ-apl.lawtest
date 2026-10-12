@@ -1,0 +1,56 @@
+// APL scope (10): dwelling/occupant conjunction opens eligibility; a
+// post-2017 loan with no exception defeats it (downstream attribution
+// silent); the old-stock non-tense exception preserves it.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-champ-apl-eligible" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcap-01": cas_apl_l831_1(entity_ref("urn:fr:apl:case:fcap"), APL_LOCATIF_AIDE_ETAT_CONVENTIONNE) { origin case_input; }
+        assert "fcap-02": occupant_apl_r831_1(entity_ref("urn:fr:apl:case:fcap"), OCC_LOCATIF_CONVENTIONNE_2_3_4) { origin case_input; }
+    }
+    evaluate truth(eligible_apl(entity_ref("urn:fr:apl:case:fcap")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-champ-apl-pret-exclu" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcapx-01": cas_apl_l831_1(entity_ref("urn:fr:apl:case:fcapx"), APL_PROPRIETAIRE_AIDE_ETAT) { origin case_input; }
+        assert "fcapx-02": occupant_apl_r831_1(entity_ref("urn:fr:apl:case:fcapx"), OCC_PROPRIETAIRE_L8311_1) { origin case_input; }
+        assert "fcapx-03": pret_apl_date_signature(entity_ref("urn:fr:apl:case:fcapx"), @2021-06-10) { origin case_input; }
+        assert "fcapx-04": logement_ancien_l831_2(entity_ref("urn:fr:apl:case:fcapx"), false) { origin case_input; }
+        assert "fcapx-05": aide_demandee(entity_ref("urn:fr:apl:case:fcapx"), APL) { origin case_input; }
+    }
+    evaluate truth(aide_attribuee(entity_ref("urn:fr:apl:case:fcapx"), APL));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-champ-apl-exception" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fcape-01": cas_apl_l831_1(entity_ref("urn:fr:apl:case:fcape"), APL_PROPRIETAIRE_AIDE_ETAT) { origin case_input; }
+        assert "fcape-02": occupant_apl_r831_1(entity_ref("urn:fr:apl:case:fcape"), OCC_PROPRIETAIRE_L8311_1) { origin case_input; }
+        assert "fcape-03": pret_apl_date_signature(entity_ref("urn:fr:apl:case:fcape"), @2019-04-02) { origin case_input; }
+        assert "fcape-04": logement_ancien_l831_2(entity_ref("urn:fr:apl:case:fcape"), true) { origin case_input; }
+        assert "fcape-05": commune_non_tendue_l831_2(entity_ref("urn:fr:apl:case:fcape"), true) { origin case_input; }
+        assert "fcape-06": aide_demandee(entity_ref("urn:fr:apl:case:fcape"), APL) { origin case_input; }
+    }
+    evaluate truth(aide_attribuee(entity_ref("urn:fr:apl:case:fcape"), APL));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,481 @@
+// Opening and extinction dates (R. 823-10/11/12/13/14, R. 831-2/3, D. 841-1,
+// L. 841-1 6 window): first-day-of-month computations with forward calendar
+// steps only. Extinction "le dernier jour du mois" (R. 823-14 2) is modelled
+// as no-right-from the first day of the next month (backward steps are
+// inexpressible, 08 precedent); coverage is identical. The R. 823-14
+// no-interruption chapeau is a meta-constraint on applying R. 823-10/12,
+// not a separate derivation. R. 831-2 yields to R. 823-14 moves via the
+// positive outside-case classification (hors_demenagement_convention_823_14).
+// Shared appreciation/request dates live here for reuse by 13/19/21.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_D841_1,
+    CCH_D841_1_ED2019_12,
+    CCH_D841_1_ED2020_01,
+    CCH_D841_1_ED2021_01,
+    CCH_D841_1_ED2023_04,
+    CCH_D841_1_ED2023_09,
+    CCH_D841_1_ED2023_12,
+    CCH_D841_1_ED2026_07,
+    CCH_L841_1,
+    CCH_L841_1_ED2019_12,
+    CCH_L841_1_ED2020_01,
+    CCH_L841_1_ED2021_01,
+    CCH_L841_1_ED2023_04,
+    CCH_L841_1_ED2023_09,
+    CCH_L841_1_ED2023_12,
+    CCH_L841_1_ED2026_07,
+    CCH_R823_10,
+    CCH_R823_10_ED2019_12,
+    CCH_R823_10_ED2020_01,
+    CCH_R823_10_ED2021_01,
+    CCH_R823_10_ED2023_04,
+    CCH_R823_10_ED2023_09,
+    CCH_R823_10_ED2023_12,
+    CCH_R823_10_ED2026_07,
+    CCH_R823_11,
+    CCH_R823_11_ED2019_12,
+    CCH_R823_11_ED2020_01,
+    CCH_R823_11_ED2021_01,
+    CCH_R823_11_ED2023_04,
+    CCH_R823_11_ED2023_09,
+    CCH_R823_11_ED2023_12,
+    CCH_R823_11_ED2026_07,
+    CCH_R823_12,
+    CCH_R823_12_ED2019_12,
+    CCH_R823_12_ED2020_01,
+    CCH_R823_12_ED2021_01,
+    CCH_R823_12_ED2023_04,
+    CCH_R823_12_ED2023_09,
+    CCH_R823_12_ED2023_12,
+    CCH_R823_12_ED2026_07,
+    CCH_R823_13,
+    CCH_R823_13_ED2019_12,
+    CCH_R823_13_ED2020_01,
+    CCH_R823_13_ED2021_01,
+    CCH_R823_13_ED2023_04,
+    CCH_R823_13_ED2023_09,
+    CCH_R823_13_ED2023_12,
+    CCH_R823_13_ED2026_07,
+    CCH_R823_14,
+    CCH_R823_14_ED2019_12,
+    CCH_R823_14_ED2020_01,
+    CCH_R823_14_ED2021_01,
+    CCH_R823_14_ED2023_04,
+    CCH_R823_14_ED2023_09,
+    CCH_R823_14_ED2023_12,
+    CCH_R823_14_ED2026_07,
+    CCH_R831_2,
+    CCH_R831_2_ED2019_12,
+    CCH_R831_2_ED2020_01,
+    CCH_R831_2_ED2021_01,
+    CCH_R831_2_ED2023_04,
+    CCH_R831_2_ED2023_09,
+    CCH_R831_2_ED2023_12,
+    CCH_R831_2_ED2026_07,
+    CCH_R831_3,
+    CCH_R831_3_ED2019_12,
+    CCH_R831_3_ED2020_01,
+    CCH_R831_3_ED2021_01,
+    CCH_R831_3_ED2023_04,
+    CCH_R831_3_ED2023_09,
+    CCH_R831_3_ED2023_12,
+    CCH_R831_3_ED2026_07,
+    Menage,
+    femme_seule_enceinte,
+    menage_nouveaux_maries,
+};
+
+deadline policy APL_MOIS_CIVIL {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+pub relation date_appreciation(m: Menage, d: Date) kind empirical {
+    label fr official "date d'appreciation du dossier (faits, partagee 13/19/21)";
+    label en unofficial "case appreciation date (facts, shared by 13/19/21)";
+}
+
+pub relation date_demande(m: Menage, d: Date) kind empirical {
+    label fr official "date de depot de la demande d'aide (dossier)";
+    label en unofficial "aid request filing date (case file)";
+}
+
+pub relation date_conditions_reunies(m: Menage, d: Date) kind empirical {
+    label fr official "date a laquelle les conditions d'ouverture sont reunies (constat)";
+    label en unofficial "date the opening conditions are met (finding)";
+}
+
+pub relation date_fin_conditions(m: Menage, d: Date) kind empirical {
+    label fr official "date a laquelle les conditions cessent d'etre reunies (constat)";
+    label en unofficial "date the conditions stop being met (finding)";
+}
+
+pub relation droit_commence_le(m: Menage, d: Date) kind institutional {
+    label fr official "aide due a compter de cette date (premier jour de mois civil)";
+    label en unofficial "aid due from this date (civil-month first day)";
+}
+
+pub relation droit_prend_fin_le(m: Menage, d: Date) kind institutional {
+    label fr official "premier jour sans droit (extinction en equivalent premier-du-mois)";
+    label en unofficial "first day without the right (extinction as next-month first day)";
+}
+
+pub relation heberge_organisme_temporaire(m: Menage) kind empirical {
+    label fr official "heberge temporaire-defavorise accedant a un logement ouvrant droit (constat R. 823-11 1)";
+    label en unofficial "temp-disadvantaged hosted person moving into an eligible dwelling (finding)";
+}
+
+pub relation arrete_insalubrite_peril_relogement(m: Menage) kind empirical {
+    label fr official "arrete d'insalubrite ou de peril avec reprise de paiement ou relogement (constat R. 823-11 2)";
+    label en unofficial "insalubrity/peril order with resumed payment or rehousing (finding)";
+}
+
+pub relation hors_hebergement_temporaire_823_11(m: Menage) kind empirical {
+    label fr official "dossier etabli hors hebergement temporaire derogatoire R. 823-11 1 (classification positive)";
+    label en unofficial "case positively classified outside temporary-hosting derogation R. 823-11 1";
+}
+
+pub relation hors_insalubrite_peril_823_11(m: Menage) kind empirical {
+    label fr official "dossier etabli hors derogation insalubrite-peril R. 823-11 2 (classification positive)";
+    label en unofficial "case positively classified outside insalubrity-peril derogation R. 823-11 2";
+}
+
+pub relation benefice_aide_hebergement_l851_1(m: Menage) kind empirical {
+    label fr official "benefice de l'aide aux organismes logeant a titre temporaire des personnes defavorisees, art. L. 851-1 (constat)";
+    label en unofficial "benefit of the temporary-hosting aid to bodies, art. L. 851-1 (finding)";
+}
+
+@source(CCH_R823_10, CCH_R823_10_ED2019_12, CCH_R823_10_ED2020_01,
+        CCH_R823_10_ED2021_01, CCH_R823_10_ED2023_04, CCH_R823_10_ED2023_09,
+        CCH_R823_10_ED2023_12, CCH_R823_10_ED2026_07)
+rule OuvertureApresConditions(m: Menage, conditions: Date, demande: Date) strict {
+    label fr official "conditions du mois, hors derogations R. 823-11 : aide due des le premier jour du mois suivant";
+    label en unofficial "conditions met during the month, outside R. 823-11 derogations: aid due from the next month first day";
+    when date_conditions_reunies(m, conditions) and date_demande(m, demande)
+        and month_start_of(conditions) >= month_start_of(demande)
+        and hors_hebergement_temporaire_823_11(m)
+        and hors_insalubrite_peril_823_11(m);
+    then droit_commence_le(m, add_calendar_period(month_start_of(conditions), 1 calendar_month));
+}
+
+@source(CCH_R823_10, CCH_R823_10_ED2019_12, CCH_R823_10_ED2020_01,
+        CCH_R823_10_ED2021_01, CCH_R823_10_ED2023_04, CCH_R823_10_ED2023_09,
+        CCH_R823_10_ED2023_12, CCH_R823_10_ED2026_07)
+rule OuvertureMoisDemande(m: Menage, conditions: Date, demande: Date) strict {
+    label fr official "conditions anterieures au mois de la demande, hors derogations R. 823-11 : due des le premier du mois de demande";
+    label en unofficial "conditions before the request month, outside R. 823-11 derogations: due from the request month first day";
+    when date_conditions_reunies(m, conditions) and date_demande(m, demande)
+        and month_start_of(conditions) < month_start_of(demande)
+        and hors_hebergement_temporaire_823_11(m)
+        and hors_insalubrite_peril_823_11(m);
+    then droit_commence_le(m, month_start_of(demande));
+}
+
+@source(CCH_R823_11, CCH_R823_11_ED2019_12, CCH_R823_11_ED2020_01,
+        CCH_R823_11_ED2021_01, CCH_R823_11_ED2023_04, CCH_R823_11_ED2023_09,
+        CCH_R823_11_ED2023_12, CCH_R823_11_ED2026_07)
+rule OuvertureDerogatoireHeberge(m: Menage, conditions: Date) strict {
+    label fr official "derogation heberge temporaire-defavorise au benefice de l'aide L. 851-1 : due des le premier du mois meme";
+    label en unofficial "temp-hosted derogation with L. 851-1 aid benefit: due from the same month first day";
+    when date_conditions_reunies(m, conditions) and heberge_organisme_temporaire(m)
+        and benefice_aide_hebergement_l851_1(m);
+    then droit_commence_le(m, month_start_of(conditions));
+}
+
+@source(CCH_R823_11, CCH_R823_11_ED2019_12, CCH_R823_11_ED2020_01,
+        CCH_R823_11_ED2021_01, CCH_R823_11_ED2023_04, CCH_R823_11_ED2023_09,
+        CCH_R823_11_ED2023_12, CCH_R823_11_ED2026_07)
+rule OuvertureDerogatoireInsalubrite(m: Menage, conditions: Date) strict {
+    label fr official "derogation insalubrite-peril : due des le premier du mois meme";
+    label en unofficial "insalubrity-peril derogation: due from the same month first day";
+    when date_conditions_reunies(m, conditions) and arrete_insalubrite_peril_relogement(m);
+    then droit_commence_le(m, month_start_of(conditions));
+}
+
+pub relation date_deces_beneficiaire(m: Menage, d: Date) kind empirical {
+    label fr official "date du deces du beneficiaire (etat civil)";
+    label en unofficial "recipient death date (civil records)";
+}
+
+@source(CCH_R823_12, CCH_R823_12_ED2019_12, CCH_R823_12_ED2020_01,
+        CCH_R823_12_ED2021_01, CCH_R823_12_ED2023_04, CCH_R823_12_ED2023_09,
+        CCH_R823_12_ED2023_12, CCH_R823_12_ED2026_07)
+rule ExtinctionFinConditions(m: Menage, fin: Date) strict {
+    label fr official "fin des conditions : plus due des le premier du mois meme";
+    label en unofficial "conditions ended: no longer due from the same month first day";
+    when date_fin_conditions(m, fin);
+    then droit_prend_fin_le(m, month_start_of(fin));
+}
+
+@source(CCH_R823_12, CCH_R823_12_ED2019_12, CCH_R823_12_ED2020_01,
+        CCH_R823_12_ED2021_01, CCH_R823_12_ED2023_04, CCH_R823_12_ED2023_09,
+        CCH_R823_12_ED2023_12, CCH_R823_12_ED2026_07)
+rule ExtinctionDecesBeneficiaire(m: Menage, deces: Date) strict {
+    label fr official "deces du beneficiaire : eteint des le premier du mois suivant";
+    label en unofficial "recipient death: extinguished from the next month first day";
+    when date_deces_beneficiaire(m, deces);
+    then droit_prend_fin_le(m, add_calendar_period(month_start_of(deces), 1 calendar_month));
+}
+
+pub relation date_deces_conjoint_charge(m: Menage, d: Date) kind empirical {
+    label fr official "date du deces du conjoint ou d'une personne a charge (etat civil)";
+    label en unofficial "spouse or dependent death date (civil records)";
+}
+
+pub relation changement_prend_effet_le(m: Menage, d: Date) kind institutional {
+    label fr official "prise d'effet du changement de situation au premier du mois";
+    label en unofficial "situation change taking effect on the month first day";
+}
+
+pub relation changement_modifiant_droits_le(m: Menage, d: Date) kind empirical {
+    label fr official "changement modifiant les droits, hors deces du conjoint ou d'une personne a charge (constat R. 823-13)";
+    label en unofficial "rights-modifying change, other than spouse or dependent death (R. 823-13 finding)";
+}
+
+pub relation fin_changement_droits_le(m: Menage, d: Date) kind empirical {
+    label fr official "fin des effets du changement modifiant les droits (constat R. 823-13)";
+    label en unofficial "end of the rights-modifying change effects (R. 823-13 finding)";
+}
+
+pub relation changement_cesse_effet_le(m: Menage, d: Date) kind institutional {
+    label fr official "cessation des effets du changement au premier du mois civil en cours R. 823-12 al. 1";
+    label en unofficial "change effects ending on the current month first day R. 823-12 al. 1";
+}
+
+pub relation separation_le(m: Menage, d: Date) kind empirical {
+    label fr official "date de la separation R. 821-3 (dossier)";
+    label en unofficial "R. 821-3 separation date (case file)";
+}
+
+pub relation separation_en_cours_periode_paiement(m: Menage) kind empirical {
+    label fr official "separation survenue en cours de periode de paiement (constat R. 823-13)";
+    label en unofficial "separation during the payment period (R. 823-13 finding)";
+}
+
+pub relation revision_separation_prend_effet_le(m: Menage, d: Date) kind institutional {
+    label fr official "revision apres separation : effet au premier du mois suivant";
+    label en unofficial "post-separation revision: effect on the next month first day";
+}
+
+@source(CCH_R823_13, CCH_R823_13_ED2019_12, CCH_R823_13_ED2020_01,
+        CCH_R823_13_ED2021_01, CCH_R823_13_ED2023_04, CCH_R823_13_ED2023_09,
+        CCH_R823_13_ED2023_12, CCH_R823_13_ED2026_07)
+rule EffetDecesConjointCharge(m: Menage, deces: Date) strict {
+    label fr official "deces du conjoint ou d'une personne a charge : effet au premier du mois suivant";
+    label en unofficial "spouse or dependent death: effect on the next month first day";
+    when date_deces_conjoint_charge(m, deces);
+    then changement_prend_effet_le(m, add_calendar_period(month_start_of(deces), 1 calendar_month));
+}
+
+@source(CCH_R823_13, CCH_R823_13_ED2019_12, CCH_R823_13_ED2020_01,
+        CCH_R823_13_ED2021_01, CCH_R823_13_ED2023_04, CCH_R823_13_ED2023_09,
+        CCH_R823_13_ED2023_12, CCH_R823_13_ED2026_07)
+rule EffetChangementDroits(m: Menage, changement: Date) strict {
+    label fr official "R. 823-13 : tout changement modifiant les droits prend effet au premier du mois suivant (regle d'ouverture)";
+    label en unofficial "R. 823-13: any rights-modifying change takes effect on the next month first day (opening rule)";
+    when changement_modifiant_droits_le(m, changement);
+    then changement_prend_effet_le(m, add_calendar_period(month_start_of(changement), 1 calendar_month));
+}
+
+@source(CCH_R823_13, CCH_R823_13_ED2019_12, CCH_R823_13_ED2020_01,
+        CCH_R823_13_ED2021_01, CCH_R823_13_ED2023_04, CCH_R823_13_ED2023_09,
+        CCH_R823_13_ED2023_12, CCH_R823_13_ED2026_07)
+rule FinEffetChangementDroits(m: Menage, fin: Date) strict {
+    label fr official "R. 823-13 : les effets du changement cessent au premier du mois civil en cours (regle d'extinction)";
+    label en unofficial "R. 823-13: the change effects end on the current month first day (extinction rule)";
+    when fin_changement_droits_le(m, fin);
+    then changement_cesse_effet_le(m, month_start_of(fin));
+}
+
+@source(CCH_R823_13, CCH_R823_13_ED2019_12, CCH_R823_13_ED2020_01,
+        CCH_R823_13_ED2021_01, CCH_R823_13_ED2023_04, CCH_R823_13_ED2023_09,
+        CCH_R823_13_ED2023_12, CCH_R823_13_ED2026_07)
+rule RevisionApresSeparation(m: Menage, separation: Date) strict {
+    label fr official "separation en cours de periode de paiement : revision au premier du mois suivant";
+    label en unofficial "separation during the payment period: revision on the next month first day";
+    when separation_le(m, separation) and separation_en_cours_periode_paiement(m);
+    then revision_separation_prend_effet_le(m, add_calendar_period(month_start_of(separation), 1 calendar_month));
+}
+
+pub relation cas_demenagement_convention(m: Menage) kind empirical {
+    label fr official "demenagement, conclusion ou resiliation de convention L. 831-1 (cas R. 823-14)";
+    label en unofficial "move, convention signed or ended under L. 831-1 (R. 823-14 case)";
+}
+
+@source(CCH_R823_14, CCH_R823_14_ED2019_12, CCH_R823_14_ED2020_01,
+        CCH_R823_14_ED2021_01, CCH_R823_14_ED2023_04, CCH_R823_14_ED2023_09,
+        CCH_R823_14_ED2023_12, CCH_R823_14_ED2026_07)
+rule OuvertureDemenagement(m: Menage, conditions: Date) strict {
+    label fr official "demenagement : ouvert des le premier du mois meme";
+    label en unofficial "move: opened from the same month first day";
+    when cas_demenagement_convention(m) and date_conditions_reunies(m, conditions);
+    then droit_commence_le(m, month_start_of(conditions));
+}
+
+@source(CCH_R823_14, CCH_R823_14_ED2019_12, CCH_R823_14_ED2020_01,
+        CCH_R823_14_ED2021_01, CCH_R823_14_ED2023_04, CCH_R823_14_ED2023_09,
+        CCH_R823_14_ED2023_12, CCH_R823_14_ED2026_07)
+rule ExtinctionAncienLogement(m: Menage, fin: Date) strict {
+    label fr official "demenagement : ancien droit jusqu'au dernier jour, sans droit des le premier suivant";
+    label en unofficial "move: old right through month end, none from the next first day";
+    when cas_demenagement_convention(m) and date_fin_conditions(m, fin);
+    then droit_prend_fin_le(m, add_calendar_period(month_start_of(fin), 1 calendar_month));
+}
+
+pub relation bail_conforme_convention(m: Menage) kind empirical {
+    label fr official "bail conforme aux stipulations de la convention, logement conventionne (constat)";
+    label en unofficial "lease conforming to the convention, conventioned dwelling (finding)";
+}
+
+pub relation date_premiere_echeance_loyer(m: Menage, d: Date) kind empirical {
+    label fr official "premiere echeance du loyer prevue par le bail ou l'engagement (dossier)";
+    label en unofficial "first rent due date under the lease or letting agreement (case file)";
+}
+
+pub relation locataire_en_place_loyer_notifie(m: Menage) kind empirical {
+    label fr official "locataire ou occupant de bonne foi dans les lieux (constat R. 831-2 2)";
+    label en unofficial "sitting tenant or good-faith occupant (finding R. 831-2 2)";
+}
+
+pub relation date_nouveau_loyer_notifie(m: Menage, d: Date) kind empirical {
+    label fr official "date du nouveau loyer notifie par le bailleur (dossier)";
+    label en unofficial "date of the new rent notified by the landlord (case file)";
+}
+
+pub relation nouvel_engagement_location(m: Menage) kind empirical {
+    label fr official "nouveau locataire avec engagement de location (constat R. 831-2 2)";
+    label en unofficial "new tenant with a letting agreement (finding R. 831-2 2)";
+}
+
+pub relation hors_demenagement_convention_823_14(m: Menage) kind empirical {
+    label fr official "dossier etabli hors cas de demenagement ou de convention R. 823-14 (classification positive)";
+    label en unofficial "case positively classified outside the R. 823-14 move-or-convention case";
+}
+
+pub relation logement_conventionne_section2_apl(m: Menage) kind empirical {
+    label fr official "logement conventionne relevant de la section 2 pour l'APL (constat R. 831-2 2)";
+    label en unofficial "dwelling under a section-2 convention for APL (R. 831-2 2 finding)";
+}
+
+@source(CCH_R831_2, CCH_R831_2_ED2019_12, CCH_R831_2_ED2020_01,
+        CCH_R831_2_ED2021_01, CCH_R831_2_ED2023_04, CCH_R831_2_ED2023_09,
+        CCH_R831_2_ED2023_12, CCH_R831_2_ED2026_07)
+rule OuvertureBailConforme(m: Menage, echeance: Date) strict {
+    label fr official "bail conforme, hors cas R. 823-14 : ouvert au premier du mois suivant la premiere echeance";
+    label en unofficial "conforming lease, outside the R. 823-14 case: opened on the first-rent-due next month first day";
+    when bail_conforme_convention(m) and date_premiere_echeance_loyer(m, echeance)
+        and hors_demenagement_convention_823_14(m);
+    then droit_commence_le(m, add_calendar_period(month_start_of(echeance), 1 calendar_month));
+}
+
+@source(CCH_R831_2, CCH_R831_2_ED2019_12, CCH_R831_2_ED2020_01,
+        CCH_R831_2_ED2021_01, CCH_R831_2_ED2023_04, CCH_R831_2_ED2023_09,
+        CCH_R831_2_ED2023_12, CCH_R831_2_ED2026_07)
+rule OuvertureLoyerNotifie(m: Menage, notifie: Date) strict {
+    label fr official "locataire en place en logement conventionne section 2, hors cas R. 823-14 : ouvert au premier du mois suivant le loyer notifie";
+    label en unofficial "sitting tenant in a section-2 conventioned dwelling, outside the R. 823-14 case: opened on the notified-rent next month first day";
+    when locataire_en_place_loyer_notifie(m) and date_nouveau_loyer_notifie(m, notifie)
+        and logement_conventionne_section2_apl(m)
+        and hors_demenagement_convention_823_14(m);
+    then droit_commence_le(m, add_calendar_period(month_start_of(notifie), 1 calendar_month));
+}
+
+@source(CCH_R831_2, CCH_R831_2_ED2019_12, CCH_R831_2_ED2020_01,
+        CCH_R831_2_ED2021_01, CCH_R831_2_ED2023_04, CCH_R831_2_ED2023_09,
+        CCH_R831_2_ED2023_12, CCH_R831_2_ED2026_07)
+rule OuvertureEngagementLocation(m: Menage, echeance: Date) strict {
+    label fr official "nouveau locataire en logement conventionne section 2, hors cas R. 823-14 : ouvert au premier du mois suivant la premiere echeance";
+    label en unofficial "new tenant in a section-2 conventioned dwelling, outside the R. 823-14 case: opened on the first-due next month first day";
+    when nouvel_engagement_location(m) and date_premiere_echeance_loyer(m, echeance)
+        and logement_conventionne_section2_apl(m)
+        and hors_demenagement_convention_823_14(m);
+    then droit_commence_le(m, add_calendar_period(month_start_of(echeance), 1 calendar_month));
+}
+
+pub relation fin_convention_apl(m: Menage, d: Date) kind empirical {
+    label fr official "fin de la convention APL du logement (dossier)";
+    label en unofficial "end of the dwelling's APL convention (case file)";
+}
+
+pub relation conditions_l353_9_reunies(m: Menage) kind empirical {
+    label fr official "conditions de l'article L. 353-9 reunies (constat externe)";
+    label en unofficial "L. 353-9 conditions met (external finding)";
+}
+
+pub relation loyer_paye_apres_fin_convention(m: Menage) kind empirical {
+    label fr official "loyer paye apres la fin de la convention (constat)";
+    label en unofficial "rent paid after the convention ended (finding)";
+}
+
+pub relation maintien_droit_fin_convention(m: Menage) kind institutional {
+    label fr official "maintien du droit APL apres la fin de la convention R. 831-3";
+    label en unofficial "APL right maintained after the convention ended under R. 831-3";
+}
+
+@source(CCH_R831_3, CCH_R831_3_ED2019_12, CCH_R831_3_ED2020_01,
+        CCH_R831_3_ED2021_01, CCH_R831_3_ED2023_04, CCH_R831_3_ED2023_09,
+        CCH_R831_3_ED2023_12, CCH_R831_3_ED2026_07)
+rule MaintienApresFinConvention(m: Menage, fin: Date) strict {
+    label fr official "fin de convention avec L. 353-9 et loyer paye : droit maintenu";
+    label en unofficial "convention ended with L. 353-9 and rent paid: right maintained";
+    when fin_convention_apl(m, fin) and conditions_l353_9_reunies(m)
+        and loyer_paye_apres_fin_convention(m);
+    then maintien_droit_fin_convention(m);
+}
+
+pub relation date_mariage(m: Menage, d: Date) kind empirical {
+    label fr official "date du mariage des nouveaux maries ALF 3 (etat civil)";
+    label en unofficial "ALF-3 newlyweds marriage date (civil records)";
+}
+
+pub relation droit_alf_maries_prend_fin_le(m: Menage, d: Date) kind institutional {
+    label fr official "fin des cinq ans d'ALF des nouveaux maries D. 841-1";
+    label en unofficial "end of the newlyweds five ALF years under D. 841-1";
+}
+
+@source(CCH_D841_1, CCH_D841_1_ED2019_12, CCH_D841_1_ED2020_01,
+        CCH_D841_1_ED2021_01, CCH_D841_1_ED2023_04, CCH_D841_1_ED2023_09,
+        CCH_D841_1_ED2023_12, CCH_D841_1_ED2026_07)
+rule DureeCinqAnsNouveauxMaries(m: Menage, mariage: Date) strict {
+    label fr official "ALF des nouveaux maries pendant cinq ans a compter du mariage";
+    label en unofficial "newlyweds ALF for five years from the marriage";
+    when menage_nouveaux_maries(m) and date_mariage(m, mariage);
+    then droit_alf_maries_prend_fin_le(m, add_calendar_period(mariage, 5 calendar_year));
+}
+
+pub relation date_quatrieme_mois_grossesse(m: Menage, d: Date) kind empirical {
+    label fr official "date du quatrieme mois de la grossesse ALF 6 (dossier medical)";
+    label en unofficial "ALF-6 pregnancy fourth-month date (medical file)";
+}
+
+pub relation date_naissance_enfant(m: Menage, d: Date) kind empirical {
+    label fr official "date de naissance de l'enfant ALF 6 (etat civil)";
+    label en unofficial "ALF-6 child birth date (civil records)";
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule OuvertureGrossesseSeule(m: Menage, quatrieme: Date) strict {
+    label fr official "grossesse seule : due des le premier du mois suivant le quatrieme mois";
+    label en unofficial "lone pregnancy: due from the fourth-month next month first day";
+    when femme_seule_enceinte(m) and date_quatrieme_mois_grossesse(m, quatrieme);
+    then droit_commence_le(m, add_calendar_period(month_start_of(quatrieme), 1 calendar_month));
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule FinGrossesseNaissance(m: Menage, naissance: Date) strict {
+    label fr official "grossesse seule : droit jusqu'au mois civil de la naissance";
+    label en unofficial "lone pregnancy: right through the birth civil month";
+    when femme_seule_enceinte(m) and date_naissance_enfant(m, naissance);
+    then droit_prend_fin_le(m, add_calendar_period(month_start_of(naissance), 1 calendar_month));
+}

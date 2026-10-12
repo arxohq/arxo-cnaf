@@ -1,0 +1,35 @@
+// Reading MoyenneArrondieCentime on the amount due (R.262-7, I), new regime.
+// No resources; the MF differs between the reference months (600.00, 600.00,
+// 601.00), so the three intermediate amounts 600.00 + 600.00 + 601.00 = 1801.00
+// and 1801/3 does not divide evenly: the reading gives 600.33.
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-montant-du-arrondi-nouveau" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; interpretation MoyenneArrondieCentime; }
+        assert "arr-dun-01": foyer_du_cas(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau")) { origin case_input; }
+        assert "arr-dun-02": mois_demande(@2025-06-01) { origin case_input; }
+        assert "arr-dun-03": mois_reference(@2025-02-01, @2025-03-01, @2025-04-01) { origin case_input; }
+        assert "arr-dun-04": mf_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-02-01, 600.00 EUR) { origin case_input; }
+        assert "arr-dun-05": mf_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-03-01, 600.00 EUR) { origin case_input; }
+        assert "arr-dun-06": mf_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-04-01, 601.00 EUR) { origin case_input; }
+        assert "arr-dun-07": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-02-01, 0.00 EUR) { origin case_input; }
+        assert "arr-dun-08": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-03-01, 0.00 EUR) { origin case_input; }
+        assert "arr-dun-09": dsn_pro_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-04-01, 0.00 EUR) { origin case_input; }
+        assert "arr-dun-10": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-02-01, 0.00 EUR) { origin case_input; }
+        assert "arr-dun-11": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-03-01, 0.00 EUR) { origin case_input; }
+        assert "arr-dun-12": dsn_autre_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-04-01, 0.00 EUR) { origin case_input; }
+        assert "arr-dun-13": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-02-01, 0.00 EUR) { origin case_input; }
+        assert "arr-dun-14": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-03-01, 0.00 EUR) { origin case_input; }
+        assert "arr-dun-15": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-04-01, 0.00 EUR) { origin case_input; }
+        assert "arr-dun-16": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-02-01, 0 EUR) { origin case_input; }
+        assert "arr-dun-17": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-03-01, 0 EUR) { origin case_input; }
+        assert "arr-dun-18": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), @2025-04-01, 0 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_du_trimestre(entity_ref("urn:fr:minima-ressources:case:montant-du-arrondi-nouveau"), 600.33 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

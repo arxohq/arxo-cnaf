@@ -1,0 +1,470 @@
+// Decree duration mechanics: 3-year limit, re-exam window and renewal,
+// reopening delay and payment branches, new pathology
+// (D. 544-1/2/3/5).
+//
+// D. 544-1 caps payment at three years per child and pathology; the
+// L. 544-3 day-count half of the same sentence is already carried by the
+// 310 rules of `03`. D. 544-2 builds the re-examination point (end of the
+// foreseeable duration, or the one-year mark where the duration reaches
+// one year — the decree still says «un an», decoded as a fixed 12 months,
+// B-PFAJPP-D544-UN-AN), the request delay from the recorded months, and
+// renews the right from the point while duration and day caps are not
+// exhausted. D. 544-3 builds the months since opening and reopens within
+// three years where the day maximum is unused and the L. 544-1/2
+// conditions hold (L. 544-2 channel facts; L. 544-1 stays the boundary
+// quote). That in-period reopening never pays beyond the maximum:
+// payment beyond runs only on the L. 544-3 para. 3 reopening, which
+// needs the expired original duration (duree_maximale_expiree, built
+// from the D. 544-1 elapsed years), while renewal (L. 544-3 para. 2)
+// pays without waiting for the end of the maximum duration, in a
+// fresh application. The 2020-2022 version carries only the beyond-max
+// branch. D. 544-5 opens a new right on a new pathology through the same
+// medical channel. Month facts share one case-local Integer scale; the
+// engine sees no arithmetic in conditions (elapsed values are built in
+// `then`, pf-af precedent).
+
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+use self::{
+    CSS_D544_1_ED2020_09,
+    CSS_D544_1_ED2021_11,
+    CSS_D544_1_ED2022_01,
+    CSS_D544_1_ED2022_04,
+    CSS_D544_1_ED2022_07,
+    CSS_D544_1_ED2022_10,
+    CSS_D544_1_ED2023_01,
+    CSS_D544_1_ED2023_07,
+    CSS_D544_1_ED2024_02,
+    CSS_D544_1_ED2024_07,
+    CSS_D544_1_ED2025_12,
+    CSS_D544_1_ED2026_01,
+    CSS_D544_1_ED2026_06,
+    CSS_D544_2_ED2020_09,
+    CSS_D544_2_ED2021_11,
+    CSS_D544_2_ED2022_01,
+    CSS_D544_2_ED2022_04,
+    CSS_D544_2_ED2022_07,
+    CSS_D544_2_ED2022_10,
+    CSS_D544_2_ED2023_01,
+    CSS_D544_2_ED2023_07,
+    CSS_D544_2_ED2024_02,
+    CSS_D544_2_ED2024_07,
+    CSS_D544_2_ED2025_12,
+    CSS_D544_2_ED2026_01,
+    CSS_D544_2_ED2026_06,
+    CSS_D544_3,
+    CSS_D544_3_ED2022_07,
+    CSS_D544_3_ED2022_10,
+    CSS_D544_3_ED2023_01,
+    CSS_D544_3_ED2023_07,
+    CSS_D544_3_ED2024_02,
+    CSS_D544_3_ED2024_07,
+    CSS_D544_3_ED2025_12,
+    CSS_D544_3_ED2026_01,
+    CSS_D544_3_ED2026_06,
+    CSS_D544_3_PRE2022_ED2020_09,
+    CSS_D544_3_PRE2022_ED2021_11,
+    CSS_D544_3_PRE2022_ED2022_01,
+    CSS_D544_5_ED2020_09,
+    CSS_D544_5_ED2021_11,
+    CSS_D544_5_ED2022_01,
+    CSS_D544_5_ED2022_04,
+    CSS_D544_5_ED2022_07,
+    CSS_D544_5_ED2022_10,
+    CSS_D544_5_ED2023_01,
+    CSS_D544_5_ED2023_07,
+    CSS_D544_5_ED2024_02,
+    CSS_D544_5_ED2024_07,
+    CSS_D544_5_ED2025_12,
+    CSS_D544_5_ED2026_01,
+    CSS_D544_5_ED2026_06,
+    CausePathologie,
+    ajpp_duree_dans_limite,
+    avis_favorable_controle,
+    certificat_gravite,
+    debut_traitement_mois,
+    delai_demande_reexamen,
+    demande_reexamen_mois,
+    droit_nouvelle_pathologie,
+    droit_renouvele_reexamen,
+    droit_rouvert,
+    duree_maximale_expiree,
+    duree_previsible_mois,
+    duree_versement_ajpp,
+    echeance_reexamen_mois,
+    gravite_persistante,
+    jours_ajpp_verses,
+    mois_depuis_ouverture,
+    nouvelle_duree_fixee,
+    nouvelle_pathologie,
+    ouverture_droit_mois,
+    rechute_mois,
+    rechute_pathologie,
+    reexamen_demande_recevable,
+    renouvellement_accorde,
+    reouverture_dans_delai,
+    versement_au_dela_max,
+    versement_sans_attendre_fin_max,
+};
+
+// --- D. 544-1: three years per child and pathology ----------------------
+
+@source(
+    CSS_D544_1_ED2020_09,
+    CSS_D544_1_ED2021_11,
+    CSS_D544_1_ED2022_01,
+    CSS_D544_1_ED2022_04,
+    CSS_D544_1_ED2022_07,
+    CSS_D544_1_ED2022_10,
+    CSS_D544_1_ED2023_01,
+    CSS_D544_1_ED2023_07,
+    CSS_D544_1_ED2024_02,
+    CSS_D544_1_ED2024_07,
+    CSS_D544_1_ED2025_12,
+    CSS_D544_1_ED2026_01,
+    CSS_D544_1_ED2026_06)
+rule DureeDansLimite(e: fr.pf.core::Enfant, cause: CausePathologie, annees: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée de versement dans les trois ans pour l'enfant et la pathologie";
+    label en unofficial "payment duration within three years for the child and pathology";
+    when duree_versement_ajpp(e, cause, annees) and annees <= DureeMaxAjppAnnees;
+    then ajpp_duree_dans_limite(e, cause);
+}
+
+// --- D. 544-1: original maximum duration expired -------------------------
+// The complement of the three-year limit on the same sentence («dans
+// la limite d'une durée maximale de trois ans»): strictly beyond it.
+// Gates the L. 544-3 para. 3 reopening («Au-delà de la durée
+// maximale»), never the 310-day ceiling or the once-renewal.
+
+@source(
+    CSS_D544_1_ED2020_09,
+    CSS_D544_1_ED2021_11,
+    CSS_D544_1_ED2022_01,
+    CSS_D544_1_ED2022_04,
+    CSS_D544_1_ED2022_07,
+    CSS_D544_1_ED2022_10,
+    CSS_D544_1_ED2023_01,
+    CSS_D544_1_ED2023_07,
+    CSS_D544_1_ED2024_02,
+    CSS_D544_1_ED2024_07,
+    CSS_D544_1_ED2025_12,
+    CSS_D544_1_ED2026_01,
+    CSS_D544_1_ED2026_06)
+rule DureeMaximaleExpiree(e: fr.pf.core::Enfant, cause: CausePathologie, annees: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée de versement au-delà des trois ans pour l'enfant et la pathologie : maximale expirée";
+    label en unofficial "payment duration past three years for the child and pathology: maximum expired";
+    when duree_versement_ajpp(e, cause, annees) and annees > DureeMaxAjppAnnees;
+    then duree_maximale_expiree(e);
+}
+
+// --- D. 544-2: re-examination point, short foreseeable duration ---------
+
+@source(
+    CSS_D544_2_ED2020_09,
+    CSS_D544_2_ED2021_11,
+    CSS_D544_2_ED2022_01,
+    CSS_D544_2_ED2022_04,
+    CSS_D544_2_ED2022_07,
+    CSS_D544_2_ED2022_10,
+    CSS_D544_2_ED2023_01,
+    CSS_D544_2_ED2023_07,
+    CSS_D544_2_ED2024_02,
+    CSS_D544_2_ED2024_07,
+    CSS_D544_2_ED2025_12,
+    CSS_D544_2_ED2026_01,
+    CSS_D544_2_ED2026_06)
+rule EcheanceReexamenCourte(e: fr.pf.core::Enfant, debut: Integer, duree: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée prévisible sous un an : échéance à la fin de la durée prévisible";
+    label en unofficial "foreseeable duration under one year: point at its end";
+    when debut_traitement_mois(e, debut) and duree_previsible_mois(e, duree)
+        and duree < 12;
+    then echeance_reexamen_mois(e, debut + duree);
+}
+
+// --- D. 544-2: re-examination point, duration of one year or more -------
+// The decree text still says «un an»: a fixed 12 months, even though the
+// L. 544-2 re-exam ceiling moved to 14 months in 2026
+// (B-PFAJPP-D544-UN-AN, proposed D-NN).
+
+@source(
+    CSS_D544_2_ED2020_09,
+    CSS_D544_2_ED2021_11,
+    CSS_D544_2_ED2022_01,
+    CSS_D544_2_ED2022_04,
+    CSS_D544_2_ED2022_07,
+    CSS_D544_2_ED2022_10,
+    CSS_D544_2_ED2023_01,
+    CSS_D544_2_ED2023_07,
+    CSS_D544_2_ED2024_02,
+    CSS_D544_2_ED2024_07,
+    CSS_D544_2_ED2025_12,
+    CSS_D544_2_ED2026_01,
+    CSS_D544_2_ED2026_06)
+rule EcheanceReexamenUnAn(e: fr.pf.core::Enfant, debut: Integer, duree: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "durée prévisible d'un an ou plus : échéance à l'issue d'un an fixe décret";
+    label en unofficial "foreseeable duration of one year or more: point at the fixed decree one-year mark";
+    when debut_traitement_mois(e, debut) and duree_previsible_mois(e, duree)
+        and duree >= 12;
+    then echeance_reexamen_mois(e, debut + 12);
+}
+
+// --- D. 544-2: request delay built from the recorded months -------------
+
+@source(
+    CSS_D544_2_ED2020_09,
+    CSS_D544_2_ED2021_11,
+    CSS_D544_2_ED2022_01,
+    CSS_D544_2_ED2022_04,
+    CSS_D544_2_ED2022_07,
+    CSS_D544_2_ED2022_10,
+    CSS_D544_2_ED2023_01,
+    CSS_D544_2_ED2023_07,
+    CSS_D544_2_ED2024_02,
+    CSS_D544_2_ED2024_07,
+    CSS_D544_2_ED2025_12,
+    CSS_D544_2_ED2026_01,
+    CSS_D544_2_ED2026_06)
+rule DelaiDemandeReexamenConstruit(e: fr.pf.core::Enfant, echeance: Integer, demande: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "mois entre la demande de réexamen et l'échéance, construits";
+    label en unofficial "built months between the re-examination request and the point";
+    when echeance_reexamen_mois(e, echeance) and demande_reexamen_mois(e, demande);
+    then delai_demande_reexamen(e, echeance - demande);
+}
+
+// --- D. 544-2: request from the last month before the point -------------
+
+@source(
+    CSS_D544_2_ED2020_09,
+    CSS_D544_2_ED2021_11,
+    CSS_D544_2_ED2022_01,
+    CSS_D544_2_ED2022_04,
+    CSS_D544_2_ED2022_07,
+    CSS_D544_2_ED2022_10,
+    CSS_D544_2_ED2023_01,
+    CSS_D544_2_ED2023_07,
+    CSS_D544_2_ED2024_02,
+    CSS_D544_2_ED2024_07,
+    CSS_D544_2_ED2025_12,
+    CSS_D544_2_ED2026_01,
+    CSS_D544_2_ED2026_06)
+rule ReexamenRecevable(e: fr.pf.core::Enfant, delai: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande à compter du dernier mois précédant l'échéance : recevable";
+    label en unofficial "request from the last month before the point: admissible";
+    when delai_demande_reexamen(e, delai) and delai <= MoisPrecedantReexamen;
+    then reexamen_demande_recevable(e);
+}
+
+// --- D. 544-2: right renewed from the point within the remainders -------
+// «dans la limite de la durée maximale restant à courir et du nombre
+// d'allocations déduction faite de celles déjà versées»: the renewal
+// holds while the elapsed duration is under three years and the paid
+// count under 310 — strict inequalities, no subtraction in conditions.
+
+@source(
+    CSS_D544_2_ED2020_09,
+    CSS_D544_2_ED2021_11,
+    CSS_D544_2_ED2022_01,
+    CSS_D544_2_ED2022_04,
+    CSS_D544_2_ED2022_07,
+    CSS_D544_2_ED2022_10,
+    CSS_D544_2_ED2023_01,
+    CSS_D544_2_ED2023_07,
+    CSS_D544_2_ED2024_02,
+    CSS_D544_2_ED2024_07,
+    CSS_D544_2_ED2025_12,
+    CSS_D544_2_ED2026_01,
+    CSS_D544_2_ED2026_06)
+rule RenouvellementReexamen(e: fr.pf.core::Enfant, cause: CausePathologie, annees: Integer, jours: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "réexamen recevable, nouvelle durée fixée, reliquats de durée et de jours : droit renouvelé";
+    label en unofficial "admissible re-examination, new duration set, duration and day remainders: right renewed";
+    when reexamen_demande_recevable(e) and nouvelle_duree_fixee(e)
+        and duree_versement_ajpp(e, cause, annees) and annees < DureeMaxAjppAnnees
+        and jours_ajpp_verses(e, jours) and jours < Plafond310Jours;
+    then droit_renouvele_reexamen(e);
+}
+
+// --- D. 544-3: months since opening built from the recorded months ------
+
+@source(
+    CSS_D544_3,
+    CSS_D544_3_ED2022_07,
+    CSS_D544_3_ED2022_10,
+    CSS_D544_3_ED2023_01,
+    CSS_D544_3_ED2023_07,
+    CSS_D544_3_ED2024_02,
+    CSS_D544_3_ED2024_07,
+    CSS_D544_3_ED2025_12,
+    CSS_D544_3_ED2026_01,
+    CSS_D544_3_ED2026_06,
+    CSS_D544_3_PRE2022_ED2020_09,
+    CSS_D544_3_PRE2022_ED2021_11,
+    CSS_D544_3_PRE2022_ED2022_01)
+rule MoisDepuisOuvertureConstruits(e: fr.pf.core::Enfant, ouverture: Integer, rechute: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "mois écoulés entre l'ouverture du droit et la rechute, construits";
+    label en unofficial "built months between the right opening and the relapse";
+    when ouverture_droit_mois(e, ouverture) and rechute_mois(e, rechute);
+    then mois_depuis_ouverture(e, rechute - ouverture);
+}
+
+// --- D. 544-3, para. 1: reopening within three years --------------------
+// «en l'absence d'utilisation du nombre maximal»: the paid count stays
+// under 310. «les conditions visées aux articles L. 544-1 et L. 544-2»:
+// the L. 544-2 channel facts; L. 544-1 stays the boundary quote. The
+// three years count 36 months on the case-local scale.
+
+@source(
+    CSS_D544_3,
+    CSS_D544_3_ED2022_07,
+    CSS_D544_3_ED2022_10,
+    CSS_D544_3_ED2023_01,
+    CSS_D544_3_ED2023_07,
+    CSS_D544_3_ED2024_02,
+    CSS_D544_3_ED2024_07,
+    CSS_D544_3_ED2025_12,
+    CSS_D544_3_ED2026_01,
+    CSS_D544_3_ED2026_06,
+    CSS_D544_3_PRE2022_ED2020_09,
+    CSS_D544_3_PRE2022_ED2021_11,
+    CSS_D544_3_PRE2022_ED2022_01)
+rule ReouvertureDelai(e: fr.pf.core::Enfant, mois: Integer, jours: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "rechute dans les trois ans, maximum inutilisé, certificat et avis : réouverture";
+    label en unofficial "relapse within three years, maximum unused, certificate and agreement: reopening";
+    when mois_depuis_ouverture(e, mois) and mois <= 36
+        and jours_ajpp_verses(e, jours) and jours < Plafond310Jours
+        and rechute_pathologie(e) and certificat_gravite(e)
+        and avis_favorable_controle(e);
+    then reouverture_dans_delai(e);
+}
+
+// --- D. 544-3, 1°: renewal paid without waiting -------------------------
+
+@source(
+    CSS_D544_3,
+    CSS_D544_3_ED2022_07,
+    CSS_D544_3_ED2022_10,
+    CSS_D544_3_ED2023_01,
+    CSS_D544_3_ED2023_07,
+    CSS_D544_3_ED2024_02,
+    CSS_D544_3_ED2024_07,
+    CSS_D544_3_ED2025_12,
+    CSS_D544_3_ED2026_01,
+    CSS_D544_3_ED2026_06)
+rule VersementSansAttendre(e: fr.pf.core::Enfant) strict {
+    effective [@2022-04-30, infinity);
+    label fr official "renouvellement unique L. 544-3 al. 2 : versé sans attendre la fin du maximum";
+    label en unofficial "L. 544-3 para. 2 once-renewal: paid without waiting for the end of the maximum";
+    when renouvellement_accorde(e);
+    then versement_sans_attendre_fin_max(e);
+}
+
+// --- D. 544-3, 2°: relapse reopening paid beyond the maximum ------------
+// 2° keys on the L. 544-3 para. 3 reopening («en application du
+// troisième alinéa»), never on the in-period D. 544-3 para. 1 delay:
+// the relapse situation plus the expiry-gated reopened right.
+
+@source(
+    CSS_D544_3,
+    CSS_D544_3_ED2022_07,
+    CSS_D544_3_ED2022_10,
+    CSS_D544_3_ED2023_01,
+    CSS_D544_3_ED2023_07,
+    CSS_D544_3_ED2024_02,
+    CSS_D544_3_ED2024_07,
+    CSS_D544_3_ED2025_12,
+    CSS_D544_3_ED2026_01,
+    CSS_D544_3_ED2026_06)
+rule VersementAuDelaRechute(e: fr.pf.core::Enfant) strict {
+    effective [@2022-04-30, infinity);
+    label fr official "réouverture L. 544-3 al. 3 sur rechute, durée maximale expirée : versé au-delà du maximum, nouvelle application";
+    label en unofficial "L. 544-3 para. 3 reopening on relapse, maximum duration expired: paid beyond the maximum, fresh application";
+    when rechute_pathologie(e) and droit_rouvert(e);
+    then versement_au_dela_max(e);
+}
+
+// --- D. 544-3, 2°: persistent-gravity reopening paid beyond ------------
+// Para. 1 names only the relapse, but 2° keys on the whole of L. 544-3
+// para. 3 («en application du troisième alinéa»), which holds both the
+// relapse and the persistent-gravity situations: the gravity reopening
+// takes the beyond-max payment without the para. 1 delay (proposed
+// reading, journal).
+
+@source(
+    CSS_D544_3,
+    CSS_D544_3_ED2022_07,
+    CSS_D544_3_ED2022_10,
+    CSS_D544_3_ED2023_01,
+    CSS_D544_3_ED2023_07,
+    CSS_D544_3_ED2024_02,
+    CSS_D544_3_ED2024_07,
+    CSS_D544_3_ED2025_12,
+    CSS_D544_3_ED2026_01,
+    CSS_D544_3_ED2026_06)
+rule VersementAuDelaGravite(e: fr.pf.core::Enfant) strict {
+    effective [@2022-04-30, infinity);
+    label fr official "réouverture L. 544-3 al. 3 sur gravité persistante, durée maximale expirée : versé au-delà du maximum, nouvelle application";
+    label en unofficial "L. 544-3 para. 3 reopening on persistent gravity, maximum duration expired: paid beyond the maximum, fresh application";
+    when gravite_persistante(e) and droit_rouvert(e);
+    then versement_au_dela_max(e);
+}
+
+// --- D. 544-3, 2020 version: single beyond-max branch -------------------
+
+@source(
+    CSS_D544_3_PRE2022_ED2020_09,
+    CSS_D544_3_PRE2022_ED2021_11,
+    CSS_D544_3_PRE2022_ED2022_01)
+rule VersementAuDelaRechutePrev(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, @2022-04-30);
+    label fr official "2020 : réouverture L. 544-3 sur rechute, durée maximale expirée, versé au-delà du maximum";
+    label en unofficial "2020: L. 544-3 reopening on relapse, maximum duration expired, paid beyond the maximum";
+    when rechute_pathologie(e) and droit_rouvert(e);
+    then versement_au_dela_max(e);
+}
+
+@source(
+    CSS_D544_3_PRE2022_ED2020_09,
+    CSS_D544_3_PRE2022_ED2021_11,
+    CSS_D544_3_PRE2022_ED2022_01)
+rule VersementAuDelaGravitePrev(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, @2022-04-30);
+    label fr official "2020 : réouverture L. 544-3 sur gravité persistante, durée maximale expirée, versé au-delà du maximum";
+    label en unofficial "2020: L. 544-3 reopening on persistent gravity, maximum duration expired, paid beyond the maximum";
+    when gravite_persistante(e) and droit_rouvert(e);
+    then versement_au_dela_max(e);
+}
+
+// --- D. 544-5: new pathology opens a new right --------------------------
+
+@source(
+    CSS_D544_5_ED2020_09,
+    CSS_D544_5_ED2021_11,
+    CSS_D544_5_ED2022_01,
+    CSS_D544_5_ED2022_04,
+    CSS_D544_5_ED2022_07,
+    CSS_D544_5_ED2022_10,
+    CSS_D544_5_ED2023_01,
+    CSS_D544_5_ED2023_07,
+    CSS_D544_5_ED2024_02,
+    CSS_D544_5_ED2024_07,
+    CSS_D544_5_ED2025_12,
+    CSS_D544_5_ED2026_01,
+    CSS_D544_5_ED2026_06)
+rule NouvellePathologieDroit(e: fr.pf.core::Enfant, cause: CausePathologie) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "nouvelle pathologie, certificat et avis : nouveau droit, enveloppe neuve";
+    label en unofficial "new pathology, certificate and agreement: new right, fresh envelope";
+    when nouvelle_pathologie(e, cause) and certificat_gravite(e)
+        and avis_favorable_controle(e);
+    then droit_nouvelle_pathologie(e);
+}

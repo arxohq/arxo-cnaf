@@ -1,0 +1,102 @@
+# Manifest §10 — package root marker (DECISION-0033). Headers §22 in the
+# .law files themselves are normative; the manifest must match them
+# (LDC-E1109, lawc check).
+[package]
+name = "fr.minima.ressources"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:minima-ressources"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after .law edits run
+# `law fix imports fr/minima-ressources`; do not maintain `use self::{…}`
+# blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+# Catalogue metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-minima-ressources"
+title = "Quarterly resources for the RSA and the prime d'activite: quarter mechanics, resource matrix, housing flat-rate; wave 4"
+primarySource = "CASF"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française; texte codifié (LEGI DILA)"
+verifiedAgainstSource = false
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# No upstream premises: DSN amounts, declared resources and the housing
+# situation arrive as case inputs with provenance (plan §1.1: DSN
+# extraction is out of scope; the model starts from what the law makes
+# of the figures). Downstream consumer: fr.casf.rsa (wave 4, same lane).
+[dependencies]
+
+[[tests]]
+family = "fr.minima.ressources#trimestre"
+regression = false
+suites = [
+    "tests/trimestre-nouveau-moyen.lawtest",
+    "tests/trimestre-ancien-moyen.lawtest",
+    "tests/trimestre-2025-02-ancien.lawtest",
+    "tests/trimestre-2025-03-nouveau.lawtest",
+    "tests/dsn-negatif-zero.lawtest",
+    "tests/base-aide-nouveau.lawtest",
+    "tests/base-forfait-nouveau.lawtest",
+    "tests/base-aide-ancien.lawtest",
+]
+
+world = ["fr.minima.ressources"]
+
+[[tests]]
+family = "fr.minima.ressources#matrice"
+regression = false
+suites = [
+    "tests/pro-net.lawtest",
+    "tests/pro-ancien.lawtest",
+    "tests/tns-trimestre.lawtest",
+    "tests/neutralisation-pro.lawtest",
+    "tests/chomage-sanction.lawtest",
+    "tests/chomage-dispense.lawtest",
+    "tests/saisonnier-barrage.lawtest",
+    "tests/cf-majore-sous-plafond.lawtest",
+    "tests/cf-majore-plafonne.lawtest",
+    "tests/asf-forfaits.lawtest",
+    "tests/asf-rang1-seul.lawtest",
+]
+
+world = ["fr.minima.ressources"]
+
+[[tests]]
+family = "fr.minima.ressources#forfait"
+regression = false
+suites = [
+    "tests/forfait-seul.lawtest",
+    "tests/forfait-gratuit-2.lawtest",
+    "tests/aide-plafonnee.lawtest",
+    "tests/aide-sous-forfait.lawtest",
+    "tests/aide-locataire-plafonnee.lawtest",
+]
+
+world = ["fr.minima.ressources"]
+
+# Reading MoyenneArrondieCentime (B-MINRES-MOYENNE-INEXACTE, owner decision
+# 08.10.2026): the rounding of an inexact quarterly average is not the text of
+# R. 262-7 but a reading (SPEC 152), selected in the context of the case.
+[[tests]]
+family = "fr.minima.ressources#lecture-moyenne"
+regression = false
+suites = [
+    "tests/moyenne-arrondie-ancien.lawtest",
+    "tests/moyenne-arrondie-ancien-hausse.lawtest",
+    "tests/moyenne-arrondie-nouveau.lawtest",
+    "tests/montant-du-arrondi-ancien.lawtest",
+    "tests/montant-du-arrondi-nouveau.lawtest",
+    "tests/moyenne-arrondie-exacte.lawtest",
+    "tests/moyenne-inexacte-sans-lecture.lawtest",
+]
+
+world = ["fr.minima.ressources"]

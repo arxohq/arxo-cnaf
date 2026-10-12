@@ -1,0 +1,20 @@
+// Monthly withdrawal: 450 EUR benefits paid into account - withdrawal up to 450 allowed, liberty active (L. 553-4 III al. 2, PC-R03-03).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-retrait-fonds-compte" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "retrait-fonds-01": parent_charge(entity_ref("urn:fr:pf:case:retrait"), entity_ref("urn:fr:pf:case:enfant-retrait")) { origin case_input; }
+        assert "retrait-fonds-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:retrait"), entity_ref("urn:fr:pf:case:enfant-retrait")) { origin adjudicated; }
+        assert "retrait-fonds-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-retrait")) { origin case_input; }
+        assert "retrait-fonds-04": reside_france_stable(entity_ref("urn:fr:pf:case:retrait")) { origin case_input; }
+        assert "retrait-fonds-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-retrait")) { origin case_input; }
+        assert "retrait-fonds-06": prestations_versees_compte(entity_ref("urn:fr:pf:case:retrait"), 450 EUR) { origin case_input; }
+    }
+    evaluate truth(retrait_mensuel_autorise_limite(entity_ref("urn:fr:pf:case:retrait"), 450 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

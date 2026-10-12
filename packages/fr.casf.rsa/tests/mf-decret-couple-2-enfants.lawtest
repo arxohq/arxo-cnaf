@@ -1,0 +1,18 @@
+// Couple with two children (four persons): 646.52 x (1 + 0.50 + 0.30 + 0.30) = 1357.692
+// (R.262-1: +50 % second person, +30 % each further dependant; 40 % only from the third child).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-decret-couple-2-enfants" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "mfdc2e-01": mois_droit(entity_ref("urn:fr:rsa:case:mf-decret-couple-2-enfants"), @2025-06-01) { origin case_input; }
+        assert "mfdc2e-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-decret-couple-2-enfants"), 4) { origin case_input; }
+        assert "mfdc2e-03": foyer_nb_parents(entity_ref("urn:fr:rsa:case:mf-decret-couple-2-enfants"), 2) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-decret-couple-2-enfants"), 1357.692 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

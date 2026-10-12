@@ -1,0 +1,20 @@
+// Deontics, without right (no prior activity): nothing to award —
+// no VerserPrepareDue position. Control — devoir-prepare-actif.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-devoir-prepare-sans-droit" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "devoir-ps-01": arret_activite(entity_ref("urn:fr:paje:benef:devoir-ps"), entity_ref("urn:fr:paje:enfant:devoir-ps")) { origin adjudicated; }
+        assert "devoir-ps-02": condition_age_prepare(entity_ref("urn:fr:paje:enfant:devoir-ps")) { origin adjudicated; }
+        assert "devoir-ps-03": menage_beneficiaire(entity_ref("urn:fr:paje:benef:devoir-ps"), entity_ref("urn:fr:paje:case:devoir-ps")) { origin case_input; }
+        assert "devoir-ps-04": bmaf_applicable(entity_ref("urn:fr:paje:case:devoir-ps"), 400.00 EUR) { origin case_input; }
+        assert "devoir-ps-05": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:devoir-ps"), entity_ref("urn:fr:paje:enfant:devoir-ps"), @2025-07-01) { origin adjudicated; }
+        assert "devoir-ps-06": organisme_debiteur(entity_ref("urn:fr:paje:org:caisse"), entity_ref("urn:fr:paje:case:devoir-ps")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserPrepareDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

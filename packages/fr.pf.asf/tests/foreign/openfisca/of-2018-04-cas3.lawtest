@@ -1,0 +1,21 @@
+// OpenFisca 2018-04 pension 50, period shaped to 2021: differential 112.52 - 50 = 62.52. Their 65.87 embeds their BMAF: class (b).
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-of-2018-04-cas3" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "of3-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas3"), entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas3-e1")) { origin case_input; }
+        assert "of3-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas3-e1")) { origin case_input; }
+        assert "of3-03": motif_asf(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas3-e1"), PENSION_PARTIELLE) { origin case_input; }
+        assert "of3-04": manquement_debiteur(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas3-e1"), @2021-03-01) { origin case_input; }
+        assert "of3-05": mois_ouverture_asf(@2021-04-01) { origin case_input; }
+        assert "of3-06": pension_recue(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas3-e1"), 50.00 EUR) { origin case_input; }
+        assert "of3-07": bmaf_retenu(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas3"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(asf_differentiel_du(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas3-e1"), 62.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

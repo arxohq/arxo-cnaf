@@ -1,0 +1,21 @@
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+// Generated witness scenarios of the question catalog (DECISION-0190):
+// the world fulfils the rule premises, the query asks its conclusion.
+// Built by corpus/tools/questions_catalog/build_catalog.py from the package CLIR;
+// hand edits — only together with the catalog.
+
+// 
+// D-42: witness world completed by hand - rule SubrogationPleinDroit (09b) requires the advancing
+// body to be a caisse d'allocations familiales (L. 581-9); card and test id unchanged.
+test "CATALOG-SUBROGATIONPLEINDROIT" {
+    given {
+        context { decision_time @2026-08-25T12:00:00Z; knowledge_time @2026-08-25T12:00:00Z; legal_time @2026-08-25; timezone "Asia/Almaty"; }
+        assert "cat-0": avance_fonds_sociaux(entity_ref("urn:law:catalog:subrogationpleindroit:v0"), entity_ref("urn:law:catalog:subrogationpleindroit:v1")) { origin case_input; }
+        assert "cat-1": caisse_allocations_familiales(entity_ref("urn:law:catalog:subrogationpleindroit:v0")) { origin case_input; }
+    }
+    evaluate truth(subrogation_plein_droit(entity_ref("urn:law:catalog:subrogationpleindroit:v1")));
+    expect truth_status == TRUE_ONLY;
+}

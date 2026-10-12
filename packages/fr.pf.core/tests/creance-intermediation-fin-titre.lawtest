@@ -1,0 +1,19 @@
+// Intermediation ends on the title end date: full II-title chain, then the end date set in the title is reached - status removed (L. 582-1 VII 2°, PC-R08-08).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-intermediation-fin-titre" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-intermediation-fin-titre-01": stabilite_residence_creancier(entity_ref("urn:fr:pf:case:creance-fintitre")) { origin case_input; }
+        assert "creance-intermediation-fin-titre-02": debiteur_stable(entity_ref("urn:fr:pf:case:creance-fintitre")) { origin case_input; }
+        assert "creance-intermediation-fin-titre-03": not debiteur_hors_etat(entity_ref("urn:fr:pf:case:creance-fintitre")) { origin case_input; }
+        assert "creance-intermediation-fin-titre-04": intermediation_titre_3732_2_ii(entity_ref("urn:fr:pf:case:creance-fintitre")) { origin case_input; }
+        assert "creance-intermediation-fin-titre-05": fin_intermediation_titre_echue(entity_ref("urn:fr:pf:case:creance-fintitre")) { origin case_input; }
+    }
+    evaluate truth(intermediation_mise_en_oeuvre(entity_ref("urn:fr:pf:case:creance-fintitre")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

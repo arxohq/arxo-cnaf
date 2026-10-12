@@ -1,0 +1,33 @@
+// РАВНО ДО САНТИМА: их 332.76, наше точное 332.7558. Их модель округляет
+// промежуточные величины до сантима, текст этого не велит — закреплён НАШ ответ.
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_apl_accession_propriete.catala_fr, scope Exemple1.
+// ИХ ОЖИДАНИЕ: mensualité_minimale = 332.76.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-apl_accession_propriete-exemple1-mensualit-minimale" {
+    given {
+        context { decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "apl_accession_propriete-exemple1-01": secteur_accession(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1")) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-02": aide_demandee(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), APL) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-03": ressources_du_menage(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), 18000 EUR) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-04": zone_du_logement(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), ZONE_II) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-05": mensualite_declaree(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), 650 EUR) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-06": personnes_a_charge(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), 2) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-07": situation_familiale(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), COUPLE) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-08": territoire(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), METROPOLE) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-09": type_travaux(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), PAS_DE_TRAVAUX) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-10": finalite_operation(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), LOGEMENT_NEUF) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-11": mode_propriete(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-12": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), false) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-13": sous_cas_mensualite(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), PRET_APRES_30_09_2017) { origin case_input; }
+        assert "apl_accession_propriete-exemple1-14": vintage_pret_depense_nette(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), PRET_DEPUIS_OCTOBRE_1998) { origin case_input; }
+    }
+    evaluate truth(mensualite_minimale(entity_ref("urn:fr:apl:case:apl_accession_propriete-exemple1"), 332.7558 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

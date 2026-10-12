@@ -1,0 +1,20 @@
+// D. 532-1: the declaration sent 2025-03-10, within the first fourteen weeks
+// (deadline 2025-04-14), is on time. First scenario: inputs only, the rule
+// builds the status.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-declaration-en-delai" {
+    given {
+        context { decision_time @2025-03-15T12:00:00Z; knowledge_time @2025-03-15T12:00:00Z; legal_time @2025-03-15; timezone "Europe/Paris"; }
+        assert "decl-delai-01": attente_naissance(entity_ref("urn:fr:paje:case:decl-delai"), entity_ref("urn:fr:paje:enfant:decl-delai")) { origin case_input; }
+        assert "decl-delai-02": debut_grossesse(entity_ref("urn:fr:paje:case:decl-delai"), entity_ref("urn:fr:paje:enfant:decl-delai"), @2025-01-06) { origin adjudicated; }
+        assert "decl-delai-03": date_limite_declaration(entity_ref("urn:fr:paje:case:decl-delai"), entity_ref("urn:fr:paje:enfant:decl-delai"), @2025-04-14) { origin adjudicated; }
+        assert "decl-delai-04": declaration_grossesse_adressee(entity_ref("urn:fr:paje:case:decl-delai"), entity_ref("urn:fr:paje:enfant:decl-delai"), @2025-03-10) { origin adjudicated; }
+    }
+    evaluate truth(declaration_grossesse_en_delai(entity_ref("urn:fr:paje:case:decl-delai"), entity_ref("urn:fr:paje:enfant:decl-delai")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

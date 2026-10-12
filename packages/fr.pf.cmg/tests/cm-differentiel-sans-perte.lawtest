@@ -1,0 +1,28 @@
+// Transitional differential without loss: the new average equals the
+// old one, so no differential right opens.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-differentiel-sans-perte" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "diffsp-01": moyenne_ancien_droit(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), 300 EUR) { origin case_input; }
+        assert "diffsp-02": moyenne_nouveau_droit(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), 500 EUR) { origin case_input; }
+        assert "diffsp-03": mode_garde(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), entity_ref("urn:fr:pf-cmg:child:diffsp"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "diffsp-04": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), 1) { origin case_input; }
+        assert "diffsp-05": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:diffsp"), 2) { origin case_input; }
+        assert "diffsp-06": heures_moyennes_periode(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), 120.0) { origin case_input; }
+        assert "diffsp-07": ressources_mois_reference(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), 2000 EUR) { origin case_input; }
+        assert "diffsp-08-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), 17633 EUR) { origin case_input; }
+        assert "diffsp-08-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), 2917 EUR) { origin case_input; }
+        assert "diffsp-08-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), 39184 EUR) { origin case_input; }
+        assert "diffsp-08-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), 6482 EUR) { origin case_input; }
+        assert "diffsp-09": mois_droit(@2025-10-01) { origin case_input; }
+        assert "diffsp-10": date_3eme_anniversaire(entity_ref("urn:fr:pf-cmg:child:diffsp"), @2026-05-01) { origin case_input; }
+    }
+    evaluate truth(differentiel_ouvert(entity_ref("urn:fr:pf-cmg:case:differentiel-sp"), entity_ref("urn:fr:pf-cmg:child:diffsp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

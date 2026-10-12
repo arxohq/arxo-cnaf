@@ -1,0 +1,121 @@
+// Arrêtés — majoration en pourcentage (27.09.2021, 19.04.2022, 29.07.2022,
+// 26.04.2023): ст. 1 даёт процент, ст. 2 — итог. Ставка СТРОИТСЯ из предыдущей
+// закреплённой ставки × (1 + %), округление HALF_UP до сантима (DECISION-0452);
+// сумма ст. 2 — проверка (`smic_conforme_publie`). Построение совпало с
+// публикацией для метрополии+ и Майотты во всех четырёх arrêtés.
+language "law.core" version "0.2";
+package fr.travail.smic version "0.1.0";
+namespace "urn:fr:corpus:clir:smic";
+
+// 10,25 × 1,0220 = 10,4755 → 10,48; 7,74 × 1,0220 = 7,91028 → 7,91.
+test "urn:query:fr-smic-conforme-arr-2021-09-27" {
+    given {
+        context { decision_time @2021-10-01T12:00:00Z; knowledge_time @2021-10-01T12:00:00Z; legal_time @2021-10-01; timezone "Europe/Paris"; }
+        assert "conforme-arr-2021-09-27-01": territoire_smic(entity_ref("urn:fr:smic:case:conforme-arr-2021-09-27:metropole"), METROPOLE_ET_DOM) { origin case_input; }
+        assert "conforme-arr-2021-09-27-02": territoire_smic(entity_ref("urn:fr:smic:case:conforme-arr-2021-09-27:mayotte"), MAYOTTE) { origin case_input; }
+    }
+    evaluate truth(smic_horaire_publie(entity_ref("urn:fr:smic:case:conforme-arr-2021-09-27:metropole"), 10.48 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_conforme_publie(entity_ref("urn:fr:smic:case:conforme-arr-2021-09-27:metropole")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_horaire_publie(entity_ref("urn:fr:smic:case:conforme-arr-2021-09-27:mayotte"), 7.91 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_conforme_publie(entity_ref("urn:fr:smic:case:conforme-arr-2021-09-27:mayotte")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// 10,57 × 1,0265 = 10,850105 → 10,85; 7,98 × 1,0265 = 8,19147 → 8,19.
+test "urn:query:fr-smic-conforme-arr-2022-04-19" {
+    given {
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; }
+        assert "conforme-arr-2022-04-19-01": territoire_smic(entity_ref("urn:fr:smic:case:conforme-arr-2022-04-19:metropole"), METROPOLE_ET_DOM) { origin case_input; }
+        assert "conforme-arr-2022-04-19-02": territoire_smic(entity_ref("urn:fr:smic:case:conforme-arr-2022-04-19:mayotte"), MAYOTTE) { origin case_input; }
+    }
+    evaluate truth(smic_horaire_publie(entity_ref("urn:fr:smic:case:conforme-arr-2022-04-19:metropole"), 10.85 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_conforme_publie(entity_ref("urn:fr:smic:case:conforme-arr-2022-04-19:metropole")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_horaire_publie(entity_ref("urn:fr:smic:case:conforme-arr-2022-04-19:mayotte"), 8.19 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_conforme_publie(entity_ref("urn:fr:smic:case:conforme-arr-2022-04-19:mayotte")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// 10,85 × 1,0201 = 11,068085 → 11,07; 8,19 × 1,0201 = 8,354619 → 8,35.
+test "urn:query:fr-smic-conforme-arr-2022-07-29" {
+    given {
+        context { decision_time @2022-08-01T12:00:00Z; knowledge_time @2022-08-01T12:00:00Z; legal_time @2022-08-01; timezone "Europe/Paris"; }
+        assert "conforme-arr-2022-07-29-01": territoire_smic(entity_ref("urn:fr:smic:case:conforme-arr-2022-07-29:metropole"), METROPOLE_ET_DOM) { origin case_input; }
+        assert "conforme-arr-2022-07-29-02": territoire_smic(entity_ref("urn:fr:smic:case:conforme-arr-2022-07-29:mayotte"), MAYOTTE) { origin case_input; }
+    }
+    evaluate truth(smic_horaire_publie(entity_ref("urn:fr:smic:case:conforme-arr-2022-07-29:metropole"), 11.07 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_conforme_publie(entity_ref("urn:fr:smic:case:conforme-arr-2022-07-29:metropole")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_horaire_publie(entity_ref("urn:fr:smic:case:conforme-arr-2022-07-29:mayotte"), 8.35 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_conforme_publie(entity_ref("urn:fr:smic:case:conforme-arr-2022-07-29:mayotte")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// 11,27 × 1,0222 = 11,520194 → 11,52; 8,51 × 1,0222 = 8,698922 → 8,70.
+test "urn:query:fr-smic-conforme-arr-2023-04-26" {
+    given {
+        context { decision_time @2023-05-01T12:00:00Z; knowledge_time @2023-05-01T12:00:00Z; legal_time @2023-05-01; timezone "Europe/Paris"; }
+        assert "conforme-arr-2023-04-26-01": territoire_smic(entity_ref("urn:fr:smic:case:conforme-arr-2023-04-26:metropole"), METROPOLE_ET_DOM) { origin case_input; }
+        assert "conforme-arr-2023-04-26-02": territoire_smic(entity_ref("urn:fr:smic:case:conforme-arr-2023-04-26:mayotte"), MAYOTTE) { origin case_input; }
+    }
+    evaluate truth(smic_horaire_publie(entity_ref("urn:fr:smic:case:conforme-arr-2023-04-26:metropole"), 11.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_conforme_publie(entity_ref("urn:fr:smic:case:conforme-arr-2023-04-26:metropole")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_horaire_publie(entity_ref("urn:fr:smic:case:conforme-arr-2023-04-26:mayotte"), 8.70 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(smic_conforme_publie(entity_ref("urn:fr:smic:case:conforme-arr-2023-04-26:mayotte")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Построение — не подстановка: сумма, не совпавшая с построенной ставкой
+// (10,47 вместо 10,48 с 01.10.2021), не устанавливается.
+test "urn:query:fr-smic-conforme-ecart-2021-10" {
+    given {
+        context { decision_time @2021-10-01T12:00:00Z; knowledge_time @2021-10-01T12:00:00Z; legal_time @2021-10-01; timezone "Europe/Paris"; }
+        assert "conforme-ecart-2021-10-01": territoire_smic(entity_ref("urn:fr:smic:case:conforme-ecart-2021-10"), METROPOLE_ET_DOM) { origin case_input; }
+    }
+    evaluate truth(smic_horaire(entity_ref("urn:fr:smic:case:conforme-ecart-2021-10"), 10.47 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

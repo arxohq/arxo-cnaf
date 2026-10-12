@@ -1,0 +1,322 @@
+// Rounding and non-payment floors, one rule per benefit text.
+// Module 03-arrondi-seuils.law of fr.prestations.versement (wave 5).
+// Effective window [@2021-01-01, infinity): programme coverage (D-01),
+// though D. 523-3 runs from 2018-07-01 and D. 543-2 from 2002-08-08.
+//
+// FINDINGS (each checked against pinned bytes; quotes in the S2 report):
+//   ASF  — floor 15 EUR on the household total (CSS D. 523-3): RULES below.
+//            Allowance rounding: SILENCE (R. 523-3-2 II rounds only the
+//            maintenance contribution, a calculation input owned by fr.pf.asf).
+//   ARS  — floor 15 EUR on the household total (CSS D. 543-2): RULES below.
+//            Rounding: SILENCE.
+//   RSA  — floor 6 EUR owned by fr.casf.rsa (R. 262-39; heads
+//            allocation_mensuelle / allocation_non_versee): NO new rules.
+//            Rounding: SILENCE.
+//   Housing (APL/ALF/ALS) — floor owned by fr.apl (CCH D. 823-16 last
+//            paragraph + arrete thresholds 10 EUR AL / 0 EUR APL, head
+//            aide_non_versee); final rounding owned by fr.apl.versement
+//            (guide p. 23/50, head montant_verse): NO new rules.
+//   AF, PAJE prime/base/PreParE, CF, AEEH, AJPP, AJPA, AAH — SILENCE on
+//            both rounding and floor in every pinned article: NO rules,
+//            boundary notes below. Their brut heads pass through unrounded.
+//   CMG  — D. 531-18 2° rounds only the monthly resources/floor/ceiling
+//            inputs (nearest euro), owned by fr.pf.cmg; the final aid has
+//            no text rounding (neighbour mechanics B-CMG-ARRONDI-CENTIMES)
+//            and no floor: SILENCE, no rules.
+//   PA (prime d'activite) — minimum-payment floor owned by the
+//            neighbour (minimum_paiement_retenu → prime_due_trimestre,
+//            consumed as the 04 echeance since FINISH-W2): NO new rules.
+//            Rounding: SILENCE (no payment-stage rounding in pinned
+//            bytes, B-PV-PA-ARRONDI).
+//
+// NO-FOLD. Both 15 EUR floors apply to "le total des montants ... du"
+// per parent or household, but the engine cannot fold per-child heads
+// into a household total (B-PFASF-SEUIL, B-PFARS-SEUIL). The fund-stated
+// household totals therefore arrive as empirical case inputs (precedent:
+// forfait_total_menage, nb_bande). Single-child cases supply the
+// per-child head value as the total (caller-side shaping, not derived).
+//
+// INPUT CONTRACT (D-V4). The stated total is the BRUT aggregate
+// ("montants ... dus", D. 523-3 / D. 543-2): the floor gates the brut,
+// then CRDS 0.5% runs on the floor-paid total (RetenueCRDSAsfTotal /
+// RetenueCRDSArsTotal) and the 05 duties pay the floor NET. Per-child
+// nets (02) and household totals are ALTERNATIVE case framings: a case
+// asserting both framings derives both duty sets, each sound in its
+// framing; no guard couples them (same philosophy as
+// B-PV-UPSTREAM-EXCLUSIVITE).
+//
+// The 15 EUR literals below restate the neighbour bareme values
+// (SeuilNonVersementAsf from 2018-07-01, SeuilNonVersementArs from
+// 2002-08-08); cross-package param references have no corpus precedent,
+// so the value is literal here and the @source lists carry the proof.
+
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+use self::{
+    crds_pf_calculee,
+};
+
+
+// --- Fund-stated household totals (engine cannot fold per-child heads) ---
+
+pub relation total_menage_asf_retenu(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "total des montants d'ASF dus au parent ou à la personne qui assume la charge de l'enfant, établi par la caisse (assiette du seuil D. 523-3)";
+    label en unofficial "fund-stated household total of ASF due to the parent or carer (base for the D. 523-3 floor)";
+}
+
+pub relation total_menage_ars_retenu(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "total des montants d'ARS dus à la personne ou au ménage, établi par la caisse (assiette du seuil D. 543-2)";
+    label en unofficial "fund-stated household total of ARS due to the person or household (base for the D. 543-2 floor)";
+}
+
+// --- Payment-stage statuses after the floor ------------------------------
+
+pub relation asf_total_verse(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "total d'ASF atteignant le seuil : versé (D. 523-3)";
+    label en unofficial "ASF total reaching the floor: paid (D. 523-3)";
+}
+
+pub relation asf_total_non_verse(p: fr.pf.core::Personne) kind institutional {
+    label fr official "total d'ASF sous 15 euros : non versé (D. 523-3)";
+    label en unofficial "ASF total below 15 euros: not paid (D. 523-3)";
+}
+
+pub relation ars_total_verse(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "total d'ARS atteignant le seuil : versé (D. 543-2)";
+    label en unofficial "ARS total reaching the floor: paid (D. 543-2)";
+}
+
+pub relation ars_total_non_verse(p: fr.pf.core::Personne) kind institutional {
+    label fr official "total d'ARS sous 15 euros : non versé (D. 543-2)";
+    label en unofficial "ARS total below 15 euros: not paid (D. 543-2)";
+}
+
+pub relation crds_precomptee_asf_total(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "CRDS précomptée sur le total d'ASF versé (Ord. 96-50 art. 14)";
+    label en unofficial "CRDS withheld from the paid ASF total (Ord. 96-50 art. 14)";
+}
+
+pub relation montant_net_crds_asf_total(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "total d'ASF net de CRDS (D. 523-3, Ord. 96-50 art. 14)";
+    label en unofficial "ASF total net of CRDS (D. 523-3, Ord. 96-50 art. 14)";
+}
+
+pub relation crds_precomptee_ars_total(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "CRDS précomptée sur le total d'ARS versé (Ord. 96-50 art. 14)";
+    label en unofficial "CRDS withheld from the paid ARS total (Ord. 96-50 art. 14)";
+}
+
+pub relation montant_net_crds_ars_total(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "total d'ARS net de CRDS (D. 543-2, Ord. 96-50 art. 14)";
+    label en unofficial "ARS total net of CRDS (D. 543-2, Ord. 96-50 art. 14)";
+}
+
+// --- ASF: 15 EUR household floor (CSS D. 523-3) ---------------------------
+// "Lorsque le total des montants d'allocation de soutien familial dû au
+// parent ou à la personne physique qui assume la charge effective et
+// permanente de l'enfant est inférieur à 15 euros, celui-ci n'est pas
+// versé." Carried by CSS_ED2018_07 ([2018-07-01, 2018-07-27)) through
+// CSS_ED2022_11 ([2022-11-01, infinity)), identical bytes.
+
+@source(fr.pf.asf::CSS_D523_3, fr.pf.asf::CSS_D523_3_ED2018_07_27,
+        fr.pf.asf::CSS_D523_3_ED2019_12, fr.pf.asf::CSS_D523_3_ED2021_12,
+        fr.pf.asf::CSS_D523_3_ED2022_11)
+// A-contrario reading (CH7-1): the bytes state only the negative
+// ("inférieur à 15 euros… n'est pas versé"); total >= 15 → versé
+// is the text's complement, pinned by the 15.00 boundary test.
+rule AsfTotalVerse(p: fr.pf.core::Personne, total: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total d'ASF à partir de 15 euros : versé (D. 523-3, a contrario)";
+    label en unofficial "ASF total from 15 euros up: paid (D. 523-3)";
+    when total_menage_asf_retenu(p, total) and total >= 15 EUR;
+    then asf_total_verse(p, total);
+}
+
+@source(fr.pf.asf::CSS_D523_3, fr.pf.asf::CSS_D523_3_ED2018_07_27,
+        fr.pf.asf::CSS_D523_3_ED2019_12, fr.pf.asf::CSS_D523_3_ED2021_12,
+        fr.pf.asf::CSS_D523_3_ED2022_11)
+rule AsfTotalNonVerse(p: fr.pf.core::Personne, total: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total d'ASF inférieur à 15 euros : non versé (D. 523-3)";
+    label en unofficial "ASF total below 15 euros: not paid (D. 523-3)";
+    when total_menage_asf_retenu(p, total) and total < 15 EUR;
+    then asf_total_non_verse(p);
+}
+
+// --- ARS: 15 EUR household floor (CSS D. 543-2) ---------------------------
+// "Lorsque le total des montants d'allocation de rentrée scolaire dû à
+// la personne ou au ménage est inférieur à 15 euros, celui-ci n'est pas
+// versé." Carried by CSS_ED2002_08 ([2002-08-08, 2004-01-01)) through
+// CSS_ED2022_02 ([2022-02-09, infinity)), identical bytes.
+
+@source(fr.pf.ars::CSS_D543_2, fr.pf.ars::CSS_D543_2_ED2004_01,
+        fr.pf.ars::CSS_D543_2_ED2008_08, fr.pf.ars::CSS_D543_2_ED2012_06,
+        fr.pf.ars::CSS_D543_2_ED2013_06, fr.pf.ars::CSS_D543_2_ED2014_08,
+        fr.pf.ars::CSS_D543_2_ED2016_03, fr.pf.ars::CSS_D543_2_ED2016_10,
+        fr.pf.ars::CSS_D543_2_ED2019_01, fr.pf.ars::CSS_D543_2_ED2022_01,
+        fr.pf.ars::CSS_D543_2_ED2022_02)
+// A-contrario reading (CH7-1): same as AsfTotalVerse — the bytes
+// state only the negative; total >= 15 → versé is the complement,
+// pinned by the 15.00 boundary test.
+rule ArsTotalVerse(p: fr.pf.core::Personne, total: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total d'ARS à partir de 15 euros : versé (D. 543-2, a contrario)";
+    label en unofficial "ARS total from 15 euros up: paid (D. 543-2)";
+    when total_menage_ars_retenu(p, total) and total >= 15 EUR;
+    then ars_total_verse(p, total);
+}
+
+@source(fr.pf.ars::CSS_D543_2, fr.pf.ars::CSS_D543_2_ED2004_01,
+        fr.pf.ars::CSS_D543_2_ED2008_08, fr.pf.ars::CSS_D543_2_ED2012_06,
+        fr.pf.ars::CSS_D543_2_ED2013_06, fr.pf.ars::CSS_D543_2_ED2014_08,
+        fr.pf.ars::CSS_D543_2_ED2016_03, fr.pf.ars::CSS_D543_2_ED2016_10,
+        fr.pf.ars::CSS_D543_2_ED2019_01, fr.pf.ars::CSS_D543_2_ED2022_01,
+        fr.pf.ars::CSS_D543_2_ED2022_02)
+rule ArsTotalNonVerse(p: fr.pf.core::Personne, total: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total d'ARS inférieur à 15 euros : non versé (D. 543-2)";
+    label en unofficial "ARS total below 15 euros: not paid (D. 543-2)";
+    when total_menage_ars_retenu(p, total) and total < 15 EUR;
+    then ars_total_non_verse(p);
+}
+
+// --- CRDS on the floor-paid totals (D-V4) ---------------------------------
+// A floor-paid aggregate IS a versée L. 511-1 benefit, so art. 14 II 8°
+// withholds 0.5% from it. The rate is NOT re-spelled here: both rules
+// call the same-package crds_pf_calculee from 02 (single spelling of
+// TauxCRDSPF); the @source carries the proof. Exact, no rounding
+// (B-PV-ARRONDI).
+
+@source(fr.pf.asf::CSS_D523_3, fr.pf.asf::CSS_D523_3_ED2018_07_27,
+        fr.pf.asf::CSS_D523_3_ED2019_12, fr.pf.asf::CSS_D523_3_ED2021_12,
+        fr.pf.asf::CSS_D523_3_ED2022_11,
+        fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01)
+rule RetenueCRDSAsfTotal(p: fr.pf.core::Personne, total: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "CRDS de 0,5 % sur le total d'ASF versé (D. 523-3, Ord. 96-50 art. 14/19)";
+    label en unofficial "0.5% CRDS on the paid ASF total (D. 523-3, Ord. 96-50 art. 14/19)";
+    when asf_total_verse(p, total);
+    then crds_precomptee_asf_total(p, crds_pf_calculee(total));
+}
+
+@source(fr.pf.asf::CSS_D523_3, fr.pf.asf::CSS_D523_3_ED2018_07_27,
+        fr.pf.asf::CSS_D523_3_ED2019_12, fr.pf.asf::CSS_D523_3_ED2021_12,
+        fr.pf.asf::CSS_D523_3_ED2022_11,
+        fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01)
+rule NetCRDSAsfTotal(p: fr.pf.core::Personne, total: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total d'ASF net de CRDS (D. 523-3, Ord. 96-50 art. 14)";
+    label en unofficial "ASF total net of CRDS (D. 523-3, Ord. 96-50 art. 14)";
+    when asf_total_verse(p, total) and crds_precomptee_asf_total(p, crds);
+    then montant_net_crds_asf_total(p, total - crds);
+}
+
+@source(fr.pf.ars::CSS_D543_2, fr.pf.ars::CSS_D543_2_ED2004_01,
+        fr.pf.ars::CSS_D543_2_ED2008_08, fr.pf.ars::CSS_D543_2_ED2012_06,
+        fr.pf.ars::CSS_D543_2_ED2013_06, fr.pf.ars::CSS_D543_2_ED2014_08,
+        fr.pf.ars::CSS_D543_2_ED2016_03, fr.pf.ars::CSS_D543_2_ED2016_10,
+        fr.pf.ars::CSS_D543_2_ED2019_01, fr.pf.ars::CSS_D543_2_ED2022_01,
+        fr.pf.ars::CSS_D543_2_ED2022_02,
+        fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01)
+rule RetenueCRDSArsTotal(p: fr.pf.core::Personne, total: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "CRDS de 0,5 % sur le total d'ARS versé (D. 543-2, Ord. 96-50 art. 14/19)";
+    label en unofficial "0.5% CRDS on the paid ARS total (D. 543-2, Ord. 96-50 art. 14/19)";
+    when ars_total_verse(p, total);
+    then crds_precomptee_ars_total(p, crds_pf_calculee(total));
+}
+
+@source(fr.pf.ars::CSS_D543_2, fr.pf.ars::CSS_D543_2_ED2004_01,
+        fr.pf.ars::CSS_D543_2_ED2008_08, fr.pf.ars::CSS_D543_2_ED2012_06,
+        fr.pf.ars::CSS_D543_2_ED2013_06, fr.pf.ars::CSS_D543_2_ED2014_08,
+        fr.pf.ars::CSS_D543_2_ED2016_03, fr.pf.ars::CSS_D543_2_ED2016_10,
+        fr.pf.ars::CSS_D543_2_ED2019_01, fr.pf.ars::CSS_D543_2_ED2022_01,
+        fr.pf.ars::CSS_D543_2_ED2022_02,
+        fr.apl::ORD9650_ART14_ED2020_01, fr.apl::ORD9650_ART19_ED2020_01)
+rule NetCRDSArsTotal(p: fr.pf.core::Personne, total: Money, crds: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total d'ARS net de CRDS (D. 543-2, Ord. 96-50 art. 14)";
+    label en unofficial "ARS total net of CRDS (D. 543-2, Ord. 96-50 art. 14)";
+    when ars_total_verse(p, total) and crds_precomptee_ars_total(p, crds);
+    then montant_net_crds_ars_total(p, total - crds);
+}
+
+// --- BOUNDARIES (silence is a finding; no rules) --------------------------
+//
+// AF (fr.pf.af). SILENCE on rounding and floor: D. 521-1 (band rates,
+// degressive top-up), D. 521-2 (forfait rates), D. 521-3 (ceilings),
+// D. 521-4, R. 521-1..4 (age bar, shared-custody split) name neither.
+// Brut heads for 05: af_montant_du, montant_parent_partage,
+// montant_majoration, montant_forfait, complement_degressif.
+// (B-PFAF-ARRONDI: no cent-rounding rule in scope.)
+//
+// PAJE prime, base, PreParE (fr.pf.paje). SILENCE on rounding and floor:
+// D. 531-1..16 and R. 531-1..4 carry rates, ceilings and opening rules
+// only; no differential, no rounding, no floor in any pinned text. Brut
+// heads for 05: prime_attribuee, base_attribuee, prepare_attribuee
+// (built on montant_prime_naissance/_adoption, montant_base_plein/
+// _partiel, montant_prepare_plein/_partiel/_majore).
+//
+// CMG (fr.pf.cmg). D. 531-18 2° rounds the monthly resources, floor and
+// ceiling to the nearest euro (input rounding, owned by the neighbour's
+// calculation rules); the final aid has no text rounding (neighbour
+// mechanics B-CMG-ARRONDI-CENTIMES / B-CMG-ARRONDI-EURO) and no floor:
+// SILENCE at payment stage. Brut heads for 05: montant_cmg_du,
+// montant_structure_du, montant_cumul_total.
+//
+// CF (fr.pf.cf). SILENCE on rounding and floor: D. 522-1/2 (rates) and
+// R. 522-1..4 name neither. Brut heads for 05: cf_montant_du,
+// cf_majore_du, cf_differentiel_du. (B-PFCF-ARRONDI.)
+//
+// AEEH (fr.pf.aeeh). SILENCE on rounding and floor: D. 541-1..4 (base,
+// six complements, single-parent increase) name neither; the L. 541-1
+// "n'est pas due" clause is boarding-school exclusion, not a floor.
+// Brut head for 05: aeeh_montant_total. (B-PFAEEH-ARRONDI.)
+//
+// AJPP (fr.pf.ajpp). SILENCE on rounding and floor in all pinned L. 544
+// articles; the D. 544 decree amounts are unpinned inputs
+// (B-PFAJPP-D544). Brut heads for 05: ajpp_montant_mois,
+// ajpp_montant_complement. (B-PFAJPP-ARRONDI.)
+//
+// AJPA (fr.css.ajpa). SILENCE on rounding and floor in all pinned L. 168
+// articles; the daily rate is a decree-set unpinned input
+// (B-PFAJPA-D168). Brut head for 05: ajpa_montant_mois.
+// (B-PFAJPA-ARRONDI.)
+//
+// RSA (fr.casf.rsa). Floor OWNED by the neighbour: R. 262-39 ("Le
+// montant au-dessous duquel l'allocation n'est pas versée est fixé à
+// 6 €.", CASF_ED2021_01 through CASF_ED2026_06) is already applied by
+// AllocVersee/AllocNonVersee. 05 reads allocation_mensuelle and
+// allocation_non_versee directly; no rules here. Rounding: SILENCE.
+//
+// AAH (fr.css.aah). SILENCE on rounding and floor: D. 821-1/2/5,
+// L. 821-1..8, R. 821-4..4-5 name neither (L. 821-5 "servie comme une
+// prestation familiale" adds no numeric rule). Brut head for 05:
+// aah_montant_du (via aah_montant_nouveau/_ancien/_rupture).
+//
+// Housing (fr.apl + fr.apl.versement). Floor OWNED by fr.apl: D. 823-16
+// last paragraph ("il n'est pas procédé à son versement" below the
+// arrete amount) with ARR_ART12 thresholds (10 EUR allocations de
+// logement, 0 EUR APL, before CRDS; analogues D. 832-24/D. 832-10/
+// D. 842-6/D. 842-15), head aide_non_versee. Rounding OWNED by
+// fr.apl.versement (guide p. 23/50: CRDS to the lower centime, aid to
+// the lower euro; head montant_verse). 05 reads those heads; no rules
+// here. (D-V1 scope boundary.)
+//
+// PA prime d'activite. WIRED since FINISH-W2: the quarterly served
+// echeance and its recovery live in 04 (Y = PA section), and
+// PA-source carries onto AF/RSA/AAH/housing join the 04 dette
+// rules (cascade follow-up). No PA heads or rules in THIS module:
+// the neighbouring 15 EUR payment floor stays a neighbour
+// concern, and the 0.50 EUR production-of-rights floor is
+// centred on AF-shaped heads.

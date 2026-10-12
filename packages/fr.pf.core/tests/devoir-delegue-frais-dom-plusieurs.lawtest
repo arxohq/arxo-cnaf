@@ -1,0 +1,19 @@
+// DOM delegate costs, several benefits with eligible highest: highest eligible-paying body in DOM, prime status unknown - it bears costs (L. 755-4 al. 2-3, PC-R04-05 benefit-specific).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-frais-dom-plusieurs" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-dom-plusieurs-01": delegue_percoit(entity_ref("urn:fr:pf:case:budget-dom-multi")) { origin case_input; }
+        assert "devoir-dom-plusieurs-02": plusieurs_prestations_delegue(entity_ref("urn:fr:pf:case:budget-dom-multi")) { origin case_input; }
+        assert "devoir-dom-plusieurs-03": organisme_montant_le_plus_eleve_eligible(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:budget-dom-multi")) { origin case_input; }
+        assert "devoir-dom-plusieurs-04": beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:budget-dom-multi")) { origin case_input; }
+        assert "devoir-dom-plusieurs-05": delegue_percoit_prestation_eligible(entity_ref("urn:fr:pf:case:budget-dom-multi")) { origin case_input; }
+        assert "devoir-dom-plusieurs-06": not prestation_delegue_unique(entity_ref("urn:fr:pf:case:budget-dom-multi")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SupporterFraisMesureDOM, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

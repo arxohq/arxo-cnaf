@@ -1,0 +1,23 @@
+// Base plein, inputs → value: child in care born 2020 (recent cohort),
+// resources of 20000 € ≤ full ceiling of 30000 €, case BMAF of 400.00 € →
+// 400 × 0.4165 = 166.60 € for 2025-07.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-base-plein-montant" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "base-plein-01": enfant_en_charge(entity_ref("urn:fr:paje:case:base-plein"), entity_ref("urn:fr:paje:enfant:base-plein")) { origin case_input; }
+        assert "base-plein-02": condition_age_base(entity_ref("urn:fr:paje:enfant:base-plein")) { origin adjudicated; }
+        assert "base-plein-03": cohorte_enfant(entity_ref("urn:fr:paje:enfant:base-plein"), NE_APARTIR_AVRIL_2018) { origin adjudicated; }
+        assert "base-plein-04": ressources_annuelles(entity_ref("urn:fr:paje:case:base-plein"), 20000 EUR) { origin case_input; }
+        assert "base-plein-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:base-plein"), 30000 EUR) { origin case_input; }
+        assert "base-plein-06": bmaf_applicable(entity_ref("urn:fr:paje:case:base-plein"), 400.00 EUR) { origin case_input; }
+        assert "base-plein-07": mois_eligible_base(entity_ref("urn:fr:paje:case:base-plein"), entity_ref("urn:fr:paje:enfant:base-plein"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(base_attribuee(entity_ref("urn:fr:paje:case:base-plein"), entity_ref("urn:fr:paje:enfant:base-plein"), 166.60 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

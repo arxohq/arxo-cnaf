@@ -1,0 +1,31 @@
+// РАВНО ДО САНТИМА: их 339.70, наше точное 339.70317425. Их модель округляет
+// промежуточные величины до сантима, текст этого не велит — закреплён НАШ ответ.
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_al_locatif.catala_fr, scope Exemple3.
+// ИХ ОЖИДАНИЕ: montant = 339.70.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-al_locatif-exemple3-montant" {
+    given {
+        context { decision_time @2023-03-01T12:00:00Z; knowledge_time @2023-03-01T12:00:00Z; legal_time @2023-03-01; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "al_locatif-exemple3-01": secteur_locatif(entity_ref("urn:fr:apl:case:al_locatif-exemple3")) { origin case_input; }
+        assert "al_locatif-exemple3-02": aide_demandee(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), ALF) { origin case_input; }
+        assert "al_locatif-exemple3-03": loyer_principal(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), 375 EUR) { origin case_input; }
+        assert "al_locatif-exemple3-04": ressources_du_menage(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), 9500 EUR) { origin case_input; }
+        assert "al_locatif-exemple3-05": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), false) { origin case_input; }
+        assert "al_locatif-exemple3-06": personnes_a_charge(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), 1) { origin case_input; }
+        assert "al_locatif-exemple3-07": situation_familiale(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), COUPLE) { origin case_input; }
+        assert "al_locatif-exemple3-08": zone_du_logement(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), ZONE_II) { origin case_input; }
+        assert "al_locatif-exemple3-09": territoire(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), OUTRE_MER) { origin case_input; }
+        assert "al_locatif-exemple3-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), 0 EUR) { origin case_input; }
+        assert "al_locatif-exemple3-11": mode_location(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), LOCATION_SEULE) { origin case_input; }
+        assert "al_locatif-exemple3-12": forme_logement(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), LOGEMENT_ORDINAIRE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:al_locatif-exemple3"), 339.70317425 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

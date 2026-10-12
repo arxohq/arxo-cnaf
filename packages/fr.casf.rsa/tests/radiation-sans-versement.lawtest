@@ -1,0 +1,16 @@
+// Decree-defined payment-free period elapsed: removal from the
+// beneficiary list (L.262-38 al. 1).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-radiation-sans-versement" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "rad-01": radiation_sans_versement(entity_ref("urn:fr:rsa:case:radiation-sans-versement")) { origin case_input; }
+    }
+    evaluate truth(radiation_liste(entity_ref("urn:fr:rsa:case:radiation-sans-versement")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

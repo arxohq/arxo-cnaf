@@ -1,0 +1,32 @@
+// ESAT, current wording (2024): quarterly track, trim resources 600.00,
+// monthly amount 1000.00: current figure (3000.00 - 600.00) / 3 = 800.00.
+// Guaranteed pay 1500.00, retained gross SMIC 1800.00: joint cap 1800.00,
+// 1800.00 - 1500.00 = 300.00 due.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-esat-nouveau-plafonne" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "es1-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:esat-1")) { origin adjudicated; }
+        assert "es1-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:esat-1")) { origin case_input; }
+        assert "es1-03": residence_permanente(entity_ref("urn:fr:css-aah:case:esat-1")) { origin case_input; }
+        assert "es1-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:esat-1")) { origin case_input; }
+        assert "es1-05": percoit_revenu_activite(entity_ref("urn:fr:css-aah:case:esat-1")) { origin case_input; }
+        assert "es1-06": personne_seule(entity_ref("urn:fr:css-aah:case:esat-1")) { origin case_input; }
+        assert "es1-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "es1-08": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:case:esat-1"), 600.00 EUR) { origin case_input; }
+        assert "es1-09": enfants_charge(0) { origin case_input; }
+        assert "es1-10": remuneration_garantie_retenue(entity_ref("urn:fr:css-aah:case:esat-1"), 1500.00 EUR) { origin case_input; }
+        assert "es1-11": smic_brut_mensuel_retenu(1800.00 EUR) { origin case_input; }
+    }
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:esat-1"), 800.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aah_montant_du(entity_ref("urn:fr:css-aah:case:esat-1"), 300.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

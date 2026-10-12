@@ -1,0 +1,20 @@
+// Child personally in receipt: the L. 512-1 reservation defeats the child's entitlement, so the parent is no allocataire.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-allocataire-enfant-beneficiaire-personnel" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "allocataire-enfant-beneficiaire-personnel-01": parent_charge(entity_ref("urn:fr:pf:case:allocataire-reserve"), entity_ref("urn:fr:pf:case:enfant-reserve")) { origin case_input; }
+        assert "allocataire-enfant-beneficiaire-personnel-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:allocataire-reserve"), entity_ref("urn:fr:pf:case:enfant-reserve")) { origin adjudicated; }
+        assert "allocataire-enfant-beneficiaire-personnel-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-reserve")) { origin case_input; }
+        assert "allocataire-enfant-beneficiaire-personnel-04": beneficiaire_personnel(entity_ref("urn:fr:pf:case:enfant-reserve")) { origin case_input; }
+        assert "allocataire-enfant-beneficiaire-personnel-05": reside_france_stable(entity_ref("urn:fr:pf:case:allocataire-reserve")) { origin case_input; }
+        assert "allocataire-enfant-beneficiaire-personnel-06": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-reserve")) { origin case_input; }
+    }
+    evaluate truth(allocataire(entity_ref("urn:fr:pf:case:allocataire-reserve")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == REQUIRES_JUDGMENT;
+}

@@ -1,0 +1,32 @@
+// Дело Catala «CasTest1» (logement-foyer, APL): пара, зона III, общий тип, redevance
+// 360 €, ресурсы 15 000 €, 23.04.2022.
+//
+// ШАГ: Af = K × (E − E0) (D. 832-24). K = 0,95 − (R − r·N)/(cm·N) при R = 15 000,
+// r = 1 217,26, cm = 13 393,40, N = 1,8 даёт 0,4187…, «par défaut» — 0,41: Catala
+// утверждает то же K. E = 360 (плата ниже плафона 450,57), E0 = 318,12546.
+// Af = 0,41 × (360 − 318,12546) = 17,1685614 €.
+// K читается из R. 351-61 (общий случай) и R. 351-61-1 (фойе молодых работников и
+// социальные резиденции) — алгебра D. 832-25 в закреплённых данных картинка, см.
+// блок «КОЭФФИЦИЕНТ K» в 04-calcul-foyer.law и README, «Коэффициент K».
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-foyer-apl-01-aide-formule" {
+    given {
+        context { decision_time @2022-04-23T12:00:00Z; knowledge_time @2022-04-23T12:00:00Z; legal_time @2022-04-23; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "foyer-apl-01-aide-formule-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-01")) { origin case_input; }
+        assert "foyer-apl-01-aide-formule-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-apl-01"), APL) { origin case_input; }
+        assert "foyer-apl-01-aide-formule-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-apl-01"), ZONE_III) { origin case_input; }
+        assert "foyer-apl-01-aide-formule-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-apl-01"), COUPLE) { origin case_input; }
+        assert "foyer-apl-01-aide-formule-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-apl-01"), 0) { origin case_input; }
+        assert "foyer-apl-01-aide-formule-06": type_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-01"), GENERAL) { origin case_input; }
+        assert "foyer-apl-01-aide-formule-07": redevance(entity_ref("urn:fr:apl:case:foyer-apl-01"), 360 EUR) { origin case_input; }
+        assert "foyer-apl-01-aide-formule-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-apl-01"), 15000 EUR) { origin case_input; }
+        assert "foyer-apl-01-aide-formule-09": territoire(entity_ref("urn:fr:apl:case:foyer-apl-01"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_foyer_formule(entity_ref("urn:fr:apl:case:foyer-apl-01"), 17.1685614 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,65 @@
+// Household composition (13): dependent-child age test, the ascendant
+// ceiling test (12 000 under 10 000 x 1.25), custody attachment and the
+// one-year designation lock.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-pac-enfant" {
+    given {
+        context { decision_time @2024-01-15T12:00:00Z; knowledge_time @2024-01-15T12:00:00Z; legal_time @2024-01-15; timezone "Europe/Paris"; deadline_policy APL_PAC_AGE; interpretation PpPlancherFinal; }
+        assert "fpac-01": membre_charge(entity_ref("urn:fr:apl:case:fpac"), entity_ref("urn:fr:apl:person:fpac-enfant")) { origin case_input; }
+        assert "fpac-02": personne_nee_le(entity_ref("urn:fr:apl:person:fpac-enfant"), @2005-06-01) { origin case_input; }
+        assert "fpac-03": enfant_l5123_l8232(entity_ref("urn:fr:apl:person:fpac-enfant")) { origin case_input; }
+        assert "fpac-04": date_appreciation(entity_ref("urn:fr:apl:case:fpac"), @2024-01-01) { origin case_input; }
+    }
+    evaluate truth(personne_a_charge_reconnue(entity_ref("urn:fr:apl:person:fpac-enfant")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-pac-ascendant" {
+    given {
+        context { decision_time @2024-01-15T12:00:00Z; knowledge_time @2024-01-15T12:00:00Z; legal_time @2024-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fpaa-01": membre_charge(entity_ref("urn:fr:apl:case:fpaa"), entity_ref("urn:fr:apl:person:fpaa-asc")) { origin case_input; }
+        assert "fpaa-02": ascendant_charge_r8234(entity_ref("urn:fr:apl:person:fpaa-asc")) { origin case_input; }
+        assert "fpaa-03": ressources_personne_charge(entity_ref("urn:fr:apl:person:fpaa-asc"), 12000 EUR) { origin case_input; }
+        assert "fpaa-04": plafond_individuel_l8159(10000 EUR) { origin case_input; }
+        assert "fpaa-05": atteint_age_l351_8_1(entity_ref("urn:fr:apl:person:fpaa-asc")) { origin case_input; }
+    }
+    evaluate truth(personne_a_charge_reconnue(entity_ref("urn:fr:apl:person:fpaa-asc")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-rattachement" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frat-01": charge_effective_constatee(entity_ref("urn:fr:apl:case:frat")) { origin case_input; }
+    }
+    evaluate truth(enfant_rattache(entity_ref("urn:fr:apl:case:frat")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-verrou-alternee" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; deadline_policy APL_PAC_AGE; interpretation PpPlancherFinal; }
+        assert "fver-01": designation_alterne_le(entity_ref("urn:fr:apl:case:fver"), @2023-01-15) { origin case_input; }
+        assert "fver-02": contestation_alterne_le(entity_ref("urn:fr:apl:case:fver"), @2023-06-01) { origin case_input; }
+    }
+    evaluate truth(remise_en_cause_irrecevable(entity_ref("urn:fr:apl:case:fver")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

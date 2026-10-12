@@ -1,0 +1,30 @@
+// Active duties and power: computed amount 500.00 due, debtor body and
+// competent commission established. Positions VerserAahDue,
+// SignalerChangements and DeclarationTrimestrielle ACTIVE; power
+// AttributionCdaph exercisable.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-devoirs-actif" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "dev1-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:dev-1")) { origin adjudicated; }
+        assert "dev1-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:dev-1")) { origin case_input; }
+        assert "dev1-03": residence_permanente(entity_ref("urn:fr:css-aah:case:dev-1")) { origin case_input; }
+        assert "dev1-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:dev-1")) { origin case_input; }
+        assert "dev1-05": percoit_revenu_activite(entity_ref("urn:fr:css-aah:case:dev-1")) { origin case_input; }
+        assert "dev1-06": personne_seule(entity_ref("urn:fr:css-aah:case:dev-1")) { origin case_input; }
+        assert "dev1-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "dev1-08": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:case:dev-1"), 1500.00 EUR) { origin case_input; }
+        assert "dev1-09": enfants_charge(0) { origin case_input; }
+        assert "dev1-10": sans_esat(entity_ref("urn:fr:css-aah:case:dev-1")) { origin case_input; }
+        assert "dev1-11": organisme_debiteur_aah(entity_ref("urn:fr:css-aah:org:caisse"), entity_ref("urn:fr:css-aah:case:dev-1")) { origin case_input; }
+        assert "dev1-12": commission_competente(entity_ref("urn:fr:css-aah:org:cdaph"), entity_ref("urn:fr:css-aah:case:dev-1")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(VerserAahDue, ACTIVE);
+    expect position(SignalerChangements, ACTIVE);
+    expect position(DeclarationTrimestrielle, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

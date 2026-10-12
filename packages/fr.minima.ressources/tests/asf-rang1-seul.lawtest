@@ -1,0 +1,17 @@
+// Lone class-1 ASF above the flat-rate (BMAF 400.00 -> 120.00 cap):
+// the class amount alone is the monthly retained figure (R.262-10-1, II).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-asf-rang1-seul" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "asfr1-01": asf_percue(entity_ref("urn:fr:minima-ressources:case:asf-rang1-seul"), @2025-04-01, RANG_1, 150.00 EUR) { origin case_input; }
+        assert "asfr1-02": bmaf_retenue(entity_ref("urn:fr:minima-ressources:case:asf-rang1-seul"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_retenu_mois(entity_ref("urn:fr:minima-ressources:case:asf-rang1-seul"), @2025-04-01, ASF_PERCUE, 120.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

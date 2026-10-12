@@ -1,0 +1,18 @@
+// Delegate costs, single benefit: the delegate receives one benefit served by the fund - the fund bears the measure costs (L. 552-6 al. 2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-frais-unique" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-delegue-frais-unique-01": delegue_percoit(entity_ref("urn:fr:pf:case:budget-frais")) { origin case_input; }
+        assert "devoir-delegue-frais-unique-02": organisme_verse_prestation_delegue(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:budget-frais")) { origin case_input; }
+        assert "devoir-delegue-frais-unique-03": prestation_delegue_unique(entity_ref("urn:fr:pf:case:budget-frais")) { origin case_input; }
+        assert "devoir-delegue-frais-unique-04": not plusieurs_prestations_delegue(entity_ref("urn:fr:pf:case:budget-frais")) { origin case_input; }
+        assert "devoir-delegue-frais-unique-05": not beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:budget-frais")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SupporterFraisMesure, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

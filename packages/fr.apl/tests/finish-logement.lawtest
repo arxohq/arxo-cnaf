@@ -1,0 +1,71 @@
+// Dwelling conditions (12): residence recognition, the 25 sqm requirement
+// for a three-person household with insufficiency, and the chambre track.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-logement-residence" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "flog-01": mois_occupation_logement(entity_ref("urn:fr:apl:case:flog"), 9) { origin case_input; }
+    }
+    evaluate truth(residence_principale_reconnue(entity_ref("urn:fr:apl:case:flog")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-logement-exception" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "floex-01": mois_occupation_logement(entity_ref("urn:fr:apl:case:floex"), 5) { origin case_input; }
+        assert "floex-02": exception_occupation_sante(entity_ref("urn:fr:apl:case:floex")) { origin case_input; }
+    }
+    evaluate truth(residence_principale_reconnue(entity_ref("urn:fr:apl:case:floex")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-logement-surface" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "flos-01": situation_familiale(entity_ref("urn:fr:apl:case:flos"), COUPLE) { origin case_input; }
+        assert "flos-02": personnes_a_charge(entity_ref("urn:fr:apl:case:flos"), 1) { origin case_input; }
+        assert "flos-03": surface_habitable(entity_ref("urn:fr:apl:case:flos"), 20) { origin case_input; }
+        // D-42: the R. 822-25 surface floor is gated in the model (12
+        // D-42: InsuffisanceSurfaceLogement) on the dwelling being outside EHPAD/USLD and
+        // D-42: outside a foyer de jeunes travailleurs; the case omitted both findings.
+        assert "flos-04": logement_hors_ehpad_usld(entity_ref("urn:fr:apl:case:flos")) { origin case_input; }
+        // D-42: second finding of the same gate.
+        assert "flos-05": logement_hors_foyer_jeunes_travailleurs(entity_ref("urn:fr:apl:case:flos")) { origin case_input; }
+    }
+    evaluate truth(surface_exigible(entity_ref("urn:fr:apl:case:flos"), 25));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(surface_insuffisante(entity_ref("urn:fr:apl:case:flos")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-logement-chambre" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "floc-01": resident_foyer_ehpad_r844_4(entity_ref("urn:fr:apl:case:floc")) { origin case_input; }
+        assert "floc-02": surface_chambre(entity_ref("urn:fr:apl:case:floc"), 12) { origin case_input; }
+        assert "floc-03": occupants_chambre(entity_ref("urn:fr:apl:case:floc"), 2) { origin case_input; }
+    }
+    evaluate truth(surface_insuffisante(entity_ref("urn:fr:apl:case:floc")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,21 @@
+// Vehicles per-item dates/evidence (PC-R05-04/PC-R06-01): two vehicles, one 12000 EUR retained with date+insurance 11500, one 15000 EUR retained with date+estimate 14800; both >10k, apports 3000+3750=6750; complete inventory.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-vehicules-deux-biens" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tv2-01": vehicule_bien_valeur(entity_ref("urn:fr:pf:case:vehicules"), entity_ref("urn:fr:pf:case:auto-1"), 12000.00 EUR, 1.0) { origin case_input; }
+        assert "tv2-02": vehicule_bien_date(entity_ref("urn:fr:pf:case:vehicules"), entity_ref("urn:fr:pf:case:auto-1"), @2026-02-10) { origin case_input; }
+        assert "tv2-03": vehicule_bien_preuve_assurance(entity_ref("urn:fr:pf:case:vehicules"), entity_ref("urn:fr:pf:case:auto-1"), 11500.00 EUR) { origin case_input; }
+        assert "tv2-04": vehicule_bien_valeur(entity_ref("urn:fr:pf:case:vehicules"), entity_ref("urn:fr:pf:case:auto-2"), 15000.00 EUR, 1.0) { origin case_input; }
+        assert "tv2-05": vehicule_bien_date(entity_ref("urn:fr:pf:case:vehicules"), entity_ref("urn:fr:pf:case:auto-2"), @2026-02-12) { origin case_input; }
+        assert "tv2-06": vehicule_bien_preuve_estimation(entity_ref("urn:fr:pf:case:vehicules"), entity_ref("urn:fr:pf:case:auto-2"), 14800.00 EUR) { origin case_input; }
+        assert "tv2-07": prestation_soumise_section(entity_ref("urn:fr:pf:case:vehicules")) { origin case_input; }
+        assert "tv2-08": inventaire_tdv_complet(entity_ref("urn:fr:pf:case:vehicules")) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_train_vie(entity_ref("urn:fr:pf:case:vehicules"), 6750.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,20 @@
+// N-2 reference year: payment in 2026 reads 2024 categorical income (R. 532-3).
+// BOUNDARY B-PFCORE-N2-INTEGER-FN closed 2026-10-11: on law.core/0.2.11 the
+// engine evaluates the Integer literals of the AnneeReference function body
+// (observed 2026-10-06 as silent), so the full chain AnneeReference ->
+// RessourcesPropres -> ressources_totales holds: TRUE_ONLY, as the norm reads.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-ressources-annee-reference" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ressources-annee-reference-01": annee_paiement(entity_ref("urn:fr:pf:case:ressources-n2"), 2026) { origin case_input; }
+        assert "ressources-annee-reference-02": revenu_net_categoriel(entity_ref("urn:fr:pf:case:ressources-n2"), 2024, 20000 EUR) { origin case_input; }
+    }
+    evaluate truth(ressources_totales(entity_ref("urn:fr:pf:case:ressources-n2"), 20000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

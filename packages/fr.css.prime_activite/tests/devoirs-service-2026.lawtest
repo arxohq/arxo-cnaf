@@ -1,0 +1,23 @@
+// Open right -> D4a information and D4b change duties ACTIVE
+// (R. 846-5).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-devoirs-service-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": age_plus_dix_huit(entity_ref("urn:fr:ppa:case:devoirs-service-2026")) { origin case_input; }
+        assert "ppa-02": residence_stable(entity_ref("urn:fr:ppa:case:devoirs-service-2026")) { origin case_input; }
+        assert "ppa-03": revenus_professionnels(entity_ref("urn:fr:ppa:case:devoirs-service-2026")) { origin case_input; }
+        assert "ppa-04": sejour_travail_ok(entity_ref("urn:fr:ppa:case:devoirs-service-2026")) { origin case_input; }
+        assert "ppa-05": conjoint_conditions_ok(entity_ref("urn:fr:ppa:case:devoirs-service-2026")) { origin case_input; }
+        assert "ppa-08": sans_exclusion_statutaire(entity_ref("urn:fr:ppa:case:devoirs-service-2026")) { origin case_input; }
+        assert "ppa-06": demande_deposee(entity_ref("urn:fr:ppa:case:devoirs-service-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-07": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:devoirs-service-2026")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DeclarerInformations, ACTIVE);
+    expect position(DeclarerChangements, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

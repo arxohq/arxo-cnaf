@@ -1,0 +1,22 @@
+// Isolated hospital stay past the second revision, active coverage,
+// no pregnancy: quarterly 400 presented -> 200 reduced (R. 846-7).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-hospitalisation-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": prime_due_trimestre(entity_ref("urn:fr:ppa:case:hospitalisation-2026"), 400.00 EUR) { origin case_input; }
+        assert "ppa-02": hospitalisation_prise_en_charge(entity_ref("urn:fr:ppa:case:hospitalisation-2026")) { origin case_input; }
+        assert "ppa-03": deuxieme_revision_depassee(entity_ref("urn:fr:ppa:case:hospitalisation-2026")) { origin case_input; }
+        assert "ppa-04": hospitalisation_en_cours(entity_ref("urn:fr:ppa:case:hospitalisation-2026")) { origin case_input; }
+        assert "ppa-05": grossesse_non_en_cours(entity_ref("urn:fr:ppa:case:hospitalisation-2026")) { origin case_input; }
+        assert "ppa-06": foyer_sans_conjoint_ni_charge(entity_ref("urn:fr:ppa:case:hospitalisation-2026")) { origin case_input; }
+        assert "ppa-07": prise_en_charge_active(entity_ref("urn:fr:ppa:case:hospitalisation-2026")) { origin case_input; }
+    }
+    evaluate truth(prime_reduite_hospitalisation(entity_ref("urn:fr:ppa:case:hospitalisation-2026"), 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

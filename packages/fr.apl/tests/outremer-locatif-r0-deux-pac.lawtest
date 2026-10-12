@@ -1,0 +1,31 @@
+// СВОЙ сценарий заморского найма: наёмных дел заморских территорий нет ни у
+// Catala, ни у OpenFisca, поэтому шаги выведены из закреплённого текста.
+//
+// Факты дела нарочно скупые: ни найма, ни ресурсов. Этому шагу они не нужны, а с
+// ними сработала бы вся цепочка расчёта, и её отказ в любом звене поразил бы весь
+// evaluation-документ.
+//
+// ШАГ, КОТОРЫЙ ПОКАЗЫВАЕТ ГРАНИЦУ ИЗЪЯТИЯ. Ст. 46 1° заменяет РОВНО ОДНУ строку
+// таблицы R0 — «un enfant à charge». При ДВУХ иждивенцах заморское дело считает
+// по метрополии: 8 646 €. Если бы изъятие читалось как замена всей таблицы,
+// это дело дало бы другое число, и сценарий на нём упал бы.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-locatif-r0-deux-pac" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "outremer-locatif-r0-deux-pac-01": secteur_locatif(entity_ref("urn:fr:apl:case:om-loc-d")) { origin case_input; }
+        assert "outremer-locatif-r0-deux-pac-02": aide_demandee(entity_ref("urn:fr:apl:case:om-loc-d"), APL) { origin case_input; }
+        assert "outremer-locatif-r0-deux-pac-03": zone_du_logement(entity_ref("urn:fr:apl:case:om-loc-d"), ZONE_II) { origin case_input; }
+        assert "outremer-locatif-r0-deux-pac-04": situation_familiale(entity_ref("urn:fr:apl:case:om-loc-d"), COUPLE) { origin case_input; }
+        assert "outremer-locatif-r0-deux-pac-05": personnes_a_charge(entity_ref("urn:fr:apl:case:om-loc-d"), 2) { origin case_input; }
+        assert "outremer-locatif-r0-deux-pac-06": mode_location(entity_ref("urn:fr:apl:case:om-loc-d"), LOCATION_SEULE) { origin case_input; }
+        assert "outremer-locatif-r0-deux-pac-07": territoire(entity_ref("urn:fr:apl:case:om-loc-d"), OUTRE_MER) { origin case_input; }
+    }
+    evaluate truth(abattement_r0(entity_ref("urn:fr:apl:case:om-loc-d"), 8646 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

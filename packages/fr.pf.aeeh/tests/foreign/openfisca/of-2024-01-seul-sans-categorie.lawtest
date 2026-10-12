@@ -1,0 +1,30 @@
+// OpenFisca AEEH case 3 (tests/formulas/aeeh.yaml, period 2024-01):
+// single 22-year-old parent, one 9-year-old disabled child, no handicap
+// level. Their BMAF 445.93, their expectation 445.93 x 0.32 (base only:
+// without a granted supplement there is no MPI even for an isolated
+// carer, L. 541-4/D. 541-3). Entitlement via the package head on the
+// established decision fact. Their case -> our answer -> class: REPORT.md
+// (OpenFisca, 3).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-of-2024-01-seul-sans-categorie" {
+    given {
+        context { decision_time @2024-01-15T12:00:00Z; knowledge_time @2024-01-15T12:00:00Z; legal_time @2024-01-15; timezone "Europe/Paris"; }
+        assert "of2401-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:foreign:of-2024-01-seul"), entity_ref("urn:fr:pf-aeeh:foreign:of-2024-01-enfant")) { origin case_input; }
+        assert "of2401-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:foreign:of-2024-01-enfant")) { origin adjudicated; }
+        assert "of2401-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:foreign:of-2024-01-enfant"), 445.93 EUR) { origin case_input; }
+        assert "of2401-04": sans_complement(entity_ref("urn:fr:pf-aeeh:foreign:of-2024-01-enfant")) { origin case_input; }
+        assert "of2401-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:foreign:of-2024-01-enfant")) { origin case_input; }
+        assert "of2401-06": personne_isolee(entity_ref("urn:fr:pf-aeeh:foreign:of-2024-01-seul")) { origin case_input; }
+    }
+    evaluate truth(aeeh_montant_base(entity_ref("urn:fr:pf-aeeh:foreign:of-2024-01-enfant"), 142.6976 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_total(entity_ref("urn:fr:pf-aeeh:foreign:of-2024-01-enfant"), 142.6976 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

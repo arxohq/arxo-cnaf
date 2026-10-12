@@ -1,0 +1,53 @@
+// Territorial attribution (L. 755-33, D73 owner transfer): the AJPP
+// «est attribuée dans les collectivités mentionnées à l'article
+// L. 751-1». The rule records the attribution where the
+// computation-level right is open for the child, the claimant is in
+// charge, and the claimant resides in a listed collectivity (case
+// fact with provenance; the L. 751-1 list itself is out of scope,
+// B-PFAJPP-DOM-L751). Pre-2021 attribution is a prev-coverage gap.
+
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+use self::{
+    CSS_L755_33_ED2020_09,
+    CSS_L755_33_ED2021_11,
+    CSS_L755_33_ED2022_01,
+    CSS_L755_33_ED2022_04,
+    CSS_L755_33_ED2022_07,
+    CSS_L755_33_ED2022_10,
+    CSS_L755_33_ED2023_01,
+    CSS_L755_33_ED2023_07,
+    CSS_L755_33_ED2024_02,
+    CSS_L755_33_ED2024_07,
+    CSS_L755_33_ED2025_12,
+    CSS_L755_33_ED2026_01,
+    CSS_L755_33_ED2026_06,
+    ajpp_attribution_l751,
+    ajpp_droit_ouvert,
+    residence_collectivite_l751,
+};
+
+@source(
+    CSS_L755_33_ED2020_09,
+    CSS_L755_33_ED2021_11,
+    CSS_L755_33_ED2022_01,
+    CSS_L755_33_ED2022_04,
+    CSS_L755_33_ED2022_07,
+    CSS_L755_33_ED2022_10,
+    CSS_L755_33_ED2023_01,
+    CSS_L755_33_ED2023_07,
+    CSS_L755_33_ED2024_02,
+    CSS_L755_33_ED2024_07,
+    CSS_L755_33_ED2025_12,
+    CSS_L755_33_ED2026_01,
+    CSS_L755_33_ED2026_06)
+rule AttributionAjppDom(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "AJPP attribuée dans une collectivité L. 751-1, droit ouvert et charge établis";
+    label en unofficial "AJPP attributed in an L. 751-1 collectivity, right open and charge established";
+    when ajpp_droit_ouvert(e) and fr.pf.core::parent_charge(p, e)
+        and residence_collectivite_l751(p);
+    then ajpp_attribution_l751(p, e);
+}

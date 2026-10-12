@@ -1,0 +1,85 @@
+// Payment routing for placed children (L543-3, R543-8, R543-9).
+//
+// A placed child (ASE 375-3 3/5 or 375-5) is paid through the CDC
+// pecule until majority or emancipation, UNLESS the child still lives
+// with the family: then the family member with effective permanent
+// charge receives it. The residence negative comes from the closure
+// below (the followed placed children exhaust the assessment).
+// Account mechanics, interest, reporting and indu restitution (R543-9)
+// are inter-organisation procedure, out of scope (B-PFARS-CDC-PROC).
+
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+use self::{
+    CSS_L543_3,
+    CSS_L543_3_PRE2022,
+    CSS_L543_3_PRE2022_ED2016_10,
+    CSS_L543_3_PRE2022_ED2019_01,
+    CSS_L543_3_PRE2022_ED2022_01,
+    CSS_R543_8,
+    CSS_R543_8_ED2019_01,
+    CSS_R543_8_ED2022_01,
+    CSS_R543_8_ED2022_02,
+    CSS_R543_9,
+    CSS_R543_9_ED2022_02,
+    CSS_R543_9_PRE2022,
+    CSS_R543_9_PRE2022_ED2019_01,
+    ars_paiement_cdc,
+    ars_paiement_famille,
+    placement_ase,
+    residence_famille,
+};
+
+@source(
+    CSS_L543_3,
+    CSS_L543_3_PRE2022,
+    CSS_L543_3_PRE2022_ED2016_10,
+    CSS_L543_3_PRE2022_ED2019_01,
+    CSS_L543_3_PRE2022_ED2022_01)
+closure ResidenceEpuisee {
+    label fr official "les enfants placés suivis épuisent l'appréciation de la résidence familiale";
+    label en unofficial "the followed placed children exhaust the family-residence assessment";
+    predicate residence_famille;
+    domain placement_ase;
+    snapshot "urn:fr:corpus:clir:pf-ars:snapshot:residence-famille";
+    complete_as_of @2021-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+@source(
+    CSS_L543_3,
+    CSS_L543_3_PRE2022,
+    CSS_L543_3_PRE2022_ED2016_10,
+    CSS_L543_3_PRE2022_ED2019_01,
+    CSS_L543_3_PRE2022_ED2022_01,
+    CSS_R543_8,
+    CSS_R543_8_ED2019_01,
+    CSS_R543_8_ED2022_01,
+    CSS_R543_8_ED2022_02,
+    CSS_R543_9,
+    CSS_R543_9_ED2022_02,
+    CSS_R543_9_PRE2022,
+    CSS_R543_9_PRE2022_ED2019_01)
+rule PaiementCdc(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant placé hors famille: versement à la Caisse des dépôts, pécule jusqu'à la majorité ou l'émancipation (L. 543-3)";
+    label en unofficial "placed child outside the family: payment to the CDC, pecule until majority or emancipation (L. 543-3)";
+    when placement_ase(e) and not residence_famille(e);
+    then ars_paiement_cdc(e);
+}
+
+@source(
+    CSS_L543_3,
+    CSS_L543_3_PRE2022,
+    CSS_L543_3_PRE2022_ED2016_10,
+    CSS_L543_3_PRE2022_ED2019_01,
+    CSS_L543_3_PRE2022_ED2022_01)
+rule PaiementFamille(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant placé résidant en famille: versement au membre qui assume la charge effective et permanente (L. 543-3 al. 2)";
+    label en unofficial "placed child living with the family: payment to the member with effective permanent charge (L. 543-3 para. 2)";
+    when placement_ase(e) and residence_famille(e);
+    then ars_paiement_famille(e);
+}

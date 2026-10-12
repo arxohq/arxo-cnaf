@@ -1,0 +1,25 @@
+// BMAF 2020 chain (DSS/SD2B/2020/33, COEFF fragment): previous base 413.16;
+// art. 81 LFSS 2020 derogates from L. 161-25 with a +0.3 % revalorisation (the
+// instruction prints the rate, not the coefficient: coefficient = 1 + rate =
+// 1.003). 413.16 x 1.003 = 414.39948, rounded to the centime -> 414.40
+// (printed 414,4), the published 1 April 2020 base.
+language "law.core" version "0.2";
+package fr.css.revalorisation version "0.1.0";
+namespace "urn:fr:corpus:clir:revalorisation";
+
+test "urn:query:fr-revalorisation-bmaf-chaine-2020" {
+    given {
+        context { deadline_policy REVALO_EXERCICE; decision_time @2020-04-01T12:00:00Z; knowledge_time @2020-04-01T12:00:00Z; legal_time @2020-04-01; timezone "Europe/Paris"; }
+        assert "bmaf-01": annee_exercice(entity_ref("urn:fr:revalorisation:exercice:2020"), 2020) { origin case_input; }
+        assert "bmaf-02": bmaf_precedente(entity_ref("urn:fr:revalorisation:exercice:2020"), 413.16 EUR) { origin case_input; }
+        assert "bmaf-03": coefficient_annee(entity_ref("urn:fr:revalorisation:exercice:2020"), 1.003) { origin case_input; }
+    }
+    evaluate truth(coefficient_retenu(entity_ref("urn:fr:revalorisation:exercice:2020"), 1.003));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bmaf_revalorisee(entity_ref("urn:fr:revalorisation:exercice:2020"), 414.40 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

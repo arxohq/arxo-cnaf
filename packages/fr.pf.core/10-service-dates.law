@@ -1,0 +1,1289 @@
+// Service of benefits and due/cessation dates (general layer):
+// R. 514-1 (debtor body: CAF residence default + MSA/Etat/L. 212-1/arrete
+// derogations), R. 552-1 (regime transfer: primitive regime serves +
+// reimbursement claim), R. 552-2 (due-from dates: next-month rule + five
+// exceptions), R. 552-3 (cessation dates + post-death maintien to the
+// last day of the third month), R. 552-4 (maintien applicability,
+// amount, ongoing conditions), L. 552-4 (schooling pieces: 2022-09-01
+// text + 1985 predecessor with three pieces), L. 552-7 (deceased child
+// counts; ASF advance kept), D. 552-7 (ARS 1-June decree companion),
+// R. 553-2 (pacs partners treated as concubins).
+//
+// D. 552-6 (competent State authority for L. 552-4; arrete authorship):
+// four rules - DASEN under rector delegation + alternative delegate
+// ("ou son delegue", PC-R04-02) + two ministerial order authorships.
+// R. 552-2 II 3 and R. 552-3 II 2 (AEEH renvois to R. 541-7) and the
+// R. 552-4 / R. 541-1 amount exception are owned by fr.pf.aeeh:
+// recorded, not duplicated.
+//
+// DEONTIC MAP:
+// - R. 514-1 - competence allocation (institutional statuses); the
+//   default is defeasible, each derogation a defeater + its own status.
+// - R. 552-1 - primitive-regime service (status) + liberty to claim
+//   reimbursement from the other regime.
+// - R. 552-2/3/4, L. 552-4/7, D. 552-7, R. 553-2 - date and counting
+//   rules: institutional statuses, no personal duties. L. 552-4
+//   retroactivity turns on an organ judgment ("motifs independants de
+//   sa volonte", section 47.3 channel).
+//
+// INPUT CONTRACTS (month mechanics, boundary B-PFCORE-DATES-MOIS
+// narrowed, not removed). The caller states first-day-of-month anchors
+// (conditions month, demande month, death month, cessation month);
+// rules derive due/cessation dates by month steps under SERVICE_MOIS.
+// Backward month steps (CMG preceding month, ASF 3-month floor) are
+// caller-stated anchors, never computed: no backward policy exists.
+// R. 552-3 IV endpoints use month_end_of of the +3-month step (E-0084,
+// PC-R03-01): last day of the third following civil month from the
+// exact death date; no policy roll is relied upon.
+// The R. 552-2 I / R. 552-3 I general rules yield to the II derogations
+// by benefit/trigger guards (PreParE single-child/option, CMG, AJPP,
+// AEEH-by-renvoi, ASF evasion-only and judicial-after-recovery), so one
+// case derives at most one due date per anchor set. Cross-benefit cases
+// for one person stay out of scope: the date heads key on the person
+// only (B-PFCORE-DUES-KEY-PERSONNE).
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_D552_6,
+    CSS_D552_6_CSS_ED2021_05,
+    CSS_D552_6_CSS_ED2021_11,
+    CSS_D552_6_CSS_ED2021_12,
+    CSS_D552_6_CSS_ED2022_01,
+    CSS_D552_6_CSS_ED2022_02,
+    CSS_D552_6_CSS_ED2022_03,
+    CSS_D552_6_CSS_ED2022_09,
+    CSS_D552_6_CSS_ED2023_07,
+    CSS_D552_6_CSS_ED2024_01,
+    CSS_D552_6_CSS_ED2025_02,
+    CSS_D552_6_CSS_ED2025_09,
+    CSS_D552_6_CSS_ED2025_12,
+    CSS_D552_6_CSS_ED2026_01,
+    CSS_D552_6_CSS_ED2026_04,
+    CSS_D552_6_CSS_ED2026_06,
+    CSS_D552_7,
+    CSS_D552_7_CSS_ED2022_02,
+    CSS_D552_7_CSS_ED2022_03,
+    CSS_D552_7_CSS_ED2022_09,
+    CSS_D552_7_CSS_ED2023_07,
+    CSS_D552_7_CSS_ED2024_01,
+    CSS_D552_7_CSS_ED2025_02,
+    CSS_D552_7_CSS_ED2025_09,
+    CSS_D552_7_CSS_ED2025_12,
+    CSS_D552_7_CSS_ED2026_01,
+    CSS_D552_7_CSS_ED2026_04,
+    CSS_D552_7_CSS_ED2026_06,
+    CSS_L552_4,
+    CSS_L552_4_CSS_ED2023_07,
+    CSS_L552_4_CSS_ED2024_01,
+    CSS_L552_4_CSS_ED2025_02,
+    CSS_L552_4_CSS_ED2025_09,
+    CSS_L552_4_CSS_ED2025_12,
+    CSS_L552_4_CSS_ED2026_01,
+    CSS_L552_4_CSS_ED2026_04,
+    CSS_L552_4_CSS_ED2026_06,
+    CSS_L552_4_PREV,
+    CSS_L552_4_PREV_CSS_ED2021_05,
+    CSS_L552_4_PREV_CSS_ED2021_11,
+    CSS_L552_4_PREV_CSS_ED2021_12,
+    CSS_L552_4_PREV_CSS_ED2022_01,
+    CSS_L552_4_PREV_CSS_ED2022_02,
+    CSS_L552_4_PREV_CSS_ED2022_03,
+    CSS_L552_7,
+    CSS_L552_7_CSS_ED2022_02,
+    CSS_L552_7_CSS_ED2022_03,
+    CSS_L552_7_CSS_ED2022_09,
+    CSS_L552_7_CSS_ED2023_07,
+    CSS_L552_7_CSS_ED2024_01,
+    CSS_L552_7_CSS_ED2025_02,
+    CSS_L552_7_CSS_ED2025_09,
+    CSS_L552_7_CSS_ED2025_12,
+    CSS_L552_7_CSS_ED2026_01,
+    CSS_L552_7_CSS_ED2026_04,
+    CSS_L552_7_CSS_ED2026_06,
+    CSS_R514_1,
+    CSS_R514_1_CSS_ED2021_05,
+    CSS_R514_1_CSS_ED2021_11,
+    CSS_R514_1_CSS_ED2021_12,
+    CSS_R514_1_CSS_ED2022_01,
+    CSS_R514_1_CSS_ED2022_02,
+    CSS_R514_1_CSS_ED2022_03,
+    CSS_R514_1_CSS_ED2022_09,
+    CSS_R514_1_CSS_ED2023_07,
+    CSS_R514_1_CSS_ED2024_01,
+    CSS_R514_1_CSS_ED2025_02,
+    CSS_R514_1_CSS_ED2025_09,
+    CSS_R514_1_CSS_ED2025_12,
+    CSS_R514_1_CSS_ED2026_01,
+    CSS_R514_1_CSS_ED2026_04,
+    CSS_R514_1_CSS_ED2026_06,
+    CSS_R552_1,
+    CSS_R552_1_CSS_ED2021_05,
+    CSS_R552_1_CSS_ED2021_11,
+    CSS_R552_1_CSS_ED2021_12,
+    CSS_R552_1_CSS_ED2022_01,
+    CSS_R552_1_CSS_ED2022_02,
+    CSS_R552_1_CSS_ED2022_03,
+    CSS_R552_1_CSS_ED2022_09,
+    CSS_R552_1_CSS_ED2023_07,
+    CSS_R552_1_CSS_ED2024_01,
+    CSS_R552_1_CSS_ED2025_02,
+    CSS_R552_1_CSS_ED2025_09,
+    CSS_R552_1_CSS_ED2025_12,
+    CSS_R552_1_CSS_ED2026_01,
+    CSS_R552_1_CSS_ED2026_04,
+    CSS_R552_1_CSS_ED2026_06,
+    CSS_R552_2,
+    CSS_R552_2_CSS_ED2021_05,
+    CSS_R552_2_CSS_ED2021_11,
+    CSS_R552_2_CSS_ED2021_12,
+    CSS_R552_2_CSS_ED2022_01,
+    CSS_R552_2_CSS_ED2022_02,
+    CSS_R552_2_CSS_ED2022_03,
+    CSS_R552_2_CSS_ED2022_09,
+    CSS_R552_2_CSS_ED2023_07,
+    CSS_R552_2_CSS_ED2024_01,
+    CSS_R552_2_CSS_ED2025_02,
+    CSS_R552_2_CSS_ED2025_09,
+    CSS_R552_2_CSS_ED2025_12,
+    CSS_R552_2_CSS_ED2026_01,
+    CSS_R552_2_CSS_ED2026_04,
+    CSS_R552_2_CSS_ED2026_06,
+    CSS_R552_3,
+    CSS_R552_3_CSS_ED2022_02,
+    CSS_R552_3_CSS_ED2022_03,
+    CSS_R552_3_CSS_ED2022_09,
+    CSS_R552_3_CSS_ED2023_07,
+    CSS_R552_3_CSS_ED2024_01,
+    CSS_R552_3_CSS_ED2025_02,
+    CSS_R552_3_CSS_ED2025_09,
+    CSS_R552_3_CSS_ED2025_12,
+    CSS_R552_3_CSS_ED2026_01,
+    CSS_R552_3_CSS_ED2026_04,
+    CSS_R552_3_CSS_ED2026_06,
+    CSS_R552_3_PREV,
+    CSS_R552_3_PREV_CSS_ED2021_05,
+    CSS_R552_3_PREV_CSS_ED2021_11,
+    CSS_R552_3_PREV_CSS_ED2021_12,
+    CSS_R552_3_PREV_CSS_ED2022_01,
+    CSS_R552_4,
+    CSS_R552_4_CSS_ED2022_02,
+    CSS_R552_4_CSS_ED2022_03,
+    CSS_R552_4_CSS_ED2022_09,
+    CSS_R552_4_CSS_ED2023_07,
+    CSS_R552_4_CSS_ED2024_01,
+    CSS_R552_4_CSS_ED2025_02,
+    CSS_R552_4_CSS_ED2025_09,
+    CSS_R552_4_CSS_ED2025_12,
+    CSS_R552_4_CSS_ED2026_01,
+    CSS_R552_4_CSS_ED2026_04,
+    CSS_R552_4_CSS_ED2026_06,
+    CSS_R553_2,
+    CSS_R553_2_CSS_ED2021_05,
+    CSS_R553_2_CSS_ED2021_11,
+    CSS_R553_2_CSS_ED2021_12,
+    CSS_R553_2_CSS_ED2022_01,
+    CSS_R553_2_CSS_ED2022_02,
+    CSS_R553_2_CSS_ED2022_03,
+    CSS_R553_2_CSS_ED2022_09,
+    CSS_R553_2_CSS_ED2023_07,
+    CSS_R553_2_CSS_ED2024_01,
+    CSS_R553_2_CSS_ED2025_02,
+    CSS_R553_2_CSS_ED2025_09,
+    CSS_R553_2_CSS_ED2025_12,
+    CSS_R553_2_CSS_ED2026_01,
+    CSS_R553_2_CSS_ED2026_04,
+    CSS_R553_2_CSS_ED2026_06,
+    Enfant,
+    Organisme,
+    Personne,
+    allocataire,
+    ars_due_exceptionnellement,
+    avant_fin_scolarite,
+    date_appreciation,
+    deces_enfant_charge,
+    deces_le,
+    organisme_debiteur_pf,
+    parent_charge,
+    ressources_totales,
+    seuil_juin_rentree,
+};
+
+// Policy for month steps (section 86) - FORWARD only.
+deadline policy SERVICE_MOIS {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+// --- R. 514-1: debtor body ---
+
+relation releve_professions_agricoles(p: Personne) kind empirical {
+    label fr official "personne soumise aux dispositions relatives aux professions agricoles, ou conjoint/concubin allocataire sans activité (R. 514-1 1°)";
+    label en unofficial "person under agricultural-profession rules, or non-working allocataire spouse/partner (R. 514-1 1)";
+}
+
+relation victime_guerre_ou_ayant_cause(p: Personne) kind empirical {
+    label fr official "victime de guerre ou ayant cause de victime de guerre (R. 514-1 2°)";
+    label en unofficial "war victim or war-victim successor (R. 514-1 2)";
+}
+
+relation categorie_l212_1(p: Personne) kind empirical {
+    label fr official "catégorie en activité ou en retraite du deuxième alinéa de L. 212-1 (article extérieur, fait d'entrée — R. 514-1 3°)";
+    label en unofficial "working or retired category of L. 212-1 para. 2 (external article, input fact - R. 514-1 3)";
+}
+
+relation derogation_arrete_rattachement(p: Personne) kind empirical {
+    label fr official "dérogation de rattachement par arrêté ministériel (activité, dispersion, déplacements — arrêté non épinglé, R. 514-1 al. 5)";
+    label en unofficial "attachment derogation by ministerial arrete (unpinned arrete, R. 514-1 para. 5)";
+}
+
+relation service_caf_residence(p: Personne) kind institutional {
+    key(p);
+    label fr official "le service incombe à la CAF du lieu de résidence habituelle de la famille (R. 514-1)";
+    label en unofficial "service falls on the CAF of the family's usual residence (R. 514-1)";
+}
+
+relation service_msa(p: Personne) kind institutional {
+    key(p);
+    label fr official "le service incombe à la MSA du lieu de résidence habituelle (R. 514-1 1°)";
+    label en unofficial "service falls on the MSA of the usual residence (R. 514-1 1)";
+}
+
+relation service_etat(p: Personne) kind institutional {
+    key(p);
+    label fr official "les prestations sont servies par l'Etat (R. 514-1 2°)";
+    label en unofficial "benefits are served by the State (R. 514-1 2)";
+}
+
+// --- R. 552-1: regime transfer ---
+
+relation transfert_regime(p: Personne) kind empirical {
+    label fr official "allocataire temporairement ou définitivement transféré à un autre régime (R. 552-1)";
+    label en unofficial "allocataire temporarily or permanently transferred to another scheme (R. 552-1)";
+}
+
+relation service_incombe_regime_primitif(p: Personne) kind institutional {
+    key(p);
+    label fr official "le service incombe au régime primitif jusqu'à régularisation administrative (R. 552-1)";
+    label en unofficial "service falls on the original scheme until administrative settlement (R. 552-1)";
+}
+
+relation regularisation_administrative_le(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "régularisation administrative du transfert intervenue à cette date (R. 552-1 « jusqu'à régularisation »)";
+    label en unofficial "administrative settlement of the transfer occurring on this date (R. 552-1 'until settlement')";
+}
+
+relation transfert_non_regularise_atteste(p: Personne) kind empirical {
+    label fr official "transfert sans régularisation administrative intervenue, attesté (R. 552-1 « jusqu'à régularisation »)";
+    label en unofficial "transfer without administrative settlement having occurred, attested (R. 552-1 'until settlement')";
+}
+
+relation regularisation_intervenue(p: Personne) kind institutional {
+    key(p);
+    label fr official "la régularisation administrative du transfert est intervenue (R. 552-1)";
+    label en unofficial "administrative settlement of the transfer has occurred (R. 552-1)";
+}
+
+relation remboursement_regimes_action(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "action: poursuivre le remboursement auprès de l'autre régime";
+    label en unofficial "action: claiming reimbursement from the other scheme";
+}
+
+// --- R. 552-2: due-from dates ---
+
+relation conditions_reunies_mois(p: Personne, premier_jour: Date) kind empirical {
+    key(p);
+    label fr official "premier jour du mois civil au cours duquel les conditions d'ouverture sont réunies (ancre mensuelle déclarée)";
+    label en unofficial "first day of the month in which opening conditions are met (stated month anchor)";
+}
+
+relation demande_deposee_mois(p: Personne, premier_jour: Date) kind empirical {
+    key(p);
+    label fr official "premier jour du mois civil du dépôt de la demande (ancre mensuelle déclarée)";
+    label en unofficial "first day of the month the claim was filed (stated month anchor)";
+}
+
+relation conditions_ajpp_reunies_depot(p: Personne, premier_jour: Date) kind empirical {
+    key(p);
+    label fr official "conditions d'ouverture AJPP réunies à la date du dépôt, fait constaté (R. 552-2 II 3°, branche AJPP)";
+    label en unofficial "AJPP opening conditions met at the filing date, stated fact (R. 552-2 II 3, AJPP branch)";
+}
+
+relation conditions_asf_reunies(p: Personne) kind empirical {
+    label fr official "conditions d'ouverture ASF réunies, fait constaté (R. 552-2 III, branches juge)";
+    label en unofficial "ASF opening conditions met, stated fact (R. 552-2 III, judicial branches)";
+}
+
+relation prepare_enfant_unique_ou_option(p: Personne) kind empirical {
+    label fr official "PreParE à enfant unique ou option L. 531-4 VI exercée (mécanique de l'option: paquet fr.pf.paje — R. 552-2 II 1°)";
+    label en unofficial "single-child PreParE or L. 531-4 VI option taken (option mechanics: fr.pf.paje - R. 552-2 II 1)";
+}
+
+relation mois_precedent_demande(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "premier jour du mois civil précédant le dépôt CMG, conditions réunies (pas de recul mensuel calculé — R. 552-2 II 2°)";
+    label en unofficial "first day of the month before the CMG filing, conditions met (no computed backward step - R. 552-2 II 2)";
+}
+
+relation demande_meme_mois(p: Personne) kind empirical {
+    label fr official "demande CMG déposée au cours du mois des conditions (R. 552-2 II 2°)";
+    label en unofficial "CMG claim filed within the conditions month (R. 552-2 II 2)";
+}
+
+relation droit_ouvert_autre_enfant(p: Personne) kind empirical {
+    label fr official "droit CMG déjà ouvert au titre d'un autre enfant (R. 552-2 II 2°)";
+    label en unofficial "CMG right already open for another child (R. 552-2 II 2)";
+}
+
+relation asf_cas3_soustrait_seul(p: Personne) kind empirical {
+    label fr official "un parent au moins se soustrait à l'entretien sans être hors d'état (ASF L. 523-1 I 3° — R. 552-2 II 5°)";
+    label en unofficial "at least one parent evading maintenance without being unable (ASF L. 523-1 I 3 - R. 552-2 II 5)";
+}
+
+relation fixation_judiciaire_apres_recouvrement(p: Personne) kind empirical {
+    label fr official "créance fixée par le juge à l'issue d'une procédure de recouvrement contre le parent défaillant (R. 552-2 II 5°)";
+    label en unofficial "claim set by the judge after recovery proceedings against the defaulting parent (R. 552-2 II 5)";
+}
+
+relation cessation_defaut_mois(p: Personne, premier_jour: Date) kind empirical {
+    key(p);
+    label fr official "premier jour du mois de cessation du défaut d'entretien (ancre mensuelle déclarée — R. 552-2 II 5°)";
+    label en unofficial "first day of the maintenance-default cessation month (stated anchor - R. 552-2 II 5)";
+}
+
+relation plancher_3_mois_demande(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "premier jour du mois, trois mois avant le dépôt (plancher déclaré, pas de recul calculé — R. 552-2 II 5°)";
+    label en unofficial "first day of the month three months before filing (stated floor, no computed step - R. 552-2 II 5)";
+}
+
+relation prestations_dues_a_compter(p: Personne, date: Date) kind institutional {
+    key(p);
+    label fr official "prestations mensuelles dues à compter de cette date (R. 552-2)";
+    label en unofficial "monthly benefits due from this date (R. 552-2)";
+}
+
+// --- R. 552-3: cessation dates ---
+
+relation conditions_cessent_mois(p: Personne, premier_jour: Date) kind empirical {
+    key(p);
+    label fr official "premier jour du mois civil de cessation des conditions (ancre mensuelle déclarée — R. 552-3 I/II)";
+    label en unofficial "first day of the conditions-cessation month (stated anchor - R. 552-3 I/II)";
+}
+
+relation prestation_cmg(p: Personne) kind empirical {
+    label fr official "la prestation en cause est le CMG (entrée II 1° — R. 552-3 II 1°)";
+    label en unofficial "the benefit at issue is the CMG (II 1 entry - R. 552-3 II 1)";
+}
+
+relation prestation_ajpp(p: Personne) kind empirical {
+    label fr official "la prestation en cause est l'AJPP (entrée II 3° — R. 552-3 II 3°)";
+    label en unofficial "the benefit at issue is the AJPP (II 3 entry - R. 552-3 II 3)";
+}
+
+relation prestation_aeeh(p: Personne) kind empirical {
+    label fr official "la prestation en cause est l'AEEH, service et cessation régis par renvoi (R. 552-2 II 3°, R. 552-3 II 2°, R. 552-4)";
+    label en unofficial "the benefit at issue is the AEEH, service and cessation governed by renvoi (R. 552-2 II 3, R. 552-3 II 2, R. 552-4)";
+}
+
+relation deces_proche_mois(p: Personne, premier_jour: Date) kind empirical {
+    key(p);
+    label fr official "premier jour du mois civil du décès (allocataire, conjoint, enfant — ancre déclarée — R. 552-3 III)";
+    label en unofficial "first day of the death month (allocataire, spouse, child - stated anchor - R. 552-3 III)";
+}
+
+relation cas_exception_l531_10(p: Personne) kind empirical {
+    label fr official "cas de l'article L. 531-10 excepté de la cessation-décès (rédaction 2015, paquet fr.pf.paje — R. 552-3 III prev)";
+    label en unofficial "L. 531-10 case exempt from death-cessation (2015 text, fr.pf.paje - R. 552-3 III prev)";
+}
+
+relation prestations_cessent_a_compter(p: Personne, date: Date) kind institutional {
+    key(p);
+    label fr official "prestations mensuelles cessant d'être dues à compter de cette date (R. 552-3)";
+    label en unofficial "monthly benefits ceasing to be due from this date (R. 552-3)";
+}
+
+relation maintien_prestations_fin(e: Enfant, date: Date) kind institutional {
+    key(e);
+    label fr official "prestations maintenues jusqu'à cette date incluse (dernier jour du 3e mois — R. 552-3 IV 1°)";
+    label en unofficial "benefits maintained up to and including this date (last day of the 3rd month - R. 552-3 IV 1)";
+}
+
+relation enfant_compte_fin(e: Enfant, date: Date) kind institutional {
+    key(e);
+    label fr official "enfant décédé compté jusqu'à cette date incluse (R. 552-3 IV 2°)";
+    label en unofficial "deceased child counted up to and including this date (R. 552-3 IV 2)";
+}
+
+relation frais_tiers_restent_dus(e: Enfant) kind empirical {
+    label fr official "des frais L. 553-4 I 2° restent dus à la personne percevant l'AEEH (R. 552-3 IV 3°)";
+    label en unofficial "L. 553-4 I 2 costs still owed to the AEEH recipient (R. 552-3 IV 3)";
+}
+
+relation interruption_versement_demandee(e: Enfant) kind empirical {
+    label fr official "la personne demande l'interruption du versement AEEH (R. 552-3 IV 3°)";
+    label en unofficial "person requests termination of the AEEH payment (R. 552-3 IV 3)";
+}
+
+relation aeeh_tiers_maintenue_fin(e: Enfant, date: Date) kind institutional {
+    key(e);
+    label fr official "AEEH au tiers maintenue jusqu'à cette date incluse (R. 552-3 IV 3°)";
+    label en unofficial "AEEH to the third party maintained up to and including this date (R. 552-3 IV 3)";
+}
+
+// --- R. 552-4: maintien conditions ---
+
+relation ouverture_droit_mois(e: Enfant, premier_jour: Date) kind empirical {
+    key(e);
+    label fr official "premier jour d'ouverture du droit aux prestations (ancre mensuelle déclarée — R. 552-4)";
+    label en unofficial "right-opening first day (stated month anchor - R. 552-4)";
+}
+
+relation maintien_applicable(e: Enfant) kind institutional {
+    key(e);
+    label fr official "L. 552-7 applicable: décès au plus tôt le mois suivant l'ouverture (R. 552-4)";
+    label en unofficial "L. 552-7 applies: death no earlier than the month after opening (R. 552-4)";
+}
+
+relation montant_mois_deces(e: Enfant, montant: Money) kind empirical {
+    key(e);
+    label fr official "montant dû au titre du mois du décès (R. 552-4)";
+    label en unofficial "amount due for the month of death (R. 552-4)";
+}
+
+relation montant_maintenu(e: Enfant, montant: Money) kind institutional {
+    key(e);
+    label fr official "montant des prestations maintenues (R. 552-4, sous R. 541-1 — fr.pf.aeeh)";
+    label en unofficial "maintained benefits amount (R. 552-4, under R. 541-1 - fr.pf.aeeh)";
+}
+
+relation conditions_maintien_applicables(e: Enfant) kind institutional {
+    key(e);
+    label fr official "conditions d'ouverture et règles propres maintenues pendant le maintien (R. 552-4, sous L. 552-7 dernier al.)";
+    label en unofficial "opening conditions and benefit rules kept during maintien (R. 552-4, under L. 552-7 last para.)";
+}
+
+// --- L. 552-7: deceased child counts, ASF advance ---
+
+relation enfant_compte_apres_deces(e: Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant décédé compte pour les conditions des prestations des autres enfants (L. 552-7 phr. 2 et 5, article à alinéa unique)";
+    label en unofficial "deceased child counts for other children's benefit conditions (L. 552-7 sentences 2 and 5, single-paragraph article)";
+}
+
+relation asf_avance_creance(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "ASF servie à titre d'avance sur créance alimentaire impayée (L. 552-7 phr. 3, article à alinéa unique)";
+    label en unofficial "ASF paid as an advance on an unpaid maintenance claim (L. 552-7 sentence 3, single-paragraph article)";
+}
+
+relation asf_avance_non_recouvree(p: Personne, e: Enfant) kind institutional {
+    key(p, e);
+    label fr official "l'avance ASF n'est pas recouvrée auprès du parent débiteur et demeure acquise au parent créancier pendant le maintien (L. 552-7 phr. 3)";
+    label en unofficial "ASF advance not recovered from the debtor parent, kept by the creditor parent during maintien (L. 552-7 sentence 3)";
+}
+
+// --- L. 552-4: schooling pieces ---
+
+relation certificat_inscription_le(p: Personne, e: Enfant, date: Date) kind empirical {
+    key(p, e);
+    label fr official "certificat d'inscription scolaire produit à cette date (L. 552-4 al. 1)";
+    label en unofficial "school enrolment certificate produced on this date (L. 552-4 para. 1)";
+}
+
+relation autorisation_l1315_le(p: Personne, e: Enfant, date: Date) kind empirical {
+    key(p, e);
+    label fr official "autorisation L. 131-5 du code de l'éducation produite à cette date (rédaction 2022 — L. 552-4 al. 1)";
+    label en unofficial "L. 131-5 education-code authorisation produced on this date (2022 text - L. 552-4 para. 1)";
+}
+
+relation certificat_instruction_famille_le(p: Personne, e: Enfant, date: Date) kind empirical {
+    key(p, e);
+    label fr official "certificat d'instruction en famille produit à cette date (rédaction 1985 — L. 552-4 al. 1 prev)";
+    label en unofficial "home-schooling certificate produced on this date (1985 text - L. 552-4 para. 1 prev)";
+}
+
+relation certificat_medical_le(p: Personne, e: Enfant, date: Date) kind empirical {
+    key(p, e);
+    label fr official "certificat médical d'impossibilité de fréquentation produit à cette date (rédaction 1985 — L. 552-4 al. 1 prev)";
+    label en unofficial "medical certificate of non-attendance produced on this date (1985 text - L. 552-4 para. 1 prev)";
+}
+
+relation pieces_scolarite_absentes(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "aucune pièce de scolarité produite (absence déclarée — L. 552-4 al. 2, rédaction 2022)";
+    label en unofficial "no schooling piece produced (stated absence - L. 552-4 para. 2, 2022 text)";
+}
+
+@source(CSS_L552_4, CSS_L552_4_CSS_ED2023_07, CSS_L552_4_CSS_ED2024_01,
+        CSS_L552_4_CSS_ED2025_02, CSS_L552_4_CSS_ED2025_09, CSS_L552_4_CSS_ED2025_12,
+        CSS_L552_4_CSS_ED2026_01, CSS_L552_4_CSS_ED2026_04, CSS_L552_4_CSS_ED2026_06,
+        CSS_L552_4_PREV, CSS_L552_4_PREV_CSS_ED2021_05, CSS_L552_4_PREV_CSS_ED2021_11,
+        CSS_L552_4_PREV_CSS_ED2021_12, CSS_L552_4_PREV_CSS_ED2022_01,
+        CSS_L552_4_PREV_CSS_ED2022_02, CSS_L552_4_PREV_CSS_ED2022_03)
+external judgment relation retard_independant_volonte(p: Personne, e: Enfant) {
+    authority Organisme;
+    label fr official "le retard de production résulte de motifs indépendants de la volonté (L. 552-4 al. 2)";
+    label en unofficial "production delay caused by reasons beyond control (L. 552-4 para. 2)";
+}
+
+relation prestations_dues_scolarite(p: Personne, e: Enfant, date: Date) kind institutional {
+    key(p, e);
+    label fr official "prestations dues à compter de la production de la pièce (L. 552-4 al. 2)";
+    label en unofficial "benefits due from production of the piece (L. 552-4 para. 2)";
+}
+
+relation versement_bloque_pieces(p: Personne, e: Enfant) kind institutional {
+    key(p, e);
+    label fr official "aucune des prestations afférentes à l'enfant soumis à l'obligation scolaire ne peut être versée sans pièce (L. 552-4 al. 1-2, rédaction 2022)";
+    label en unofficial "none of the benefits relating to the child subject to compulsory schooling may be paid without a piece (L. 552-4 paras. 1-2, 2022 text)";
+}
+
+relation versement_retroactif_possible(p: Personne, e: Enfant) kind institutional {
+    key(p, e);
+    label fr official "prestations rétroactivement payées ou rétablies (L. 552-4 al. 2)";
+    label en unofficial "benefits retroactively paid or restored (L. 552-4 para. 2)";
+}
+
+// --- R. 553-2: pacs assimilation ---
+
+relation ressources_pacs(p: Personne, premier: Money, second: Money) kind empirical {
+    key(p);
+    label fr official "ressources de chacun des partenaires de pacs durant l'année de référence (R. 553-2, comme concubins)";
+    label en unofficial "resources of each civil-pact partner for the reference year (R. 553-2, as concubins)";
+}
+
+@source(CSS_R514_1, CSS_R514_1_CSS_ED2021_05, CSS_R514_1_CSS_ED2021_11, CSS_R514_1_CSS_ED2021_12,
+        CSS_R514_1_CSS_ED2022_01, CSS_R514_1_CSS_ED2022_02, CSS_R514_1_CSS_ED2022_03,
+        CSS_R514_1_CSS_ED2022_09, CSS_R514_1_CSS_ED2023_07, CSS_R514_1_CSS_ED2024_01,
+        CSS_R514_1_CSS_ED2025_02, CSS_R514_1_CSS_ED2025_09, CSS_R514_1_CSS_ED2025_12,
+        CSS_R514_1_CSS_ED2026_01, CSS_R514_1_CSS_ED2026_04, CSS_R514_1_CSS_ED2026_06)
+rule ServiceCafResidence(p: Personne) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "Le service incombe à la CAF du lieu de résidence habituelle de la famille";
+    label en unofficial "Service falls on the CAF of the family's usual residence";
+    when allocataire(p);
+    then service_caf_residence(p);
+}
+
+@source(CSS_R514_1, CSS_R514_1_CSS_ED2021_05, CSS_R514_1_CSS_ED2021_11, CSS_R514_1_CSS_ED2021_12,
+        CSS_R514_1_CSS_ED2022_01, CSS_R514_1_CSS_ED2022_02, CSS_R514_1_CSS_ED2022_03,
+        CSS_R514_1_CSS_ED2022_09, CSS_R514_1_CSS_ED2023_07, CSS_R514_1_CSS_ED2024_01,
+        CSS_R514_1_CSS_ED2025_02, CSS_R514_1_CSS_ED2025_09, CSS_R514_1_CSS_ED2025_12,
+        CSS_R514_1_CSS_ED2026_01, CSS_R514_1_CSS_ED2026_04, CSS_R514_1_CSS_ED2026_06)
+rule DerogationMSA(p: Personne) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "Professions agricoles: le rattachement CAF ne s'applique pas";
+    label en unofficial "Agricultural professions: CAF attachment does not apply - status removed";
+    when releve_professions_agricoles(p);
+    defeat service_caf_residence(p);
+}
+
+@source(CSS_R514_1, CSS_R514_1_CSS_ED2021_05, CSS_R514_1_CSS_ED2021_11, CSS_R514_1_CSS_ED2021_12,
+        CSS_R514_1_CSS_ED2022_01, CSS_R514_1_CSS_ED2022_02, CSS_R514_1_CSS_ED2022_03,
+        CSS_R514_1_CSS_ED2022_09, CSS_R514_1_CSS_ED2023_07, CSS_R514_1_CSS_ED2024_01,
+        CSS_R514_1_CSS_ED2025_02, CSS_R514_1_CSS_ED2025_09, CSS_R514_1_CSS_ED2025_12,
+        CSS_R514_1_CSS_ED2026_01, CSS_R514_1_CSS_ED2026_04, CSS_R514_1_CSS_ED2026_06)
+rule DerogationEtat(p: Personne) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "Victimes de guerre: le rattachement CAF ne s'applique pas";
+    label en unofficial "War victims: CAF attachment does not apply - status removed";
+    when victime_guerre_ou_ayant_cause(p);
+    defeat service_caf_residence(p);
+}
+
+@source(CSS_R514_1, CSS_R514_1_CSS_ED2021_05, CSS_R514_1_CSS_ED2021_11, CSS_R514_1_CSS_ED2021_12,
+        CSS_R514_1_CSS_ED2022_01, CSS_R514_1_CSS_ED2022_02, CSS_R514_1_CSS_ED2022_03,
+        CSS_R514_1_CSS_ED2022_09, CSS_R514_1_CSS_ED2023_07, CSS_R514_1_CSS_ED2024_01,
+        CSS_R514_1_CSS_ED2025_02, CSS_R514_1_CSS_ED2025_09, CSS_R514_1_CSS_ED2025_12,
+        CSS_R514_1_CSS_ED2026_01, CSS_R514_1_CSS_ED2026_04, CSS_R514_1_CSS_ED2026_06)
+rule DerogationL2121(p: Personne) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "Catégories L. 212-1: le rattachement CAF ne s'applique pas (organisme déterminé par l'article extérieur)";
+    label en unofficial "L. 212-1 categories: CAF attachment does not apply (body set by the external article) - status removed";
+    when categorie_l212_1(p);
+    defeat service_caf_residence(p);
+}
+
+@source(CSS_R514_1, CSS_R514_1_CSS_ED2021_05, CSS_R514_1_CSS_ED2021_11, CSS_R514_1_CSS_ED2021_12,
+        CSS_R514_1_CSS_ED2022_01, CSS_R514_1_CSS_ED2022_02, CSS_R514_1_CSS_ED2022_03,
+        CSS_R514_1_CSS_ED2022_09, CSS_R514_1_CSS_ED2023_07, CSS_R514_1_CSS_ED2024_01,
+        CSS_R514_1_CSS_ED2025_02, CSS_R514_1_CSS_ED2025_09, CSS_R514_1_CSS_ED2025_12,
+        CSS_R514_1_CSS_ED2026_01, CSS_R514_1_CSS_ED2026_04, CSS_R514_1_CSS_ED2026_06)
+rule DerogationArrete(p: Personne) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "Dérogation par arrêté: le rattachement CAF ne s'applique pas";
+    label en unofficial "Arrete derogation: CAF attachment does not apply - status removed";
+    when derogation_arrete_rattachement(p);
+    defeat service_caf_residence(p);
+}
+
+@source(CSS_R514_1, CSS_R514_1_CSS_ED2021_05, CSS_R514_1_CSS_ED2021_11, CSS_R514_1_CSS_ED2021_12,
+        CSS_R514_1_CSS_ED2022_01, CSS_R514_1_CSS_ED2022_02, CSS_R514_1_CSS_ED2022_03,
+        CSS_R514_1_CSS_ED2022_09, CSS_R514_1_CSS_ED2023_07, CSS_R514_1_CSS_ED2024_01,
+        CSS_R514_1_CSS_ED2025_02, CSS_R514_1_CSS_ED2025_09, CSS_R514_1_CSS_ED2025_12,
+        CSS_R514_1_CSS_ED2026_01, CSS_R514_1_CSS_ED2026_04, CSS_R514_1_CSS_ED2026_06)
+rule ServiceMSAAgricoles(p: Personne) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "Professions agricoles: le service incombe à la MSA du lieu de résidence habituelle";
+    label en unofficial "Agricultural professions: service falls on the MSA of the usual residence";
+    when allocataire(p) and releve_professions_agricoles(p);
+    then service_msa(p);
+}
+
+@source(CSS_R514_1, CSS_R514_1_CSS_ED2021_05, CSS_R514_1_CSS_ED2021_11, CSS_R514_1_CSS_ED2021_12,
+        CSS_R514_1_CSS_ED2022_01, CSS_R514_1_CSS_ED2022_02, CSS_R514_1_CSS_ED2022_03,
+        CSS_R514_1_CSS_ED2022_09, CSS_R514_1_CSS_ED2023_07, CSS_R514_1_CSS_ED2024_01,
+        CSS_R514_1_CSS_ED2025_02, CSS_R514_1_CSS_ED2025_09, CSS_R514_1_CSS_ED2025_12,
+        CSS_R514_1_CSS_ED2026_01, CSS_R514_1_CSS_ED2026_04, CSS_R514_1_CSS_ED2026_06)
+rule ServiceEtatGuerre(p: Personne) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "Victimes de guerre: les prestations sont servies par l'Etat";
+    label en unofficial "War victims: benefits are served by the State";
+    when allocataire(p) and victime_guerre_ou_ayant_cause(p);
+    then service_etat(p);
+}
+
+@source(CSS_R552_1, CSS_R552_1_CSS_ED2021_05, CSS_R552_1_CSS_ED2021_11, CSS_R552_1_CSS_ED2021_12,
+        CSS_R552_1_CSS_ED2022_01, CSS_R552_1_CSS_ED2022_02, CSS_R552_1_CSS_ED2022_03,
+        CSS_R552_1_CSS_ED2022_09, CSS_R552_1_CSS_ED2023_07, CSS_R552_1_CSS_ED2024_01,
+        CSS_R552_1_CSS_ED2025_02, CSS_R552_1_CSS_ED2025_09, CSS_R552_1_CSS_ED2025_12,
+        CSS_R552_1_CSS_ED2026_01, CSS_R552_1_CSS_ED2026_04, CSS_R552_1_CSS_ED2026_06)
+rule RegularisationIntervenue(p: Personne, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Régularisation administrative datée: le transfert est régularisé (R. 552-1)";
+    label en unofficial "Dated administrative settlement: the transfer is settled (R. 552-1)";
+    when regularisation_administrative_le(p, date);
+    then regularisation_intervenue(p);
+}
+
+@source(CSS_R552_1, CSS_R552_1_CSS_ED2021_05, CSS_R552_1_CSS_ED2021_11, CSS_R552_1_CSS_ED2021_12,
+        CSS_R552_1_CSS_ED2022_01, CSS_R552_1_CSS_ED2022_02, CSS_R552_1_CSS_ED2022_03,
+        CSS_R552_1_CSS_ED2022_09, CSS_R552_1_CSS_ED2023_07, CSS_R552_1_CSS_ED2024_01,
+        CSS_R552_1_CSS_ED2025_02, CSS_R552_1_CSS_ED2025_09, CSS_R552_1_CSS_ED2025_12,
+        CSS_R552_1_CSS_ED2026_01, CSS_R552_1_CSS_ED2026_04, CSS_R552_1_CSS_ED2026_06)
+rule RegularisationNonIntervenue(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Transfert sans régularisation attestée: la régularisation n'est pas intervenue (R. 552-1)";
+    label en unofficial "Transfer without attested settlement: settlement has not occurred (R. 552-1)";
+    when transfert_regime(p) and transfert_non_regularise_atteste(p);
+    then not regularisation_intervenue(p);
+}
+
+@source(CSS_R552_1, CSS_R552_1_CSS_ED2021_05, CSS_R552_1_CSS_ED2021_11, CSS_R552_1_CSS_ED2021_12,
+        CSS_R552_1_CSS_ED2022_01, CSS_R552_1_CSS_ED2022_02, CSS_R552_1_CSS_ED2022_03,
+        CSS_R552_1_CSS_ED2022_09, CSS_R552_1_CSS_ED2023_07, CSS_R552_1_CSS_ED2024_01,
+        CSS_R552_1_CSS_ED2025_02, CSS_R552_1_CSS_ED2025_09, CSS_R552_1_CSS_ED2025_12,
+        CSS_R552_1_CSS_ED2026_01, CSS_R552_1_CSS_ED2026_04, CSS_R552_1_CSS_ED2026_06)
+rule ServiceRegimePrimitifSansRegularisation(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Transfert non régularisé: le service incombe au régime primitif";
+    label en unofficial "Unsettled transfer: service falls on the original scheme";
+    when transfert_regime(p) and transfert_non_regularise_atteste(p)
+        and not regularisation_intervenue(p);
+    then service_incombe_regime_primitif(p);
+}
+
+@source(CSS_R552_1, CSS_R552_1_CSS_ED2021_05, CSS_R552_1_CSS_ED2021_11, CSS_R552_1_CSS_ED2021_12,
+        CSS_R552_1_CSS_ED2022_01, CSS_R552_1_CSS_ED2022_02, CSS_R552_1_CSS_ED2022_03,
+        CSS_R552_1_CSS_ED2022_09, CSS_R552_1_CSS_ED2023_07, CSS_R552_1_CSS_ED2024_01,
+        CSS_R552_1_CSS_ED2025_02, CSS_R552_1_CSS_ED2025_09, CSS_R552_1_CSS_ED2025_12,
+        CSS_R552_1_CSS_ED2026_01, CSS_R552_1_CSS_ED2026_04, CSS_R552_1_CSS_ED2026_06)
+rule ServiceRegimePrimitifAvantRegularisation(p: Personne, regul: Date, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Transfert régularisé: le service incombe au primitif avant la date de régularisation";
+    label en unofficial "Settled transfer: service falls on the original scheme before the settlement date";
+    when transfert_regime(p) and regularisation_administrative_le(p, regul)
+        and date_appreciation(p, date) and date < regul;
+    then service_incombe_regime_primitif(p);
+}
+
+@source(CSS_R552_1, CSS_R552_1_CSS_ED2021_05, CSS_R552_1_CSS_ED2021_11, CSS_R552_1_CSS_ED2021_12,
+        CSS_R552_1_CSS_ED2022_01, CSS_R552_1_CSS_ED2022_02, CSS_R552_1_CSS_ED2022_03,
+        CSS_R552_1_CSS_ED2022_09, CSS_R552_1_CSS_ED2023_07, CSS_R552_1_CSS_ED2024_01,
+        CSS_R552_1_CSS_ED2025_02, CSS_R552_1_CSS_ED2025_09, CSS_R552_1_CSS_ED2025_12,
+        CSS_R552_1_CSS_ED2026_01, CSS_R552_1_CSS_ED2026_04, CSS_R552_1_CSS_ED2026_06)
+rule RemboursementEntreRegimes(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Service au primitif: il poursuit le remboursement auprès de l'autre régime";
+    label en unofficial "Service on the original scheme: it claims reimbursement from the other scheme";
+    when service_incombe_regime_primitif(p) and organisme_debiteur_pf(o, p);
+    then liberty PoursuivreRemboursementRegime {
+        holder o;
+        action remboursement_regimes_action(o, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_R552_2, CSS_R552_2_CSS_ED2021_05, CSS_R552_2_CSS_ED2021_11, CSS_R552_2_CSS_ED2021_12,
+        CSS_R552_2_CSS_ED2022_01, CSS_R552_2_CSS_ED2022_02, CSS_R552_2_CSS_ED2022_03,
+        CSS_R552_2_CSS_ED2022_09, CSS_R552_2_CSS_ED2023_07, CSS_R552_2_CSS_ED2024_01,
+        CSS_R552_2_CSS_ED2025_02, CSS_R552_2_CSS_ED2025_09, CSS_R552_2_CSS_ED2025_12,
+        CSS_R552_2_CSS_ED2026_01, CSS_R552_2_CSS_ED2026_04, CSS_R552_2_CSS_ED2026_06)
+rule DuesCompterMoisSuivant(p: Personne, ancre: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Prestations mensuelles dues à partir du premier jour du mois civil suivant les conditions, hors cas dérogatoires du II";
+    label en unofficial "Monthly benefits due from the first day of the month after the conditions month, outside the II derogation cases";
+    when conditions_reunies_mois(p, ancre) and not prepare_enfant_unique_ou_option(p)
+        and not prestation_cmg(p) and not prestation_ajpp(p) and not prestation_aeeh(p)
+        and not asf_cas3_soustrait_seul(p) and not fixation_judiciaire_apres_recouvrement(p);
+    then prestations_dues_a_compter(p, add_calendar_period(ancre, 1 calendar_month));
+}
+
+@source(CSS_R552_2, CSS_R552_2_CSS_ED2021_05, CSS_R552_2_CSS_ED2021_11, CSS_R552_2_CSS_ED2021_12,
+        CSS_R552_2_CSS_ED2022_01, CSS_R552_2_CSS_ED2022_02, CSS_R552_2_CSS_ED2022_03,
+        CSS_R552_2_CSS_ED2022_09, CSS_R552_2_CSS_ED2023_07, CSS_R552_2_CSS_ED2024_01,
+        CSS_R552_2_CSS_ED2025_02, CSS_R552_2_CSS_ED2025_09, CSS_R552_2_CSS_ED2025_12,
+        CSS_R552_2_CSS_ED2026_01, CSS_R552_2_CSS_ED2026_04, CSS_R552_2_CSS_ED2026_06)
+rule DuesPrepareMemeMois(p: Personne, ancre: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "PreParE enfant unique ou option: due dès le premier jour du mois des conditions";
+    label en unofficial "Single-child or option PreParE: due from the first day of the conditions month";
+    when conditions_reunies_mois(p, ancre) and prepare_enfant_unique_ou_option(p);
+    then prestations_dues_a_compter(p, ancre);
+}
+
+@source(CSS_R552_2, CSS_R552_2_CSS_ED2021_05, CSS_R552_2_CSS_ED2021_11, CSS_R552_2_CSS_ED2021_12,
+        CSS_R552_2_CSS_ED2022_01, CSS_R552_2_CSS_ED2022_02, CSS_R552_2_CSS_ED2022_03,
+        CSS_R552_2_CSS_ED2022_09, CSS_R552_2_CSS_ED2023_07, CSS_R552_2_CSS_ED2024_01,
+        CSS_R552_2_CSS_ED2025_02, CSS_R552_2_CSS_ED2025_09, CSS_R552_2_CSS_ED2025_12,
+        CSS_R552_2_CSS_ED2026_01, CSS_R552_2_CSS_ED2026_04, CSS_R552_2_CSS_ED2026_06)
+rule DuesCmgMoisPrecedent(p: Personne, depot: Date, precedent: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "CMG dû dès le premier jour du mois précédant le dépôt (conditions réunies), hors dépôt le même mois et droit ouvert pour un autre enfant";
+    label en unofficial "CMG due from the first day of the month before filing (conditions met), unless filed the same month or a right is open for another child";
+    when demande_deposee_mois(p, depot) and mois_precedent_demande(p, precedent)
+        and not demande_meme_mois(p) and not droit_ouvert_autre_enfant(p);
+    then prestations_dues_a_compter(p, precedent);
+}
+
+@source(CSS_R552_2, CSS_R552_2_CSS_ED2021_05, CSS_R552_2_CSS_ED2021_11, CSS_R552_2_CSS_ED2021_12,
+        CSS_R552_2_CSS_ED2022_01, CSS_R552_2_CSS_ED2022_02, CSS_R552_2_CSS_ED2022_03,
+        CSS_R552_2_CSS_ED2022_09, CSS_R552_2_CSS_ED2023_07, CSS_R552_2_CSS_ED2024_01,
+        CSS_R552_2_CSS_ED2025_02, CSS_R552_2_CSS_ED2025_09, CSS_R552_2_CSS_ED2025_12,
+        CSS_R552_2_CSS_ED2026_01, CSS_R552_2_CSS_ED2026_04, CSS_R552_2_CSS_ED2026_06)
+rule DuesCmgMoisMeme(p: Personne, ancre: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "CMG: demande du même mois — droit ouvert dès le mois des conditions";
+    label en unofficial "CMG: same-month filing - right open from the conditions month";
+    when conditions_reunies_mois(p, ancre) and demande_meme_mois(p);
+    then prestations_dues_a_compter(p, ancre);
+}
+
+@source(CSS_R552_2, CSS_R552_2_CSS_ED2021_05, CSS_R552_2_CSS_ED2021_11, CSS_R552_2_CSS_ED2021_12,
+        CSS_R552_2_CSS_ED2022_01, CSS_R552_2_CSS_ED2022_02, CSS_R552_2_CSS_ED2022_03,
+        CSS_R552_2_CSS_ED2022_09, CSS_R552_2_CSS_ED2023_07, CSS_R552_2_CSS_ED2024_01,
+        CSS_R552_2_CSS_ED2025_02, CSS_R552_2_CSS_ED2025_09, CSS_R552_2_CSS_ED2025_12,
+        CSS_R552_2_CSS_ED2026_01, CSS_R552_2_CSS_ED2026_04, CSS_R552_2_CSS_ED2026_06)
+rule DuesCmgDroitOuvert(p: Personne, ancre: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "CMG: droit déjà ouvert pour un autre enfant — dès le mois des conditions";
+    label en unofficial "CMG: right already open for another child - from the conditions month";
+    when conditions_reunies_mois(p, ancre) and droit_ouvert_autre_enfant(p);
+    then prestations_dues_a_compter(p, ancre);
+}
+
+@source(CSS_R552_2, CSS_R552_2_CSS_ED2021_05, CSS_R552_2_CSS_ED2021_11, CSS_R552_2_CSS_ED2021_12,
+        CSS_R552_2_CSS_ED2022_01, CSS_R552_2_CSS_ED2022_02, CSS_R552_2_CSS_ED2022_03,
+        CSS_R552_2_CSS_ED2022_09, CSS_R552_2_CSS_ED2023_07, CSS_R552_2_CSS_ED2024_01,
+        CSS_R552_2_CSS_ED2025_02, CSS_R552_2_CSS_ED2025_09, CSS_R552_2_CSS_ED2025_12,
+        CSS_R552_2_CSS_ED2026_01, CSS_R552_2_CSS_ED2026_04, CSS_R552_2_CSS_ED2026_06)
+rule DuesAjppMoisDemande(p: Personne, depot: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "AJPP due dès le premier jour du mois du dépôt, conditions réunies au dépôt (R. 552-2 II 3°)";
+    label en unofficial "AJPP due from the first day of the filing month, conditions met at filing (R. 552-2 II 3)";
+    when demande_deposee_mois(p, depot) and conditions_ajpp_reunies_depot(p, depot);
+    then prestations_dues_a_compter(p, depot);
+}
+
+@source(CSS_R552_2, CSS_R552_2_CSS_ED2021_05, CSS_R552_2_CSS_ED2021_11, CSS_R552_2_CSS_ED2021_12,
+        CSS_R552_2_CSS_ED2022_01, CSS_R552_2_CSS_ED2022_02, CSS_R552_2_CSS_ED2022_03,
+        CSS_R552_2_CSS_ED2022_09, CSS_R552_2_CSS_ED2023_07, CSS_R552_2_CSS_ED2024_01,
+        CSS_R552_2_CSS_ED2025_02, CSS_R552_2_CSS_ED2025_09, CSS_R552_2_CSS_ED2025_12,
+        CSS_R552_2_CSS_ED2026_01, CSS_R552_2_CSS_ED2026_04, CSS_R552_2_CSS_ED2026_06)
+rule DuesAsfMoisSuivant(p: Personne, depot: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF défaillance seule: due dès le premier jour du mois suivant le dépôt";
+    label en unofficial "ASF evasion-only: due from the first day of the month after filing";
+    when demande_deposee_mois(p, depot) and asf_cas3_soustrait_seul(p);
+    then prestations_dues_a_compter(p, add_calendar_period(depot, 1 calendar_month));
+}
+
+@source(CSS_R552_2, CSS_R552_2_CSS_ED2021_05, CSS_R552_2_CSS_ED2021_11, CSS_R552_2_CSS_ED2021_12,
+        CSS_R552_2_CSS_ED2022_01, CSS_R552_2_CSS_ED2022_02, CSS_R552_2_CSS_ED2022_03,
+        CSS_R552_2_CSS_ED2022_09, CSS_R552_2_CSS_ED2023_07, CSS_R552_2_CSS_ED2024_01,
+        CSS_R552_2_CSS_ED2025_02, CSS_R552_2_CSS_ED2025_09, CSS_R552_2_CSS_ED2025_12,
+        CSS_R552_2_CSS_ED2026_01, CSS_R552_2_CSS_ED2026_04, CSS_R552_2_CSS_ED2026_06)
+rule DuesAsfJugeRecouvrement(p: Personne, cessation: Date, plancher: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF créance judiciaire après recouvrement, conditions réunies: dès le mois suivant la cessation quand il est postérieur ou égal au plancher";
+    label en unofficial "ASF judicial claim after recovery, conditions met: from the month after cessation when it is later than or equal to the floor";
+    when fixation_judiciaire_apres_recouvrement(p) and cessation_defaut_mois(p, cessation)
+        and plancher_3_mois_demande(p, plancher) and conditions_asf_reunies(p)
+        and plancher <= add_calendar_period(cessation, 1 calendar_month);
+    then prestations_dues_a_compter(p, add_calendar_period(cessation, 1 calendar_month));
+}
+
+@source(CSS_R552_2, CSS_R552_2_CSS_ED2021_05, CSS_R552_2_CSS_ED2021_11, CSS_R552_2_CSS_ED2021_12,
+        CSS_R552_2_CSS_ED2022_01, CSS_R552_2_CSS_ED2022_02, CSS_R552_2_CSS_ED2022_03,
+        CSS_R552_2_CSS_ED2022_09, CSS_R552_2_CSS_ED2023_07, CSS_R552_2_CSS_ED2024_01,
+        CSS_R552_2_CSS_ED2025_02, CSS_R552_2_CSS_ED2025_09, CSS_R552_2_CSS_ED2025_12,
+        CSS_R552_2_CSS_ED2026_01, CSS_R552_2_CSS_ED2026_04, CSS_R552_2_CSS_ED2026_06)
+rule DuesAsfJugePlancher(p: Personne, cessation: Date, plancher: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF créance judiciaire après recouvrement, conditions réunies: au plancher des trois mois quand il est postérieur au mois suivant la cessation";
+    label en unofficial "ASF judicial claim after recovery, conditions met: at the three-month floor when it is later than the month after cessation";
+    when fixation_judiciaire_apres_recouvrement(p) and cessation_defaut_mois(p, cessation)
+        and plancher_3_mois_demande(p, plancher) and conditions_asf_reunies(p)
+        and plancher > add_calendar_period(cessation, 1 calendar_month);
+    then prestations_dues_a_compter(p, plancher);
+}
+
+@source(CSS_R552_3, CSS_R552_3_CSS_ED2022_02, CSS_R552_3_CSS_ED2022_03, CSS_R552_3_CSS_ED2022_09,
+        CSS_R552_3_CSS_ED2023_07, CSS_R552_3_CSS_ED2024_01, CSS_R552_3_CSS_ED2025_02,
+        CSS_R552_3_CSS_ED2025_09, CSS_R552_3_CSS_ED2025_12, CSS_R552_3_CSS_ED2026_01,
+        CSS_R552_3_CSS_ED2026_04, CSS_R552_3_CSS_ED2026_06)
+rule CessentMoisMeme(p: Personne, ancre: Date) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "Prestations mensuelles cessant dès le premier jour du mois de cessation des conditions";
+    label en unofficial "Monthly benefits ceasing from the first day of the conditions-cessation month";
+    when conditions_cessent_mois(p, ancre) and not prestation_cmg(p) and not prestation_ajpp(p)
+        and not prestation_aeeh(p);
+    then prestations_cessent_a_compter(p, ancre);
+}
+
+@source(CSS_R552_3, CSS_R552_3_CSS_ED2022_02, CSS_R552_3_CSS_ED2022_03, CSS_R552_3_CSS_ED2022_09,
+        CSS_R552_3_CSS_ED2023_07, CSS_R552_3_CSS_ED2024_01, CSS_R552_3_CSS_ED2025_02,
+        CSS_R552_3_CSS_ED2025_09, CSS_R552_3_CSS_ED2025_12, CSS_R552_3_CSS_ED2026_01,
+        CSS_R552_3_CSS_ED2026_04, CSS_R552_3_CSS_ED2026_06)
+rule CessentCmgMoisSuivant(p: Personne, ancre: Date) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "CMG cessant le premier jour du mois suivant la cessation des conditions";
+    label en unofficial "CMG ceasing on the first day of the month after the conditions end";
+    when conditions_cessent_mois(p, ancre) and prestation_cmg(p);
+    then prestations_cessent_a_compter(p, add_calendar_period(ancre, 1 calendar_month));
+}
+
+@source(CSS_R552_3, CSS_R552_3_CSS_ED2022_02, CSS_R552_3_CSS_ED2022_03, CSS_R552_3_CSS_ED2022_09,
+        CSS_R552_3_CSS_ED2023_07, CSS_R552_3_CSS_ED2024_01, CSS_R552_3_CSS_ED2025_02,
+        CSS_R552_3_CSS_ED2025_09, CSS_R552_3_CSS_ED2025_12, CSS_R552_3_CSS_ED2026_01,
+        CSS_R552_3_CSS_ED2026_04, CSS_R552_3_CSS_ED2026_06)
+rule CessentAjppMoisSuivant(p: Personne, ancre: Date) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "AJPP cessant dès le premier jour du mois suivant la cessation des conditions";
+    label en unofficial "AJPP ceasing from the first day of the month after the conditions end";
+    when conditions_cessent_mois(p, ancre) and prestation_ajpp(p);
+    then prestations_cessent_a_compter(p, add_calendar_period(ancre, 1 calendar_month));
+}
+
+@source(CSS_R552_3, CSS_R552_3_CSS_ED2022_02, CSS_R552_3_CSS_ED2022_03, CSS_R552_3_CSS_ED2022_09,
+        CSS_R552_3_CSS_ED2023_07, CSS_R552_3_CSS_ED2024_01, CSS_R552_3_CSS_ED2025_02,
+        CSS_R552_3_CSS_ED2025_09, CSS_R552_3_CSS_ED2025_12, CSS_R552_3_CSS_ED2026_01,
+        CSS_R552_3_CSS_ED2026_04, CSS_R552_3_CSS_ED2026_06)
+rule CessentDecesMoisSuivant(p: Personne, deces: Date) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "Décès: prestations cessant au premier jour du mois civil qui suit le décès";
+    label en unofficial "Death: benefits ceasing on the first day of the month after death";
+    when deces_proche_mois(p, deces);
+    then prestations_cessent_a_compter(p, add_calendar_period(deces, 1 calendar_month));
+}
+
+@source(CSS_R552_3, CSS_R552_3_CSS_ED2022_02, CSS_R552_3_CSS_ED2022_03, CSS_R552_3_CSS_ED2022_09,
+        CSS_R552_3_CSS_ED2023_07, CSS_R552_3_CSS_ED2024_01, CSS_R552_3_CSS_ED2025_02,
+        CSS_R552_3_CSS_ED2025_09, CSS_R552_3_CSS_ED2025_12, CSS_R552_3_CSS_ED2026_01,
+        CSS_R552_3_CSS_ED2026_04, CSS_R552_3_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule MaintienFinTroisiemeMois(e: Enfant, deces: Date) strict {
+    // Source endpoint: last day of the third following civil month
+    // (E-0084 month_end_of of the +3-month step; PC-R03-01).
+    effective [@2022-01-31, infinity);
+    label fr official "Enfant à charge décédé: prestations maintenues jusqu'au dernier jour du troisième mois civil qui suit le décès, droit ouvert avant le mois du décès";
+    label en unofficial "Deceased child in care: benefits maintained up to the last day of the third month after death, right opened before the death month";
+    when deces_le(e, deces) and deces_enfant_charge(e) and maintien_applicable(e);
+    then maintien_prestations_fin(e, month_end_of(add_calendar_period(deces, 3 calendar_month)));
+}
+
+@source(CSS_R552_3, CSS_R552_3_CSS_ED2022_02, CSS_R552_3_CSS_ED2022_03, CSS_R552_3_CSS_ED2022_09,
+        CSS_R552_3_CSS_ED2023_07, CSS_R552_3_CSS_ED2024_01, CSS_R552_3_CSS_ED2025_02,
+        CSS_R552_3_CSS_ED2025_09, CSS_R552_3_CSS_ED2025_12, CSS_R552_3_CSS_ED2026_01,
+        CSS_R552_3_CSS_ED2026_04, CSS_R552_3_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule EnfantCompteFinTroisiemeMois(e: Enfant, deces: Date) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "Enfant à charge décédé: AF et CF versés en tenant compte de l'enfant jusqu'au dernier jour du troisième mois, droit ouvert avant le mois du décès";
+    label en unofficial "Deceased child in care: AF and CF paid counting the child up to the last day of the third month, right opened before the death month";
+    when deces_le(e, deces) and deces_enfant_charge(e) and maintien_applicable(e);
+    then enfant_compte_fin(e, month_end_of(add_calendar_period(deces, 3 calendar_month)));
+}
+
+@source(CSS_R552_3, CSS_R552_3_CSS_ED2022_02, CSS_R552_3_CSS_ED2022_03, CSS_R552_3_CSS_ED2022_09,
+        CSS_R552_3_CSS_ED2023_07, CSS_R552_3_CSS_ED2024_01, CSS_R552_3_CSS_ED2025_02,
+        CSS_R552_3_CSS_ED2025_09, CSS_R552_3_CSS_ED2025_12, CSS_R552_3_CSS_ED2026_01,
+        CSS_R552_3_CSS_ED2026_04, CSS_R552_3_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule AeehTiersMaintenue(e: Enfant, deces: Date) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "Enfant à charge décédé: AEEH au tiers maintenue jusqu'au dernier jour du troisième mois, frais dus et sans demande d'interruption, droit ouvert avant le mois du décès";
+    label en unofficial "Deceased child in care: AEEH to the third party maintained up to the last day of the third month, costs owed and no termination asked, right opened before the death month";
+    when deces_le(e, deces) and deces_enfant_charge(e) and frais_tiers_restent_dus(e)
+        and not interruption_versement_demandee(e) and maintien_applicable(e);
+    then aeeh_tiers_maintenue_fin(e, month_end_of(add_calendar_period(deces, 3 calendar_month)));
+}
+
+@source(CSS_R552_3_PREV, CSS_R552_3_PREV_CSS_ED2021_05, CSS_R552_3_PREV_CSS_ED2021_11,
+        CSS_R552_3_PREV_CSS_ED2021_12, CSS_R552_3_PREV_CSS_ED2022_01)
+rule CessentMoisMemePrev(p: Personne, ancre: Date) strict {
+    effective [@2021-01-01, @2022-01-31);
+    label fr official "Cessation au mois même (rédaction 2015, I inchangé)";
+    label en unofficial "Same-month cessation (2015 text, I unchanged)";
+    when conditions_cessent_mois(p, ancre) and not prestation_cmg(p) and not prestation_ajpp(p)
+        and not prestation_aeeh(p);
+    then prestations_cessent_a_compter(p, ancre);
+}
+
+@source(CSS_R552_3_PREV, CSS_R552_3_PREV_CSS_ED2021_05, CSS_R552_3_PREV_CSS_ED2021_11,
+        CSS_R552_3_PREV_CSS_ED2021_12, CSS_R552_3_PREV_CSS_ED2022_01)
+rule CessentCmgMoisSuivantPrev(p: Personne, ancre: Date) strict {
+    effective [@2021-01-01, @2022-01-31);
+    label fr official "CMG cessant au mois suivant (rédaction 2015, II 1° inchangé)";
+    label en unofficial "CMG ceasing the next month (2015 text, II 1 unchanged)";
+    when conditions_cessent_mois(p, ancre) and prestation_cmg(p);
+    then prestations_cessent_a_compter(p, add_calendar_period(ancre, 1 calendar_month));
+}
+
+@source(CSS_R552_3_PREV, CSS_R552_3_PREV_CSS_ED2021_05, CSS_R552_3_PREV_CSS_ED2021_11,
+        CSS_R552_3_PREV_CSS_ED2021_12, CSS_R552_3_PREV_CSS_ED2022_01)
+rule CessentAjppMoisSuivantPrev(p: Personne, ancre: Date) strict {
+    effective [@2021-01-01, @2022-01-31);
+    label fr official "AJPP cessant au mois suivant (rédaction 2015, II 3° inchangé)";
+    label en unofficial "AJPP ceasing the next month (2015 text, II 3 unchanged)";
+    when conditions_cessent_mois(p, ancre) and prestation_ajpp(p);
+    then prestations_cessent_a_compter(p, add_calendar_period(ancre, 1 calendar_month));
+}
+
+@source(CSS_R552_3_PREV, CSS_R552_3_PREV_CSS_ED2021_05, CSS_R552_3_PREV_CSS_ED2021_11,
+        CSS_R552_3_PREV_CSS_ED2021_12, CSS_R552_3_PREV_CSS_ED2022_01)
+rule CessentDecesPrevL5310(p: Personne, deces: Date) strict {
+    effective [@2021-01-01, @2022-01-31);
+    label fr official "Décès: cessation au mois suivant, sauf cas L. 531-10 (rédaction 2015)";
+    label en unofficial "Death: next-month cessation unless the L. 531-10 case (2015 text)";
+    when deces_proche_mois(p, deces) and not cas_exception_l531_10(p);
+    then prestations_cessent_a_compter(p, add_calendar_period(deces, 1 calendar_month));
+}
+
+@source(CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule MaintienOuvertureCondition(e: Enfant, ouverture: Date, deces: Date) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "Maintien si le décès intervient au plus tôt le mois suivant le premier jour d'ouverture";
+    label en unofficial "Maintien where death falls no earlier than the month after opening day";
+    when ouverture_droit_mois(e, ouverture) and deces_le(e, deces)
+        and deces >= add_calendar_period(ouverture, 1 calendar_month);
+    then maintien_applicable(e);
+}
+
+@source(CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule MontantMaintenuEgal(e: Enfant, montant: Money) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "Le montant maintenu est celui dû au titre du mois du décès (sous R. 541-1, fr.pf.aeeh)";
+    label en unofficial "Maintained amount equals the month-of-death amount (under R. 541-1, fr.pf.aeeh)";
+    when maintien_applicable(e) and montant_mois_deces(e, montant);
+    then montant_maintenu(e, montant);
+}
+
+@source(CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule ConditionsMaintienApplicables(e: Enfant) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "Conditions d'ouverture et règles propres maintenues pendant le maintien (sous L. 552-7 dernier al.)";
+    label en unofficial "Opening conditions and benefit rules kept during maintien (under L. 552-7 last para.)";
+    when maintien_applicable(e);
+    then conditions_maintien_applicables(e);
+}
+
+@source(CSS_L552_7, CSS_L552_7_CSS_ED2022_02, CSS_L552_7_CSS_ED2022_03, CSS_L552_7_CSS_ED2022_09,
+        CSS_L552_7_CSS_ED2023_07, CSS_L552_7_CSS_ED2024_01, CSS_L552_7_CSS_ED2025_02,
+        CSS_L552_7_CSS_ED2025_09, CSS_L552_7_CSS_ED2025_12, CSS_L552_7_CSS_ED2026_01,
+        CSS_L552_7_CSS_ED2026_04, CSS_L552_7_CSS_ED2026_06)
+rule EnfantCompteAutresPrestations(e: Enfant) strict {
+    // Applicability follows the 2022-01-28 decree (NOTA loi 2020-692):
+    // deaths from 2022-01-31. Existing ArsDecesApresJuin (09a) opens at
+    // 2022-01-01 and is preserved untouched; the 30-day difference is
+    // journaled (F-01) for reviewer qualification.
+    effective [@2022-01-31, infinity);
+    label fr official "L'enfant décédé compte pour les prestations dues au titre des autres enfants";
+    label en unofficial "The deceased child counts for benefits due for the other children";
+    when deces_enfant_charge(e) and maintien_applicable(e);
+    then enfant_compte_apres_deces(e);
+}
+
+@source(CSS_L552_7, CSS_L552_7_CSS_ED2022_02, CSS_L552_7_CSS_ED2022_03, CSS_L552_7_CSS_ED2022_09,
+        CSS_L552_7_CSS_ED2023_07, CSS_L552_7_CSS_ED2024_01, CSS_L552_7_CSS_ED2025_02,
+        CSS_L552_7_CSS_ED2025_09, CSS_L552_7_CSS_ED2025_12, CSS_L552_7_CSS_ED2026_01,
+        CSS_L552_7_CSS_ED2026_04, CSS_L552_7_CSS_ED2026_06)
+rule AsfAvanceAcquise(p: Personne, e: Enfant) strict {
+    effective [@2022-01-31, infinity);
+    label fr official "L'avance ASF demeure acquise au parent créancier pendant le maintien";
+    label en unofficial "The ASF advance stays with the creditor parent during maintien";
+    when asf_avance_creance(p, e) and maintien_applicable(e);
+    then asf_avance_non_recouvree(p, e);
+}
+
+@source(CSS_L552_4, CSS_L552_4_CSS_ED2023_07, CSS_L552_4_CSS_ED2024_01,
+        CSS_L552_4_CSS_ED2025_02, CSS_L552_4_CSS_ED2025_09, CSS_L552_4_CSS_ED2025_12,
+        CSS_L552_4_CSS_ED2026_01, CSS_L552_4_CSS_ED2026_04, CSS_L552_4_CSS_ED2026_06)
+rule DuesScolariteInscription(p: Personne, e: Enfant, date: Date) strict {
+    effective [@2022-09-01, infinity);
+    label fr official "Enfant soumis à l'obligation scolaire: prestations dues à compter du certificat d'inscription scolaire";
+    label en unofficial "Child subject to compulsory schooling: benefits due from the school enrolment certificate";
+    when certificat_inscription_le(p, e, date) and avant_fin_scolarite(e);
+    then prestations_dues_scolarite(p, e, date);
+}
+
+@source(CSS_L552_4, CSS_L552_4_CSS_ED2023_07, CSS_L552_4_CSS_ED2024_01,
+        CSS_L552_4_CSS_ED2025_02, CSS_L552_4_CSS_ED2025_09, CSS_L552_4_CSS_ED2025_12,
+        CSS_L552_4_CSS_ED2026_01, CSS_L552_4_CSS_ED2026_04, CSS_L552_4_CSS_ED2026_06)
+rule DuesScolariteAutorisation(p: Personne, e: Enfant, date: Date) strict {
+    effective [@2022-09-01, infinity);
+    label fr official "Enfant soumis à l'obligation scolaire: prestations dues à compter de l'autorisation L. 131-5";
+    label en unofficial "Child subject to compulsory schooling: benefits due from the L. 131-5 authorisation";
+    when autorisation_l1315_le(p, e, date) and avant_fin_scolarite(e);
+    then prestations_dues_scolarite(p, e, date);
+}
+
+@source(CSS_L552_4, CSS_L552_4_CSS_ED2023_07, CSS_L552_4_CSS_ED2024_01,
+        CSS_L552_4_CSS_ED2025_02, CSS_L552_4_CSS_ED2025_09, CSS_L552_4_CSS_ED2025_12,
+        CSS_L552_4_CSS_ED2026_01, CSS_L552_4_CSS_ED2026_04, CSS_L552_4_CSS_ED2026_06)
+rule VersementBloqueSansPiece(p: Personne, e: Enfant) strict {
+    effective [@2022-09-01, infinity);
+    label fr official "Enfant soumis à l'obligation scolaire, sans production effective d'une pièce: aucune des prestations afférentes ne peut être versée";
+    label en unofficial "Child subject to compulsory schooling, no piece effectively produced: none of the relating benefits may be paid";
+    when pieces_scolarite_absentes(p, e) and avant_fin_scolarite(e);
+    then versement_bloque_pieces(p, e);
+}
+
+@source(CSS_L552_4, CSS_L552_4_CSS_ED2023_07, CSS_L552_4_CSS_ED2024_01,
+        CSS_L552_4_CSS_ED2025_02, CSS_L552_4_CSS_ED2025_09, CSS_L552_4_CSS_ED2025_12,
+        CSS_L552_4_CSS_ED2026_01, CSS_L552_4_CSS_ED2026_04, CSS_L552_4_CSS_ED2026_06)
+rule RetroactifInscription(p: Personne, e: Enfant, date: Date) strict {
+    effective [@2022-09-01, infinity);
+    label fr official "Enfant soumis à l'obligation scolaire, retard indépendant de la volonté: prestations rétroactivement payées (inscription)";
+    label en unofficial "Child subject to compulsory schooling, delay beyond control: benefits retroactively paid (enrolment)";
+    when certificat_inscription_le(p, e, date) and retard_independant_volonte(p, e)
+        and avant_fin_scolarite(e);
+    then versement_retroactif_possible(p, e);
+}
+
+@source(CSS_L552_4, CSS_L552_4_CSS_ED2023_07, CSS_L552_4_CSS_ED2024_01,
+        CSS_L552_4_CSS_ED2025_02, CSS_L552_4_CSS_ED2025_09, CSS_L552_4_CSS_ED2025_12,
+        CSS_L552_4_CSS_ED2026_01, CSS_L552_4_CSS_ED2026_04, CSS_L552_4_CSS_ED2026_06)
+rule RetroactifAutorisation(p: Personne, e: Enfant, date: Date) strict {
+    effective [@2022-09-01, infinity);
+    label fr official "Enfant soumis à l'obligation scolaire, retard indépendant de la volonté: prestations rétroactivement payées (autorisation)";
+    label en unofficial "Child subject to compulsory schooling, delay beyond control: benefits retroactively paid (authorisation)";
+    when autorisation_l1315_le(p, e, date) and retard_independant_volonte(p, e)
+        and avant_fin_scolarite(e);
+    then versement_retroactif_possible(p, e);
+}
+
+@source(CSS_L552_4_PREV, CSS_L552_4_PREV_CSS_ED2021_05, CSS_L552_4_PREV_CSS_ED2021_11,
+        CSS_L552_4_PREV_CSS_ED2021_12, CSS_L552_4_PREV_CSS_ED2022_01,
+        CSS_L552_4_PREV_CSS_ED2022_02, CSS_L552_4_PREV_CSS_ED2022_03)
+rule DuesScolariteInscriptionPrev(p: Personne, e: Enfant, date: Date) strict {
+    effective [@2021-01-01, @2022-09-01);
+    label fr official "Enfant soumis à l'obligation scolaire: prestations dues à compter du certificat d'inscription (rédaction 1985)";
+    label en unofficial "Child subject to compulsory schooling: benefits due from the enrolment certificate (1985 text)";
+    when certificat_inscription_le(p, e, date) and avant_fin_scolarite(e);
+    then prestations_dues_scolarite(p, e, date);
+}
+
+@source(CSS_L552_4_PREV, CSS_L552_4_PREV_CSS_ED2021_05, CSS_L552_4_PREV_CSS_ED2021_11,
+        CSS_L552_4_PREV_CSS_ED2021_12, CSS_L552_4_PREV_CSS_ED2022_01,
+        CSS_L552_4_PREV_CSS_ED2022_02, CSS_L552_4_PREV_CSS_ED2022_03)
+rule DuesScolariteInstructionFamillePrev(p: Personne, e: Enfant, date: Date) strict {
+    effective [@2021-01-01, @2022-09-01);
+    label fr official "Enfant soumis à l'obligation scolaire: prestations dues à compter du certificat d'instruction en famille (rédaction 1985)";
+    label en unofficial "Child subject to compulsory schooling: benefits due from the home-schooling certificate (1985 text)";
+    when certificat_instruction_famille_le(p, e, date) and avant_fin_scolarite(e);
+    then prestations_dues_scolarite(p, e, date);
+}
+
+@source(CSS_L552_4_PREV, CSS_L552_4_PREV_CSS_ED2021_05, CSS_L552_4_PREV_CSS_ED2021_11,
+        CSS_L552_4_PREV_CSS_ED2021_12, CSS_L552_4_PREV_CSS_ED2022_01,
+        CSS_L552_4_PREV_CSS_ED2022_02, CSS_L552_4_PREV_CSS_ED2022_03)
+rule DuesScolariteMedicalPrev(p: Personne, e: Enfant, date: Date) strict {
+    effective [@2021-01-01, @2022-09-01);
+    label fr official "Enfant soumis à l'obligation scolaire: prestations dues à compter du certificat médical (rédaction 1985)";
+    label en unofficial "Child subject to compulsory schooling: benefits due from the medical certificate (1985 text)";
+    when certificat_medical_le(p, e, date) and avant_fin_scolarite(e);
+    then prestations_dues_scolarite(p, e, date);
+}
+
+@source(CSS_L552_4_PREV, CSS_L552_4_PREV_CSS_ED2021_05, CSS_L552_4_PREV_CSS_ED2021_11,
+        CSS_L552_4_PREV_CSS_ED2021_12, CSS_L552_4_PREV_CSS_ED2022_01,
+        CSS_L552_4_PREV_CSS_ED2022_02, CSS_L552_4_PREV_CSS_ED2022_03)
+rule RetroactifInscriptionPrev(p: Personne, e: Enfant, date: Date) strict {
+    effective [@2021-01-01, @2022-09-01);
+    label fr official "Enfant soumis à l'obligation scolaire, retard indépendant de la volonté: rétroactivité (1985, inscription)";
+    label en unofficial "Child subject to compulsory schooling, delay beyond control: retroactivity (1985, enrolment)";
+    when certificat_inscription_le(p, e, date) and retard_independant_volonte(p, e)
+        and avant_fin_scolarite(e);
+    then versement_retroactif_possible(p, e);
+}
+
+@source(CSS_L552_4_PREV, CSS_L552_4_PREV_CSS_ED2021_05, CSS_L552_4_PREV_CSS_ED2021_11,
+        CSS_L552_4_PREV_CSS_ED2021_12, CSS_L552_4_PREV_CSS_ED2022_01,
+        CSS_L552_4_PREV_CSS_ED2022_02, CSS_L552_4_PREV_CSS_ED2022_03)
+rule RetroactifInstructionFamillePrev(p: Personne, e: Enfant, date: Date) strict {
+    effective [@2021-01-01, @2022-09-01);
+    label fr official "Enfant soumis à l'obligation scolaire, retard indépendant de la volonté: rétroactivité (1985, instruction en famille)";
+    label en unofficial "Child subject to compulsory schooling, delay beyond control: retroactivity (1985, home schooling)";
+    when certificat_instruction_famille_le(p, e, date) and retard_independant_volonte(p, e)
+        and avant_fin_scolarite(e);
+    then versement_retroactif_possible(p, e);
+}
+
+@source(CSS_L552_4_PREV, CSS_L552_4_PREV_CSS_ED2021_05, CSS_L552_4_PREV_CSS_ED2021_11,
+        CSS_L552_4_PREV_CSS_ED2021_12, CSS_L552_4_PREV_CSS_ED2022_01,
+        CSS_L552_4_PREV_CSS_ED2022_02, CSS_L552_4_PREV_CSS_ED2022_03)
+rule RetroactifMedicalPrev(p: Personne, e: Enfant, date: Date) strict {
+    effective [@2021-01-01, @2022-09-01);
+    label fr official "Enfant soumis à l'obligation scolaire, retard indépendant de la volonté: rétroactivité (1985, certificat médical)";
+    label en unofficial "Child subject to compulsory schooling, delay beyond control: retroactivity (1985, medical certificate)";
+    when certificat_medical_le(p, e, date) and retard_independant_volonte(p, e)
+        and avant_fin_scolarite(e);
+    then versement_retroactif_possible(p, e);
+}
+
+// --- D. 552-6: competent authority and order authorship (PC-R03-07, PC-R04-02 delegate) ---
+
+relation dasen_autorite_competente(e: Enfant) kind institutional {
+    key(e);
+    label fr official "autorité compétente de l'Etat pour L. 552-4 al. 1: le directeur académique agissant sur délégation du recteur (D. 552-6 al. 1, première branche)";
+    label en unofficial "competent State authority for L. 552-4 para. 1: the DASEN acting under rector delegation (D. 552-6 para. 1, first branch)";
+}
+
+relation delegue_dasen_autorite_competente(e: Enfant) kind institutional {
+    key(e);
+    label fr official "autorité compétente de l'Etat pour L. 552-4 al. 1: le délégué du directeur académique, « ou son délégué » (D. 552-6 al. 1, seconde branche)";
+    label en unofficial "competent State authority for L. 552-4 para. 1: the DASEN delegate, 'ou son delegue' (D. 552-6 para. 1, second branch)";
+}
+
+relation arrete_l5524_quatre_ministres(e: Enfant) kind institutional {
+    key(e);
+    label fr official "arrêté d'application L. 552-4 al. 3 pris par les ministres de l'éducation, de l'agriculture, du budget et de la sécurité sociale (D. 552-6 al. 2)";
+    label en unofficial "L. 552-4 para. 3 implementation order made by the education, agriculture, budget and social-security ministers (D. 552-6 para. 2)";
+}
+
+relation arrete_l5525_deux_ministres(p: Personne) kind institutional {
+    key(p);
+    label fr official "arrêté L. 552-5 pris par les ministres de l'éducation et de la sécurité sociale (D. 552-6 al. 3; L. 552-5 hors groupe payment-core)";
+    label en unofficial "L. 552-5 order made by the education and social-security ministers (D. 552-6 para. 3; L. 552-5 outside payment-core)";
+}
+
+@source(CSS_D552_6, CSS_D552_6_CSS_ED2021_05, CSS_D552_6_CSS_ED2021_11, CSS_D552_6_CSS_ED2021_12,
+        CSS_D552_6_CSS_ED2022_01, CSS_D552_6_CSS_ED2022_02, CSS_D552_6_CSS_ED2022_03,
+        CSS_D552_6_CSS_ED2022_09, CSS_D552_6_CSS_ED2023_07, CSS_D552_6_CSS_ED2024_01,
+        CSS_D552_6_CSS_ED2025_02, CSS_D552_6_CSS_ED2025_09, CSS_D552_6_CSS_ED2025_12,
+        CSS_D552_6_CSS_ED2026_01, CSS_D552_6_CSS_ED2026_04, CSS_D552_6_CSS_ED2026_06)
+rule AutoriteDasenCompetente(p: Personne, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Scolarité: le DASEN sous délégation du recteur est l'autorité compétente (D. 552-6 al. 1)";
+    label en unofficial "Schooling: the DASEN under rector delegation is the competent authority (D. 552-6 para. 1)";
+    when parent_charge(p, e);
+    then dasen_autorite_competente(e);
+}
+
+@source(CSS_D552_6, CSS_D552_6_CSS_ED2021_05, CSS_D552_6_CSS_ED2021_11, CSS_D552_6_CSS_ED2021_12,
+        CSS_D552_6_CSS_ED2022_01, CSS_D552_6_CSS_ED2022_02, CSS_D552_6_CSS_ED2022_03,
+        CSS_D552_6_CSS_ED2022_09, CSS_D552_6_CSS_ED2023_07, CSS_D552_6_CSS_ED2024_01,
+        CSS_D552_6_CSS_ED2025_02, CSS_D552_6_CSS_ED2025_09, CSS_D552_6_CSS_ED2025_12,
+        CSS_D552_6_CSS_ED2026_01, CSS_D552_6_CSS_ED2026_04, CSS_D552_6_CSS_ED2026_06)
+rule AutoriteDelegueCompetente(p: Personne, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Scolarité: le délégué du DASEN est l'autorité compétente alternative, « ou son délégué » (D. 552-6 al. 1)";
+    label en unofficial "Schooling: the DASEN delegate is the alternative competent authority, 'ou son delegue' (D. 552-6 para. 1)";
+    when parent_charge(p, e);
+    then delegue_dasen_autorite_competente(e);
+}
+
+@source(CSS_D552_6, CSS_D552_6_CSS_ED2021_05, CSS_D552_6_CSS_ED2021_11, CSS_D552_6_CSS_ED2021_12,
+        CSS_D552_6_CSS_ED2022_01, CSS_D552_6_CSS_ED2022_02, CSS_D552_6_CSS_ED2022_03,
+        CSS_D552_6_CSS_ED2022_09, CSS_D552_6_CSS_ED2023_07, CSS_D552_6_CSS_ED2024_01,
+        CSS_D552_6_CSS_ED2025_02, CSS_D552_6_CSS_ED2025_09, CSS_D552_6_CSS_ED2025_12,
+        CSS_D552_6_CSS_ED2026_01, CSS_D552_6_CSS_ED2026_04, CSS_D552_6_CSS_ED2026_06)
+rule ArreteL5524Ministres(p: Personne, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Scolarité: arrêté interministériel éducation/agriculture/budget/sécurité sociale (D. 552-6 al. 2)";
+    label en unofficial "Schooling: joint education/agriculture/budget/social-security order (D. 552-6 para. 2)";
+    when parent_charge(p, e);
+    then arrete_l5524_quatre_ministres(e);
+}
+
+@source(CSS_D552_6, CSS_D552_6_CSS_ED2021_05, CSS_D552_6_CSS_ED2021_11, CSS_D552_6_CSS_ED2021_12,
+        CSS_D552_6_CSS_ED2022_01, CSS_D552_6_CSS_ED2022_02, CSS_D552_6_CSS_ED2022_03,
+        CSS_D552_6_CSS_ED2022_09, CSS_D552_6_CSS_ED2023_07, CSS_D552_6_CSS_ED2024_01,
+        CSS_D552_6_CSS_ED2025_02, CSS_D552_6_CSS_ED2025_09, CSS_D552_6_CSS_ED2025_12,
+        CSS_D552_6_CSS_ED2026_01, CSS_D552_6_CSS_ED2026_04, CSS_D552_6_CSS_ED2026_06)
+rule ArreteL5525Ministres(p: Personne) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "Arrêté L. 552-5: ministres de l'éducation et de la sécurité sociale (D. 552-6 al. 3)";
+    label en unofficial "L. 552-5 order: education and social-security ministers (D. 552-6 para. 3)";
+    when allocataire(p);
+    then arrete_l5525_deux_ministres(p);
+}
+
+@source(CSS_D552_7, CSS_D552_7_CSS_ED2022_02, CSS_D552_7_CSS_ED2022_03, CSS_D552_7_CSS_ED2022_09,
+        CSS_D552_7_CSS_ED2023_07, CSS_D552_7_CSS_ED2024_01, CSS_D552_7_CSS_ED2025_02,
+        CSS_D552_7_CSS_ED2025_09, CSS_D552_7_CSS_ED2025_12, CSS_D552_7_CSS_ED2026_01,
+        CSS_D552_7_CSS_ED2026_04, CSS_D552_7_CSS_ED2026_06,
+        CSS_R552_4, CSS_R552_4_CSS_ED2022_02, CSS_R552_4_CSS_ED2022_03, CSS_R552_4_CSS_ED2022_09,
+        CSS_R552_4_CSS_ED2023_07, CSS_R552_4_CSS_ED2024_01, CSS_R552_4_CSS_ED2025_02,
+        CSS_R552_4_CSS_ED2025_09, CSS_R552_4_CSS_ED2025_12, CSS_R552_4_CSS_ED2026_01,
+        CSS_R552_4_CSS_ED2026_04, CSS_R552_4_CSS_ED2026_06)
+rule ArsDecesSeuilDecret(e: Enfant, deces: Date, seuil: Date) strict {
+    // Decree-anchored companion of ArsDecesApresJuin (09a): the 1 June
+    // threshold of D. 552-7 in force 2022-01-31. Both rules conclude the
+    // same head; conclusions agree. R. 552-4 gates both producers.
+    effective [@2022-01-31, infinity);
+    label fr official "ARS due au titre de la rentrée postérieure, décès à compter du 1er juin, droit ouvert avant le mois du décès (D. 552-7, R. 552-4)";
+    label en unofficial "ARS for the following school year, death on/after 1 June, right opened before the death month (D. 552-7, R. 552-4)";
+    when deces_le(e, deces) and seuil_juin_rentree(e, seuil) and deces >= seuil
+        and maintien_applicable(e);
+    then ars_due_exceptionnellement(e);
+}
+
+@source(CSS_R553_2, CSS_R553_2_CSS_ED2021_05, CSS_R553_2_CSS_ED2021_11, CSS_R553_2_CSS_ED2021_12,
+        CSS_R553_2_CSS_ED2022_01, CSS_R553_2_CSS_ED2022_02, CSS_R553_2_CSS_ED2022_03,
+        CSS_R553_2_CSS_ED2022_09, CSS_R553_2_CSS_ED2023_07, CSS_R553_2_CSS_ED2024_01,
+        CSS_R553_2_CSS_ED2025_02, CSS_R553_2_CSS_ED2025_09, CSS_R553_2_CSS_ED2025_12,
+        CSS_R553_2_CSS_ED2026_01, CSS_R553_2_CSS_ED2026_04, CSS_R553_2_CSS_ED2026_06)
+rule RessourcesPacs(p: Personne, premier: Money, second: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Pacs: il est tenu compte du total des ressources des deux partenaires, comme concubins";
+    label en unofficial "Civil pact: both partners' total resources count, as concubins";
+    when ressources_pacs(p, premier, second);
+    then ressources_totales(p, premier + second);
+}

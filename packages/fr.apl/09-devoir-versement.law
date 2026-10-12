@@ -1,0 +1,134 @@
+// Deontic layer of the rental sector: the agency's duty to pay the due
+// benefit, and the owner exclusion of L. 822-3.
+//
+// DEONTIC MAP OVER PINNED TEXTS ONLY (SFA_ISTOCHNIK_PERVYM: bytes of
+// 01-sources.law; outside them — a boundary, not guesswork).
+//
+//   D1. Duty to pay. The bytes hold no «l'organisme verse» formula; they hold
+//   the «aide_due (right + above-threshold computation)» link (03, AideDue:
+//   droit_ouvert + aide_theorique) and the «aide_theorique / aide_non_versee»
+//   pair (02: «il n'est pas procédé à son versement» below the arrêté level).
+//   The duty fires on aide_due. The texts name no bearer, so the
+//   agency–case link is an empirical case fact (the deontic-migration.md
+//   addressee-relation pattern), not an invented bearer. Performance is the
+//   empirical fact aide_versee. Window [@2021-01-01, infinity): basis is the
+//   D-01 coverage window (see analysis/duty-bearer-inventory.json).
+//   Duty scope is the rental sector: DroitOuvert (03) is gated by
+//   secteur_locatif, so aide_due and the duty exist only there. Since
+//   08.10.2026 the foyer sector also computes down to aide_theorique /
+//   aide_non_versee (04, K block), but its right-opening is not formalised —
+//   the boundary B-APL-DEVOIR-SECTEURS now stands at the right-opening gate,
+//   not at the missing K; accession still stops before K (see 04 header).
+//
+//   D2. Owner exclusion (L. 822-3 «ne sont pas dues») — a defeater of the
+//   right (DroitOuvert became defeasible under this change; firing no
+//   defeater keeps the prior derivation). Establishing the exclusion
+//   (including the regulatory share-threshold check, which the R. 822 slice
+//   does not cover) is the agency's job: empirical fact
+//   exclusion_propriete_l822_3. The threshold itself is a boundary
+//   (B-APL-L8223-SEUIL): the 20 % cap is pinned, the value is not.
+//
+//   LAYER BOUNDARIES (omission records, not norms):
+//   B-APL-TIERS-PAYANT: payment to the landlord — no pinned fragment names it
+//   («bailleur» search yields only RLS and colocation); the D. 823-16..19
+//   versement rules and follow-ons per the renvoi (01-sources.law:622) are
+//   unpinned.
+//   B-APL-OBLIGATIONS-BENEFICIAIRE: no behavioral duties of the recipient
+//   («doit», «est tenu») in the 851 fragments — only opening-right conditions
+//   and requisites (D. 842-7 certificate); declaration-duty articles (R. 823-*)
+//   are unpinned.
+//   B-APL-L5122: children conditions (L. 823-1 → L. 512-2 CSS) — a delegated
+//   act, the wave-1 neighbour package (deferred delegation, not a sense
+//   boundary).
+//
+// Scenarios: tests/devoir-versement-*.lawtest (family fr.apl#devoir-versement
+// in law.toml): ACTIVE; threshold pair (no duty — aide_non_versee);
+// L. 822-3 exclusion pair (right defeated — no duty).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    ARR_ART12_ED2019_10,
+    ARR_ART12_ED2020_01,
+    ARR_ART12_ED2020_10,
+    ARR_ART12_ED2021_01,
+    ARR_ART12_ED2021_10,
+    ARR_ART12_ED2022_01,
+    ARR_ART12_ED2022_07,
+    ARR_ART12_ED2023_01,
+    ARR_ART12_ED2023_10,
+    ARR_ART12_ED2024_01,
+    ARR_ART12_ED2024_10,
+    ARR_ART12_ED2025_01,
+    ARR_ART12_ED2025_10,
+    CCH_D823_16,
+    CCH_D823_16_ED2019_12,
+    CCH_D823_16_ED2020_01,
+    CCH_D823_16_ED2021_01,
+    CCH_D823_16_ED2023_04,
+    CCH_D823_16_ED2023_09,
+    CCH_D823_16_ED2023_12,
+    CCH_D823_16_ED2026_07,
+    CCH_L822_3,
+    CCH_L822_3_ED2019_12,
+    CCH_L822_3_ED2020_01,
+    CCH_L822_3_ED2021_01,
+    CCH_L822_3_ED2023_04,
+    CCH_L822_3_ED2023_09,
+    CCH_L822_3_ED2023_12,
+    CCH_L822_3_ED2026_07,
+    Menage,
+    aide_due,
+    droit_ouvert,
+};
+
+pub entity Organisme {
+    label fr official "organisme chargé du dossier d'aide personnelle au logement";
+    label ru unofficial "орган, ведущий дело о жилищном пособии";
+}
+
+pub relation organisme_debiteur(o: Organisme, m: Menage) kind empirical {
+    label fr official "l'organisme est débiteur de l'aide du ménage";
+    label ru unofficial "орган — должник пособия домохозяйства (факт дела)";
+}
+
+relation aide_versee(m: Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "l'aide a été versée au ménage";
+    label ru unofficial "пособие выплачено домохозяйству (исполнение)";
+}
+
+pub relation exclusion_propriete_l822_3(m: Menage) kind empirical {
+    label fr official "l'exclusion du propriétaire de l'article L. 822-3 est retenue, dérogation réglementaire comprise";
+    label ru unofficial "исключение собственника по L. 822-3 установлено органом, включая проверку reglamentaire-порога";
+}
+
+@source(CCH_D823_16, CCH_D823_16_ED2019_12, CCH_D823_16_ED2020_01,
+        CCH_D823_16_ED2021_01, CCH_D823_16_ED2023_04, CCH_D823_16_ED2023_09,
+        CCH_D823_16_ED2023_12, CCH_D823_16_ED2026_07, ARR_ART12_ED2019_10,
+        ARR_ART12_ED2020_01, ARR_ART12_ED2020_10, ARR_ART12_ED2021_01,
+        ARR_ART12_ED2021_10, ARR_ART12_ED2022_01, ARR_ART12_ED2022_07,
+        ARR_ART12_ED2023_01, ARR_ART12_ED2023_10, ARR_ART12_ED2024_01,
+        ARR_ART12_ED2024_10, ARR_ART12_ED2025_01, ARR_ART12_ED2025_10)
+rule DevoirVerserAideTheorique(o: Organisme, m: Menage, montant: Money) strict {
+    label fr official "l'aide due — droit ouvert et résultat au moins égal au seuil — est versée au ménage";
+    label ru unofficial "причитающееся пособие (право открыто, итог не ниже порога) — орган обязан выплатить";
+    when aide_due(m, montant) and organisme_debiteur(o, m);
+    then duty VerserAideTheoriqueDue {
+        bearer o;
+        beneficiary m;
+        maintain aide_versee(m, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L822_3, CCH_L822_3_ED2019_12, CCH_L822_3_ED2020_01,
+        CCH_L822_3_ED2021_01, CCH_L822_3_ED2023_04, CCH_L822_3_ED2023_09,
+        CCH_L822_3_ED2023_12, CCH_L822_3_ED2026_07)
+rule ExclusionProprietaireL8223(m: Menage) defeater {
+    label fr official "Article L822-3. Les aides personnelles au logement ne sont pas dues aux personnes locataires d'un logement dont elles-mêmes, leurs conjoints ou l'un de leurs ascendants ou descendants, jouissent d'une part de la propriété ou de l'usufruit";
+    label ru unofficial "L. 822-3: нанимателю-собственнику (супругу, восходящему/нисходящему) пособие не причитается — право снято";
+    when exclusion_propriete_l822_3(m);
+    defeat droit_ouvert(m);
+}

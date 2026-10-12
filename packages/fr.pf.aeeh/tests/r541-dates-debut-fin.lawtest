@@ -1,0 +1,29 @@
+// R. 541-7 al. 1/2, start and suppression-end dates: filing on
+// 2024-03-15 opens the award on 2024-04-01; suppression notified on
+// 2024-03-15 ends payment on 2024-03-01 without an AAH right and on
+// 2024-04-01 with one.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-dates-debut-fin" {
+    given {
+        context { deadline_policy AEEH_MOIS_CIVIL; decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-ddf-01": demande_aeeh_deposee(entity_ref("urn:fr:pf-aeeh:case:enfant-ddf"), @2024-03-15) { origin case_input; }
+        assert "r541-ddf-02": notification_suppression(entity_ref("urn:fr:pf-aeeh:case:enfant-ddf-sans"), @2024-03-15) { origin case_input; }
+        assert "r541-ddf-03": notification_suppression(entity_ref("urn:fr:pf-aeeh:case:enfant-ddf-avec"), @2024-03-15) { origin case_input; }
+        assert "r541-ddf-04": ouvre_droit_aah(entity_ref("urn:fr:pf-aeeh:case:enfant-ddf-avec")) { origin case_input; }
+    }
+    evaluate truth(date_debut_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-ddf"), @2024-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(date_fin_suppression(entity_ref("urn:fr:pf-aeeh:case:enfant-ddf-sans"), @2024-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(date_fin_suppression(entity_ref("urn:fr:pf-aeeh:case:enfant-ddf-avec"), @2024-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,21 @@
+// Shared residence from December 2025: effective alternance, both
+// parents claim, AF-shared eligible with the R. 521-2 choice — each
+// claiming parent is allocataire.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-alternance-deux-parents" {
+    given {
+        context { decision_time @2025-12-20T12:00:00Z; knowledge_time @2025-12-20T12:00:00Z; legal_time @2025-12-15; timezone "Europe/Paris"; }
+        assert "alt-01": residence_alternee_effective(entity_ref("urn:fr:pf-cmg:child:alt")) { origin case_input; }
+        assert "alt-02": demande_cmg_parent(entity_ref("urn:fr:pf-cmg:parent:pere-alt"), entity_ref("urn:fr:pf-cmg:child:alt")) { origin case_input; }
+        assert "alt-03": demande_cmg_parent(entity_ref("urn:fr:pf-cmg:parent:mere-alt"), entity_ref("urn:fr:pf-cmg:child:alt")) { origin case_input; }
+        assert "alt-04": eligible_af_partage(entity_ref("urn:fr:pf-cmg:parent:pere-alt")) { origin case_input; }
+        assert "alt-05": choix_partage_af(entity_ref("urn:fr:pf-cmg:parent:pere-alt"), entity_ref("urn:fr:pf-cmg:parent:mere-alt")) { origin case_input; }
+    }
+    evaluate truth(parent_allocataire_alternance(entity_ref("urn:fr:pf-cmg:parent:pere-alt"), entity_ref("urn:fr:pf-cmg:child:alt")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

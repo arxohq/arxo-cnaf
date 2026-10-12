@@ -1,0 +1,371 @@
+// Shared surface of the package: case facts and predicates that the CF
+// modules fill in. Upstream premises (child in care, CF award conditions,
+// debtor body) belong to fr.pf.core and arrive as case inputs; NOTHING
+// owned by a neighbour package is redefined here.
+//
+// Module map:
+//   01-sources.law         - sources, back-to-back editions, fragments (generated)
+//   02-conditions.law      - L522-1, R522-1: qualifying children, open right
+//   03-plafond.law         - L522-2, R522-2, R522-4: ceilings and majorations
+//   04-montant.law         - D522-1, D522-2, L522-3, R522-3: amounts, differential
+//   05-devoir-versement.law - duty of the fund to pay the computed CF
+//   06-dom.law               - DOM complement familial (L755-16/16-1,
+//                               D755-6/6-1, R755-1..4): DOM qualifying ages,
+//                               small-family ceilings, DOM award, DOM amounts
+//                               on the L755-3 base, DOM payment duties
+//   07-pass.law            - PASS of the reference year for the two-earner
+//                               test (R522-2 para. 3): the PASS series itself
+//                               (arretes 2015-2026, pinned without a gap)
+//                               belongs to the package fr.css.pass (D-84);
+//                               here the bridge by reference year and the
+//                               case-supplied PASS
+//   bareme/*.lawparam.json - rates, thresholds and counts (generated)
+//
+// SCOPE BOUNDARY. The package computes the monthly complement familial
+// (brut, before CRDS) for metropolitan France (02-05), for the DOM
+// Title V departments (06-dom.law R755-1 track: award, amounts,
+// differential, duties) and the Title V collectivity scope with available
+// base/increased amounts (06-dom.law broad track, no duties). Outside:
+// N-2 resource assessment (R532-1/R532-3..8, upstream packages), euro BMAF,
+// euro L755-3 base (stated-assumption inputs), the PASS of a reference year
+// outside the pinned fr.css.pass series 2015-2026 (the case then brings
+// pass_annuel), month mechanics of right opening (R552-2/3, assumed
+// calendar month), Mayotte (wave 7) and AUTRE (no conclusion anywhere),
+// Saint-Barthélemy/Saint-Martin on the department track (no R755-1
+// conclusion; broad Title V scope/amounts only, B-PFCF-DOM-TERRITOIRE),
+// the L751-1 list itself (unowned; department class arrives as the
+// provenance-bearing departement_l751_1 case fact) and the L755-3/BMAF
+// liaison (pending fr.pf.dom registration, B-PFCF-DOM-LIAISON).
+// Full list - README, "Boundaries".
+//
+// MIGRATION-REQ-PFCF-01. date_naissance is declared locally ONLY because
+// fr.pf.core does not publish it (parallel lane). When the upstream pub
+// lands, delete the local relation and qualify uses with fr.pf.core::.
+// MIGRATION-REQ-PFCF-02. cadre_cf_remplie is the local stand-in for the
+// L. 522-1 award frame: fr.pf.core keeps cf_condition_remplie (and its
+// resource/age sub-conditions) package-private (09a-prestations.law).
+// When core publishes it, delete the local relation and read the pub.
+
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+import fr.css.pass version "0.1.0";
+import fr.pf.core version "0.1.0";
+
+// Residence territory for the DOM rules: the six L. 751-1 collectivities
+// in force over the program window (D-76) plus METROPOLE/MAYOTTE/AUTRE for
+// exclusion tests. Department-only rules (R. 755-1 track) additionally
+// require the provenance-bearing departement_l751_1 case fact; the Title V
+// broad track reads the six values directly (B-PFCF-DOM-TERRITOIRE).
+pub enum Territoire {
+    label fr official "territoire de résidence pour les règles DOM (R. 755-1, L. 755-16/16-1)";
+    label en unofficial "residence territory for the DOM rules (R. 755-1, L. 755-16/16-1)";
+    METROPOLE,
+    GUADELOUPE,
+    GUYANE,
+    MARTINIQUE,
+    REUNION,
+    SAINT_BARTHELEMY,
+    SAINT_MARTIN,
+    MAYOTTE,
+    AUTRE
+}
+
+// --- Household case inputs (empirical) ---
+
+pub relation bmaf_retenu(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "base mensuelle retenue pour le mois du droit (arrêté, montant non épinglé)";
+    label en unofficial "monthly base retained for the month of right (arrete figure, unpinned)";
+}
+
+pub relation ressources_menage(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "ressources annuelles du ménage appréciées selon R. 532-1 et R. 532-3 (fait du dossier)";
+    label en unofficial "annual household resources assessed per R. 532-1 and R. 532-3 (case fact)";
+}
+
+pub relation plafond_base_cf(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "plafond de base du complément familial revalorisé au 1er janvier de l'année du droit, tel que publié (R. 522-2 al. 1 et 4)";
+    label en unofficial "base complement familial ceiling revalued on 1 January of the year of right, as published (R. 522-2 paras. 1 and 4)";
+}
+
+pub relation majoration_enfant_cf(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "majoration du plafond de base par enfant à charge à partir du premier (25 %), telle que publiée (R. 522-2 al. 2 et 4)";
+    label en unofficial "base ceiling increment per dependent child from the first (25%), as published (R. 522-2 paras. 2 and 4)";
+}
+
+pub relation majoration_troisieme_cf(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "majoration du plafond de base par enfant à charge à partir du troisième (30 %), telle que publiée (R. 522-2 al. 2 et 4)";
+    label en unofficial "base ceiling increment per dependent child from the third (30%), as published (R. 522-2 paras. 2 and 4)";
+}
+
+pub relation majoration_biactivite(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "majoration du plafond de base, couple biactif ou parent isolé, telle que publiée (R. 522-2 al. 3 et 4)";
+    label en unofficial "base ceiling increment, two-earner couple or lone parent, as published (R. 522-2 paras. 3 and 4)";
+}
+
+pub relation plafond_base_majore(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "plafond de base du montant majoré revalorisé au 1er janvier de l'année du droit, tel que publié (R. 522-4 al. 1 et 3)";
+    label en unofficial "base ceiling of the increased amount revalued on 1 January of the year of right, as published (R. 522-4 paras. 1 and 3)";
+}
+
+pub relation majoration_enfant_majore(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "majoration du plafond du montant majoré par enfant à charge à partir du premier (25 %), telle que publiée (R. 522-4 al. 2 et 3)";
+    label en unofficial "increased-amount ceiling increment per dependent child from the first (25%), as published (R. 522-4 paras. 2 and 3)";
+}
+
+pub relation majoration_troisieme_majore(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "majoration du plafond du montant majoré par enfant à charge à partir du troisième (30 %), telle que publiée (R. 522-4 al. 2 et 3)";
+    label en unofficial "increased-amount ceiling increment per dependent child from the third (30%), as published (R. 522-4 paras. 2 and 3)";
+}
+
+pub relation majoration_biactivite_majore(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "majoration du plafond du montant majoré, couple biactif ou parent isolé, telle que publiée (R. 522-4 al. 2 et 3)";
+    label en unofficial "increased-amount ceiling increment, two-earner couple or lone parent, as published (R. 522-4 paras. 2 and 3)";
+}
+
+pub relation revenu_pro_min_couple(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "plus faible des deux revenus professionnels du couple pour l'année de référence (R. 522-2 al. 3)";
+    label en unofficial "lower of the two members' professional incomes for the reference year (R. 522-2 para. 3)";
+}
+
+pub relation pass_annuel(montant: Money) kind empirical {
+    label fr official "plafond annuel de la sécurité sociale fourni pour l'espèce, au 1er janvier de l'année de référence (écarte celui des arrêtés)";
+    label en unofficial "annual social-security ceiling supplied for the case, on 1 January of the reference year (displaces the arretes' figure)";
+}
+
+pub relation annee_reference_ressources(p: fr.pf.core::Personne, annee: Integer) kind empirical {
+    key(p);
+    label fr official "année civile de référence des ressources du ménage (R. 522-2 al. 3, R. 532-1; fait du dossier)";
+    label en unofficial "reference calendar year of the household resources (R. 522-2 para. 3, R. 532-1; case fact)";
+}
+
+pub relation parent_isole(p: fr.pf.core::Personne) kind empirical {
+    label fr official "la personne assume seule la charge des enfants (R. 522-2 al. 3)";
+    label en unofficial "person alone bears the children's charge (R. 522-2 para. 3)";
+}
+
+pub relation nb_enfants_cf(p: fr.pf.core::Personne, n: Integer) kind empirical {
+    key(p);
+    label fr official "nombre d'enfants à charge retenu par la caisse (contrat d'entrée: cohérent avec les faits cf_enfant_qualifie)";
+    label en unofficial "dependent-children count retained by the fund (input contract: consistent with cf_enfant_qualifie facts)";
+}
+
+pub relation mois_droit(mois: Date) kind empirical {
+    label fr official "mois du droit apprécié (vaut normalement le mois de legal_time)";
+    label en unofficial "appreciated month of right (normally the legal_time month)";
+}
+
+pub relation foyer_du_cas(p: fr.pf.core::Personne) kind empirical {
+    label fr official "personne-ancre du ménage décrite par le cas (domaine de clôture §70)";
+    label en unofficial "household anchor person recorded in the case (§70 closure domain)";
+}
+
+pub relation enfant_du_cas(e: fr.pf.core::Enfant) kind empirical {
+    label fr official "enfant décrit par le cas (domaine de clôture §70)";
+    label en unofficial "child recorded in the case (§70 closure domain)";
+}
+
+// --- Per-child case inputs ---
+
+pub relation date_naissance(e: fr.pf.core::Enfant, naissance: Date) kind empirical {
+    key(e);
+    label fr official "date de naissance de l'enfant (MIGRATION-REQ-PFCF-01: en attente du pub fr.pf.core)";
+    label en unofficial "child birthdate (MIGRATION-REQ-PFCF-01: pending fr.pf.core pub)";
+}
+
+pub relation remuneration_sous_plafond(e: fr.pf.core::Enfant) kind empirical {
+    key(e);
+    label fr official "la rémunération de l'enfant n'excède pas le plafond du deuxième alinéa de R. 512-2 (appréciation amont)";
+    label en unofficial "child remuneration within the R. 512-2 para. 2 ceiling (upstream assessment)";
+}
+
+// --- Institutional conclusions ---
+
+pub relation cf_enfant_qualifie(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant compte pour le complément familial: trois ans et plus, moins de vingt et un ans (R. 522-1)";
+    label en unofficial "child counts for the complement familial: three or older, under twenty-one (R. 522-1)";
+}
+
+pub relation couple_biactif(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "chaque membre du couple retire de son activité un revenu au moins égal à 13,6 % du plafond annuel (R. 522-2 al. 3)";
+    label en unofficial "each couple member earns at least 13.6% of the annual ceiling from work (R. 522-2 para. 3)";
+}
+
+pub relation cadre_cf_remplie(p: fr.pf.core::Personne) kind empirical {
+    key(p);
+    label fr official "cadre d'attribution du complément familial réuni, appréciation du fonds (MIGRATION-REQ-PFCF-02: en attente du pub fr.pf.core)";
+    label en unofficial "complement familial award frame met, fund assessment (MIGRATION-REQ-PFCF-02: pending fr.pf.core pub)";
+}
+
+pub relation pass_fourni(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "un plafond de la sécurité sociale est fourni pour l'espèce et prévaut sur celui des arrêtés (marque)";
+    label en unofficial "a social-security ceiling is supplied for the case and prevails over the arretes' figure (marker)";
+}
+
+pub relation pass_reference(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "plafond annuel de la sécurité sociale en vigueur au 1er janvier de l'année de référence : celui fourni pour l'espèce, sinon celui de l'arrêté épinglé (R. 522-2 al. 3)";
+    label en unofficial "annual social-security ceiling in force on 1 January of the reference year: the case-supplied one, otherwise the pinned arrete's figure (R. 522-2 para. 3)";
+}
+
+pub relation cf_droit_ouvert(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "droit au complément familial ouvert pour le mois (L. 522-1, R. 522-1, R. 522-2)";
+    label en unofficial "complement familial right open for the month (L. 522-1, R. 522-1, R. 522-2)";
+}
+
+pub relation plafond_cf_applicable(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "plafond de ressources applicable au ménage (R. 522-2, majoration comprise)";
+    label en unofficial "resource ceiling applicable to the household (R. 522-2, increment included)";
+}
+
+pub relation plafond_majore_applicable(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "plafond du montant majoré applicable au ménage (R. 522-4, majoration comprise)";
+    label en unofficial "increased-amount ceiling applicable to the household (R. 522-4, increment included)";
+}
+
+pub relation cf_montant_du(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "complément familial mensuel dû au ménage (D. 522-1, brut)";
+    label en unofficial "monthly complement familial due to the household (D. 522-1, gross)";
+}
+
+pub relation cf_majore_du(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant majoré mensuel dû au ménage (L. 522-3, D. 522-2, brut)";
+    label en unofficial "monthly increased amount due to the household (L. 522-3, D. 522-2, gross)";
+}
+
+pub relation cf_differentiel_du(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "complément différentiel mensuel dû au ménage (R. 522-3, brut)";
+    label en unofficial "monthly differential top-up due to the household (R. 522-3, gross)";
+}
+
+pub relation cf_verse(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "le complément dû a été versé au ménage (exécution; l'organisme figure au porteur)";
+    label en unofficial "the due complement was paid to the household (performance; the paying body is recorded for the household)";
+}
+
+// --- DOM case inputs (empirical; 06-dom.law) ---
+
+pub relation territoire(p: fr.pf.core::Personne, t: Territoire) kind empirical {
+    key(p);
+    label fr official "territoire de résidence du ménage";
+    label en unofficial "household residence territory";
+}
+
+pub relation base_dom_retenue(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "base mensuelle de l'article L. 755-3 retenue pour le mois du droit (montant non épinglé)";
+    label en unofficial "monthly base of article L. 755-3 retained for the month of right (unpinned figure)";
+}
+
+pub relation cadre_cf_dom_remplie(p: fr.pf.core::Personne) kind empirical {
+    key(p);
+    label fr official "conditions générales d'ouverture du droit dans les DOM et cadre d'attribution réunis, appréciation du fonds (en attente de la liaison fr.pf.dom)";
+    label en unofficial "general DOM opener conditions and award frame met, fund assessment (pending fr.pf.dom liaison)";
+}
+
+pub relation presence_jeune_dom(p: fr.pf.core::Personne) kind empirical {
+    key(p);
+    label fr official "au moins un des enfants comptés a moins de cinq ans, appréciation du fonds (contrat d'entrée: cohérent avec les faits cf_dom_enfant_jeune)";
+    label en unofficial "at least one counted child is under five, fund assessment (input contract: consistent with cf_dom_enfant_jeune facts)";
+}
+
+pub relation departement_l751_1(t: Territoire) kind empirical {
+    label fr official "t est l'un des départements mentionnés à l'article L. 751-1 (R. 755-1, fait du dossier avec provenance; liste L. 751-1 hors champ)";
+    label en unofficial "t is one of the departments mentioned in L. 751-1 (R. 755-1, case fact with provenance; L. 751-1 list out of scope)";
+}
+
+pub relation cadre_cf_titre_v_remplie(p: fr.pf.core::Personne) kind empirical {
+    key(p);
+    label fr official "cadre d'attribution titre V réuni pour la collectivité, appréciation du fonds (L. 755-16/16-1; conditions réglementaires du non-département non épinglées, R. 755-1 non affirmé)";
+    label en unofficial "Title V award frame met for the collectivity, fund assessment (L. 755-16/16-1; non-department regulatory detail unpinned, R. 755-1 not asserted)";
+}
+
+// --- DOM institutional conclusions (06-dom.law) ---
+
+pub relation cf_dom_enfant_ancien(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant a plus de trois ans (R. 755-1)";
+    label en unofficial "child is over three years old (R. 755-1)";
+}
+
+pub relation cf_dom_enfant_jeune(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant a plus de trois ans et moins de cinq ans (R. 755-1)";
+    label en unofficial "child is over three and under five years old (R. 755-1)";
+}
+
+pub relation cf_dom_plafond(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "plafond de ressources DOM applicable au ménage d'un ou deux enfants (R. 755-2, majoration comprise)";
+    label en unofficial "DOM resource ceiling for a one- or two-child household (R. 755-2, increment included)";
+}
+
+pub relation cf_dom_plafond_majore(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "plafond DOM du montant majoré applicable au ménage d'un ou deux enfants (R. 755-4, majoration comprise)";
+    label en unofficial "DOM increased-amount ceiling for a one- or two-child household (R. 755-4, increment included)";
+}
+
+pub relation cf_dom_droit_ouvert(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "droit au complément familial DOM ouvert pour le mois (L. 755-16, R. 755-1, R. 755-2)";
+    label en unofficial "DOM complement familial right open for the month (L. 755-16, R. 755-1, R. 755-2)";
+}
+
+pub relation cf_dom_montant_du(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "complément familial DOM mensuel dû au ménage (D. 755-6, brut)";
+    label en unofficial "monthly DOM complement familial due to the household (D. 755-6, gross)";
+}
+
+pub relation cf_dom_majore_du(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant majoré DOM mensuel dû au ménage (L. 755-16-1, D. 755-6-1, brut)";
+    label en unofficial "monthly DOM increased amount due to the household (L. 755-16-1, D. 755-6-1, gross)";
+}
+
+pub relation cf_dom_differentiel_du(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "complément différentiel DOM mensuel dû au ménage (L. 755-16 al. 4, R. 755-3, brut)";
+    label en unofficial "monthly DOM differential top-up due to the household (L. 755-16 para. 4, R. 755-3, gross)";
+}
+
+pub relation cf_titre_v_portee(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "ménage dans la portée statutaire titre V : collectivité L. 751-1 (L. 755-16, L. 755-16-1)";
+    label en unofficial "household within Title V statutory scope: L. 751-1 collectivity (L. 755-16, L. 755-16-1)";
+}
+
+pub relation cf_titre_v_montant_disponible(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant titre V disponible : 41,65 % de la base L. 755-3 (D. 755-6, brut, sans devoir)";
+    label en unofficial "Title V amount available: 41.65% of the L. 755-3 base (D. 755-6, gross, no duty)";
+}
+
+pub relation cf_titre_v_majore_disponible(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant majoré titre V disponible au taux en vigueur (L. 755-16-1, D. 755-6-1, brut, sans devoir)";
+    label en unofficial "Title V increased amount available at the rate in force (L. 755-16-1, D. 755-6-1, gross, no duty)";
+}

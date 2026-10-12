@@ -1,0 +1,22 @@
+// No exceptional-circumstances finding: no-entitlement evaluation alone - no grant kept (R. 553-3-6).
+// D-42 BOUNDARY (judgment channel, SPEC 47.3): "circonstances exceptionnelles" (R. 553-3-6) is the
+// evaluative element circonstances_exceptionnelles, an external judgment relation with authority
+// Organisme. The case carries no assessment at all, so the answer cannot be COMPUTED: truth stays
+// NEITHER (no grant kept is established) and the organ's assessment is requested, as in
+// allocataire-sans-charge. The former "evaluation_status == COMPUTED" contradicted that design.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-circonstances-absentes" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-circonstances-absentes-01": evaluation_sans_droit(entity_ref("urn:fr:pf:case:ordinaire")) { origin case_input; }
+        assert "tdv-circonstances-absentes-02": prestation_soumise_section(entity_ref("urn:fr:pf:case:ordinaire")) { origin case_input; }
+    }
+    evaluate truth(attribution_maintenue_exceptionnelle(entity_ref("urn:fr:pf:case:ordinaire")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == REQUIRES_JUDGMENT;
+    expect judgment_request(circonstances_exceptionnelles, Organisme);
+}

@@ -1,0 +1,49 @@
+// Прочтение D-83 выбрано в context (`interpretation ArrondiLignesDss;`): суммы AF — округлённые
+// строки таблицы DSS, итог — их сумма (08-lecture-arrondi-lignes.law). Ожидания — строки
+// закреплённой таблицы DSS/2B/2026/46 (фрагменты DSS_2026_46_AF и DSS_2026_46_MAJO), BMAF 478,16 €: полоса 2 —
+// «2 enfants … 16 % 76,51» (dss-2026-46.txt:190); надбавка ребёнка в résidence alternée (R. 521-4 al. 2) —
+// строка половинной ставки 8 % / 2 = 4 %: «4% 19,13» (:208). Месячная сумма 76,51 + 19,13 = 95,64.
+// Плафон I(2) = 66 652 + 2 × 6 664 = 79 980 (DSS_2025_177_PLAFOND_AF, строка «2 enfants ≤ 79 980»); ресурсы
+// 80 500, превышение 520 < 12 × 95,64 = 1 147,68: douzième (79 980 + 1 147,68 − 80 500) / 12 = 52,3066… → 52,31
+// (D-82). Итог 95,64 + 52,31 = 147,95. Без прочтения: (79 980 + 12 × 95,632 − 80 500) / 12 — INEXACT_DIVISION.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-lignes-dss-2026-bande-2-demi-douzieme" {
+    given {
+        context { decision_time @2026-04-15T12:00:00Z; knowledge_time @2026-04-15T12:00:00Z; legal_time @2026-04-15; timezone "Europe/Paris"; interpretation ArrondiLignesDss; }
+        assert "l83-01": territoire(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), METROPOLE) { origin case_input; }
+        assert "l83-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 2) { origin case_input; }
+        assert "l83-03": ressources_menage(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 80500 EUR) { origin case_input; }
+        assert "l83-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 66652 EUR) { origin case_input; }
+        assert "l83-05": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 93276 EUR) { origin case_input; }
+        assert "l83-06": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 6664 EUR) { origin case_input; }
+        assert "l83-07": bmaf_retenu(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 478.16 EUR) { origin case_input; }
+        assert "l83-08": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 0) { origin case_input; }
+        assert "l83-09": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 1) { origin case_input; }
+        assert "l83-10": forfait_total_menage(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 0 EUR) { origin case_input; }
+        assert "l83-11": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 0) { origin case_input; }
+        assert "l83-12": foyer_du_cas(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme")) { origin case_input; }
+    }
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), BANDE_2));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond1_applicable(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 79980 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 95.64 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(complement_degressif(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 52.31 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-bande-2-demi-douzieme"), 147.95 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

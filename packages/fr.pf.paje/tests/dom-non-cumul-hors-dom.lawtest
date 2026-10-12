@@ -1,0 +1,23 @@
+// L. 755-19, scope control: metropolitan household with a full-rate base
+// right open and a CF award established — the DOM article does not apply,
+// so its cumulation bar does not conclude. Control —
+// dom-base-cf-dom-plein.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-non-cumul-hors-dom" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-hd-01": territoire(entity_ref("urn:fr:paje:case:dom-hd"), METROPOLE) { origin case_input; }
+        assert "dom-hd-02": enfant_en_charge(entity_ref("urn:fr:paje:case:dom-hd"), entity_ref("urn:fr:paje:enfant:dom-hd")) { origin case_input; }
+        assert "dom-hd-03": condition_age_base(entity_ref("urn:fr:paje:enfant:dom-hd")) { origin adjudicated; }
+        assert "dom-hd-04": ressources_annuelles(entity_ref("urn:fr:paje:case:dom-hd"), 20000 EUR) { origin case_input; }
+        assert "dom-hd-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:dom-hd"), 30000 EUR) { origin case_input; }
+        assert "dom-hd-06": cf_dom_l755_16_servi(entity_ref("urn:fr:paje:case:dom-hd")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_base_cf_dom_interdit(entity_ref("urn:fr:paje:case:dom-hd"), entity_ref("urn:fr:paje:enfant:dom-hd")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

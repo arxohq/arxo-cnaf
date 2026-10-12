@@ -1,0 +1,724 @@
+// Indu recovery and immunities: L. 553-2 (retenues, single repayment,
+// 10% indemnity for fraude), L. 553-2-1 (mise en demeure 1 month, contrainte,
+// 10% majoration), L. 553-3 (PF priority over majorations), L. 553-4
+// (incessibilite/insaisissabilite + exceptions), L. 553-5 (train de vie -
+// organ judgment channel).
+//
+// DEONTIC MAP:
+// - L. 553-2 para. 1 "est recupere" - organ duty to recover (duty,
+//   maintain indu_recupere); choice of means - allocataire liberty
+//   (single repayment) with a case window.
+// - Retenues scale (decree, D. 553-1 out of scope) - boundary: rate not derived.
+//   Majoration <= 50% and doubling on repeat - decree rate (boundary),
+//   repeat condition (5 years) executable.
+// - L. 553-4 I - immunity (incessibilite/insaisissabilite), defeater - fraude;
+//   1/2 - permission to attach (creditor/organ liberty) by the named
+//   means (L. 553-2 para. 3).
+// - L. 553-5 "disproportion marquee" - two channels (PC-R03-04): outside the
+//   R. 553-3 section (other benefits) the organ judgment enables the forfait;
+//   inside the section (PAJE/CF/ARS) only the R. 553-3-5 regulatory finding
+//   (twice the ceiling) enables it, via EvaluationForfaitaireReglementaire.
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_L553_2,
+    CSS_L553_2_1,
+    CSS_L553_2_1_CSS_ED2025_09,
+    CSS_L553_2_1_CSS_ED2025_12,
+    CSS_L553_2_1_CSS_ED2026_01,
+    CSS_L553_2_1_CSS_ED2026_04,
+    CSS_L553_2_1_CSS_ED2026_06,
+    CSS_L553_2_CSS_ED2025_02,
+    CSS_L553_2_CSS_ED2025_09,
+    CSS_L553_2_CSS_ED2025_12,
+    CSS_L553_2_CSS_ED2026_01,
+    CSS_L553_2_CSS_ED2026_04,
+    CSS_L553_2_CSS_ED2026_06,
+    CSS_L553_3,
+    CSS_L553_3_CSS_ED2021_05,
+    CSS_L553_3_CSS_ED2021_11,
+    CSS_L553_3_CSS_ED2021_12,
+    CSS_L553_3_CSS_ED2022_01,
+    CSS_L553_3_CSS_ED2022_02,
+    CSS_L553_3_CSS_ED2022_03,
+    CSS_L553_3_CSS_ED2022_09,
+    CSS_L553_3_CSS_ED2023_07,
+    CSS_L553_3_CSS_ED2024_01,
+    CSS_L553_3_CSS_ED2025_02,
+    CSS_L553_3_CSS_ED2025_09,
+    CSS_L553_3_CSS_ED2025_12,
+    CSS_L553_3_CSS_ED2026_01,
+    CSS_L553_3_CSS_ED2026_04,
+    CSS_L553_3_CSS_ED2026_06,
+    CSS_L553_4,
+    CSS_L553_4_CSS_ED2021_05,
+    CSS_L553_4_CSS_ED2021_11,
+    CSS_L553_4_CSS_ED2021_12,
+    CSS_L553_4_CSS_ED2022_01,
+    CSS_L553_4_CSS_ED2022_02,
+    CSS_L553_4_CSS_ED2022_03,
+    CSS_L553_4_CSS_ED2022_09,
+    CSS_L553_4_CSS_ED2023_07,
+    CSS_L553_4_CSS_ED2024_01,
+    CSS_L553_4_CSS_ED2025_02,
+    CSS_L553_4_CSS_ED2025_09,
+    CSS_L553_4_CSS_ED2025_12,
+    CSS_L553_4_CSS_ED2026_01,
+    CSS_L553_4_CSS_ED2026_04,
+    CSS_L553_4_CSS_ED2026_06,
+    CSS_L553_5,
+    CSS_L553_5_CSS_ED2021_05,
+    CSS_L553_5_CSS_ED2021_11,
+    CSS_L553_5_CSS_ED2021_12,
+    CSS_L553_5_CSS_ED2022_01,
+    CSS_L553_5_CSS_ED2022_02,
+    CSS_L553_5_CSS_ED2022_03,
+    CSS_L553_5_CSS_ED2022_09,
+    CSS_L553_5_CSS_ED2023_07,
+    CSS_L553_5_CSS_ED2024_01,
+    CSS_L553_5_CSS_ED2025_02,
+    CSS_L553_5_CSS_ED2025_09,
+    CSS_L553_5_CSS_ED2025_12,
+    CSS_L553_5_CSS_ED2026_01,
+    CSS_L553_5_CSS_ED2026_04,
+    CSS_L553_5_CSS_ED2026_06,
+    CSS_R553_3_5,
+    CSS_R553_3_5_CSS_ED2021_05,
+    CSS_R553_3_5_CSS_ED2021_11,
+    CSS_R553_3_5_CSS_ED2021_12,
+    CSS_R553_3_5_CSS_ED2022_01,
+    CSS_R553_3_5_CSS_ED2022_02,
+    CSS_R553_3_5_CSS_ED2022_03,
+    CSS_R553_3_5_CSS_ED2022_09,
+    CSS_R553_3_5_CSS_ED2023_07,
+    CSS_R553_3_5_CSS_ED2024_01,
+    CSS_R553_3_5_CSS_ED2025_02,
+    CSS_R553_3_5_CSS_ED2025_09,
+    CSS_R553_3_5_CSS_ED2025_12,
+    CSS_R553_3_5_CSS_ED2026_01,
+    CSS_R553_3_5_CSS_ED2026_04,
+    CSS_R553_3_5_CSS_ED2026_06,
+    Enfant,
+    Organisme,
+    Personne,
+    allocataire,
+    date_appreciation,
+    disproportion_reglementaire_constatee,
+    fraude_reiteree,
+    indemnite_frais_gestion,
+    indu_constate,
+    indu_fausse_declaration,
+    indu_frauduleux,
+    indu_recupere_retenues,
+    option_remboursement_unique,
+    organisme_debiteur_pf,
+    prestation_hors_section,
+    section_train_vie_applicable,
+};
+
+// Policy for add_calendar_period (section 86) - FORWARD only.
+deadline policy RECOUVREMENT_DELAI {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+relation indu_rembourse_unique(p: Personne) kind institutional {
+    key(p);
+    label fr official "l'indu est remboursé intégralement en un seul versement";
+    label en unofficial "overpayment fully repaid in a single payment";
+}
+
+relation premiere_majoration_notifiee_le(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "date de notification de l'indu ayant donné lieu à majoration de la retenue (L. 553-2 al. 3)";
+    label en unofficial "date of notification of the overpayment that raised the deduction (L. 553-2 para. 3)";
+}
+
+relation nouvelle_fraude_le(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "date de la fraude nouvelle (réitération éventuelle)";
+    label en unofficial "date of the new fraud (possible repeat)";
+}
+
+relation mise_en_demeure_adressee_le(p: Personne, date: Date) kind empirical {
+    key(p);
+    label fr official "date de la mise en demeure adressée par lettre recommandée (L. 553-2-1 al. 3)";
+    label en unofficial "date the mise en demeure was sent by registered letter (L. 553-2-1 para. 3)";
+}
+
+relation etablissement_service_eligible_l5532_1(p: Personne) kind empirical {
+    label fr official "établissement ou service L. 2324-1 CSP n'ayant pas respecté le dernier alinéa de L. 531-6, manquement constaté (L. 553-2-1 al. 1, p = débiteur établissement/service)";
+    label en unofficial "L. 2324-1 CSP establishment or service in breach of the last paragraph of L. 531-6, breach established (L. 553-2-1 para. 1, p = establishment/service debtor)";
+}
+
+relation notification_recouvrement_adressee(p: Personne) kind empirical {
+    label fr official "action en recouvrement ouverte par notification de payer ou de produire des observations (L. 553-2-1 al. 2)";
+    label en unofficial "recovery action opened by notice to pay or to submit observations (L. 553-2-1 para. 2)";
+}
+
+relation observations_interesse_rejetees(p: Personne) kind empirical {
+    label fr official "rejet total ou partiel des observations de l'intéressé (L. 553-2-1 al. 3)";
+    label en unofficial "total or partial rejection of the observations (L. 553-2-1 para. 3)";
+}
+
+relation mise_en_demeure_sans_effet(p: Personne, mise: Date) kind empirical {
+    key(p);
+    label fr official "mise en demeure restée sans effet à la date d'appréciation (L. 553-2-1 al. 4)";
+    label en unofficial "mise en demeure without effect at the appreciation date (L. 553-2-1 para. 4)";
+}
+
+relation sommes_mise_issues_notification(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "sommes de la mise en demeure mentionnées sur la notification initiale (L. 553-2-1 al. 3 « ne peut concerner que »)";
+    label en unofficial "mise en demeure sums taken from the initial notice (L. 553-2-1 para. 3 'only')";
+}
+
+relation date_exigibilite_mise_le(p: Personne, echeance: Date) kind empirical {
+    key(p);
+    label fr official "date d'exigibilité des sommes mentionnée dans la mise en demeure (L. 553-2-1 al. 4)";
+    label en unofficial "due date of the sums stated in the mise en demeure (L. 553-2-1 para. 4)";
+}
+
+relation remettre_majoration_action(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "action: remise de la majoration de 10 % (L. 553-2-1 al. 4 « peut faire l'objet d'une remise »)";
+    label en unofficial "action: remitting the 10% increase (L. 553-2-1 para. 4 'may be remitted')";
+}
+
+relation contrainte_possible(p: Personne) kind institutional {
+    key(p);
+    label fr official "la mise en demeure restée sans effet: le directeur peut délivrer une contrainte (L. 553-2-1 al. 4)";
+    label en unofficial "mise en demeure without effect: the director may issue a contrainte (L. 553-2-1 para. 4)";
+}
+
+relation sommes_non_reglees(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "sommes réclamées non réglées aux dates d'exigibilité de la mise en demeure";
+    label en unofficial "claimed amounts unpaid by the mise en demeure deadlines";
+}
+
+relation majoration_mise_en_demeure(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "majoration de 10 % des sommes non réglées (L. 553-2-1 al. 4)";
+    label en unofficial "10% increase on unpaid amounts (L. 553-2-1 para. 4)";
+}
+
+relation montant_majorations_concurrentes(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant des majorations d'allocations concurrentes (chômage, réfugiés, militaires, retraites — L. 553-3)";
+    label en unofficial "amount of competing increases (unemployment, refugees, military, pensions - L. 553-3)";
+}
+
+relation montant_prestations_familiales(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant des prestations familiales dues pour le même enfant (L. 553-3)";
+    label en unofficial "amount of family benefits due for the same child (L. 553-3)";
+}
+
+relation majorations_reduites(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "majorations réduites à due concurrence des prestations familiales (L. 553-3 al. 2)";
+    label en unofficial "increases reduced by the amount of family benefits (L. 553-3 para. 2)";
+}
+
+relation meme_enfant_pf_majoration(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "un même enfant ouvre droit aux prestations familiales et à la majoration concurrente (L. 553-3 al. 1)";
+    label en unofficial "the same child opens both the family-benefit right and the competing increase (L. 553-3 para. 1)";
+}
+
+relation majoration_enumereree_l5533(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "la majoration concurrente est l'une des allocations énumérées: chômage, réfugiés, militaires, retraites/pensions Etat/collectivités/prévoyance obligatoire (L. 553-3 al. 1 1°-4°)";
+    label en unofficial "the competing increase is one of the listed kinds: unemployment, refugees, military, State/collectivity/compulsory-provision pensions (L. 553-3 para. 1 1-4)";
+}
+
+relation cumul_logement_handicape_exception(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "allocation de logement pour enfant infirme au-delà des limites d'âge AF, cumulable avec les majorations de retraites/pensions du chef de cet enfant (L. 553-3 al. 3)";
+    label en unofficial "housing allowance for a disabled child past AF age limits, cumulable with pension increases for that child (L. 553-3 para. 3)";
+}
+
+relation asf_en_cause_l5533(p: Personne, e: Enfant) kind empirical {
+    key(p, e);
+    label fr official "la prestation familiale en cause est l'allocation de soutien familial, article inapplicable (L. 553-3 al. 4)";
+    label en unofficial "the family benefit at issue is ASF, article does not apply (L. 553-3 para. 4)";
+}
+
+pub relation saisie_alimentaire_possible(p: Personne) kind empirical {
+    label fr official "cas de saisissabilité du 1°/2° du I de l'article L. 553-4 (dettes alimentaires, frais de soins/hébergement/éducation)";
+    label en unofficial "seizable case under 1/2 of I of article L. 553-4 (maintenance debts, care/accommodation/education costs)";
+}
+
+relation saisie_action(p: Personne) kind empirical {
+    key(p);
+    label fr official "action: saisie des prestations familiales dans un cas du 1°/2° de L. 553-4";
+    label en unofficial "action: attaching family benefits in a 1/2 case of L. 553-4";
+}
+
+relation creance_1degre_alimentaire_l581(p: Personne) kind empirical {
+    label fr official "dettes alimentaires, contribution aux charges du mariage liées à l'entretien des enfants, ou créances L. 581-1/L. 581-3 (L. 553-4 I 1°)";
+    label en unofficial "maintenance debts, marriage-charge contribution for children, or L. 581-1/L. 581-3 claims (L. 553-4 I 1)";
+}
+
+relation frais_2degre_soins_hebergement(p: Personne) kind empirical {
+    label fr official "frais de soins, hébergement, éducation ou formation, notamment établissements L. 541-1 (L. 553-4 I 2°)";
+    label en unofficial "care, accommodation, education or training costs, notably L. 541-1 establishments (L. 553-4 I 2)";
+}
+
+relation prestation_listee_1degre(p: Personne) kind empirical {
+    label fr official "prestation en cause: allocation de base, PreParE, AF, CF, ARS ou ASF (L. 553-4 I 1°)";
+    label en unofficial "benefit at issue: base allowance, PreParE, AF, CF, ARS or ASF (L. 553-4 I 1)";
+}
+
+relation prestation_aeeh_2degre(p: Personne) kind empirical {
+    label fr official "prestation en cause: allocation d'éducation de l'enfant handicapé (L. 553-4 I 2°)";
+    label en unofficial "benefit at issue: disabled-child education allowance (L. 553-4 I 2)";
+}
+
+relation frais_aeeh_impayes(p: Personne) kind empirical {
+    label fr official "frais L. 553-4 I 2° non payés à la personne assumant l'éducation spéciale, la formation ou l'entretien";
+    label en unofficial "L. 553-4 I 2 costs unpaid to the person bearing special education, training or upkeep";
+}
+
+relation assume_charge_education_speciale(e: Personne, p: Personne) kind empirical {
+    key(e, p);
+    label fr official "la personne physique ou morale assume la charge de l'éducation spéciale, de la formation ou de l'entretien de l'enfant (L. 553-4 I 2°)";
+    label en unofficial "natural or legal person bears the child's special education, training or upkeep charge (L. 553-4 I 2)";
+}
+
+relation versement_direct_aeeh_action(o: Organisme, e: Personne, p: Personne) kind empirical {
+    key(o, e, p);
+    label fr official "action: versement direct de l'AEEH à la personne assumant la charge, par l'organisme débiteur";
+    label en unofficial "action: direct AEEH payment to the charge-bearing person by the debtor body";
+}
+
+relation parent_debiteur_beneficiaire_pf(p: Personne) kind empirical {
+    label fr official "le parent débiteur est bénéficiaire de prestations familiales (L. 553-4 I, intermédiation L. 582-1)";
+    label en unofficial "the debtor parent receives family benefits (L. 553-4 I, L. 582-1 intermediation)";
+}
+
+relation intermediation_financiere_l5821(p: Personne) kind empirical {
+    label fr official "intermédiation financière de la pension alimentaire prévue à L. 582-1 en cours (fait constaté)";
+    label en unofficial "L. 582-1 maintenance-payment intermediation in course (stated fact)";
+}
+
+relation accord_paiement_pension_pf(p: Personne) kind empirical {
+    label fr official "le parent débiteur consent au paiement de la pension sur ses prestations familiales (L. 553-4 I)";
+    label en unofficial "the debtor parent agrees to pension payment from family benefits (L. 553-4 I)";
+}
+
+relation prelevement_pension_intermediation_action(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "action: paiement de la pension alimentaire sur les prestations familiales via l'intermédiation";
+    label en unofficial "action: maintenance payment from family benefits through intermediation";
+}
+
+relation demande_cotisations_volontaires(p: Personne) kind empirical {
+    label fr official "l'allocataire demande le recouvrement des cotisations d'assurance volontaire L. 742-1 sur ses prestations (L. 553-4 I)";
+    label en unofficial "allocataire requests L. 742-1 voluntary-insurance contributions from benefits (L. 553-4 I)";
+}
+
+relation prestation_l5111_hors_logement(p: Personne) kind empirical {
+    label fr official "prestation visée à L. 511-1, autre que l'allocation de logement (L. 553-4 I)";
+    label en unofficial "L. 511-1 benefit other than housing allowance (L. 553-4 I)";
+}
+
+relation recouvrement_cotisations_action(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "action: recouvrement des cotisations volontaires L. 742-1 sur les prestations familiales";
+    label en unofficial "action: recovering voluntary L. 742-1 contributions from family benefits";
+}
+
+relation compte_courant_bloque(p: Personne) kind empirical {
+    label fr official "blocage d'un compte courant de dépôts ou d'avances recevant les prestations (L. 553-4 III)";
+    label en unofficial "blocking of a deposit or advance current account receiving benefits (L. 553-4 III)";
+}
+
+relation protection_compte_maintenue(p: Personne) kind institutional {
+    key(p);
+    label fr official "le blocage ne fait pas obstacle à l'insaisissabilité et à l'incessibilité (L. 553-4 III al. 1)";
+    label en unofficial "blocking does not defeat unseizability and unassignability (L. 553-4 III para. 1)";
+}
+
+relation prestations_versees_compte(p: Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "prestations familiales servies par versement à un compte courant, montant mensuel (L. 553-4 III al. 2)";
+    label en unofficial "family benefits paid into a current account, monthly amount (L. 553-4 III para. 2)";
+}
+
+relation retrait_mensuel_autorise_limite(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "retrait mensuel autorisé malgré opposition, dans la limite des prestations versées (L. 553-4 III al. 2)";
+    label en unofficial "monthly withdrawal allowed despite opposition, up to the paid benefits (L. 553-4 III para. 2)";
+}
+
+relation retrait_fonds_action(p: Personne) kind empirical {
+    key(p);
+    label fr official "action: retrait mensuel de fonds du compte courant malgré opposition";
+    label en unofficial "action: monthly fund withdrawal from the current account despite opposition";
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+external judgment relation disproportion_train_de_vie(p: Personne) {
+    authority Organisme;
+    label fr official "disproportion marquée entre le train de vie et les ressources déclarées (L. 553-5 al. 1)";
+    label en unofficial "marked disproportion between lifestyle and declared resources (L. 553-5 para. 1)";
+}
+
+relation evaluation_forfaitaire_possible(p: Personne) kind institutional {
+    key(p);
+    label fr official "une évaluation forfaitaire des éléments de train de vie peut être prise en compte (L. 553-5 al. 1)";
+    label en unofficial "lump-sum assessment of lifestyle items may be counted (L. 553-5 para. 1)";
+}
+
+function indemnite_dix_pourcent(sommes: Money) -> Money =
+    sommes * 0.10;
+
+function majorations_apres_priorite(majorations: Money, prestations: Money) -> Money =
+    majorations - prestations;
+
+const ZeroMajorations: Money = 0.00 EUR {
+    label fr official "majorations entièrement exclues par priorité (L. 553-3 al. 1)";
+    label en unofficial "increases fully excluded by priority (L. 553-3 para. 1)";
+}
+
+@source(CSS_L553_2, CSS_L553_2_CSS_ED2025_02, CSS_L553_2_CSS_ED2025_09, CSS_L553_2_CSS_ED2025_12,
+        CSS_L553_2_CSS_ED2026_01, CSS_L553_2_CSS_ED2026_04, CSS_L553_2_CSS_ED2026_06)
+rule InduRetenues(p: Personne, montant: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "Tout indu est récupéré par retenues sur les prestations à venir, sauf option du remboursement unique";
+    label en unofficial "Every indu is recovered by deductions from future benefits, absent the single-repayment option";
+    when indu_constate(p, montant) and not option_remboursement_unique(p);
+    then indu_recupere_retenues(p);
+}
+
+@source(CSS_L553_2, CSS_L553_2_CSS_ED2025_02, CSS_L553_2_CSS_ED2025_09, CSS_L553_2_CSS_ED2025_12,
+        CSS_L553_2_CSS_ED2026_01, CSS_L553_2_CSS_ED2026_04, CSS_L553_2_CSS_ED2026_06)
+rule InduRemboursementUnique(p: Personne, montant: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "Si l'allocataire opte pour cette solution: remboursement intégral en un seul versement";
+    label en unofficial "At the allocataire's option: full repayment in a single payment";
+    when indu_constate(p, montant) and option_remboursement_unique(p);
+    then indu_rembourse_unique(p);
+}
+
+@source(CSS_L553_2, CSS_L553_2_CSS_ED2025_02, CSS_L553_2_CSS_ED2025_09, CSS_L553_2_CSS_ED2025_12,
+        CSS_L553_2_CSS_ED2026_01, CSS_L553_2_CSS_ED2026_04, CSS_L553_2_CSS_ED2026_06)
+rule IndemniteFraisGestion(p: Personne, sommes: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "En cas de fraude: indemnité de 10 % des sommes réclamées au titre des prestations versées à tort";
+    label en unofficial "In case of fraud: 10% indemnity on amounts wrongly paid";
+    when indu_constate(p, sommes) and indu_frauduleux(p);
+    then indemnite_frais_gestion(p, indemnite_dix_pourcent(sommes));
+}
+
+@source(CSS_L553_2, CSS_L553_2_CSS_ED2025_02, CSS_L553_2_CSS_ED2025_09, CSS_L553_2_CSS_ED2025_12,
+        CSS_L553_2_CSS_ED2026_01, CSS_L553_2_CSS_ED2026_04, CSS_L553_2_CSS_ED2026_06)
+rule ReiterationFraude(p: Personne, premiere: Date, nouvelle: Date) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "Réitération de la fraude dans les cinq ans de la notification: le taux de majoration est doublé";
+    label en unofficial "Repeat fraud within five years of notification: the increase rate is doubled";
+    when premiere_majoration_notifiee_le(p, premiere) and nouvelle_fraude_le(p, nouvelle)
+        and nouvelle < add_calendar_period(premiere, 5 calendar_year);
+    then fraude_reiteree(p);
+}
+
+@source(CSS_L553_2_1, CSS_L553_2_1_CSS_ED2025_09, CSS_L553_2_1_CSS_ED2025_12,
+        CSS_L553_2_1_CSS_ED2026_01, CSS_L553_2_1_CSS_ED2026_04, CSS_L553_2_1_CSS_ED2026_06)
+rule ContrainteApresMiseEnDemeure(p: Personne, mise: Date, date: Date) strict {
+    effective [@2025-02-28, infinity);
+    label fr official "Etablissement éligible, notification, rejet des observations, mise en demeure recommandée restée sans effet après un mois: contrainte à effets de jugement (opposition non requise pour la délivrance)";
+    label en unofficial "Eligible establishment, notice, rejected observations, registered demand without effect after one month: contrainte with judgment effect (no opposition needed for issue)";
+    when etablissement_service_eligible_l5532_1(p) and notification_recouvrement_adressee(p)
+        and observations_interesse_rejetees(p) and mise_en_demeure_adressee_le(p, mise)
+        and mise_en_demeure_sans_effet(p, mise) and date_appreciation(p, date)
+        and date >= add_calendar_period(mise, 1 calendar_month);
+    then contrainte_possible(p);
+}
+
+@source(CSS_L553_2_1, CSS_L553_2_1_CSS_ED2025_09, CSS_L553_2_1_CSS_ED2025_12,
+        CSS_L553_2_1_CSS_ED2026_01, CSS_L553_2_1_CSS_ED2026_04, CSS_L553_2_1_CSS_ED2026_06)
+rule MajorationMiseEnDemeure(p: Personne, sommes: Money, mise: Date, echeance: Date, date: Date) strict {
+    effective [@2025-02-28, infinity);
+    label fr official "Etablissement éligible, notification initiale, rejet des observations, mise en demeure recommandée: majoration de 10 % des sommes issues de la notification, non réglées à l'exigibilité échue (remise possible)";
+    label en unofficial "Eligible establishment, initial notice, rejected observations, registered demand: 10% increase on notice-sourced sums unpaid at the passed due date (remission possible)";
+    when etablissement_service_eligible_l5532_1(p) and notification_recouvrement_adressee(p)
+        and observations_interesse_rejetees(p) and mise_en_demeure_adressee_le(p, mise)
+        and sommes_mise_issues_notification(p, sommes) and sommes_non_reglees(p, sommes)
+        and date_exigibilite_mise_le(p, echeance) and date_appreciation(p, date)
+        and date >= echeance;
+    then majoration_mise_en_demeure(p, indemnite_dix_pourcent(sommes));
+}
+
+@source(CSS_L553_2_1, CSS_L553_2_1_CSS_ED2025_09, CSS_L553_2_1_CSS_ED2025_12,
+        CSS_L553_2_1_CSS_ED2026_01, CSS_L553_2_1_CSS_ED2026_04, CSS_L553_2_1_CSS_ED2026_06)
+rule RemiseMajorationMiseEnDemeure(o: Organisme, p: Personne, montant: Money) strict {
+    effective [@2025-02-28, infinity);
+    label fr official "La majoration de 10 % appliquée peut faire l'objet d'une remise par l'organisme";
+    label en unofficial "The applied 10% increase may be remitted by the body";
+    when majoration_mise_en_demeure(p, montant) and organisme_debiteur_pf(o, p);
+    then liberty RemettreMajorationMiseEnDemeure {
+        holder o;
+        action remettre_majoration_action(o, p);
+        window [@2025-02-28, infinity);
+    };
+}
+
+@source(CSS_L553_3, CSS_L553_3_CSS_ED2021_05, CSS_L553_3_CSS_ED2021_11, CSS_L553_3_CSS_ED2021_12,
+        CSS_L553_3_CSS_ED2022_01, CSS_L553_3_CSS_ED2022_02, CSS_L553_3_CSS_ED2022_03,
+        CSS_L553_3_CSS_ED2022_09, CSS_L553_3_CSS_ED2023_07, CSS_L553_3_CSS_ED2024_01,
+        CSS_L553_3_CSS_ED2025_02, CSS_L553_3_CSS_ED2025_09, CSS_L553_3_CSS_ED2025_12,
+        CSS_L553_3_CSS_ED2026_01, CSS_L553_3_CSS_ED2026_04, CSS_L553_3_CSS_ED2026_06)
+rule PrioritePrestations(p: Personne, e: Enfant, prestations: Money, majorations: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Même enfant et majoration énumérée, hors logement-handicapé et hors ASF: prestations par priorité, majorations réduites à due concurrence";
+    label en unofficial "Same child and listed increase, outside housing-disabled and ASF exclusions: priority benefits, increases reduced accordingly";
+    when montant_prestations_familiales(p, prestations) and montant_majorations_concurrentes(p, majorations)
+        and meme_enfant_pf_majoration(p, e) and majoration_enumereree_l5533(p, e)
+        and not cumul_logement_handicape_exception(p, e) and not asf_en_cause_l5533(p, e)
+        and prestations < majorations;
+    then majorations_reduites(p, majorations_apres_priorite(majorations, prestations));
+}
+
+@source(CSS_L553_3, CSS_L553_3_CSS_ED2021_05, CSS_L553_3_CSS_ED2021_11, CSS_L553_3_CSS_ED2021_12,
+        CSS_L553_3_CSS_ED2022_01, CSS_L553_3_CSS_ED2022_02, CSS_L553_3_CSS_ED2022_03,
+        CSS_L553_3_CSS_ED2022_09, CSS_L553_3_CSS_ED2023_07, CSS_L553_3_CSS_ED2024_01,
+        CSS_L553_3_CSS_ED2025_02, CSS_L553_3_CSS_ED2025_09, CSS_L553_3_CSS_ED2025_12,
+        CSS_L553_3_CSS_ED2026_01, CSS_L553_3_CSS_ED2026_04, CSS_L553_3_CSS_ED2026_06)
+rule PrioritePrestationsExclusionTotale(p: Personne, e: Enfant, prestations: Money, majorations: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Priorité absorbant toute la majoration: majorations exclues, ramenées à zéro";
+    label en unofficial "Priority consuming the whole increase: increases excluded, reduced to zero";
+    when montant_prestations_familiales(p, prestations) and montant_majorations_concurrentes(p, majorations)
+        and meme_enfant_pf_majoration(p, e) and majoration_enumereree_l5533(p, e)
+        and not cumul_logement_handicape_exception(p, e) and not asf_en_cause_l5533(p, e)
+        and prestations >= majorations;
+    then majorations_reduites(p, ZeroMajorations);
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule Insaisissabilite(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Les prestations familiales sont incessibles et insaisissables";
+    label en unofficial "Family benefits are unassignable and unseizable";
+    when allocataire(p);
+    then immunity InsaisissabilitePrestations {
+        holder p;
+        protected_effect saisie_action(p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule SaisieFraudePossible(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Sauf pour le recouvrement des indus versés à la suite d'une manoeuvre frauduleuse: saisie possible (L. 553-4 I, première branche)";
+    label en unofficial "Except recovery of overpayments following a fraudulent scheme: attachment possible (L. 553-4 I, first branch)";
+    when allocataire(p) and organisme_debiteur_pf(o, p) and indu_frauduleux(p);
+    then liberty SaisieInduFrauduleux {
+        holder o;
+        action saisie_action(p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule SaisieFausseDeclarationPossible(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Sauf pour le recouvrement des indus versés à la suite d'une fausse déclaration: saisie possible (L. 553-4 I, seconde branche)";
+    label en unofficial "Except recovery of overpayments following a false declaration: attachment possible (L. 553-4 I, second branch)";
+    when allocataire(p) and organisme_debiteur_pf(o, p) and indu_fausse_declaration(p);
+    then liberty SaisieInduFausseDeclaration {
+        holder o;
+        action saisie_action(p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule SaisiePrestation1Degre(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "1° du I: saisie possible d'une prestation listée (base, PreParE, AF, CF, ARS, ASF) pour dette alimentaire ou créance L. 581";
+    label en unofficial "I 1: listed benefit (base, PreParE, AF, CF, ARS, ASF) attachable for maintenance or L. 581 claim";
+    when allocataire(p) and organisme_debiteur_pf(o, p) and saisie_alimentaire_possible(p)
+        and creance_1degre_alimentaire_l581(p) and prestation_listee_1degre(p);
+    then liberty SaisieCas1Degre {
+        holder o;
+        action saisie_action(p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule SaisieAeeh2Degre(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "2° du I: saisie possible de l'AEEH pour frais de soins, hébergement, éducation ou formation";
+    label en unofficial "I 2: AEEH attachable for care, accommodation, education or training costs";
+    when allocataire(p) and organisme_debiteur_pf(o, p) and saisie_alimentaire_possible(p)
+        and frais_2degre_soins_hebergement(p) and prestation_aeeh_2degre(p);
+    then liberty SaisieCas2Degre {
+        holder o;
+        action saisie_action(p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule PaiementDirectAeehFraisImpayes(o: Organisme, e: Personne, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "2° du I: frais impayés, la personne assumant la charge obtient le versement direct de l'AEEH";
+    label en unofficial "I 2: unpaid costs, the charge-bearing person obtains direct AEEH payment";
+    when allocataire(p) and organisme_debiteur_pf(o, p)
+        and frais_aeeh_impayes(p) and assume_charge_education_speciale(e, p);
+    then liberty PaiementDirectAeeh {
+        holder e;
+        action versement_direct_aeeh_action(o, e, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule PensionIntermediationAccord(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Parent débiteur bénéficiaire: pension via l'intermédiation L. 582-1 prélevée sur les prestations avec son accord";
+    label en unofficial "Debtor parent on benefits: pension through L. 582-1 intermediation taken from benefits with agreement";
+    when parent_debiteur_beneficiaire_pf(p) and organisme_debiteur_pf(o, p)
+        and intermediation_financiere_l5821(p) and accord_paiement_pension_pf(p);
+    then liberty PrelevementPensionIntermediation {
+        holder o;
+        action prelevement_pension_intermediation_action(o, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule CotisationsVolontairesSurPrestations(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Sur demande: cotisations volontaires L. 742-1 recouvrées sur les prestations L. 511-1 hors logement";
+    label en unofficial "On request: voluntary L. 742-1 contributions recovered from L. 511-1 benefits except housing";
+    when allocataire(p) and organisme_debiteur_pf(o, p)
+        and demande_cotisations_volontaires(p) and prestation_l5111_hors_logement(p);
+    then liberty PrelevementCotisationsVolontaires {
+        holder o;
+        action recouvrement_cotisations_action(o, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule ProtectionCompteBloque(p: Personne) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "III: le blocage du compte courant ne fait pas obstacle à l'insaisissabilité et à l'incessibilité";
+    label en unofficial "III: current-account blocking does not defeat unseizability and unassignability";
+    when allocataire(p) and compte_courant_bloque(p);
+    then protection_compte_maintenue(p);
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule RetraitMensuelLimite(p: Personne, montant: Money) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "III: retrait mensuel autorisé malgré opposition, dans la limite des prestations versées au compte";
+    label en unofficial "III: monthly withdrawal allowed despite opposition, up to the benefits paid into the account";
+    when allocataire(p) and prestations_versees_compte(p, montant);
+    then retrait_mensuel_autorise_limite(p, montant);
+}
+
+@source(CSS_L553_4, CSS_L553_4_CSS_ED2021_05, CSS_L553_4_CSS_ED2021_11, CSS_L553_4_CSS_ED2021_12,
+        CSS_L553_4_CSS_ED2022_01, CSS_L553_4_CSS_ED2022_02, CSS_L553_4_CSS_ED2022_03,
+        CSS_L553_4_CSS_ED2022_09, CSS_L553_4_CSS_ED2023_07, CSS_L553_4_CSS_ED2024_01,
+        CSS_L553_4_CSS_ED2025_02, CSS_L553_4_CSS_ED2025_09, CSS_L553_4_CSS_ED2025_12,
+        CSS_L553_4_CSS_ED2026_01, CSS_L553_4_CSS_ED2026_04, CSS_L553_4_CSS_ED2026_06)
+rule LiberteRetraitFonds(p: Personne, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "III: l'allocataire peut retirer chaque mois les fonds dans la limite des prestations";
+    label en unofficial "III: allocataire may monthly withdraw funds up to the benefits";
+    when retrait_mensuel_autorise_limite(p, montant);
+    then liberty RetraitFondsCompte {
+        holder p;
+        action retrait_fonds_action(p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L553_5, CSS_L553_5_CSS_ED2021_05, CSS_L553_5_CSS_ED2021_11, CSS_L553_5_CSS_ED2021_12,
+        CSS_L553_5_CSS_ED2022_01, CSS_L553_5_CSS_ED2022_02, CSS_L553_5_CSS_ED2022_03,
+        CSS_L553_5_CSS_ED2022_09, CSS_L553_5_CSS_ED2023_07, CSS_L553_5_CSS_ED2024_01,
+        CSS_L553_5_CSS_ED2025_02, CSS_L553_5_CSS_ED2025_09, CSS_L553_5_CSS_ED2025_12,
+        CSS_L553_5_CSS_ED2026_01, CSS_L553_5_CSS_ED2026_04, CSS_L553_5_CSS_ED2026_06)
+rule EvaluationForfaitaireTrainDeVie(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Hors section R. 553-3 (autres prestations): disproportion marquée constatée par l'organisme, forfait pris en compte (L. 553-5)";
+    label en unofficial "Outside the R. 553-3 section (other benefits): organ-found marked disproportion, schedule counts (L. 553-5)";
+    when disproportion_train_de_vie(p) and prestation_hors_section(p)
+        and not section_train_vie_applicable(p);
+    then evaluation_forfaitaire_possible(p);
+}
+
+@source(CSS_L553_5, CSS_L553_5_CSS_ED2021_05, CSS_L553_5_CSS_ED2021_11, CSS_L553_5_CSS_ED2021_12,
+        CSS_L553_5_CSS_ED2022_01, CSS_L553_5_CSS_ED2022_02, CSS_L553_5_CSS_ED2022_03,
+        CSS_L553_5_CSS_ED2022_09, CSS_L553_5_CSS_ED2023_07, CSS_L553_5_CSS_ED2024_01,
+        CSS_L553_5_CSS_ED2025_02, CSS_L553_5_CSS_ED2025_09, CSS_L553_5_CSS_ED2025_12,
+        CSS_L553_5_CSS_ED2026_01, CSS_L553_5_CSS_ED2026_04, CSS_L553_5_CSS_ED2026_06,
+        CSS_R553_3_5, CSS_R553_3_5_CSS_ED2021_05, CSS_R553_3_5_CSS_ED2021_11,
+        CSS_R553_3_5_CSS_ED2021_12, CSS_R553_3_5_CSS_ED2022_01, CSS_R553_3_5_CSS_ED2022_02,
+        CSS_R553_3_5_CSS_ED2022_03, CSS_R553_3_5_CSS_ED2022_09, CSS_R553_3_5_CSS_ED2023_07,
+        CSS_R553_3_5_CSS_ED2024_01, CSS_R553_3_5_CSS_ED2025_02, CSS_R553_3_5_CSS_ED2025_09,
+        CSS_R553_3_5_CSS_ED2025_12, CSS_R553_3_5_CSS_ED2026_01, CSS_R553_3_5_CSS_ED2026_04,
+        CSS_R553_3_5_CSS_ED2026_06)
+rule EvaluationForfaitaireReglementaire(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Section R. 553-3: disproportion réglementaire au double du plafond, forfait pris en compte pour le droit (L. 553-5 via R. 553-3-5)";
+    label en unofficial "R. 553-3 section: regulatory disproportion at twice the ceiling, schedule counts (L. 553-5 via R. 553-3-5)";
+    when disproportion_reglementaire_constatee(p);
+    then evaluation_forfaitaire_possible(p);
+}

@@ -1,0 +1,582 @@
+// Montant forfaitaire PPA (personne seule) par mois: цепочка L. 161-25 из закреплённых байтов
+// (L. 842-3, DECISION-0452). Модуль порождён tools/build_forfait_chaine.py из sources/montant/ —
+// руками не править.
+//
+// Сумма задаётся МЕСЯЦЕМ расчёта (R. 843-1: три месяца квартала), поэтому окна — условия на дату
+// месяца, а не `effective`. Декрет называет сумму: правило окна несёт её как норму и объявляет её
+// опубликованной. Построение — предыдущая сумма × коэффициент L. 161-25 на 1 апреля, округление
+// до сантима HALF_UP: тексты округления не называют, это ЧТЕНИЕ (§152, прочтение D-82, практика
+// касс), поэтому построенное выводится только под ForfaitRevalorisationArrondiCentime. Окно
+// 01.07.2022 — 31.03.2023 не имеет декрета: сумма декрета 2022-701 × 1,04 (ст. 9 закона 2022-1158)
+// и есть норма окна, под тем же чтением. 1 апреля 2023 ст. 9 берёт коэффициент L. 161-25 (1,056)
+// на 1,04. Построенное сверяется с опубликованным и с числом, предъявленным делом. Число дела
+// (forfait_base_retenu) вытесняет сумму декрета.
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27,
+    DEC2020_491_ART1,
+    DEC2021_528_ART1,
+    DEC2022_701_ART1,
+    DEC2023_343_ART1,
+    DEC2024_403_ART1,
+    DEC2025_294_ART1,
+    DEC2026_222_ART2,
+    DEC2026_222_ART3,
+    DSS_2026_46_COEFF,
+    DSS_2B_2021_65_COEFF,
+    DSS_2B_2022_82_COEFF,
+    DSS_2B_2023_41_COEFF,
+    DSS_2B_2024_43_COEFF,
+    DSS_2B_2025_38_COEFF,
+    DSS_SD2B_2020_33_COEFF,
+    Demandeur,
+    FormeFoyer,
+    LOI_2022_1158_ART9,
+    forfait_base_retenu,
+    forme_foyer_retenue,
+};
+
+pub relation forfait_base_saisi(mois: Date) kind institutional {
+    key(mois);
+    label fr official "une base mensuelle personne seule est fournie pour le mois (forfait_base_retenu) et prévaut sur celle des décrets";
+    label en unofficial "a single-person monthly base is supplied for the month (forfait_base_retenu) and prevails over the decree amounts";
+}
+
+pub relation forfait_base_du_mois(mois: Date, base: Money) kind institutional {
+    key(mois);
+    label fr official "montant forfaitaire personne seule applicable au mois : base fournie pour l'espèce, sinon montant du décret de revalorisation épinglé (L. 842-3)";
+    label en unofficial "single-person flat-rate amount applicable to the month: case-supplied base, otherwise the pinned revaluation decree amount (L. 842-3)";
+}
+
+pub relation forfait_base_publie(mois: Date, base: Money) kind institutional {
+    key(mois);
+    label fr official "montant forfaitaire personne seule publié par le décret de revalorisation en vigueur au mois";
+    label en unofficial "single-person flat-rate amount published by the revaluation decree in force in the month";
+}
+
+pub relation forfait_base_construit(mois: Date, base: Money) kind institutional {
+    key(mois);
+    label fr official "montant forfaitaire construit : montant précédent multiplié par le coefficient L. 161-25, arrondi au centime (lecture)";
+    label en unofficial "flat-rate amount built: previous amount times the L. 161-25 coefficient, rounded to the centime (reading)";
+}
+
+pub relation forfait_base_conforme_publie(mois: Date) kind institutional {
+    key(mois);
+    label fr official "le montant forfaitaire construit est égal au montant publié du décret pour le mois";
+    label en unofficial "the built flat-rate amount equals the decree's published amount for the month";
+}
+
+pub relation forfait_saisi_conforme_construit(mois: Date) kind institutional {
+    key(mois);
+    label fr official "la base fournie pour le mois est égale au montant forfaitaire construit";
+    label en unofficial "the base supplied for the month equals the built flat-rate amount";
+}
+
+@source(
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseSaisiMarque(mois: Date, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "une base fournie pour le mois écarte celle des décrets (marque)";
+    label en unofficial "a base supplied for the month displaces the decree amounts (marker)";
+    when forfait_base_retenu(mois, b);
+    then forfait_base_saisi(mois);
+}
+
+@source(
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseSaisie(mois: Date, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "base mensuelle personne seule fournie pour le mois, retenue telle quelle (L. 842-3)";
+    label en unofficial "single-person monthly base supplied for the month, used as is (L. 842-3)";
+    when forfait_base_retenu(mois, b);
+    then forfait_base_du_mois(mois, b);
+}
+
+@source(
+    DEC2020_491_ART1,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseDecret2020(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire personne seule porté à 553,16 euros par le décret 2020-491, applicable au mois d'avril 2020";
+    label en unofficial "single-person flat-rate amount set at 553.16 euros by decree 2020-491, applicable from April 2020";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2020-04-01 and mois < @2021-04-01 and not_known(forfait_base_saisi(mois));
+    then forfait_base_du_mois(mois, 553.16 EUR);
+}
+
+@source(
+    DEC2020_491_ART1)
+rule ForfaitBasePublie2020(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant publié par le décret 2020-491 : 553,16 euros";
+    label en unofficial "amount published by decree 2020-491: 553.16 euros";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2020-04-01 and mois < @2021-04-01;
+    then forfait_base_publie(mois, 553.16 EUR);
+}
+
+@source(
+    DEC2021_528_ART1,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseDecret2021(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire personne seule porté à 553,71 euros par le décret 2021-528, applicable au mois d'avril 2021";
+    label en unofficial "single-person flat-rate amount set at 553.71 euros by decree 2021-528, applicable from April 2021";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2021-04-01 and mois < @2022-04-01 and not_known(forfait_base_saisi(mois));
+    then forfait_base_du_mois(mois, 553.71 EUR);
+}
+
+@source(
+    DEC2021_528_ART1)
+rule ForfaitBasePublie2021(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant publié par le décret 2021-528 : 553,71 euros";
+    label en unofficial "amount published by decree 2021-528: 553.71 euros";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2021-04-01 and mois < @2022-04-01;
+    then forfait_base_publie(mois, 553.71 EUR);
+}
+
+@source(
+    DEC2020_491_ART1,
+    DSS_2B_2021_65_COEFF,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseConstruit2021(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire construit au 1er avril 2021 : montant précédent multiplié par le coefficient L. 161-25 (1,001), arrondi au centime (lecture)";
+    label en unofficial "flat-rate amount built on 1 April 2021: previous amount times the L. 161-25 coefficient (1.001), rounded to the centime (reading)";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2021-04-01 and mois < @2022-04-01;
+    then forfait_base_construit(mois, round(553.16 EUR * 1.001, 2, "HALF_UP"));
+}
+
+@source(
+    DEC2022_701_ART1,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseDecret2022(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire personne seule porté à 563,68 euros par le décret 2022-701, applicable au mois d'avril 2022";
+    label en unofficial "single-person flat-rate amount set at 563.68 euros by decree 2022-701, applicable from April 2022";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2022-04-01 and mois < @2022-07-01 and not_known(forfait_base_saisi(mois));
+    then forfait_base_du_mois(mois, 563.68 EUR);
+}
+
+@source(
+    DEC2022_701_ART1)
+rule ForfaitBasePublie2022(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant publié par le décret 2022-701 : 563,68 euros";
+    label en unofficial "amount published by decree 2022-701: 563.68 euros";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2022-04-01 and mois < @2022-07-01;
+    then forfait_base_publie(mois, 563.68 EUR);
+}
+
+@source(
+    DEC2021_528_ART1,
+    DSS_2B_2022_82_COEFF,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseConstruit2022(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire construit au 1er avril 2022 : montant précédent multiplié par le coefficient L. 161-25 (1,018), arrondi au centime (lecture)";
+    label en unofficial "flat-rate amount built on 1 April 2022: previous amount times the L. 161-25 coefficient (1.018), rounded to the centime (reading)";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2022-04-01 and mois < @2022-07-01;
+    then forfait_base_construit(mois, round(553.71 EUR * 1.018, 2, "HALF_UP"));
+}
+
+@source(
+    DEC2022_701_ART1,
+    LOI_2022_1158_ART9,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseLoi2022(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire du 1er juillet 2022 : montant du décret 2022-701 multiplié par le coefficient 1,04 de l'article 9 de la loi 2022-1158, arrondi au centime (lecture)";
+    label en unofficial "flat-rate amount from 1 July 2022: decree 2022-701 amount times the 1.04 coefficient of article 9 of Act 2022-1158, rounded to the centime (reading)";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2022-07-01 and mois < @2023-04-01 and not_known(forfait_base_saisi(mois));
+    then forfait_base_du_mois(mois, round(563.68 EUR * 1.04, 2, "HALF_UP"));
+}
+
+@source(
+    DEC2023_343_ART1,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseDecret2023(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire personne seule porté à 595,25 euros par le décret 2023-343, applicable au mois d'avril 2023";
+    label en unofficial "single-person flat-rate amount set at 595.25 euros by decree 2023-343, applicable from April 2023";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2023-04-01 and mois < @2024-04-01 and not_known(forfait_base_saisi(mois));
+    then forfait_base_du_mois(mois, 595.25 EUR);
+}
+
+@source(
+    DEC2023_343_ART1)
+rule ForfaitBasePublie2023(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant publié par le décret 2023-343 : 595,25 euros";
+    label en unofficial "amount published by decree 2023-343: 595.25 euros";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2023-04-01 and mois < @2024-04-01;
+    then forfait_base_publie(mois, 595.25 EUR);
+}
+
+@source(
+    DEC2022_701_ART1,
+    DSS_2B_2023_41_COEFF,
+    LOI_2022_1158_ART9,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseConstruit2023(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire construit au 1er avril 2023 : montant précédent multiplié par le coefficient L. 161-25 (1,056), arrondi au centime (lecture)";
+    label en unofficial "flat-rate amount built on 1 April 2023: previous amount times the L. 161-25 coefficient (1.056), rounded to the centime (reading)";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2023-04-01 and mois < @2024-04-01;
+    then forfait_base_construit(mois, div_round(round(563.68 EUR * 1.04, 2, "HALF_UP") * 1.056, 1.04, 2, "HALF_UP"));
+}
+
+@source(
+    DEC2024_403_ART1,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseDecret2024(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire personne seule porté à 622,63 euros par le décret 2024-403, applicable au mois d'avril 2024";
+    label en unofficial "single-person flat-rate amount set at 622.63 euros by decree 2024-403, applicable from April 2024";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2024-04-01 and mois < @2025-04-01 and not_known(forfait_base_saisi(mois));
+    then forfait_base_du_mois(mois, 622.63 EUR);
+}
+
+@source(
+    DEC2024_403_ART1)
+rule ForfaitBasePublie2024(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant publié par le décret 2024-403 : 622,63 euros";
+    label en unofficial "amount published by decree 2024-403: 622.63 euros";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2024-04-01 and mois < @2025-04-01;
+    then forfait_base_publie(mois, 622.63 EUR);
+}
+
+@source(
+    DEC2023_343_ART1,
+    DSS_2B_2024_43_COEFF,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseConstruit2024(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire construit au 1er avril 2024 : montant précédent multiplié par le coefficient L. 161-25 (1,046), arrondi au centime (lecture)";
+    label en unofficial "flat-rate amount built on 1 April 2024: previous amount times the L. 161-25 coefficient (1.046), rounded to the centime (reading)";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2024-04-01 and mois < @2025-04-01;
+    then forfait_base_construit(mois, round(595.25 EUR * 1.046, 2, "HALF_UP"));
+}
+
+@source(
+    DEC2025_294_ART1,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseDecret2025(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire personne seule porté à 633,21 euros par le décret 2025-294, applicable au mois d'avril 2025";
+    label en unofficial "single-person flat-rate amount set at 633.21 euros by decree 2025-294, applicable from April 2025";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2025-04-01 and mois < @2026-04-01 and not_known(forfait_base_saisi(mois));
+    then forfait_base_du_mois(mois, 633.21 EUR);
+}
+
+@source(
+    DEC2025_294_ART1)
+rule ForfaitBasePublie2025(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant publié par le décret 2025-294 : 633,21 euros";
+    label en unofficial "amount published by decree 2025-294: 633.21 euros";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2025-04-01 and mois < @2026-04-01;
+    then forfait_base_publie(mois, 633.21 EUR);
+}
+
+@source(
+    DEC2024_403_ART1,
+    DSS_2B_2025_38_COEFF,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseConstruit2025(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire construit au 1er avril 2025 : montant précédent multiplié par le coefficient L. 161-25 (1,017), arrondi au centime (lecture)";
+    label en unofficial "flat-rate amount built on 1 April 2025: previous amount times the L. 161-25 coefficient (1.017), rounded to the centime (reading)";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2025-04-01 and mois < @2026-04-01;
+    then forfait_base_construit(mois, round(622.63 EUR * 1.017, 2, "HALF_UP"));
+}
+
+@source(
+    DEC2026_222_ART2,
+    DEC2026_222_ART3,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseDecret2026(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire personne seule porté à 638,28 euros par le décret 2026-222, applicable au mois d'avril 2026";
+    label en unofficial "single-person flat-rate amount set at 638.28 euros by decree 2026-222, applicable from April 2026";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2026-04-01 and not_known(forfait_base_saisi(mois));
+    then forfait_base_du_mois(mois, 638.28 EUR);
+}
+
+@source(
+    DEC2026_222_ART2,
+    DEC2026_222_ART3)
+rule ForfaitBasePublie2026(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant publié par le décret 2026-222 : 638,28 euros";
+    label en unofficial "amount published by decree 2026-222: 638.28 euros";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2026-04-01;
+    then forfait_base_publie(mois, 638.28 EUR);
+}
+
+@source(
+    DEC2025_294_ART1,
+    DSS_2026_46_COEFF,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseConstruit2026(d: Demandeur, mois: Date, f: FormeFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant forfaitaire construit au 1er avril 2026 : montant précédent multiplié par le coefficient L. 161-25 (1,008), arrondi au centime (lecture)";
+    label en unofficial "flat-rate amount built on 1 April 2026: previous amount times the L. 161-25 coefficient (1.008), rounded to the centime (reading)";
+    when forme_foyer_retenue(d, mois, f) and mois >= @2026-04-01;
+    then forfait_base_construit(mois, round(633.21 EUR * 1.008, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitBaseConformePublie(mois: Date, p: Money, c: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le montant forfaitaire construit par la chaîne L. 161-25 est égal au montant publié du décret";
+    label en unofficial "the flat-rate amount built by the L. 161-25 chain equals the decree's published amount";
+    when forfait_base_publie(mois, p) and forfait_base_construit(mois, c) and p == c;
+    then forfait_base_conforme_publie(mois);
+}
+
+@source(
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule ForfaitSaisiConformeConstruit(mois: Date, s: Money, c: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la base fournie pour le mois est égale au montant forfaitaire construit par la chaîne L. 161-25";
+    label en unofficial "the base supplied for the month equals the flat-rate amount built by the L. 161-25 chain";
+    when forfait_base_retenu(mois, s) and forfait_base_construit(mois, c) and s == c;
+    then forfait_saisi_conforme_construit(mois);
+}
+
+@source(
+    LOI_2022_1158_ART9,
+    DSS_SD2B_2020_33_COEFF,
+    DSS_2B_2021_65_COEFF,
+    DSS_2B_2022_82_COEFF,
+    DSS_2B_2023_41_COEFF,
+    DSS_2B_2024_43_COEFF,
+    DSS_2B_2025_38_COEFF,
+    DSS_2026_46_COEFF)
+pub interpretation ForfaitRevalorisationArrondiCentime of LOI_2022_1158_ART9 {
+    status disputed;
+    label fr official "lecture : le produit du montant forfaitaire précédent par le coefficient de revalorisation (L. 161-25, ou 1,04 de l'article 9 de la loi 2022-1158) est arrondi au centime, demi vers le haut — pratique des caisses (CNAF) ; ni le décret ni L. 842-3 ni L. 161-25 ni l'article 9 ne fixent d'arrondi";
+    label en unofficial "reading: the product of the previous flat-rate amount and the revaluation coefficient (L. 161-25, or the 1.04 of article 9 of Act 2022-1158) is rounded to the centime, half up - fund (CNAF) practice; neither the decree nor L. 842-3 nor L. 161-25 nor article 9 states a rounding";
+    include ForfaitBaseConstruit2021;
+    include ForfaitBaseConstruit2022;
+    include ForfaitBaseLoi2022;
+    include ForfaitBaseConstruit2023;
+    include ForfaitBaseConstruit2024;
+    include ForfaitBaseConstruit2025;
+    include ForfaitBaseConstruit2026;
+}

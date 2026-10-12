@@ -1,0 +1,19 @@
+// Long foreseeable duration: 14 months from month 120 — the decree
+// one-year mark builds the point at 132, the request at 131 is in the
+// last month before it.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reexamen-un-an" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-rxu-01": debut_traitement_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rxu"), 120) { origin case_input; }
+        assert "ajpp-rxu-02": duree_previsible_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rxu"), 14) { origin case_input; }
+        assert "ajpp-rxu-03": demande_reexamen_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rxu"), 131) { origin case_input; }
+    }
+    evaluate truth(reexamen_demande_recevable(entity_ref("urn:fr:pf-ajpp:case:enfant-rxu")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

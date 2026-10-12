@@ -1,0 +1,36 @@
+// Transitional differential, childminder under three: average loss
+// 500 - 300 = 200.00 under 90% of the 1 000.00 net (300.00 counted
+// with the 100.00 paid); October 2025 precedes the 2026-cohort
+// extinction; the right is open and the amount is 200.00.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-differentiel-ouvert" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "diff-01": moyenne_ancien_droit(entity_ref("urn:fr:pf-cmg:case:differentiel"), 500 EUR) { origin case_input; }
+        assert "diff-02": moyenne_nouveau_droit(entity_ref("urn:fr:pf-cmg:case:differentiel"), 300 EUR) { origin case_input; }
+        assert "diff-03": mode_garde(entity_ref("urn:fr:pf-cmg:case:differentiel"), entity_ref("urn:fr:pf-cmg:child:diff"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "diff-04": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:differentiel"), 1) { origin case_input; }
+        assert "diff-05": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:diff"), 2) { origin case_input; }
+        assert "diff-06": heures_moyennes_periode(entity_ref("urn:fr:pf-cmg:case:differentiel"), 120.0) { origin case_input; }
+        assert "diff-07": ressources_mois_reference(entity_ref("urn:fr:pf-cmg:case:differentiel"), 2000 EUR) { origin case_input; }
+        assert "diff-08-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:differentiel"), 17633 EUR) { origin case_input; }
+        assert "diff-08-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:differentiel"), 2917 EUR) { origin case_input; }
+        assert "diff-08-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:differentiel"), 39184 EUR) { origin case_input; }
+        assert "diff-08-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:differentiel"), 6482 EUR) { origin case_input; }
+        assert "diff-09": mois_droit(@2025-10-01) { origin case_input; }
+        assert "diff-10": date_3eme_anniversaire(entity_ref("urn:fr:pf-cmg:child:diff"), @2026-05-01) { origin case_input; }
+        assert "diff-11": remuneration_nette_salarie(entity_ref("urn:fr:pf-cmg:case:differentiel"), 1000 EUR) { origin case_input; }
+        assert "diff-12": cmg_verse(entity_ref("urn:fr:pf-cmg:case:differentiel"), entity_ref("urn:fr:pf-cmg:child:diff"), 100 EUR) { origin case_input; }
+    }
+    evaluate truth(differentiel_ouvert(entity_ref("urn:fr:pf-cmg:case:differentiel"), entity_ref("urn:fr:pf-cmg:child:diff")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_differentiel(entity_ref("urn:fr:pf-cmg:case:differentiel"), entity_ref("urn:fr:pf-cmg:child:diff"), 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

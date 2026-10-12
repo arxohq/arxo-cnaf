@@ -1,0 +1,27 @@
+// Isolated-major exception evidence (PA-R4-07): an isolated-major
+// amount with a kept child affirmatively bars suspension; without
+// any exception evidence suspension stays undetermined (R.846-8).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-incarceration-exception-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": incarceration_en_cours(entity_ref("urn:fr:ppa:case:incarceration-majo")) { origin case_input; }
+        assert "ppa-02": deuxieme_reexamen_depasse(entity_ref("urn:fr:ppa:case:incarceration-majo")) { origin case_input; }
+        assert "ppa-03": majo_isolee_avec_enfant(entity_ref("urn:fr:ppa:case:incarceration-majo")) { origin case_input; }
+        assert "ppa-06": foyer_sans_conjoint_ni_charge(entity_ref("urn:fr:ppa:case:incarceration-majo")) { origin case_input; }
+        assert "ppa-04": incarceration_en_cours(entity_ref("urn:fr:ppa:case:incarceration-inconnue")) { origin case_input; }
+        assert "ppa-05": deuxieme_reexamen_depasse(entity_ref("urn:fr:ppa:case:incarceration-inconnue")) { origin case_input; }
+        assert "ppa-07": foyer_sans_conjoint_ni_charge(entity_ref("urn:fr:ppa:case:incarceration-inconnue")) { origin case_input; }
+    }
+    evaluate truth(prime_suspendue_incarceration(entity_ref("urn:fr:ppa:case:incarceration-majo")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(prime_suspendue_incarceration(entity_ref("urn:fr:ppa:case:incarceration-inconnue")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

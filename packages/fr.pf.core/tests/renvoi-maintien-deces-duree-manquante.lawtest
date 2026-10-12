@@ -1,0 +1,15 @@
+// Maintien period missing: decree period never pinned and no listed benefit - no maintien conclusion (L. 552-7 boundary, duree_maintien_fixee absent, PC-R07-17 enumerated).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-renvoi-maintien-deces-duree-manquante" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "renvoi-maintien-deces-duree-manquante-01": deces_enfant_charge(entity_ref("urn:fr:pf:case:enfant-deces-maintien")) { origin case_input; }
+    }
+    evaluate truth(prestations_maintenues_deces(entity_ref("urn:fr:pf:case:enfant-deces-maintien")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

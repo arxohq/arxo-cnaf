@@ -1,0 +1,53 @@
+// DOM right open, two children in Guadeloupe: resources 30000 equal the
+// two-child ceiling 30000 (equality opens, L. 755-16 «n'excèdent pas»).
+// Both children are over three; only the younger is under five.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-droit-ouvert" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ddo-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert-e1")) { origin case_input; }
+        assert "ddo-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert-e2")) { origin case_input; }
+        assert "ddo-03": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert-e1")) { origin case_input; }
+        assert "ddo-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert-e2")) { origin case_input; }
+        assert "ddo-05": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert-e1"), @2017-03-15) { origin case_input; }
+        assert "ddo-06": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert-e2"), @2015-03-15) { origin case_input; }
+        assert "ddo-07": mois_droit(@2021-06-01) { origin case_input; }
+        assert "ddo-08": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), 2) { origin case_input; }
+        assert "ddo-09": ressources_menage(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), 30000 EUR) { origin case_input; }
+        assert "ddo-10": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), 20000 EUR) { origin case_input; }
+        assert "ddo-10a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), 5000 EUR) { origin case_input; }
+        assert "ddo-10b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), 6000 EUR) { origin case_input; }
+        assert "ddo-10c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), 10000 EUR) { origin case_input; }
+        assert "ddo-10d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), 2500 EUR) { origin case_input; }
+        assert "ddo-10e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), 3000 EUR) { origin case_input; }
+        assert "ddo-11": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert")) { origin case_input; }
+        assert "ddo-12": territoire(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert"), GUADELOUPE) { origin case_input; }
+        assert "ddo-13": cadre_cf_dom_remplie(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert")) { origin case_input; }
+        assert "ddo-14": presence_jeune_dom(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert")) { origin case_input; }
+        assert "ddo-15": departement_l751_1(GUADELOUPE) { origin case_input; }
+    }
+    evaluate truth(cf_dom_enfant_ancien(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_enfant_ancien(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert-e2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_enfant_jeune(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_enfant_jeune(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert-e2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_droit_ouvert(entity_ref("urn:fr:pf-cf:case:dom-droit-ouvert")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

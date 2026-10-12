@@ -1,0 +1,18 @@
+// 2026 cohort: partial-rate PreParE mid-right with part-time indemnities - cumulation admitted (L. 532-2 III).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cumul-partiel-encours-2026" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "cumul-partiel-encours-2026-01": beneficie_prepare_taux_partiel(entity_ref("urn:fr:pf:case:partiel-2026"), entity_ref("urn:fr:pf:case:enfant-2026b")) { origin case_input; }
+        assert "cumul-partiel-encours-2026-02": prepare_en_cours(entity_ref("urn:fr:pf:case:partiel-2026"), entity_ref("urn:fr:pf:case:enfant-2026b")) { origin case_input; }
+        assert "cumul-partiel-encours-2026-03": indemnites_temps_partiel_1_4(entity_ref("urn:fr:pf:case:partiel-2026")) { origin case_input; }
+        assert "cumul-partiel-encours-2026-04": cohorte_2026(entity_ref("urn:fr:pf:case:enfant-2026b")) { origin case_input; }
+    }
+    evaluate truth(cumul_prepare_partiel_encours_admis(entity_ref("urn:fr:pf:case:partiel-2026"), entity_ref("urn:fr:pf:case:enfant-2026b")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

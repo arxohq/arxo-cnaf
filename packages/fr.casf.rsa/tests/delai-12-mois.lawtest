@@ -1,0 +1,21 @@
+// Twelve-month orientation period: health vulnerability identified in
+// the global diagnostic, diagnostic-established obstacle to job-seeking
+// engagement, eight months of required prior support (> 6)
+// (D. 262-65-2-1).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-delai-12-mois" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "del-01": vulnerabilite_constatee(entity_ref("urn:fr:rsa:case:delai-12-mois"), SANTE) { origin case_input; }
+        assert "del-02": diagnostic_global(entity_ref("urn:fr:rsa:case:delai-12-mois")) { origin case_input; }
+        assert "del-03": obstacle_engagement_emploi(entity_ref("urn:fr:rsa:case:delai-12-mois")) { origin case_input; }
+        assert "del-04": duree_accompagnement_mois(entity_ref("urn:fr:rsa:case:delai-12-mois"), 8) { origin case_input; }
+    }
+    evaluate truth(delai_porte_12_mois(entity_ref("urn:fr:rsa:case:delai-12-mois")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

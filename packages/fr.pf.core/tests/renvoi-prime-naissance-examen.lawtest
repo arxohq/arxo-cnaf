@@ -1,0 +1,15 @@
+// Birth grant condition: first prenatal examination evidenced - condition met (L. 533-1).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-renvoi-prime-naissance-examen" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "renvoi-prime-naissance-examen-01": examen_prenatal_justifie(entity_ref("urn:fr:pf:case:prime-naissance")) { origin case_input; }
+    }
+    evaluate truth(prime_naissance_condition_remplie(entity_ref("urn:fr:pf:case:prime-naissance")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

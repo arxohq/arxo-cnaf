@@ -1,0 +1,286 @@
+// Housing-expense arrears (L. 824-1/2/3): landlord signal, the 2023
+// mechanism change, and resumption on consumer-code admissibility.
+// L. 824-2 applies in two source-driven windows: good-faith maintenance or
+// organism decision (2021-01-01 to 2023-07-29), then CCAPEX referral with
+// support from 2023-07-29 (loi 2023-668 art. 12). The arrears themselves
+// arrive as an agency finding: the constitutive R. 824-1 is abrogated, so
+// no threshold wires in (recorded boundary, no invented test).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    Bailleur,
+    CCH_L824_1,
+    CCH_L824_1_ED2019_12,
+    CCH_L824_1_ED2020_01,
+    CCH_L824_1_ED2021_01,
+    CCH_L824_1_ED2023_04,
+    CCH_L824_1_ED2023_09,
+    CCH_L824_1_ED2023_12,
+    CCH_L824_1_ED2026_07,
+    CCH_L824_2,
+    CCH_L824_2_ED2019_12,
+    CCH_L824_2_ED2020_01,
+    CCH_L824_2_ED2021_01,
+    CCH_L824_2_ED2023_04,
+    CCH_L824_2_ED2023_09,
+    CCH_L824_2_ED2023_12,
+    CCH_L824_2_ED2026_07,
+    CCH_L824_3,
+    CCH_L824_3_ED2019_12,
+    CCH_L824_3_ED2020_01,
+    CCH_L824_3_ED2021_01,
+    CCH_L824_3_ED2023_04,
+    CCH_L824_3_ED2023_09,
+    CCH_L824_3_ED2023_12,
+    CCH_L824_3_ED2026_07,
+    Menage,
+    Organisme,
+    RoleTiers,
+    bailleur_du_menage,
+    destinataire_aide,
+    organisme_debiteur,
+    role_tiers,
+};
+
+pub relation impaye_depense_logement(m: Menage) kind empirical {
+    label fr official "impaye de depense de logement constate par l'organisme (fait de dossier)";
+    label en unofficial "housing-expense arrears established by the body (case fact)";
+}
+
+pub relation impaye_signale(m: Menage) kind empirical {
+    label fr official "impaye signale a l'organisme par le bailleur ou le preteur (execution)";
+    label en unofficial "arrears reported to the body by the landlord or lender (performance)";
+}
+
+pub relation versement_maintenu_impaye(m: Menage) kind institutional {
+    label fr official "versement de l'aide maintenu malgre l'impaye";
+    label en unofficial "aid payment maintained despite the arrears";
+}
+
+pub relation versement_suspendu_impaye(m: Menage) kind institutional {
+    label fr official "versement de l'aide suspendu pour impaye";
+    label en unofficial "aid payment suspended for arrears";
+}
+
+pub relation versement_suspendu_en_place(m: Menage) kind empirical {
+    label fr official "suspension du versement en place (fait de dossier)";
+    label en unofficial "payment suspension in place (case fact)";
+}
+
+pub relation versement_retabli_l824_3(m: Menage) kind institutional {
+    label fr official "versement retabli sur recevabilite L. 722-10 du code de la consommation";
+    label en unofficial "payment resumed on consumer-code L. 722-10 admissibility";
+}
+
+@source(CCH_L824_1, CCH_L824_1_ED2019_12, CCH_L824_1_ED2020_01,
+        CCH_L824_1_ED2021_01, CCH_L824_1_ED2023_04, CCH_L824_1_ED2023_09,
+        CCH_L824_1_ED2023_12, CCH_L824_1_ED2026_07)
+rule DevoirSignalerImpayeBailleur(m: Menage, b: Bailleur, o: Organisme) strict {
+    label fr official "le bailleur signale l'impaye a l'organisme";
+    label en unofficial "the landlord reports the arrears to the body";
+    when impaye_depense_logement(m) and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR)
+        and destinataire_aide(m, b) and organisme_debiteur(o, m);
+    then duty BailleurSignalerImpaye {
+        bearer b;
+        beneficiary o;
+        maintain impaye_signale(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L824_1, CCH_L824_1_ED2019_12, CCH_L824_1_ED2020_01,
+        CCH_L824_1_ED2021_01, CCH_L824_1_ED2023_04, CCH_L824_1_ED2023_09,
+        CCH_L824_1_ED2023_12, CCH_L824_1_ED2026_07)
+rule DevoirSignalerImpayePreteur(m: Menage, b: Bailleur, o: Organisme) strict {
+    label fr official "le preteur signale l'impaye a l'organisme";
+    label en unofficial "the lender reports the arrears to the body";
+    when impaye_depense_logement(m) and bailleur_du_menage(b, m) and role_tiers(b, PRETEUR)
+        and destinataire_aide(m, b) and organisme_debiteur(o, m);
+    then duty PreteurSignalerImpaye {
+        bearer b;
+        beneficiary o;
+        maintain impaye_signale_preteur(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation impaye_signale_preteur(m: Menage) kind empirical {
+    label fr official "impaye signale a l'organisme par le preteur (execution)";
+    label en unofficial "arrears reported to the body by the lender (performance)";
+}
+
+pub relation bonne_foi_impaye(m: Menage) kind empirical {
+    label fr official "beneficiaire de bonne foi face a l'impaye (appreciation de l'organisme)";
+    label en unofficial "recipient in good faith over the arrears (body assessment)";
+}
+
+pub relation decision_maintien_organisme(m: Menage, maintien: Boolean) kind empirical {
+    label fr official "decision de maintien ou non de l'organisme avant le 29.07.2023 (fait explicite)";
+    label en unofficial "body maintain-or-not decision before 29.07.2023 (explicit fact)";
+}
+
+@source(CCH_L824_2, CCH_L824_2_ED2019_12, CCH_L824_2_ED2020_01,
+        CCH_L824_2_ED2021_01, CCH_L824_2_ED2023_04, CCH_L824_2_ED2023_09,
+        CCH_L824_2_ED2023_12, CCH_L824_2_ED2026_07)
+rule MaintienBonneFoiAvant2023(m: Menage) strict {
+    label fr official "bonne foi : maintien du versement (fenetre 2021-2023)";
+    label en unofficial "good faith: payment maintained (2021-2023 window)";
+    effective [@2021-01-01, @2023-07-29);
+    when impaye_depense_logement(m) and bonne_foi_impaye(m);
+    then versement_maintenu_impaye(m);
+}
+
+@source(CCH_L824_2, CCH_L824_2_ED2019_12, CCH_L824_2_ED2020_01,
+        CCH_L824_2_ED2021_01, CCH_L824_2_ED2023_04, CCH_L824_2_ED2023_09,
+        CCH_L824_2_ED2023_12, CCH_L824_2_ED2026_07)
+rule MaintienDecideAvant2023(m: Menage) strict {
+    label fr official "hors bonne foi decide maintenu : maintien (fenetre 2021-2023)";
+    label en unofficial "non-good-faith decided maintained: kept (2021-2023 window)";
+    effective [@2021-01-01, @2023-07-29);
+    when impaye_depense_logement(m) and decision_maintien_organisme(m, true);
+    then versement_maintenu_impaye(m);
+}
+
+@source(CCH_L824_2, CCH_L824_2_ED2019_12, CCH_L824_2_ED2020_01,
+        CCH_L824_2_ED2021_01, CCH_L824_2_ED2023_04, CCH_L824_2_ED2023_09,
+        CCH_L824_2_ED2023_12, CCH_L824_2_ED2026_07)
+rule SuspensionDecideeAvant2023(m: Menage) strict {
+    label fr official "hors bonne foi decide non maintenu : suspension (fenetre 2021-2023)";
+    label en unofficial "non-good-faith decided not maintained: suspended (2021-2023 window)";
+    effective [@2021-01-01, @2023-07-29);
+    when impaye_depense_logement(m) and decision_maintien_organisme(m, false);
+    then versement_suspendu_impaye(m);
+}
+
+@source(CCH_L824_2, CCH_L824_2_ED2019_12, CCH_L824_2_ED2020_01,
+        CCH_L824_2_ED2021_01, CCH_L824_2_ED2023_04, CCH_L824_2_ED2023_09,
+        CCH_L824_2_ED2023_12, CCH_L824_2_ED2026_07)
+rule PouvoirDeciderMaintienAvant2023(m: Menage, o: Organisme) defeasible {
+    label fr official "hors bonne foi etablie, l'organisme decide du maintien ou non (fenetre 2021-2023)";
+    label en unofficial "outside established good faith, the body decides maintain-or-not (2021-2023 window)";
+    effective [@2021-01-01, @2023-07-29);
+    when impaye_depense_logement(m) and organisme_debiteur(o, m)
+        and not_known(bonne_foi_impaye(m));
+    then power DeciderMaintienImpoye {
+        holder o;
+        exercise decision_maintien_organisme(m, true);
+        valid_when (impaye_depense_logement(m) and organisme_debiteur(o, m));
+        effect versement_maintenu_impaye(m);
+        window [@2021-01-01, @2023-07-29);
+    };
+}
+
+pub entity CommissionCCAPEX {
+    label fr official "commission de coordination des actions de prevention des expulsions locatives";
+    label en unofficial "commission coordinating eviction-prevention actions";
+}
+
+pub relation ccapex_competente(c: CommissionCCAPEX, m: Menage) kind empirical {
+    label fr official "commission CCAPEX competente pour le dossier (fait de dossier)";
+    label en unofficial "CCAPEX commission competent for the case (case fact)";
+}
+
+pub relation ccapex_saisie(m: Menage) kind empirical {
+    label fr official "commission saisie par l'organisme sur le maintien (execution)";
+    label en unofficial "commission seised by the body on maintenance (performance)";
+}
+
+pub relation accompagnement_mis_en_place(m: Menage) kind empirical {
+    label fr official "accompagnement social et budgetaire mis en place (execution)";
+    label en unofficial "social and budget support put in place (performance)";
+}
+
+pub relation diagnostic_transmis_ccapex(m: Menage) kind empirical {
+    label fr official "diagnostic social et financier transmis a la commission (execution)";
+    label en unofficial "social and financial assessment sent to the commission (performance)";
+}
+
+pub relation decision_ccapex(m: Menage, maintien: Boolean) kind empirical {
+    label fr official "decision de maintien ou non de la commission (fait explicite)";
+    label en unofficial "commission maintain-or-not decision (explicit fact)";
+}
+
+@source(CCH_L824_2, CCH_L824_2_ED2019_12, CCH_L824_2_ED2020_01,
+        CCH_L824_2_ED2021_01, CCH_L824_2_ED2023_04, CCH_L824_2_ED2023_09,
+        CCH_L824_2_ED2023_12, CCH_L824_2_ED2026_07)
+rule DevoirSaisirCCAPEX(m: Menage, o: Organisme, c: CommissionCCAPEX) strict {
+    label fr official "l'organisme saisit la commission sur le maintien (29.07.2023)";
+    label en unofficial "the body seises the commission on maintenance (29.07.2023)";
+    effective [@2023-07-29, infinity);
+    when impaye_depense_logement(m) and organisme_debiteur(o, m)
+        and ccapex_competente(c, m);
+    then duty SaisirCCAPEX {
+        bearer o;
+        beneficiary c;
+        maintain ccapex_saisie(m) during [@2023-07-29, infinity);
+    };
+}
+
+@source(CCH_L824_2, CCH_L824_2_ED2019_12, CCH_L824_2_ED2020_01,
+        CCH_L824_2_ED2021_01, CCH_L824_2_ED2023_04, CCH_L824_2_ED2023_09,
+        CCH_L824_2_ED2023_12, CCH_L824_2_ED2026_07)
+rule DevoirAccompagnerMenage(m: Menage, o: Organisme) strict {
+    label fr official "l'organisme met en place l'accompagnement social et budgetaire (29.07.2023)";
+    label en unofficial "the body sets up social and budget support (29.07.2023)";
+    effective [@2023-07-29, infinity);
+    when impaye_depense_logement(m) and organisme_debiteur(o, m);
+    then duty AccompagnerMenageImpaye {
+        bearer o;
+        beneficiary m;
+        maintain accompagnement_mis_en_place(m) during [@2023-07-29, infinity);
+    };
+}
+
+@source(CCH_L824_2, CCH_L824_2_ED2019_12, CCH_L824_2_ED2020_01,
+        CCH_L824_2_ED2021_01, CCH_L824_2_ED2023_04, CCH_L824_2_ED2023_09,
+        CCH_L824_2_ED2023_12, CCH_L824_2_ED2026_07)
+rule DevoirTransmettreDiagnostic(m: Menage, o: Organisme, c: CommissionCCAPEX) strict {
+    label fr official "le diagnostic social et financier est transmis a la commission (29.07.2023)";
+    label en unofficial "the social and financial assessment goes to the commission (29.07.2023)";
+    effective [@2023-07-29, infinity);
+    when impaye_depense_logement(m) and organisme_debiteur(o, m)
+        and ccapex_competente(c, m);
+    then duty TransmettreDiagnosticCCAPEX {
+        bearer o;
+        beneficiary c;
+        maintain diagnostic_transmis_ccapex(m) during [@2023-07-29, infinity);
+    };
+}
+
+@source(CCH_L824_2, CCH_L824_2_ED2019_12, CCH_L824_2_ED2020_01,
+        CCH_L824_2_ED2021_01, CCH_L824_2_ED2023_04, CCH_L824_2_ED2023_09,
+        CCH_L824_2_ED2023_12, CCH_L824_2_ED2026_07)
+rule MaintienDecideCCAPEX(m: Menage) strict {
+    label fr official "commission favorable : maintien (29.07.2023)";
+    label en unofficial "commission in favour: maintained (29.07.2023)";
+    effective [@2023-07-29, infinity);
+    when decision_ccapex(m, true);
+    then versement_maintenu_impaye(m);
+}
+
+@source(CCH_L824_2, CCH_L824_2_ED2019_12, CCH_L824_2_ED2020_01,
+        CCH_L824_2_ED2021_01, CCH_L824_2_ED2023_04, CCH_L824_2_ED2023_09,
+        CCH_L824_2_ED2023_12, CCH_L824_2_ED2026_07)
+rule SuspensionDecideeCCAPEX(m: Menage) strict {
+    label fr official "commission defavorable : suspension (29.07.2023)";
+    label en unofficial "commission against: suspended (29.07.2023)";
+    effective [@2023-07-29, infinity);
+    when decision_ccapex(m, false);
+    then versement_suspendu_impaye(m);
+}
+
+pub relation decision_recevabilite_l722_10(m: Menage) kind empirical {
+    label fr official "decision de recevabilite L. 722-10 du code de la consommation (fait externe)";
+    label en unofficial "consumer-code L. 722-10 admissibility decision (external fact)";
+}
+
+@source(CCH_L824_3, CCH_L824_3_ED2019_12, CCH_L824_3_ED2020_01,
+        CCH_L824_3_ED2021_01, CCH_L824_3_ED2023_04, CCH_L824_3_ED2023_09,
+        CCH_L824_3_ED2023_12, CCH_L824_3_ED2026_07)
+rule RetablissementL722_10(m: Menage) strict {
+    label fr official "recevabilite L. 722-10 : le versement suspendu est retabli";
+    label en unofficial "L. 722-10 admissibility: the suspended payment resumes";
+    when decision_recevabilite_l722_10(m) and versement_suspendu_en_place(m);
+    then versement_retabli_l824_3(m);
+}

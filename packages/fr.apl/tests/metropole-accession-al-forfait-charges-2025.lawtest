@@ -1,0 +1,26 @@
+// Противовес: тот же состав и месяц права, метрополия — 59,97 € + 13,60 € × 2 =
+// 87,17 € (ст. 34, редакция с 1 октября 2024 года).
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-metropole-accession-al-forfait-charges-2025" {
+    given {
+        context { decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "metropole-accession-al-forfait-charges-2025-01": secteur_accession_allocations(entity_ref("urn:fr:apl:case:mt-acc-2025")) { origin case_input; }
+        assert "metropole-accession-al-forfait-charges-2025-02": aide_demandee(entity_ref("urn:fr:apl:case:mt-acc-2025"), ALF) { origin case_input; }
+        assert "metropole-accession-al-forfait-charges-2025-03": zone_du_logement(entity_ref("urn:fr:apl:case:mt-acc-2025"), ZONE_II) { origin case_input; }
+        assert "metropole-accession-al-forfait-charges-2025-04": situation_familiale(entity_ref("urn:fr:apl:case:mt-acc-2025"), COUPLE) { origin case_input; }
+        assert "metropole-accession-al-forfait-charges-2025-05": personnes_a_charge(entity_ref("urn:fr:apl:case:mt-acc-2025"), 2) { origin case_input; }
+        assert "metropole-accession-al-forfait-charges-2025-06": vintage_certificat(entity_ref("urn:fr:apl:case:mt-acc-2025"), CERTIFICAT_DEPUIS_01_10_2019) { origin case_input; }
+        assert "metropole-accession-al-forfait-charges-2025-07": mode_propriete(entity_ref("urn:fr:apl:case:mt-acc-2025"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "metropole-accession-al-forfait-charges-2025-08": territoire(entity_ref("urn:fr:apl:case:mt-acc-2025"), METROPOLE) { origin case_input; }
+        assert "metropole-accession-al-forfait-charges-2025-09": mensualite_declaree(entity_ref("urn:fr:apl:case:mt-acc-2025"), 500 EUR) { origin case_input; }
+        assert "metropole-accession-al-forfait-charges-2025-10": base_plancher_ressources(entity_ref("urn:fr:apl:case:mt-acc-2025"), COEFFICIENT_MENSUALITE) { origin case_input; }
+        assert "metropole-accession-al-forfait-charges-2025-11": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:mt-acc-2025"), false) { origin case_input; }
+    }
+    evaluate truth(forfait_charges_al_accession(entity_ref("urn:fr:apl:case:mt-acc-2025"), 87.17 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

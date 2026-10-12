@@ -1,0 +1,28 @@
+// Death prolongation amount branches (R. 541-1 al. 5, «ce versement»):
+// for L. 541-1 para. 4 leave/suspension periods the monthly prolongation
+// pays the death-month amount, or the previous-month amount when
+// higher. Two children, one per branch. Month amounts without such
+// periods conclude nothing (see r541-deces-2026).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-deces-branches" {
+    given {
+        context { decision_time @2024-07-15T12:00:00Z; knowledge_time @2024-07-15T12:00:00Z; legal_time @2024-07-15; timezone "Europe/Paris"; }
+        assert "r541-db-01": montant_mois_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-db-egal"), 496.00 EUR) { origin case_input; }
+        assert "r541-db-02": montant_mois_precedent(entity_ref("urn:fr:pf-aeeh:case:enfant-db-egal"), 496.00 EUR) { origin case_input; }
+        assert "r541-db-03": montant_mois_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-db-sup"), 128.00 EUR) { origin case_input; }
+        assert "r541-db-04": montant_mois_precedent(entity_ref("urn:fr:pf-aeeh:case:enfant-db-sup"), 496.00 EUR) { origin case_input; }
+        assert "r541-db-05": periodes_conges_internat(entity_ref("urn:fr:pf-aeeh:case:enfant-db-egal")) { origin case_input; }
+        assert "r541-db-06": periodes_conges_internat(entity_ref("urn:fr:pf-aeeh:case:enfant-db-sup")) { origin case_input; }
+    }
+    evaluate truth(montant_prolongation_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-db-egal"), 496.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_prolongation_deces(entity_ref("urn:fr:pf-aeeh:case:enfant-db-sup"), 496.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

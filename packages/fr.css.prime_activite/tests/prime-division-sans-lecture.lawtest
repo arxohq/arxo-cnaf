@@ -1,0 +1,107 @@
+// D-82/D-83 sans lecture, ou avec UNE seule des deux lectures (comportement inchangé là où la lecture manque):
+//   div-s1 faits de div-m1 sans lecture: la moyenne trimestrielle est une fraction infinie (INEXACT_DIVISION, SPEC 50/18) -> RUNTIME_ERROR;
+//   div-s2 faits de div-b1 sans lecture: le rapport (1000,00 - 709,18) / 949,58 n'est pas fini -> RUNTIME_ERROR;
+//   div-s3 faits de div-b2 sans lecture: le rapport vaut 1/2, la bonification 119,360085 est exacte, aucun arrondi sans lecture;
+//   div-s4 faits de div-e1 avec la seule lecture de la moyenne: la bonification linéaire reste inexacte -> RUNTIME_ERROR;
+//   div-s5 faits de div-e1 avec la seule lecture de la bonification: la moyenne 306,7066… reste inexacte -> RUNTIME_ERROR.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-division-sans-lecture-moyenne" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "div-s1-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s1"), @2026-02-01, SEUL) { origin case_input; }
+        assert "div-s1-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s1"), @2026-02-01, 1700.00 EUR) { origin case_input; }
+        assert "div-s1-03": smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+        assert "div-s1-04": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-s1"), @2026-02-01, 1700.00 EUR) { origin case_input; }
+        assert "div-s1-05": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s1"), @2026-03-01, SEUL) { origin case_input; }
+        assert "div-s1-06": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s1"), @2026-03-01, 1700.00 EUR) { origin case_input; }
+        assert "div-s1-07": smic_horaire_retenu(@2026-03-01, 12.02 EUR) { origin case_input; }
+        assert "div-s1-08": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-s1"), @2026-03-01, 1700.00 EUR) { origin case_input; }
+        assert "div-s1-09": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s1"), @2026-04-01, SEUL) { origin case_input; }
+        assert "div-s1-10": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s1"), @2026-04-01, 1701.00 EUR) { origin case_input; }
+        assert "div-s1-11": smic_horaire_retenu(@2026-04-01, 12.02 EUR) { origin case_input; }
+        assert "div-s1-12": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-s1"), @2026-04-01, 1701.00 EUR) { origin case_input; }
+        assert "div-s1-13": mois_revue(entity_ref("urn:fr:ppa:case:div-s1"), @2026-06-01) { origin case_input; }
+        assert "div-s1-14": minimum_paiement_retenu(@2026-06-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:div-s1"), 191.57 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-division-sans-lecture-boni" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "div-s2-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s2"), @2026-02-01, SEUL) { origin case_input; }
+        assert "div-s2-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s2"), @2026-02-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s2-03": smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+    }
+    evaluate truth(bonification_mensuelle(entity_ref("urn:fr:ppa:case:div-s2"), @2026-02-01, 73.11 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-division-sans-lecture-boni-exact" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "div-s3-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s3"), @2026-02-01, SEUL) { origin case_input; }
+        assert "div-s3-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s3"), @2026-02-01, 1183.97 EUR) { origin case_input; }
+        assert "div-s3-03": smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+    }
+    evaluate truth(bonification_mensuelle(entity_ref("urn:fr:ppa:case:div-s3"), @2026-02-01, 119.360085 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-ppa-division-moyenne-seule-boni-inexact" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; interpretation PrimeMoyenneArrondieCentime; }
+        assert "div-s4-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s4"), @2026-02-01, SEUL) { origin case_input; }
+        assert "div-s4-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s4"), @2026-02-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s4-03": smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+        assert "div-s4-04": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-s4"), @2026-02-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s4-05": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s4"), @2026-03-01, SEUL) { origin case_input; }
+        assert "div-s4-06": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s4"), @2026-03-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s4-07": smic_horaire_retenu(@2026-03-01, 12.02 EUR) { origin case_input; }
+        assert "div-s4-08": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-s4"), @2026-03-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s4-09": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s4"), @2026-04-01, SEUL) { origin case_input; }
+        assert "div-s4-10": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s4"), @2026-04-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s4-11": smic_horaire_retenu(@2026-04-01, 12.02 EUR) { origin case_input; }
+        assert "div-s4-12": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-s4"), @2026-04-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s4-13": mois_revue(entity_ref("urn:fr:ppa:case:div-s4"), @2026-06-01) { origin case_input; }
+        assert "div-s4-14": minimum_paiement_retenu(@2026-06-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:div-s4"), 306.71 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-division-boni-seule-moyenne-inexacte" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; interpretation BonificationLineaireArrondieCentime; }
+        assert "div-s5-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s5"), @2026-02-01, SEUL) { origin case_input; }
+        assert "div-s5-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s5"), @2026-02-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s5-03": smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+        assert "div-s5-04": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-s5"), @2026-02-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s5-05": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s5"), @2026-03-01, SEUL) { origin case_input; }
+        assert "div-s5-06": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s5"), @2026-03-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s5-07": smic_horaire_retenu(@2026-03-01, 12.02 EUR) { origin case_input; }
+        assert "div-s5-08": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-s5"), @2026-03-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s5-09": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-s5"), @2026-04-01, SEUL) { origin case_input; }
+        assert "div-s5-10": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-s5"), @2026-04-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s5-11": smic_horaire_retenu(@2026-04-01, 12.02 EUR) { origin case_input; }
+        assert "div-s5-12": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-s5"), @2026-04-01, 1000.00 EUR) { origin case_input; }
+        assert "div-s5-13": mois_revue(entity_ref("urn:fr:ppa:case:div-s5"), @2026-06-01) { origin case_input; }
+        assert "div-s5-14": minimum_paiement_retenu(@2026-06-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:div-s5"), 306.71 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}

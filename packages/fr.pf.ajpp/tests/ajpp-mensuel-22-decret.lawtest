@@ -1,0 +1,16 @@
+// Monthly cap from the decree text: 20 days in March 2024, no
+// retained maximum asserted — within the pinned 22 (D. 544-4).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-mensuel-22-decret" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-m22-01": jours_ajpp_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-m22"), @2024-03-01, 20) { origin case_input; }
+    }
+    evaluate truth(mensuel_dans_limite(entity_ref("urn:fr:pf-ajpp:case:enfant-m22"), @2024-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

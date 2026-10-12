@@ -1,0 +1,46 @@
+// Mayotte concludes nothing (wave 7, B-PFCF-DOM-TERRITOIRE): the same
+// two-child household as dom-droit-ouvert opens no DOM right and no DOM
+// amount. The small-family ceiling itself still builds (it carries no
+// territory premise, like the metropolitan ceilings).
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-droit-mayotte-silence" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ddm-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence-e1")) { origin case_input; }
+        assert "ddm-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence-e2")) { origin case_input; }
+        assert "ddm-03": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence-e1")) { origin case_input; }
+        assert "ddm-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence-e2")) { origin case_input; }
+        assert "ddm-05": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence-e1"), @2017-03-15) { origin case_input; }
+        assert "ddm-06": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence-e2"), @2015-03-15) { origin case_input; }
+        assert "ddm-07": mois_droit(@2021-06-01) { origin case_input; }
+        assert "ddm-08": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 2) { origin case_input; }
+        assert "ddm-09": ressources_menage(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 30000 EUR) { origin case_input; }
+        assert "ddm-10": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 20000 EUR) { origin case_input; }
+        assert "ddm-10a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 5000 EUR) { origin case_input; }
+        assert "ddm-10b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 6000 EUR) { origin case_input; }
+        assert "ddm-10c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 10000 EUR) { origin case_input; }
+        assert "ddm-10d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 2500 EUR) { origin case_input; }
+        assert "ddm-10e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 3000 EUR) { origin case_input; }
+        assert "ddm-11": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence")) { origin case_input; }
+        assert "ddm-12": territoire(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), MAYOTTE) { origin case_input; }
+        assert "ddm-13": cadre_cf_dom_remplie(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence")) { origin case_input; }
+        assert "ddm-14": presence_jeune_dom(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence")) { origin case_input; }
+        assert "ddm-15": base_dom_retenue(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(cf_dom_plafond(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 30000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_droit_ouvert(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_montant_du(entity_ref("urn:fr:pf-cf:case:dom-droit-mayotte-silence"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

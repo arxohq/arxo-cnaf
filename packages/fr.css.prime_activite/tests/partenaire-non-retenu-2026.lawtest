@@ -1,0 +1,93 @@
+// Non-retained partner, all three statutory alternatives (R. 842-4,
+// PA-FE-01): a spouse failing L. 842-2 3° (student, kept in the
+// household but not counted), a concubin failing L. 842-1
+// (unstable residence), a PACS partner failing L. 842-2 4°
+// (posted worker) each trigger both consequences: counted
+// resources and professional income assimilated to L. 842-4 2°
+// replacement income. The claimant's own professional stream is
+// recorded in every positive case and left untouched by the
+// assimilation. A retained partner (full R. 842-2 II monthly grid,
+// conditions met) records partner income without either
+// consequence; a file with no partner evidence classifies neither.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-partenaire-non-retenu-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": conjoint_present(entity_ref("urn:fr:ppa:case:partenaire-epoux-2026")) { origin case_input; }
+        assert "ppa-02": conjoint_non_retenu(entity_ref("urn:fr:ppa:case:partenaire-epoux-2026")) { origin case_input; }
+        assert "ppa-03": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:partenaire-epoux-2026"), @2026-04-01, 945.00 EUR) { origin case_input; }
+        assert "ppa-04": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:partenaire-epoux-2026"), @2026-04-01, 1182.00 EUR) { origin case_input; }
+        assert "ppa-05": mois_du_droit(entity_ref("urn:fr:ppa:case:partenaire-epoux-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-06": conjoint_present(entity_ref("urn:fr:ppa:case:partenaire-concubin-2026")) { origin case_input; }
+        assert "ppa-07": concubin_non_retenu(entity_ref("urn:fr:ppa:case:partenaire-concubin-2026")) { origin case_input; }
+        assert "ppa-08": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:partenaire-concubin-2026"), @2026-04-01, 945.00 EUR) { origin case_input; }
+        assert "ppa-09": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:partenaire-concubin-2026"), @2026-04-01, 1182.00 EUR) { origin case_input; }
+        assert "ppa-10": mois_du_droit(entity_ref("urn:fr:ppa:case:partenaire-concubin-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-11": conjoint_present(entity_ref("urn:fr:ppa:case:partenaire-pacs-2026")) { origin case_input; }
+        assert "ppa-12": partenaire_pacs_non_retenu(entity_ref("urn:fr:ppa:case:partenaire-pacs-2026")) { origin case_input; }
+        assert "ppa-13": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:partenaire-pacs-2026"), @2026-04-01, 945.00 EUR) { origin case_input; }
+        assert "ppa-14": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:partenaire-pacs-2026"), @2026-04-01, 1182.00 EUR) { origin case_input; }
+        assert "ppa-15": mois_du_droit(entity_ref("urn:fr:ppa:case:partenaire-pacs-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-16": conjoint_present(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026")) { origin case_input; }
+        assert "ppa-17": mois_revue(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-18": mois_du_droit(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-19": regime_general(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026")) { origin case_input; }
+        assert "ppa-20": condition_mensuelle(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-06-01, CONJOINT, COND_L8422_2) { origin case_input; }
+        assert "ppa-21": condition_mensuelle(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-02-01, CONJOINT, COND_L8422_5) { origin case_input; }
+        assert "ppa-22": condition_mensuelle(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-03-01, CONJOINT, COND_L8422_5) { origin case_input; }
+        assert "ppa-23": condition_mensuelle(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-04-01, CONJOINT, COND_L8422_5) { origin case_input; }
+        assert "ppa-24": condition_mensuelle(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-02-01, CONJOINT, COND_L8422_4) { origin case_input; }
+        assert "ppa-25": condition_mensuelle(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-03-01, CONJOINT, COND_L8422_4) { origin case_input; }
+        assert "ppa-26": condition_mensuelle(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-04-01, CONJOINT, COND_L8422_4) { origin case_input; }
+        assert "ppa-27": condition_mensuelle(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-06-01, CONJOINT, COND_L8422_4) { origin case_input; }
+        assert "ppa-28": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-04-01, 945.00 EUR) { origin case_input; }
+        assert "ppa-29": mois_du_droit(entity_ref("urn:fr:ppa:case:partenaire-inconnu-2026"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(ressources_conjoint_comptees(entity_ref("urn:fr:ppa:case:partenaire-epoux-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revenus_conjoint_assimiles_remplacement(entity_ref("urn:fr:ppa:case:partenaire-epoux-2026"), @2026-04-01, 945.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ressources_conjoint_comptees(entity_ref("urn:fr:ppa:case:partenaire-concubin-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revenus_conjoint_assimiles_remplacement(entity_ref("urn:fr:ppa:case:partenaire-concubin-2026"), @2026-04-01, 945.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ressources_conjoint_comptees(entity_ref("urn:fr:ppa:case:partenaire-pacs-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revenus_conjoint_assimiles_remplacement(entity_ref("urn:fr:ppa:case:partenaire-pacs-2026"), @2026-04-01, 945.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(conditions_conjoint_ok(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ressources_conjoint_comptees(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revenus_conjoint_assimiles_remplacement(entity_ref("urn:fr:ppa:case:partenaire-retenu-2026"), @2026-04-01, 945.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ressources_conjoint_comptees(entity_ref("urn:fr:ppa:case:partenaire-inconnu-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revenus_conjoint_assimiles_remplacement(entity_ref("urn:fr:ppa:case:partenaire-inconnu-2026"), @2026-04-01, 945.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

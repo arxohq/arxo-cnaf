@@ -1,0 +1,356 @@
+// Statistics: transmissions and publication (D.262-95/96/97/98/100).
+//
+// DEONTIC MAP: duties with computed deadlines.
+// - D.262-95: the president transmits annual data before the end of
+//   the first quarter to TWO recipients ("au représentant de l'Etat
+//   dans le département et aux services statistiques"): one duty per
+//   recipient, each firing on its own premises; the 2025-01-01
+//   wording extends the scope to spouses and partners (four rules:
+//   two recipients times back-to-back windows);
+// - D.262-96: CNAF and CCMSA transmit quarterly data; the current
+//   wording (month-end headcounts before the end of the second month
+//   of the quarter) differs from the predecessor (four items before
+//   quarter end): two rules;
+// - D.262-97: CNAF and CCMSA transmit annual data; current (31
+//   December headcounts before the end of the third quarter) versus
+//   predecessor (five items before the end of the first quarter):
+//   two rules;
+// - D.262-98: L.262-55 information to the statistical services, body
+//   side and department side, for sample persons only
+//   ("informations relatives aux personnes physiques destinées à la
+//   constitution d'échantillons statistiquement représentatifs",
+//   L.262-55; echantillon_l262_55): a filed claim alone does not
+//   prove sample inclusion;
+// - D.262-100: regular publication of the results, statistical
+//   services and national funds ("assurent la publication régulière
+//   des résultats de l'exploitation des données"); standing duties
+//   of the statistical services and the national funds themselves,
+//   with no beneficiary: the text states no claim trigger and no
+//   individual beneficiary, and no computable period for "régulière",
+//   so the window stays standing;
+// - D.262-99 (ministerial orders fixing the lists): source boundary,
+//   B-RSA-ARRETE-LISTES, no rule.
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+// `use self` is hand-maintained in nochecks authoring (no `law fix
+// imports` until the locks free). Fragment names join the block via the
+// deferred `law fix imports fr.casf.rsa` run after regenerating sources.
+use self::{
+    CASF_D262_100,
+    CASF_D262_100_ED2021_03,
+    CASF_D262_100_ED2021_04,
+    CASF_D262_100_ED2023_01,
+    CASF_D262_100_ED2024_01,
+    CASF_D262_100_ED2024_07,
+    CASF_D262_100_ED2025_01,
+    CASF_D262_100_ED2025_06,
+    CASF_D262_100_ED2026_06,
+    CASF_D262_95,
+    CASF_D262_95_ED2025_06,
+    CASF_D262_95_ED2026_06,
+    CASF_D262_95_PRE2025,
+    CASF_D262_95_PRE2025_ED2021_03,
+    CASF_D262_95_PRE2025_ED2021_04,
+    CASF_D262_95_PRE2025_ED2023_01,
+    CASF_D262_95_PRE2025_ED2024_01,
+    CASF_D262_95_PRE2025_ED2024_07,
+    CASF_D262_96,
+    CASF_D262_96_ED2025_06,
+    CASF_D262_96_ED2026_06,
+    CASF_D262_96_PRE2025,
+    CASF_D262_96_PRE2025_ED2021_03,
+    CASF_D262_96_PRE2025_ED2021_04,
+    CASF_D262_96_PRE2025_ED2023_01,
+    CASF_D262_96_PRE2025_ED2024_01,
+    CASF_D262_96_PRE2025_ED2024_07,
+    CASF_D262_97,
+    CASF_D262_97_ED2025_06,
+    CASF_D262_97_ED2026_06,
+    CASF_D262_97_PRE2025,
+    CASF_D262_97_PRE2025_ED2021_03,
+    CASF_D262_97_PRE2025_ED2021_04,
+    CASF_D262_97_PRE2025_ED2023_01,
+    CASF_D262_97_PRE2025_ED2024_01,
+    CASF_D262_97_PRE2025_ED2024_07,
+    CASF_D262_98,
+    CASF_D262_98_ED2021_03,
+    CASF_D262_98_ED2021_04,
+    CASF_D262_98_ED2023_01,
+    CASF_D262_98_ED2024_01,
+    CASF_D262_98_ED2024_07,
+    CASF_D262_98_ED2025_01,
+    CASF_D262_98_ED2025_06,
+    CASF_D262_98_ED2026_06,
+    Departement,
+    Organisme,
+    Prefet,
+    annee_donnees_fin,
+    departement_competent,
+    donnees_annuelles_transmises,
+    donnees_annuelles_transmises_caisses_pre2025,
+    donnees_annuelles_transmises_pre2025,
+    donnees_annuelles_transmises_prefet,
+    donnees_annuelles_transmises_prefet_pre2025,
+    donnees_trimestre_transmises_pre2025,
+    echantillon_l262_55,
+    effectifs_annuels_transmis,
+    effectifs_trimestre_transmis,
+    est_caisse_nationale,
+    est_organisme_service,
+    est_service_statistique,
+    infos_l262_55_transmises_dept,
+    infos_l262_55_transmises_organisme,
+    organisme_competent,
+    prefet_du_departement,
+    publication_caisses_assuree,
+    publication_services_assuree,
+    trimestre_courant_fin,
+    trimestre_donnees_fin,
+};
+
+@source(
+    CASF_D262_95,
+    CASF_D262_95_ED2025_06,
+    CASF_D262_95_ED2026_06)
+rule TransmettreDonneesAnnuellesPresidentRule(d: Departement, s: Organisme, fin: Date) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "le président transmet les données annuelles, conjoint inclus, avant la fin du premier trimestre (D. 262-95 en vigueur)";
+    label en unofficial "the president transmits the annual data, spouse included, before the end of the first quarter (D. 262-95 in force)";
+    when annee_donnees_fin(d, fin)
+        and est_service_statistique(s);
+    then duty TransmettreDonneesAnnuellesPresident {
+        bearer d;
+        beneficiary s;
+        maintain donnees_annuelles_transmises(d, s, fin) during [fin, month_end_of(add_calendar_period(fin, 3 calendar_month))];
+    };
+}
+
+@source(
+    CASF_D262_95_PRE2025,
+    CASF_D262_95_PRE2025_ED2021_03,
+    CASF_D262_95_PRE2025_ED2021_04,
+    CASF_D262_95_PRE2025_ED2023_01,
+    CASF_D262_95_PRE2025_ED2024_01,
+    CASF_D262_95_PRE2025_ED2024_07)
+rule TransmettreDonneesAnnuellesPresidentPre2025Rule(d: Departement, s: Organisme, fin: Date) strict {
+    effective [@2021-01-01, @2025-01-01);
+    label fr official "le président transmet les données annuelles des seuls bénéficiaires avant la fin du premier trimestre (D. 262-95 prédécesseur)";
+    label en unofficial "the president transmits the claimants-only annual data before the end of the first quarter (D. 262-95 predecessor)";
+    when annee_donnees_fin(d, fin)
+        and est_service_statistique(s);
+    then duty TransmettreDonneesAnnuellesPresidentPre2025 {
+        bearer d;
+        beneficiary s;
+        maintain donnees_annuelles_transmises_pre2025(d, s, fin) during [fin, month_end_of(add_calendar_period(fin, 3 calendar_month))];
+    };
+}
+
+@source(
+    CASF_D262_95,
+    CASF_D262_95_ED2025_06,
+    CASF_D262_95_ED2026_06)
+rule TransmettreDonneesAnnuellesPrefetRule(d: Departement, f: Prefet, fin: Date) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "le président transmet au représentant de l'Etat les données annuelles, conjoint inclus, avant la fin du premier trimestre (D. 262-95 en vigueur)";
+    label en unofficial "the president transmits the annual data, spouse included, to the State representative before the end of the first quarter (D. 262-95 in force)";
+    when annee_donnees_fin(d, fin)
+        and prefet_du_departement(f, d);
+    then duty TransmettreDonneesAnnuellesPrefet {
+        bearer d;
+        beneficiary f;
+        maintain donnees_annuelles_transmises_prefet(d, f, fin) during [fin, month_end_of(add_calendar_period(fin, 3 calendar_month))];
+    };
+}
+
+@source(
+    CASF_D262_95_PRE2025,
+    CASF_D262_95_PRE2025_ED2021_03,
+    CASF_D262_95_PRE2025_ED2021_04,
+    CASF_D262_95_PRE2025_ED2023_01,
+    CASF_D262_95_PRE2025_ED2024_01,
+    CASF_D262_95_PRE2025_ED2024_07)
+rule TransmettreDonneesAnnuellesPrefetPre2025Rule(d: Departement, f: Prefet, fin: Date) strict {
+    effective [@2021-01-01, @2025-01-01);
+    label fr official "le président transmet au représentant de l'Etat les données annuelles des seuls bénéficiaires avant la fin du premier trimestre (D. 262-95 prédécesseur)";
+    label en unofficial "the president transmits the claimants-only annual data to the State representative before the end of the first quarter (D. 262-95 predecessor)";
+    when annee_donnees_fin(d, fin)
+        and prefet_du_departement(f, d);
+    then duty TransmettreDonneesAnnuellesPrefetPre2025 {
+        bearer d;
+        beneficiary f;
+        maintain donnees_annuelles_transmises_prefet_pre2025(d, f, fin) during [fin, month_end_of(add_calendar_period(fin, 3 calendar_month))];
+    };
+}
+
+@source(
+    CASF_D262_96,
+    CASF_D262_96_ED2025_06,
+    CASF_D262_96_ED2026_06)
+rule TransmettreEffectifsTrimestreRule(o: Organisme, s: Organisme, t: Date) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "la caisse nationale transmet les effectifs de fin de mois avant la fin du deuxième mois du trimestre (D. 262-96 en vigueur)";
+    label en unofficial "the national fund transmits the month-end headcounts before the end of the second month of the quarter (D. 262-96 in force)";
+    when est_caisse_nationale(o)
+        and est_service_statistique(s)
+        and trimestre_donnees_fin(t);
+    then duty TransmettreEffectifsTrimestre {
+        bearer o;
+        beneficiary s;
+        maintain effectifs_trimestre_transmis(o, s, t) during [t, month_end_of(add_calendar_period(t, 2 calendar_month))];
+    };
+}
+
+@source(
+    CASF_D262_96_PRE2025,
+    CASF_D262_96_PRE2025_ED2021_03,
+    CASF_D262_96_PRE2025_ED2021_04,
+    CASF_D262_96_PRE2025_ED2023_01,
+    CASF_D262_96_PRE2025_ED2024_01,
+    CASF_D262_96_PRE2025_ED2024_07)
+rule TransmettreTrimestrePre2025Rule(o: Organisme, s: Organisme, tprev: Date, tcour: Date) strict {
+    effective [@2021-01-01, @2025-01-01);
+    label fr official "la caisse nationale transmet les données trimestrielles en quatre rubriques avant la fin du trimestre (D. 262-96 prédécesseur)";
+    label en unofficial "the national fund transmits the quarterly data in four items before quarter end (D. 262-96 predecessor)";
+    when est_caisse_nationale(o)
+        and est_service_statistique(s)
+        and trimestre_donnees_fin(tprev)
+        and trimestre_courant_fin(tcour);
+    then duty TransmettreTrimestrePre2025 {
+        bearer o;
+        beneficiary s;
+        maintain donnees_trimestre_transmises_pre2025(o, s, tprev) during [tprev, tcour];
+    };
+}
+
+@source(
+    CASF_D262_97,
+    CASF_D262_97_ED2025_06,
+    CASF_D262_97_ED2026_06)
+rule TransmettreEffectifsAnnuelsRule(o: Organisme, s: Organisme, d: Departement, fin: Date) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "la caisse nationale transmet les effectifs et caractéristiques au 31 décembre avant la fin du troisième trimestre (D. 262-97 en vigueur)";
+    label en unofficial "the national fund transmits the 31 December headcounts and characteristics before the end of the third quarter (D. 262-97 in force)";
+    when est_caisse_nationale(o)
+        and est_service_statistique(s)
+        and annee_donnees_fin(d, fin);
+    then duty TransmettreEffectifsAnnuels {
+        bearer o;
+        beneficiary s;
+        maintain effectifs_annuels_transmis(o, s, fin) during [fin, month_end_of(add_calendar_period(fin, 9 calendar_month))];
+    };
+}
+
+@source(
+    CASF_D262_97_PRE2025,
+    CASF_D262_97_PRE2025_ED2021_03,
+    CASF_D262_97_PRE2025_ED2021_04,
+    CASF_D262_97_PRE2025_ED2023_01,
+    CASF_D262_97_PRE2025_ED2024_01,
+    CASF_D262_97_PRE2025_ED2024_07)
+rule TransmettreAnnuellesCaissesPre2025Rule(o: Organisme, s: Organisme, d: Departement, fin: Date) strict {
+    effective [@2021-01-01, @2025-01-01);
+    label fr official "la caisse nationale transmet les données annuelles en cinq rubriques avant la fin du premier trimestre (D. 262-97 prédécesseur)";
+    label en unofficial "the national fund transmits the annual data in five items before the end of the first quarter (D. 262-97 predecessor)";
+    when est_caisse_nationale(o)
+        and est_service_statistique(s)
+        and annee_donnees_fin(d, fin);
+    then duty TransmettreAnnuellesCaissesPre2025 {
+        bearer o;
+        beneficiary s;
+        maintain donnees_annuelles_transmises_caisses_pre2025(o, s, fin) during [fin, month_end_of(add_calendar_period(fin, 3 calendar_month))];
+    };
+}
+
+@source(
+    CASF_D262_98,
+    CASF_D262_98_ED2021_03,
+    CASF_D262_98_ED2021_04,
+    CASF_D262_98_ED2023_01,
+    CASF_D262_98_ED2024_01,
+    CASF_D262_98_ED2024_07,
+    CASF_D262_98_ED2025_01,
+    CASF_D262_98_ED2025_06,
+    CASF_D262_98_ED2026_06)
+rule TransmettreInfosL262_55OrganismeRule(o: Organisme, s: Organisme, p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'organisme transmet aux services statistiques les informations L. 262-55 des personnes à l'échantillon (D. 262-98 via L. 262-55, côté organisme)";
+    label en unofficial "the body transmits the in-sample persons' L. 262-55 information to the statistical services (D. 262-98 via L. 262-55, body side)";
+    when est_organisme_service(o)
+        and organisme_competent(o, p)
+        and echantillon_l262_55(p)
+        and est_service_statistique(s);
+    then duty TransmettreInfosL262_55Organisme {
+        bearer o;
+        beneficiary s;
+        maintain infos_l262_55_transmises_organisme(o, s) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_98,
+    CASF_D262_98_ED2021_03,
+    CASF_D262_98_ED2021_04,
+    CASF_D262_98_ED2023_01,
+    CASF_D262_98_ED2024_01,
+    CASF_D262_98_ED2024_07,
+    CASF_D262_98_ED2025_01,
+    CASF_D262_98_ED2025_06,
+    CASF_D262_98_ED2026_06)
+rule TransmettreInfosL262_55DepartementRule(d: Departement, s: Organisme, p: fr.minima.ressources::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le département transmet aux services statistiques les informations L. 262-55 des personnes à l'échantillon (D. 262-98 via L. 262-55, côté département)";
+    label en unofficial "the department transmits the in-sample persons' L. 262-55 information to the statistical services (D. 262-98 via L. 262-55, department side)";
+    when departement_competent(d, p)
+        and echantillon_l262_55(p)
+        and est_service_statistique(s);
+    then duty TransmettreInfosL262_55Departement {
+        bearer d;
+        beneficiary s;
+        maintain infos_l262_55_transmises_dept(d, s) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_100,
+    CASF_D262_100_ED2021_03,
+    CASF_D262_100_ED2021_04,
+    CASF_D262_100_ED2023_01,
+    CASF_D262_100_ED2024_01,
+    CASF_D262_100_ED2024_07,
+    CASF_D262_100_ED2025_01,
+    CASF_D262_100_ED2025_06,
+    CASF_D262_100_ED2026_06)
+rule PublierResultatsServicesRule(s: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "les services statistiques assurent la publication régulière des résultats (D. 262-100)";
+    label en unofficial "the statistical services ensure the regular publication of the results (D. 262-100)";
+    when est_service_statistique(s);
+    then duty PublierResultatsServices {
+        bearer s;
+        maintain publication_services_assuree(s) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CASF_D262_100,
+    CASF_D262_100_ED2021_03,
+    CASF_D262_100_ED2021_04,
+    CASF_D262_100_ED2023_01,
+    CASF_D262_100_ED2024_01,
+    CASF_D262_100_ED2024_07,
+    CASF_D262_100_ED2025_01,
+    CASF_D262_100_ED2025_06,
+    CASF_D262_100_ED2026_06)
+rule PublierResultatsCaissesRule(o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "la caisse nationale assure la publication régulière des résultats (D. 262-100)";
+    label en unofficial "the national fund ensures the regular publication of the results (D. 262-100)";
+    when est_caisse_nationale(o);
+    then duty PublierResultatsCaisses {
+        bearer o;
+        maintain publication_caisses_assuree(o) during [@2021-01-01, infinity);
+    };
+}

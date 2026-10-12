@@ -1,0 +1,37 @@
+// Linear bonification midpoint, new wording: single person, SMIC 12.00,
+// base 640.00, professional income 1182.00/month (Feb-Apr 2026), resources
+// 1182.00. 59xSMIC=708.00, 138xSMIC=1656.00; ratio (1182-708)/948 = 0.5;
+// boni = 0.377x640x0.5 = 120.64; fraction 0.5985x1182 = 707.427;
+// prime = 640 + 707.427 + 120.64 - 1182 = 286.067; average 286.067,
+// above the 15.00 floor -> due 286.067 for June 2026 (L.842-3, D.843-1/2/3,
+// R.843-1 new wording).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-prime-seul-lineaire-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": forfait_base_retenu(@2026-02-01, 640.00 EUR) { origin case_input; }
+        assert "ppa-02": forfait_base_retenu(@2026-03-01, 640.00 EUR) { origin case_input; }
+        assert "ppa-03": forfait_base_retenu(@2026-04-01, 640.00 EUR) { origin case_input; }
+        assert "ppa-04": smic_horaire_retenu(@2026-02-01, 12.00 EUR) { origin case_input; }
+        assert "ppa-05": smic_horaire_retenu(@2026-03-01, 12.00 EUR) { origin case_input; }
+        assert "ppa-06": smic_horaire_retenu(@2026-04-01, 12.00 EUR) { origin case_input; }
+        assert "ppa-07": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), @2026-02-01, SEUL) { origin case_input; }
+        assert "ppa-08": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), @2026-03-01, SEUL) { origin case_input; }
+        assert "ppa-09": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), @2026-04-01, SEUL) { origin case_input; }
+        assert "ppa-10": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), @2026-02-01, 1182.00 EUR) { origin case_input; }
+        assert "ppa-11": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), @2026-03-01, 1182.00 EUR) { origin case_input; }
+        assert "ppa-12": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), @2026-04-01, 1182.00 EUR) { origin case_input; }
+        assert "ppa-13": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), @2026-02-01, 1182.00 EUR) { origin case_input; }
+        assert "ppa-14": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), @2026-03-01, 1182.00 EUR) { origin case_input; }
+        assert "ppa-15": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), @2026-04-01, 1182.00 EUR) { origin case_input; }
+        assert "ppa-16": mois_revue(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-17": minimum_paiement_retenu(@2026-06-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:seul-lineaire-2026"), 286.067 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

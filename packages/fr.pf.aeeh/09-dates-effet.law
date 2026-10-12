@@ -1,0 +1,249 @@
+// R. 541-6/7/8: silence, effect dates, hospitalization.
+//
+// DEONTIC MAP: the silence deadline + rejet_implicite (R. 541-6) are
+// institutional computation (legal fiction, no position): the date head
+// is the exclusive +4-month threshold, the fiction holding strictly
+// beyond it («plus de quatre mois»). R. 541-7 start
+// and end dates are institutional computation («premier jour du mois
+// suivant» built with month_start_of over a calendar step; the sans/avec
+// AAH branches are disjoint via negation-as-absence on ouvre_droit_aah,
+// pf-af partage_actif pattern). The R. 512-2 link is an institutional
+// bridge reading pub fr.pf.core::enfant_ouvre_droit (upstream mechanics
+// stay upstream). R. 541-7 al. 4 PCH end is institutional computation;
+// duties SuspendreComplement and RetablirComplement (organisme).
+// R. 541-8: assimilation date institutional; assimilation defeasible with
+// a contraintes defeater; liberty MaintenirVersementHospitalisation
+// (commission).
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+use self::{
+    CSS_R541_6_ED2021_01,
+    CSS_R541_6_ED2022_01,
+    CSS_R541_6_ED2026_04,
+    CSS_R541_7,
+    CSS_R541_7_ED2022_01,
+    CSS_R541_7_ED2026_04,
+    CSS_R541_8_ED2021_01,
+    CSS_R541_8_ED2022_01,
+    CSS_R541_8_ED2026_04,
+    Commission,
+    aeeh_condition_r512_2,
+    assimile_internat,
+    attribution_pch,
+    commission_competente,
+    complement_retabli,
+    complement_suspendu_pch,
+    contraintes_hospitalisation_complement,
+    date_appreciation,
+    date_assimilation_hospitalisation,
+    date_debut_droit,
+    date_fin_complement_pch,
+    date_fin_suppression,
+    date_rejet_implicite,
+    demande_aeeh_deposee,
+    hospitalisation,
+    information_attribution_pch,
+    maintien_verse,
+    notification_suppression,
+    option_prestation_compensation,
+    ouvre_droit_aah,
+    rejet_implicite,
+    sans_confirmation_pch,
+    sans_decision_cdaph,
+};
+
+deadline policy AEEH_MOIS_CIVIL {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+// --- R. 541-6: silence over four months is a rejection -----------------------
+
+@source(
+    CSS_R541_6_ED2021_01,
+    CSS_R541_6_ED2022_01,
+    CSS_R541_6_ED2026_04)
+rule DateRejetImplicite(e: fr.pf.core::Enfant, depot: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "seuil du rejet implicite : quatre mois après le dépôt, le silence au-delà valant rejet (R. 541-6)";
+    label en unofficial "implicit-rejection threshold: four months after filing, silence beyond it deemed a rejection (R. 541-6)";
+    when demande_aeeh_deposee(e, depot);
+    then date_rejet_implicite(e, add_calendar_period(depot, 4 calendar_month));
+}
+
+@source(
+    CSS_R541_6_ED2021_01,
+    CSS_R541_6_ED2022_01,
+    CSS_R541_6_ED2026_04)
+rule RejetImplicite(e: fr.pf.core::Enfant, depot: Date, rejet: Date, d: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "silence gardé pendant plus de quatre mois valant rejet (R. 541-6)";
+    label en unofficial "silence kept for over four months deemed a rejection (R. 541-6)";
+    when demande_aeeh_deposee(e, depot) and date_rejet_implicite(e, rejet)
+        and date_appreciation(e, d) and d > rejet
+        and sans_decision_cdaph(e);
+    then rejet_implicite(e);
+}
+
+// --- R. 541-7 al. 1: award from the next month ----------------------------------
+
+@source(
+    CSS_R541_7,
+    CSS_R541_7_ED2022_01,
+    CSS_R541_7_ED2026_04)
+rule DateDebutDroit(e: fr.pf.core::Enfant, depot: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "attribution à compter du premier jour du mois suivant le dépôt (R. 541-7 al. 1)";
+    label en unofficial "award from the first day of the month after filing (R. 541-7 para. 1)";
+    when demande_aeeh_deposee(e, depot);
+    then date_debut_droit(e, month_start_of(add_calendar_period(depot, 1 calendar_month)));
+}
+
+// --- R. 541-7 al. 2: suppression ends ---------------------------------------------
+
+@source(
+    CSS_R541_7,
+    CSS_R541_7_ED2022_01,
+    CSS_R541_7_ED2026_04)
+rule DateFinSuppressionSansAAH(e: fr.pf.core::Enfant, notification: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "suppression sans droit AAH : cessation au premier jour du mois de notification (R. 541-7 al. 2)";
+    label en unofficial "suppression without an AAH right: end on the notification month's first day (R. 541-7 para. 2)";
+    when notification_suppression(e, notification) and not_known(ouvre_droit_aah(e));  // D-42: no negative holder for AAH (§67/§69); "sans droit AAH" = not established
+    then date_fin_suppression(e, month_start_of(notification));
+}
+
+@source(
+    CSS_R541_7,
+    CSS_R541_7_ED2022_01,
+    CSS_R541_7_ED2026_04)
+rule DateFinSuppressionAvecAAH(e: fr.pf.core::Enfant, notification: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "suppression avec droit AAH : cessation au premier jour du mois suivant (R. 541-7 al. 2)";
+    label en unofficial "suppression with an AAH right: end on the next month's first day (R. 541-7 para. 2)";
+    when notification_suppression(e, notification) and ouvre_droit_aah(e);
+    then date_fin_suppression(e, month_start_of(add_calendar_period(notification, 1 calendar_month)));
+}
+
+// --- R. 541-7 al. 3: R. 512-2 applies ----------------------------------------------
+
+@source(
+    CSS_R541_7,
+    CSS_R541_7_ED2022_01,
+    CSS_R541_7_ED2026_04)
+rule PontR5122(e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "R. 512-2 applicable à l'AEEH : enfant ouvrant droit au sens amont (R. 541-7 al. 3)";
+    label en unofficial "R. 512-2 applicable to the AEEH: entitled child in the upstream sense (R. 541-7 para. 3)";
+    when fr.pf.core::enfant_ouvre_droit(e);
+    then aeeh_condition_r512_2(e);
+}
+
+// --- R. 541-7 al. 4: PCH option and suspension ----------------------------------------
+
+@source(
+    CSS_R541_7,
+    CSS_R541_7_ED2022_01,
+    CSS_R541_7_ED2026_04)
+rule DateFinComplementPCH(e: fr.pf.core::Enfant, option: Date, attribution: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "option PCH : versement du complément cessant à la date d'attribution (R. 541-7 al. 4)";
+    label en unofficial "PCH option: supplement payment ending on the attribution date (R. 541-7 para. 4)";
+    when option_prestation_compensation(e, option) and attribution_pch(e, attribution);
+    then date_fin_complement_pch(e, attribution);
+}
+
+@source(
+    CSS_R541_7,
+    CSS_R541_7_ED2022_01,
+    CSS_R541_7_ED2026_04)
+rule DevoirSuspendreComplement(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, information: Date, attribution: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "informé de l'attribution PCH, l'organisme suspend le versement du complément (R. 541-7 al. 4)";
+    label en unofficial "informed of the PCH attribution, the body suspends the supplement payment (R. 541-7 para. 4)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and information_attribution_pch(o, e, information) and attribution_pch(e, attribution);
+    then duty SuspendreComplementPCH {
+        bearer o;
+        beneficiary p;
+        maintain complement_suspendu_pch(e) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R541_7,
+    CSS_R541_7_ED2022_01,
+    CSS_R541_7_ED2026_04)
+rule DevoirRetablirComplement(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "attribution non confirmée : l'organisme rétablit le versement rétroactivement (R. 541-7 al. 4)";
+    label en unofficial "attribution unconfirmed: the body retroactively restores the payment (R. 541-7 para. 4)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and complement_suspendu_pch(e) and sans_confirmation_pch(e);
+    then duty RetablirComplementRetroactif {
+        bearer o;
+        beneficiary p;
+        maintain complement_retabli(e) during [@2021-01-01, infinity);
+    };
+}
+
+// --- R. 541-8: hospitalization assimilated to boarding -------------------------------
+
+@source(
+    CSS_R541_8_ED2021_01,
+    CSS_R541_8_ED2022_01,
+    CSS_R541_8_ED2026_04)
+rule DateAssimilationHospitalisation(e: fr.pf.core::Enfant, debut: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "assimilation à l'internat dès le premier jour du troisième mois civil suivant l'hospitalisation (R. 541-8)";
+    label en unofficial "assimilation to boarding from the first day of the third civil month after hospitalization (R. 541-8)";
+    when hospitalisation(e, debut);
+    then date_assimilation_hospitalisation(e, month_start_of(add_calendar_period(debut, 3 calendar_month)));
+}
+
+@source(
+    CSS_R541_8_ED2021_01,
+    CSS_R541_8_ED2022_01,
+    CSS_R541_8_ED2026_04)
+rule AssimilationHospitalisation(e: fr.pf.core::Enfant, debut: Date, assimilation: Date, d: Date) defeasible {
+    effective [@2021-01-01, infinity);
+    label fr official "l'hospitalisation est assimilée au placement en internat, sauf contraintes de complément (R. 541-8)";
+    label en unofficial "the hospital stay is assimilated to boarding placement, unless supplement constraints (R. 541-8)";
+    when hospitalisation(e, debut) and date_assimilation_hospitalisation(e, assimilation)
+        and date_appreciation(e, d) and d >= assimilation;
+    then assimile_internat(e);
+}
+
+@source(
+    CSS_R541_8_ED2021_01,
+    CSS_R541_8_ED2022_01,
+    CSS_R541_8_ED2026_04)
+rule DefeaterContraintesHospitalisation(e: fr.pf.core::Enfant) defeater {
+    effective [@2021-01-01, infinity);
+    label fr official "contraintes d'hospitalisation dans les conditions d'un complément : pas d'assimilation (R. 541-8)";
+    label en unofficial "hospital constraints meeting supplement conditions: no assimilation (R. 541-8)";
+    when contraintes_hospitalisation_complement(e);
+    defeat assimile_internat(e);
+}
+
+@source(
+    CSS_R541_8_ED2021_01,
+    CSS_R541_8_ED2022_01,
+    CSS_R541_8_ED2026_04)
+rule LiberteMaintienVersement(c: Commission, p: fr.pf.core::Personne, e: fr.pf.core::Enfant, debut: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "contraintes de complément : sur décision de la commission, le versement peut être maintenu (R. 541-8)";
+    label en unofficial "supplement constraints: on the commission decision, payment may be maintained (R. 541-8)";
+    when commission_competente(c, e) and fr.pf.core::parent_charge(p, e)
+        and hospitalisation(e, debut) and contraintes_hospitalisation_complement(e);
+    then liberty MaintenirVersementHospitalisation {
+        holder c;
+        action maintien_verse(e);
+        window [@2021-01-01, infinity);
+    };
+}

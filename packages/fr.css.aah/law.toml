@@ -1,0 +1,141 @@
+# Manifest §10 — package root marker (DECISION-0033). Headers §22 in the
+# .law files themselves are normative; the manifest must match them
+# (LDC-E1109, lawc check).
+[package]
+name = "fr.css.aah"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:aah"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after .law edits run
+# `law fix imports fr/aah`; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+# Catalogue metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-aah"
+title = "Allocation aux adultes handicapés (AAH)"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française"
+verifiedAgainstSource = false
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Standalone package (no upstream premises): the CDAPH decision, the rate
+# and the RSDAE arrive as this package's own established facts (B-AAH-TETE);
+# the monthly euro amount is pinned and built from the decrees and the
+# L. 161-25 coefficients (07-montant-chaine.law; a case-supplied amount still
+# prevails); resources arrive as retained case facts (B-AAH-RESSOURCES-CALCUL).
+# Worlds below contain only this package.
+
+# Right tracks (L821-1 80%+, L821-2 50-79% + RSDAE, D821-1 rates).
+[[tests]]
+family = "fr.css.aah#droit"
+regression = false
+suites = [
+    "tests/aah-droit-80.lawtest",
+    "tests/aah-droit-50-79-rsdae.lawtest",
+    "tests/aah-droit-50-79-sans-rsdae.lawtest",
+]
+world = ["fr.css.aah"]
+
+# Amounts (L821-3-1, D821-2 both wordings, annual/quarterly tracks, 1 April revalorisation by the chain).
+[[tests]]
+family = "fr.css.aah#montant"
+regression = false
+suites = [
+    "tests/aah-montant-seul-sans-ressources.lawtest",
+    "tests/aah-montant-seul-ressources-partielles.lawtest",
+    "tests/aah-montant-trimestriel.lawtest",
+    "tests/aah-montant-plafond-depasse.lawtest",
+    "tests/aah-montant-couple-exclut-seul.lawtest",
+    "tests/aah-montant-revalo.lawtest",
+]
+world = ["fr.css.aah"]
+
+# D. 821-2 al. 3 divisions (douzieme, tiers) under the reading DouziemeTiersArrondiCentime
+# (SPEC 152, D-82/D-83): rounded to the centime, half up; without the reading the
+# default stays exact division (non-terminating quotient: INEXACT_DIVISION).
+[[tests]]
+family = "fr.css.aah#montant-division"
+regression = false
+suites = [
+    "tests/aah-division-annuel-arrondi.lawtest",
+    "tests/aah-division-trimestriel-arrondi.lawtest",
+    "tests/aah-division-sans-lecture.lawtest",
+]
+world = ["fr.css.aah"]
+
+# Amount chain (L821-3-1, L161-25; DECISION-0452): decree amounts of the windows,
+# the 2022-1158 art. 9 window, the built chain under the reading
+# AahRevalorisationArrondiCentime, the case-supplied amount, decree to award.
+# Expectations are generated from the pinned texts (tools/build_montant_chaine.py).
+[[tests]]
+family = "fr.css.aah#montant-chaine"
+regression = false
+suites = [
+    "tests/aah-montant-decrets.lawtest",
+    "tests/aah-montant-loi-2022.lawtest",
+    "tests/aah-montant-chaine-lecture.lawtest",
+    "tests/aah-montant-sans-lecture.lawtest",
+    "tests/aah-montant-saisi-prevaut.lawtest",
+    "tests/aah-montant-decret-bout-en-bout.lawtest",
+]
+world = ["fr.css.aah"]
+
+# Uncoupling 01.10.2023: double calculation, irreversible switch (2022-1694
+# art. 2), named readings SensRenouvellement (§152) with dependency pair.
+[[tests]]
+family = "fr.css.aah#deconjugalisation"
+regression = false
+suites = [
+    "tests/aah-double-calcul-maintien.lawtest",
+    "tests/aah-double-calcul-bascule.lawtest",
+    "tests/aah-double-calcul-irreversible.lawtest",
+    "tests/aah-double-calcul-avant-reforme.lawtest",
+    "tests/aah-lecture-tant-que.lawtest",
+    "tests/aah-lecture-strict.lawtest",
+    "tests/aah-lecture-sans-axe.lawtest",
+]
+world = ["fr.css.aah"]
+
+# ESAT joint cap (D821-5 both wordings, decree 2023-360).
+[[tests]]
+family = "fr.css.aah#cumul-esat"
+regression = false
+suites = [
+    "tests/aah-esat-nouveau-plafonne.lawtest",
+    "tests/aah-esat-ancien-couple.lawtest",
+    "tests/aah-esat-maintien-couple-enfant.lawtest",
+]
+world = ["fr.css.aah"]
+
+# Fund duty, CDAPH power, recipient duties (positions).
+[[tests]]
+family = "fr.css.aah#devoirs"
+regression = false
+suites = [
+    "tests/devoirs-actif.lawtest",
+    "tests/devoirs-sans-droit.lawtest",
+]
+world = ["fr.css.aah"]
+
+# OpenFisca-France cases (openfisca/openfisca-france@<see foreign REPORT>,
+# tests/formulas/aah/): each case's expectation is THEIR number. Not
+# regressions: measurement of third-party cases.
+[[tests]]
+family = "fr.css.aah#openfisca-import"
+regression = false
+suites = [
+    "tests/foreign/openfisca/of-2023-03-cessation.lawtest",
+    "tests/foreign/openfisca/of-2023-08-conjugalise.lawtest",
+    "tests/foreign/openfisca/of-2023-11-deconjugalise.lawtest",
+]
+world = ["fr.css.aah"]

@@ -1,0 +1,31 @@
+// Exact half-cent tie stays pending (D75, B-PFAJPP-TIE-ARRONDI):
+// shn 9.33 with CRDS rate 0.0048 gives (7*9.33)/(1-0.0048) =
+// 65.31/0.9952 = 65.625 exactly — a tie between 65.62 and 65.63.
+// The pinned D. 544-6 names no tie-breaking mode, so the case
+// flags the tie (established by this computation) and no rounded
+// rate is derived: the pending head holds, both adjacent cents
+// stay NEITHER.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-taux-tie-attente" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-tt-01": smic_horaire_net_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-tt"), 9.33 EUR) { origin case_input; }
+        assert "ajpp-tt-02": taux_crds_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-tt"), 0.0048) { origin case_input; }
+        assert "ajpp-tt-03": tie_formule_taux(entity_ref("urn:fr:pf-ajpp:case:enfant-tt")) { origin case_input; }
+    }
+    evaluate truth(taux_tie_en_attente(entity_ref("urn:fr:pf-ajpp:case:enfant-tt")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(taux_journalier_calcule(entity_ref("urn:fr:pf-ajpp:case:enfant-tt"), 65.63 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(taux_journalier_calcule(entity_ref("urn:fr:pf-ajpp:case:enfant-tt"), 65.62 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

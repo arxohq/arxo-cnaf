@@ -1,0 +1,30 @@
+// Собственное дело: одиночка, зона I, общий тип, redevance 36 €, ресурсы 600 €.
+//
+// Абатмент минимума чистого расхода доводит пособие до E − 26,68 = 9,32 €, шаг
+// взносов даёт 9,0466 € — ниже порога выплаты 10 € (ст. 29 арретэ):
+// «il n'est pas procédé à son versement» — выплаты нет.
+// K читается из R. 351-61 (общий случай) и R. 351-61-1 (фойе молодых работников и
+// социальные резиденции) — алгебра D. 832-25 в закреплённых данных картинка, см.
+// блок «КОЭФФИЦИЕНТ K» в 04-calcul-foyer.law и README, «Коэффициент K».
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-foyer-apl-08-sous-seuil" {
+    given {
+        context { decision_time @2022-04-23T12:00:00Z; knowledge_time @2022-04-23T12:00:00Z; legal_time @2022-04-23; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "foyer-apl-08-sous-seuil-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-08")) { origin case_input; }
+        assert "foyer-apl-08-sous-seuil-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-apl-08"), APL) { origin case_input; }
+        assert "foyer-apl-08-sous-seuil-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-apl-08"), ZONE_I) { origin case_input; }
+        assert "foyer-apl-08-sous-seuil-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-apl-08"), PERSONNE_SEULE) { origin case_input; }
+        assert "foyer-apl-08-sous-seuil-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-apl-08"), 0) { origin case_input; }
+        assert "foyer-apl-08-sous-seuil-06": type_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-08"), GENERAL) { origin case_input; }
+        assert "foyer-apl-08-sous-seuil-07": redevance(entity_ref("urn:fr:apl:case:foyer-apl-08"), 36 EUR) { origin case_input; }
+        assert "foyer-apl-08-sous-seuil-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-apl-08"), 600 EUR) { origin case_input; }
+        assert "foyer-apl-08-sous-seuil-09": territoire(entity_ref("urn:fr:apl:case:foyer-apl-08"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_non_versee(entity_ref("urn:fr:apl:case:foyer-apl-08")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

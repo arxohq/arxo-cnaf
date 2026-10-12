@@ -1,0 +1,29 @@
+// КОЛОКАЦИЯ (ст. 16 арретэ), редакция 2026 года: плафон найма и форфейт
+// расходов берутся из собственных таблиц колокаторов — 252,73 € и
+// 30,64 € против 336,97 € и 61,29 € у одиночного найма. Точный итог —
+// 159,80192 €.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-colocation-2026" {
+    given {
+        context { decision_time @2026-11-15T12:00:00Z; knowledge_time @2026-11-15T12:00:00Z; legal_time @2026-11-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frontiere-colocation-2026-01": secteur_locatif(entity_ref("urn:fr:apl:case:frontiere-colocation-2026")) { origin case_input; }
+        assert "frontiere-colocation-2026-02": zone_du_logement(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), ZONE_I) { origin case_input; }
+        assert "frontiere-colocation-2026-03": aide_demandee(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), APL) { origin case_input; }
+        assert "frontiere-colocation-2026-04": situation_familiale(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), PERSONNE_SEULE) { origin case_input; }
+        assert "frontiere-colocation-2026-05": personnes_a_charge(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), 0) { origin case_input; }
+        assert "frontiere-colocation-2026-06": loyer_principal(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), 300 EUR) { origin case_input; }
+        assert "frontiere-colocation-2026-07": ressources_du_menage(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), 7800 EUR) { origin case_input; }
+        assert "frontiere-colocation-2026-08": mode_location(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), COLOCATION) { origin case_input; }
+        assert "frontiere-colocation-2026-09": forme_logement(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "frontiere-colocation-2026-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), 0 EUR) { origin case_input; }
+        assert "frontiere-colocation-2026-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), false) { origin case_input; }
+        assert "frontiere-colocation-2026-12": territoire(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:frontiere-colocation-2026"), 159.80192 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

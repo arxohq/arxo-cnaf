@@ -1,0 +1,31 @@
+// СВОЙ сценарий заморского найма: наёмных дел заморских территорий нет ни у
+// Catala, ни у OpenFisca, поэтому шаги выведены из закреплённого текста.
+//
+// Факты дела нарочно скупые: ни найма, ни ресурсов. Этому шагу они не нужны, а с
+// ними сработала бы вся цепочка расчёта, и её отказ в любом звене поразил бы весь
+// evaluation-документ.
+//
+// ШАГ, ЗАКРЕПЛЯЮЩИЙ МОЛЧАНИЕ НОРМЫ. Ст. 47 о ставках TF не говорит, а в список
+// ст. 46 Сен-Пьер-и-Микелон не входит. Значит TF он считает по МЕТРОПОЛИИ:
+// 3,15 %, а не 2,99 % заморской таблицы. Это чтение двух статей, и сценарий его
+// закрепляет — иначе «заморская территория» читалась бы как один режим.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-saint-pierre-locatif-tf-couple" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "saint-pierre-locatif-tf-couple-01": secteur_locatif(entity_ref("urn:fr:apl:case:sp-loc-a")) { origin case_input; }
+        assert "saint-pierre-locatif-tf-couple-02": aide_demandee(entity_ref("urn:fr:apl:case:sp-loc-a"), APL) { origin case_input; }
+        assert "saint-pierre-locatif-tf-couple-03": zone_du_logement(entity_ref("urn:fr:apl:case:sp-loc-a"), ZONE_II) { origin case_input; }
+        assert "saint-pierre-locatif-tf-couple-04": situation_familiale(entity_ref("urn:fr:apl:case:sp-loc-a"), COUPLE) { origin case_input; }
+        assert "saint-pierre-locatif-tf-couple-05": personnes_a_charge(entity_ref("urn:fr:apl:case:sp-loc-a"), 0) { origin case_input; }
+        assert "saint-pierre-locatif-tf-couple-06": mode_location(entity_ref("urn:fr:apl:case:sp-loc-a"), LOCATION_SEULE) { origin case_input; }
+        assert "saint-pierre-locatif-tf-couple-07": territoire(entity_ref("urn:fr:apl:case:sp-loc-a"), SAINT_PIERRE_ET_MIQUELON) { origin case_input; }
+    }
+    evaluate truth(taux_composition_familiale(entity_ref("urn:fr:apl:case:sp-loc-a"), 0.0315));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

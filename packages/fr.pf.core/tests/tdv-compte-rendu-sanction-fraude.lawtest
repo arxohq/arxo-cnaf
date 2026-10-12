@@ -1,0 +1,22 @@
+// Conforming local report with a fraud sanction: late reply, refusal direction, evaluated items and a 500 EUR fraud sanction - the report is conforming (R. 553-3-7 1/2/4).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-compte-rendu-sanction-fraude" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-compte-rendu-sanction-fraude-01": compte_rendu_transmis(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf")) { origin case_input; }
+        assert "tdv-compte-rendu-sanction-fraude-02": compte_rendu_transmis_sans_delai(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf")) { origin case_input; }
+        assert "tdv-compte-rendu-sanction-fraude-03": compte_rendu_anonymise(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:evalue-fraude")) { origin case_input; }
+        assert "tdv-compte-rendu-sanction-fraude-04": compte_rendu_reponse_hors_delai(entity_ref("urn:fr:pf:case:evalue-fraude")) { origin case_input; }
+        assert "tdv-compte-rendu-sanction-fraude-05": compte_rendu_decision_refus(entity_ref("urn:fr:pf:case:evalue-fraude")) { origin case_input; }
+        assert "tdv-compte-rendu-sanction-fraude-06": compte_rendu_elements_evalues(entity_ref("urn:fr:pf:case:evalue-fraude")) { origin case_input; }
+        assert "tdv-compte-rendu-sanction-fraude-07": compte_rendu_sanction_fraude(entity_ref("urn:fr:pf:case:evalue-fraude"), 500.00 EUR) { origin case_input; }
+        assert "tdv-compte-rendu-sanction-fraude-08": prestation_soumise_section(entity_ref("urn:fr:pf:case:evalue-fraude")) { origin case_input; }
+    }
+    evaluate truth(compte_rendu_evaluation_conforme(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf"), entity_ref("urn:fr:pf:case:evalue-fraude")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

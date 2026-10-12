@@ -1,0 +1,62 @@
+// R. 541-4 I-II, 2026 filing cohort (decree 2026-227 NOTA, legal_time
+// 2026-06, CSS_ED2026_04): the 50-80 % ordinary due-ends conclude only
+// for initial/renewal requests filed from 2026-04-01 with the adjudicated
+// ordinary regime and an affirmative no-trigger record; an older filing
+// keeps the unconditional 2-5 year award period and gets no due-end;
+// without any filing date nothing concludes on either head (pending, not
+// false). The 80 % ordinary due-end is unchanged across wordings and
+// needs no cohort fact (regime + no-trigger record only).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-cohorte-2026" {
+    given {
+        context { deadline_policy AEEH_DUREES; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "r541-co-01": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-co-ancien"), 60.0) { origin adjudicated; }
+        assert "r541-co-02": date_attribution_aeeh(entity_ref("urn:fr:pf-aeeh:case:enfant-co-ancien"), @2024-03-15) { origin case_input; }
+        assert "r541-co-03": demande_attribution_aeeh_deposee(entity_ref("urn:fr:pf-aeeh:case:enfant-co-ancien"), @2024-02-10) { origin case_input; }
+        assert "r541-co-04": ouverture_droit_aah(entity_ref("urn:fr:pf-aeeh:case:enfant-co-ancien"), @2026-06-15) { origin case_input; }
+        assert "r541-co-05": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-co-nouveau"), 60.0) { origin adjudicated; }
+        assert "r541-co-06": date_attribution_aeeh(entity_ref("urn:fr:pf-aeeh:case:enfant-co-nouveau"), @2026-05-10) { origin case_input; }
+        assert "r541-co-07": demande_attribution_aeeh_deposee(entity_ref("urn:fr:pf-aeeh:case:enfant-co-nouveau"), @2026-05-02) { origin case_input; }
+        assert "r541-co-08": fin_conditions_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-co-nouveau"), @2026-09-20) { origin case_input; }
+        assert "r541-co-14": attribution_ordinaire_r5414(entity_ref("urn:fr:pf-aeeh:case:enfant-co-nouveau")) { origin adjudicated; }
+        assert "r541-co-16": certificat_sans_perspective(entity_ref("urn:fr:pf-aeeh:case:enfant-co-nouveau")) { origin adjudicated; }
+        assert "r541-co-09": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-co-sans"), 60.0) { origin adjudicated; }
+        assert "r541-co-10": date_attribution_aeeh(entity_ref("urn:fr:pf-aeeh:case:enfant-co-sans"), @2026-05-10) { origin case_input; }
+        assert "r541-co-11": ouverture_droit_aah(entity_ref("urn:fr:pf-aeeh:case:enfant-co-sans"), @2026-06-15) { origin case_input; }
+        assert "r541-co-12": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-co-80"), 80.0) { origin adjudicated; }
+        assert "r541-co-13": ouverture_droit_aah(entity_ref("urn:fr:pf-aeeh:case:enfant-co-80"), @2026-06-15) { origin case_input; }
+        assert "r541-co-15": attribution_ordinaire_r5414(entity_ref("urn:fr:pf-aeeh:case:enfant-co-80")) { origin adjudicated; }
+        assert "r541-co-17": equipe_sans_proposition(entity_ref("urn:fr:pf-aeeh:case:enfant-co-80")) { origin adjudicated; }
+    }
+    evaluate truth(bornes_duree_attribution(entity_ref("urn:fr:pf-aeeh:case:enfant-co-ancien"), @2026-03-15, @2029-03-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-co-ancien"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-co-nouveau"), @2026-09-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bornes_duree_attribution(entity_ref("urn:fr:pf-aeeh:case:enfant-co-nouveau"), @2028-05-10, @2031-05-10));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-co-sans"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bornes_duree_attribution(entity_ref("urn:fr:pf-aeeh:case:enfant-co-sans"), @2028-05-10, @2031-05-10));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-co-80"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

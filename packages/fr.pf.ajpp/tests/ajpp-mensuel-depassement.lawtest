@@ -1,0 +1,19 @@
+// Monthly cap exceeded: 23 days against 22, no record either way.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-mensuel-depassement" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-mend-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-mend")) { origin adjudicated; }
+        assert "ajpp-mend-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-mend")) { origin adjudicated; }
+        assert "ajpp-mend-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-mend"), entity_ref("urn:fr:pf-ajpp:case:enfant-mend")) { origin case_input; }
+        assert "ajpp-mend-04": jours_ajpp_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mend"), @2024-03-01, 23) { origin case_input; }
+        assert "ajpp-mend-05": plafond_mensuel_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-mend"), 22) { origin case_input; }
+    }
+    evaluate truth(mensuel_dans_limite(entity_ref("urn:fr:pf-ajpp:case:enfant-mend"), @2024-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

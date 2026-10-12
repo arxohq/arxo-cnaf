@@ -1,0 +1,387 @@
+// Attribution of a single aid (L. 821-5, R. 821-1/3/4/5/6, L. 841-5):
+// eligibility joined with the request, the literal APL priority, the ALS
+// same-purpose difference, dwelling unicity markers and the
+// allocation-to-APL switch.
+//
+// READING ADOPTED (flagged for the owner): R. 821-5 is read LITERALLY — when
+// APL scope conditions are met, only APL is attributed, even if the household
+// requested ALF or ALS (the household is redirected to an APL request; the
+// ALF/ALS attribution is defeated on bare eligible_apl, with no APL-demand
+// premise). The coherent alternative (priority among requested aids only)
+// would pay ALF to an APL-eligible household; the text says "seule cette
+// aide est attribuee" without conditioning on the demand.
+//
+// The L. 821-5 non-cumul emerges from the priority defeaters; no separate
+// rule restates it. R. 821-1 (one person/household, several dwellings) is
+// its own prohibition marker. The one-aid-per-dwelling default that
+// R. 821-4 derogates from is a conflict marker with the R. 821-4
+// co-ownership/co-tenancy defeater. R. 821-3 (separated spouses, two
+// established principal residences) is a permission marker: each spouse may
+// be granted an aid; distinct subjects in distinct dwellings escape the
+// same-household/single-dwelling logic by construction, so no defeater is
+// needed. Which attribution is withdrawn on a proven conflict stays a
+// boundary (unpinned enforcement).
+//
+// FRAGMENTS (predicted; reviewer verifies after sync --write): base + all 7
+// _ED fragments per cited article (all stable since 2019-09-01).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_L821_5,
+    CCH_L821_5_ED2019_12,
+    CCH_L821_5_ED2020_01,
+    CCH_L821_5_ED2021_01,
+    CCH_L821_5_ED2023_04,
+    CCH_L821_5_ED2023_09,
+    CCH_L821_5_ED2023_12,
+    CCH_L821_5_ED2026_07,
+    CCH_L831_1,
+    CCH_L831_1_ED2019_12,
+    CCH_L831_1_ED2020_01,
+    CCH_L831_1_ED2021_01,
+    CCH_L831_1_ED2023_04,
+    CCH_L831_1_ED2023_09,
+    CCH_L831_1_ED2023_12,
+    CCH_L831_1_ED2026_07,
+    CCH_L841_1,
+    CCH_L841_1_ED2019_12,
+    CCH_L841_1_ED2020_01,
+    CCH_L841_1_ED2021_01,
+    CCH_L841_1_ED2023_04,
+    CCH_L841_1_ED2023_09,
+    CCH_L841_1_ED2023_12,
+    CCH_L841_1_ED2026_07,
+    CCH_L841_2,
+    CCH_L841_2_ED2019_12,
+    CCH_L841_2_ED2020_01,
+    CCH_L841_2_ED2021_01,
+    CCH_L841_2_ED2023_04,
+    CCH_L841_2_ED2023_09,
+    CCH_L841_2_ED2023_12,
+    CCH_L841_2_ED2026_07,
+    CCH_L841_5,
+    CCH_L841_5_ED2019_12,
+    CCH_L841_5_ED2020_01,
+    CCH_L841_5_ED2021_01,
+    CCH_L841_5_ED2023_04,
+    CCH_L841_5_ED2023_09,
+    CCH_L841_5_ED2023_12,
+    CCH_L841_5_ED2026_07,
+    CCH_R821_1,
+    CCH_R821_1_ED2019_12,
+    CCH_R821_1_ED2020_01,
+    CCH_R821_1_ED2021_01,
+    CCH_R821_1_ED2023_04,
+    CCH_R821_1_ED2023_09,
+    CCH_R821_1_ED2023_12,
+    CCH_R821_1_ED2026_07,
+    CCH_R821_3,
+    CCH_R821_3_ED2019_12,
+    CCH_R821_3_ED2020_01,
+    CCH_R821_3_ED2021_01,
+    CCH_R821_3_ED2023_04,
+    CCH_R821_3_ED2023_09,
+    CCH_R821_3_ED2023_12,
+    CCH_R821_3_ED2026_07,
+    CCH_R821_4,
+    CCH_R821_4_ED2019_12,
+    CCH_R821_4_ED2020_01,
+    CCH_R821_4_ED2021_01,
+    CCH_R821_4_ED2023_04,
+    CCH_R821_4_ED2023_09,
+    CCH_R821_4_ED2023_12,
+    CCH_R821_4_ED2026_07,
+    CCH_R821_5,
+    CCH_R821_5_ED2019_12,
+    CCH_R821_5_ED2020_01,
+    CCH_R821_5_ED2021_01,
+    CCH_R821_5_ED2023_04,
+    CCH_R821_5_ED2023_09,
+    CCH_R821_5_ED2023_12,
+    CCH_R821_5_ED2026_07,
+    CCH_R821_6,
+    CCH_R821_6_ED2019_12,
+    CCH_R821_6_ED2020_01,
+    CCH_R821_6_ED2021_01,
+    CCH_R821_6_ED2023_04,
+    CCH_R821_6_ED2023_09,
+    CCH_R821_6_ED2023_12,
+    CCH_R821_6_ED2026_07,
+    CCH_R823_2,
+    CCH_R823_2_ED2019_12,
+    CCH_R823_2_ED2020_01,
+    CCH_R823_2_ED2021_01,
+    CCH_R823_2_ED2023_04,
+    CCH_R823_2_ED2023_09,
+    CCH_R823_2_ED2023_12,
+    CCH_R823_2_ED2026_07,
+    Menage,
+    TypeAide,
+    aide_apres_rls,
+    aide_demandee,
+    eligible_alf,
+    eligible_als,
+    eligible_apl,
+};
+
+pub relation aide_attribuee(m: Menage, t: TypeAide) kind institutional {
+    label fr official "aide attribuee au menage (champ joint a la demande)";
+    label en unofficial "aid attributed to the household (scope joined with the request)";
+}
+
+@source(CCH_L831_1, CCH_L831_1_ED2019_12, CCH_L831_1_ED2020_01,
+        CCH_L831_1_ED2021_01, CCH_L831_1_ED2023_04, CCH_L831_1_ED2023_09,
+        CCH_L831_1_ED2023_12, CCH_L831_1_ED2026_07, CCH_R823_2,
+        CCH_R823_2_ED2019_12, CCH_R823_2_ED2020_01, CCH_R823_2_ED2021_01,
+        CCH_R823_2_ED2023_04, CCH_R823_2_ED2023_09, CCH_R823_2_ED2023_12,
+        CCH_R823_2_ED2026_07)
+rule AttributionAPL(m: Menage) defeasible {
+    label fr official "champ APL et demande d'APL : APL attribuee";
+    label en unofficial "APL scope plus APL request: APL attributed";
+    when eligible_apl(m) and aide_demandee(m, APL);
+    then aide_attribuee(m, APL);
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07, CCH_R823_2,
+        CCH_R823_2_ED2019_12, CCH_R823_2_ED2020_01, CCH_R823_2_ED2021_01,
+        CCH_R823_2_ED2023_04, CCH_R823_2_ED2023_09, CCH_R823_2_ED2023_12,
+        CCH_R823_2_ED2026_07)
+rule AttributionALF(m: Menage) defeasible {
+    label fr official "champ ALF et demande d'ALF : ALF attribuee (defeasible : priorite APL)";
+    label en unofficial "ALF scope plus ALF request: ALF attributed (defeasible: APL priority)";
+    when eligible_alf(m) and aide_demandee(m, ALF);
+    then aide_attribuee(m, ALF);
+}
+
+@source(CCH_L841_2, CCH_L841_2_ED2019_12, CCH_L841_2_ED2020_01,
+        CCH_L841_2_ED2021_01, CCH_L841_2_ED2023_04, CCH_L841_2_ED2023_09,
+        CCH_L841_2_ED2023_12, CCH_L841_2_ED2026_07, CCH_R823_2,
+        CCH_R823_2_ED2019_12, CCH_R823_2_ED2020_01, CCH_R823_2_ED2021_01,
+        CCH_R823_2_ED2023_04, CCH_R823_2_ED2023_09, CCH_R823_2_ED2023_12,
+        CCH_R823_2_ED2026_07)
+rule AttributionALS(m: Menage) defeasible {
+    label fr official "champ ALS et demande d'ALS : ALS attribuee (defeasible : priorite APL)";
+    label en unofficial "ALS scope plus ALS request: ALS attributed (defeasible: APL priority)";
+    when eligible_als(m) and aide_demandee(m, ALS);
+    then aide_attribuee(m, ALS);
+}
+
+@source(CCH_R821_5, CCH_R821_5_ED2019_12, CCH_R821_5_ED2020_01,
+        CCH_R821_5_ED2021_01, CCH_R821_5_ED2023_04, CCH_R821_5_ED2023_09,
+        CCH_R821_5_ED2023_12, CCH_R821_5_ED2026_07, CCH_L821_5,
+        CCH_L821_5_ED2019_12, CCH_L821_5_ED2020_01, CCH_L821_5_ED2021_01,
+        CCH_L821_5_ED2023_04, CCH_L821_5_ED2023_09, CCH_L821_5_ED2023_12,
+        CCH_L821_5_ED2026_07)
+rule AplPrimeALF(m: Menage) defeater {
+    label fr official "conditions APL remplies : seule l'APL est attribuee, pas l'ALF";
+    label en unofficial "APL conditions met: only APL is attributed, not ALF";
+    when eligible_apl(m);
+    defeat aide_attribuee(m, ALF);
+}
+
+@source(CCH_R821_5, CCH_R821_5_ED2019_12, CCH_R821_5_ED2020_01,
+        CCH_R821_5_ED2021_01, CCH_R821_5_ED2023_04, CCH_R821_5_ED2023_09,
+        CCH_R821_5_ED2023_12, CCH_R821_5_ED2026_07, CCH_L821_5,
+        CCH_L821_5_ED2019_12, CCH_L821_5_ED2020_01, CCH_L821_5_ED2021_01,
+        CCH_L821_5_ED2023_04, CCH_L821_5_ED2023_09, CCH_L821_5_ED2023_12,
+        CCH_L821_5_ED2026_07)
+rule AplPrimeALS(m: Menage) defeater {
+    label fr official "conditions APL remplies : seule l'APL est attribuee, pas l'ALS";
+    label en unofficial "APL conditions met: only APL is attributed, not ALS";
+    when eligible_apl(m);
+    defeat aide_attribuee(m, ALS);
+}
+
+// --- Dwelling unicity markers (R. 821-1/4) + separation (R. 821-3) -----------
+// The case supplies each shared-dwelling pair once (no reflexive pairs).
+// Markers detect the conflict; withdrawal and split shares are unpinned.
+
+pub relation partage_logement_avec(m1: Menage, m2: Menage) kind empirical {
+    label fr official "les deux menages occupent le meme logement (fait de dossier, une fois par paire)";
+    label en unofficial "both households occupy the same dwelling (case fact, once per pair)";
+}
+
+pub relation cumul_logement_interdit(m1: Menage, m2: Menage) kind institutional {
+    label fr official "deux aides sur le meme logement : cumul interdit, defaut auquel R. 821-4 deroge (marqueur)";
+    label en unofficial "two aids on one dwelling: prohibited combination, the default R. 821-4 derogates from (marker)";
+}
+
+pub relation coproprietaire_cotitulaire_logement(m1: Menage, m2: Menage) kind empirical {
+    label fr official "foyers distincts coproprietaires et cotitulaires du pret, du bail ou de l'engagement (constat R. 821-4)";
+    label en unofficial "distinct homes co-owning and co-holding the loan, lease or letting agreement (R. 821-4 finding)";
+}
+
+@source(CCH_R821_4,
+        CCH_R821_4_ED2019_12, CCH_R821_4_ED2020_01, CCH_R821_4_ED2021_01,
+        CCH_R821_4_ED2023_04, CCH_R821_4_ED2023_09, CCH_R821_4_ED2023_12,
+        CCH_R821_4_ED2026_07)
+rule CumulLogementInterdit(m1: Menage, m2: Menage, t1: TypeAide, t2: TypeAide) defeasible {
+    label fr official "une seule aide par logement : deux attributions colocalisees marquent le cumul";
+    label en unofficial "one aid per dwelling: two co-located attributions mark the combination";
+    when aide_attribuee(m1, t1) and aide_attribuee(m2, t2)
+        and partage_logement_avec(m1, m2);
+    then cumul_logement_interdit(m1, m2);
+}
+
+@source(CCH_R821_4,
+        CCH_R821_4_ED2019_12, CCH_R821_4_ED2020_01, CCH_R821_4_ED2021_01,
+        CCH_R821_4_ED2023_04, CCH_R821_4_ED2023_09, CCH_R821_4_ED2023_12,
+        CCH_R821_4_ED2026_07)
+rule ExceptionCoproprieteCotitularite(m1: Menage, m2: Menage) defeater {
+    label fr official "R. 821-4 : foyers coproprietaires et cotitulaires, chacun peut etre attributaire";
+    label en unofficial "R. 821-4: co-owning co-holding homes, each may be attributed";
+    when coproprietaire_cotitulaire_logement(m1, m2);
+    defeat cumul_logement_interdit(m1, m2);
+}
+
+pub relation pluralite_logements_meme_menage(m: Menage) kind empirical {
+    label fr official "aide sollicitee au titre de plusieurs logements pour une meme personne ou un meme menage (constat R. 821-1)";
+    label en unofficial "aid claimed for several dwellings for one person or household (R. 821-1 finding)";
+}
+
+pub relation cumul_logements_meme_menage(m: Menage) kind institutional {
+    label fr official "meme personne ou menage sur plusieurs logements : cumul interdit R. 821-1 (marqueur)";
+    label en unofficial "same person or household on several dwellings: prohibited combination R. 821-1 (marker)";
+}
+
+@source(CCH_R821_1, CCH_R821_1_ED2019_12, CCH_R821_1_ED2020_01,
+        CCH_R821_1_ED2021_01, CCH_R821_1_ED2023_04, CCH_R821_1_ED2023_09,
+        CCH_R821_1_ED2023_12, CCH_R821_1_ED2026_07)
+rule CumulLogementsMemeMenage(m: Menage) strict {
+    label fr official "R. 821-1 : pas d'aide au profit d'une meme personne ou d'un meme menage au titre de plusieurs logements";
+    label en unofficial "R. 821-1: no aid for one person or household for several dwellings";
+    when pluralite_logements_meme_menage(m);
+    then cumul_logements_meme_menage(m);
+}
+
+@source(CCH_R821_1, CCH_R821_1_ED2019_12, CCH_R821_1_ED2020_01,
+        CCH_R821_1_ED2021_01, CCH_R821_1_ED2023_04, CCH_R821_1_ED2023_09,
+        CCH_R821_1_ED2023_12, CCH_R821_1_ED2026_07)
+rule InterdictionCumulLogementsMemeMenage(m: Menage, t: TypeAide) strict {
+    label fr official "R. 821-1 : attributaire d'une aide, le menage ne sollicite pas d'aide au titre de plusieurs logements";
+    label en unofficial "R. 821-1: holding an attributed aid, the household must not claim aid for several dwellings";
+    when aide_attribuee(m, t);
+    then prohibition NonCumulLogementsMemeMenage {
+        bearer m;
+        action pluralite_logements_meme_menage(m);
+        window [@2021-01-01, infinity);
+    };
+}
+
+// No defeater withdrawing one attribution: the source prohibits the
+// simultaneous attribution but selects no dwelling for withdrawal, so no
+// priority is invented. The prohibition above constrains the claim; the
+// marker records the unresolved plurality visibly.
+
+pub relation separation_deux_residences_etablie(m1: Menage, m2: Menage) kind empirical {
+    label fr official "separation avec deux foyers distincts et deux residences principales constatees par l'organisme (constat R. 821-3)";
+    label en unofficial "separation with two distinct homes and two principal residences found by the body (R. 821-3 finding)";
+}
+
+pub relation aides_separation_permises(m1: Menage, m2: Menage) kind institutional {
+    label fr official "conjoints separes : une aide peut etre accordee a chacun R. 821-3 (permission)";
+    label en unofficial "separated spouses: an aid may be granted to each R. 821-3 (permission)";
+}
+
+@source(CCH_R821_3, CCH_R821_3_ED2019_12, CCH_R821_3_ED2020_01,
+        CCH_R821_3_ED2021_01, CCH_R821_3_ED2023_04, CCH_R821_3_ED2023_09,
+        CCH_R821_3_ED2023_12, CCH_R821_3_ED2026_07)
+rule SeparationDeuxAidesPermises(m1: Menage, m2: Menage, t1: TypeAide, t2: TypeAide) defeasible {
+    label fr official "R. 821-3 : deux sujets distincts sur deux residences distinctes, chacun attributaire permis";
+    label en unofficial "R. 821-3: two distinct subjects in two distinct residences, each attribution permitted";
+    when separation_deux_residences_etablie(m1, m2) and aide_attribuee(m1, t1)
+        and aide_attribuee(m2, t2);
+    then aides_separation_permises(m1, m2);
+}
+
+// --- Allocation-to-APL switch on an aided loan (R. 821-6) --------------------
+
+pub relation allocation_en_cours_avant_pret(m: Menage) kind empirical {
+    label fr official "allocation percue avant le pret aide d'accession (fait de dossier)";
+    label en unofficial "allocation received before the aided accession loan (case fact)";
+}
+
+pub relation pret_aide_etat_accession(m: Menage) kind empirical {
+    label fr official "pret aide de l'Etat en accession pour l'agrandissement ou pret conventionne pour l'amelioration (constat R. 821-6)";
+    label en unofficial "state-aided accession loan for enlargement or conventionne loan for improvement (R. 821-6 finding)";
+}
+
+pub relation ouverture_droit_apl(m: Menage) kind empirical {
+    label fr official "ouverture du droit a l'APL constatee (declencheur R. 821-6, distinct de l'attribution)";
+    label en unofficial "APL right opening established (R. 821-6 trigger, distinct from attribution)";
+}
+
+pub relation allocation_prend_fin_bascule(m: Menage) kind institutional {
+    label fr official "l'allocation cesse par l'effet de la bascule R. 821-6";
+    label en unofficial "the allocation ends through the R. 821-6 switch";
+}
+
+@source(CCH_R821_6, CCH_R821_6_ED2019_12, CCH_R821_6_ED2020_01,
+        CCH_R821_6_ED2021_01, CCH_R821_6_ED2023_04, CCH_R821_6_ED2023_09,
+        CCH_R821_6_ED2023_12, CCH_R821_6_ED2026_07)
+rule BasculeAllocationVersAPL(m: Menage) defeasible {
+    label fr official "allocataire empruntant aide pour acceder : l'APL est attribuee";
+    label en unofficial "allocation recipient borrowing aided to purchase: APL is attributed";
+    when allocation_en_cours_avant_pret(m) and pret_aide_etat_accession(m)
+        and eligible_apl(m) and aide_demandee(m, APL);
+    then aide_attribuee(m, APL);
+}
+
+@source(CCH_R821_6, CCH_R821_6_ED2019_12, CCH_R821_6_ED2020_01,
+        CCH_R821_6_ED2021_01, CCH_R821_6_ED2023_04, CCH_R821_6_ED2023_09,
+        CCH_R821_6_ED2023_12, CCH_R821_6_ED2026_07)
+rule FinAllocationParBascule(m: Menage) defeasible {
+    label fr official "le droit a l'allocation est eteint a compter de l'ouverture du droit a l'APL";
+    label en unofficial "the allocation right ends once the APL right opens";
+    when allocation_en_cours_avant_pret(m) and pret_aide_etat_accession(m)
+        and aide_attribuee(m, APL) and ouverture_droit_apl(m);
+    then allocation_prend_fin_bascule(m);
+}
+
+// --- ALS same-purpose non-cumul and difference (L. 841-5) --------------------
+
+pub relation aide_meme_objet_percue(m: Menage, montant: Money) kind empirical {
+    label fr official "aide au meme objet deja percue (fait de dossier ; le declencheur L. 841-5 est le montant du)";
+    label en unofficial "same-purpose aid already received (case fact; the L. 841-5 trigger is the due amount)";
+}
+
+pub relation aide_meme_objet_due(m: Menage, montant: Money) kind empirical {
+    label fr official "aide au meme objet due a la meme personne sur le fondement d'une autre reglementation (constat L. 841-5)";
+    label en unofficial "same-purpose aid due to the same person under another regulation (L. 841-5 finding)";
+}
+
+pub relation difference_als_versee(m: Menage, montant: Money) kind institutional {
+    label fr official "difference ALS versee quand l'aide au meme objet est inferieure";
+    label en unofficial "ALS difference paid when the same-purpose aid is lower";
+}
+
+// D-79: L. 841-5 compares the other aid with the ALS "a laquelle les
+// dispositions du present livre ouvriraient droit" - the entitlement
+// (aide_apres_rls), before D. 823-16, which only stops PAYMENT of a result
+// below the threshold ("il n'est pas procede a son versement").
+@source(CCH_L841_5, CCH_L841_5_ED2019_12, CCH_L841_5_ED2020_01,
+        CCH_L841_5_ED2021_01, CCH_L841_5_ED2023_04, CCH_L841_5_ED2023_09,
+        CCH_L841_5_ED2023_12, CCH_L841_5_ED2026_07)
+rule DifferenceALSMemeObjet(m: Menage, als: Money, autre: Money) strict {
+    label fr official "ALS non cumulable : la difference est versee si l'autre aide due est inferieure a l'ALS ouverte (avant seuil de versement)";
+    label en unofficial "ALS not combinable: the difference is paid when the other due aid is below the ALS entitlement (before the payment threshold)";
+    when aide_demandee(m, ALS) and aide_apres_rls(m, als)
+        and aide_meme_objet_due(m, autre) and autre < als;
+    then difference_als_versee(m, als - autre);
+}
+
+@source(CCH_L841_5, CCH_L841_5_ED2019_12, CCH_L841_5_ED2020_01,
+        CCH_L841_5_ED2021_01, CCH_L841_5_ED2023_04, CCH_L841_5_ED2023_09,
+        CCH_L841_5_ED2023_12, CCH_L841_5_ED2026_07)
+rule NonCumulALSMemeObjetSuperieure(m: Menage, als: Money, autre: Money) defeater {
+    label fr official "ALS non cumulable : aucune ALS quand l'autre aide due atteint ou depasse l'ALS ouverte";
+    label en unofficial "ALS not combinable: no ALS when the other due aid meets or exceeds the ALS entitlement";
+    when aide_demandee(m, ALS) and aide_apres_rls(m, als)
+        and aide_meme_objet_due(m, autre) and autre >= als;
+    defeat aide_attribuee(m, ALS);
+}

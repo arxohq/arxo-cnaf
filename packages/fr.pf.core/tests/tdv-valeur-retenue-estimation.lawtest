@@ -1,0 +1,18 @@
+// Vehicle retained estimation (PC-R06-01): valeur 15 000 EUR with date, professional estimate 15 200 EUR same Bien - retained 15 000, apport 3 750 EUR (R. 553-3-1 5 + II 2° b).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-valeur-retenue-estimation" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-retenue-estimation-01": vehicule_bien_valeur(entity_ref("urn:fr:pf:case:retenue-estimation"), entity_ref("urn:fr:pf:case:auto-1"), 15000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-retenue-estimation-02": vehicule_bien_date(entity_ref("urn:fr:pf:case:retenue-estimation"), entity_ref("urn:fr:pf:case:auto-1"), @2026-02-12) { origin case_input; }
+        assert "tdv-retenue-estimation-03": vehicule_bien_preuve_estimation(entity_ref("urn:fr:pf:case:retenue-estimation"), entity_ref("urn:fr:pf:case:auto-1"), 15200.00 EUR) { origin case_input; }
+        assert "tdv-retenue-estimation-04": prestation_soumise_section(entity_ref("urn:fr:pf:case:retenue-estimation")) { origin case_input; }
+    }
+    evaluate truth(apport_forfaitaire(entity_ref("urn:fr:pf:case:retenue-estimation"), 3750.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

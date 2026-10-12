@@ -1,0 +1,16 @@
+// Information duties: debtor fund with a claim whose satisfaction is incumbent on it - information and claim assistance duties are active (L. 583-1, PC-R07-08 request premise).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-information-concours" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-information-concours-01": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:informe")) { origin case_input; }
+        assert "devoir-information-concours-02": demande_dont_satisfaction_incombe(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:informe")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InformerAllocataires, ACTIVE);
+    expect position(PreterConcoursDemandes, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

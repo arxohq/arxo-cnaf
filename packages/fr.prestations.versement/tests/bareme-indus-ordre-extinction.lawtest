@@ -1,0 +1,22 @@
+// Extinction moves the levy: oldest indu extinguished (solde zero), newer owed - the single levy goes to the newer (D. 553-4 al. 3, PC-R04-03).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-indus-ordre-extinction" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "indus-extinction-01": indus_multiples(entity_ref("urn:fr:pv:case:multi-eteint")) { origin case_input; }
+        assert "indus-extinction-02": indu_constate_le(entity_ref("urn:fr:pv:indu:eteint"), entity_ref("urn:fr:pv:case:multi-eteint"), @2026-01-10, 800.00 EUR) { origin case_input; }
+        assert "indus-extinction-03": indu_constate_le(entity_ref("urn:fr:pv:indu:suivant"), entity_ref("urn:fr:pv:case:multi-eteint"), @2026-03-05, 400.00 EUR) { origin case_input; }
+        assert "indus-extinction-04": indu_solde_restant(entity_ref("urn:fr:pv:indu:eteint"), entity_ref("urn:fr:pv:case:multi-eteint"), 0.00 EUR) { origin case_input; }
+        assert "indus-extinction-05": indu_solde_restant(entity_ref("urn:fr:pv:indu:suivant"), entity_ref("urn:fr:pv:case:multi-eteint"), 400.00 EUR) { origin case_input; }
+        assert "indus-extinction-06": retenue_unique_indus_multiples(entity_ref("urn:fr:pv:case:multi-eteint")) { origin case_input; }
+        assert "indus-extinction-07": registre_indus_complet(entity_ref("urn:fr:pv:case:multi-eteint")) { origin case_input; }
+        assert "indus-extinction-08": prelevement_mensuel(entity_ref("urn:fr:pv:case:multi-eteint"), 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(retenue_affectee_indu(entity_ref("urn:fr:pv:indu:suivant"), entity_ref("urn:fr:pv:case:multi-eteint")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

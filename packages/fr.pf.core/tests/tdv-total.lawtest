@@ -1,0 +1,26 @@
+// Full schedule (PC-R05-03/04/05): per-item built/unbuilt/vehicles/art with dates/evidence, spending with period, complete inventory - evaluation 12 600 EUR (R. 553-3-1: 1-2 in full, 3/4/6/8/9 at 80 %, 5 at 25 %, 7 at 3 %, 10 at 10 %; + R. 553-3-3).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-total" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-total-01": batie_bien_valeur(entity_ref("urn:fr:pf:case:train-vie"), entity_ref("urn:fr:pf:case:bien-bati-1"), 5000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-total-03": depenses_travaux(entity_ref("urn:fr:pf:case:train-vie"), 2000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-total-05": vehicule_bien_valeur(entity_ref("urn:fr:pf:case:train-vie"), entity_ref("urn:fr:pf:case:bien-vehicule-1"), 12000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-total-05d": vehicule_bien_date(entity_ref("urn:fr:pf:case:train-vie"), entity_ref("urn:fr:pf:case:bien-vehicule-1"), @2026-02-15) { origin case_input; }
+        assert "tdv-total-05p": vehicule_bien_sans_preuve(entity_ref("urn:fr:pf:case:train-vie"), entity_ref("urn:fr:pf:case:bien-vehicule-1")) { origin case_input; }
+        assert "tdv-total-06": depenses_equipement(entity_ref("urn:fr:pf:case:train-vie"), 1500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-total-08": depenses_loisirs(entity_ref("urn:fr:pf:case:train-vie"), 1000.00 EUR, 0.5) { origin case_input; }
+        assert "tdv-total-09": depenses_clubs(entity_ref("urn:fr:pf:case:train-vie"), 500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-total-10": capitaux_fin_periode(entity_ref("urn:fr:pf:case:train-vie"), 10000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-total-11": prestation_soumise_section(entity_ref("urn:fr:pf:case:train-vie")) { origin case_input; }
+        assert "tdv-total-12": depenses_foyer_periode_reference(entity_ref("urn:fr:pf:case:train-vie")) { origin case_input; }
+        assert "tdv-total-15": inventaire_tdv_complet(entity_ref("urn:fr:pf:case:train-vie")) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_train_vie(entity_ref("urn:fr:pf:case:train-vie"), 12600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

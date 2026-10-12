@@ -1,0 +1,31 @@
+// Active direct-payment duty, reform: the 601.12 childminder total is
+// justified and the debtor body recorded — position
+// PayerComplementDirectJustifie is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-devoir-versement-actif" {
+    given {
+        context { deadline_policy CMG_MOIS_CALENDAIRE; decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "devoir-act-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), entity_ref("urn:fr:pf-cmg:child:deva"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "devoir-act-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:devoir-actif")) { origin case_input; }
+        assert "devoir-act-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), entity_ref("urn:fr:pf-cmg:child:deva")) { origin case_input; }
+        assert "devoir-act-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:deva"), 2) { origin case_input; }
+        assert "devoir-act-05": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), 1) { origin case_input; }
+        assert "devoir-act-06": facteur_smic(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), 1.0) { origin case_input; }
+        assert "devoir-act-07": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), entity_ref("urn:fr:pf-cmg:child:deva"), 600 EUR) { origin case_input; }
+        assert "devoir-act-08": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), entity_ref("urn:fr:pf-cmg:child:deva"), 50 EUR) { origin case_input; }
+        assert "devoir-act-09": heures_remunerees(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), entity_ref("urn:fr:pf-cmg:child:deva"), 130.0) { origin case_input; }
+        assert "devoir-act-10": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), entity_ref("urn:fr:pf-cmg:child:deva"), 200 EUR) { origin case_input; }
+        assert "devoir-act-11": cout_reference_retenu(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), entity_ref("urn:fr:pf-cmg:child:deva"), 4.85 EUR) { origin case_input; }
+        assert "devoir-act-12": montant_forfaitaire_isole(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), 700 EUR) { origin case_input; }
+        assert "devoir-act-13": forfait_logement(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), 100 EUR) { origin case_input; }
+        assert "devoir-act-14": revenu_mensuel_brut(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), 3000 EUR) { origin case_input; }
+        assert "devoir-act-15": justification_depenses(entity_ref("urn:fr:pf-cmg:case:devoir-actif"), entity_ref("urn:fr:pf-cmg:child:deva"), @2025-10-18) { origin case_input; }
+        assert "devoir-act-16": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-cmg:org:caisse-dev"), entity_ref("urn:fr:pf-cmg:case:devoir-actif")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PayerComplementDirectJustifie, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

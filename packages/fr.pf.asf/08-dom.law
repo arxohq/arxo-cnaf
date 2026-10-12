@@ -1,0 +1,159 @@
+// DOM extension of the ASF (L755-17, D755-7, D755-8; FINISH transfer
+// from the DOM group, D-73). Thin link norms: territorial attribution,
+// applicability of the metropolitan R523/D523 provisions, metro rate
+// parity. The metropolitan computation (02-07) is untouched and
+// territorially unrestricted; these rules only link it for DOM cases.
+//
+// DEONTIC MAP (pinned text only):
+// - L. 755-17 "est attribuée ... dans les collectivités ... dans les
+//   conditions fixées par décret" - institutional attribution status
+//   asf_attribuee_dom over the six L. 751-1 collectivities, no duty:
+//   no Bearer [REDACTED] deadline or sanction in the text. The award reads
+//   the parent in charge, the eligible child and the collectivity
+//   residence only (L. 755-17 alone); the D755-8 parity status and the
+//   department-only D755-7 status are separate branches, not award
+//   premises (RETURN04 award/parity split, D76 territory split).
+// - D. 755-7 "sont applicables ... dans les départements" -
+//   department-only applicability status asf_metro_applicable_dom
+//   over R523-1..6, R523-8, D523-3, on department residence with
+//   provenance; no deontic position. R581-1 and R581-3..10 are
+//   authored in fr.pf.maintenance this round (static
+//   publication/liaison pending); R581-2 is separately scoped. The
+//   R581 liaison is out of scope here (B-PFASF-D755-7-R581); norms
+//   unchanged.
+// - D. 755-8 "sont identiques" - generic rate parity status
+//   asf_taux_parite_dom on collectivity residence; the text names no
+//   territory class, so the status is not department-only. The metro
+//   rates stay in the R523-7 bareme rows, no new parameter. The rate
+//   equality is a consequence for the computation, not an award
+//   condition: independent branch, never an award premise (RETURN04).
+// No evaluative predicates: both residence facts are evidenced case
+// facts with provenance (channel 3), independent per world; metro
+// grounds stay upstream.
+//
+// READINGS (adopted, flagged for review):
+// - Q-PFASF-DOM-1: the articles name no resident; the allocataire
+//   parent's residence anchors the case (collectivity and department
+//   facts stated independently with provenance).
+// - Q-PFASF-DOM-2 SUPERSEDED by the D76 return: "collectivités"
+//   (L755-17 award, D755-8 parity) and "départements" (D755-7
+//   applicability) are two source classes with two independent facts
+//   (residence_dom, residence_departement_dom); the one-scope reading
+//   of 2026-10-07 is withdrawn.
+// - Metro L523/R523/D523 rules carry no territorial premise and keep
+//   firing for every case; the DOM grant presupposes that regime.
+// - D755-7's list is expressed as ONE applicability status: the
+//   department provisions function as a block, and per-article heads
+//   would stand unread. R581 is excluded in the label.
+// - In a collectivity-only world (no department residence) the award
+//   holds where its premises hold; which R523/D523 provisions govern
+//   there is caller case input, this package concludes nothing for it
+//   (B-PFASF-DOM-HORS-DEPT).
+// - D755-8 NOTA (benefits due from September 1995) predates the
+//   program window; recorded in articles.json, outside the fragment.
+//
+// EDITIONS. All three versions cover the program window fully
+// (L755-17 from 2015-10-16, D755-7 from 2018-07-01, D755-8 from
+// 1995-11-11; no future versions); no predecessors pinned. Rules are
+// effective [@2021-01-01, infinity). GENERATED_OUTPUT_PENDING:
+// 01-sources.law, sources/css/L755-17.txt, D755-7.txt, D755-8.txt,
+// sources/editions/*.txt, articles.json and fragment-map.json await
+// tools/build_sources.py --write; @source/use-self resync is deferred
+// to that run (new editions CSS_ED1995_11, CSS_ED2015_10; no renames).
+
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+use self::{
+    CSS_D755_7,
+    CSS_D755_7_ED2018_07_27,
+    CSS_D755_7_ED2019_12,
+    CSS_D755_7_ED2021_12,
+    CSS_D755_7_ED2022_11,
+    CSS_D755_8,
+    CSS_D755_8_ED1999_11,
+    CSS_D755_8_ED2011_12,
+    CSS_D755_8_ED2014_04,
+    CSS_D755_8_ED2015_04,
+    CSS_D755_8_ED2015_10,
+    CSS_D755_8_ED2016_04,
+    CSS_D755_8_ED2017_04,
+    CSS_D755_8_ED2018_04,
+    CSS_D755_8_ED2018_07,
+    CSS_D755_8_ED2018_07_27,
+    CSS_D755_8_ED2019_12,
+    CSS_D755_8_ED2021_12,
+    CSS_D755_8_ED2022_11,
+    CSS_L755_17,
+    CSS_L755_17_ED2016_04,
+    CSS_L755_17_ED2017_04,
+    CSS_L755_17_ED2018_04,
+    CSS_L755_17_ED2018_07,
+    CSS_L755_17_ED2018_07_27,
+    CSS_L755_17_ED2019_12,
+    CSS_L755_17_ED2021_12,
+    CSS_L755_17_ED2022_11,
+    asf_attribuee_dom,
+    asf_enfant_eligible,
+    asf_metro_applicable_dom,
+    asf_taux_parite_dom,
+    residence_dom,
+    residence_departement_dom,
+};
+
+@source(
+    CSS_D755_7,
+    CSS_D755_7_ED2018_07_27,
+    CSS_D755_7_ED2019_12,
+    CSS_D755_7_ED2021_12,
+    CSS_D755_7_ED2022_11)
+rule AsfMetroApplicableDom(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "R. 523-1 à R. 523-6, R. 523-8 et D. 523-3 applicables dans les départements L. 751-1, hors R. 581-1 à R. 581-10 (D. 755-7)";
+    label en unofficial "R. 523-1 to R. 523-6, R. 523-8 and D. 523-3 applicable in L. 751-1 departments, except R. 581-1 to R. 581-10 (D. 755-7)";
+    when residence_departement_dom(p);
+    then asf_metro_applicable_dom(p);
+}
+
+@source(
+    CSS_D755_8,
+    CSS_D755_8_ED1999_11,
+    CSS_D755_8_ED2011_12,
+    CSS_D755_8_ED2014_04,
+    CSS_D755_8_ED2015_04,
+    CSS_D755_8_ED2015_10,
+    CSS_D755_8_ED2016_04,
+    CSS_D755_8_ED2017_04,
+    CSS_D755_8_ED2018_04,
+    CSS_D755_8_ED2018_07,
+    CSS_D755_8_ED2018_07_27,
+    CSS_D755_8_ED2019_12,
+    CSS_D755_8_ED2021_12,
+    CSS_D755_8_ED2022_11)
+rule AsfTauxPariteDom(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "taux servant au calcul de l'ASF identiques à ceux de la métropole (D. 755-8)";
+    label en unofficial "ASF computation rates identical to the metropolitan ones (D. 755-8)";
+    when residence_dom(p);
+    then asf_taux_parite_dom(p);
+}
+
+@source(
+    CSS_L755_17,
+    CSS_L755_17_ED2016_04,
+    CSS_L755_17_ED2017_04,
+    CSS_L755_17_ED2018_04,
+    CSS_L755_17_ED2018_07,
+    CSS_L755_17_ED2018_07_27,
+    CSS_L755_17_ED2019_12,
+    CSS_L755_17_ED2021_12,
+    CSS_L755_17_ED2022_11)
+rule AsfAttribueeDom(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF attribuée dans les collectivités L. 751-1 dans les conditions fixées par décret (L. 755-17)";
+    label en unofficial "ASF granted in L. 751-1 collectivities under the conditions fixed by decree (L. 755-17)";
+    when fr.pf.core::parent_charge(p, e) and asf_enfant_eligible(e)
+        and residence_dom(p);
+    then asf_attribuee_dom(e);
+}

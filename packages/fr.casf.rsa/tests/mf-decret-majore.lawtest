@@ -1,0 +1,18 @@
+// Lone parent with one child: the increased amount is built from the 2025 decree base,
+// 646.52 x 128.412 % + 646.52 x 42.804 % = 1106.9456832 (R.262-1 al. 2; L.262-9).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-decret-majore" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "mfdmj-01": isole_majore(entity_ref("urn:fr:rsa:case:mf-decret-majore")) { origin case_input; }
+        assert "mfdmj-02": majore_nb_enfants(entity_ref("urn:fr:rsa:case:mf-decret-majore"), 1) { origin case_input; }
+        assert "mfdmj-03": mois_droit(entity_ref("urn:fr:rsa:case:mf-decret-majore"), @2025-06-01) { origin case_input; }
+    }
+    evaluate truth(mf_majore(entity_ref("urn:fr:rsa:case:mf-decret-majore"), 1106.9456832 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

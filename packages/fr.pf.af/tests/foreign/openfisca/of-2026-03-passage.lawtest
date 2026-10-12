@@ -1,0 +1,50 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// OpenFisca AF 2026-03 passage: born 2012-03-01, the 14th birthday
+// falls on 01.03.2026, so the new 18 regime applies and nothing
+// opens at 14. Both engines conclude zero.
+// Their case -> our answer -> class: REPORT.md (OpenFisca, 6).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-of-2026-03-passage" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "of2603p-01": territoire(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), METROPOLE) { origin case_input; }
+        assert "of2603p-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), 3) { origin case_input; }
+        assert "of2603p-03": ressources_menage(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), 30000 EUR) { origin case_input; }
+        assert "of2603p-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), 55950 EUR) { origin case_input; }
+        assert "of2603p-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), 78300 EUR) { origin case_input; }
+        assert "of2603p-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), 5595 EUR) { origin case_input; }
+        assert "of2603p-05": bmaf_retenu(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), 400.00 EUR) { origin case_input; }
+        assert "of2603p-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), 0) { origin case_input; }
+        assert "of2603p-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), 0) { origin case_input; }
+        assert "of2603p-08": forfait_total_menage(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), 0 EUR) { origin case_input; }
+        assert "of2603p-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), 0) { origin case_input; }
+        assert "of2603p-10": foyer_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2026-passage")) { origin case_input; }
+        assert "of2603p-11": mois_droit(@2026-03-01) { origin case_input; }
+        assert "of2603p-12": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e1")) { origin case_input; }
+        assert "of2603p-13": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e2")) { origin case_input; }
+        assert "of2603p-14": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:of-2026-passage"), entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e3")) { origin case_input; }
+        assert "of2603p-15": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e1")) { origin case_input; }
+        assert "of2603p-16": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e2")) { origin case_input; }
+        assert "of2603p-17": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e3")) { origin case_input; }
+        assert "of2603p-18": date_naissance(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e1"), @2012-03-01) { origin case_input; }
+        assert "of2603p-19": date_naissance(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e2"), @2014-01-01) { origin case_input; }
+        assert "of2603p-20": date_naissance(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e3"), @2016-01-01) { origin case_input; }
+        assert "of2603p-21": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e1")) { origin case_input; }
+        assert "of2603p-22": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e2")) { origin case_input; }
+        assert "of2603p-23": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e3")) { origin case_input; }
+        assert "of2603p-24": garde(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e1"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "of2603p-25": garde(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e2"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "of2603p-26": garde(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e3"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+    }
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:foreign:of-2026-passage-e1"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

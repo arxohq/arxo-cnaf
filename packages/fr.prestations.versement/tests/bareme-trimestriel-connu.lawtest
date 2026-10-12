@@ -1,0 +1,19 @@
+// Quarterly right: last known weighted 400 within four months, current quarterly information still absent, declaration not received - kept (D. 553-1 III).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-trimestriel-connu" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; deadline_policy BAREME_DELAI_MOIS; }
+        assert "t-ouv": droit_trimestriel_ouvert(entity_ref("urn:fr:pv:case:trimestriel")) { origin case_input; }
+        assert "t-pond": pond_trimestriel_connu(entity_ref("urn:fr:pv:case:trimestriel"), 400.00 EUR) { origin case_input; }
+        assert "t-inc": ressources_trimestrielles_inconnues(entity_ref("urn:fr:pv:case:trimestriel")) { origin case_input; }
+        assert "t-dec": declaration_montant_revenus_non_recue(entity_ref("urn:fr:pv:case:trimestriel")) { origin case_input; }
+        assert "t-dep": delai_4_mois_depart_le(entity_ref("urn:fr:pv:case:trimestriel"), @2022-03-01) { origin case_input; }
+        assert "t-app": date_appreciation_revenus(entity_ref("urn:fr:pv:case:trimestriel"), @2022-06-15) { origin case_input; }
+    }
+    evaluate truth(revenu_pondere(entity_ref("urn:fr:pv:case:trimestriel"), 400.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

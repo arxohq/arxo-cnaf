@@ -1,0 +1,246 @@
+// Resource ceilings (L522-2, R522-2, R522-4).
+//
+// CEILING READING (D-36, closes Q-PFCF-2). R522-2 al. 2 is tiered by rank:
+// +25 % for each of the first two children and +30 % for each child from
+// the third (the third child takes 30 %, NOT 25 % + 30 %). The official
+// DSS/2B/2025/177 table 2.1 (annual ceilings 2026, base 24 853) proves it:
+// 3 children = 44 735 = 24 853 + 2 x 6 213 + 7 456; 4 children = 52 191
+// = 44 735 + 7 456. The earlier cumulative reading (25 % for every child
+// plus 30 % from the third, e.g. 41 000 on base 20 000) was a model defect
+// found by the blind reader (pfcf-blind-07..10). The formulas hold for
+// n >= 3 (the CF child-count gate of every ceiling rule).
+//
+// PUBLISHED AMOUNTS (D-83, pattern of D-81 for fr.pf.af). R522-2 al. 4 and
+// R522-4 al. 3 entrust the decree with «le montant du plafond de ressources
+// et celui de la majoration» and revalue them on 1 January; the DSS
+// instruction prints the base and each increment separately, every one with
+// its own euro rounding (2018: base 20 989, 25 % = 5 247, 30 % = 6 297,
+// two-earner 8 437; increased amount: base 10 496, 2 624, 3 149, 4 218).
+// A ceiling is therefore BUILT as base + increments x children from the
+// published amounts (DECISION-0452), per track:
+//   base track     plafond_base_cf, majoration_enfant_cf,
+//                  majoration_troisieme_cf, majoration_biactivite;
+//   increased amt  plafond_base_majore, majoration_enfant_majore,
+//                  majoration_troisieme_majore, majoration_biactivite_majore.
+// The increased-amount base and its increments are published on their own
+// (2018: 10 496 against half of 20 989 = 10 494,5; 4 218 against half of
+// 8 437 = 4 218,5), so R522-4 is read from its own published amounts, not
+// from halving the base track. This closes B-PFCF-PLAFOND-ARRONDI,
+// B-PFCF-PLAFOND-MAJORE-BASE and Q-PFCF-1 (the two-earner increment of the
+// increased amount is the published one, not the full base-track value).
+// The percentage parameters are gone: with published increments a second
+// path («base x 25 %») would give two competing values for one ceiling.
+// Sources of the figures: sources/dss-plafonds/ (tools/pin_plafonds_dss.py,
+// byte-verbatim slices of the DSS instructions pinned by fr.css.revalorisation).
+// The al. 3 two-earner test is built by CoupleBiactif (02) from the pinned
+// PASS series (pass_reference); the figures arrive as case inputs with
+// provenance. §70 closures: the case household exhausts the biactif/isole
+// extent, so `not` in the plain-ceiling bodies fires (E4113).
+
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+use self::{
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04,
+    couple_biactif,
+    foyer_du_cas,
+    majoration_biactivite,
+    majoration_biactivite_majore,
+    majoration_enfant_cf,
+    majoration_enfant_majore,
+    majoration_troisieme_cf,
+    majoration_troisieme_majore,
+    nb_enfants_cf,
+    parent_isole,
+    plafond_base_cf,
+    plafond_base_majore,
+    plafond_cf_applicable,
+    plafond_majore_applicable,
+};
+
+function plafond_publie_formule(base: Money, enfant: Money, troisieme: Money, n: Integer) -> Money =
+    base + enfant * 2.0 + troisieme * (n - 2);
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+closure CoupleBiactifEstClos {
+    label fr official "le ménage décrit par le cas épuise l'appréciation biactive";
+    label en unofficial "the recorded household exhausts the two-earner assessment";
+    predicate couple_biactif;
+    domain foyer_du_cas;
+    snapshot "urn:fr:corpus:clir:pf-cf:snapshot:couple-biactif";
+    complete_as_of @2018-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+closure ParentIsoleEstClos {
+    label fr official "le ménage décrit par le cas épuise l'appréciation isolée";
+    label en unofficial "the recorded household exhausts the lone-parent assessment";
+    predicate parent_isole;
+    domain foyer_du_cas;
+    snapshot "urn:fr:corpus:clir:pf-cf:snapshot:parent-isole";
+    complete_as_of @2018-01-01T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PlafondSansMajoration(p: fr.pf.core::Personne, base: Money, enfant: Money, troisieme: Money, n: Integer) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "ni biactif ni isolé: plafond de base publié et majorations par enfant publiées (R. 522-2 al. 1-2 et 4)";
+    label en unofficial "neither two-earner nor lone: published base ceiling with published per-child increments (R. 522-2 paras. 1-2 and 4)";
+    when plafond_base_cf(p, base) and majoration_enfant_cf(p, enfant) and majoration_troisieme_cf(p, troisieme)
+        and nb_enfants_cf(p, n) and n >= 3
+        and foyer_du_cas(p) and not couple_biactif(p) and not parent_isole(p);
+    then plafond_cf_applicable(p, plafond_publie_formule(base, enfant, troisieme, n));
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PlafondAvecBiactif(p: fr.pf.core::Personne, base: Money, enfant: Money, troisieme: Money, n: Integer, majoration: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "couple biactif: plafond majoré de la majoration publiée pour double activité (R. 522-2 al. 3-4)";
+    label en unofficial "two-earner couple: ceiling raised by the published two-earner increment (R. 522-2 paras. 3-4)";
+    when plafond_base_cf(p, base) and majoration_enfant_cf(p, enfant) and majoration_troisieme_cf(p, troisieme)
+        and nb_enfants_cf(p, n) and n >= 3
+        and couple_biactif(p) and majoration_biactivite(p, majoration);
+    then plafond_cf_applicable(p, plafond_publie_formule(base, enfant, troisieme, n) + majoration);
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PlafondAvecIsole(p: fr.pf.core::Personne, base: Money, enfant: Money, troisieme: Money, n: Integer, majoration: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "parent isolé: même majoration publiée que le couple biactif (R. 522-2 al. 3-4)";
+    label en unofficial "lone parent: same published increment as the two-earner couple (R. 522-2 paras. 3-4)";
+    when plafond_base_cf(p, base) and majoration_enfant_cf(p, enfant) and majoration_troisieme_cf(p, troisieme)
+        and nb_enfants_cf(p, n) and n >= 3
+        and parent_isole(p) and majoration_biactivite(p, majoration);
+    then plafond_cf_applicable(p, plafond_publie_formule(base, enfant, troisieme, n) + majoration);
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04)
+rule MajoreSansMajoration(p: fr.pf.core::Personne, base: Money, enfant: Money, troisieme: Money, n: Integer) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "montant majoré, ni biactif ni isolé: plafond de base du montant majoré publié et majorations par enfant publiées (R. 522-4)";
+    label en unofficial "increased amount, neither two-earner nor lone: published increased-amount base ceiling with published per-child increments (R. 522-4)";
+    when plafond_base_majore(p, base) and majoration_enfant_majore(p, enfant) and majoration_troisieme_majore(p, troisieme)
+        and nb_enfants_cf(p, n) and n >= 3
+        and foyer_du_cas(p) and not couple_biactif(p) and not parent_isole(p);
+    then plafond_majore_applicable(p, plafond_publie_formule(base, enfant, troisieme, n));
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04)
+rule MajoreAvecBiactif(p: fr.pf.core::Personne, base: Money, enfant: Money, troisieme: Money, n: Integer, majoration: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "montant majoré, couple biactif: plafond publié du montant majoré avec sa majoration publiée pour double activité (R. 522-4, R. 522-2 al. 2-3)";
+    label en unofficial "increased amount, two-earner couple: published increased-amount ceiling with its published two-earner increment (R. 522-4, R. 522-2 paras. 2-3)";
+    when plafond_base_majore(p, base) and majoration_enfant_majore(p, enfant) and majoration_troisieme_majore(p, troisieme)
+        and nb_enfants_cf(p, n) and n >= 3
+        and couple_biactif(p) and majoration_biactivite_majore(p, majoration);
+    then plafond_majore_applicable(p, plafond_publie_formule(base, enfant, troisieme, n) + majoration);
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_4,
+    CSS_R522_4_PRE2022,
+    CSS_R522_4_PRE2022_ED2017_04,
+    CSS_R522_4_PRE2022_ED2018_01,
+    CSS_R522_4_PRE2022_ED2018_04,
+    CSS_R522_4_PRE2022_ED2020_04)
+rule MajoreAvecIsole(p: fr.pf.core::Personne, base: Money, enfant: Money, troisieme: Money, n: Integer, majoration: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "montant majoré, parent isolé: plafond publié du montant majoré avec sa majoration publiée pour isolement (R. 522-4, R. 522-2 al. 2-3)";
+    label en unofficial "increased amount, lone parent: published increased-amount ceiling with its published lone-parent increment (R. 522-4, R. 522-2 paras. 2-3)";
+    when plafond_base_majore(p, base) and majoration_enfant_majore(p, enfant) and majoration_troisieme_majore(p, troisieme)
+        and nb_enfants_cf(p, n) and n >= 3
+        and parent_isole(p) and majoration_biactivite_majore(p, majoration);
+    then plafond_majore_applicable(p, plafond_publie_formule(base, enfant, troisieme, n) + majoration);
+}

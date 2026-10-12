@@ -1,0 +1,28 @@
+// Тот же случай, конечная сумма D. 842-15: Af → минорация 5 € (ст. 41) → абатмент минимума
+// чистого расхода 15 € (чистый расход 358,6308639 € — абатмента нет) → не больше
+// redevance 360 € → шаг взносов D. 823-16 → порог 10 € (ст. 42).
+// K читается из R. 351-61 (общий случай) и R. 351-61-1 (фойе молодых работников и
+// социальные резиденции) — алгебра D. 832-25 в закреплённых данных картинка, см.
+// блок «КОЭФФИЦИЕНТ K» в 04-calcul-foyer.law и README, «Коэффициент K».
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-foyer-al-03-aide-mensuelle" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "foyer-al-03-aide-mensuelle-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-al-03")) { origin case_input; }
+        assert "foyer-al-03-aide-mensuelle-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-al-03"), ALF) { origin case_input; }
+        assert "foyer-al-03-aide-mensuelle-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-al-03"), ZONE_III) { origin case_input; }
+        assert "foyer-al-03-aide-mensuelle-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-al-03"), COUPLE) { origin case_input; }
+        assert "foyer-al-03-aide-mensuelle-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-al-03"), 0) { origin case_input; }
+        assert "foyer-al-03-aide-mensuelle-06": categorie_equivalence_loyer(entity_ref("urn:fr:apl:case:foyer-al-03"), PERSONNES_AGEES) { origin case_input; }
+        assert "foyer-al-03-aide-mensuelle-07": redevance(entity_ref("urn:fr:apl:case:foyer-al-03"), 360 EUR) { origin case_input; }
+        assert "foyer-al-03-aide-mensuelle-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-al-03"), 15000 EUR) { origin case_input; }
+        assert "foyer-al-03-aide-mensuelle-09": territoire(entity_ref("urn:fr:apl:case:foyer-al-03"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:foyer-al-03"), 29.1472456805 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

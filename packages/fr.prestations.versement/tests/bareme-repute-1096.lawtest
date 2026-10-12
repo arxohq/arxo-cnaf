@@ -1,0 +1,16 @@
+// Deemed income: resources unknown, no quarterly right, declaration not received - weighted deemed 1 096 (D. 553-1 III).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-repute-1096" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "r-inc": ressources_inconnues(entity_ref("urn:fr:pv:case:inconnu")) { origin case_input; }
+        assert "r-dec": declaration_montant_revenus_non_recue(entity_ref("urn:fr:pv:case:inconnu")) { origin case_input; }
+        assert "r-noq": not droit_trimestriel_ouvert(entity_ref("urn:fr:pv:case:inconnu")) { origin case_input; }
+    }
+    evaluate truth(revenu_pondere(entity_ref("urn:fr:pv:case:inconnu"), 1096.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

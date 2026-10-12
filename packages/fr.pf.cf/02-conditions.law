@@ -1,0 +1,178 @@
+// Award conditions of the complement familial (L522-1, R522-1, R522-2).
+//
+// DEONTIC MAP: right-conferring rules only (qualifying children, open
+// right, two-earner test). No must/must-not positions here; the duty to
+// pay lives in 05-devoir-versement.law. Evaluative channels:
+// - nb_enfants_cf (R522-1 count): the engine has no fold, the fund
+//   establishes the count; the input contract requires consistency with
+//   the per-child cf_enfant_qualifie facts (B-PFCF-COMPTAGE, AF pattern);
+// - remuneration_sous_plafond (R522-1 al. 2, R512-2 ceiling): assessed
+//   upstream, established by the fund;
+// - cadre_cf_remplie (L522-1 frame): local fund-established stand-in
+//   (MIGRATION-REQ-PFCF-02), read strictly (package split REQ-PFCF-02,
+//   AF pattern).
+
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+use self::{
+    CSS_L522_1,
+    CSS_L522_1_ED2011_11,
+    CSS_L522_1_ED2014_01,
+    CSS_L522_1_ED2014_04,
+    CSS_L522_1_ED2017_04,
+    CSS_L522_1_ED2018_01,
+    CSS_L522_1_ED2018_04,
+    CSS_L522_1_ED2020_04,
+    CSS_L522_1_ED2022_10,
+    CSS_R522_1,
+    CSS_R522_1_ED2003_12,
+    CSS_R522_1_ED2011_11,
+    CSS_R522_1_ED2014_01,
+    CSS_R522_1_ED2014_04,
+    CSS_R522_1_ED2017_04,
+    CSS_R522_1_ED2018_01,
+    CSS_R522_1_ED2018_04,
+    CSS_R522_1_ED2020_04,
+    CSS_R522_1_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    cadre_cf_remplie,
+    cf_droit_ouvert,
+    cf_enfant_qualifie,
+    couple_biactif,
+    date_naissance,
+    mois_droit,
+    nb_enfants_cf,
+    pass_reference,
+    plafond_cf_applicable,
+    remuneration_sous_plafond,
+    ressources_menage,
+    revenu_pro_min_couple,
+};
+
+// Term policy for the R. 522-1 age bands (§86): ages are reached on
+// the birthday (same-day count, inclusive end), months are not
+// rolled. Tests evaluating child ages name this policy in context.
+deadline policy AGE_ATTEINT {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+@source(
+    CSS_L522_1,
+    CSS_L522_1_ED2011_11,
+    CSS_L522_1_ED2014_01,
+    CSS_L522_1_ED2014_04,
+    CSS_L522_1_ED2017_04,
+    CSS_L522_1_ED2018_01,
+    CSS_L522_1_ED2018_04,
+    CSS_L522_1_ED2020_04,
+    CSS_L522_1_ED2022_10,
+    CSS_R522_1,
+    CSS_R522_1_ED2003_12,
+    CSS_R522_1_ED2011_11,
+    CSS_R522_1_ED2014_01,
+    CSS_R522_1_ED2014_04,
+    CSS_R522_1_ED2017_04,
+    CSS_R522_1_ED2018_01,
+    CSS_R522_1_ED2018_04,
+    CSS_R522_1_ED2020_04,
+    CSS_R522_1_ED2022_10)
+rule QualifieTroisAns(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "enfant de trois ans et plus, moins de vingt ans: compte pour le complément familial (R. 522-1 al. 1)";
+    label en unofficial "child aged three or older, under twenty: counts for the complement familial (R. 522-1 para. 1)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and date_naissance(e, naissance) and mois_droit(mois)
+        and mois >= add_calendar_period(naissance, 3 calendar_year)
+        and mois < add_calendar_period(naissance, 20 calendar_year);
+    then cf_enfant_qualifie(e);
+}
+
+@source(
+    CSS_R522_1,
+    CSS_R522_1_ED2003_12,
+    CSS_R522_1_ED2011_11,
+    CSS_R522_1_ED2014_01,
+    CSS_R522_1_ED2014_04,
+    CSS_R522_1_ED2017_04,
+    CSS_R522_1_ED2018_01,
+    CSS_R522_1_ED2018_04,
+    CSS_R522_1_ED2020_04,
+    CSS_R522_1_ED2022_10)
+rule QualifieVingtEtUn(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "enfant de vingt à vingt et un ans, rémunération sous plafond: compte jusqu'à vingt et un ans (R. 522-1 al. 2)";
+    label en unofficial "child aged twenty to twenty-one, pay within the ceiling: counts until twenty-one (R. 522-1 para. 2)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and date_naissance(e, naissance) and mois_droit(mois)
+        and mois >= add_calendar_period(naissance, 20 calendar_year)
+        and mois < add_calendar_period(naissance, 21 calendar_year)
+        and remuneration_sous_plafond(e);
+    then cf_enfant_qualifie(e);
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule CoupleBiactif(p: fr.pf.core::Personne, rev: Money, plafond_secu: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "chaque membre du couple gagne au moins 13,6 % du plafond annuel de la sécurité sociale (R. 522-2 al. 3)";
+    label en unofficial "each couple member earns at least 13.6% of the annual social-security ceiling (R. 522-2 para. 3)";
+    when revenu_pro_min_couple(p, rev) and pass_reference(p, plafond_secu)
+        and rev >= TauxBiactifRevenu * plafond_secu;
+    then couple_biactif(p);
+}
+
+@source(
+    CSS_L522_1,
+    CSS_L522_1_ED2011_11,
+    CSS_L522_1_ED2014_01,
+    CSS_L522_1_ED2014_04,
+    CSS_L522_1_ED2017_04,
+    CSS_L522_1_ED2018_01,
+    CSS_L522_1_ED2018_04,
+    CSS_L522_1_ED2020_04,
+    CSS_L522_1_ED2022_10,
+    CSS_R522_1,
+    CSS_R522_1_ED2003_12,
+    CSS_R522_1_ED2011_11,
+    CSS_R522_1_ED2014_01,
+    CSS_R522_1_ED2014_04,
+    CSS_R522_1_ED2017_04,
+    CSS_R522_1_ED2018_01,
+    CSS_R522_1_ED2018_04,
+    CSS_R522_1_ED2020_04,
+    CSS_R522_1_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule CfDroitOuvert(p: fr.pf.core::Personne, n: Integer, r: Money, plafond: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "trois enfants et plus, ressources sous plafond: droit ouvert (L. 522-1, R. 522-1, R. 522-2)";
+    label en unofficial "three or more children, resources within the ceiling: right open (L. 522-1, R. 522-1, R. 522-2)";
+    when cadre_cf_remplie(p) and nb_enfants_cf(p, n) and n >= 3
+        and ressources_menage(p, r) and plafond_cf_applicable(p, plafond) and r <= plafond;
+    then cf_droit_ouvert(p);
+}

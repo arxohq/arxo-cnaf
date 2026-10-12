@@ -1,0 +1,22 @@
+// Conforming local report: transmitted without delay, anonymised, with timely reply, grant direction, evaluated items and stated absence of sanction - the report is conforming (R. 553-3-7).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-compte-rendu-conforme" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-compte-rendu-conforme-01": compte_rendu_transmis(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf")) { origin case_input; }
+        assert "tdv-compte-rendu-conforme-02": compte_rendu_transmis_sans_delai(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf")) { origin case_input; }
+        assert "tdv-compte-rendu-conforme-03": compte_rendu_anonymise(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:evalue-conforme")) { origin case_input; }
+        assert "tdv-compte-rendu-conforme-04": compte_rendu_reponse_dans_delai(entity_ref("urn:fr:pf:case:evalue-conforme")) { origin case_input; }
+        assert "tdv-compte-rendu-conforme-05": compte_rendu_decision_attribution(entity_ref("urn:fr:pf:case:evalue-conforme")) { origin case_input; }
+        assert "tdv-compte-rendu-conforme-06": compte_rendu_elements_evalues(entity_ref("urn:fr:pf:case:evalue-conforme")) { origin case_input; }
+        assert "tdv-compte-rendu-conforme-07": compte_rendu_aucune_sanction(entity_ref("urn:fr:pf:case:evalue-conforme")) { origin case_input; }
+        assert "tdv-compte-rendu-conforme-08": prestation_soumise_section(entity_ref("urn:fr:pf:case:evalue-conforme")) { origin case_input; }
+    }
+    evaluate truth(compte_rendu_evaluation_conforme(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:org:cnaf"), entity_ref("urn:fr:pf:case:evalue-conforme")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

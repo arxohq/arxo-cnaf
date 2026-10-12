@@ -1,0 +1,19 @@
+// 66-day career cap in the 2021 edition: 60 days recorded in 2021 —
+// within the statutory sixty-six (CSS_ED2021_01 carries the 2019
+// wording LEGIARTI000039787616 with the career sentence).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-carriere-66-2021-ok" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ajpa-c21-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-c21"), entity_ref("urn:fr:css:ajpa:case:aide-c21")) { origin case_input; }
+        assert "ajpa-c21-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-c21")) { origin adjudicated; }
+        assert "ajpa-c21-03": jours_ajpa_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-c21"), 60) { origin case_input; }
+    }
+    evaluate truth(ajpa_dans_limite_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-c21")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

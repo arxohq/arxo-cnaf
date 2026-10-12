@@ -1,0 +1,28 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+// Suspensive appeal (L. 262-46 al. 2) is pre-encoded in the imported
+// recoverability: the neighbour withholds indu_recouvrable while a
+// recours_suspensif stands, so no recovery fact derives here (contract
+// (e): silence, not zero). The echeance is paid whole outside this
+// layer (underivable truth here is COMPUTED + NEITHER — observed,
+// not the INTERPRETATION_REQUIRED of the aah-lecture-sans-axe case).
+
+test "urn:query:fr-pv-rec-rsa-suspensif" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "alloc": fr.casf.rsa::allocation_mensuelle(entity_ref("urn:fr:pv:case:rsa"), @2024-03-01, 600.00 EUR) { origin case_input; }
+        // D-42: the stated scale rate 0.30 is gone (contract (b), PC-R07-39): the levy
+        // arrives as the Money amount the fund applies; same case, 0.30 x RSA allocation
+        // 600.00 = 180.00 EUR. Carry pairs carry their lawful-carry gate (PC-R07-36).
+        assert "levy": retenue_mensuelle_rsa_declaree(entity_ref("urn:fr:pv:case:rsa"), 180.00 EUR) { origin case_input; }
+        assert "levy-pf-licite": report_pf_sur_rsa_licite(entity_ref("urn:fr:pv:case:rsa")) { origin case_input; }
+        assert "levy-pa-licite": report_pa_sur_rsa_licite(entity_ref("urn:fr:pv:case:rsa")) { origin case_input; }
+        assert "susp": fr.casf.rsa::recours_suspensif(entity_ref("urn:fr:pv:case:rsa")) { origin case_input; }
+    }
+    evaluate truth(retenue_appliquee_rsa(entity_ref("urn:fr:pv:case:rsa")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

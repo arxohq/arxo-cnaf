@@ -1,0 +1,16 @@
+// Monthly income R: 1 000 income + 300 benefits - 200 charges = 1 100 (D. 553-1 III).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-r-total" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "r-a": revenus_mensuels_a(entity_ref("urn:fr:pv:case:menage"), 1000.00 EUR) { origin case_input; }
+        assert "r-b": prestations_mensuelles_b(entity_ref("urn:fr:pv:case:menage"), 300.00 EUR) { origin case_input; }
+        assert "r-c": charges_logement_c(entity_ref("urn:fr:pv:case:menage"), 200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(revenu_mensuel_r(entity_ref("urn:fr:pv:case:menage"), 1100.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

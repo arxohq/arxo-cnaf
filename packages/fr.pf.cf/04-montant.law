@@ -1,0 +1,157 @@
+// Monthly amounts and the differential top-up (D522-1, D522-2, L522-3,
+// R522-3).
+//
+// EXCLUSIVITY (D-29(a), F-CH6-CF-BASE-MAJORE). L. 522-3 attributes the
+// increased amount to the household within the half ceiling INSTEAD of
+// the base amount: CfMontantBase therefore requires r > plafond_majore,
+// CfMontantMajore requires r <= plafond_majore; no household receives
+// both for the same month.
+//
+// MONEY FORMS. Multiplications are Money x Decimal (bareme fractions,
+// APL convention) and divisions Money / Decimal ("/ 2.0", "/ 12.0").
+// Inexact quotients refuse (no silent rounding, SPEC §58): differential
+// tests use exact quotients only (B-PFCF-ARRONDI).
+// The majore rate is the time-rowed TauxCfMajore (58,33 % until
+// 2018-04-01, 62,48 % after); the 2018-01/2018-04 edition pair proves
+// the row selection.
+
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+use self::{
+    CSS_D522_1,
+    CSS_D522_1_ED1996_01,
+    CSS_D522_1_ED2000_01,
+    CSS_D522_1_ED2003_12,
+    CSS_D522_1_ED2011_11,
+    CSS_D522_1_ED2014_01,
+    CSS_D522_1_ED2014_04,
+    CSS_D522_1_ED2017_04,
+    CSS_D522_1_ED2018_01,
+    CSS_D522_1_ED2018_04,
+    CSS_D522_1_ED2020_04,
+    CSS_D522_1_ED2022_10,
+    CSS_D522_2,
+    CSS_D522_2_ED2020_04,
+    CSS_D522_2_ED2022_10,
+    CSS_D522_2_PRE2018,
+    CSS_D522_2_PRE2018_ED2018_01,
+    CSS_L522_3,
+    CSS_L522_3_ED2017_04,
+    CSS_L522_3_ED2018_01,
+    CSS_L522_3_ED2018_04,
+    CSS_L522_3_ED2020_04,
+    CSS_L522_3_ED2022_10,
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_3,
+    CSS_R522_3_ED2014_04,
+    CSS_R522_3_ED2017_04,
+    CSS_R522_3_ED2018_01,
+    CSS_R522_3_ED2018_04,
+    CSS_R522_3_ED2020_04,
+    CSS_R522_3_ED2022_10,
+    bmaf_retenu,
+    cf_differentiel_du,
+    cf_droit_ouvert,
+    cf_majore_du,
+    cf_montant_du,
+    plafond_cf_applicable,
+    plafond_majore_applicable,
+    ressources_menage,
+};
+
+@source(
+    CSS_D522_1,
+    CSS_D522_1_ED1996_01,
+    CSS_D522_1_ED2000_01,
+    CSS_D522_1_ED2003_12,
+    CSS_D522_1_ED2011_11,
+    CSS_D522_1_ED2014_01,
+    CSS_D522_1_ED2014_04,
+    CSS_D522_1_ED2017_04,
+    CSS_D522_1_ED2018_01,
+    CSS_D522_1_ED2018_04,
+    CSS_D522_1_ED2020_04,
+    CSS_D522_1_ED2022_10)
+rule CfMontantBase(p: fr.pf.core::Personne, r: Money, plafond_majore: Money, bmaf: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "montant du complément familial: 41,65 % de la base mensuelle, hors ménage sous le plafond moitié (D. 522-1, L. 522-3)";
+    label en unofficial "complement familial amount: 41.65% of the monthly base, excluding a household within the half ceiling (D. 522-1, L. 522-3)";
+    when cf_droit_ouvert(p) and ressources_menage(p, r)
+        and plafond_majore_applicable(p, plafond_majore) and r > plafond_majore
+        and bmaf_retenu(p, bmaf);
+    then cf_montant_du(p, round(TauxCfBase * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_L522_3,
+    CSS_L522_3_ED2017_04,
+    CSS_L522_3_ED2018_01,
+    CSS_L522_3_ED2018_04,
+    CSS_L522_3_ED2020_04,
+    CSS_L522_3_ED2022_10,
+    CSS_D522_2,
+    CSS_D522_2_ED2020_04,
+    CSS_D522_2_ED2022_10,
+    CSS_D522_2_PRE2018,
+    CSS_D522_2_PRE2018_ED2018_01)
+rule CfMontantMajore(p: fr.pf.core::Personne, r: Money, plafond_majore: Money, bmaf: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "ressources sous le plafond moitié: montant majoré au taux en vigueur (L. 522-3, D. 522-2)";
+    label en unofficial "resources within the half ceiling: increased amount at the rate in force (L. 522-3, D. 522-2)";
+    when cf_droit_ouvert(p) and ressources_menage(p, r)
+        and plafond_majore_applicable(p, plafond_majore) and r <= plafond_majore
+        and bmaf_retenu(p, bmaf);
+    then cf_majore_du(p, round(TauxCfMajore * bmaf, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    CSS_R522_3,
+    CSS_R522_3_ED2014_04,
+    CSS_R522_3_ED2017_04,
+    CSS_R522_3_ED2018_01,
+    CSS_R522_3_ED2018_04,
+    CSS_R522_3_ED2020_04,
+    CSS_R522_3_ED2022_10,
+    CSS_D522_1,
+    CSS_D522_1_ED1996_01,
+    CSS_D522_1_ED2000_01,
+    CSS_D522_1_ED2003_12,
+    CSS_D522_1_ED2011_11,
+    CSS_D522_1_ED2014_01,
+    CSS_D522_1_ED2014_04,
+    CSS_D522_1_ED2017_04,
+    CSS_D522_1_ED2018_01,
+    CSS_D522_1_ED2018_04,
+    CSS_D522_1_ED2020_04,
+    CSS_D522_1_ED2022_10)
+// Standalone R. 522-3 track: the overrun household has no open base
+// right (resources exceed the ceiling), so neither cf_droit_ouvert nor
+// the resource-gated cf_montant_du is required here. The monthly
+// reference is the theoretical base amount (TauxCfBase x BMAF); the
+// child-count gate arrives through the R. 522-2 ceiling (n >= 3).
+rule CfDifferentiel(p: fr.pf.core::Personne, r: Money, plafond: Money, bmaf: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "dépassement inférieur à douze mensualités: différentiel au douzième de l'écart, voie autonome (R. 522-3)";
+    label en unofficial "overrun under twelve monthly amounts: differential at one twelfth of the gap, standalone track (R. 522-3)";
+    when plafond_cf_applicable(p, plafond)
+        and ressources_menage(p, r) and bmaf_retenu(p, bmaf)
+        and r > plafond and r - plafond < 12.0 * (TauxCfBase * bmaf);
+    then cf_differentiel_du(p, (plafond + 12.0 * (TauxCfBase * bmaf) - r) / 12.0);
+}

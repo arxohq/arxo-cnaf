@@ -1,0 +1,26 @@
+// BMAF 2016 chain (DSS/SD2B/2016/77, COEFF fragment): previous base 406.21;
+// the instruction prints the rate (0.1 %), not the coefficient, so the
+// coefficient is 1 + rate = 1.001. 406.21 x 1.001 = 406.61621, rounded to the
+// centime -> 406.62, the published 1 April 2016 base. L. 161-25 applies from
+// 2016-01-01, hence there is no scenario for the 2015 step (base maintained
+// at 406.21, DSS/SD2B/2015/92).
+language "law.core" version "0.2";
+package fr.css.revalorisation version "0.1.0";
+namespace "urn:fr:corpus:clir:revalorisation";
+
+test "urn:query:fr-revalorisation-bmaf-chaine-2016" {
+    given {
+        context { deadline_policy REVALO_EXERCICE; decision_time @2016-04-01T12:00:00Z; knowledge_time @2016-04-01T12:00:00Z; legal_time @2016-04-01; timezone "Europe/Paris"; }
+        assert "bmaf-01": annee_exercice(entity_ref("urn:fr:revalorisation:exercice:2016"), 2016) { origin case_input; }
+        assert "bmaf-02": bmaf_precedente(entity_ref("urn:fr:revalorisation:exercice:2016"), 406.21 EUR) { origin case_input; }
+        assert "bmaf-03": coefficient_annee(entity_ref("urn:fr:revalorisation:exercice:2016"), 1.001) { origin case_input; }
+    }
+    evaluate truth(coefficient_retenu(entity_ref("urn:fr:revalorisation:exercice:2016"), 1.001));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bmaf_revalorisee(entity_ref("urn:fr:revalorisation:exercice:2016"), 406.62 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

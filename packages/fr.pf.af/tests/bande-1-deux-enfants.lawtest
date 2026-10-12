@@ -1,0 +1,41 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Band 1, two young children: flat 32% of the base, no supplement, no top-up.
+// BMAF 400.00 EUR is a stated illustrative assumption (arrete unpinned,
+// B-PFAF-BMAF-EURO); the assertions bear on band selection and the rate.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-bande-1-deux-enfants" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "bande-1-01": territoire(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), METROPOLE) { origin case_input; }
+        assert "bande-1-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 2) { origin case_input; }
+        assert "bande-1-03": ressources_menage(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 30000 EUR) { origin case_input; }
+        assert "bande-1-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 55950 EUR) { origin case_input; }
+        assert "bande-1-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 78300 EUR) { origin case_input; }
+        assert "bande-1-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 5595 EUR) { origin case_input; }
+        assert "bande-1-05": bmaf_retenu(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 400.00 EUR) { origin case_input; }
+        assert "bande-1-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 0) { origin case_input; }
+        assert "bande-1-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 0) { origin case_input; }
+        assert "bande-1-08": forfait_total_menage(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 0 EUR) { origin case_input; }
+        assert "bande-1-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 0) { origin case_input; }
+        assert "bande-1-10": foyer_du_cas(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants")) { origin case_input; }
+    }
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), BANDE_1));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:bande-1-deux-enfants"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

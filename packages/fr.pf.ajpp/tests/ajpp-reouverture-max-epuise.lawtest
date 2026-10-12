@@ -1,0 +1,21 @@
+// Reopening with the day maximum exhausted: 310 days paid — the
+// «maximum inutilisé» condition fails, no decree reopening.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reouverture-max-epuise" {
+    given {
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; }
+        assert "ajpp-rome-01": ouverture_droit_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rome"), 200) { origin case_input; }
+        assert "ajpp-rome-02": rechute_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rome"), 210) { origin case_input; }
+        assert "ajpp-rome-03": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-rome"), 310) { origin case_input; }
+        assert "ajpp-rome-04": rechute_pathologie(entity_ref("urn:fr:pf-ajpp:case:enfant-rome")) { origin case_input; }
+        assert "ajpp-rome-05": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-rome")) { origin adjudicated; }
+        assert "ajpp-rome-06": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-rome")) { origin adjudicated; }
+    }
+    evaluate truth(reouverture_dans_delai(entity_ref("urn:fr:pf-ajpp:case:enfant-rome")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

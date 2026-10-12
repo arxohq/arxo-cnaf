@@ -1,0 +1,23 @@
+// L. 531-9 daily-allowance bar before the 2025-12-31 wording (FULL RETURN
+// 03, R02-06: coherent facts): legal_time 2025-06-10, infant born 2025
+// (age 0, pre-2026 — no 2026-cohort fact), open right plus the allowance
+// — the marker stays silent (pre-effective window and pre-cohort child).
+// Control — cm-non-cumul-indemnite (post-effective, 2026 cohort, TRUE).
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-non-cumul-indemnite-avant" {
+    given {
+        context { decision_time @2025-06-20T12:00:00Z; knowledge_time @2025-06-20T12:00:00Z; legal_time @2025-06-10; timezone "Europe/Paris"; }
+        assert "ncia-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:ncia"), entity_ref("urn:fr:pf-cmg:child:ncia"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "ncia-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:ncia")) { origin case_input; }
+        assert "ncia-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:ncia"), entity_ref("urn:fr:pf-cmg:child:ncia")) { origin case_input; }
+        assert "ncia-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:ncia"), 0) { origin case_input; }
+        assert "ncia-05": indemnite_journaliere_meme_enfant(entity_ref("urn:fr:pf-cmg:case:ncia"), entity_ref("urn:fr:pf-cmg:child:ncia")) { origin case_input; }
+    }
+    evaluate truth(cumul_indemnite_interdit(entity_ref("urn:fr:pf-cmg:case:ncia"), entity_ref("urn:fr:pf-cmg:child:ncia")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

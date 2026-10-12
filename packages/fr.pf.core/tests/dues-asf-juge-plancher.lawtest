@@ -1,0 +1,18 @@
+// ASF judicial claim below the floor: cessation month would give December, floor January - due from the floor, the later date (R. 552-2 II 5 "au plus tôt").
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-dues-asf-juge-plancher" {
+    given {
+        context { decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "dues-asf-juge-plancher-01": fixation_judiciaire_apres_recouvrement(entity_ref("urn:fr:pf:case:asf-plancher")) { origin case_input; }
+        assert "dues-asf-juge-plancher-02": cessation_defaut_mois(entity_ref("urn:fr:pf:case:asf-plancher"), @2025-11-01) { origin case_input; }
+        assert "dues-asf-juge-plancher-03": plancher_3_mois_demande(entity_ref("urn:fr:pf:case:asf-plancher"), @2026-01-01) { origin case_input; }
+        assert "dues-asf-juge-plancher-04": conditions_asf_reunies(entity_ref("urn:fr:pf:case:asf-plancher")) { origin case_input; }
+    }
+    evaluate truth(prestations_dues_a_compter(entity_ref("urn:fr:pf:case:asf-plancher"), @2026-01-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

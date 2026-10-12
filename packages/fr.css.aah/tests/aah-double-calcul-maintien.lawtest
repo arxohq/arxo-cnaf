@@ -1,0 +1,44 @@
+// Double calculation, maintenance active (Oct 2023): couple, own annual
+// resources 9000.00, retained spouse resources 3000.00, no children,
+// monthly amount 1000.00 retained.
+// Former: plafond 12000.00 x 1.81 = 21720.00; (21720.00 - 12000.00) / 12
+// = 810.00. Current: plafond 12000.00; (12000.00 - 9000.00) / 12 = 250.00.
+// 810.00 > 250.00: maintenance applies, 810.00 due.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-double-calcul-maintien" {
+    given {
+        context { decision_time @2023-10-15T12:00:00Z; knowledge_time @2023-10-15T12:00:00Z; legal_time @2023-10-15; timezone "Europe/Paris"; }
+        assert "dc1-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:couple-dc1")) { origin adjudicated; }
+        assert "dc1-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:couple-dc1")) { origin case_input; }
+        assert "dc1-03": residence_permanente(entity_ref("urn:fr:css-aah:case:couple-dc1")) { origin case_input; }
+        assert "dc1-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:couple-dc1")) { origin case_input; }
+        assert "dc1-05": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:couple-dc1")) { origin case_input; }
+        assert "dc1-06": en_couple(entity_ref("urn:fr:css-aah:case:couple-dc1")) { origin case_input; }
+        assert "dc1-07": beneficiaire_au_1er_octobre_2023(entity_ref("urn:fr:css-aah:case:couple-dc1")) { origin case_input; }
+        assert "dc1-08": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "dc1-09": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:couple-dc1"), 9000.00 EUR) { origin case_input; }
+        assert "dc1-10": ressources_conjoint_retenues(entity_ref("urn:fr:css-aah:case:couple-dc1"), 3000.00 EUR) { origin case_input; }
+        assert "dc1-11": ressources_trimestrielles_retenues(entity_ref("urn:fr:css-aah:case:couple-dc1"), 0.00 EUR) { origin case_input; }
+        assert "dc1-12": enfants_charge(0) { origin case_input; }
+        assert "dc1-13": sans_esat(entity_ref("urn:fr:css-aah:case:couple-dc1")) { origin case_input; }
+    }
+    evaluate truth(aah_montant_ancien(entity_ref("urn:fr:css-aah:case:couple-dc1"), 810.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aah_montant_nouveau(entity_ref("urn:fr:css-aah:case:couple-dc1"), 250.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aah_maintien_ancien_calcul(entity_ref("urn:fr:css-aah:case:couple-dc1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aah_montant_du(entity_ref("urn:fr:css-aah:case:couple-dc1"), 810.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

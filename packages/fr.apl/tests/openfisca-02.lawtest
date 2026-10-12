@@ -1,0 +1,38 @@
+// Cas 2: одинокое лицо, зона III, наём 608 € — выше плафона дегрессивности, пропорция невыразима
+// 
+// ИСТОЧНИК ОЖИДАНИЯ: OpenFisca-France, openfisca/openfisca-france@b2ab9943, tests/formulas/aides_logement_reforme_janvier_2021.yaml.
+// ИХ ЧИСЛА ДВА, и они разные: в файле — 181.39 €, а их КОД на
+// закреплённом коммите даёт 181.40 € (замер 13.09.2026, openfisca-france
+// 176.0.9; допуск их теста relative_error_margin 0,01 расхождение файла с
+// собственным кодом скрывает). Сверяться с кодом: tools/compare_openfisca.py.
+// ПРИЧИНА РАСХОЖДЕНИЯ С НАМИ: их код округляет пропорцию дегрессивности, текст политики не даёт (README, «Квалификация расхождений»).
+// 
+// НАШ ИСХОД — ОТКАЗ, и он предметный: наём выше плафона дегрессивности,
+// а пропорциональное уменьшение D. 823-16 не названо ни одной политикой
+// округления. Частное денег на деньги точно (§58, E-0083), но умножение
+// денег на не-10-гладкую долю §50 отвергает (INEXACT_DIVISION) — молчаливого
+// округления здесь нет по построению. Сценарий закрепляет именно отказ.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-openfisca-02-degressivite-inexacte" {
+    given {
+        context { decision_time @2021-01-15T12:00:00Z; knowledge_time @2021-01-15T12:00:00Z; legal_time @2021-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "openfisca-02-degressivite-inexacte-01": secteur_locatif(entity_ref("urn:fr:apl:case:openfisca-02")) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-02": zone_du_logement(entity_ref("urn:fr:apl:case:openfisca-02"), ZONE_III) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-03": aide_demandee(entity_ref("urn:fr:apl:case:openfisca-02"), ALS) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-04": situation_familiale(entity_ref("urn:fr:apl:case:openfisca-02"), PERSONNE_SEULE) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-05": personnes_a_charge(entity_ref("urn:fr:apl:case:openfisca-02"), 0) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-06": loyer_principal(entity_ref("urn:fr:apl:case:openfisca-02"), 608 EUR) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-07": ressources_du_menage(entity_ref("urn:fr:apl:case:openfisca-02"), 6900 EUR) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-08": mode_location(entity_ref("urn:fr:apl:case:openfisca-02"), LOCATION_SEULE) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-09": forme_logement(entity_ref("urn:fr:apl:case:openfisca-02"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:openfisca-02"), 0 EUR) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:openfisca-02"), false) { origin case_input; }
+        assert "openfisca-02-degressivite-inexacte-12": territoire(entity_ref("urn:fr:apl:case:openfisca-02"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:openfisca-02"), 181.39 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}

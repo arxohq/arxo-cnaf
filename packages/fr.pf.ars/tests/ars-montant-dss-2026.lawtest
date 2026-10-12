@@ -1,0 +1,32 @@
+// DSS/2B/2026/46 barème (annexe III.3, pinned in fr.css.revalorisation):
+// ARS 11-14 band, BMAF 478.16: 0.9467 x 478.16 = 452.67407, rounded to
+// the centime -> 452.67, the published amount. Child born 2014-06-01 is
+// twelve at the 2026 rentrée (eleven reached, fifteen not), six before
+// 1 February 2027 and under eighteen at 15 September 2026, enrolled.
+// D-29(b): the base amount requires ars_droit_ouvert, so the case states
+// the resource facts (resources 12000 within the stated base ceiling 10000 +
+// per-child increment; illustrative).
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-montant-dss-2026" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2026-09-15T12:00:00Z; knowledge_time @2026-09-15T12:00:00Z; legal_time @2026-09-15; timezone "Europe/Paris"; }
+        assert "amd-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:montant-dss-2026"), entity_ref("urn:fr:pf-ars:case:montant-dss-2026-e1")) { origin case_input; }
+        assert "amd-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:montant-dss-2026-e1")) { origin case_input; }
+        assert "amd-03": date_naissance(entity_ref("urn:fr:pf-ars:case:montant-dss-2026-e1"), @2014-06-01) { origin case_input; }
+        assert "amd-04": seuil_six_ans(@2027-02-01) { origin case_input; }
+        assert "amd-05": seuil_dix_huit_ans(@2026-09-15) { origin case_input; }
+        assert "amd-06": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:montant-dss-2026-e1")) { origin case_input; }
+        assert "amd-07": date_reference_taux(@2025-12-31) { origin case_input; }
+        assert "amd-08": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:montant-dss-2026"), 478.16 EUR) { origin case_input; }
+        assert "amd-rg1": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:montant-dss-2026"), 1) { origin case_input; }
+        assert "amd-rg2": ressources_menage(entity_ref("urn:fr:pf-ars:case:montant-dss-2026"), 12000 EUR) { origin case_input; }
+        assert "amd-rg3": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:montant-dss-2026"), 10000 EUR) { origin case_input; }
+    }
+    evaluate truth(ars_montant_du(entity_ref("urn:fr:pf-ars:case:montant-dss-2026-e1"), 452.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

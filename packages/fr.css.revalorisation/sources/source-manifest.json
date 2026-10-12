@@ -1,0 +1,480 @@
+{
+ "$comment": "Охват источников пакета fr.css.revalorisation (фаза 0): ДАННЫЕ вместо перечней в коде. Байты — официальные архивы INSEE Melodi (data.gouv.fr, организация INSEE): месячный IPC Ensemble (вход L. 161-25) и 1er quintile hors tabac (вход relèvement SMIC, декрет 2025-1228 ст. 3). ZIP-кэш sources/insee/.cache/ в git не идёт; в git — извлечённые ряды sources/insee/insee-ipc-series.json. Текст L. 161-25 (зеркало CSS, ферма) и инструкции DSS (D-Q4/ферма) — граница пакета. D-24 (06.10.2026): цепочка назад — инструкции DSS апрель 2022–2025 + потолки январь 2022–2025, срезы страниц из полных бюллетеней BO Santé (снимки Internet Archive id_, кэш sources/bo/.cache/ в git не идёт); инструмент tools/fetch_dss_bo.py; происхождение — sources/PROVENANCE.md. Сессия 1 (08.10.2026): история до 2015 — BMAF апрель 2015–2021 и потолки январь 2015, 2017–2021: срезы из бюллетеней 2017.4, 2018.1, 2019.1, 2019.4, 2021.5 (канал 2) и целые PDF отдельных инструкций сайта sante.gouv.fr (канал 3, tools/fetch_dss_bo.py); дайджест SHA-1 каждого снимка сверен с индексом CDX Internet Archive (cdx_sha1_b32). Ст. 9 закона 2022-1158 (коэффициент 1,04 с 01.07.2022) — из дампа LEGI (tools/pin_loi_2022_1158.py). Не найдены: инструкция BMAF 2018 (DSS/SD2B/2018/81) и потолки 2016 (DSS/SD2B/2015/371) — см. sources/PROVENANCE.md.",
+ "archives": [
+  {
+   "name": "DS_IPC_PRINC",
+   "file": "DS_IPC_PRINC.zip",
+   "url": "https://api.insee.fr/melodi/file/DS_IPC_PRINC/DS_IPC_PRINC_CSV_FR",
+   "bytes": 3829908,
+   "sha256": "sha256:9d34d301b75bef122e41cafb848f896495476b9e1c0460da61e45d065a9d6337",
+   "retrieved_at": "2026-10-05"
+  },
+  {
+   "name": "DS_IPC_IND_CAT",
+   "file": "DS_IPC_IND_CAT.zip",
+   "url": "https://api.insee.fr/melodi/file/DS_IPC_IND_CAT/DS_IPC_IND_CAT_CSV_FR",
+   "bytes": 7224,
+   "sha256": "sha256:80cbf3a7b4f32cb35f8398c01779df09747b97dd027c159a6e8fe5054ac5f4e3",
+   "retrieved_at": "2026-10-05"
+  }
+ ],
+ "series": [
+  {
+   "id": "IPC_ENSEMBLE_M",
+   "archive": "DS_IPC_PRINC",
+   "data_csv": "DS_IPC_PRINC_data.csv",
+   "meta_csv": "DS_IPC_PRINC_metadata.csv",
+   "base": "2025",
+   "filter": {
+    "FREQ": "M",
+    "IDX_TYPE": "CPI",
+    "IND_TYPE": "IX",
+    "GEO": "F",
+    "TPH_CPI": "_T",
+    "COICOP_2018": "00",
+    "SEASONAL_ADJUST": "N"
+   }
+  },
+  {
+   "id": "IPC_QUINT1_HORSTABAC_M",
+   "archive": "DS_IPC_IND_CAT",
+   "data_csv": "DS_IPC_IND_CAT_data.csv",
+   "meta_csv": "DS_IPC_IND_CAT_metadata.csv",
+   "base": "2025",
+   "filter": {
+    "FREQ": "M",
+    "IDX_TYPE": "CPI",
+    "IND_TYPE": "IX",
+    "GEO": "F",
+    "QUANTILE_NIVVIE": "QUINT1",
+    "PRODUCT_GROUP": "4018",
+    "TPH": "_Z",
+    "TSH": "_Z",
+    "AGE": "_Z",
+    "PCS": "_Z",
+    "SEASONAL_ADJUST": "N"
+   }
+  }
+ ],
+ "declared": {},
+ "edition_of": {
+  "insee-ipc-series.json": "INSEE_IPC_ED2026"
+ },
+ "documents": [
+  {
+   "file": "L161-25.txt",
+   "mirror_xml": "LEGITEXT000006073189/dump/article/LEGI/ARTI/00/00/31/78/10/LEGIARTI000031781092.xml",
+   "legi_id": "LEGIARTI000031781092",
+   "state": "VIGUEUR 2016-01-01/2999-01-01",
+   "sha256": "6c362fd782b87908692452ac0e3c5d6d28f224f824b8981f4fc3ec858a5104ca"
+  },
+  {
+   "file": "loi-2022-1158-art9.txt",
+   "dump_path": "legi/global/code_et_TNC_en_vigueur/TNC_en_vigueur/JORF/TEXT/00/00/46/18/67/JORFTEXT000046186723/article/LEGI/ARTI/00/00/46/18/84/LEGIARTI000046188473.xml",
+   "legi_id": "LEGIARTI000046188473",
+   "state": "VIGUEUR 2022-08-18/2999-01-01",
+   "xml_sha256": "a99dc515761939e3daf8a79cde862e169dfe85e8e395d388c5e2ec4c0f9615e0",
+   "sha256": "c3b121c0b034e7aab85be07c3329b2f12e397fc189e06a77ba1e68bf4eb215ea",
+   "record": "loi-2022-1158-art9.json",
+   "pin_tool": "tools/pin_loi_2022_1158.py",
+   "retrieved_at": "2026-10-08"
+  },
+  {
+   "file": "dss-2026-46.pdf",
+   "url": "https://bulletins-officiels.social.gouv.fr/sites/textes-officiels/files/2026-03/SFHS2607952J.pdf",
+   "bytes": 263198,
+   "sha256": "5288475881ca40b7ee82e53d8b77bd2767f0051258f39ecb5ce541704b9e0756",
+   "retrieved_at": "2026-10-06",
+   "text_extract": "dss-2026-46.txt",
+   "text_sha256": "e99e176f704aa78098475a297edc51b7f395cc32729300887502ae2ce89abdfe"
+  },
+  {
+   "file": "dss-2025-177.pdf",
+   "url": "https://bulletins-officiels.social.gouv.fr/sites/textes-officiels/files/2025-12/SFHS2535630J_0.pdf",
+   "bytes": 230195,
+   "sha256": "a51de9474b15cbc0f746ebf9811c3c0e2f823db1e7e7e2bc34fc985dc730e161",
+   "retrieved_at": "2026-10-06",
+   "text_extract": "dss-2025-177.txt",
+   "text_sha256": "5b89e337e71b5309efe46e90393b4ca7c78ee2fa36edae969eaedf886afb6059"
+  },
+  {
+   "file": "dss-2014-345.pdf",
+   "channel": "IA id_ snapshot of a single-article PDF (whole file, no slicing)",
+   "url": "https://sante.gouv.fr/fichiers/bo/2015/15-01/ste_20150001_0000_0061.pdf",
+   "snapshot": "https://web.archive.org/web/20230420072139id_/https://sante.gouv.fr/fichiers/bo/2015/15-01/ste_20150001_0000_0061.pdf",
+   "nor": "AFSS1430005C",
+   "bytes": 106874,
+   "sha256": "ee1b2da90f055f47e522b9bd753c879857542f4a7c04d83b61318e5fc4bf8b7a",
+   "cdx_sha1_b32": "MQMT6YFNK2TLE3VBCPXWKOJCQQ4GBIM7",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2014-345.txt",
+   "text_sha256": "eded869ecb02b74f592bb04dca801f430bef9cb29834ed4ea0fde242f560ee45"
+  },
+  {
+   "file": "dss-2015-92.pdf",
+   "channel": "IA id_ snapshot of a single-article PDF (whole file, no slicing)",
+   "url": "https://sante.gouv.fr/fichiers/bo/2015/15-04/ste_20150004_0000_0085.pdf",
+   "snapshot": "https://web.archive.org/web/20240702050209id_/https://sante.gouv.fr/fichiers/bo/2015/15-04/ste_20150004_0000_0085.pdf",
+   "nor": "AFSS1507843C",
+   "bytes": 91406,
+   "sha256": "e790ce3da5e3d2353c5fd4af94e6ecf12c024dc60c0f9852383b78d529ae6df1",
+   "cdx_sha1_b32": "FKS2EWE5OGKQ54K2DAQ44ERB2VIOBNYS",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2015-92.txt",
+   "text_sha256": "ff0d384b6d20b4e2626a9d39587db3d309f27eae900de48bb2f601c639b47db9"
+  },
+  {
+   "file": "dss-2016-396.pdf",
+   "channel": "IA id_ snapshot of a single-article PDF (whole file, no slicing)",
+   "url": "https://sante.gouv.fr/fichiers/bo/2017/17-01/ste_20170001_0000_0088.pdf",
+   "snapshot": "https://web.archive.org/web/20240630052908id_/https://sante.gouv.fr/fichiers/bo/2017/17-01/ste_20170001_0000_0088.pdf",
+   "nor": "AFSS1638099C",
+   "bytes": 121066,
+   "sha256": "5527924f84604b0cfe79e8e53e2d99f8cb4f76ecb1e0e8b14e4836b5cfde0aad",
+   "cdx_sha1_b32": "VGEP3JQJKBRFAYHDS4ONI4QJHIC5OTTQ",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2016-396.txt",
+   "text_sha256": "5ada35c7fcc273bf65111bafde50e4cabe06557dc3b144b1758c07599e412d8e"
+  },
+  {
+   "file": "dss-2016-77.pdf",
+   "channel": "IA id_ snapshot of a single-article PDF (whole file, no slicing)",
+   "url": "https://sante.gouv.fr/fichiers/bo/2016/16-04/ste_20160004_0000_0132.pdf",
+   "snapshot": "https://web.archive.org/web/20240706135050id_/https://sante.gouv.fr/fichiers/bo/2016/16-04/ste_20160004_0000_0132.pdf",
+   "nor": "AFSS1607684C",
+   "bytes": 122498,
+   "sha256": "194dae53ee3038186ed2561d54fa4a907effd1324a5f692404382edfca927a05",
+   "cdx_sha1_b32": "A6FSKKAJCJO2XR547ZP2IO2CPUHWIAGT",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2016-77.txt",
+   "text_sha256": "0152d7623b6a3924a9d0f38fe0c4f77ef33d2823b2f1a6074afc559f72e2e5e4"
+  },
+  {
+   "file": "dss-2017-352.pdf",
+   "bulletin": "2018.1.sante.pdf",
+   "pages": "692-698",
+   "nor": "SSAS1736497C",
+   "snapshot": "https://web.archive.org/web/20240403102916id_/https://sante.gouv.fr/fichiers/bo/2018/18-01/ste_20180001_0000_p000.pdf",
+   "bytes": 82128,
+   "sha256": "20638e451ad0d5f58dd36b33254025b07bc664183bd76384875dcd60dc21ee6b",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2017-352.txt",
+   "text_sha256": "b94603492e6f287e87a8e68c981683a3f0ca000955b855ebe1aa1eee4ed0b1ee",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2017-97.pdf",
+   "bulletin": "2017.4.sante.pdf",
+   "pages": "458-462",
+   "nor": "AFSS1709166C",
+   "snapshot": "https://web.archive.org/web/20240327030904id_/https://sante.gouv.fr/fichiers/bo/2017/17-04/ste_20170004_0000_p000.pdf",
+   "bytes": 78357,
+   "sha256": "98357d59d70ed3d9a7d617f5d60905ee7684062b798a5745b38d1854e21d1709",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2017-97.txt",
+   "text_sha256": "37193b7938f5be2575111e82de5ce36af4ef7604a28868e7775064913b517ea7",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2018-279.pdf",
+   "bulletin": "2019.1.sante.pdf",
+   "pages": "460-466",
+   "nor": "SSAS1834542J",
+   "snapshot": "https://web.archive.org/web/20230516134052id_/https://sante.gouv.fr/fichiers/bo/2019/19-01/ste_20190001_0000_p000.pdf",
+   "bytes": 155040,
+   "sha256": "1ee88059893865636b2e951fe4b914b257bc9573d23d5bae5d74cd7393c8192d",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2018-279.txt",
+   "text_sha256": "ba9e275944845442bc67c771cd475d11282d5422b63738e4063a1d628eaa70f1",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2019-261.pdf",
+   "channel": "IA id_ snapshot of a single-article PDF (whole file, no slicing)",
+   "url": "https://sante.gouv.fr/fichiers/bo/2019/19-12/ste_20190012_0000_0064.pdf",
+   "snapshot": "https://web.archive.org/web/20250504041933id_/https://sante.gouv.fr/fichiers/bo/2019/19-12/ste_20190012_0000_0064.pdf",
+   "nor": "SSAS1936748J",
+   "bytes": 224570,
+   "sha256": "0831bf4a407ef50dc5f12a85adf86bc06d361138e3f76938cc7135dc532ce8cc",
+   "cdx_sha1_b32": "LLCQUBWSVISWONPMDG3OFDJRWU7AXL6I",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2019-261.txt",
+   "text_sha256": "0fb53c4fb53aaf54ba6ce1dea85a798f24fa854ffce4ddbbc3f3b9144bc9c45b"
+  },
+  {
+   "file": "dss-2019-65.pdf",
+   "bulletin": "2019.4.sante.pdf",
+   "pages": "355-361",
+   "nor": "SSAS1908955J",
+   "snapshot": "https://web.archive.org/web/20200306193845id_/https://solidarites-sante.gouv.fr/fichiers/bo/2019/19-04/ste_20190004_0000_p000.pdf",
+   "bytes": 90657,
+   "sha256": "534314a268134154066ac567305165b31afbb598d6b4edc7f268ea4a36ff5362",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2019-65.txt",
+   "text_sha256": "88920600cc9deeb9bd09e9b6093e27c6f5c4bf8ee8ddb1e4b2e0f552f136ba28",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2020-226.pdf",
+   "channel": "IA id_ snapshot of a single-article PDF (whole file, no slicing)",
+   "url": "https://sante.gouv.fr/fichiers/bo/2020/20-12/ste_20200012_0000_0050.pdf",
+   "snapshot": "https://web.archive.org/web/20240520154018id_/https://sante.gouv.fr/fichiers/bo/2020/20-12/ste_20200012_0000_0050.pdf",
+   "nor": "SSAS2034948J",
+   "bytes": 223227,
+   "sha256": "243d4973838b48d6fe353e796d91152570b1dcb11dece161b2575f03ae316822",
+   "cdx_sha1_b32": "OEOBBYBHTLCINNPFS5QVG5NWMHYQNSC2",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2020-226.txt",
+   "text_sha256": "1fab624eb1b2f5691a5f8f4860b9afc407b5391956d6cfeca76e77664d564590"
+  },
+  {
+   "file": "dss-2020-33.pdf",
+   "channel": "IA id_ snapshot of a single-article PDF (whole file, no slicing)",
+   "url": "https://sante.gouv.fr/fichiers/bo/2020/20-02/ste_20200002_0000_0046.pdf",
+   "snapshot": "https://web.archive.org/web/20230119222325id_/https://sante.gouv.fr/fichiers/bo/2020/20-02/ste_20200002_0000_0046.pdf",
+   "nor": "SSAS2005144J",
+   "bytes": 255193,
+   "sha256": "33f04ed80bce08012771eee9bd8e6d91393ad20520a16d3605b63c79045588d8",
+   "cdx_sha1_b32": "7BJKUZH3ENE6MRUPH53N6LAPY5YZU3SA",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2020-33.txt",
+   "text_sha256": "ecca137fe3c55979447244f34eb105c5af624fba99b449a42e1879f5b99588a4"
+  },
+  {
+   "file": "dss-2021-247.pdf",
+   "bulletin": "2021.24.sante.pdf",
+   "pages": "162-170",
+   "nor": "SSAS2137492J",
+   "snapshot": "https://web.archive.org/web/20230407184317id_/https://sante.gouv.fr/fichiers/bo/2021/2021.24.sante.pdf",
+   "bytes": 958380,
+   "sha256": "f7fa037ac65a127c165c46d5eaf8a3d8813ea12f982ce58f6f2937c577894d0e",
+   "retrieved_at": "2026-10-06",
+   "text_extract": "dss-2021-247.txt",
+   "text_sha256": "83751230269006af7989a8244b2264e0fea399b1eb64893f1d84f6d8f37402cc",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2021-65.pdf",
+   "bulletin": "2021.5.sante.pdf",
+   "pages": "140-150",
+   "nor": "SSAS2108988J",
+   "snapshot": "https://web.archive.org/web/20240806005418id_/https://sante.gouv.fr/fichiers/bo/2021/2021.5.sante.pdf",
+   "bytes": 1007500,
+   "sha256": "ba3e644635bfe38e74fe1ad42196154c0bb2669631d338439e5f78a198874a42",
+   "retrieved_at": "2026-10-08",
+   "text_extract": "dss-2021-65.txt",
+   "text_sha256": "fa0697db8f1bbb09fa52f66d8e4f01bc123e4fd0fc724e1fe702c4742621e49a",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2022-283.pdf",
+   "bulletin": "2022.26.sante.pdf",
+   "pages": "171-180",
+   "nor": "APHS2237054J",
+   "snapshot": "https://web.archive.org/web/20230130162057id_/https://sante.gouv.fr/fichiers/bo/2022/2022.26.sante.pdf",
+   "bytes": 935905,
+   "sha256": "9a014ec3bde4884373df935cb1b34a7427cca35b94a72839551731ca01f2d06c",
+   "retrieved_at": "2026-10-06",
+   "text_extract": "dss-2022-283.txt",
+   "text_sha256": "1eee3bca6acfefeedb1a1be1afbfdf876590e9381297927fe07d6a26a0cbbfa2",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2022-82.pdf",
+   "bulletin": "2022.8.sante.pdf",
+   "pages": "404-413",
+   "nor": "SSAS2209926J",
+   "snapshot": "https://web.archive.org/web/20240309145501id_/https://sante.gouv.fr/fichiers/bo/2022/2022.8.sante.pdf",
+   "bytes": 908558,
+   "sha256": "ae121608393a18982ac09971129c219da1e67e712c7c24a46ac73dd27750292b",
+   "retrieved_at": "2026-10-06",
+   "text_extract": "dss-2022-82.txt",
+   "text_sha256": "8257ed00550d1703f884df4f7de1a00b7571ce6289e41c8fd1dedf52214fc585",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2023-205.pdf",
+   "bulletin": "2023.24.sante.pdf",
+   "pages": "72-81",
+   "nor": "FAMS2335370J",
+   "snapshot": "https://web.archive.org/web/20231231050117id_/https://sante.gouv.fr/fichiers/bo/2023/2023.24.sante.pdf",
+   "bytes": 927693,
+   "sha256": "89da3de4729c84288b1cfda79a8f3347e2d7ae25e40a39b509db5547c5422f19",
+   "retrieved_at": "2026-10-06",
+   "text_extract": "dss-2023-205.txt",
+   "text_sha256": "a3d4e559096b8bb62b4b06db5a14058e215ae660fc8c6f0bf4c68af37f4d3731",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2023-41.pdf",
+   "bulletin": "2023.6.sante.pdf",
+   "pages": "119-129",
+   "nor": "APHS2308236J",
+   "snapshot": "https://web.archive.org/web/20230331123522id_/https://sante.gouv.fr/fichiers/bo/2023/2023.6.sante.pdf",
+   "bytes": 1940812,
+   "sha256": "628434c066d9fe27505b1819a9dcb026afe7a921d8e3747dd8ecadb5041f9caa",
+   "retrieved_at": "2026-10-06",
+   "text_extract": "dss-2023-41.txt",
+   "text_sha256": "89e0b6e620f9977e791d712b2748ce5742ec6fc6709e4fe10bd5a69a44882611",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2024-181.pdf",
+   "bulletin": "2024.34.sante.pdf",
+   "pages": "201-210",
+   "nor": "SAES2434195J",
+   "snapshot": "https://web.archive.org/web/20250117220816id_/https://sante.gouv.fr/fichiers/bo/2024/2024.34.sante.pdf",
+   "bytes": 1570712,
+   "sha256": "123c1510ed3992f7edc532765109e1beda68714c7e4a3aae80b711490829dc13",
+   "retrieved_at": "2026-10-06",
+   "text_extract": "dss-2024-181.txt",
+   "text_sha256": "4b04ba3dcffcde306a3ad98245b2466a8c7fa7d06bd39490178a5300d5812f73",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2024-43.pdf",
+   "bulletin": "2024.6.sante.pdf",
+   "pages": "86-97",
+   "nor": "TSSS2408365J",
+   "snapshot": "https://web.archive.org/web/20240403124929id_/https://sante.gouv.fr/fichiers/bo/2024/2024.6.sante.pdf",
+   "bytes": 1286945,
+   "sha256": "693c0a794cc4cb5ef6aabe43299a41a7df8084b91439f7bbc7d357794f5c80fd",
+   "retrieved_at": "2026-10-06",
+   "text_extract": "dss-2024-43.txt",
+   "text_sha256": "6705d15c37a1e092b81139ae02dcef894bcdd5426818c6608ab973bd433b8fc4",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  },
+  {
+   "file": "dss-2025-38.pdf",
+   "bulletin": "2025.6.sante.pdf",
+   "pages": "27-38",
+   "nor": "TSSS2508202J",
+   "snapshot": "https://web.archive.org/web/20250401012620id_/https://sante.gouv.fr/fichiers/bo/2025/2025.6.sante.pdf",
+   "bytes": 907450,
+   "sha256": "f9018e16b45a8bc3bd0cbc2bc49684ab6a0a625f4d2fdd3a384a7039ded694a0",
+   "retrieved_at": "2026-10-06",
+   "text_extract": "dss-2025-38.txt",
+   "text_sha256": "bc4a3399b528fd77446a8ec6705aa5abdbffb2eb8f269b2958c4aa5734bf0e84",
+   "sliced_with": "pypdf 6.14.2 (tools/fetch_dss_bo.py)"
+  }
+ ],
+ "bulletins": [
+  {
+   "file": "2017.4.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2017/17-04/ste_20170004_0000_p000.pdf",
+   "snapshot": "https://web.archive.org/web/20240327030904id_/https://sante.gouv.fr/fichiers/bo/2017/17-04/ste_20170004_0000_p000.pdf",
+   "bytes": 11982626,
+   "sha256": "3a2ef6844c7347b32d8ca03a8d6531b12ca3b17c333e08056e20935a918f658a",
+   "retrieved_at": "2026-10-08",
+   "cdx_sha1_b32": "U424BVR2ALXF45BBEGMRTYCP2YB2GKOR"
+  },
+  {
+   "file": "2018.1.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2018/18-01/ste_20180001_0000_p000.pdf",
+   "snapshot": "https://web.archive.org/web/20240403102916id_/https://sante.gouv.fr/fichiers/bo/2018/18-01/ste_20180001_0000_p000.pdf",
+   "bytes": 12103731,
+   "sha256": "761464b3e8e76600e8148adb03790673d44c11281c5efdc4cbb9fca74245012f",
+   "retrieved_at": "2026-10-08",
+   "cdx_sha1_b32": "3JZOYWF6LNRM2HFBKEAUOJM2MZJI3XWO"
+  },
+  {
+   "file": "2019.1.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2019/19-01/ste_20190001_0000_p000.pdf",
+   "snapshot": "https://web.archive.org/web/20230516134052id_/https://sante.gouv.fr/fichiers/bo/2019/19-01/ste_20190001_0000_p000.pdf",
+   "bytes": 6010824,
+   "sha256": "367c27c1e6c291a69bd97d53b3a783335db1e084a194ae52e9430fe3e74b22d5",
+   "retrieved_at": "2026-10-08",
+   "cdx_sha1_b32": "4CBPYTHCBF636EXQ62HKIJM7CEARQE3S"
+  },
+  {
+   "file": "2019.4.sante.pdf",
+   "url": "https://solidarites-sante.gouv.fr/fichiers/bo/2019/19-04/ste_20190004_0000_p000.pdf",
+   "snapshot": "https://web.archive.org/web/20200306193845id_/https://solidarites-sante.gouv.fr/fichiers/bo/2019/19-04/ste_20190004_0000_p000.pdf",
+   "bytes": 12604050,
+   "sha256": "e85c9cb70ee7bd059d0ce6d1f78951811451e536c31804f4573d2dd330676469",
+   "retrieved_at": "2026-10-08",
+   "cdx_sha1_b32": "ZFQRYLGPHQVLCTFTFPMSOSX77DZ6SR5X"
+  },
+  {
+   "file": "2021.24.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2021/2021.24.sante.pdf",
+   "snapshot": "https://web.archive.org/web/20230407184317id_/https://sante.gouv.fr/fichiers/bo/2021/2021.24.sante.pdf",
+   "bytes": 4088617,
+   "sha256": "13f81c311e803d0904ae7b37ca38973c8d1fb402fc50db0b748b6cc9c68ef58e",
+   "retrieved_at": "2026-10-06",
+   "cdx_sha1_b32": "FJ3OYFHBK6YNADTCQL3ZPAC5GC2LHWIP"
+  },
+  {
+   "file": "2021.5.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2021/2021.5.sante.pdf",
+   "snapshot": "https://web.archive.org/web/20240806005418id_/https://sante.gouv.fr/fichiers/bo/2021/2021.5.sante.pdf",
+   "bytes": 8452274,
+   "sha256": "f4ff369a62171f669c6cc025f22c60e94395129cee5e843fefcf79f27194a6cb",
+   "retrieved_at": "2026-10-08",
+   "cdx_sha1_b32": "D7YSWGLYXIVOR6JXETCAV6JQK7HQRASX"
+  },
+  {
+   "file": "2022.26.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2022/2022.26.sante.pdf",
+   "snapshot": "https://web.archive.org/web/20230130162057id_/https://sante.gouv.fr/fichiers/bo/2022/2022.26.sante.pdf",
+   "bytes": 5248748,
+   "sha256": "d6da7e04ffe75ceaed95dfa5863171d2ff84e3638802c5aca846fbabb5e99c0c",
+   "retrieved_at": "2026-10-06",
+   "cdx_sha1_b32": "63WLKNHMORE3M3MTNTEJGZJ7WYQ4UHLY"
+  },
+  {
+   "file": "2022.8.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2022/2022.8.sante.pdf",
+   "snapshot": "https://web.archive.org/web/20240309145501id_/https://sante.gouv.fr/fichiers/bo/2022/2022.8.sante.pdf",
+   "bytes": 16653881,
+   "sha256": "9f1adaa4113766f932816dceedff0a719a357d8e3063e07d953da8f2b4dd58f4",
+   "retrieved_at": "2026-10-06",
+   "cdx_sha1_b32": "R3IQUNNXNQ63Q7DIPRTOHBWQNPLYQPSF"
+  },
+  {
+   "file": "2023.24.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2023/2023.24.sante.pdf",
+   "snapshot": "https://web.archive.org/web/20231231050117id_/https://sante.gouv.fr/fichiers/bo/2023/2023.24.sante.pdf",
+   "bytes": 4239194,
+   "sha256": "7c5072aac0ee488dd33b3e4498a8d7e4edf651228a7637376e925d927eb132fd",
+   "retrieved_at": "2026-10-06",
+   "cdx_sha1_b32": "OQQRRYHJG2RPAGZXZL7KJAAEPP5S5QEQ"
+  },
+  {
+   "file": "2023.6.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2023/2023.6.sante.pdf",
+   "snapshot": "https://web.archive.org/web/20230331123522id_/https://sante.gouv.fr/fichiers/bo/2023/2023.6.sante.pdf",
+   "bytes": 6578281,
+   "sha256": "cf80128acc35e9f7525f78bc093dbd0d60531b3a5f032a423db0bab720731797",
+   "retrieved_at": "2026-10-06",
+   "cdx_sha1_b32": "7UTULN6EE6P35H4MA75BKDSYJIC6JPYA"
+  },
+  {
+   "file": "2024.34.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2024/2024.34.sante.pdf",
+   "snapshot": "https://web.archive.org/web/20250117220816id_/https://sante.gouv.fr/fichiers/bo/2024/2024.34.sante.pdf",
+   "bytes": 6400276,
+   "sha256": "90a1166ea2994e3eb1b039493be0f5611a6f3dcb9d313ca20a7a1f9cc7b628fb",
+   "retrieved_at": "2026-10-06",
+   "cdx_sha1_b32": "GHFGGNS4W4HHP6MHXSMGAZJMWKOJSKGP"
+  },
+  {
+   "file": "2024.6.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2024/2024.6.sante.pdf",
+   "snapshot": "https://web.archive.org/web/20240403124929id_/https://sante.gouv.fr/fichiers/bo/2024/2024.6.sante.pdf",
+   "bytes": 3406444,
+   "sha256": "bd9ff93203f1c0d4a48907271347b0766806a81017b64317f7dff5bbe6000383",
+   "retrieved_at": "2026-10-06",
+   "cdx_sha1_b32": "SF7TD75HCDLFU7H2527ANOFVSZDFYWGO"
+  },
+  {
+   "file": "2025.6.sante.pdf",
+   "url": "https://sante.gouv.fr/fichiers/bo/2025/2025.6.sante.pdf",
+   "snapshot": "https://web.archive.org/web/20250401012620id_/https://sante.gouv.fr/fichiers/bo/2025/2025.6.sante.pdf",
+   "bytes": 7288874,
+   "sha256": "9dd8350854c16fe896aa19b1c6fad0410f1040a4c57f9fff691488f8693f2ce2",
+   "retrieved_at": "2026-10-06",
+   "cdx_sha1_b32": "2OQKEPUJXN6U2UW5GZ5TSP2RQTJOGCV4"
+  }
+ ]
+}

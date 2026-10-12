@@ -1,0 +1,38 @@
+// Suspension liberty (L. 541-2, para. 2).
+//
+// «Lorsque la personne ayant la charge de l'enfant handicapé ne donne pas
+// suite aux mesures préconisées par la commission, l'allocation peut être
+// suspendue ou supprimée dans les mêmes conditions et après audition de
+// cette personne sur sa demande.» A liberty of the debtor body (pf-core
+// SuspendreVersementControle pattern): holder the body, action the
+// recorded suspension, window the coverage window. The «mêmes conditions»
+// (CDAPH decision channel) is carried by the computed right.
+
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+use self::{
+    CSS_L541_2_ED2021_01,
+    CSS_L541_2_ED2022_01,
+    CSS_L541_2_ED2026_04,
+    aeeh_droit_calcule,
+    audition_tenue,
+    non_suite_mesures,
+    suspension_prononcee,
+};
+
+@source(CSS_L541_2_ED2021_01, CSS_L541_2_ED2022_01, CSS_L541_2_ED2026_04)
+rule SuspensionNonSuivi(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "non-suite aux mesures préconisées, après audition : l'allocation peut être suspendue ou supprimée";
+    label en unofficial "recommended measures not followed, after a hearing: the allowance may be suspended or removed";
+    when aeeh_droit_calcule(e) and fr.pf.core::organisme_debiteur_pf(o, p)
+        and fr.pf.core::parent_charge(p, e)
+        and non_suite_mesures(e) and audition_tenue(p);
+    then liberty SuspendreAeehNonSuivi {
+        holder o;
+        action suspension_prononcee(e);
+        window [@2021-01-01, infinity);
+    };
+}

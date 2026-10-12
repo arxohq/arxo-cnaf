@@ -1,0 +1,106 @@
+// N-2 resources (R. 532-3): executable - reference-year computation (N-2) and concubinage total.
+// Revenu net categoriel amounts and CGI deductions (art. 156, 158, 157 bis, 83,
+// 81 quater) - package fr.tax.income_for_pf (CNAF-INCPF, sibling session);
+// they enter here as provenanced facts (boundary B-PFCORE-CGI).
+// Revaluation of unknown resources by IPC (rapport economique et financier,
+// annex to the projet de loi de finances) - figure not pinned: boundary,
+// recorded in the README; rule follows pinning.
+//
+// DEONTIC MAP: no deontic positions - the article sets a computation base.
+// "Il est tenu compte" - counting instruction, not a personal duty.
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_R532_3,
+    CSS_R532_3_CSS_ED2021_05,
+    CSS_R532_3_CSS_ED2021_11,
+    CSS_R532_3_CSS_ED2021_12,
+    CSS_R532_3_CSS_ED2022_01,
+    CSS_R532_3_CSS_ED2022_02,
+    CSS_R532_3_CSS_ED2022_03,
+    CSS_R532_3_CSS_ED2022_09,
+    CSS_R532_3_CSS_ED2023_07,
+    CSS_R532_3_CSS_ED2024_01,
+    CSS_R532_3_CSS_ED2025_02,
+    CSS_R532_3_CSS_ED2025_09,
+    CSS_R532_3_CSS_ED2025_12,
+    CSS_R532_3_CSS_ED2026_01,
+    CSS_R532_3_CSS_ED2026_04,
+    CSS_R532_3_CSS_ED2026_06,
+    Personne,
+};
+
+relation annee_paiement(p: Personne, annee: Integer) kind empirical {
+    key(p);
+    label fr official "année civile de la période de paiement";
+    label en unofficial "calendar year of the payment period";
+}
+
+relation annee_reference(p: Personne, annee: Integer) kind institutional {
+    key(p);
+    label fr official "année civile de référence: l'avant-dernière année précédant la période de paiement (R. 532-3 al. 1)";
+    label en unofficial "reference calendar year: the second year before the payment period (R. 532-3 para. 1)";
+}
+
+relation revenu_net_categoriel(p: Personne, annee: Integer, montant: Money) kind empirical {
+    key(p, annee);
+    label fr official "total des revenus nets catégoriels de l'année de référence, déterminé selon R. 532-3 (fait avec provenance, calcul: fr.tax.income_for_pf)";
+    label en unofficial "total net categorical income for the reference year under R. 532-3 (provenanced fact, computed by fr.tax.income_for_pf)";
+}
+
+relation ressources_concubin(p: Personne, premier: Money, second: Money) kind empirical {
+    key(p);
+    label fr official "ressources de chacun des concubins durant l'année de référence (R. 532-3 dernier al.)";
+    label en unofficial "resources of each cohabiting partner for the reference year (R. 532-3 last para.)";
+}
+
+relation ressources_totales(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "total des ressources retenues pour la personne";
+    label en unofficial "total resources counted for the person";
+}
+
+function annee_moins_deux(annee: Integer) -> Integer =
+    annee - 2;
+
+@source(CSS_R532_3, CSS_R532_3_CSS_ED2021_05, CSS_R532_3_CSS_ED2021_11, CSS_R532_3_CSS_ED2021_12,
+        CSS_R532_3_CSS_ED2022_01, CSS_R532_3_CSS_ED2022_02, CSS_R532_3_CSS_ED2022_03,
+        CSS_R532_3_CSS_ED2022_09, CSS_R532_3_CSS_ED2023_07, CSS_R532_3_CSS_ED2024_01,
+        CSS_R532_3_CSS_ED2025_02, CSS_R532_3_CSS_ED2025_09, CSS_R532_3_CSS_ED2025_12,
+        CSS_R532_3_CSS_ED2026_01, CSS_R532_3_CSS_ED2026_04, CSS_R532_3_CSS_ED2026_06)
+rule AnneeReference(p: Personne, annee: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'année civile de référence est l'avant-dernière année précédant la période de paiement";
+    label en unofficial "The reference year is the second year before the payment period";
+    when annee_paiement(p, annee);
+    then annee_reference(p, annee_moins_deux(annee));
+}
+
+@source(CSS_R532_3, CSS_R532_3_CSS_ED2021_05, CSS_R532_3_CSS_ED2021_11, CSS_R532_3_CSS_ED2021_12,
+        CSS_R532_3_CSS_ED2022_01, CSS_R532_3_CSS_ED2022_02, CSS_R532_3_CSS_ED2022_03,
+        CSS_R532_3_CSS_ED2022_09, CSS_R532_3_CSS_ED2023_07, CSS_R532_3_CSS_ED2024_01,
+        CSS_R532_3_CSS_ED2025_02, CSS_R532_3_CSS_ED2025_09, CSS_R532_3_CSS_ED2025_12,
+        CSS_R532_3_CSS_ED2026_01, CSS_R532_3_CSS_ED2026_04, CSS_R532_3_CSS_ED2026_06)
+rule RessourcesPropres(p: Personne, annee: Integer, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Ressources retenues: le total des revenus nets catégoriels de l'année de référence";
+    label en unofficial "Counted resources: total net categorical income for the reference year";
+    when annee_reference(p, annee) and revenu_net_categoriel(p, annee, montant);
+    then ressources_totales(p, montant);
+}
+
+@source(CSS_R532_3, CSS_R532_3_CSS_ED2021_05, CSS_R532_3_CSS_ED2021_11, CSS_R532_3_CSS_ED2021_12,
+        CSS_R532_3_CSS_ED2022_01, CSS_R532_3_CSS_ED2022_02, CSS_R532_3_CSS_ED2022_03,
+        CSS_R532_3_CSS_ED2022_09, CSS_R532_3_CSS_ED2023_07, CSS_R532_3_CSS_ED2024_01,
+        CSS_R532_3_CSS_ED2025_02, CSS_R532_3_CSS_ED2025_09, CSS_R532_3_CSS_ED2025_12,
+        CSS_R532_3_CSS_ED2026_01, CSS_R532_3_CSS_ED2026_04, CSS_R532_3_CSS_ED2026_06)
+rule RessourcesConcubinage(p: Personne, premier: Money, second: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "En cas de concubinage, il est tenu compte du total des ressources perçues par chacun des concubins";
+    label en unofficial "In case of concubinage, the total resources received by each partner counts";
+    when ressources_concubin(p, premier, second);
+    then ressources_totales(p, premier + second);
+}

@@ -1,0 +1,14 @@
+// Seizure scale on false declaration: overpayment following a false declaration - seizure levies follow D. 553-1/2 (L. 553-4 I second branch authorizes; D. 553-3 covers only paragraph-II seizures, H-PAY-CALC08-001).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-saisie-fausse-declaration" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "s-fausse": fr.pf.core::indu_fausse_declaration(entity_ref("urn:fr:pv:case:saisi-fausse")) { origin case_input; }
+    }
+    evaluate truth(prelevements_saisie_bareme(entity_ref("urn:fr:pv:case:saisi-fausse")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

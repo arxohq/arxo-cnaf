@@ -1,0 +1,727 @@
+// Аллокации сектора приобретения жилья: D. 842-6…D. 842-12 и глава VI арретэ
+// от 27 сентября 2019 года.
+//
+// ФОРМУЛА (D. 842-6): Af = K × (L + C − L0), и обе её отсылки — те же, что у
+// аллокаций сектора фойе:
+//   * K — «calculé selon les dispositions du 2° de l'article D. 832-25»;
+//   * L0 — «selon les dispositions du deuxième alinéa de l'article D. 832-26,
+//     dans lesquelles elle se substitue à E0».
+// Поэтому этот сектор — ВТОРОЙ независимый свидетель той же пары норм, и L0
+// здесь считает та же функция `loyer_minimal_calcule` модуля 04: отсылка
+// дословно совпадает, и расходиться реализациям было бы нечем. До июля
+// 2022 года — та же старая таблица (`loyer_minimal_avant_2022` модуля 04).
+// D. 842-9 al. 2: плафон не ниже значения на вселение при первой оккупации
+// получателем (факты premiere_occupation/vintage_entree_lieux).
+// D. 842-11 al. 3: коэффициент — только 1°/3° R. 842-5 и заём после
+// 01.07.1999 (факты dette_accession_allocation/pret_allocation_date_signature).
+//
+// КОЭФФИЦИЕНТА K НЕТ по той же причине, что в модулях 04 и 05: формула 2°
+// D. 832-25 в открытых данных LEGI отдана картинкой. Множитель cm второй ветви
+// (21 420,91 €, ст. 30) и потолок 0,90 в тексте есть.
+//
+// ЧЕМ ЭТОТ СЕКТОР ОТЛИЧАЕТСЯ ОТ APL-ПРИОБРЕТЕНИЯ (модуль 05):
+//   * плафон берётся из ст. 33, а не ст. 18, и выбирается ДАТОЙ СЕРТИФИКАТА, а
+//     не датой подписания займа — другой факт, другое перечисление;
+//   * таблица ст. 33 несёт ВОСЕМЬ составов (до пяти иждивенцев поимённо), а
+//     ст. 18 — четыре;
+//   * L0 считается вторым абзацем D. 832-26, а не первым и не траншами ст. 23;
+//   * у пола ресурсов ДВЕ базы (D. 842-12): коэффициент на мензуальность либо
+//     фиксированные 3 900 €.
+//
+// ДЕЛА CATALA ЭТОГО СЕКТОРА В ОХВАТ НЕ ВХОДЯТ. Оба их дела
+// (`tests_calcul_al_accession_propriete`) заданы для Гваделупы и
+// Сен-Пьера-и-Микелона, то есть для заморских территорий: у них свои главы
+// арретэ (IX и X) и свой коэффициент выравнивания, в закреплённый охват не
+// входящие. Сверять наши числа с их ожиданиями поэтому НЕЛЬЗЯ — это были бы
+// числа другой нормы. Сценарии этого семейства закрепляют шаги, выведенные из
+// закреплённого текста, и названы `frontiere-al-accession-*`.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    ARR_ART31_ED2019_10,
+    ARR_ART31_ED2020_01,
+    ARR_ART31_ED2020_10,
+    ARR_ART31_ED2021_01,
+    ARR_ART31_ED2021_10,
+    ARR_ART31_ED2022_01,
+    ARR_ART31_ED2022_07,
+    ARR_ART31_ED2023_01,
+    ARR_ART31_ED2023_10,
+    ARR_ART31_ED2024_01,
+    ARR_ART31_ED2024_10,
+    ARR_ART31_ED2025_01,
+    ARR_ART31_ED2025_10,
+    ARR_ART33_ED2020_01,
+    ARR_ART33_ED2020_10,
+    ARR_ART33_ED2021_01,
+    ARR_ART33_ED2021_10,
+    ARR_ART33_ED2022_01,
+    ARR_ART33_ED2022_07,
+    ARR_ART33_ED2023_01,
+    ARR_ART33_ED2023_10,
+    ARR_ART33_ED2024_01,
+    ARR_ART33_ED2024_10,
+    ARR_ART33_ED2025_01,
+    ARR_ART33_ED2025_10,
+    ARR_ART34_ED2019_10,
+    ARR_ART34_ED2020_01,
+    ARR_ART34_ED2020_10,
+    ARR_ART34_ED2021_01,
+    ARR_ART34_ED2021_10,
+    ARR_ART34_ED2022_01,
+    ARR_ART34_ED2022_07,
+    ARR_ART34_ED2023_01,
+    ARR_ART34_ED2025_10,
+    ARR_ART34_ED2026_10,
+    ARR_ART37_ED2019_10,
+    ARR_ART37_ED2020_01,
+    ARR_ART37_ED2020_10,
+    ARR_ART37_ED2021_01,
+    ARR_ART37_ED2021_10,
+    ARR_ART37_ED2022_01,
+    ARR_ART37_ED2022_07,
+    ARR_ART37_ED2023_01,
+    ARR_ART37_ED2025_10,
+    ARR_ART37_ED2026_10,
+    ARR_ART38_ED2019_10,
+    ARR_ART38_ED2020_01,
+    ARR_ART38_ED2020_10,
+    ARR_ART38_ED2021_01,
+    ARR_ART38_ED2021_10,
+    ARR_ART38_ED2022_01,
+    ARR_ART38_ED2022_07,
+    ARR_ART38_ED2023_01,
+    ARR_ART38_ED2023_10,
+    ARR_ART38_ED2024_01,
+    ARR_ART38_ED2024_10,
+    ARR_ART38_ED2025_01,
+    ARR_ART38_ED2025_10,
+    ARR_ART39_ED2019_10,
+    ARR_ART39_ED2020_01,
+    ARR_ART39_ED2020_10,
+    ARR_ART39_ED2021_01,
+    ARR_ART39_ED2021_10,
+    ARR_ART39_ED2022_01,
+    ARR_ART39_ED2022_07,
+    ARR_ART39_ED2023_01,
+    ARR_ART39_ED2023_10,
+    ARR_ART39_ED2024_01,
+    ARR_ART39_ED2024_10,
+    ARR_ART39_ED2025_01,
+    ARR_ART39_ED2025_10,
+    ARR_ART46_ED2023_01,
+    ARR_ART46_ED2025_10,
+    ARR_ART46_ED2026_10,
+    BasePlancherRessources,
+    CCH_D832_26,
+    CCH_D832_26_ED2019_12,
+    CCH_D832_26_ED2020_01,
+    CCH_D832_26_ED2021_01,
+    CCH_D832_26_ED2023_04,
+    CCH_D832_26_ED2023_09,
+    CCH_D832_26_ED2023_12,
+    CCH_D832_26_ED2026_07,
+    CCH_D842_10,
+    CCH_D842_10_ED2019_12,
+    CCH_D842_10_ED2020_01,
+    CCH_D842_10_ED2021_01,
+    CCH_D842_10_ED2023_04,
+    CCH_D842_10_ED2023_09,
+    CCH_D842_10_ED2023_12,
+    CCH_D842_10_ED2026_07,
+    CCH_D842_11,
+    CCH_D842_11_ED2019_12,
+    CCH_D842_11_ED2020_01,
+    CCH_D842_11_ED2021_01,
+    CCH_D842_11_ED2023_04,
+    CCH_D842_11_ED2023_09,
+    CCH_D842_11_ED2023_12,
+    CCH_D842_11_ED2026_07,
+    CCH_D842_12,
+    CCH_D842_12_ED2019_12,
+    CCH_D842_12_ED2020_01,
+    CCH_D842_12_ED2021_01,
+    CCH_D842_12_ED2023_04,
+    CCH_D842_12_ED2023_09,
+    CCH_D842_12_ED2023_12,
+    CCH_D842_12_ED2026_07,
+    CCH_D842_6,
+    CCH_D842_6_ED2019_12,
+    CCH_D842_6_ED2020_01,
+    CCH_D842_6_ED2021_01,
+    CCH_D842_6_ED2023_04,
+    CCH_D842_6_ED2023_09,
+    CCH_D842_6_ED2023_12,
+    CCH_D842_6_ED2026_07,
+    CCH_D842_7,
+    CCH_D842_7_ED2019_12,
+    CCH_D842_7_ED2020_01,
+    CCH_D842_7_ED2021_01,
+    CCH_D842_7_ED2023_04,
+    CCH_D842_7_ED2023_09,
+    CCH_D842_7_ED2023_12,
+    CCH_D842_7_ED2026_07,
+    CCH_D842_9,
+    CCH_D842_9_ED2019_12,
+    CCH_D842_9_ED2020_01,
+    CCH_D842_9_ED2021_01,
+    CCH_D842_9_ED2023_04,
+    CCH_D842_9_ED2023_09,
+    CCH_D842_9_ED2023_12,
+    CCH_D842_9_ED2026_07,
+    DetteAccessionAllocation,
+    Menage,
+    ModePropriete,
+    SituationFamiliale,
+    Territoire,
+    VintageCertificatDate,
+    Zone,
+    base_plancher_ressources,
+    dette_accession_allocation,
+    loyer_minimal_avant_2022,
+    loyer_minimal_calcule,
+    mensualite_declaree,
+    mode_propriete,
+    nombre_coproprietaires,
+    personnes_a_charge,
+    pret_allocation_date_signature,
+    ressources_retenues,
+    secteur_accession_allocations,
+    situation_familiale,
+    situation_r822_11_13_17,
+    territoire,
+    vintage_certificat,
+    zone_du_logement,
+};
+
+// --- ст. 33 арретэ: плафон мензуальности ---------------------------------
+
+function plafond_mensualite_al_colonne(vintage: VintageCertificatDate,
+                                       zone: Zone,
+                                       situation: SituationFamiliale,
+                                       pac: Integer) -> Money {
+    let isole: Money = match vintage {
+        CERTIFICAT_DEPUIS_01_10_2015 => match zone {
+            ZONE_I => PlafondMensualiteALCert2015Zone1Isole;
+            ZONE_II => PlafondMensualiteALCert2015Zone2Isole;
+            ZONE_III => PlafondMensualiteALCert2015Zone3Isole;
+        };
+        CERTIFICAT_DEPUIS_01_10_2017 => match zone {
+            ZONE_I => PlafondMensualiteALCert2017Zone1Isole;
+            ZONE_II => PlafondMensualiteALCert2017Zone2Isole;
+            ZONE_III => PlafondMensualiteALCert2017Zone3Isole;
+        };
+        CERTIFICAT_DEPUIS_01_10_2019 => match zone {
+            ZONE_I => PlafondMensualiteALCert2019Zone1Isole;
+            ZONE_II => PlafondMensualiteALCert2019Zone2Isole;
+            ZONE_III => PlafondMensualiteALCert2019Zone3Isole;
+        };
+    };
+    let couples: Money = match vintage {
+        CERTIFICAT_DEPUIS_01_10_2015 => match zone {
+            ZONE_I => PlafondMensualiteALCert2015Zone1Couples;
+            ZONE_II => PlafondMensualiteALCert2015Zone2Couples;
+            ZONE_III => PlafondMensualiteALCert2015Zone3Couples;
+        };
+        CERTIFICAT_DEPUIS_01_10_2017 => match zone {
+            ZONE_I => PlafondMensualiteALCert2017Zone1Couples;
+            ZONE_II => PlafondMensualiteALCert2017Zone2Couples;
+            ZONE_III => PlafondMensualiteALCert2017Zone3Couples;
+        };
+        CERTIFICAT_DEPUIS_01_10_2019 => match zone {
+            ZONE_I => PlafondMensualiteALCert2019Zone1Couples;
+            ZONE_II => PlafondMensualiteALCert2019Zone2Couples;
+            ZONE_III => PlafondMensualiteALCert2019Zone3Couples;
+        };
+    };
+    let c1: Money = match vintage {
+        CERTIFICAT_DEPUIS_01_10_2015 => match zone {
+            ZONE_I => PlafondMensualiteALCert2015Zone1C1;
+            ZONE_II => PlafondMensualiteALCert2015Zone2C1;
+            ZONE_III => PlafondMensualiteALCert2015Zone3C1;
+        };
+        CERTIFICAT_DEPUIS_01_10_2017 => match zone {
+            ZONE_I => PlafondMensualiteALCert2017Zone1C1;
+            ZONE_II => PlafondMensualiteALCert2017Zone2C1;
+            ZONE_III => PlafondMensualiteALCert2017Zone3C1;
+        };
+        CERTIFICAT_DEPUIS_01_10_2019 => match zone {
+            ZONE_I => PlafondMensualiteALCert2019Zone1C1;
+            ZONE_II => PlafondMensualiteALCert2019Zone2C1;
+            ZONE_III => PlafondMensualiteALCert2019Zone3C1;
+        };
+    };
+    let c2: Money = match vintage {
+        CERTIFICAT_DEPUIS_01_10_2015 => match zone {
+            ZONE_I => PlafondMensualiteALCert2015Zone1C2;
+            ZONE_II => PlafondMensualiteALCert2015Zone2C2;
+            ZONE_III => PlafondMensualiteALCert2015Zone3C2;
+        };
+        CERTIFICAT_DEPUIS_01_10_2017 => match zone {
+            ZONE_I => PlafondMensualiteALCert2017Zone1C2;
+            ZONE_II => PlafondMensualiteALCert2017Zone2C2;
+            ZONE_III => PlafondMensualiteALCert2017Zone3C2;
+        };
+        CERTIFICAT_DEPUIS_01_10_2019 => match zone {
+            ZONE_I => PlafondMensualiteALCert2019Zone1C2;
+            ZONE_II => PlafondMensualiteALCert2019Zone2C2;
+            ZONE_III => PlafondMensualiteALCert2019Zone3C2;
+        };
+    };
+    let c3: Money = match vintage {
+        CERTIFICAT_DEPUIS_01_10_2015 => match zone {
+            ZONE_I => PlafondMensualiteALCert2015Zone1C3;
+            ZONE_II => PlafondMensualiteALCert2015Zone2C3;
+            ZONE_III => PlafondMensualiteALCert2015Zone3C3;
+        };
+        CERTIFICAT_DEPUIS_01_10_2017 => match zone {
+            ZONE_I => PlafondMensualiteALCert2017Zone1C3;
+            ZONE_II => PlafondMensualiteALCert2017Zone2C3;
+            ZONE_III => PlafondMensualiteALCert2017Zone3C3;
+        };
+        CERTIFICAT_DEPUIS_01_10_2019 => match zone {
+            ZONE_I => PlafondMensualiteALCert2019Zone1C3;
+            ZONE_II => PlafondMensualiteALCert2019Zone2C3;
+            ZONE_III => PlafondMensualiteALCert2019Zone3C3;
+        };
+    };
+    let c4: Money = match vintage {
+        CERTIFICAT_DEPUIS_01_10_2015 => match zone {
+            ZONE_I => PlafondMensualiteALCert2015Zone1C4;
+            ZONE_II => PlafondMensualiteALCert2015Zone2C4;
+            ZONE_III => PlafondMensualiteALCert2015Zone3C4;
+        };
+        CERTIFICAT_DEPUIS_01_10_2017 => match zone {
+            ZONE_I => PlafondMensualiteALCert2017Zone1C4;
+            ZONE_II => PlafondMensualiteALCert2017Zone2C4;
+            ZONE_III => PlafondMensualiteALCert2017Zone3C4;
+        };
+        CERTIFICAT_DEPUIS_01_10_2019 => match zone {
+            ZONE_I => PlafondMensualiteALCert2019Zone1C4;
+            ZONE_II => PlafondMensualiteALCert2019Zone2C4;
+            ZONE_III => PlafondMensualiteALCert2019Zone3C4;
+        };
+    };
+    let c5: Money = match vintage {
+        CERTIFICAT_DEPUIS_01_10_2015 => match zone {
+            ZONE_I => PlafondMensualiteALCert2015Zone1C5;
+            ZONE_II => PlafondMensualiteALCert2015Zone2C5;
+            ZONE_III => PlafondMensualiteALCert2015Zone3C5;
+        };
+        CERTIFICAT_DEPUIS_01_10_2017 => match zone {
+            ZONE_I => PlafondMensualiteALCert2017Zone1C5;
+            ZONE_II => PlafondMensualiteALCert2017Zone2C5;
+            ZONE_III => PlafondMensualiteALCert2017Zone3C5;
+        };
+        CERTIFICAT_DEPUIS_01_10_2019 => match zone {
+            ZONE_I => PlafondMensualiteALCert2019Zone1C5;
+            ZONE_II => PlafondMensualiteALCert2019Zone2C5;
+            ZONE_III => PlafondMensualiteALCert2019Zone3C5;
+        };
+    };
+    let majoration: Money = match vintage {
+        CERTIFICAT_DEPUIS_01_10_2015 => match zone {
+            ZONE_I => PlafondMensualiteALCert2015Zone1ParPersSupp;
+            ZONE_II => PlafondMensualiteALCert2015Zone2ParPersSupp;
+            ZONE_III => PlafondMensualiteALCert2015Zone3ParPersSupp;
+        };
+        CERTIFICAT_DEPUIS_01_10_2017 => match zone {
+            ZONE_I => PlafondMensualiteALCert2017Zone1ParPersSupp;
+            ZONE_II => PlafondMensualiteALCert2017Zone2ParPersSupp;
+            ZONE_III => PlafondMensualiteALCert2017Zone3ParPersSupp;
+        };
+        CERTIFICAT_DEPUIS_01_10_2019 => match zone {
+            ZONE_I => PlafondMensualiteALCert2019Zone1ParPersSupp;
+            ZONE_II => PlafondMensualiteALCert2019Zone2ParPersSupp;
+            ZONE_III => PlafondMensualiteALCert2019Zone3ParPersSupp;
+        };
+    };
+    let sans_pac: Money = match situation {
+        PERSONNE_SEULE => isole;
+        COUPLE => couples;
+    };
+    return if pac == 0 then sans_pac
+        else if pac == 1 then c1
+        else if pac == 2 then c2
+        else if pac == 3 then c3
+        else if pac == 4 then c4
+        else if pac == 5 then c5
+        else c5 + majoration * max(0, pac - 5);
+}
+
+// Ст. 37 1°: у сособственников плафон есть 75 % плафона ст. 33.
+function part_plafond_al_selon_propriete(mode: ModePropriete) -> Decimal = match mode {
+    PROPRIETAIRE_UNIQUE => 1.0;
+    COPROPRIETAIRE => PartCoproprietairePlafondAL;
+};
+
+// --- ст. 34 и ст. 37 2°: форфейт расходов --------------------------------
+
+// Ст. 46 2° a) заменяет форфейт расходов ст. 34, а 2° b) — суммы сособственников
+// ст. 37, и обе замены действуют для семи территорий списка. Сен-Пьер-и-Микелон
+// в ст. 46 НЕ входит: ст. 47 говорит только о главе VII и о форфейте R0,
+// поэтому в секторе приобретения он считается по значениям метрополии. Это не
+// умолчание, а чтение двух статей: список территорий ст. 46 закрыт.
+function forfait_charges_al_accession_calcule(mode: ModePropriete,
+                                              situation: SituationFamiliale,
+                                              pac: Integer,
+                                              zone_geo: Territoire) -> Money {
+    return match zone_geo {
+        METROPOLE => match mode {
+            PROPRIETAIRE_UNIQUE => ForfaitChargesALAccessionBase
+                + ForfaitChargesALAccessionParPacSup * pac;
+            COPROPRIETAIRE => (match situation {
+                PERSONNE_SEULE => ForfaitChargesCoproALIsole;
+                COUPLE => ForfaitChargesCoproALCouple;
+            }) + ForfaitChargesCoproALMajoration * pac;
+        };
+        OUTRE_MER => match mode {
+            PROPRIETAIRE_UNIQUE => ForfaitChargesBaseOutreMer
+                + ForfaitChargesParPacSupOutreMer * pac;
+            COPROPRIETAIRE => (match situation {
+                PERSONNE_SEULE => ForfaitChargesPartageIsoleOutreMer;
+                COUPLE => ForfaitChargesPartageCoupleOutreMer;
+            }) + ForfaitChargesPartageMajorationOutreMer * pac;
+        };
+        SAINT_PIERRE_ET_MIQUELON => match mode {
+            PROPRIETAIRE_UNIQUE => ForfaitChargesALAccessionBase
+                + ForfaitChargesALAccessionParPacSup * pac;
+            COPROPRIETAIRE => (match situation {
+                PERSONNE_SEULE => ForfaitChargesCoproALIsole;
+                COUPLE => ForfaitChargesCoproALCouple;
+            }) + ForfaitChargesCoproALMajoration * pac;
+        };
+    };
+}
+
+// --- D. 842-12: пол ресурсов двумя базами -------------------------------
+
+function plancher_ressources_al_calcule(base: BasePlancherRessources,
+                                        declaree: Money) -> Money = match base {
+    COEFFICIENT_MENSUALITE => declaree * CoefPlancherRessourcesAL;
+    MONTANT_FORFAITAIRE => ForfaitPlancherRessourcesAL;
+};
+
+// Голый параметр СТОИТ в голове правила у соседей (`DepenseNetteMinimaleALF`
+// модуля 04), и `check` такую форму принимает — но на исполнении заключение не
+// появляется вовсе: замер 14.09.2026 дал `truth_status NEITHER` при зелёной
+// статике. Поэтому даже одно-параметровый шаг идёт через функцию: она читает
+// параметр по оси `legal_time` так же, как все прочие функции барема.
+
+function depense_nette_minimale_al_calculee() -> Money = DepenseNetteMinimaleALAccession;
+
+function coefficient_depense_nette_al_calcule() -> Decimal = CoefDepenseNetteALAccession;
+
+// --- шаги расчёта как заключения норм ------------------------------------
+
+pub relation plafond_mensualite_al(m: Menage, plafond: Money) kind institutional {
+    key(m);
+    label fr official "mensualité plafond des allocations en secteur accession";
+    label ru unofficial "плафон мензуальности аллокаций сектора приобретения";
+}
+
+// --- D. 842-9 al. 2 : plancher du plafond à l'entrée dans les lieux --------
+// Le plafond retenu ne peut être inférieur à celui applicable au moment de
+// l'entrée dans les lieux, sous réserve d'un local habité pour la première
+// fois par l'allocataire. Le millésime d'entrée est un fait de dossier
+// (même énumération VintageCertificatDate que le certificat daté) ; sans
+// fait de première occupation, le plafond du certificat s'applique seul.
+
+pub relation premiere_occupation_allocataire_al(m: Menage) kind empirical {
+    label fr official "local habité pour la première fois par l'allocataire au sens de l'article D. 842-9 (constat)";
+    label ru unofficial "жильё впервые занято получателем по ст. D. 842-9 (факт дела)";
+}
+
+pub relation vintage_entree_lieux_al(m: Menage, vintage: VintageCertificatDate) kind empirical {
+    key(m);
+    label fr official "millésime de l'article 33 applicable au moment de l'entrée dans les lieux (fait de dossier D. 842-9)";
+    label ru unofficial "винтаж ст. 33 на момент вселения (факт дела D. 842-9)";
+}
+
+pub relation plafond_mensualite_al_entree_lieux(m: Menage, plafond: Money) kind institutional {
+    key(m);
+    label fr official "mensualité plafond applicable au moment de l'entrée dans les lieux (plancher D. 842-9)";
+    label ru unofficial "плафон мензуальности на момент вселения (пол D. 842-9)";
+}
+
+pub relation mensualite_eligible_al(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "L: mensualité éligible des allocations en secteur accession";
+    label ru unofficial "L: мензуальность аллокаций, взятая в пределах плафона";
+}
+
+pub relation forfait_charges_al_accession(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "C: montant forfaitaire des charges des allocations en secteur accession";
+    label ru unofficial "C: форфейт расходов аллокаций сектора приобретения";
+}
+
+pub relation mensualite_minimale_al(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "L0: mensualité minimale des allocations en secteur accession";
+    label ru unofficial "L0: минимальная мензуальность аллокаций сектора приобретения";
+}
+
+pub relation plancher_ressources_al(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "plancher de ressources de l'article D. 842-12";
+    label ru unofficial "пол ресурсов ст. D. 842-12";
+}
+
+pub relation depense_nette_minimale_al(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "montant minimum de dépense nette de logement de l'article D. 842-11";
+    label ru unofficial "минимальный чистый расход ст. D. 842-11";
+}
+
+pub relation coefficient_depense_nette_al(m: Menage, coefficient: Decimal) kind institutional {
+    key(m);
+    label fr official "coefficient de la dépense nette minimale du troisième alinéa de l'article D. 842-11";
+    label ru unofficial "коэффициент минимального чистого расхода ст. D. 842-11";
+}
+
+@source(CCH_D842_6, CCH_D842_6_ED2019_12, CCH_D842_6_ED2020_01,
+        CCH_D842_6_ED2021_01, CCH_D842_6_ED2023_04, CCH_D842_6_ED2023_09,
+        CCH_D842_6_ED2023_12, CCH_D842_6_ED2026_07, ARR_ART33_ED2020_01,
+        ARR_ART33_ED2020_10, ARR_ART33_ED2021_01, ARR_ART33_ED2021_10,
+        ARR_ART33_ED2022_01, ARR_ART37_ED2019_10, ARR_ART37_ED2020_01,
+        ARR_ART37_ED2020_10, ARR_ART37_ED2021_01, ARR_ART37_ED2021_10,
+        ARR_ART37_ED2022_01, ARR_ART33_ED2022_07, ARR_ART33_ED2023_01,
+        ARR_ART33_ED2023_10, ARR_ART33_ED2024_01, ARR_ART33_ED2024_10,
+        ARR_ART33_ED2025_01, ARR_ART33_ED2025_10, ARR_ART37_ED2025_10,
+        ARR_ART37_ED2026_10)
+rule PlafondMensualiteAL(m: Menage, vintage: VintageCertificatDate, zone: Zone,
+                         situation: SituationFamiliale, pac: Integer,
+                         mode: ModePropriete) strict {
+    label fr official "L correspond à la mensualité principale, prise en compte dans la limite d'un plafond fixé par arrêté en fonction de la zone géographique et de la composition familiale";
+    label ru unofficial "плафон мензуальности аллокаций по зоне, составу и винтажу сертификата";
+    when secteur_accession_allocations(m) and vintage_certificat(m, vintage)
+        and zone_du_logement(m, zone) and situation_familiale(m, situation)
+        and personnes_a_charge(m, pac) and mode_propriete(m, mode);
+    then plafond_mensualite_al(m,
+        plafond_mensualite_al_colonne(vintage, zone, situation, pac)
+        * part_plafond_al_selon_propriete(mode));
+}
+
+@source(CCH_D842_9, CCH_D842_9_ED2019_12, CCH_D842_9_ED2020_01,
+        CCH_D842_9_ED2021_01, CCH_D842_9_ED2023_04, CCH_D842_9_ED2023_09,
+        CCH_D842_9_ED2023_12, CCH_D842_9_ED2026_07, ARR_ART33_ED2020_01,
+        ARR_ART33_ED2020_10, ARR_ART33_ED2021_01, ARR_ART33_ED2021_10,
+        ARR_ART33_ED2022_01, ARR_ART33_ED2022_07, ARR_ART33_ED2023_01,
+        ARR_ART33_ED2023_10, ARR_ART33_ED2024_01, ARR_ART33_ED2024_10,
+        ARR_ART33_ED2025_01, ARR_ART33_ED2025_10)
+rule PlafondMensualiteALEntreeLieux(m: Menage, vintage: VintageCertificatDate, zone: Zone,
+                         situation: SituationFamiliale, pac: Integer,
+                         mode: ModePropriete) strict {
+    label fr official "le plafond retenu ne peut être inférieur à celui applicable au moment de l'entrée dans les lieux, pour un local habité pour la première fois par l'allocataire";
+    label ru unofficial "пол плафона: значение на момент вселения для впервые занятого получателем жилья (D. 842-9)";
+    when secteur_accession_allocations(m) and premiere_occupation_allocataire_al(m)
+        and vintage_entree_lieux_al(m, vintage)
+        and zone_du_logement(m, zone) and situation_familiale(m, situation)
+        and personnes_a_charge(m, pac) and mode_propriete(m, mode);
+    then plafond_mensualite_al_entree_lieux(m,
+        plafond_mensualite_al_colonne(vintage, zone, situation, pac)
+        * part_plafond_al_selon_propriete(mode));
+}
+
+@source(CCH_D842_6, CCH_D842_6_ED2019_12, CCH_D842_6_ED2020_01,
+        CCH_D842_6_ED2021_01, CCH_D842_6_ED2023_04, CCH_D842_6_ED2023_09,
+        CCH_D842_6_ED2023_12, CCH_D842_6_ED2026_07, CCH_D842_7,
+        CCH_D842_7_ED2019_12, CCH_D842_7_ED2020_01, CCH_D842_7_ED2021_01,
+        CCH_D842_7_ED2023_04, CCH_D842_7_ED2023_09, CCH_D842_7_ED2023_12,
+        CCH_D842_7_ED2026_07)
+rule MensualiteEligibleAL(m: Menage, declaree: Money, plafond: Money) strict {
+    label fr official "L correspond à la mensualité principale, déterminée selon les dispositions des articles D. 842-7 à D. 842-10, prise en compte dans la limite d'un plafond";
+    label ru unofficial "L: заявленная мензуальность аллокаций, ограниченная плафоном (без первой оккупации)";
+    when secteur_accession_allocations(m) and mode_propriete(m, PROPRIETAIRE_UNIQUE)
+        and mensualite_declaree(m, declaree)
+        and plafond_mensualite_al(m, plafond)
+        and not_known(premiere_occupation_allocataire_al(m));
+    then mensualite_eligible_al(m, min(declaree, plafond));
+}
+
+@source(CCH_D842_6, CCH_D842_6_ED2019_12, CCH_D842_6_ED2020_01,
+        CCH_D842_6_ED2021_01, CCH_D842_6_ED2023_04, CCH_D842_6_ED2023_09,
+        CCH_D842_6_ED2023_12, CCH_D842_6_ED2026_07, CCH_D842_9,
+        CCH_D842_9_ED2019_12, CCH_D842_9_ED2020_01, CCH_D842_9_ED2021_01,
+        CCH_D842_9_ED2023_04, CCH_D842_9_ED2023_09, CCH_D842_9_ED2023_12,
+        CCH_D842_9_ED2026_07)
+rule MensualiteEligibleALPremiereOccupation(m: Menage, declaree: Money, plafond: Money, plancher: Money) strict {
+    label fr official "première occupation par l'allocataire : L est prise en compte dans la limite du plafond relevé au plancher de l'entrée dans les lieux (D. 842-9)";
+    label ru unofficial "L при первой оккупации получателем: плафон, поднятый до пола вселения (D. 842-9)";
+    when secteur_accession_allocations(m) and mode_propriete(m, PROPRIETAIRE_UNIQUE)
+        and mensualite_declaree(m, declaree)
+        and plafond_mensualite_al(m, plafond)
+        and plafond_mensualite_al_entree_lieux(m, plancher);
+    then mensualite_eligible_al(m, min(declaree, max(plafond, plancher)));
+}
+
+// D. 842-10 1°: когда одно жильё занимают несколько отдельных домохозяйств,
+// сособственных и содолжных по займу, мензуальность каждого есть ЧАСТНОЕ
+// учтённых платежей на число сособственников, и лишь затем — в пределах
+// плафона, соответствующего составу каждого из них. Поэтому у сособственника
+// своё правило: делитель приходит фактом дела, и на не-10-гладком частном §58
+// отказывает (`INEXACT_DIVISION`) вместо молчаливого округления — норма делить
+// велит, а политики округления не называет.
+@source(CCH_D842_10, CCH_D842_10_ED2019_12, CCH_D842_10_ED2020_01,
+        CCH_D842_10_ED2021_01, CCH_D842_10_ED2023_04, CCH_D842_10_ED2023_09,
+        CCH_D842_10_ED2023_12, CCH_D842_10_ED2026_07, CCH_D842_7,
+        CCH_D842_7_ED2019_12, CCH_D842_7_ED2020_01, CCH_D842_7_ED2021_01,
+        CCH_D842_7_ED2023_04, CCH_D842_7_ED2023_09, CCH_D842_7_ED2023_12,
+        CCH_D842_7_ED2026_07)
+rule MensualiteEligibleALCopropriete(m: Menage, declaree: Money, plafond: Money,
+                                     nombre: Decimal) strict {
+    label fr official "la mensualité L représente le quotient de la somme prise en compte au titre des charges mentionnées à l'article D. 842-7 par le nombre de copropriétaires, cotitulaires du prêt ouvrant droit à l'allocation de logement, le résultat étant pris en compte dans la limite de la mensualité plafond qui correspond à la situation familiale de chacun des intéressés";
+    label ru unofficial "L сособственника: платежи делятся на число сособственников, затем плафон (без первой оккупации)";
+    when secteur_accession_allocations(m) and mode_propriete(m, COPROPRIETAIRE)
+        and mensualite_declaree(m, declaree) and nombre_coproprietaires(m, nombre)
+        and plafond_mensualite_al(m, plafond)
+        and not_known(premiere_occupation_allocataire_al(m));
+    then mensualite_eligible_al(m, min(declaree / nombre, plafond));
+}
+
+@source(CCH_D842_10, CCH_D842_10_ED2019_12, CCH_D842_10_ED2020_01,
+        CCH_D842_10_ED2021_01, CCH_D842_10_ED2023_04, CCH_D842_10_ED2023_09,
+        CCH_D842_10_ED2023_12, CCH_D842_10_ED2026_07, CCH_D842_9,
+        CCH_D842_9_ED2019_12, CCH_D842_9_ED2020_01, CCH_D842_9_ED2021_01,
+        CCH_D842_9_ED2023_04, CCH_D842_9_ED2023_09, CCH_D842_9_ED2023_12,
+        CCH_D842_9_ED2026_07)
+rule MensualiteEligibleALCoproprietePremiereOccupation(m: Menage, declaree: Money, plafond: Money,
+                                     nombre: Decimal, plancher: Money) strict {
+    label fr official "première occupation par l'allocataire : le quotient du copropriétaire est pris en compte dans la limite du plafond relevé au plancher de l'entrée dans les lieux (D. 842-9)";
+    label ru unofficial "L сособственника при первой оккупации получателем: частное в пределах плафона, поднятого до пола вселения (D. 842-9)";
+    when secteur_accession_allocations(m) and mode_propriete(m, COPROPRIETAIRE)
+        and mensualite_declaree(m, declaree) and nombre_coproprietaires(m, nombre)
+        and plafond_mensualite_al(m, plafond)
+        and plafond_mensualite_al_entree_lieux(m, plancher);
+    then mensualite_eligible_al(m, min(declaree / nombre, max(plafond, plancher)));
+}
+
+@source(CCH_D842_6, CCH_D842_6_ED2019_12, CCH_D842_6_ED2020_01,
+        CCH_D842_6_ED2021_01, CCH_D842_6_ED2023_04, CCH_D842_6_ED2023_09,
+        CCH_D842_6_ED2023_12, CCH_D842_6_ED2026_07, ARR_ART34_ED2019_10,
+        ARR_ART34_ED2020_01, ARR_ART34_ED2020_10, ARR_ART34_ED2021_01,
+        ARR_ART34_ED2021_10, ARR_ART34_ED2022_01, ARR_ART34_ED2022_07,
+        ARR_ART34_ED2023_01, ARR_ART37_ED2019_10, ARR_ART37_ED2020_01,
+        ARR_ART37_ED2020_10, ARR_ART37_ED2021_01, ARR_ART37_ED2021_10,
+        ARR_ART37_ED2022_01, ARR_ART37_ED2022_07, ARR_ART37_ED2023_01,
+        ARR_ART46_ED2023_01, ARR_ART34_ED2025_10, ARR_ART37_ED2025_10,
+        ARR_ART46_ED2025_10,
+        ARR_ART34_ED2026_10, ARR_ART37_ED2026_10, ARR_ART46_ED2026_10)
+rule ForfaitChargesALAccession(m: Menage, mode: ModePropriete,
+                               situation: SituationFamiliale, pac: Integer,
+                               zone_geo: Territoire) strict {
+    label fr official "C est le montant forfaitaire au titre des charges, fixé par arrêté en fonction de la composition familiale";
+    label ru unofficial "C: форфейт расходов по составу домохозяйства и территории";
+    when secteur_accession_allocations(m) and mode_propriete(m, mode)
+        and situation_familiale(m, situation) and personnes_a_charge(m, pac)
+        and territoire(m, zone_geo);
+    then forfait_charges_al_accession(m,
+        forfait_charges_al_accession_calcule(mode, situation, pac, zone_geo));
+}
+
+// L0 — тот же второй абзац D. 832-26, что у аллокаций сектора фойе, и та же
+// функция: доли N из d пункта 2° D. 832-25, форфейт БЕЗ умножения на N.
+@source(CCH_D842_6, CCH_D842_6_ED2019_12, CCH_D842_6_ED2020_01,
+        CCH_D842_6_ED2021_01, CCH_D842_6_ED2023_04, CCH_D842_6_ED2023_09,
+        CCH_D842_6_ED2023_12, CCH_D842_6_ED2026_07, CCH_D832_26,
+        CCH_D832_26_ED2019_12, CCH_D832_26_ED2020_01, CCH_D832_26_ED2021_01,
+        CCH_D832_26_ED2023_04, CCH_D832_26_ED2023_09, CCH_D832_26_ED2023_12,
+        CCH_D832_26_ED2026_07, ARR_ART31_ED2022_07, ARR_ART31_ED2023_01,
+        ARR_ART31_ED2023_10, ARR_ART31_ED2024_01, ARR_ART31_ED2024_10,
+        ARR_ART31_ED2025_01, ARR_ART31_ED2025_10)
+rule MensualiteMinimaleAL(m: Menage, situation: SituationFamiliale,
+                          pac: Integer, ressources: Money) strict {
+    label fr official "L0 est la mensualité minimale, calculée selon les dispositions du deuxième alinéa de l'article D. 832-26, dans lesquelles elle se substitue à E0";
+    label ru unofficial "L0: второй абзац D. 832-26 с подстановкой L0 вместо E0 (таблица с 01.07.2022)";
+    effective [@2022-07-01, infinity);
+    when secteur_accession_allocations(m) and situation_familiale(m, situation)
+        and personnes_a_charge(m, pac) and ressources_retenues(m, ressources);
+    then mensualite_minimale_al(m, loyer_minimal_calcule(situation, pac, ressources));
+}
+
+@source(CCH_D842_6, CCH_D842_6_ED2019_12, CCH_D842_6_ED2020_01,
+        CCH_D842_6_ED2021_01, CCH_D842_6_ED2023_04, CCH_D842_6_ED2023_09,
+        CCH_D842_6_ED2023_12, CCH_D842_6_ED2026_07, CCH_D832_26,
+        CCH_D832_26_ED2019_12, CCH_D832_26_ED2020_01, CCH_D832_26_ED2021_01,
+        CCH_D832_26_ED2023_04, CCH_D832_26_ED2023_09,
+        CCH_D832_26_ED2023_12, CCH_D832_26_ED2026_07, ARR_ART31_ED2019_10,
+        ARR_ART31_ED2020_01, ARR_ART31_ED2020_10, ARR_ART31_ED2021_01,
+        ARR_ART31_ED2021_10, ARR_ART31_ED2022_01)
+rule MensualiteMinimaleALAvantJuillet2022(m: Menage, situation: SituationFamiliale,
+                          pac: Integer, ressources: Money) strict {
+    label fr official "L0 est la mensualité minimale, calculée selon les dispositions du deuxième alinéa de l'article D. 832-26, dans lesquelles elle se substitue à E0";
+    label ru unofficial "L0 до июля 2022 года: единая таблица транш ст. 31";
+    effective [@2021-01-01, @2022-07-01);
+    when secteur_accession_allocations(m) and situation_familiale(m, situation)
+        and personnes_a_charge(m, pac) and ressources_retenues(m, ressources);
+    then mensualite_minimale_al(m, loyer_minimal_avant_2022(situation, pac, ressources));
+}
+
+@source(CCH_D842_12, CCH_D842_12_ED2019_12, CCH_D842_12_ED2020_01,
+        CCH_D842_12_ED2021_01, CCH_D842_12_ED2023_04, CCH_D842_12_ED2023_09,
+        CCH_D842_12_ED2023_12, CCH_D842_12_ED2026_07, ARR_ART39_ED2019_10,
+        ARR_ART39_ED2020_01, ARR_ART39_ED2020_10, ARR_ART39_ED2021_01,
+        ARR_ART39_ED2021_10, ARR_ART39_ED2022_01, ARR_ART39_ED2022_07,
+        ARR_ART39_ED2023_01, ARR_ART39_ED2023_10, ARR_ART39_ED2024_01,
+        ARR_ART39_ED2024_10, ARR_ART39_ED2025_01, ARR_ART39_ED2025_10)
+rule PlancherRessourcesAL(m: Menage, base: BasePlancherRessources,
+                          declaree: Money) strict {
+    label fr official "si les ressources sont inférieures à un montant égal au produit d'un coefficient et de la mensualité déclarée, ou à un montant forfaitaire, ces ressources sont portées à ce montant sauf dans les situations mentionnées aux articles R. 822-11 et R. 822-13 à R. 822-17";
+    label ru unofficial "пол ресурсов: коэффициент на мензуальность либо форфейт, кроме ситуаций R. 822-11 и R. 822-13…R. 822-17";
+    when secteur_accession_allocations(m) and base_plancher_ressources(m, base)
+        and mensualite_declaree(m, declaree)
+        and situation_r822_11_13_17(m, false);
+    then plancher_ressources_al(m, plancher_ressources_al_calcule(base, declaree));
+}
+
+@source(CCH_D842_11, CCH_D842_11_ED2019_12, CCH_D842_11_ED2020_01,
+        CCH_D842_11_ED2021_01, CCH_D842_11_ED2023_04, CCH_D842_11_ED2023_09,
+        CCH_D842_11_ED2023_12, CCH_D842_11_ED2026_07, ARR_ART38_ED2019_10,
+        ARR_ART38_ED2020_01, ARR_ART38_ED2020_10, ARR_ART38_ED2021_01,
+        ARR_ART38_ED2021_10, ARR_ART38_ED2022_01, ARR_ART38_ED2022_07,
+        ARR_ART38_ED2023_01, ARR_ART38_ED2023_10, ARR_ART38_ED2024_01,
+        ARR_ART38_ED2024_10, ARR_ART38_ED2025_01, ARR_ART38_ED2025_10)
+rule DepenseNetteMinimaleAL(m: Menage) strict {
+    label fr official "lorsque la dépense nette minimale est inférieure à un montant fixé par arrêté, il est procédé à un abattement sur le montant mensuel de l'allocation égal à la différence constatée";
+    label ru unofficial "минимум чистого расхода аллокаций сектора приобретения";
+    when secteur_accession_allocations(m);
+    then depense_nette_minimale_al(m, depense_nette_minimale_al_calculee());
+}
+
+@source(CCH_D842_11, CCH_D842_11_ED2019_12, CCH_D842_11_ED2020_01,
+        CCH_D842_11_ED2021_01, CCH_D842_11_ED2023_04, CCH_D842_11_ED2023_09,
+        CCH_D842_11_ED2023_12, CCH_D842_11_ED2026_07, ARR_ART38_ED2019_10,
+        ARR_ART38_ED2020_01, ARR_ART38_ED2020_10, ARR_ART38_ED2021_01,
+        ARR_ART38_ED2021_10, ARR_ART38_ED2022_01, ARR_ART38_ED2022_07,
+        ARR_ART38_ED2023_01, ARR_ART38_ED2023_10, ARR_ART38_ED2024_01,
+        ARR_ART38_ED2024_10, ARR_ART38_ED2025_01, ARR_ART38_ED2025_10)
+rule CoefficientDepenseNetteALAccession(m: Menage, signature: Date) strict {
+    label fr official "dans le cas mentionné au 1° de l'article R. 842-5, lorsque le contrat de prêt a été signé après le 1er juillet 1999, la dépense nette minimale pour effectuer l'abattement doit être inférieure au produit des ressources par un coefficient fixé par arrêté";
+    label ru unofficial "коэффициент минимального чистого расхода третьего абзаца D. 842-11 (1° R. 842-5, заём после 01.07.1999)";
+    when secteur_accession_allocations(m)
+        and dette_accession_allocation(m, DETTE_ACCESSION_PROPRIETE)
+        and pret_allocation_date_signature(m, signature)
+        and signature > @1999-07-01;
+    then coefficient_depense_nette_al(m, coefficient_depense_nette_al_calcule());
+}
+
+@source(CCH_D842_11, CCH_D842_11_ED2019_12, CCH_D842_11_ED2020_01,
+        CCH_D842_11_ED2021_01, CCH_D842_11_ED2023_04, CCH_D842_11_ED2023_09,
+        CCH_D842_11_ED2023_12, CCH_D842_11_ED2026_07, ARR_ART38_ED2019_10,
+        ARR_ART38_ED2020_01, ARR_ART38_ED2020_10, ARR_ART38_ED2021_01,
+        ARR_ART38_ED2021_10, ARR_ART38_ED2022_01, ARR_ART38_ED2022_07,
+        ARR_ART38_ED2023_01, ARR_ART38_ED2023_10, ARR_ART38_ED2024_01,
+        ARR_ART38_ED2024_10, ARR_ART38_ED2025_01, ARR_ART38_ED2025_10)
+rule CoefficientDepenseNetteALAgrandissement(m: Menage, signature: Date) strict {
+    label fr official "dans le cas mentionné au 3° de l'article R. 842-5, lorsque le contrat de prêt a été signé après le 1er juillet 1999, la dépense nette minimale pour effectuer l'abattement doit être inférieure au produit des ressources par un coefficient fixé par arrêté";
+    label ru unofficial "коэффициент минимального чистого расхода третьего абзаца D. 842-11 (3° R. 842-5, заём после 01.07.1999)";
+    when secteur_accession_allocations(m)
+        and dette_accession_allocation(m, DETTE_AGRANDISSEMENT_AMENAGEMENT)
+        and pret_allocation_date_signature(m, signature)
+        and signature > @1999-07-01;
+    then coefficient_depense_nette_al(m, coefficient_depense_nette_al_calcule());
+}

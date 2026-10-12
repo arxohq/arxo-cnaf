@@ -1,0 +1,103 @@
+// Couple, deux revenus de 600.00 par mois (chacun sous 59 x SMIC 11.65 = 687.35: pas de bonification), aide au logement 200.00,
+// révision 2024-09 (ancienne rédaction de R. 843-1: mois 2024-06..08), AUCUNE base n'est fournie: montant forfaitaire du décret 2024-403
+// (622.63), couple x 1.5 = 933.945; fraction 61 % de 1200.00 = 732.0000; forfait logement 16 % x 933.945 = 149.43120
+// (aide 200.00 plafonnée); ressources 1200.00 + 149.43120 = 1349.43120; prime = 933.945 + 732.0000 - 1349.43120 = 316.51380; moyenne de trois mois égaux.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+// prime due 316.51380
+test "urn:query:fr-ppa-prime-couple-al-2024" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2024-09-15T12:00:00Z; knowledge_time @2024-09-15T12:00:00Z; legal_time @2024-09-15; timezone "Europe/Paris"; }
+        assert "prime-couple-al-2024-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-06-01, COUPLE) { origin case_input; }
+        assert "prime-couple-al-2024-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-06-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-03": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-06-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-04": smic_horaire_retenu(@2024-06-01, 11.65 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-05": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-06-01, AIDE) { origin case_input; }
+        assert "prime-couple-al-2024-06": aide_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-06-01, 200.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-07": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-06-01, 1200.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-08": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-07-01, COUPLE) { origin case_input; }
+        assert "prime-couple-al-2024-09": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-07-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-10": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-07-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-11": smic_horaire_retenu(@2024-07-01, 11.65 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-12": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-07-01, AIDE) { origin case_input; }
+        assert "prime-couple-al-2024-13": aide_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-07-01, 200.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-14": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-07-01, 1200.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-15": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-08-01, COUPLE) { origin case_input; }
+        assert "prime-couple-al-2024-16": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-08-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-17": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-08-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-18": smic_horaire_retenu(@2024-08-01, 11.65 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-19": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-08-01, AIDE) { origin case_input; }
+        assert "prime-couple-al-2024-20": aide_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-08-01, 200.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-21": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-08-01, 1200.00 EUR) { origin case_input; }
+        assert "prime-couple-al-2024-22": mois_revue(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), @2024-09-01) { origin case_input; }
+        assert "prime-couple-al-2024-23": minimum_paiement_retenu(@2024-09-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:prime-couple-al-2024"), 316.51380 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// même foyer, logement à titre gratuit: forfait en nature 149.43120, prime 316.51380
+test "urn:query:fr-ppa-prime-couple-nature-2024" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2024-09-15T12:00:00Z; knowledge_time @2024-09-15T12:00:00Z; legal_time @2024-09-15; timezone "Europe/Paris"; }
+        assert "prime-couple-nature-2024-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-06-01, COUPLE) { origin case_input; }
+        assert "prime-couple-nature-2024-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-06-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-03": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-06-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-04": smic_horaire_retenu(@2024-06-01, 11.65 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-05": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-06-01, NATURE) { origin case_input; }
+        assert "prime-couple-nature-2024-06": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-06-01, 1200.00 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-07": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-07-01, COUPLE) { origin case_input; }
+        assert "prime-couple-nature-2024-08": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-07-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-09": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-07-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-10": smic_horaire_retenu(@2024-07-01, 11.65 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-11": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-07-01, NATURE) { origin case_input; }
+        assert "prime-couple-nature-2024-12": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-07-01, 1200.00 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-13": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-08-01, COUPLE) { origin case_input; }
+        assert "prime-couple-nature-2024-14": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-08-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-15": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-08-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-16": smic_horaire_retenu(@2024-08-01, 11.65 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-17": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-08-01, NATURE) { origin case_input; }
+        assert "prime-couple-nature-2024-18": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-08-01, 1200.00 EUR) { origin case_input; }
+        assert "prime-couple-nature-2024-19": mois_revue(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), @2024-09-01) { origin case_input; }
+        assert "prime-couple-nature-2024-20": minimum_paiement_retenu(@2024-09-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:prime-couple-nature-2024"), 316.51380 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// même foyer, sans élément de logement: ressources 1200.00 < forfait 933.945? non: 1200.00 >= 933.945? True; prime 465.9450
+test "urn:query:fr-ppa-prime-couple-sans-2024" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2024-09-15T12:00:00Z; knowledge_time @2024-09-15T12:00:00Z; legal_time @2024-09-15; timezone "Europe/Paris"; }
+        assert "prime-couple-sans-2024-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-06-01, COUPLE) { origin case_input; }
+        assert "prime-couple-sans-2024-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-06-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-03": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-06-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-04": smic_horaire_retenu(@2024-06-01, 11.65 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-05": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-06-01, SANS) { origin case_input; }
+        assert "prime-couple-sans-2024-06": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-06-01, 1200.00 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-07": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-07-01, COUPLE) { origin case_input; }
+        assert "prime-couple-sans-2024-08": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-07-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-09": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-07-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-10": smic_horaire_retenu(@2024-07-01, 11.65 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-11": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-07-01, SANS) { origin case_input; }
+        assert "prime-couple-sans-2024-12": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-07-01, 1200.00 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-13": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-08-01, COUPLE) { origin case_input; }
+        assert "prime-couple-sans-2024-14": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-08-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-15": revenus_pro_conjoint(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-08-01, 600.00 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-16": smic_horaire_retenu(@2024-08-01, 11.65 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-17": situation_logement_retenue(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-08-01, SANS) { origin case_input; }
+        assert "prime-couple-sans-2024-18": ressources_hors_logement_retenues(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-08-01, 1200.00 EUR) { origin case_input; }
+        assert "prime-couple-sans-2024-19": mois_revue(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), @2024-09-01) { origin case_input; }
+        assert "prime-couple-sans-2024-20": minimum_paiement_retenu(@2024-09-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:prime-couple-sans-2024"), 465.9450 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

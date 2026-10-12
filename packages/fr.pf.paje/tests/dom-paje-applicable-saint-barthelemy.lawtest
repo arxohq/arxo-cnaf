@@ -1,0 +1,17 @@
+// L. 755-19, para. 1 (FULL RETURN 03, R02-03): the household resides in
+// Saint-Barthélemy — named in the L. 751-1 list (D-76 context), so PAJE is
+// awarded under the Book V Title III conditions.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-applicable-saint-barthelemy" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-sb-01": territoire(entity_ref("urn:fr:paje:case:dom-sb"), SAINT_BARTHELEMY) { origin case_input; }
+    }
+    evaluate truth(paje_dom_applicable(entity_ref("urn:fr:paje:case:dom-sb")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

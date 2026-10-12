@@ -1,0 +1,48 @@
+// Delivery-method evidence (PA-FE09-03): a fully documented notice
+// with a timely request, but no proof it was sent by a means
+// conferring date-certain receipt. The D7 duty (director-qualified)
+// still ACTIVE, yet notice completeness, CRA interruption, the
+// implicit rejection and the recovery all stay undetermined
+// (R. 847-1-1 I, II, III).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-notification-moyen-incertain-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-09-10T12:00:00Z; knowledge_time @2026-09-10T12:00:00Z; legal_time @2026-09-10; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_recupere(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), 300.00 EUR) { origin case_input; }
+        assert "ppa-02": constat_indu(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-03": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026")) { origin case_input; }
+        assert "ppa-04": directeur_de(entity_ref("urn:fr:ppa:org:directeur"), entity_ref("urn:fr:ppa:org:caisse")) { origin case_input; }
+        assert "ppa-05": notification_recouvrement(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-06": notification_contenu_base(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-07": notification_modalites_rectification(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-08": notification_possibilite_recouvrement(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-09": notification_voies_recours(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-10": reception_notification(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-11": demande_rectification(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), @2026-06-10) { origin case_input; }
+        assert "ppa-12": date_observation_recours(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), @2026-09-10) { origin case_input; }
+        assert "ppa-13": absence_decision_rectification(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NotifierIndu, ACTIVE);
+    expect not position(NotifierRejetRectification, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(notification_recouvrement_complete(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026"), @2026-05-20));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(interruption_delai_cra(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_implicite_rectification(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recouvrement_apres_demande(entity_ref("urn:fr:ppa:case:notification-moyen-incertain-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

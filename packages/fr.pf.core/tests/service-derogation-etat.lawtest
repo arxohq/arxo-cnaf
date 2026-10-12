@@ -1,0 +1,20 @@
+// State service: war-victim allocataire - benefits served by the State (R. 514-1 2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-service-derogation-etat" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "service-derogation-etat-01": parent_charge(entity_ref("urn:fr:pf:case:victime"), entity_ref("urn:fr:pf:case:enfant-victime")) { origin case_input; }
+        assert "service-derogation-etat-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:victime"), entity_ref("urn:fr:pf:case:enfant-victime")) { origin adjudicated; }
+        assert "service-derogation-etat-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-victime")) { origin case_input; }
+        assert "service-derogation-etat-04": reside_france_stable(entity_ref("urn:fr:pf:case:victime")) { origin case_input; }
+        assert "service-derogation-etat-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-victime")) { origin case_input; }
+        assert "service-derogation-etat-06": victime_guerre_ou_ayant_cause(entity_ref("urn:fr:pf:case:victime")) { origin case_input; }
+    }
+    evaluate truth(service_etat(entity_ref("urn:fr:pf:case:victime")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

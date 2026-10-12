@@ -1,0 +1,21 @@
+// Residence: 2-month stay, 5-month insertion stay excluded, annual
+// total 2 months, complete classified history -> stable residence
+// (R. 842-1; PA-R4-04 positive history premise).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-ouverture-residence-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": sejour_duree(entity_ref("urn:fr:ppa:case:ouverture-residence-2026"), 1, 2) { origin case_input; }
+        assert "ppa-02": sejour_duree(entity_ref("urn:fr:ppa:case:ouverture-residence-2026"), 2, 5) { origin case_input; }
+        assert "ppa-03": sejour_insertion(entity_ref("urn:fr:ppa:case:ouverture-residence-2026"), 2) { origin case_input; }
+        assert "ppa-04": duree_totale_etrangere_annee(entity_ref("urn:fr:ppa:case:ouverture-residence-2026"), 2026, 2) { origin case_input; }
+        assert "ppa-05": historique_sejours_complet(entity_ref("urn:fr:ppa:case:ouverture-residence-2026")) { origin case_input; }
+    }
+    evaluate truth(residence_r842_1(entity_ref("urn:fr:ppa:case:ouverture-residence-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

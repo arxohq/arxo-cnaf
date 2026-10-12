@@ -1,0 +1,18 @@
+// Monthly pieces duty silent without a concerned month: leave
+// and debtor-body link recorded, but no mois_concerne_ajpp — no
+// TransmettreAttestationConge position (D. 544-9 duties are
+// month-keyed; the month is a premise, not a default).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-sans-mois-concerne" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-dsm-01": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-dsm"), entity_ref("urn:fr:pf-ajpp:case:enfant-dsm")) { origin case_input; }
+        assert "ajpp-dsm-02": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-dsm")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(TransmettreAttestationConge, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

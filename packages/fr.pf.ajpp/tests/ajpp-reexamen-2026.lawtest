@@ -1,0 +1,19 @@
+// 2026 re-exam ceiling: the doctor set fourteen months, inside 6..14
+// (L. 544-2 2026: «quatorze mois»). The twelve-month ceiling is over.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reexamen-2026" {
+    given {
+        context { decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; }
+        assert "ajpp-reex26-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-reex26")) { origin adjudicated; }
+        assert "ajpp-reex26-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-reex26")) { origin adjudicated; }
+        assert "ajpp-reex26-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-reex26"), entity_ref("urn:fr:pf-ajpp:case:enfant-reex26")) { origin case_input; }
+        assert "ajpp-reex26-04": echeance_reexamen(entity_ref("urn:fr:pf-ajpp:case:enfant-reex26"), 14) { origin adjudicated; }
+    }
+    evaluate truth(reexamen_conforme(entity_ref("urn:fr:pf-ajpp:case:enfant-reex26")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

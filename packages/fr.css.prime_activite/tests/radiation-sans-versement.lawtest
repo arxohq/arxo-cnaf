@@ -1,0 +1,15 @@
+// Regulatory no-payment period elapsed: removal from the list (L.843-5).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-radiation-sans-versement" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": periode_sans_versement_ecoulee(entity_ref("urn:fr:ppa:case:radiation")) { origin case_input; }
+    }
+    evaluate truth(radie_sans_versement(entity_ref("urn:fr:ppa:case:radiation")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

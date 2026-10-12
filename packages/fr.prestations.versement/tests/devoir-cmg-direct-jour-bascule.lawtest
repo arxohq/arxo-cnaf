@@ -1,0 +1,18 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+// Boundary day 2025-09-01: ancien window ends (exclusive), reforme
+// starts (inclusive) — the reforme duty fires on the switch day
+// (F-CH6-03: no justification premise on the direct twin).
+
+test "urn:query:fr-pv-devoir-cmg-direct-jour-bascule" {
+    given {
+        context { decision_time @2025-09-01T12:00:00Z; knowledge_time @2025-09-01T12:00:00Z; legal_time @2025-09-01; timezone "Europe/Paris"; }
+        assert "brut": fr.pf.cmg::montant_cmg_du(entity_ref("urn:fr:pv:case:allocataire"), entity_ref("urn:fr:pv:case:enfant"), 300.00 EUR) { origin case_input; }
+        assert "org": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pv:case:caisse"), entity_ref("urn:fr:pv:case:allocataire")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PayerCmgDirectReformeNet, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

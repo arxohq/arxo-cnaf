@@ -1,0 +1,22 @@
+// L. 755-19, para. 3, base side: Martinique household, full-rate base
+// right open (20000 € ≤ 30000 €), L. 755-16 complément familial served —
+// the base/CF cumulation is barred.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-base-cf-dom-plein" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-cfp-01": territoire(entity_ref("urn:fr:paje:case:dom-cfp"), MARTINIQUE) { origin case_input; }
+        assert "dom-cfp-02": enfant_en_charge(entity_ref("urn:fr:paje:case:dom-cfp"), entity_ref("urn:fr:paje:enfant:dom-cfp")) { origin case_input; }
+        assert "dom-cfp-03": condition_age_base(entity_ref("urn:fr:paje:enfant:dom-cfp")) { origin adjudicated; }
+        assert "dom-cfp-04": ressources_annuelles(entity_ref("urn:fr:paje:case:dom-cfp"), 20000 EUR) { origin case_input; }
+        assert "dom-cfp-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:dom-cfp"), 30000 EUR) { origin case_input; }
+        assert "dom-cfp-06": cf_dom_l755_16_servi(entity_ref("urn:fr:paje:case:dom-cfp")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_base_cf_dom_interdit(entity_ref("urn:fr:paje:case:dom-cfp"), entity_ref("urn:fr:paje:enfant:dom-cfp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,230 @@
+// Old scale (before 01.09.2025): resource ceilings, 85% of net pay
+// under BMAF-band maxima, halves between three and six and for
+// part-time PreParE.
+//
+// D. 531-18 (2018): 85% max of net salary plus L. 423-4 allowances,
+// capped per band (114.04 / 71.91 / 43.14% of BMAF) by N-2 resources
+// against the D. 531-18-1 ceilings (+40% single). D. 531-20 halves the
+// maxima between three and six; old D. 531-21 halves them for part-time
+// PreParE. Full rows are strict and disjoint from the halved rows
+// (not_known on the halve grounds); the halved rows conclude on the
+// positive grounds. Co-occurring halves yield the same halved value,
+// so no precedence is needed; combined halve interaction is single
+// (B-CMG-DEMI-DOUBLE).
+
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+use self::{
+    CSS_D531_17_ED2012_06,
+    CSS_D531_17_ED2022_01,
+    CSS_D531_18_1_ED2018_04,
+    CSS_D531_18_1_ED2022_01,
+    CSS_D531_18_ED2018_04,
+    CSS_D531_20_ED2020_01,
+    CSS_D531_21_ED2015_01,
+    CSS_L531_5_ED2020_01,
+    age_taux_reduit,
+    aide_ancienne_b,
+    arrondi_maximum_cmg,
+    bmaf_retenu,
+    droit_cmg_ouvert,
+    indemnites_entretien_repas,
+    maximum_ancien_b,
+    montant_cmg_du,
+    nb_enfants_charge,
+    part_cotisations,
+    personne_seule,
+    plafond1_applicable,
+    plafond2_applicable,
+    plafond_a_base_isole_publie,
+    plafond_a_base_publie,
+    plafond_a_enfant_isole_publie,
+    plafond_a_enfant_publie,
+    plafond_c_base_isole_publie,
+    plafond_c_base_publie,
+    plafond_c_enfant_isole_publie,
+    plafond_c_enfant_publie,
+    preparer_temps_partiel,
+    ressources_annuelles,
+    salaire_net_verse,
+    taux_bande_ancienne,
+};
+
+function plafond_ancien_montant(base: Money, incr: Money, n: Integer) -> Money =
+    base + incr * n;
+
+// --- Old resource ceilings (+40% single) ----------------------------------------
+//
+// D. 531-18-1 sets the nominal bases and per-child supplements. DSS circulars
+// publish both components separately for each entitlement year, including isolement.
+
+@source(CSS_D531_18_1_ED2018_04, CSS_D531_18_1_ED2022_01)
+rule Plafond1Ancien(p: fr.pf.core::Personne, n: Integer, base: Money, incr: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien plafond a: base publiée + majoration par enfant";
+    label en unofficial "old a-ceiling: published base + supplement per child";
+    when nb_enfants_charge(p, n) and plafond_a_base_publie(p, base) and plafond_a_enfant_publie(p, incr) and not_known(personne_seule(p));
+    then plafond1_applicable(p, plafond_ancien_montant(base, incr, n));
+}
+
+@source(CSS_D531_18_1_ED2018_04, CSS_D531_18_1_ED2022_01)
+rule Plafond1AncienSeule(p: fr.pf.core::Personne, n: Integer, base: Money, incr: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien plafond a majoré de 40 % (personne seule)";
+    label en unofficial "old a-ceiling plus 40% (single person)";
+    when personne_seule(p) and nb_enfants_charge(p, n) and plafond_a_base_isole_publie(p, base) and plafond_a_enfant_isole_publie(p, incr);
+    then plafond1_applicable(p, plafond_ancien_montant(base, incr, n));
+}
+
+@source(CSS_D531_18_1_ED2018_04, CSS_D531_18_1_ED2022_01)
+rule Plafond2Ancien(p: fr.pf.core::Personne, n: Integer, base: Money, incr: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien plafond c: base publiée + majoration par enfant";
+    label en unofficial "old c-ceiling: published base + supplement per child";
+    when nb_enfants_charge(p, n) and plafond_c_base_publie(p, base) and plafond_c_enfant_publie(p, incr) and not_known(personne_seule(p));
+    then plafond2_applicable(p, plafond_ancien_montant(base, incr, n));
+}
+
+@source(CSS_D531_18_1_ED2018_04, CSS_D531_18_1_ED2022_01)
+rule Plafond2AncienSeule(p: fr.pf.core::Personne, n: Integer, base: Money, incr: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien plafond c majoré de 40 % (personne seule)";
+    label en unofficial "old c-ceiling plus 40% (single person)";
+    when personne_seule(p) and nb_enfants_charge(p, n) and plafond_c_base_isole_publie(p, base) and plafond_c_enfant_isole_publie(p, incr);
+    then plafond2_applicable(p, plafond_ancien_montant(base, incr, n));
+}
+
+// --- Old BMAF-band maxima (strict full rows) ----------------------------------------
+//
+// Band by resources: at most p1 → 114.04%; p1–p2 → 71.91%; above p2 →
+// 43.14% of BMAF. Full rows are disjoint from the halved rows below.
+
+@source(CSS_D531_18_ED2018_04)
+rule MaximumAncienBande1(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien maximum bande 1: 114,04 % de la BMAF";
+    label en unofficial "old band-1 maximum: 114.04% of the BMAF";
+    when droit_cmg_ouvert(p, e) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and r <= p1 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_ancien_b(p, e, TauxBMAFAncienBande1 * bmaf);
+}
+
+@source(CSS_D531_18_ED2018_04)
+rule MaximumAncienBande2(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien maximum bande 2: 71,91 % de la BMAF";
+    label en unofficial "old band-2 maximum: 71.91% of the BMAF";
+    when droit_cmg_ouvert(p, e) and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p1 and r <= p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_ancien_b(p, e, TauxBMAFAncienBande2 * bmaf);
+}
+
+@source(CSS_D531_18_ED2018_04)
+rule MaximumAncienBande3(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p2: Money, bmaf: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien maximum bande 3: 43,14 % de la BMAF";
+    label en unofficial "old band-3 maximum: 43.14% of the BMAF";
+    when droit_cmg_ouvert(p, e) and ressources_annuelles(p, r) and plafond2_applicable(p, p2) and r > p2 and bmaf_retenu(p, bmaf) and not_known(age_taux_reduit(p, e)) and not_known(preparer_temps_partiel(p)) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_ancien_b(p, e, TauxBMAFAncienBande3 * bmaf);
+}
+
+// --- Halves: age 3-6 (old D. 531-20) and part-time PreParE (old D. 531-21) --------
+
+// --- Band rate reader (shared by the halved rows) -----------------------------------
+//
+// The band is a pure function of resources against the two ceilings.
+
+@source(CSS_D531_18_ED2018_04)
+rule TauxBandeAncienne1(p: fr.pf.core::Personne, r: Money, p1: Money, p2: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "bande ancienne 1: ressources au plus égales au plafond a";
+    label en unofficial "old band 1: resources at most the a-ceiling";
+    when ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r <= p1;
+    then taux_bande_ancienne(p, r, p1, p2, TauxBMAFAncienBande1);
+}
+
+@source(CSS_D531_18_ED2018_04)
+rule TauxBandeAncienne2(p: fr.pf.core::Personne, r: Money, p1: Money, p2: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "bande ancienne 2: ressources entre les plafonds a et c";
+    label en unofficial "old band 2: resources between the a and c ceilings";
+    when ressources_annuelles(p, r)
+        and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and r > p1 and r <= p2;
+    then taux_bande_ancienne(p, r, p1, p2, TauxBMAFAncienBande2);
+}
+
+@source(CSS_D531_18_ED2018_04)
+rule TauxBandeAncienne3(p: fr.pf.core::Personne, r: Money, p1: Money, p2: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "bande ancienne 3: ressources au delà du plafond c";
+    label en unofficial "old band 3: resources above the c-ceiling";
+    when ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2) and r > p2;
+    then taux_bande_ancienne(p, r, p1, p2, TauxBMAFAncienBande3);
+}
+
+@source(CSS_D531_20_ED2020_01)
+rule MaximumAncienReduitAge(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien maximum divisé par deux entre trois et six ans";
+    label en unofficial "old maximum halved between three and six";
+    when droit_cmg_ouvert(p, e) and age_taux_reduit(p, e)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_ancienne(p, r, p1, p2, t) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_ancien_b(p, e, t * bmaf / 2.0);
+}
+
+@source(CSS_D531_21_ED2015_01)
+rule MaximumAncienReduitPreParE(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, r: Money, p1: Money, p2: Money, bmaf: Money, t: Decimal) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien maximum divisé par deux (PreParE à temps partiel)";
+    label en unofficial "old maximum halved (part-time PreParE)";
+    when droit_cmg_ouvert(p, e) and preparer_temps_partiel(p)
+        and ressources_annuelles(p, r) and plafond1_applicable(p, p1) and plafond2_applicable(p, p2)
+        and bmaf_retenu(p, bmaf) and taux_bande_ancienne(p, r, p1, p2, t) and not_known(arrondi_maximum_cmg(p, e));
+    then maximum_ancien_b(p, e, t * bmaf / 2.0);
+}
+
+// --- Old part b: 85% of net under the maxima ------------------------------------------
+//
+// «La prise en charge partielle ... est fixée au maximum à 85 % du
+// salaire net servi et des indemnités».
+
+@source(CSS_D531_18_ED2018_04)
+rule AideAncienneSousMaximum(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, salaire: Money, indemnites: Money, maximum: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien 85 % sous le maximum: 85 % du net";
+    label en unofficial "old 85% under the maximum: 85% of net pay";
+    when droit_cmg_ouvert(p, e)
+        and salaire_net_verse(p, e, salaire)
+        and indemnites_entretien_repas(p, e, indemnites)
+        and maximum_ancien_b(p, e, maximum)
+        and TauxPriseEnCharge85 * (salaire + indemnites) <= maximum;
+    then aide_ancienne_b(p, e, TauxPriseEnCharge85 * (salaire + indemnites));
+}
+
+@source(CSS_D531_18_ED2018_04)
+rule AideAncienneEcretee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, salaire: Money, indemnites: Money, maximum: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien 85 % écrêté au maximum";
+    label en unofficial "old 85% cut to the maximum";
+    when droit_cmg_ouvert(p, e)
+        and salaire_net_verse(p, e, salaire)
+        and indemnites_entretien_repas(p, e, indemnites)
+        and maximum_ancien_b(p, e, maximum)
+        and TauxPriseEnCharge85 * (salaire + indemnites) > maximum;
+    then aide_ancienne_b(p, e, maximum);
+}
+
+// --- Old total due per child ---------------------------------------------------------------
+//
+// Part a (03) plus part b, rounded to cents (B-CMG-ARRONDI-CENTIMES).
+
+@source(CSS_L531_5_ED2020_01, CSS_D531_17_ED2012_06, CSS_D531_17_ED2022_01, CSS_D531_18_ED2018_04)
+rule MontantDuAncien(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, a: Money, b: Money) strict {
+    effective [@2021-01-01, @2025-09-01);
+    label fr official "ancien total dû: part cotisations plus part barème, arrondi au centime";
+    label en unofficial "old total due: contribution part plus scale part, rounded to cents";
+    when part_cotisations(p, e, a) and aide_ancienne_b(p, e, b);
+    then montant_cmg_du(p, e, round(a + b, 2, "HALF_UP"));
+}

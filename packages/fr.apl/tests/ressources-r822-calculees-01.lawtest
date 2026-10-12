@@ -1,0 +1,60 @@
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+// R.822 slice link (D-APL-RES-LIEN): the case gives ONLY computed inputs
+// (membres + DSN periode, no flat ressources_du_menage) — same numbers as
+// ressources-r822-13-pension: brut 30 600, net 27 540. Retained R is
+// 27 600 (centaine supérieure). The flat path stays silent here (mutual
+// exclusion by case construction); the flat-fact fallback is covered by the
+// 142 legacy scenarios.
+
+test "R822-calculees-01 ressources calculees seules vers ressources_retenues" {
+    given {
+        // D-42: G-A13 migration (24-lecture-pp.law) — D. 823-17 "P0 ... ne peut etre
+        // inferieure a un montant minimum" has two readings in group SensMinimumPp
+        // (selection exactly_one); this hand suite selects the working reading, as
+        // the other hand suites do. No expectation changed.
+        context { legal_time @2025-08-01; decision_time @2025-08-01T09:00:00Z; knowledge_time @2025-08-01T09:00:00Z; timezone "Europe/Paris"; deadline_policy R822_13_MOIS_SUIVANT; interpretation PpPlancherFinal; }
+        assert "mb": membre_du_menage(entity_ref("urn:fr:example:apl:m2"), entity_ref("urn:fr:example:apl:p2")) { origin case_input; }
+        // D-42: R. 822-13 / R. 822-17 reach only "le beneficiaire ou son conjoint";
+        // the model asks for that role (allocataire_ou_conjoint_ressources) since
+        // the 08 repair. The sole member of this case is the beneficiary.
+        assert "role": allocataire_ou_conjoint_ressources(entity_ref("urn:fr:example:apl:m2"), entity_ref("urn:fr:example:apl:p2")) { origin case_input; }
+        // D-42: R. 822-3/4 (reform method, 08 RessourcesRetenuesCalculees*) is
+        // keyed per housing sector (accession APL joins only in May 2021, decree
+        // 2020-1816 NOTA); this case is a rental (secteur locatif) household.
+        assert "sect": secteur_locatif(entity_ref("urn:fr:example:apl:m2")) { origin case_input; }
+        assert "pe": fr.tax.income_for_apl::periode_evaluee(entity_ref("urn:fr:example:apl:p2"), @2024-01-01, @2025-01-01) { origin case_input; }
+        assert "pension": preuve_cessation_activite_pension(entity_ref("urn:fr:example:apl:m2"), entity_ref("urn:fr:example:apl:p2"), @2024-06-01) { origin case_input; }
+        assert "no-rsa": pas_de_rsa(entity_ref("urn:fr:example:apl:m2"), entity_ref("urn:fr:example:apl:p2")) { origin case_input; }
+        assert "s01": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-01-01, 3000.00 EUR) { origin case_input; }
+        assert "s02": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-02-01, 3000.00 EUR) { origin case_input; }
+        assert "s03": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-03-01, 3000.00 EUR) { origin case_input; }
+        assert "s04": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-04-01, 3000.00 EUR) { origin case_input; }
+        assert "s05": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-05-01, 3000.00 EUR) { origin case_input; }
+        assert "s06": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-06-01, 3000.00 EUR) { origin case_input; }
+        assert "s07": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-07-01, 3000.00 EUR) { origin case_input; }
+        assert "s08": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-08-01, 3000.00 EUR) { origin case_input; }
+        assert "s09": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-09-01, 3000.00 EUR) { origin case_input; }
+        assert "s10": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-10-01, 3000.00 EUR) { origin case_input; }
+        assert "s11": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-11-01, 3000.00 EUR) { origin case_input; }
+        assert "s12": fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-12-01, 3000.00 EUR) { origin case_input; }
+        assert "c01": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-01-01, 0.00 EUR) { origin case_input; }
+        assert "c02": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-02-01, 0.00 EUR) { origin case_input; }
+        assert "c03": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-03-01, 0.00 EUR) { origin case_input; }
+        assert "c04": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-04-01, 0.00 EUR) { origin case_input; }
+        assert "c05": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-05-01, 0.00 EUR) { origin case_input; }
+        assert "c06": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-06-01, 0.00 EUR) { origin case_input; }
+        assert "c07": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-07-01, 0.00 EUR) { origin case_input; }
+        assert "c08": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-08-01, 0.00 EUR) { origin case_input; }
+        assert "c09": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-09-01, 0.00 EUR) { origin case_input; }
+        assert "c10": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-10-01, 0.00 EUR) { origin case_input; }
+        assert "c11": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-11-01, 0.00 EUR) { origin case_input; }
+        assert "c12": fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(entity_ref("urn:fr:example:apl:p2"), @2024-12-01, 0.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ressources_retenues(entity_ref("urn:fr:example:apl:m2"), 27600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

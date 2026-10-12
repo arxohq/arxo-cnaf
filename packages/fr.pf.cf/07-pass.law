@@ -1,0 +1,87 @@
+// PASS (plafond annuel de la sécurité sociale) pour le test de double activité de R. 522-2 al. 3 (D-83, D-84).
+//
+// R. 522-2 al. 3: каждый член пары получил за год отсчёта доход не ниже 13,6 % «du plafond annuel de la
+// sécurité sociale en vigueur au 1er janvier de la même année».
+//
+// D-84: ряд PASS (arrêtés «portant fixation du plafond de la sécurité sociale», valeur mensuelle, годовое
+// значение = 12 × mensuelle) ведёт пакет fr.css.pass; здесь только мост: ГОД ОТСЧЁТА — факт дела
+// (annee_reference_ressources: ресурсы N−2 по R. 532-1, оценка выше по цепочке), а PASS этого года пакет
+// берёт у fr.css.pass::pass_annuel_arrete. Ряд закреплён непрерывно за 2015–2026 годы (по одному arrêté на
+// год; граница B-PASS-2017 снята 08.10.2026), поэтому для любого года отсчёта из этого ряда PASS выводится
+// без участия дела; граница B-PFCF-PASS-2017 снята. Год отсчёта вне ряда (до 2015 и после 2026) число
+// arrêté не выводит, и без pass_annuel порог не устанавливается — замкнутость CoupleBiactifEstClos при
+// заданном revenu_pro_min_couple дала бы ложное «не биактивна», поэтому дело с таким годом обязано
+// предъявить pass_annuel (контракт входа). PASS, предъявленный делом (pass_annuel), вытесняет число
+// arrêté (марка pass_fourni).
+
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+use self::{
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04,
+    annee_reference_ressources,
+    pass_annuel,
+    pass_fourni,
+    pass_reference,
+    revenu_pro_min_couple,
+};
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PassFourniMarque(p: fr.pf.core::Personne, rev: Money, x: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "un plafond de la sécurité sociale fourni pour l'espèce écarte celui des arrêtés (marque)";
+    label en unofficial "a social-security ceiling supplied for the case displaces the arretes' figure (marker)";
+    when revenu_pro_min_couple(p, rev) and pass_annuel(x);
+    then pass_fourni(p);
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PassReferenceFourni(p: fr.pf.core::Personne, rev: Money, x: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "plafond de la sécurité sociale de l'année de référence : celui fourni pour l'espèce (R. 522-2 al. 3)";
+    label en unofficial "social-security ceiling of the reference year: the case-supplied one (R. 522-2 para. 3)";
+    when revenu_pro_min_couple(p, rev) and pass_annuel(x);
+    then pass_reference(p, x);
+}
+
+@source(
+    CSS_R522_2,
+    CSS_R522_2_PRE2022,
+    CSS_R522_2_PRE2022_ED2014_01,
+    CSS_R522_2_PRE2022_ED2014_04,
+    CSS_R522_2_PRE2022_ED2017_04,
+    CSS_R522_2_PRE2022_ED2018_01,
+    CSS_R522_2_PRE2022_ED2018_04,
+    CSS_R522_2_PRE2022_ED2020_04)
+rule PassReferenceArrete(p: fr.pf.core::Personne, rev: Money, annee: Integer, x: Money) strict {
+    effective [@2018-01-01, infinity);
+    label fr official "plafond de la sécurité sociale de l'année de référence : celui de l'arrêté annuel (fr.css.pass), à défaut de plafond fourni pour l'espèce (R. 522-2 al. 3, D. 242-17)";
+    label en unofficial "social-security ceiling of the reference year: the annual arrete's figure (fr.css.pass), absent a case-supplied ceiling (R. 522-2 para. 3, D. 242-17)";
+    when revenu_pro_min_couple(p, rev) and annee_reference_ressources(p, annee)
+        and fr.css.pass::pass_annuel_arrete(annee, x) and not_known(pass_fourni(p));
+    then pass_reference(p, x);
+}

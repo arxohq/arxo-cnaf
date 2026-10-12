@@ -1,0 +1,22 @@
+// Undue specific-hours majoration: thirty declared specific hours
+// unjustified at control — the recovery power of the debtor body
+// is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-devoir-versement-recouvrement" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "devoir-rec-01": heures_specifiques(entity_ref("urn:fr:pf-cmg:case:devoir-recouvrement"), entity_ref("urn:fr:pf-cmg:child:devr"), 30.0) { origin case_input; }
+        assert "devoir-rec-02": controle_heures_defaillant(entity_ref("urn:fr:pf-cmg:case:devoir-recouvrement"), entity_ref("urn:fr:pf-cmg:child:devr")) { origin case_input; }
+        assert "devoir-rec-03": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-cmg:org:caisse-rec"), entity_ref("urn:fr:pf-cmg:case:devoir-recouvrement")) { origin case_input; }
+    }
+    evaluate truth(majoration_indue(entity_ref("urn:fr:pf-cmg:case:devoir-recouvrement"), entity_ref("urn:fr:pf-cmg:child:devr")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate positions();
+    expect position(RecouvrerMajorationIndue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

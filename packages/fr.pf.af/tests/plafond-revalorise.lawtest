@@ -1,0 +1,38 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.5) заменён плафонами-входами
+// D. 521-3: база I 83925, база II 117450, надбавка 8392.5 за ребёнка =
+// суммы D. 521-3 I/II × 1.5 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Revalued ceilings: factor 1.5 moves ceiling I (2 children) to
+// 67 140 x 1.5 = 100 710, so resources 70 000 EUR stay in band 1.
+// Monthly 128.00, top-up 0, total due 128.00. The factor is a stated
+// input (yearly arrete unpinned, B-PFAF-PLAFOND-REVALO).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-plafond-revalorise" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "plaf-01": territoire(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), METROPOLE) { origin case_input; }
+        assert "plaf-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 2) { origin case_input; }
+        assert "plaf-03": ressources_menage(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 70000 EUR) { origin case_input; }
+        assert "plaf-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 83925 EUR) { origin case_input; }
+        assert "plaf-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 117450 EUR) { origin case_input; }
+        assert "plaf-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 8392.5 EUR) { origin case_input; }
+        assert "plaf-05": bmaf_retenu(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 400.00 EUR) { origin case_input; }
+        assert "plaf-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 0) { origin case_input; }
+        assert "plaf-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 0) { origin case_input; }
+        assert "plaf-08": forfait_total_menage(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 0 EUR) { origin case_input; }
+        assert "plaf-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 0) { origin case_input; }
+        assert "plaf-10": foyer_du_cas(entity_ref("urn:fr:pf-af:case:plafond-revalorise")) { origin case_input; }
+    }
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), BANDE_1));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:plafond-revalorise"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,17 @@
+// Claim filed: the claimant may file at the RSA service body
+// (D. 262-26 d)).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-depot-organisme" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "depot-01": demande_rsa_deposee(entity_ref("urn:fr:rsa:case:depot-organisme")) { origin case_input; }
+        assert "depot-02": est_organisme_service(entity_ref("urn:fr:rsa:org:caf")) { origin case_input; }
+        assert "depot-03": organisme_competent(entity_ref("urn:fr:rsa:org:caf"), entity_ref("urn:fr:rsa:case:depot-organisme")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DeposerDemandeOrganisme, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,13 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-crds-ajpp-complement-net" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "brut": fr.pf.ajpp::ajpp_montant_complement(entity_ref("urn:fr:pv:case:enfant"), 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_net_crds_ajpp_complement(entity_ref("urn:fr:pv:case:enfant"), 99.50 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

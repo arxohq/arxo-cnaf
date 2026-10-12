@@ -1,0 +1,18 @@
+// From 2026-04-01 the pinned series is exhausted (the 1 April 2026 decree is not
+// pinned): the 2025 figure (646.52) is NOT extrapolated, the proposition is not
+// established.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-decret-apres-serie" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2026-05-15T12:00:00Z; knowledge_time @2026-05-15T12:00:00Z; legal_time @2026-05-15; timezone "Europe/Paris"; }
+        assert "t-apre-01": mois_droit(entity_ref("urn:fr:rsa:case:mf-decret-apres-serie"), @2026-05-01) { origin case_input; }
+        assert "t-apre-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-decret-apres-serie"), 1) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-decret-apres-serie"), 646.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

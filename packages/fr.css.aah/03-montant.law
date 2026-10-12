@@ -1,0 +1,666 @@
+// Amounts (L. 821-3-1, D. 821-2): uncapped monthly figures, both regimes.
+//
+// «Le montant de l'allocation ... est fixé par décret» (L. 821-3-1): the
+// monthly amount is montant_aah_applicable of 07-montant-chaine.law — the
+// pinned decree amount of the window (decrees 2019-1047 ... 2026-229, chain
+// of the L. 161-25 coefficients built and checked there, DECISION-0452), or
+// the case-supplied montant_mensuel_retenu, which prevails over the decree.
+// «Le bénéficiaire ... a droit, mensuellement, à une allocation égale au
+// douzième de la différence entre le montant du plafond applicable et les
+// ressources annuelles» (D. 821-2, para. 3), «ou ... au tiers de la
+// différence ... [trimestrielles]» for the R. 821-4-1 track, «sans que
+// cette allocation puisse excéder le montant mensuel» (cap at M).
+// Eligibility threshold (para. 1): resources below twelve (resp. three)
+// times the monthly amount. Plafond (para. 2): +81 % for a couple under
+// the pre-2023 wording, +50 % per dependent child under both wordings.
+// Spouse resources feed the pre-2023 computation (former L. 821-3).
+// The ESAT cap (D. 821-5) is applied in 05-cumul-esat.law; the 2022-1694
+// choice between the two figures in 04-deconjugalisation.law.
+//
+// MONEY FORMS (pf-af convention): multiplications Money x Decimal
+// (bareme fractions), divisions Money / Decimal ("/ 12.0"): exact division, a
+// non-terminating quotient is INEXACT_DIVISION. Rounding of the douzième and the
+// tiers is the READING DouziemeTiersArrondiCentime (section "Reading D-82/D-83"
+// at the end of this file), selected in the context of the case.
+
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+use self::{
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01,
+    CSS_R821_4_1_ED2026_06_28,
+    CSS_R821_4_1_ED2026_07_23,
+    CSS_R821_4_1_PRE2023_ED2021_01_01,
+    CSS_R821_4_1_PRE2023_ED2021_05_01,
+    CSS_R821_4_1_PRE2023_ED2021_12_03,
+    CSS_R821_4_1_PRE2023_ED2022_01_01,
+    CSS_R821_4_1_PRE2023_ED2022_01_21,
+    CSS_R821_4_1_PRE2023_ED2022_06_17,
+    CSS_R821_4_1_PRE2026_ED2023_01_01,
+    CSS_R821_4_1_PRE2026_ED2023_09_01,
+    CSS_R821_4_1_PRE2026_ED2023_10_01,
+    CSS_R821_4_1_PRE2026_ED2024_12_01,
+    CSS_R821_4_1_PRE2026_ED2025_08_28,
+    CSS_R821_4_1_PRE2026_ED2026_01_01,
+    CSS_R821_4_ED2026_06_28,
+    CSS_R821_4_ED2026_07_23,
+    CSS_R821_4_PRE2022_06_ED2022_01_21,
+    CSS_R821_4_PRE2022_ED2021_01_01,
+    CSS_R821_4_PRE2022_ED2021_05_01,
+    CSS_R821_4_PRE2022_ED2021_12_03,
+    CSS_R821_4_PRE2022_ED2022_01_01,
+    CSS_R821_4_PRE2023_ED2022_06_17,
+    CSS_R821_4_PRE2025_ED2023_01_01,
+    CSS_R821_4_PRE2025_ED2023_09_01,
+    CSS_R821_4_PRE2025_ED2023_10_01,
+    CSS_R821_4_PRE2025_ED2024_12_01,
+    CSS_R821_4_PRE2026_ED2025_08_28,
+    CSS_R821_4_PRE2026_ED2026_01_01,
+    Personne,
+    aah_droit_calcule,
+    aah_montant_ancien,
+    aah_montant_nouveau,
+    en_couple,
+    enfants_charge,
+    lecture_douzieme_tiers_arrondis,
+    montant_aah_applicable,
+    percoit_revenu_activite,
+    personne_seule,
+    ressources_annuelles_retenues,
+    ressources_conjoint_retenues,
+    ressources_trimestrielles_retenues,
+    sans_revenu_activite,
+};
+
+function plafond_nouveau_annuel(m: Money, n: Integer) -> Money =
+    12.0 * m + 12.0 * m * MajorationPlafondEnfant * n;
+
+function plafond_nouveau_trimestriel(m: Money, n: Integer) -> Money =
+    3.0 * m + 3.0 * m * MajorationPlafondEnfant * n;
+
+function plafond_ancien_couple_annuel(m: Money, n: Integer) -> Money =
+    12.0 * m * (1.0 + MajorationPlafondCoupleAncien) + 12.0 * m * MajorationPlafondEnfant * n;
+
+function plafond_ancien_couple_trimestriel(m: Money, n: Integer) -> Money =
+    3.0 * m * (1.0 + MajorationPlafondCoupleAncien) + 3.0 * m * MajorationPlafondEnfant * n;
+
+// --- Current rules: annual track (R. 821-4) -------------------------------
+
+@source(
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_PRE2025_ED2023_10_01,
+    CSS_R821_4_PRE2025_ED2024_12_01,
+    CSS_R821_4_PRE2026_ED2025_08_28,
+    CSS_R821_4_PRE2026_ED2026_01_01,
+    CSS_R821_4_ED2026_06_28,
+    CSS_R821_4_ED2026_07_23)
+rule MontantNouveauAnnuel(p: Personne, m: Money, r: Money, n: Integer) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "montant nouveau, régime annuel: douzième de (plafond − ressources annuelles), au plus le montant mensuel";
+    label en unofficial "current amount, annual track: twelfth of (ceiling - annual resources), at most the monthly amount";
+    when aah_droit_calcule(p) and sans_revenu_activite(p) and montant_aah_applicable(m) and ressources_annuelles_retenues(p, r) and enfants_charge(n) and r < plafond_nouveau_annuel(m, n) and not_known(lecture_douzieme_tiers_arrondis());
+    then aah_montant_nouveau(p, min(m, (plafond_nouveau_annuel(m, n) - r) / 12.0));
+}
+
+// --- Current rules: quarterly track (R. 821-4-1) --------------------------
+
+@source(
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_1_PRE2026_ED2023_10_01,
+    CSS_R821_4_1_PRE2026_ED2024_12_01,
+    CSS_R821_4_1_PRE2026_ED2025_08_28,
+    CSS_R821_4_1_PRE2026_ED2026_01_01,
+    CSS_R821_4_1_ED2026_06_28,
+    CSS_R821_4_1_ED2026_07_23)
+rule MontantNouveauTrimestriel(p: Personne, m: Money, r: Money, n: Integer) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "montant nouveau, régime trimestriel: tiers de (plafond − ressources trimestrielles), au plus le montant mensuel";
+    label en unofficial "current amount, quarterly track: third of (ceiling - quarterly resources), at most the monthly amount";
+    when aah_droit_calcule(p) and percoit_revenu_activite(p) and montant_aah_applicable(m) and ressources_trimestrielles_retenues(p, r) and enfants_charge(n) and r < plafond_nouveau_trimestriel(m, n) and not_known(lecture_douzieme_tiers_arrondis());
+    then aah_montant_nouveau(p, min(m, (plafond_nouveau_trimestriel(m, n) - r) / 3.0));
+}
+
+// --- Former rules (30.09.2023): annual track, couple ----------------------
+
+@source(
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_PRE2022_ED2021_01_01,
+    CSS_R821_4_PRE2022_ED2021_05_01,
+    CSS_R821_4_PRE2022_ED2021_12_03,
+    CSS_R821_4_PRE2022_ED2022_01_01,
+    CSS_R821_4_PRE2022_06_ED2022_01_21,
+    CSS_R821_4_PRE2023_ED2022_06_17,
+    CSS_R821_4_PRE2025_ED2023_01_01,
+    CSS_R821_4_PRE2025_ED2023_09_01)
+rule MontantAncienAnnuelCouple(p: Personne, m: Money, r1: Money, r2: Money, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant ancien, régime annuel, couple: plafond majoré de 81 %, ressources du couple";
+    label en unofficial "former amount, annual track, couple: 81% higher ceiling, couple resources";
+    when aah_droit_calcule(p) and sans_revenu_activite(p) and en_couple(p) and montant_aah_applicable(m) and ressources_annuelles_retenues(p, r1) and ressources_conjoint_retenues(p, r2) and enfants_charge(n) and r1 + r2 < plafond_ancien_couple_annuel(m, n) and not_known(lecture_douzieme_tiers_arrondis());
+    then aah_montant_ancien(p, min(m, (plafond_ancien_couple_annuel(m, n) - (r1 + r2)) / 12.0));
+}
+
+// --- Former rules: annual track, single -----------------------------------
+
+@source(
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_PRE2022_ED2021_01_01,
+    CSS_R821_4_PRE2022_ED2021_05_01,
+    CSS_R821_4_PRE2022_ED2021_12_03,
+    CSS_R821_4_PRE2022_ED2022_01_01,
+    CSS_R821_4_PRE2022_06_ED2022_01_21,
+    CSS_R821_4_PRE2023_ED2022_06_17,
+    CSS_R821_4_PRE2025_ED2023_01_01,
+    CSS_R821_4_PRE2025_ED2023_09_01)
+rule MontantAncienAnnuelSeul(p: Personne, m: Money, r: Money, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant ancien, régime annuel, personne seule: plafond sans majoration couple";
+    label en unofficial "former amount, annual track, single person: ceiling without couple increase";
+    when aah_droit_calcule(p) and sans_revenu_activite(p) and personne_seule(p) and montant_aah_applicable(m) and ressources_annuelles_retenues(p, r) and enfants_charge(n) and r < plafond_nouveau_annuel(m, n) and not_known(lecture_douzieme_tiers_arrondis());
+    then aah_montant_ancien(p, min(m, (plafond_nouveau_annuel(m, n) - r) / 12.0));
+}
+
+// --- Former rules: quarterly track, couple --------------------------------
+
+@source(
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_1_PRE2023_ED2021_01_01,
+    CSS_R821_4_1_PRE2023_ED2021_05_01,
+    CSS_R821_4_1_PRE2023_ED2021_12_03,
+    CSS_R821_4_1_PRE2023_ED2022_01_01,
+    CSS_R821_4_1_PRE2023_ED2022_01_21,
+    CSS_R821_4_1_PRE2023_ED2022_06_17,
+    CSS_R821_4_1_PRE2026_ED2023_01_01,
+    CSS_R821_4_1_PRE2026_ED2023_09_01)
+rule MontantAncienTrimestrielCouple(p: Personne, m: Money, r1: Money, r2: Money, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant ancien, régime trimestriel, couple: plafond majoré de 81 %, ressources du couple";
+    label en unofficial "former amount, quarterly track, couple: 81% higher ceiling, couple resources";
+    when aah_droit_calcule(p) and percoit_revenu_activite(p) and en_couple(p) and montant_aah_applicable(m) and ressources_trimestrielles_retenues(p, r1) and ressources_conjoint_retenues(p, r2) and enfants_charge(n) and r1 + r2 < plafond_ancien_couple_trimestriel(m, n) and not_known(lecture_douzieme_tiers_arrondis());
+    then aah_montant_ancien(p, min(m, (plafond_ancien_couple_trimestriel(m, n) - (r1 + r2)) / 3.0));
+}
+
+// --- Former rules: quarterly track, single --------------------------------
+
+@source(
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_1_PRE2023_ED2021_01_01,
+    CSS_R821_4_1_PRE2023_ED2021_05_01,
+    CSS_R821_4_1_PRE2023_ED2021_12_03,
+    CSS_R821_4_1_PRE2023_ED2022_01_01,
+    CSS_R821_4_1_PRE2023_ED2022_01_21,
+    CSS_R821_4_1_PRE2023_ED2022_06_17,
+    CSS_R821_4_1_PRE2026_ED2023_01_01,
+    CSS_R821_4_1_PRE2026_ED2023_09_01)
+rule MontantAncienTrimestrielSeul(p: Personne, m: Money, r: Money, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant ancien, régime trimestriel, personne seule: plafond sans majoration couple";
+    label en unofficial "former amount, quarterly track, single person: ceiling without couple increase";
+    when aah_droit_calcule(p) and percoit_revenu_activite(p) and personne_seule(p) and montant_aah_applicable(m) and ressources_trimestrielles_retenues(p, r) and enfants_charge(n) and r < plafond_nouveau_trimestriel(m, n) and not_known(lecture_douzieme_tiers_arrondis());
+    then aah_montant_ancien(p, min(m, (plafond_nouveau_trimestriel(m, n) - r) / 3.0));
+}
+
+// --- Reading D-82/D-83: douzième and tiers of D. 821-2, rounded to the centime ---
+//
+// D. 821-2 al. 3: «une allocation égale au douzième de la différence entre le
+// montant du plafond applicable et les ressources annuelles» (R. 821-4 track),
+// «au tiers de la différence» for the quarterly track (R. 821-4-1). Neither the
+// article nor the decrees state a rounding. The base rules above divide exactly:
+// a quotient that does not terminate (an eighth place and beyond, a twelfth or a
+// third of a figure of more than two places) makes the document NON_EXECUTABLE
+// (INEXACT_DIVISION, SPEC 50/18: rounding only by an explicit policy). The
+// rounding is not a text of the law but a READING (SPEC 152, owner decisions
+// D-82 / D-83, 08.10.2026): the basis is the practice of the funds (CNAF),
+// under which the intermediate value (the quotient, the monthly amount before
+// the cap at the monthly amount M) is rounded to the centime, HALF_UP. The
+// reading is outside any group: unselected it executes nothing and changes no
+// answer; selected (context { interpretation fr.css.aah::DouziemeTiersArrondiCentime; })
+// it replaces the exact division by div_round(difference, 12.0 | 3.0, 2, "HALF_UP")
+// in all six rules, and the marker silences the exact-division rules (not_known),
+// so each head carries ONE value under either choice. The reading rounds ALWAYS
+// when selected, also where the exact quotient is longer than two places (as the
+// funds do); where the quotient is already in centimes the two give the same value.
+// The cap min(m, ·) comes after the rounding: M is itself a centime figure.
+
+@source(
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01)
+rule LectureDouziemeTiersArrondis() strict {
+    effective [@2021-01-01, infinity);
+    label fr official "lecture retenue : le douzième et le tiers de la différence (D. 821-2 al. 3) sont arrondis au centime (marqueur)";
+    label en unofficial "selected reading: the twelfth and the third of the difference (D. 821-2 para. 3) are rounded to the centime (marker)";
+    when true;
+    then lecture_douzieme_tiers_arrondis();
+}
+
+@source(
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_PRE2025_ED2023_10_01,
+    CSS_R821_4_PRE2025_ED2024_12_01,
+    CSS_R821_4_PRE2026_ED2025_08_28,
+    CSS_R821_4_PRE2026_ED2026_01_01,
+    CSS_R821_4_ED2026_06_28,
+    CSS_R821_4_ED2026_07_23)
+rule MontantNouveauAnnuelArrondi(p: Personne, m: Money, r: Money, n: Integer) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "montant nouveau, régime annuel: douzième de (plafond − ressources annuelles), au plus le montant mensuel, arrondi au centime (lecture D-82)";
+    label en unofficial "current amount, annual track: twelfth of (ceiling - annual resources), at most the monthly amount, rounded to the centime (reading D-82)";
+    when aah_droit_calcule(p) and sans_revenu_activite(p) and montant_aah_applicable(m) and ressources_annuelles_retenues(p, r) and enfants_charge(n) and r < plafond_nouveau_annuel(m, n);
+    then aah_montant_nouveau(p, min(m, div_round(plafond_nouveau_annuel(m, n) - r, 12.0, 2, "HALF_UP")));
+}
+
+@source(
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_1_PRE2026_ED2023_10_01,
+    CSS_R821_4_1_PRE2026_ED2024_12_01,
+    CSS_R821_4_1_PRE2026_ED2025_08_28,
+    CSS_R821_4_1_PRE2026_ED2026_01_01,
+    CSS_R821_4_1_ED2026_06_28,
+    CSS_R821_4_1_ED2026_07_23)
+rule MontantNouveauTrimestrielArrondi(p: Personne, m: Money, r: Money, n: Integer) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "montant nouveau, régime trimestriel: tiers de (plafond − ressources trimestrielles), au plus le montant mensuel, arrondi au centime (lecture D-82)";
+    label en unofficial "current amount, quarterly track: third of (ceiling - quarterly resources), at most the monthly amount, rounded to the centime (reading D-82)";
+    when aah_droit_calcule(p) and percoit_revenu_activite(p) and montant_aah_applicable(m) and ressources_trimestrielles_retenues(p, r) and enfants_charge(n) and r < plafond_nouveau_trimestriel(m, n);
+    then aah_montant_nouveau(p, min(m, div_round(plafond_nouveau_trimestriel(m, n) - r, 3.0, 2, "HALF_UP")));
+}
+
+@source(
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_PRE2022_ED2021_01_01,
+    CSS_R821_4_PRE2022_ED2021_05_01,
+    CSS_R821_4_PRE2022_ED2021_12_03,
+    CSS_R821_4_PRE2022_ED2022_01_01,
+    CSS_R821_4_PRE2022_06_ED2022_01_21,
+    CSS_R821_4_PRE2023_ED2022_06_17,
+    CSS_R821_4_PRE2025_ED2023_01_01,
+    CSS_R821_4_PRE2025_ED2023_09_01)
+rule MontantAncienAnnuelCoupleArrondi(p: Personne, m: Money, r1: Money, r2: Money, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant ancien, régime annuel, couple: plafond majoré de 81 %, ressources du couple, arrondi au centime (lecture D-82)";
+    label en unofficial "former amount, annual track, couple: 81% higher ceiling, couple resources, rounded to the centime (reading D-82)";
+    when aah_droit_calcule(p) and sans_revenu_activite(p) and en_couple(p) and montant_aah_applicable(m) and ressources_annuelles_retenues(p, r1) and ressources_conjoint_retenues(p, r2) and enfants_charge(n) and r1 + r2 < plafond_ancien_couple_annuel(m, n);
+    then aah_montant_ancien(p, min(m, div_round(plafond_ancien_couple_annuel(m, n) - (r1 + r2), 12.0, 2, "HALF_UP")));
+}
+
+@source(
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_PRE2022_ED2021_01_01,
+    CSS_R821_4_PRE2022_ED2021_05_01,
+    CSS_R821_4_PRE2022_ED2021_12_03,
+    CSS_R821_4_PRE2022_ED2022_01_01,
+    CSS_R821_4_PRE2022_06_ED2022_01_21,
+    CSS_R821_4_PRE2023_ED2022_06_17,
+    CSS_R821_4_PRE2025_ED2023_01_01,
+    CSS_R821_4_PRE2025_ED2023_09_01)
+rule MontantAncienAnnuelSeulArrondi(p: Personne, m: Money, r: Money, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant ancien, régime annuel, personne seule: plafond sans majoration couple, arrondi au centime (lecture D-82)";
+    label en unofficial "former amount, annual track, single person: ceiling without couple increase, rounded to the centime (reading D-82)";
+    when aah_droit_calcule(p) and sans_revenu_activite(p) and personne_seule(p) and montant_aah_applicable(m) and ressources_annuelles_retenues(p, r) and enfants_charge(n) and r < plafond_nouveau_annuel(m, n);
+    then aah_montant_ancien(p, min(m, div_round(plafond_nouveau_annuel(m, n) - r, 12.0, 2, "HALF_UP")));
+}
+
+@source(
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_1_PRE2023_ED2021_01_01,
+    CSS_R821_4_1_PRE2023_ED2021_05_01,
+    CSS_R821_4_1_PRE2023_ED2021_12_03,
+    CSS_R821_4_1_PRE2023_ED2022_01_01,
+    CSS_R821_4_1_PRE2023_ED2022_01_21,
+    CSS_R821_4_1_PRE2023_ED2022_06_17,
+    CSS_R821_4_1_PRE2026_ED2023_01_01,
+    CSS_R821_4_1_PRE2026_ED2023_09_01)
+rule MontantAncienTrimestrielCoupleArrondi(p: Personne, m: Money, r1: Money, r2: Money, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant ancien, régime trimestriel, couple: plafond majoré de 81 %, ressources du couple, arrondi au centime (lecture D-82)";
+    label en unofficial "former amount, quarterly track, couple: 81% higher ceiling, couple resources, rounded to the centime (reading D-82)";
+    when aah_droit_calcule(p) and percoit_revenu_activite(p) and en_couple(p) and montant_aah_applicable(m) and ressources_trimestrielles_retenues(p, r1) and ressources_conjoint_retenues(p, r2) and enfants_charge(n) and r1 + r2 < plafond_ancien_couple_trimestriel(m, n);
+    then aah_montant_ancien(p, min(m, div_round(plafond_ancien_couple_trimestriel(m, n) - (r1 + r2), 3.0, 2, "HALF_UP")));
+}
+
+@source(
+    CSS_L821_3_PRE2021_ED2021_01_01,
+    CSS_L821_3_PRE2021_ED2021_05_01,
+    CSS_L821_3_PRE2022_ED2021_12_03,
+    CSS_L821_3_PRE2023_ED2022_01_01,
+    CSS_L821_3_PRE2023_ED2022_01_21,
+    CSS_L821_3_PRE2023_ED2022_06_17,
+    CSS_L821_3_PRE2023_ED2023_01_01,
+    CSS_L821_3_PRE2023_ED2023_09_01,
+    CSS_L821_3_ED2023_10_01,
+    CSS_L821_3_ED2024_12_01,
+    CSS_L821_3_ED2025_08_28,
+    CSS_L821_3_ED2026_01_01,
+    CSS_L821_3_ED2026_06_28,
+    CSS_L821_3_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01,
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_R821_4_1_PRE2023_ED2021_01_01,
+    CSS_R821_4_1_PRE2023_ED2021_05_01,
+    CSS_R821_4_1_PRE2023_ED2021_12_03,
+    CSS_R821_4_1_PRE2023_ED2022_01_01,
+    CSS_R821_4_1_PRE2023_ED2022_01_21,
+    CSS_R821_4_1_PRE2023_ED2022_06_17,
+    CSS_R821_4_1_PRE2026_ED2023_01_01,
+    CSS_R821_4_1_PRE2026_ED2023_09_01)
+rule MontantAncienTrimestrielSeulArrondi(p: Personne, m: Money, r: Money, n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "montant ancien, régime trimestriel, personne seule: plafond sans majoration couple, arrondi au centime (lecture D-82)";
+    label en unofficial "former amount, quarterly track, single person: ceiling without couple increase, rounded to the centime (reading D-82)";
+    when aah_droit_calcule(p) and percoit_revenu_activite(p) and personne_seule(p) and montant_aah_applicable(m) and ressources_trimestrielles_retenues(p, r) and enfants_charge(n) and r < plafond_nouveau_trimestriel(m, n);
+    then aah_montant_ancien(p, min(m, div_round(plafond_nouveau_trimestriel(m, n) - r, 3.0, 2, "HALF_UP")));
+}
+
+@source(
+    CSS_D821_2_ED2023_10_01,
+    CSS_D821_2_ED2024_12_01,
+    CSS_D821_2_ED2025_08_28,
+    CSS_D821_2_ED2026_01_01,
+    CSS_D821_2_ED2026_06_28,
+    CSS_D821_2_ED2026_07_23,
+    CSS_D821_2_PRE2023_ED2021_01_01,
+    CSS_D821_2_PRE2023_ED2021_05_01,
+    CSS_D821_2_PRE2023_ED2021_12_03,
+    CSS_D821_2_PRE2023_ED2022_01_01,
+    CSS_D821_2_PRE2023_ED2022_01_21,
+    CSS_D821_2_PRE2023_ED2022_06_17,
+    CSS_D821_2_PRE2023_ED2023_01_01,
+    CSS_D821_2_PRE2023_ED2023_09_01)
+pub interpretation DouziemeTiersArrondiCentime of CSS_D821_2_ED2026_07_23 {
+    status disputed;
+    label fr official "lecture : le douzième (régime annuel) et le tiers (régime trimestriel) de la différence entre le plafond et les ressources, D. 821-2 al. 3, si la division n'est pas exacte, sont arrondis au centime, demi vers le haut — pratique des caisses (CNAF) ; ni la D. 821-2 ni la L. 821-3-1 ne fixent d'arrondi";
+    label en unofficial "reading: the twelfth (annual track) and the third (quarterly track) of the difference between the ceiling and the resources, D. 821-2 para. 3, where the division is not exact, are rounded to the centime, half up - fund (CNAF) practice; neither D. 821-2 nor L. 821-3-1 states a rounding";
+    include LectureDouziemeTiersArrondis;
+    include MontantNouveauAnnuelArrondi;
+    include MontantNouveauTrimestrielArrondi;
+    include MontantAncienAnnuelCoupleArrondi;
+    include MontantAncienAnnuelSeulArrondi;
+    include MontantAncienTrimestrielCoupleArrondi;
+    include MontantAncienTrimestrielSeulArrondi;
+}

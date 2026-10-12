@@ -1,0 +1,615 @@
+// Scope of the three aids (CCH Livre VIII, Titres III-IV): APL dwelling and
+// occupant cases, post-2017 loan exclusions, the six ALF household categories,
+// the residual ALS, accession-allocation debts, the pregnancy assimilation and
+// the family-benefits bridge.
+//
+// INPUT CONTRACT (case facts, all origin case_input unless noted):
+// agency-established classifications at the article's own level: cas_apl_l831_1
+// (the 6 dwelling cases), occupant_apl_r831_1 (the 4 occupant cases),
+// dette_accession_allocation (the 3 R. 842-5 debts), loan signature dates,
+// the four family-benefit receipt flags (explicit booleans; false means the
+// agency established non-receipt), and household-composition findings
+// (enfant_charge_l512_3, menage_nouveaux_maries, ascendant_charge_age_determine,
+// proche_handicape_charge, femme_seule_enceinte). Raw dwelling facts (aid and
+// loan characteristics, convention texts, the R. 321-15 work list, the
+// D. 331-63 technical norms, the L. 831-2 commune list) are NOT inputs: the
+// agency establishes the article-level category and the case carries it.
+// Eligibility heads (eligible_apl/alf/als) are ADVISORY: they do not gate
+// droit_ouvert or any calculation module, which keep reading aide_demandee and
+// their own facts. Wiring eligibility as a gate is an owner follow-up (it
+// would change existing derivations); the priority and exclusion logic below
+// is fully executable on its own heads.
+//
+// DEONTIC MAP (this module is entitlement classification, no duties):
+// L. 831-1/R. 831-1 grant APL by case conjunction; L. 831-2 excludes
+// post-2017 loans (defeater) with the 2018-2019 double-condition exception
+// (lex-specialis restorer); L. 841-4 excludes unconditionally (defeaters);
+// L. 841-1 grants ALF by household category; L. 841-2 grants ALS residually
+// (defeasible, defeated by attributed APL/ALF); L. 841-3 extends ALS to
+// long-stay residents; R. 842-5 classifies accession debts; R. 841-2 deems
+// the lone pregnant woman childless for the calculation; L. 821-3 publishes
+// the family-benefits exclusion marker, household and child level (effect
+// in pf-core).
+// L. 841-5 (ALS non-cumul and difference) lives in 11-exclusivite with the
+// attribution layer it qualifies.
+//
+// OPEN-WORLD CAVEAT (recorded, not hidden): the residual ALS defeats on
+// ATTRIBUTED apl/alf (scope joined with the request: the package's
+// institutional notion of "beneficier", L. 841-2). Bare eligibility without
+// attribution no longer excludes. Payment-level receipt is aid-untyped in
+// the core (aide_versee/aide_mensuelle carry no aid), so attribution-level
+// benefit is the adopted reading; the versement nuance is a boundary.
+// A case that supplies no scope inputs derives no attribution, so ALS
+// defaults eligible when requested; unassessed scope is not ineligibility.
+//
+// FRAGMENTS (predicted; reviewer verifies after sync --write): base + all 7
+// _ED fragments for each cited article (all stable since 2019-09-01).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_L821_3,
+    CCH_L821_3_ED2019_12,
+    CCH_L821_3_ED2020_01,
+    CCH_L821_3_ED2021_01,
+    CCH_L821_3_ED2023_04,
+    CCH_L821_3_ED2023_09,
+    CCH_L821_3_ED2023_12,
+    CCH_L821_3_ED2026_07,
+    CCH_L831_1,
+    CCH_L831_1_ED2019_12,
+    CCH_L831_1_ED2020_01,
+    CCH_L831_1_ED2021_01,
+    CCH_L831_1_ED2023_04,
+    CCH_L831_1_ED2023_09,
+    CCH_L831_1_ED2023_12,
+    CCH_L831_1_ED2026_07,
+    CCH_L831_2,
+    CCH_L831_2_ED2019_12,
+    CCH_L831_2_ED2020_01,
+    CCH_L831_2_ED2021_01,
+    CCH_L831_2_ED2023_04,
+    CCH_L831_2_ED2023_09,
+    CCH_L831_2_ED2023_12,
+    CCH_L831_2_ED2026_07,
+    CCH_L841_1,
+    CCH_L841_1_ED2019_12,
+    CCH_L841_1_ED2020_01,
+    CCH_L841_1_ED2021_01,
+    CCH_L841_1_ED2023_04,
+    CCH_L841_1_ED2023_09,
+    CCH_L841_1_ED2023_12,
+    CCH_L841_1_ED2026_07,
+    CCH_L841_2,
+    CCH_L841_2_ED2019_12,
+    CCH_L841_2_ED2020_01,
+    CCH_L841_2_ED2021_01,
+    CCH_L841_2_ED2023_04,
+    CCH_L841_2_ED2023_09,
+    CCH_L841_2_ED2023_12,
+    CCH_L841_2_ED2026_07,
+    CCH_L841_3,
+    CCH_L841_3_ED2019_12,
+    CCH_L841_3_ED2020_01,
+    CCH_L841_3_ED2021_01,
+    CCH_L841_3_ED2023_04,
+    CCH_L841_3_ED2023_09,
+    CCH_L841_3_ED2023_12,
+    CCH_L841_3_ED2026_07,
+    CCH_L841_4,
+    CCH_L841_4_ED2019_12,
+    CCH_L841_4_ED2020_01,
+    CCH_L841_4_ED2021_01,
+    CCH_L841_4_ED2023_04,
+    CCH_L841_4_ED2023_09,
+    CCH_L841_4_ED2023_12,
+    CCH_L841_4_ED2026_07,
+    CCH_R831_1,
+    CCH_R831_1_ED2019_12,
+    CCH_R831_1_ED2020_01,
+    CCH_R831_1_ED2021_01,
+    CCH_R831_1_ED2023_04,
+    CCH_R831_1_ED2023_09,
+    CCH_R831_1_ED2023_12,
+    CCH_R831_1_ED2026_07,
+    CCH_R841_2,
+    CCH_R841_2_ED2019_12,
+    CCH_R841_2_ED2020_01,
+    CCH_R841_2_ED2021_01,
+    CCH_R841_2_ED2023_04,
+    CCH_R841_2_ED2023_09,
+    CCH_R841_2_ED2023_12,
+    CCH_R841_2_ED2026_07,
+    CCH_R842_5,
+    CCH_R842_5_ED2019_12,
+    CCH_R842_5_ED2020_01,
+    CCH_R842_5_ED2021_01,
+    CCH_R842_5_ED2023_04,
+    CCH_R842_5_ED2023_09,
+    CCH_R842_5_ED2023_12,
+    CCH_R842_5_ED2026_07,
+    Menage,
+    PersonneACharge,
+    TypeAide,
+    aide_demandee,
+    personnes_a_charge,
+};
+
+// --- APL dwelling cases (L. 831-1 1-6) -------------------------------------
+
+@source(CCH_L831_1, CCH_L831_1_ED2019_12, CCH_L831_1_ED2020_01,
+        CCH_L831_1_ED2021_01, CCH_L831_1_ED2023_04, CCH_L831_1_ED2023_09,
+        CCH_L831_1_ED2023_12, CCH_L831_1_ED2026_07)
+pub enum CasAPL_L831_1 {
+    label fr official "cas d'application de l'aide personnalisee au logement (art. L. 831-1 1 a 6)";
+    label en unofficial "APL scope dwelling cases (art. L. 831-1 1-6)";
+    APL_PROPRIETAIRE_AIDE_ETAT, APL_HLM_BAILLEUR_CONVENTIONNE,
+    APL_LOCATIF_AIDE_ETAT_CONVENTIONNE, APL_LOCATIF_REGLEMENTAIRE_CONVENTIONNE,
+    APL_FOYER_ASSIMILE_CONVENTIONNE, APL_LOCATION_ACCESSION_AIDEE
+}
+
+pub relation cas_apl_l831_1(m: Menage, c: CasAPL_L831_1) kind empirical {
+    label fr official "le logement releve du cas vise de l'article L. 831-1 (constat de l'organisme)";
+    label en unofficial "the dwelling falls under the cited L. 831-1 case (agency finding)";
+}
+
+// --- APL occupant cases (R. 831-1 1-4) --------------------------------------
+
+@source(CCH_R831_1, CCH_R831_1_ED2019_12, CCH_R831_1_ED2020_01,
+        CCH_R831_1_ED2021_01, CCH_R831_1_ED2023_04, CCH_R831_1_ED2023_09,
+        CCH_R831_1_ED2023_12, CCH_R831_1_ED2026_07)
+pub enum OccupantAPL_R831_1 {
+    label fr official "personnes occupantes attributaires de l'APL (art. R. 831-1 1 a 4)";
+    label en unofficial "APL recipient occupant cases (art. R. 831-1 1-4)";
+    OCC_PROPRIETAIRE_L8311_1, OCC_LOCATIF_CONVENTIONNE_2_3_4,
+    OCC_LOCATION_ACCESSION_6, OCC_FOYER_PRIVATIF_5
+}
+
+pub relation occupant_apl_r831_1(m: Menage, k: OccupantAPL_R831_1) kind empirical {
+    label fr official "le menage occupe au sens du cas vise de l'article R. 831-1 (constat de l'organisme)";
+    label en unofficial "the household occupies under the cited R. 831-1 case (agency finding)";
+}
+
+pub relation assimile_proprietaire_apl(m: Menage) kind empirical {
+    label fr official "assimile au proprietaire R. 831-1 al. 2, vocation a terme ou parts sociales (constat)";
+    label en unofficial "deemed owner under R. 831-1 al. 2, future title or company shares (finding)";
+}
+
+pub relation eligible_apl(m: Menage) kind institutional {
+    label fr official "le menage remplit les conditions de champ de l'APL";
+    label en unofficial "the household meets the APL scope conditions";
+}
+
+@source(CCH_L831_1, CCH_L831_1_ED2019_12, CCH_L831_1_ED2020_01,
+        CCH_L831_1_ED2021_01, CCH_L831_1_ED2023_04, CCH_L831_1_ED2023_09,
+        CCH_L831_1_ED2023_12, CCH_L831_1_ED2026_07, CCH_R831_1,
+        CCH_R831_1_ED2019_12, CCH_R831_1_ED2020_01, CCH_R831_1_ED2021_01,
+        CCH_R831_1_ED2023_04, CCH_R831_1_ED2023_09, CCH_R831_1_ED2023_12,
+        CCH_R831_1_ED2026_07)
+rule EligibleAPL(m: Menage, c: CasAPL_L831_1,
+    k: OccupantAPL_R831_1) defeasible {
+    label fr official "cas L. 831-1 joint au cas d'occupation R. 831-1 : champ de l'APL";
+    label en unofficial "L. 831-1 case joined with R. 831-1 occupant case: APL scope";
+    when cas_apl_l831_1(m, c) and occupant_apl_r831_1(m, k);
+    then eligible_apl(m);
+}
+
+// --- Post-2017 loan exclusion (L. 831-2) ------------------------------------
+// No APL for loans signed after 31.12.2017, except loans signed before
+// 01.01.2020 for an old dwelling in a listed non-tense commune. The three
+// defeaters fire on the three ways the exception FAILS (positive premises
+// only); when the exception holds, all three stay silent.
+
+pub relation pret_apl_date_signature(m: Menage, d: Date) kind empirical {
+    label fr official "date de signature du contrat de pret APL (dossier accession)";
+    label en unofficial "APL loan contract signature date (accession cases)";
+}
+
+pub relation logement_ancien_l831_2(m: Menage, ancien: Boolean) kind empirical {
+    label fr official "logement ancien au sens de l'exception L. 831-2 (constat explicite)";
+    label en unofficial "old-stock dwelling under the L. 831-2 exception (explicit finding)";
+}
+
+pub relation commune_non_tendue_l831_2(m: Menage, non_tendue: Boolean) kind empirical {
+    label fr official "commune sur la liste arretee des communes non tendues (constat explicite)";
+    label en unofficial "commune on the listed non-tense communes (explicit finding)";
+}
+
+@source(CCH_L831_2, CCH_L831_2_ED2019_12, CCH_L831_2_ED2020_01,
+        CCH_L831_2_ED2021_01, CCH_L831_2_ED2023_04, CCH_L831_2_ED2023_09,
+        CCH_L831_2_ED2023_12, CCH_L831_2_ED2026_07)
+rule ExclusionPretSigneApres2017(m: Menage, d: Date) defeater {
+    label fr official "L. 831-2 al. 1 : pret signe apres le 31 decembre 2017, pas d'APL sauf exception etablie";
+    label en unofficial "L. 831-2 al. 1: loan signed after 31.12.2017, no APL unless the exception holds";
+    when pret_apl_date_signature(m, d) and d > @2017-12-31;
+    defeat eligible_apl(m);
+}
+
+@source(CCH_L831_2, CCH_L831_2_ED2019_12, CCH_L831_2_ED2020_01,
+        CCH_L831_2_ED2021_01, CCH_L831_2_ED2023_04, CCH_L831_2_ED2023_09,
+        CCH_L831_2_ED2023_12, CCH_L831_2_ED2026_07)
+rule ExceptionPret2018AncienNonTendu(m: Menage, c: CasAPL_L831_1, k: OccupantAPL_R831_1, d: Date) defeasible {
+    label fr official "L. 831-2 al. 2 : pret 2018-2019, logement ancien en commune non tendue, droit maintenu";
+    label en unofficial "L. 831-2 al. 2: 2018-2019 loan, old dwelling in a non-tense commune, right preserved";
+    when cas_apl_l831_1(m, c) and occupant_apl_r831_1(m, k)
+        and pret_apl_date_signature(m, d) and d >= @2018-01-01 and d < @2020-01-01
+        and logement_ancien_l831_2(m, true) and commune_non_tendue_l831_2(m, true);
+    then eligible_apl(m);
+}
+
+priority ExceptionPret2018OverExclusion {
+    prefer ExceptionPret2018AncienNonTendu over ExclusionPretSigneApres2017;
+    reason lex_specialis;
+}
+
+// --- ALF household categories (L. 841-1 1-6) --------------------------------
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+pub enum CategorieALF {
+    label fr official "categories de beneficiaires de l'ALF (art. L. 841-1 1 a 6)";
+    label en unofficial "ALF recipient household categories (art. L. 841-1 1-6)";
+    ALF_PRESTATIONS_FAMILIALES, ALF_ENFANT_CHARGE_SANS_PF, ALF_NOUVEAUX_MARIES,
+    ALF_ASCENDANT_AGE, ALF_PROCHE_HANDICAPE, ALF_GROSSESSE_SEULE
+}
+
+pub relation categorie_alf(m: Menage, c: CategorieALF) kind institutional {
+    label fr official "le menage releve de la categorie visee de l'article L. 841-1";
+    label en unofficial "the household falls under the cited L. 841-1 category";
+}
+
+pub relation percoit_allocations_familiales(m: Menage, oui: Boolean) kind empirical {
+    label fr official "perception des allocations familiales L. 511-1 2 (constat explicite)";
+    label en unofficial "family allowances receipt L. 511-1 2 (explicit finding)";
+}
+
+pub relation percoit_complement_familial(m: Menage, oui: Boolean) kind empirical {
+    label fr official "perception du complement familial L. 511-1 3 (constat explicite)";
+    label en unofficial "complement familial receipt L. 511-1 3 (explicit finding)";
+}
+
+pub relation percoit_aeeh(m: Menage, oui: Boolean) kind empirical {
+    label fr official "perception de l'AEEH L. 511-1 5 (constat explicite)";
+    label en unofficial "AEEH receipt L. 511-1 5 (explicit finding)";
+}
+
+pub relation percoit_asf(m: Menage, oui: Boolean) kind empirical {
+    label fr official "perception de l'ASF L. 511-1 6 (constat explicite)";
+    label en unofficial "ASF receipt L. 511-1 6 (explicit finding)";
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule CategorieALFAllocationsFamiliales(m: Menage) strict {
+    label fr official "allocataires des allocations familiales : ALF 1 a)";
+    label en unofficial "family-allowance recipients: ALF 1 a)";
+    when percoit_allocations_familiales(m, true);
+    then categorie_alf(m, ALF_PRESTATIONS_FAMILIALES);
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule CategorieALFComplementFamilial(m: Menage) strict {
+    label fr official "allocataires du complement familial : ALF 1 b)";
+    label en unofficial "complement-familial recipients: ALF 1 b)";
+    when percoit_complement_familial(m, true);
+    then categorie_alf(m, ALF_PRESTATIONS_FAMILIALES);
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule CategorieALFAeeh(m: Menage) strict {
+    label fr official "allocataires de l'AEEH : ALF 1 c)";
+    label en unofficial "AEEH recipients: ALF 1 c)";
+    when percoit_aeeh(m, true);
+    then categorie_alf(m, ALF_PRESTATIONS_FAMILIALES);
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule CategorieALFAsf(m: Menage) strict {
+    label fr official "allocataires de l'ASF : ALF 1 d)";
+    label en unofficial "ASF recipients: ALF 1 d)";
+    when percoit_asf(m, true);
+    then categorie_alf(m, ALF_PRESTATIONS_FAMILIALES);
+}
+
+pub relation enfant_charge_l512_3(m: Menage) kind empirical {
+    label fr official "enfant a charge au sens de l'article L. 512-3 CSS (constat)";
+    label en unofficial "dependent child under CSS L. 512-3 (finding)";
+}
+
+pub relation sans_droit_prestations_alf1(m: Menage) kind empirical {
+    label fr official "aucun droit a l'une des prestations enumerees au 1 de l'art. L. 841-1 (constat juridique : n'ayant pas droit)";
+    label en unofficial "no legal right to any L. 841-1 1 benefit (legal finding: n'ayant pas droit)";
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule CategorieALFEnfantCharge(m: Menage) strict {
+    label fr official "enfant a charge, n'ayant pas droit aux prestations du 1 : ALF 2";
+    label en unofficial "dependent child with no legal right to the 1 benefits: ALF 2";
+    when enfant_charge_l512_3(m) and sans_droit_prestations_alf1(m);
+    then categorie_alf(m, ALF_ENFANT_CHARGE_SANS_PF);
+}
+
+pub relation menage_nouveaux_maries(m: Menage) kind empirical {
+    label fr official "menage sans enfant a charge nouvellement marie (constat ; duree en 14-dates)";
+    label en unofficial "newly married childless household (finding; duration in 14-dates)";
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule CategorieALFNouveauxMaries(m: Menage) strict {
+    label fr official "menages sans enfant a charge a compter du mariage : ALF 3";
+    label en unofficial "childless households from marriage: ALF 3";
+    when menage_nouveaux_maries(m);
+    then categorie_alf(m, ALF_NOUVEAUX_MARIES);
+}
+
+pub relation ascendant_charge_age_determine(m: Menage) kind empirical {
+    label fr official "ascendant a charge vivant au foyer ayant depasse l'age determine (constat)";
+    label en unofficial "dependent ascendant in the home past the set age (finding)";
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule CategorieALFAscendantAge(m: Menage) strict {
+    label fr official "ascendant a charge ayant depasse l'age determine : ALF 4";
+    label en unofficial "dependent ascendant past the set age: ALF 4";
+    when ascendant_charge_age_determine(m);
+    then categorie_alf(m, ALF_ASCENDANT_AGE);
+}
+
+pub relation proche_handicape_charge(m: Menage) kind empirical {
+    label fr official "parent handicape a charge, 80 % ou RSDAE reconnue par la CDAPH (constat)";
+    label en unofficial "disabled dependent kin, 80 % or CDAPH-recognised RSDAE (finding)";
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule CategorieALFProcheHandicape(m: Menage) strict {
+    label fr official "parent handicape a charge au foyer : ALF 5";
+    label en unofficial "disabled dependent kin in the home: ALF 5";
+    when proche_handicape_charge(m);
+    then categorie_alf(m, ALF_PROCHE_HANDICAPE);
+}
+
+pub relation femme_seule_enceinte(m: Menage) kind empirical {
+    label fr official "femme seule sans personne a charge enceinte (constat ; fenetre en 14-dates)";
+    label en unofficial "lone pregnant woman with no dependents (finding; window in 14-dates)";
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule CategorieALFGrossesse(m: Menage) strict {
+    label fr official "femme seule enceinte sans personne a charge : ALF 6";
+    label en unofficial "lone pregnant woman with no dependents: ALF 6";
+    when femme_seule_enceinte(m);
+    then categorie_alf(m, ALF_GROSSESSE_SEULE);
+}
+
+pub relation eligible_alf(m: Menage) kind institutional {
+    label fr official "le menage remplit les conditions de champ de l'ALF";
+    label en unofficial "the household meets the ALF scope conditions";
+}
+
+@source(CCH_L841_1, CCH_L841_1_ED2019_12, CCH_L841_1_ED2020_01,
+        CCH_L841_1_ED2021_01, CCH_L841_1_ED2023_04, CCH_L841_1_ED2023_09,
+        CCH_L841_1_ED2023_12, CCH_L841_1_ED2026_07)
+rule EligibleALF(m: Menage, c: CategorieALF) defeasible {
+    label fr official "toute categorie L. 841-1 ouvre le champ de l'ALF (defeasible : L. 841-4)";
+    label en unofficial "any L. 841-1 category opens ALF scope (defeasible: L. 841-4)";
+    when categorie_alf(m, c);
+    then eligible_alf(m);
+}
+
+// --- Residual ALS (L. 841-2) + long-stay assimilation (L. 841-3) -------------
+
+pub relation eligible_als(m: Menage) kind institutional {
+    label fr official "le menage remplit les conditions de champ de l'ALS (residuelle)";
+    label en unofficial "the household meets the residual ALS scope conditions";
+}
+
+@source(CCH_L841_2, CCH_L841_2_ED2019_12, CCH_L841_2_ED2020_01,
+        CCH_L841_2_ED2021_01, CCH_L841_2_ED2023_04, CCH_L841_2_ED2023_09,
+        CCH_L841_2_ED2023_12, CCH_L841_2_ED2026_07)
+rule EligibleALSResiduel(m: Menage) defeasible {
+    label fr official "l'ALS demandee est residuelle : le champ de l'APL ou de l'ALF l'ecarte";
+    label en unofficial "requested ALS is residual: the APL or ALF scope defeats it";
+    when aide_demandee(m, ALS);
+    then eligible_als(m);
+}
+
+// D-79: L. 841-2 makes the ALS residual: "les personnes ne beneficiant pas
+// de l'ALF ou de l'APL". The aid is attributed by the fund under the scope
+// the household falls into, not by the label of the request, so the household
+// that falls within the APL or ALF scope (eligible_apl/eligible_alf, which do
+// not read the request) is outside the ALS. Reading aide_attribuee here would
+// close a non-stratifiable cycle (§110); eligibility does not.
+@source(CCH_L841_2, CCH_L841_2_ED2019_12, CCH_L841_2_ED2020_01,
+        CCH_L841_2_ED2021_01, CCH_L841_2_ED2023_04, CCH_L841_2_ED2023_09,
+        CCH_L841_2_ED2023_12, CCH_L841_2_ED2026_07)
+rule AplAttribueeExclutALS(m: Menage) defeater {
+    label fr official "le champ de l'APL exclut l'ALS residuelle (L. 841-2)";
+    label en unofficial "the APL scope excludes the residual ALS (L. 841-2)";
+    when eligible_apl(m);
+    defeat eligible_als(m);
+}
+
+@source(CCH_L841_2, CCH_L841_2_ED2019_12, CCH_L841_2_ED2020_01,
+        CCH_L841_2_ED2021_01, CCH_L841_2_ED2023_04, CCH_L841_2_ED2023_09,
+        CCH_L841_2_ED2023_12, CCH_L841_2_ED2026_07)
+rule AlfAttribueeExclutALS(m: Menage) defeater {
+    label fr official "le champ de l'ALF exclut l'ALS residuelle (L. 841-2)";
+    label en unofficial "the ALF scope excludes the residual ALS (L. 841-2)";
+    when eligible_alf(m);
+    defeat eligible_als(m);
+}
+
+pub relation resident_usld_l841_3(m: Menage) kind empirical {
+    label fr official "resident assimile au sens de l'article L. 841-3 (constat)";
+    label en unofficial "resident assimilated under L. 841-3 (finding)";
+}
+
+@source(CCH_L841_3, CCH_L841_3_ED2019_12, CCH_L841_3_ED2020_01,
+        CCH_L841_3_ED2021_01, CCH_L841_3_ED2023_04, CCH_L841_3_ED2023_09,
+        CCH_L841_3_ED2023_12, CCH_L841_3_ED2026_07)
+rule AssimilationUSLD(m: Menage) defeasible {
+    label fr official "residents assimiles L. 841-3 : champ de l'ALS (defeasible : L. 841-2)";
+    label en unofficial "L. 841-3 assimilated residents: ALS scope (defeasible: L. 841-2)";
+    when resident_usld_l841_3(m);
+    then eligible_als(m);
+}
+
+// --- Accession-allocation debts (R. 842-5) + L. 841-4 exclusion ---------------
+
+@source(CCH_R842_5, CCH_R842_5_ED2019_12, CCH_R842_5_ED2020_01,
+        CCH_R842_5_ED2021_01, CCH_R842_5_ED2023_04, CCH_R842_5_ED2023_09,
+        CCH_R842_5_ED2023_12, CCH_R842_5_ED2026_07)
+pub enum DetteAccessionAllocation {
+    label fr official "dettes ouvrant le droit a l'allocation en accession (art. R. 842-5 1 a 3)";
+    label en unofficial "debts opening allocation rights in accession (art. R. 842-5 1-3)";
+    DETTE_ACCESSION_PROPRIETE, DETTE_TRAVAUX_R321_15,
+    DETTE_AGRANDISSEMENT_AMENAGEMENT
+}
+
+pub relation dette_accession_allocation(m: Menage, d: DetteAccessionAllocation) kind empirical {
+    label fr official "dette d'accession relevant du cas vise de l'article R. 842-5 (constat)";
+    label en unofficial "accession debt under the cited R. 842-5 case (finding)";
+}
+
+pub relation dette_eligible_allocation(m: Menage) kind institutional {
+    label fr official "dette eligible a l'allocation en accession";
+    label en unofficial "allocation-eligible accession debt";
+}
+
+@source(CCH_R842_5, CCH_R842_5_ED2019_12, CCH_R842_5_ED2020_01,
+        CCH_R842_5_ED2021_01, CCH_R842_5_ED2023_04, CCH_R842_5_ED2023_09,
+        CCH_R842_5_ED2023_12, CCH_R842_5_ED2026_07)
+rule DetteEligibleAllocationAccession(m: Menage, d: DetteAccessionAllocation) strict {
+    label fr official "tout cas R. 842-5 est une dette eligible (listes externes constatees)";
+    label en unofficial "any R. 842-5 case is an eligible debt (external lists as found)";
+    when dette_accession_allocation(m, d);
+    then dette_eligible_allocation(m);
+}
+
+pub relation pret_allocation_date_signature(m: Menage, d: Date) kind empirical {
+    label fr official "date de signature du pret d'accession en allocation (dossier)";
+    label en unofficial "allocation-accession loan signature date (case file)";
+}
+
+@source(CCH_L841_4, CCH_L841_4_ED2019_12, CCH_L841_4_ED2020_01,
+        CCH_L841_4_ED2021_01, CCH_L841_4_ED2023_04, CCH_L841_4_ED2023_09,
+        CCH_L841_4_ED2023_12, CCH_L841_4_ED2026_07)
+rule ExclusionAllocationPretApres2017ALF(m: Menage, ds: Date) defeater {
+    label fr official "pret d'accession a la propriete signe apres le 31 decembre 2017 : pas d'ALF (L. 841-4)";
+    label en unofficial "ownership-access loan signed after 31.12.2017: no ALF (L. 841-4)";
+    when dette_accession_allocation(m, DETTE_ACCESSION_PROPRIETE)
+        and pret_allocation_date_signature(m, ds)
+        and ds > @2017-12-31;
+    defeat eligible_alf(m);
+}
+
+@source(CCH_L841_4, CCH_L841_4_ED2019_12, CCH_L841_4_ED2020_01,
+        CCH_L841_4_ED2021_01, CCH_L841_4_ED2023_04, CCH_L841_4_ED2023_09,
+        CCH_L841_4_ED2023_12, CCH_L841_4_ED2026_07)
+rule ExclusionAllocationPretApres2017ALS(m: Menage, ds: Date) defeater {
+    label fr official "pret d'accession a la propriete signe apres le 31 decembre 2017 : pas d'ALS (L. 841-4)";
+    label en unofficial "ownership-access loan signed after 31.12.2017: no ALS (L. 841-4)";
+    when dette_accession_allocation(m, DETTE_ACCESSION_PROPRIETE)
+        and pret_allocation_date_signature(m, ds)
+        and ds > @2017-12-31;
+    defeat eligible_als(m);
+}
+
+// --- Family-benefits bridge (L. 821-3) ---------------------------------------
+
+pub relation enfant_beneficiaire_personnel(m: Menage) kind empirical {
+    label fr official "un enfant du menage beneficie a titre personnel d'une aide au logement (constat)";
+    label en unofficial "a household child personally receives a housing aid (finding)";
+}
+
+pub relation exclusion_denombrement_pf(m: Menage) kind institutional {
+    label fr official "au moins un enfant du menage est exclu du denombrement des prestations familiales L. 821-3 (resume existentiel, pont pf-core)";
+    label en unofficial "at least one household child is out of the family-benefits headcount L. 821-3 (existential summary, pf-core bridge)";
+}
+
+pub relation enfant_beneficiaire_aide_personnelle(m: Menage, p: PersonneACharge) kind empirical {
+    label fr official "l'enfant p du menage beneficie a titre personnel d'une aide au logement (constat individuel)";
+    label en unofficial "household child p personally receives a housing aid (individual finding)";
+}
+
+pub relation exclusion_denombrement_pf_enfant(m: Menage, p: PersonneACharge) kind institutional {
+    label fr official "l'enfant p n'est pas compte comme enfant a charge pour les prestations familiales (pont pf-core)";
+    label en unofficial "child p is not counted as a dependent for family benefits (pf-core bridge)";
+}
+
+@source(CCH_L821_3, CCH_L821_3_ED2019_12, CCH_L821_3_ED2020_01,
+        CCH_L821_3_ED2021_01, CCH_L821_3_ED2023_04, CCH_L821_3_ED2023_09,
+        CCH_L821_3_ED2023_12, CCH_L821_3_ED2026_07)
+rule ExclusionDenombrementPF(m: Menage) strict {
+    label fr official "un enfant beneficiaire personnel : au moins un enfant exclu du denombrement PF";
+    label en unofficial "a personally benefiting child: at least one child out of the PF headcount";
+    when enfant_beneficiaire_personnel(m);
+    then exclusion_denombrement_pf(m);
+}
+
+@source(CCH_L821_3, CCH_L821_3_ED2019_12, CCH_L821_3_ED2020_01,
+        CCH_L821_3_ED2021_01, CCH_L821_3_ED2023_04, CCH_L821_3_ED2023_09,
+        CCH_L821_3_ED2023_12, CCH_L821_3_ED2026_07)
+rule ExclusionDenombrementPFEnfant(m: Menage, p: PersonneACharge) strict {
+    label fr official "l'enfant p beneficiaire personnel n'est pas compte pour les prestations familiales";
+    label en unofficial "personally benefiting child p is not counted for family benefits";
+    when enfant_beneficiaire_aide_personnelle(m, p);
+    then exclusion_denombrement_pf_enfant(m, p);
+}
+
+@source(CCH_L821_3, CCH_L821_3_ED2019_12, CCH_L821_3_ED2020_01,
+        CCH_L821_3_ED2021_01, CCH_L821_3_ED2023_04, CCH_L821_3_ED2023_09,
+        CCH_L821_3_ED2023_12, CCH_L821_3_ED2026_07)
+rule ExclusionDenombrementPFAgregee(m: Menage, p: PersonneACharge) strict {
+    label fr official "un enfant exclu au niveau individuel : le menage porte le resume existentiel (au moins un exclu)";
+    label en unofficial "a child excluded at individual level: the household carries the existential summary (at least one excluded)";
+    when exclusion_denombrement_pf_enfant(m, p);
+    then exclusion_denombrement_pf(m);
+}
+
+// --- Pregnancy assimilation for the calculation (R. 841-2) -------------------
+
+pub relation pac_retenues_calcul_alf(m: Menage, n: Integer) kind institutional {
+    label fr official "personnes a charge retenues pour le calcul de l'ALF";
+    label en unofficial "dependents retained for the ALF calculation";
+}
+
+@source(CCH_R841_2, CCH_R841_2_ED2019_12, CCH_R841_2_ED2020_01,
+        CCH_R841_2_ED2021_01, CCH_R841_2_ED2023_04, CCH_R841_2_ED2023_09,
+        CCH_R841_2_ED2023_12, CCH_R841_2_ED2026_07)
+rule PacGrossesseZero(m: Menage) strict {
+    label fr official "femme seule enceinte assimilee aux menages sans enfant : zero retenu";
+    label en unofficial "lone pregnant woman deemed childless: zero retained";
+    when femme_seule_enceinte(m);
+    then pac_retenues_calcul_alf(m, 0);
+}
+
+@source(CCH_R841_2, CCH_R841_2_ED2019_12, CCH_R841_2_ED2020_01,
+        CCH_R841_2_ED2021_01, CCH_R841_2_ED2023_04, CCH_R841_2_ED2023_09,
+        CCH_R841_2_ED2023_12, CCH_R841_2_ED2026_07)
+rule PacCalculAlfDefaut(m: Menage, n: Integer) strict {
+    label fr official "hors grossesse visee : personnes a charge declarees retenues";
+    label en unofficial "outside the covered pregnancy: declared dependents retained";
+    when personnes_a_charge(m, n) and not_known(femme_seule_enceinte(m));
+    then pac_retenues_calcul_alf(m, n);
+}

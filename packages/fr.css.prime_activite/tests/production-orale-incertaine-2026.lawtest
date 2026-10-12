@@ -1,0 +1,32 @@
+// Nonproduction evidence (PA-R4-01/08): a late oral request after
+// a date-certain notice, with an open CRA window, activates the
+// beneficiary production duty, but without production or
+// nonproduction evidence neither the default rejection nor the
+// examination is established (R.847-1-1 IV 2°; PA-FE09-03).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-production-orale-incertaine-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; }
+        assert "ppa-01": demande_rectification(entity_ref("urn:fr:ppa:case:production-orale-incertaine-2026"), @2026-06-10) { origin case_input; }
+        assert "ppa-02": demande_rectification_orale(entity_ref("urn:fr:ppa:case:production-orale-incertaine-2026")) { origin case_input; }
+        assert "ppa-03": reception_notification(entity_ref("urn:fr:ppa:case:production-orale-incertaine-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-04": date_observation_recours(entity_ref("urn:fr:ppa:case:production-orale-incertaine-2026"), @2026-07-15) { origin case_input; }
+        assert "ppa-05": delai_recours_cra_en_cours(entity_ref("urn:fr:ppa:case:production-orale-incertaine-2026")) { origin case_input; }
+        assert "ppa-06": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:production-orale-incertaine-2026")) { origin case_input; }
+        assert "ppa-07": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:production-orale-incertaine-2026")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettrePieces, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_demande_orale(entity_ref("urn:fr:ppa:case:production-orale-incertaine-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(examen_demande_possible(entity_ref("urn:fr:ppa:case:production-orale-incertaine-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,172 @@
+# Manifest §10 — package root marker (DECISION-0033). Normative headings per §22
+# live in the .law files themselves; the manifest must match them (LDC-E1109, lawc check).
+[package]
+name = "fr.pf.cf"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:pf-cf"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after editing .law files run
+# `law fix imports fr/pf-cf`; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Catalog metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-pf-cf"
+title = "Complement familial (CF): award conditions (L. 522-1, R. 522-1), ceilings (L. 522-2, R. 522-2, R. 522-4), amounts (D. 522-1, D. 522-2, L. 522-3) and differential (R. 522-3), fund payment duty; wave 3"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française"
+verifiedAgainstSource = false
+
+[dependencies]
+"fr.css.pass" = "0.1.0"
+"fr.pf.core" = "0.1.0"
+
+# Own families (DECISION-0127): regression = false until the ratchet is registered.
+[[tests]]
+family = "fr.pf.cf#conditions"
+regression = false
+suites = [
+    "tests/conditions-trois-enfants.lawtest",
+    "tests/conditions-deux-enfants.lawtest",
+    "tests/conditions-vingt-et-un-an.lawtest",
+    "tests/conditions-vingt-ans-remunere.lawtest",
+    "tests/conditions-biactif.lawtest",
+    "tests/conditions-non-biactif.lawtest",
+]
+world = ["fr.pf.cf", "fr.pf.core", "fr.css.pass"]
+
+[[tests]]
+family = "fr.pf.cf#plafond"
+regression = false
+suites = [
+    "tests/plafond-trois-enfants.lawtest",
+    "tests/plafond-cinq-enfants.lawtest",
+    "tests/plafond-biactif.lawtest",
+    "tests/plafond-majore.lawtest",
+    "tests/plafond-majore-biactif.lawtest",
+    "tests/plafond-dss-2018.lawtest",
+    "tests/plafond-dss-2019.lawtest",
+    "tests/plafond-dss-2020.lawtest",
+    "tests/plafond-dss-2021.lawtest",
+    "tests/plafond-dss-2022.lawtest",
+    "tests/plafond-dss-2023.lawtest",
+    "tests/plafond-dss-2024.lawtest",
+    "tests/plafond-dss-2025.lawtest",
+    "tests/plafond-dss-2026.lawtest",
+]
+world = ["fr.pf.cf", "fr.pf.core", "fr.css.pass"]
+
+[[tests]]
+family = "fr.pf.cf#pass"
+regression = false
+suites = [
+    "tests/pass-2016-biactif.lawtest",
+    "tests/pass-2016-sous-seuil.lawtest",
+    "tests/pass-2015-seuil-egal.lawtest",
+    "tests/pass-2026-seuil-egal.lawtest",
+    "tests/pass-fourni-prevaut.lawtest",
+    "tests/pass-2017-seuil.lawtest",
+    "tests/pass-2018-seuil.lawtest",
+    "tests/pass-2019-seuil.lawtest",
+    "tests/pass-2020-seuil.lawtest",
+    "tests/pass-2021-seuil.lawtest",
+    "tests/pass-2022-seuil.lawtest",
+    "tests/pass-2023-seuil.lawtest",
+    "tests/pass-2024-seuil.lawtest",
+    "tests/pass-2025-seuil.lawtest",
+]
+world = ["fr.pf.cf", "fr.pf.core", "fr.css.pass"]
+
+[[tests]]
+family = "fr.pf.cf#montant"
+regression = false
+suites = [
+    "tests/montant-base.lawtest",
+    "tests/montant-dss-2026.lawtest",
+    "tests/montant-majore-2018-01.lawtest",
+    "tests/montant-majore-2018-04.lawtest",
+    "tests/montant-majore-2021.lawtest",
+    "tests/montant-base-exclu-majore.lawtest",
+    "tests/montant-ressources-absentes.lawtest",
+    "tests/differentiel-ouvert.lawtest",
+    "tests/differentiel-seuil-egal.lawtest",
+    "tests/differentiel-plafond-egal.lawtest",
+]
+world = ["fr.pf.cf", "fr.pf.core", "fr.css.pass"]
+
+[[tests]]
+family = "fr.pf.cf#devoir-versement"
+regression = false
+suites = [
+    "tests/devoir-versement-actif.lawtest",
+    "tests/devoir-versement-majore.lawtest",
+    "tests/devoir-versement-differentiel.lawtest",
+    "tests/devoir-versement-sans-droit.lawtest",
+]
+world = ["fr.pf.cf", "fr.pf.core", "fr.css.pass"]
+
+[[tests]]
+family = "fr.pf.cf#dom"
+regression = false
+suites = [
+    "tests/dom-ancien-strict.lawtest",
+    "tests/dom-jeune-cinq-ans.lawtest",
+    "tests/dom-plafond-un-enfant.lawtest",
+    "tests/dom-plafond-deux-enfants-biactif.lawtest",
+    "tests/dom-droit-ouvert.lawtest",
+    "tests/dom-droit-mayotte-silence.lawtest",
+    "tests/dom-montant-base.lawtest",
+    "tests/dom-montant-majore.lawtest",
+    "tests/dom-montant-trois-enfants.lawtest",
+    "tests/dom-differentiel.lawtest",
+    "tests/dom-devoir-base.lawtest",
+    "tests/dom-devoir-majore.lawtest",
+    "tests/dom-devoir-differentiel.lawtest",
+    "tests/dom-devoir-sans-droit.lawtest",
+    "tests/dom-ressources-absentes.lawtest",
+    "tests/dom-titre-v-portee-collectivites.lawtest",
+    "tests/dom-titre-v-montant-saint-barthelemy.lawtest",
+    "tests/dom-titre-v-majore-saint-martin.lawtest",
+    "tests/dom-differentiel-silence-sb.lawtest",
+    "tests/dom-departement-preuve-manquante.lawtest",
+    "tests/dom-titre-v-sans-cadre.lawtest",
+]
+world = ["fr.pf.cf", "fr.pf.core", "fr.css.pass"]
+
+# OpenFisca-France cases (openfisca/openfisca-france@<see tests/foreign/REPORT.md>,
+# tests/formulas/cf.yaml, cf_2018.yaml, cf_2018_04.yaml): each case's
+# expectation is THEIR number. Not regressions: measurement of third-party cases.
+[[tests]]
+family = "fr.pf.cf#openfisca-import"
+regression = false
+suites = [
+    "tests/foreign/openfisca/of-cf-base-ressources.lawtest",
+    "tests/foreign/openfisca/of-2018-cas1.lawtest",
+    "tests/foreign/openfisca/of-2018-cas2.lawtest",
+    "tests/foreign/openfisca/of-2018-cas3.lawtest",
+    "tests/foreign/openfisca/of-2018-cas4.lawtest",
+    "tests/foreign/openfisca/of-2018-cas5.lawtest",
+    "tests/foreign/openfisca/of-2018-cas6.lawtest",
+    "tests/foreign/openfisca/of-2018-np1.lawtest",
+    "tests/foreign/openfisca/of-2018-np2.lawtest",
+    "tests/foreign/openfisca/of-2018-np3.lawtest",
+    "tests/foreign/openfisca/of-2018-np4.lawtest",
+    "tests/foreign/openfisca/of-2018-np5.lawtest",
+    "tests/foreign/openfisca/of-2018-np6.lawtest",
+    "tests/foreign/openfisca/of-2018-np7.lawtest",
+    "tests/foreign/openfisca/of-2018-np8.lawtest",
+    "tests/foreign/openfisca/of-2018-np9.lawtest",
+    "tests/foreign/openfisca/of-2018-04-cas1.lawtest",
+    "tests/foreign/openfisca/of-2018-04-cas2.lawtest",
+]
+world = ["fr.pf.cf", "fr.pf.core", "fr.css.pass"]

@@ -1,0 +1,45 @@
+// Deadline-window evidence (PA-R4-01/08): a filed CRA appeal
+// without any deadline evidence stays undetermined; an expired
+// filing deadline affirmatively bars admissibility on both the
+// direct and the association routes; an admissible appeal at the
+// expired R.142-6 point without a no-decision file status leaves
+// the implicit rejection undetermined (R.847-2).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-recours-delai-incertain-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": decision_refus(entity_ref("urn:fr:ppa:case:recours-delai-inconnu")) { origin case_input; }
+        assert "ppa-02": recours_cra_forme(entity_ref("urn:fr:ppa:case:recours-delai-inconnu"), @2026-06-05) { origin case_input; }
+        assert "ppa-03": decision_refus(entity_ref("urn:fr:ppa:case:recours-delai-expire")) { origin case_input; }
+        assert "ppa-04": recours_cra_forme(entity_ref("urn:fr:ppa:case:recours-delai-expire"), @2026-06-05) { origin case_input; }
+        assert "ppa-05": delai_recours_cra_expire(entity_ref("urn:fr:ppa:case:recours-delai-expire")) { origin case_input; }
+        assert "ppa-10": recours_cra_association(entity_ref("urn:fr:ppa:case:recours-delai-expire"), @2026-06-05) { origin case_input; }
+        assert "ppa-11": association_regulierement_constituee(entity_ref("urn:fr:ppa:case:recours-delai-expire")) { origin case_input; }
+        assert "ppa-12": association_anciennete_5_ans(entity_ref("urn:fr:ppa:case:recours-delai-expire")) { origin case_input; }
+        assert "ppa-13": association_objet_insertion_pro(entity_ref("urn:fr:ppa:case:recours-delai-expire")) { origin case_input; }
+        assert "ppa-14": mandat_association_ecrit(entity_ref("urn:fr:ppa:case:recours-delai-expire")) { origin case_input; }
+        assert "ppa-06": decision_refus(entity_ref("urn:fr:ppa:case:recours-decision-inconnue")) { origin case_input; }
+        assert "ppa-07": recours_cra_forme(entity_ref("urn:fr:ppa:case:recours-decision-inconnue"), @2026-06-05) { origin case_input; }
+        assert "ppa-08": delai_recours_cra_en_cours(entity_ref("urn:fr:ppa:case:recours-decision-inconnue")) { origin case_input; }
+        assert "ppa-09": delai_r142_6_expire(entity_ref("urn:fr:ppa:case:recours-decision-inconnue")) { origin case_input; }
+    }
+    evaluate truth(recours_prealaire_recevable(entity_ref("urn:fr:ppa:case:recours-delai-inconnu")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recours_prealaire_recevable(entity_ref("urn:fr:ppa:case:recours-delai-expire")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recours_prealaire_recevable(entity_ref("urn:fr:ppa:case:recours-decision-inconnue")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_implicite_cra(entity_ref("urn:fr:ppa:case:recours-decision-inconnue")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

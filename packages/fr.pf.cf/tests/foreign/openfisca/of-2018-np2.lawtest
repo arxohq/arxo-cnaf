@@ -1,0 +1,26 @@
+// OpenFisca Non Passant 2 (2018-01): single child (12), N-2 15000.
+// Their cf = 0; ours: count below three, no conclusion. Class (c).
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-of-2018-np2" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2018-01-15T12:00:00Z; knowledge_time @2018-01-15T12:00:00Z; legal_time @2018-01-15; timezone "Europe/Paris"; }
+        assert "on2-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-np2"), entity_ref("urn:fr:pf-cf:foreign:of-2018-np2-e1")) { origin case_input; }
+        assert "on2-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-np2-e1")) { origin case_input; }
+        assert "on2-03": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-np2-e1"), @2005-06-01) { origin case_input; }
+        assert "on2-04": mois_droit(@2018-01-01) { origin case_input; }
+        assert "on2-05": nb_enfants_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-np2"), 1) { origin case_input; }
+        assert "on2-06": ressources_menage(entity_ref("urn:fr:pf-cf:foreign:of-2018-np2"), 15000 EUR) { origin case_input; }
+        assert "on2-07": cadre_cf_remplie(entity_ref("urn:fr:pf-cf:foreign:of-2018-np2")) { origin case_input; }
+    }
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:foreign:of-2018-np2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_montant_du(entity_ref("urn:fr:pf-cf:foreign:of-2018-np2"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

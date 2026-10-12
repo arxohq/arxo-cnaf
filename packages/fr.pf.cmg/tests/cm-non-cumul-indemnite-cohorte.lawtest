@@ -1,0 +1,20 @@
+// L. 531-9 daily-allowance bar without the 2026 cohort gate: open
+// right plus the allowance for an earlier child — silent.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-non-cumul-indemnite-cohorte" {
+    given {
+        context { decision_time @2026-03-20T12:00:00Z; knowledge_time @2026-03-20T12:00:00Z; legal_time @2026-03-10; timezone "Europe/Paris"; }
+        assert "ncic-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:ncic"), entity_ref("urn:fr:pf-cmg:child:ncic"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "ncic-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:ncic")) { origin case_input; }
+        assert "ncic-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:ncic"), entity_ref("urn:fr:pf-cmg:child:ncic")) { origin case_input; }
+        assert "ncic-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:ncic"), 2) { origin case_input; }
+        assert "ncic-05": indemnite_journaliere_meme_enfant(entity_ref("urn:fr:pf-cmg:case:ncic"), entity_ref("urn:fr:pf-cmg:child:ncic")) { origin case_input; }
+    }
+    evaluate truth(cumul_indemnite_interdit(entity_ref("urn:fr:pf-cmg:case:ncic"), entity_ref("urn:fr:pf-cmg:child:ncic")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

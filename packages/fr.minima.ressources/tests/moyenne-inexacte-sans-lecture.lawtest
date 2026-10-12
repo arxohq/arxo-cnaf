@@ -1,0 +1,31 @@
+// B-MINRES-MOYENNE-INEXACTE retained without the reading: the facts of
+// moyenne-arrondie-ancien (167.00 + 167.00 + 0.00 over three months) with NO
+// interpretation selected. The default averaging rule divides exactly, 334/3 does
+// not divide evenly (INEXACT_DIVISION, SPEC 50/18): the document is not
+// executable (document status RUNTIME_ERROR, issue INEXACT_DIVISION), the rounding is a
+// reading and is not applied silently.
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-moyenne-inexacte-sans-lecture" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-01-15T12:00:00Z; knowledge_time @2025-01-15T12:00:00Z; legal_time @2025-01-15; timezone "Europe/Paris"; }
+        assert "arr-sel-01": foyer_du_cas(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture")) { origin case_input; }
+        assert "arr-sel-02": mois_demande(@2025-01-01) { origin case_input; }
+        assert "arr-sel-03": mois_reference(@2024-10-01, @2024-11-01, @2024-12-01) { origin case_input; }
+        assert "arr-sel-04": mf_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture"), @2024-10-01, 600.00 EUR) { origin case_input; }
+        assert "arr-sel-05": mf_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture"), @2024-11-01, 600.00 EUR) { origin case_input; }
+        assert "arr-sel-06": mf_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture"), @2024-12-01, 600.00 EUR) { origin case_input; }
+        assert "arr-sel-07": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture"), @2024-10-01, 167.00 EUR) { origin case_input; }
+        assert "arr-sel-08": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture"), @2024-11-01, 167.00 EUR) { origin case_input; }
+        assert "arr-sel-09": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture"), @2024-12-01, 0.00 EUR) { origin case_input; }
+        assert "arr-sel-10": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture"), @2024-10-01, 0 EUR) { origin case_input; }
+        assert "arr-sel-11": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "arr-sel-12": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture"), @2024-12-01, 0 EUR) { origin case_input; }
+    }
+    evaluate truth(montant_du_trimestre(entity_ref("urn:fr:minima-ressources:case:moyenne-inexacte-sans-lecture"), 488.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}

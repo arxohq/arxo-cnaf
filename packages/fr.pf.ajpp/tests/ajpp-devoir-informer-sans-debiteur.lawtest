@@ -1,0 +1,17 @@
+// Duty silent without the debtor link: right open and leave taken,
+// but no debtor body established — no InformerDemandeurAjpp position.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-informer-sans-debiteur" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-dd-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-dd")) { origin adjudicated; }
+        assert "ajpp-dd-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-dd")) { origin adjudicated; }
+        assert "ajpp-dd-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-dd"), entity_ref("urn:fr:pf-ajpp:case:enfant-dd")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(InformerDemandeurAjpp, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

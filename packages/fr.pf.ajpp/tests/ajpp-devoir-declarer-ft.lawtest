@@ -1,0 +1,18 @@
+// Duty to declare to France Travail (D2 active): L. 5421-1
+// job-seeker in charge of the child, operator recorded — the
+// DeclarerJoursPrisFT position is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-declarer-ft" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-dft-01": chomeur_l5421(entity_ref("urn:fr:pf-ajpp:case:parent-dft")) { origin case_input; }
+        assert "ajpp-dft-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ajpp:case:parent-dft"), entity_ref("urn:fr:pf-ajpp:case:enfant-dft")) { origin case_input; }
+        assert "ajpp-dft-03": france_travail_operateur(entity_ref("urn:fr:pf-ajpp:org:france-travail")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DeclarerJoursPrisFT, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

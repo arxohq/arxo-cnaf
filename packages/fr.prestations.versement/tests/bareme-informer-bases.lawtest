@@ -1,0 +1,15 @@
+// Information on recovery bases: unknown resources - the fund must inform (D. 553-1 III).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-informer-bases" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "i-inc": ressources_inconnues(entity_ref("urn:fr:pv:case:inconnu")) { origin case_input; }
+        assert "i-org": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pv:org:caisse"), entity_ref("urn:fr:pv:case:inconnu")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InformerBasesRecouvrement, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

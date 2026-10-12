@@ -1,0 +1,32 @@
+// D-82/D-83, de bout en bout: les DEUX lectures (PrimeMoyenneArrondieCentime et BonificationLineaireArrondieCentime) choisies.
+// Seul, février-avril 2026, revenu = ressources = 1000,00, SMIC 12,02; forfait 633,21 / 633,21 / 638,28 (décrets 2025-294 et 2026-222).
+// Réplique indépendante (fractions, HALF_UP): bonification de chaque mois arrondie -> 73.11 /
+// 73.11 / 73.70; prime = f + 0,5985 x 1000,00 + bonification - 1000,00 =
+// 304.82 / 304.82 / 310.48; moyenne 23003/75 = 306.70666667… -> 306.71.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-division-chaine-nouveau" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; interpretation PrimeMoyenneArrondieCentime; interpretation BonificationLineaireArrondieCentime; }
+        assert "div-e1-01": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-e1"), @2026-02-01, SEUL) { origin case_input; }
+        assert "div-e1-02": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-e1"), @2026-02-01, 1000.00 EUR) { origin case_input; }
+        assert "div-e1-03": smic_horaire_retenu(@2026-02-01, 12.02 EUR) { origin case_input; }
+        assert "div-e1-04": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-e1"), @2026-02-01, 1000.00 EUR) { origin case_input; }
+        assert "div-e1-05": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-e1"), @2026-03-01, SEUL) { origin case_input; }
+        assert "div-e1-06": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-e1"), @2026-03-01, 1000.00 EUR) { origin case_input; }
+        assert "div-e1-07": smic_horaire_retenu(@2026-03-01, 12.02 EUR) { origin case_input; }
+        assert "div-e1-08": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-e1"), @2026-03-01, 1000.00 EUR) { origin case_input; }
+        assert "div-e1-09": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:div-e1"), @2026-04-01, SEUL) { origin case_input; }
+        assert "div-e1-10": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:div-e1"), @2026-04-01, 1000.00 EUR) { origin case_input; }
+        assert "div-e1-11": smic_horaire_retenu(@2026-04-01, 12.02 EUR) { origin case_input; }
+        assert "div-e1-12": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:div-e1"), @2026-04-01, 1000.00 EUR) { origin case_input; }
+        assert "div-e1-13": mois_revue(entity_ref("urn:fr:ppa:case:div-e1"), @2026-06-01) { origin case_input; }
+        assert "div-e1-14": minimum_paiement_retenu(@2026-06-01, 15.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_due_trimestre(entity_ref("urn:fr:ppa:case:div-e1"), 306.71 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

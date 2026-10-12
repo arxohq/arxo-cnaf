@@ -1,0 +1,38 @@
+// Single child in Guyane: right open from the first child
+// (L. 755-12). 5.88% of the retained L. 755-3 base (1 000.00 EUR
+// stated assumption, B-PFAF-BMAF-DOM): 58.80. The only child, aged
+// five, is the eldest: no supplement. Total due 58.80.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-dom-enfant-unique" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "dom-01": territoire(entity_ref("urn:fr:pf-af:case:dom-enfant-unique"), GUYANE) { origin case_input; }
+        assert "dom-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:dom-enfant-unique"), 1) { origin case_input; }
+        assert "dom-03": base_dom_retenue(entity_ref("urn:fr:pf-af:case:dom-enfant-unique"), 1000.00 EUR) { origin case_input; }
+        assert "dom-04": forfait_total_menage(entity_ref("urn:fr:pf-af:case:dom-enfant-unique"), 0 EUR) { origin case_input; }
+        assert "dom-05": foyer_du_cas(entity_ref("urn:fr:pf-af:case:dom-enfant-unique")) { origin case_input; }
+        assert "dom-06": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:dom-enfant-unique"), entity_ref("urn:fr:pf-af:child:unique-gy")) { origin case_input; }
+        assert "dom-07": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:unique-gy")) { origin case_input; }
+        assert "dom-08": date_naissance(entity_ref("urn:fr:pf-af:child:unique-gy"), @2018-03-01) { origin case_input; }
+        assert "dom-09": enfant_du_cas(entity_ref("urn:fr:pf-af:child:unique-gy")) { origin case_input; }
+    }
+    evaluate truth(af_droit_ouvert(entity_ref("urn:fr:pf-af:case:dom-enfant-unique")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af_dom(entity_ref("urn:fr:pf-af:case:dom-enfant-unique"), 58.80 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:child:unique-gy"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:dom-enfant-unique"), 58.80 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

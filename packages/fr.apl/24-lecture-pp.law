@@ -1,0 +1,90 @@
+// G-A13: two readings of the personal share Pp (D. 823-17).
+// Pinned text: "Pp = P0 + Tp * (R - R0)" where "P0 ... ne peut etre
+// inferieure a un montant minimum defini par arrete". The floor in 2 deg.
+// attaches to P0 itself. Working reading (PpPlancherFinal): the resource
+// term cannot drive Pp below P0, i.e. Pp = max(P0, P0 + Tp*(R-R0)) —
+// implemented by the base rule ParticipationPersonnelle (02), included
+// here so the selection is genuine. Literal reading (PpLitteral): the
+// formula applies without a final floor, Pp = P0 + Tp*(R-R0), writing to
+// the SAME normative head so downstream aid (aide_formule) follows the
+// selected reading. The legacy probe head
+// participation_personnelle_litterale is kept as a compatibility alias
+// (blind case 26 probes it); it mirrors the canonical head only under
+// PpLitteral and is otherwise silent. Queries on the canonical head or
+// downstream aid without a selection report INTERPRETATION_REQUIRED
+// (§152/§156). Hand suites carry "interpretation PpPlancherFinal;" in
+// context (G-A13 migration 2026-10-08; no semantic change to the working
+// reading itself); generated foreign suites await the map key plus the
+// shared render patch (GENERATED_OUTPUT_PENDING, see line journal).
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_D823_17,
+    CCH_D823_17_ED2019_12,
+    CCH_D823_17_ED2020_01,
+    CCH_D823_17_ED2021_01,
+    CCH_D823_17_ED2023_04,
+    CCH_D823_17_ED2023_09,
+    CCH_D823_17_ED2023_12,
+    CCH_D823_17_ED2026_07,
+    Menage,
+    ParticipationPersonnelle,
+    abattement_r0,
+    participation_minimale,
+    participation_personnelle,
+    ressources_retenues,
+    taux_participation,
+};
+
+pub relation participation_personnelle_litterale(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "Pp littéral : participation personnelle sans plancher final (sonde G-A13)";
+    label en unofficial "literal Pp probe (G-A13 compatibility alias of the canonical head)";
+}
+
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+    CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+    CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07)
+rule ParticipationPersonnelleLitterale(m: Menage, p0: Money, taux: Decimal, ressources: Money, abattement: Money) strict {
+    label fr official "Pp = P0 + Tp × (R − R0), sans plancher final";
+    label en unofficial "Pp = P0 + Tp x (R - R0) with no final floor (literal reading)";
+    when participation_minimale(m, p0) and taux_participation(m, taux)
+        and ressources_retenues(m, ressources) and abattement_r0(m, abattement);
+    then participation_personnelle(m, p0 + taux * (ressources - abattement));
+}
+
+// Compatibility alias: under the literal reading the legacy probe head
+// carries the same value as the canonical head, so sealed blind probes on
+// the legacy head keep their answers. Under the working reading (or with
+// no selection) this rule is silent and the legacy head is NEITHER.
+@source(CCH_D823_17, CCH_D823_17_ED2019_12, CCH_D823_17_ED2020_01,
+    CCH_D823_17_ED2021_01, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09,
+    CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07)
+rule ParticipationPersonnelleLitteraleAlias(m: Menage, x: Money) strict {
+    label fr official "sonde Pp littéral : recopie de la tête canonique sous lecture littérale";
+    label en unofficial "literal Pp probe: alias of the canonical head under the literal reading";
+    when participation_personnelle(m, x);
+    then participation_personnelle_litterale(m, x);
+}
+
+pub interpretation PpPlancherFinal {
+    status disputed;
+    label en unofficial "working reading: Pp floored at P0 (base rule)";
+    include ParticipationPersonnelle;
+}
+
+pub interpretation PpLitteral {
+    status disputed;
+    label en unofficial "literal reading: Pp formula with no final floor (same head)";
+    include ParticipationPersonnelleLitterale;
+    include ParticipationPersonnelleLitteraleAlias;
+}
+
+// Reading of the D. 823-17 personal share: final floor or literal formula
+// (interpretation_group carries no labels in the grammar).
+interpretation_group SensMinimumPp {
+    alternatives PpPlancherFinal, PpLitteral;
+    selection exactly_one;
+}

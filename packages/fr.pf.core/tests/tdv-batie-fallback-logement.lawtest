@@ -1,0 +1,27 @@
+// Built fallback (PC-R05-03): one built inapplicable with dwelling 5 000 retained, plus spending/vehicles/capital - evaluation 12 600 EUR (R. 553-3-1 1° second sentence).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-batie-fallback-logement" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-batie-fallback-01": batie_bien_inapplicable(entity_ref("urn:fr:pf:case:repli-batie"), entity_ref("urn:fr:pf:case:bien-repli")) { origin case_input; }
+        assert "tdv-batie-fallback-02": valeur_locative_batie_fallback_logement(entity_ref("urn:fr:pf:case:repli-batie"), 5000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-fallback-04": depenses_travaux(entity_ref("urn:fr:pf:case:repli-batie"), 2000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-fallback-06": vehicule_bien_valeur(entity_ref("urn:fr:pf:case:repli-batie"), entity_ref("urn:fr:pf:case:auto-1"), 12000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-fallback-06d": vehicule_bien_date(entity_ref("urn:fr:pf:case:repli-batie"), entity_ref("urn:fr:pf:case:auto-1"), @2026-02-15) { origin case_input; }
+        assert "tdv-batie-fallback-06p": vehicule_bien_sans_preuve(entity_ref("urn:fr:pf:case:repli-batie"), entity_ref("urn:fr:pf:case:auto-1")) { origin case_input; }
+        assert "tdv-batie-fallback-07": depenses_equipement(entity_ref("urn:fr:pf:case:repli-batie"), 1500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-fallback-09": depenses_loisirs(entity_ref("urn:fr:pf:case:repli-batie"), 1000.00 EUR, 0.5) { origin case_input; }
+        assert "tdv-batie-fallback-10": depenses_clubs(entity_ref("urn:fr:pf:case:repli-batie"), 500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-fallback-11": capitaux_fin_periode(entity_ref("urn:fr:pf:case:repli-batie"), 10000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-batie-fallback-12": prestation_soumise_section(entity_ref("urn:fr:pf:case:repli-batie")) { origin case_input; }
+        assert "tdv-batie-fallback-13": depenses_foyer_periode_reference(entity_ref("urn:fr:pf:case:repli-batie")) { origin case_input; }
+        assert "tdv-batie-fallback-16": inventaire_tdv_complet(entity_ref("urn:fr:pf:case:repli-batie")) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_train_vie(entity_ref("urn:fr:pf:case:repli-batie"), 12600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

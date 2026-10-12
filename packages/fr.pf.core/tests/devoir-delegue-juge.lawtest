@@ -1,0 +1,19 @@
+// Delegate measure: judicial budget-management assistance ordered - the judge may appoint a benefit delegate (L. 552-6 al. 1).
+// D-42: the case lacked the seized court (juge_mesure_aide_gestion binds the liberty holder, L. 552-6
+// al. 1 "le juge") and the metropole statement (DesignerDelegueMesure reads not beneficiaire_dom_l7554,
+// an explicit negative case fact, SPEC 69). Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-juge" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-delegue-juge-01": mesure_judiciaire_aide_gestion(entity_ref("urn:fr:pf:case:budget")) { origin case_input; }
+        assert "devoir-delegue-juge-02": juge_mesure_aide_gestion(entity_ref("urn:fr:pf:case:tribunal"), entity_ref("urn:fr:pf:case:budget")) { origin case_input; }
+        assert "devoir-delegue-juge-03": not beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:budget")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DesignerDeleguePrestations, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

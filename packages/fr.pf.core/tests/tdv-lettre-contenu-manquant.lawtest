@@ -1,0 +1,22 @@
+// Incomplete procedure letter: sanctions notice missing - the notice is not conforming (R. 553-3-4 1).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-lettre-contenu-manquant" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-lettre-contenu-manquant-01": lettre_procedure_adressee(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:incomplete")) { origin case_input; }
+        assert "tdv-lettre-contenu-manquant-07": lettre_procedure_accuse_reception(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:incomplete")) { origin case_input; }
+        assert "tdv-lettre-contenu-manquant-02": lettre_contenu_procedure(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:incomplete")) { origin case_input; }
+        assert "tdv-lettre-contenu-manquant-03": lettre_contenu_audition_conseil(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:incomplete")) { origin case_input; }
+        assert "tdv-lettre-contenu-manquant-04": lettre_contenu_transmission(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:incomplete")) { origin case_input; }
+        assert "tdv-lettre-contenu-manquant-05": lettre_contenu_questionnaire(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:incomplete")) { origin case_input; }
+        assert "tdv-lettre-contenu-manquant-06": lettre_contenu_pieces_l5833(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:incomplete")) { origin case_input; }
+        assert "tdv-lettre-contenu-manquant-08": prestation_soumise_section(entity_ref("urn:fr:pf:case:incomplete")) { origin case_input; }
+    }
+    evaluate truth(lettre_procedure_conforme(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:incomplete")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

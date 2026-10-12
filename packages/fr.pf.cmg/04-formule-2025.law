@@ -1,0 +1,393 @@
+// Reform formula (D. 531-18): monthly cost under hourly caps, monthly
+// income in [floor, 8500] rounded to the euro, effort rate by children
+// and care mode, reference hourly cost, and the aid formula net of CRDS.
+//
+// «Complément = coût mensuel x (1 - (revenu mensuel x taux d'effort /
+// coût horaire de référence))». The CRDS (ord. 96-50 art. 14) computed
+// from the aid is package fr.prestations.versement (wave 5).
+//
+// Effort-rate override (D. 531-18, 3°, last para.): each child opening
+// the L. 541-1 benefit moves one step down the table, i.e. rate(n+1)
+// floored at the bottom row. Base rows are strict and disjoint from
+// the AEEH rows (not_known on the L. 541-1 fact).
+
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+use self::{
+    CSS_D531_17_ED2025_09,
+    CSS_D531_18_ED2025_09,
+    CSS_L531_5_ED2025_09,
+    CSS_L531_5_ED2025_12,
+    ModeGarde,
+    cout_horaire_reference,
+    cout_mensuel_plafonne,
+    cout_mensuel_retenu,
+    cout_reference_retenu,
+    droit_cmg_ouvert,
+    enfant_aeeh,
+    facteur_smic,
+    forfait_logement,
+    heures_remunerees,
+    indemnites_entretien_repas,
+    indemnites_rupture_exclues,
+    mode_garde,
+    montant_cmg_du,
+    montant_cmg_part_b,
+    montant_forfaitaire_isole,
+    nb_enfants_charge,
+    part_cotisations,
+    plafond_horaire,
+    plancher_revenu,
+    revenu_mensuel_brut,
+    revenu_mensuel_retenu,
+    salaire_net_verse,
+    taux_effort,
+};
+
+// --- Floor: L. 262-2 amount minus R. 531-? no — R. 262-9 forfait -------
+//
+// «dans la limite d'un plancher dont le montant est égal à celui prévu
+// à l'article L. 262-2 ... pour une personne isolée avec un enfant,
+// déduction faite du forfait mentionné à l'article R. 262-9».
+
+@source(CSS_D531_18_ED2025_09)
+rule PlancherConstruit(m: fr.pf.core::Personne, forfait: Money, logement: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "plancher: forfait isolé un enfant moins forfait logement";
+    label en unofficial "floor: single-with-one-child forfait minus housing forfait";
+    when montant_forfaitaire_isole(m, forfait) and forfait_logement(m, logement);
+    then plancher_revenu(m, forfait - logement);
+}
+
+// --- Monthly income: clamp to [floor, 8500], round to the euro --------
+//
+// «ramenées à une valeur mensuelle. Les ressources mensuelles et les
+// valeurs du plancher et du plafond sont arrondies à l'euro le plus
+// proche, la fraction d'euro égale à 0,50 étant comptée pour 1».
+
+@source(CSS_D531_18_ED2025_09)
+rule RevenuSousPlancher(m: fr.pf.core::Personne, brut: Money, plancher: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "ressources sous le plancher: plancher retenu";
+    label en unofficial "resources under the floor: floor retained";
+    when revenu_mensuel_brut(m, brut) and plancher_revenu(m, plancher) and brut < plancher;
+    then revenu_mensuel_retenu(m, round(plancher, 0, "HALF_UP"));
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule RevenuPlafonne(m: fr.pf.core::Personne, brut: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "ressources au delà de 8 500 €: plafond retenu";
+    label en unofficial "resources above 8,500 €: ceiling retained";
+    when revenu_mensuel_brut(m, brut) and brut > PlafondRevenuMensuel;
+    then revenu_mensuel_retenu(m, round(PlafondRevenuMensuel, 0, "HALF_UP"));
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule RevenuBorne(m: fr.pf.core::Personne, brut: Money, plancher: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "ressources entre plancher et plafond: arrondi à l'euro";
+    label en unofficial "resources between floor and ceiling: rounded to the euro";
+    when revenu_mensuel_brut(m, brut)
+        and plancher_revenu(m, plancher)
+        and brut >= plancher and brut <= PlafondRevenuMensuel;
+    then revenu_mensuel_retenu(m, round(brut, 0, "HALF_UP"));
+}
+
+// --- Hourly caps (SMIC-revalorised) -------------------------------------------
+//
+// 1°: 8 EUR (childminder) / 15 EUR (home employee), same elements as
+// the monthly cost, per paid hour. Both revalorised by the 1 January
+// SMIC growth.
+
+@source(CSS_D531_18_ED2025_09)
+rule PlafondHoraireAM(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, facteur: Decimal) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "plafond horaire assistante maternelle: 8 € x facteur SMIC";
+    label en unofficial "childminder hourly cap: 8 € x SMIC factor";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, ASSISTANT_MATERNEL) and facteur_smic(p, facteur);
+    then plafond_horaire(p, e, PlafondHoraireAssmat * facteur);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule PlafondHoraireDom(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, facteur: Decimal) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "plafond horaire domicile: 15 € x facteur SMIC";
+    label en unofficial "home-employment hourly cap: 15 € x SMIC factor";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, EMPLOYE_DOMICILE) and facteur_smic(p, facteur);
+    then plafond_horaire(p, e, PlafondHoraireDomicile * facteur);
+}
+
+// --- Reference hourly cost: a case fact -------------------------------------------
+//
+// The formula divides by a reference hourly cost, but no pinned document
+// states its value (no 4,85/10,38 in the 36 pinned documents; the
+// CSS mirror holds no CMG article with them — B-CMG-COUT-REFERENCE,
+// DSS_PENDING). The retained cost therefore enters as a case fact.
+
+@source(CSS_D531_18_ED2025_09)
+rule CoutReferenceRetenu(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, ref: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "coût horaire de référence: coût retenu pour le mois du droit";
+    label en unofficial "reference hourly cost: cost retained for the month of right";
+    when droit_cmg_ouvert(p, e) and cout_reference_retenu(p, e, ref);
+    then cout_horaire_reference(p, e, ref);
+}
+
+// --- Monthly cost under verification -------------------------------------------
+//
+// 1°: net salary plus all contribution-bearing elements; childminder
+// adds daily care allowances and meal costs. From the 2025-12-31 wording
+// the L. 1234-5 et seq. severance indemnities are excluded from the
+// ceiling verification (law 2025-1403). Expenses taken into account
+// cannot exceed the hourly cap.
+
+@source(CSS_D531_18_ED2025_09, CSS_L531_5_ED2025_09)
+rule CoutControleAvantExclusion(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, salaire: Money, indemnites: Money) strict {
+    effective [@2025-09-01, @2025-12-31);
+    label fr official "coût mensuel: net plus entretien et repas, sans exclusion";
+    label en unofficial "monthly cost: net pay plus care allowances and meals, no exclusion";
+    when droit_cmg_ouvert(p, e)
+        and salaire_net_verse(p, e, salaire)
+        and indemnites_entretien_repas(p, e, indemnites);
+    then cout_mensuel_retenu(p, e, salaire + indemnites);
+}
+
+@source(CSS_D531_18_ED2025_09, CSS_L531_5_ED2025_12)
+rule CoutControleExclusion(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, salaire: Money, indemnites: Money, exclues: Money) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "coût mensuel hors indemnités de rupture exclues (L. 531-5 éd. 2025-12)";
+    label en unofficial "monthly cost minus excluded severance indemnities (L. 531-5 2025-12 wording)";
+    when droit_cmg_ouvert(p, e)
+        and salaire_net_verse(p, e, salaire)
+        and indemnites_entretien_repas(p, e, indemnites)
+        and indemnites_rupture_exclues(p, e, exclues);
+    then cout_mensuel_retenu(p, e, salaire + indemnites - exclues);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule CoutPlafonneSousPlafond(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, cout: Money, heures: Decimal, cap: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "coût sous le plafond horaire: retenu tel quel";
+    label en unofficial "cost under the hourly cap: retained as is";
+    when cout_mensuel_retenu(p, e, cout)
+        and heures_remunerees(p, e, heures)
+        and plafond_horaire(p, e, cap)
+        and cout <= cap * heures;
+    then cout_mensuel_plafonne(p, e, cout);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule CoutPlafonneEcrete(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, cout: Money, heures: Decimal, cap: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "coût écrêté au plafond horaire x heures";
+    label en unofficial "cost cut to hourly cap x hours";
+    when cout_mensuel_retenu(p, e, cout)
+        and heures_remunerees(p, e, heures)
+        and plafond_horaire(p, e, cap)
+        and cout > cap * heures;
+    then cout_mensuel_plafonne(p, e, cap * heures);
+}
+
+// --- Effort rate tables (D. 531-18, 3°) --------------------------------------------
+//
+// Childminder: 0.0619 / 0.0516 / 0.0413 / 0.0310 (4-7) / 0.0206 (8+).
+// Home employee: double. Percent numbers, applied over 100 in the
+// formula. Base rows are strict and disjoint from the AEEH rows below
+// (not_known on the L. 541-1 fact); the AEEH rows conclude the
+// next-lower rate on the positive fact.
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAM1(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "taux d'effort assistante maternelle, un enfant";
+    label en unofficial "childminder effort rate, one child";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, ASSISTANT_MATERNEL) and nb_enfants_charge(p, n) and n == 1 and not_known(enfant_aeeh(e));
+    then taux_effort(p, e, TauxEffortAM1Enfant);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAM2(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "taux d'effort assistante maternelle, deux enfants";
+    label en unofficial "childminder effort rate, two children";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, ASSISTANT_MATERNEL) and nb_enfants_charge(p, n) and n == 2 and not_known(enfant_aeeh(e));
+    then taux_effort(p, e, TauxEffortAM2Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAM3(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "taux d'effort assistante maternelle, trois enfants";
+    label en unofficial "childminder effort rate, three children";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, ASSISTANT_MATERNEL) and nb_enfants_charge(p, n) and n == 3 and not_known(enfant_aeeh(e));
+    then taux_effort(p, e, TauxEffortAM3Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAM4a7(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "taux d'effort assistante maternelle, quatre à sept enfants";
+    label en unofficial "childminder effort rate, four to seven children";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, ASSISTANT_MATERNEL) and nb_enfants_charge(p, n) and n >= 4 and n <= 7 and not_known(enfant_aeeh(e));
+    then taux_effort(p, e, TauxEffortAM4a7Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAM8(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "taux d'effort assistante maternelle, huit enfants et plus";
+    label en unofficial "childminder effort rate, eight children or more";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, ASSISTANT_MATERNEL) and nb_enfants_charge(p, n) and n >= 8 and not_known(enfant_aeeh(e));
+    then taux_effort(p, e, TauxEffortAM8Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortDom1(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "taux d'effort domicile, un enfant";
+    label en unofficial "home-employment effort rate, one child";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, EMPLOYE_DOMICILE) and nb_enfants_charge(p, n) and n == 1 and not_known(enfant_aeeh(e));
+    then taux_effort(p, e, TauxEffortDom1Enfant);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortDom2(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "taux d'effort domicile, deux enfants";
+    label en unofficial "home-employment effort rate, two children";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, EMPLOYE_DOMICILE) and nb_enfants_charge(p, n) and n == 2 and not_known(enfant_aeeh(e));
+    then taux_effort(p, e, TauxEffortDom2Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortDom3(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "taux d'effort domicile, trois enfants";
+    label en unofficial "home-employment effort rate, three children";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, EMPLOYE_DOMICILE) and nb_enfants_charge(p, n) and n == 3 and not_known(enfant_aeeh(e));
+    then taux_effort(p, e, TauxEffortDom3Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortDom4a7(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "taux d'effort domicile, quatre à sept enfants";
+    label en unofficial "home-employment effort rate, four to seven children";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, EMPLOYE_DOMICILE) and nb_enfants_charge(p, n) and n >= 4 and n <= 7 and not_known(enfant_aeeh(e));
+    then taux_effort(p, e, TauxEffortDom4a7Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortDom8(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "taux d'effort domicile, huit enfants et plus";
+    label en unofficial "home-employment effort rate, eight children or more";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, EMPLOYE_DOMICILE) and nb_enfants_charge(p, n) and n >= 8 and not_known(enfant_aeeh(e));
+    then taux_effort(p, e, TauxEffortDom8Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAEEHAM1(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "AEEH assistante maternelle, un enfant: taux deux enfants";
+    label en unofficial "AEEH childminder, one child: two-children rate";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, ASSISTANT_MATERNEL) and enfant_aeeh(e) and nb_enfants_charge(p, n) and n == 1;
+    then taux_effort(p, e, TauxEffortAM2Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAEEHAM2(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "AEEH assistante maternelle, deux enfants: taux trois enfants";
+    label en unofficial "AEEH childminder, two children: three-children rate";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, ASSISTANT_MATERNEL) and enfant_aeeh(e) and nb_enfants_charge(p, n) and n == 2;
+    then taux_effort(p, e, TauxEffortAM3Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAEEHAM3a6(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "AEEH assistante maternelle, trois à six enfants: taux quatre à sept";
+    label en unofficial "AEEH childminder, three to six children: four-to-seven rate";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, ASSISTANT_MATERNEL) and enfant_aeeh(e) and nb_enfants_charge(p, n) and n >= 3 and n <= 6;
+    then taux_effort(p, e, TauxEffortAM4a7Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAEEHAM7(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "AEEH assistante maternelle, sept enfants et plus: taux huit et plus";
+    label en unofficial "AEEH childminder, seven children or more: eight-or-more rate";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, ASSISTANT_MATERNEL) and enfant_aeeh(e) and nb_enfants_charge(p, n) and n >= 7;
+    then taux_effort(p, e, TauxEffortAM8Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAEEHDom1(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "AEEH domicile, un enfant: taux deux enfants";
+    label en unofficial "AEEH home employment, one child: two-children rate";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, EMPLOYE_DOMICILE) and enfant_aeeh(e) and nb_enfants_charge(p, n) and n == 1;
+    then taux_effort(p, e, TauxEffortDom2Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAEEHDom2(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "AEEH domicile, deux enfants: taux trois enfants";
+    label en unofficial "AEEH home employment, two children: three-children rate";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, EMPLOYE_DOMICILE) and enfant_aeeh(e) and nb_enfants_charge(p, n) and n == 2;
+    then taux_effort(p, e, TauxEffortDom3Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAEEHDom3a6(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "AEEH domicile, trois à six enfants: taux quatre à sept";
+    label en unofficial "AEEH home employment, three to six children: four-to-seven rate";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, EMPLOYE_DOMICILE) and enfant_aeeh(e) and nb_enfants_charge(p, n) and n >= 3 and n <= 6;
+    then taux_effort(p, e, TauxEffortDom4a7Enfants);
+}
+
+@source(CSS_D531_18_ED2025_09)
+rule TauxEffortAEEHDom7(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "AEEH domicile, sept enfants et plus: taux huit et plus";
+    label en unofficial "AEEH home employment, seven children or more: eight-or-more rate";
+    when droit_cmg_ouvert(p, e) and mode_garde(p, e, EMPLOYE_DOMICILE) and enfant_aeeh(e) and nb_enfants_charge(p, n) and n >= 7;
+    then taux_effort(p, e, TauxEffortDom8Enfants);
+}
+
+// --- The formula: part b, net of CRDS -------------------------------------------
+//
+// No floor is set by the text: at the 8 500 ceiling the bracket can go
+// slightly negative — computed as is (B-CMG-FORMULE-NEGATIVE).
+
+@source(CSS_D531_18_ED2025_09)
+rule FormulePartB(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, cout: Money, revenu: Money, taux: Decimal, ref: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "part b: coût x (1 - revenu x taux / référence)";
+    label en unofficial "part b: cost x (1 - income x rate / reference)";
+    when droit_cmg_ouvert(p, e)
+        and cout_mensuel_plafonne(p, e, cout)
+        and revenu_mensuel_retenu(p, revenu)
+        and taux_effort(p, e, taux)
+        and cout_horaire_reference(p, e, ref);
+    then montant_cmg_part_b(p, e, cout * (1.0 - div_round(revenu * taux, 100.0 * ref, 6, "HALF_UP")));
+}
+
+// --- Total due per child: part a + part b, rounded to cents ----------------------
+//
+// Cent rounding is payment mechanics (B-CMG-ARRONDI-CENTIMES).
+
+@source(CSS_L531_5_ED2025_09, CSS_L531_5_ED2025_12, CSS_D531_17_ED2025_09, CSS_D531_18_ED2025_09)
+rule MontantDuReforme(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, a: Money, b: Money) strict {
+    effective [@2025-09-01, infinity);
+    label fr official "total dû: part cotisations plus part formule, arrondi au centime";
+    label en unofficial "total due: contribution part plus formula part, rounded to cents";
+    when part_cotisations(p, e, a) and montant_cmg_part_b(p, e, b);
+    then montant_cmg_du(p, e, round(a + b, 2, "HALF_UP"));
+}

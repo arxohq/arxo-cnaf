@@ -1,0 +1,18 @@
+// Delegate costs excluded in DOM prime-only single: the single benefit is the prime forfaitaire (L. 524-5 II), no eligible benefit - no DOM cost duty (L. 755-4 al. 2-3, PC-R04-05).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-frais-prime-exclue" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-delegue-frais-prime-exclue-01": delegue_percoit(entity_ref("urn:fr:pf:case:budget-prime")) { origin case_input; }
+        assert "devoir-delegue-frais-prime-exclue-02": organisme_verse_prestation_delegue(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:budget-prime")) { origin case_input; }
+        assert "devoir-delegue-frais-prime-exclue-03": delegue_percoit_prime_forfaitaire(entity_ref("urn:fr:pf:case:budget-prime")) { origin case_input; }
+        assert "devoir-delegue-frais-prime-exclue-04": beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:budget-prime")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(SupporterFraisMesure, ACTIVE);
+    expect not position(SupporterFraisMesureDOM, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

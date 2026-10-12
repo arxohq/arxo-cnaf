@@ -1,0 +1,24 @@
+// Contribution transmission: full L. 582-2 title chain, competent allocataire-residence body, 350 EUR agreement amount - that body must communicate the amount to the fisc (L. 582-2, L. 583-5, PC-R07-27, PC-R08-05).
+// D-42: the case lacked the competent tax administration: DevoirTransmettreContribution (09b) binds the
+// duty beneficiary through administration_fiscale_competente (L. 583-5). Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-transmettre-contribution" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-transmettre-contribution-01": demande_conjointe_parents_separes(entity_ref("urn:fr:pf:case:creance-trfisc")) { origin case_input; }
+        assert "creance-transmettre-contribution-02": attestation_absence_creance(entity_ref("urn:fr:pf:case:creance-trfisc")) { origin case_input; }
+        assert "creance-transmettre-contribution-03": attestation_absence_demarche(entity_ref("urn:fr:pf:case:creance-trfisc")) { origin case_input; }
+        assert "creance-transmettre-contribution-04": contribution_seuil_atteint(entity_ref("urn:fr:pf:case:creance-trfisc")) { origin case_input; }
+        assert "creance-transmettre-contribution-05": infos_contribution_precisees(entity_ref("urn:fr:pf:case:creance-trfisc")) { origin case_input; }
+        assert "creance-transmettre-contribution-06": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:creance-trfisc")) { origin case_input; }
+        assert "creance-transmettre-contribution-07": titre_organisme_residence_allocataire(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:creance-trfisc")) { origin case_input; }
+        assert "creance-transmettre-contribution-08": accord_parents_contribution_montant(entity_ref("urn:fr:pf:case:creance-trfisc"), 350 EUR) { origin case_input; }
+        assert "creance-transmettre-contribution-09": administration_fiscale_competente(entity_ref("urn:fr:pf:org:dgfip"), entity_ref("urn:fr:pf:case:creance-trfisc")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreContributionFisc, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

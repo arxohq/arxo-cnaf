@@ -1,0 +1,22 @@
+// Reopening on relapse without expiry: right established, pathology
+// relapsed, but no expired original duration is recorded — the
+// L. 544-3 para. 3 reopening («Au-delà de la durée maximale») stays
+// NEITHER. The positive route with expiry is
+// ajpp-reouverture-apres-max-rechute.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reouverture-rechute" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-reo-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-reo")) { origin adjudicated; }
+        assert "ajpp-reo-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-reo")) { origin adjudicated; }
+        assert "ajpp-reo-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-reo"), entity_ref("urn:fr:pf-ajpp:case:enfant-reo")) { origin case_input; }
+        assert "ajpp-reo-04": rechute_pathologie(entity_ref("urn:fr:pf-ajpp:case:enfant-reo")) { origin adjudicated; }
+    }
+    evaluate truth(droit_rouvert(entity_ref("urn:fr:pf-ajpp:case:enfant-reo")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

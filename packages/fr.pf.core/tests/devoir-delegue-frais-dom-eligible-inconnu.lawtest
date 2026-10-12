@@ -1,0 +1,19 @@
+// DOM explicitly non-eligible (PC-R04-05 control hardened PC-R07-06): several benefits in DOM but eligible receipt explicitly denied - no DOM duty (L. 755-4 al. 2-3).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-frais-dom-eligible-inconnu" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-dom-inconnu-01": delegue_percoit(entity_ref("urn:fr:pf:case:budget-dom-inconnu")) { origin case_input; }
+        assert "devoir-dom-inconnu-02": plusieurs_prestations_delegue(entity_ref("urn:fr:pf:case:budget-dom-inconnu")) { origin case_input; }
+        assert "devoir-dom-inconnu-03": beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:budget-dom-inconnu")) { origin case_input; }
+        assert "devoir-dom-inconnu-04": not delegue_percoit_prestation_eligible(entity_ref("urn:fr:pf:case:budget-dom-inconnu")) { origin case_input; }
+        assert "devoir-dom-inconnu-05": not prestation_delegue_unique(entity_ref("urn:fr:pf:case:budget-dom-inconnu")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(SupporterFraisMesure, ACTIVE);
+    expect not position(SupporterFraisMesureDOM, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

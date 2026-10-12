@@ -1,0 +1,498 @@
+// Раздел 2 главы II титула II книги VIII CCH — вертикальный срез 15.09.2026:
+// R. 822-3 (три периода учёта), R. 822-4 (база ресурсов, зарплата и пособие
+// по безработице), R. 822-13 (вычет 30% при пенсии/инвалидности/AAH),
+// R. 822-17 (полная нейтрализация при RSA). Остальные девять норм подраздела
+// 2 (R. 822-7…12, 14…16, 18) и R. 822-2/5/6 — объявленная граница этого
+// захода: продолжение отдельной работой (см. README).
+// R. 822-18 поименно (D-B-01, 06.10.2026): абаттман контрактов
+// профессионализации исполним (доход минус вычет, шапка — месячный SMIC),
+// но шапке не на что опереться — fr.smic отдаёт только часовой 2026 года,
+// а месячный ждёт опоры из C. trav. Дыра 01.01–07.06.2021 отдельной оси
+// редакций не требует: статью не цитирует ни одно правило.
+// R. 822-13/17 поименно (08.10.2026): исключения — только получатель либо
+// супруг (роль allocataire_ou_conjoint_ressources); возобновление
+// деятельности снимает абатман с месяца возобновления (не со следующего).
+// Мост RessourcesRetenuesCalculees — четыре секторных правила: APL
+// приобретения (L. 831-1) новым методом только с мая 2021 (NOTA 2020-1816).
+//
+// ГРАНИЦА: обратный отсчёт невыразим (§86 — add_calendar_period/
+// add_business_days берут только положительный счёт, отрицательный —
+// DEADLINE_POLICY_INVALID; прецедент — us.code.federal_holidays и
+// docs/candidates/01-public-law.ru.md). Поэтому окно R. 822-3 1° («с 13-го по
+// 2-й месяц перед месяцем права») НЕ вычисляется термами внутри пакета —
+// его границы [debut, fin) дело предъявляет фактом `periode_evaluee`
+// (объявлена в fr.tax.income_for_apl), вычисленные автором сценария по тому
+// же правилу. Из того же ограничения дата начала действия R. 822-17
+// («месяц, следующий за» и «до последнего дня месяца, когда условия
+// перестали выполняться») — ТОЖЕ окно, предъявляемое фактом, а не
+// вычисляемое из одной пороговой даты: производный конец периода потребовал
+// бы «последний день месяца X» без обратного шага, что здесь недостижимо.
+// Единственное различие: R. 822-13 вычисляется НАСТОЯЩИМ термом
+// (`add_calendar_period` только ВПЕРЁД, от единственной пороговой даты) —
+// см. AbattementPensionActifMois ниже.
+//
+// СВЯЗЬ ПАКЕТОВ: `membre_du_menage` — единственный мост к
+// `fr.tax.income_for_apl::Person`. Правило R. 822-2 (кто считается членом
+// домохозяйства, тест шести месяцев проживания) НЕ выведено — роль
+// «считается членом» дело предъявляет фактом; граница с причиной в README.
+//
+// LINK (D-APL-RES-LIEN, wave 2): `ressources_du_menage_calculee` feeds
+// ressources_retenues beside the flat fact (ch. 02) — one source per case,
+// mutually exclusive; the flat fact stays the fallback for pre-reform months
+// and cases without membres/periodes.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_D823_17,
+    CCH_D823_17_ED2023_04,
+    CCH_D823_17_ED2023_09,
+    CCH_D823_17_ED2023_12,
+    CCH_D823_17_ED2026_07,
+    CCH_R822_13,
+    CCH_R822_13_ED2023_04,
+    CCH_R822_13_ED2023_09,
+    CCH_R822_13_ED2023_12,
+    CCH_R822_13_ED2026_07,
+    CCH_R822_17,
+    CCH_R822_17_ED2023_04,
+    CCH_R822_17_ED2023_09,
+    CCH_R822_17_ED2023_12,
+    CCH_R822_17_ED2026_07,
+    CCH_R822_2,
+    CCH_R822_2_ED2023_04,
+    CCH_R822_2_ED2023_09,
+    CCH_R822_2_ED2023_12,
+    CCH_R822_2_ED2026_07,
+    CCH_R822_3,
+    CCH_R822_3_ED2023_04,
+    CCH_R822_3_ED2023_09,
+    CCH_R822_3_ED2023_12,
+    CCH_R822_3_ED2026_07,
+    CCH_R822_4,
+    CCH_R822_4_ED2023_04,
+    CCH_R822_4_ED2023_09,
+    CCH_R822_4_ED2023_12,
+    CCH_R822_4_ED2026_07,
+    Menage,
+    ressources_retenues,
+    secteur_accession,
+    secteur_accession_allocations,
+    secteur_locatif,
+    secteur_logement_foyer,
+};
+
+// Политика для add_calendar_period (§86) — только ВПЕРЁД, шаг «месяц,
+// следующий за», без рабочих дней/переносов. `month_end` обязателен НА
+// ДЕЛЕ для единиц calendar_month/calendar_year, хотя запись §86 называет
+// поле необязательным: его отсутствие даёт тихий отказ БЕЗ диагностики
+// (измерено 15.09.2026 — образец `US_CONSTITUTION_AGE`, где поле есть).
+// «День всегда 1» (шаг применяется к month_start_of) — last_day_of_month
+// не наблюдаем на этом входе, но обязан быть назван.
+deadline policy R822_13_MOIS_SUIVANT {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+// --- R. 822-2: состав домохозяйства (мост, тест шести месяцев — граница) --
+
+@source(CCH_R822_2, CCH_R822_2_ED2023_04, CCH_R822_2_ED2023_09, CCH_R822_2_ED2023_12, CCH_R822_2_ED2026_07)
+pub relation membre_du_menage(m: Menage, p: fr.tax.income_for_apl::Person) kind empirical {
+    key(p);
+    label fr official "personne dont les ressources sont prises en compte au sens de l'article R. 822-2 (demandeur ou allocataire, conjoint, personne vivant habituellement au foyer depuis plus de six mois)";
+    label ru unofficial "лицо, чьи ресурсы учитываются по ст. R.822-2 (заявитель, супруг, проживающий в семье более шести месяцев); тест шести месяцев — факт дела, не выводится в этом заходе";
+}
+
+// --- R. 822-13: abattement de 30 % — pension, invalidité, rente AT, AAH ---
+//
+// «apporte la preuve» — УСТАНОВЛЕННЫЙ факт (канал §73 DECISION-0194: норма
+// требует установить обстоятельство, а не делегирует ОЦЕНКУ органу — не
+// канал суждения §47.3).
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+pub relation preuve_cessation_activite_pension(m: Menage, p: fr.tax.income_for_apl::Person, mois_changement: Date) kind empirical {
+    key(m, p);
+    label fr official "preuve apportée de la cessation d'activité professionnelle et de l'admission au bénéfice d'une pension de retraite ou d'invalidité, d'une rente d'accident du travail ou de l'allocation aux adultes handicapés; mois au cours duquel survient le changement de situation";
+    label ru unofficial "установлен факт прекращения деятельности и назначения пенсии/инвалидности/AT-ренты/AAH; месяц, в котором произошла смена ситуации";
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+pub relation pas_de_pension_etablie(m: Menage, p: fr.tax.income_for_apl::Person) kind empirical {
+    key(m, p);
+    label fr official "aucune preuve de cessation d'activité et d'admission à pension n'est apportée pour cette personne (exclusion mutuelle avec preuve_cessation_activite_pension)";
+    label ru unofficial "факт прекращения деятельности и назначения пенсии для этого лица не установлен (взаимоисключимо с preuve_cessation_activite_pension)";
+}
+
+// --- R. 822-17: RSA — non prise en compte totale, fenêtre du dossier -----
+//
+// Fenêtre [debut, fin) prête par le dossier (voir la note de tête sur
+// l'obstacle du décompte arrière); `perception_rsa_sans_fin` couvre le cas
+// où les conditions restent réunies au moment de l'appréciation.
+
+@source(CCH_R822_17, CCH_R822_17_ED2023_04, CCH_R822_17_ED2023_09, CCH_R822_17_ED2023_12, CCH_R822_17_ED2026_07)
+pub relation perception_rsa_periode(m: Menage, p: fr.tax.income_for_apl::Person, debut: Date, fin: Date) kind empirical {
+    key(m, p);
+    label fr official "revenu de solidarité active perçu; fenêtre [debut, fin) de non prise en compte des revenus d'activité et indemnités de chômage, calculée par le dossier à partir du premier jour du mois suivant celui où les conditions sont réunies jusqu'au dernier jour du mois où elles cessent de l'être";
+    label ru unofficial "получение RSA; окно [debut, fin) полной нейтрализации дохода от деятельности и пособия по безработице, вычислено делом (с 1-го числа месяца, следующего за наступлением условий, до последнего дня месяца их прекращения)";
+}
+
+@source(CCH_R822_17, CCH_R822_17_ED2023_04, CCH_R822_17_ED2023_09, CCH_R822_17_ED2023_12, CCH_R822_17_ED2026_07)
+pub relation pas_de_rsa(m: Menage, p: fr.tax.income_for_apl::Person) kind empirical {
+    key(m, p);
+    label fr official "le RSA n'est pas perçu par cette personne (exclusion mutuelle avec perception_rsa_periode)";
+    label ru unofficial "RSA этим лицом не получается (взаимоисключимо с perception_rsa_periode)";
+}
+
+// --- Acteur R. 822-13/17 : bénéficiaire ou conjoint, reprise d'activité ----
+//
+// Les deux exceptions ne visent que « le bénéficiaire ou son conjoint » :
+// la neutralisation/abattement d'un autre membre n'a pas de base source.
+// La reprise d'une activité rémunérée supprime l'abattement R. 822-13
+// « à partir du premier jour du mois civil au cours duquel intervient
+// la reprise » (mois de reprise en revenu entier, pas le mois suivant).
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07, CCH_R822_17, CCH_R822_17_ED2023_04, CCH_R822_17_ED2023_09, CCH_R822_17_ED2023_12, CCH_R822_17_ED2026_07)
+pub relation allocataire_ou_conjoint_ressources(m: Menage, p: fr.tax.income_for_apl::Person) kind empirical {
+    key(m, p);
+    label fr official "la personne est le bénéficiaire ou son conjoint au sens des articles R. 822-13 et R. 822-17 (rôle acteur)";
+    label ru unofficial "лицо — получатель либо его супруг по ст. R.822-13 и R.822-17 (роль актёра исключений)";
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+pub relation reprise_activite_remuneree_le(m: Menage, p: fr.tax.income_for_apl::Person, mois_reprise: Date) kind empirical {
+    key(m, p);
+    label fr official "reprise par l'intéressé d'une activité professionnelle rémunérée ; mois civil au cours duquel intervient la reprise (fin de l'abattement R. 822-13)";
+    label ru unofficial "возобновление лицом оплачиваемой деятельности; календарный месяц возобновления (конец абатмана R.822-13)";
+}
+
+pub relation mois_reprise_activite_atteint(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date) kind institutional {
+    key(m, p, mois);
+    label fr official "le mois apprécié est celui de la reprise d'activité ou un mois ultérieur (abattement R. 822-13 supprimé)";
+    label ru unofficial "оцениваемый месяц — месяц возобновления деятельности либо позже (абатман R.822-13 снят)";
+}
+
+// The appraised month is bound by the counted monthly income (salary or
+// unemployment benefit), one rule per income kind (range restriction §190).
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+rule MoisRepriseActiviteAtteintSalaire(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, reprise: Date) strict {
+    label fr official "R. 822-13 al. 3 : l'abattement est supprimé à partir du premier jour du mois de reprise (revenus d'activité)";
+    label ru unofficial "R.822-13 абз. 3: абатман снят с первого дня месяца возобновления (доход от деятельности)";
+    when fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(p, mois, brut)
+        and reprise_activite_remuneree_le(m, p, reprise)
+        and mois >= month_start_of(reprise);
+    then mois_reprise_activite_atteint(m, p, mois);
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+rule MoisRepriseActiviteAtteintChomage(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, reprise: Date) strict {
+    label fr official "R. 822-13 al. 3 : l'abattement est supprimé à partir du premier jour du mois de reprise (indemnités de chômage)";
+    label ru unofficial "R.822-13 абз. 3: абатман снят с первого дня месяца возобновления (пособие по безработице)";
+    when fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(p, mois, brut)
+        and reprise_activite_remuneree_le(m, p, reprise)
+        and mois >= month_start_of(reprise);
+    then mois_reprise_activite_atteint(m, p, mois);
+}
+
+// --- Montants comptés, mois par mois --------------------------------------
+
+pub relation salaire_compte_mensuel(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, montant: Money) kind institutional {
+    key(m, p, mois);
+    label fr official "salaire retenu pour ce mois après application, le cas échéant, de l'abattement R. 822-13 ou de la neutralisation R. 822-17";
+    label ru unofficial "зарплата, учтённая за месяц, после применения (если применимо) абатмана R.822-13 либо нейтрализации R.822-17";
+}
+
+pub relation chomage_compte_mensuel(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, montant: Money) kind institutional {
+    key(m, p, mois);
+    label fr official "indemnité de chômage retenue pour ce mois après application, le cas échéant, de l'abattement R. 822-13 ou de la neutralisation R. 822-17";
+    label ru unofficial "пособие по безработице, учтённое за месяц, после применения (если применимо) абатмана R.822-13 либо нейтрализации R.822-17";
+}
+
+// R.822-17 l'emporte: la neutralisation totale s'applique même si R.822-13
+// serait par ailleurs actif (le texte ne prévoit pas de cumul; R.822-17 vise
+// exactement les mêmes revenus que R.822-13 module la pension).
+
+@source(CCH_R822_17, CCH_R822_17_ED2023_04, CCH_R822_17_ED2023_09, CCH_R822_17_ED2023_12, CCH_R822_17_ED2026_07)
+rule SalaireNeutraliseRsa(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, debut: Date, fin: Date) strict {
+    label fr official "R. 822-17: aucun revenu d'activité du bénéficiaire ou de son conjoint n'est compté pendant la fenêtre de perception du RSA";
+    label ru unofficial "R.822-17: доход от деятельности получателя либо супруга не учитывается в окне получения RSA";
+    when membre_du_menage(m, p)
+        and allocataire_ou_conjoint_ressources(m, p)
+        and fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(p, mois, brut)
+        and perception_rsa_periode(m, p, debut, fin)
+        and mois >= debut and mois < fin;
+    then salaire_compte_mensuel(m, p, mois, brut - brut);
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+rule SalaireAbattuPension(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, mois_changement: Date) strict {
+    label fr official "R. 822-13: abattement de 30 % sur les revenus d'activité du bénéficiaire ou de son conjoint à compter du mois suivant le changement de situation, sauf reprise d'activité";
+    label ru unofficial "R.822-13: вычет 30% из дохода от деятельности получателя либо супруга с месяца, следующего за сменой ситуации, кроме возобновления деятельности";
+    when membre_du_menage(m, p)
+        and allocataire_ou_conjoint_ressources(m, p)
+        and fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(p, mois, brut)
+        and preuve_cessation_activite_pension(m, p, mois_changement)
+        and pas_de_rsa(m, p)
+        and mois >= add_calendar_period(month_start_of(mois_changement), 1 calendar_month)
+        and not_known(mois_reprise_activite_atteint(m, p, mois));
+    then salaire_compte_mensuel(m, p, mois, brut - brut * (3 / 10));
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+rule SalaireNonAbattuPensionAvant(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, mois_changement: Date) strict {
+    label fr official "R. 822-13: avant le mois suivant le changement de situation, le revenu du bénéficiaire ou de son conjoint est retenu en entier";
+    label ru unofficial "R.822-13: до месяца, следующего за сменой ситуации, доход получателя либо супруга учитывается полностью";
+    when membre_du_menage(m, p)
+        and allocataire_ou_conjoint_ressources(m, p)
+        and fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(p, mois, brut)
+        and preuve_cessation_activite_pension(m, p, mois_changement)
+        and pas_de_rsa(m, p)
+        and mois < add_calendar_period(month_start_of(mois_changement), 1 calendar_month);
+    then salaire_compte_mensuel(m, p, mois, brut);
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+rule SalaireCompletRepriseActivite(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, mois_changement: Date) strict {
+    label fr official "R. 822-13 al. 3 : après reprise d'activité, le revenu est retenu en entier dès le mois de reprise";
+    label ru unofficial "R.822-13 абз. 3: после возобновления деятельности доход учитывается полностью с месяца возобновления";
+    when membre_du_menage(m, p)
+        and allocataire_ou_conjoint_ressources(m, p)
+        and fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(p, mois, brut)
+        and preuve_cessation_activite_pension(m, p, mois_changement)
+        and pas_de_rsa(m, p)
+        and mois_reprise_activite_atteint(m, p, mois);
+    then salaire_compte_mensuel(m, p, mois, brut);
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07, CCH_R822_17, CCH_R822_17_ED2023_04, CCH_R822_17_ED2023_09, CCH_R822_17_ED2023_12, CCH_R822_17_ED2026_07)
+rule SalaireCompletPasDePensionPasDeRsa(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money) strict {
+    label fr official "sans pension établie ni RSA : le revenu est retenu en entier pour tout membre";
+    label ru unofficial "нейтрализация неприменима: доход учитывается полностью";
+    when membre_du_menage(m, p)
+        and fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(p, mois, brut)
+        and pas_de_pension_etablie(m, p)
+        and pas_de_rsa(m, p);
+    then salaire_compte_mensuel(m, p, mois, brut);
+}
+
+// Le dossier a déclaré une fenêtre de RSA, mais CE mois lui est extérieur:
+// R. 822-17 ne joue pas ce mois-ci, R. 822-13 non plus (pas de pension) —
+// le revenu est retenu en entier.
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07, CCH_R822_17, CCH_R822_17_ED2023_04, CCH_R822_17_ED2023_09, CCH_R822_17_ED2023_12, CCH_R822_17_ED2026_07)
+rule SalaireCompletPasDePensionRsaHorsFenetre(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, debut: Date, fin: Date) strict {
+    label fr official "hors de la fenêtre RSA du dossier et sans pension établie: le revenu du bénéficiaire ou de son conjoint est retenu en entier";
+    label ru unofficial "вне окна RSA дела и без установленной пенсии: доход получателя либо супруга учитывается полностью";
+    when membre_du_menage(m, p)
+        and allocataire_ou_conjoint_ressources(m, p)
+        and fr.tax.income_for_apl::salaire_net_mensuel_avant_abattement(p, mois, brut)
+        and pas_de_pension_etablie(m, p)
+        and perception_rsa_periode(m, p, debut, fin)
+        and (mois < debut or mois >= fin);
+    then salaire_compte_mensuel(m, p, mois, brut);
+}
+
+// Même schéma pour les indemnités de chômage — R. 822-13 et R. 822-17
+// visent l'un et l'autre expressément « les revenus d'activité
+// professionnelle et les indemnités de chômage ».
+
+@source(CCH_R822_17, CCH_R822_17_ED2023_04, CCH_R822_17_ED2023_09, CCH_R822_17_ED2023_12, CCH_R822_17_ED2026_07)
+rule ChomageNeutraliseRsa(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, debut: Date, fin: Date) strict {
+    label fr official "R. 822-17: aucune indemnité de chômage du bénéficiaire ou de son conjoint n'est comptée pendant la fenêtre de perception du RSA";
+    label ru unofficial "R.822-17: пособие по безработице получателя либо супруга не учитывается в окне получения RSA";
+    when membre_du_menage(m, p)
+        and allocataire_ou_conjoint_ressources(m, p)
+        and fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(p, mois, brut)
+        and perception_rsa_periode(m, p, debut, fin)
+        and mois >= debut and mois < fin;
+    then chomage_compte_mensuel(m, p, mois, brut - brut);
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+rule ChomageAbattuPension(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, mois_changement: Date) strict {
+    label fr official "R. 822-13: abattement de 30 % sur les indemnités de chômage du bénéficiaire ou de son conjoint à compter du mois suivant le changement de situation, sauf reprise d'activité";
+    label ru unofficial "R.822-13: вычет 30% из пособия по безработице получателя либо супруга с месяца, следующего за сменой ситуации, кроме возобновления деятельности";
+    when membre_du_menage(m, p)
+        and allocataire_ou_conjoint_ressources(m, p)
+        and fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(p, mois, brut)
+        and preuve_cessation_activite_pension(m, p, mois_changement)
+        and pas_de_rsa(m, p)
+        and mois >= add_calendar_period(month_start_of(mois_changement), 1 calendar_month)
+        and not_known(mois_reprise_activite_atteint(m, p, mois));
+    then chomage_compte_mensuel(m, p, mois, brut - brut * (3 / 10));
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+rule ChomageNonAbattuPensionAvant(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, mois_changement: Date) strict {
+    label fr official "R. 822-13: avant le mois suivant le changement de situation, l'indemnité du bénéficiaire ou de son conjoint est retenue en entier";
+    label ru unofficial "R.822-13: до месяца, следующего за сменой ситуации, пособие получателя либо супруга учитывается полностью";
+    when membre_du_menage(m, p)
+        and allocataire_ou_conjoint_ressources(m, p)
+        and fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(p, mois, brut)
+        and preuve_cessation_activite_pension(m, p, mois_changement)
+        and pas_de_rsa(m, p)
+        and mois < add_calendar_period(month_start_of(mois_changement), 1 calendar_month);
+    then chomage_compte_mensuel(m, p, mois, brut);
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07)
+rule ChomageCompletRepriseActivite(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, mois_changement: Date) strict {
+    label fr official "R. 822-13 al. 3 : après reprise d'activité, l'indemnité est retenue en entier dès le mois de reprise";
+    label ru unofficial "R.822-13 абз. 3: после возобновления деятельности пособие учитывается полностью с месяца возобновления";
+    when membre_du_menage(m, p)
+        and allocataire_ou_conjoint_ressources(m, p)
+        and fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(p, mois, brut)
+        and preuve_cessation_activite_pension(m, p, mois_changement)
+        and pas_de_rsa(m, p)
+        and mois_reprise_activite_atteint(m, p, mois);
+    then chomage_compte_mensuel(m, p, mois, brut);
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07, CCH_R822_17, CCH_R822_17_ED2023_04, CCH_R822_17_ED2023_09, CCH_R822_17_ED2023_12, CCH_R822_17_ED2026_07)
+rule ChomageCompletPasDePensionPasDeRsa(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money) strict {
+    label fr official "sans pension établie ni RSA : l'indemnité est retenue en entier pour tout membre";
+    label ru unofficial "нейтрализация неприменима: пособие учитывается полностью";
+    when membre_du_menage(m, p)
+        and fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(p, mois, brut)
+        and pas_de_pension_etablie(m, p)
+        and pas_de_rsa(m, p);
+    then chomage_compte_mensuel(m, p, mois, brut);
+}
+
+@source(CCH_R822_13, CCH_R822_13_ED2023_04, CCH_R822_13_ED2023_09, CCH_R822_13_ED2023_12, CCH_R822_13_ED2026_07, CCH_R822_17, CCH_R822_17_ED2023_04, CCH_R822_17_ED2023_09, CCH_R822_17_ED2023_12, CCH_R822_17_ED2026_07)
+rule ChomageCompletPasDePensionRsaHorsFenetre(m: Menage, p: fr.tax.income_for_apl::Person, mois: Date, brut: Money, debut: Date, fin: Date) strict {
+    label fr official "hors de la fenêtre RSA du dossier et sans pension établie: l'indemnité du bénéficiaire ou de son conjoint est retenue en entier";
+    label ru unofficial "вне окна RSA дела и без установленной пенсии: пособие получателя либо супруга учитывается полностью";
+    when membre_du_menage(m, p)
+        and allocataire_ou_conjoint_ressources(m, p)
+        and fr.tax.income_for_apl::indemnite_chomage_nette_mensuelle_avant_abattement(p, mois, brut)
+        and pas_de_pension_etablie(m, p)
+        and perception_rsa_periode(m, p, debut, fin)
+        and (mois < debut or mois >= fin);
+    then chomage_compte_mensuel(m, p, mois, brut);
+}
+
+// --- Agrégation sur la fenêtre, puis déduction ст. 83 3° (§59, R. 822-4) --
+
+pub relation revenu_brut_periode_membre(m: Menage, p: fr.tax.income_for_apl::Person, debut: Date, fin: Date, montant: Money) kind institutional {
+    key(m, p, debut, fin);
+    label fr official "somme du salaire et de l'indemnité de chômage COMPTÉS sur les douze mois, avant déduction forfaitaire";
+    label ru unofficial "сумма учтённых зарплаты и пособия по безработице за двенадцать месяцев, ДО форфейтного вычета";
+}
+
+@source(CCH_R822_3, CCH_R822_3_ED2023_04, CCH_R822_3_ED2023_09, CCH_R822_3_ED2023_12, CCH_R822_3_ED2026_07, CCH_R822_4, CCH_R822_4_ED2023_04, CCH_R822_4_ED2023_09, CCH_R822_4_ED2023_12, CCH_R822_4_ED2026_07)
+rule RevenuBrutPeriodeMembre(m: Menage, p: fr.tax.income_for_apl::Person, debut: Date, fin: Date) strict {
+    label fr official "le revenu brut du membre pour la période est le total du salaire et de l'indemnité de chômage comptés des douze mois";
+    label ru unofficial "брутто-доход члена домохозяйства за период — сумма учтённых зарплаты и пособия за двенадцать месяцев";
+    when membre_du_menage(m, p)
+        and fr.tax.income_for_apl::periode_evaluee(p, debut, fin)
+        and ((count all mois: Date for m2: Money where mois >= debut and mois < fin
+              and salaire_compte_mensuel(m, p, mois, m2)) == 12)
+        and ((count all mois: Date for m2: Money where mois >= debut and mois < fin
+              and chomage_compte_mensuel(m, p, mois, m2)) == 12);
+    then revenu_brut_periode_membre(m, p, debut, fin,
+        (sum all m2: Money for mois: Date where mois >= debut and mois < fin
+            and salaire_compte_mensuel(m, p, mois, m2))
+      + (sum all m2: Money for mois: Date where mois >= debut and mois < fin
+            and chomage_compte_mensuel(m, p, mois, m2)));
+}
+
+pub relation revenu_net_categoriel_membre(m: Menage, p: fr.tax.income_for_apl::Person, debut: Date, fin: Date, montant: Money) kind institutional {
+    key(m, p, debut, fin);
+    label fr official "revenu net catégoriel du membre pour la période, après déduction forfaitaire de l'article 83 3° du CGI (art. R. 822-4 I)";
+    label ru unofficial "чистый категориальный доход члена домохозяйства за период, после форфейтного вычета ст. 83 3° CGI";
+}
+
+// Formule reproduite EN LIGNE (pas d'appel à `function`): un appel de
+// `function` sur une variable liée par une règle à DEUX prémisses agrégat
+// (`count … == 12`, ci-dessus) donne NEITHER sans diagnostic — mesuré
+// 15.09.2026 dans `fr.tax.income_for_apl` (trois répétitions isolées,
+// reproduit par lawc ET lawref), non qualifié. La même formule que
+// `fr.tax.income_for_apl::RevenuNetCategorielPeriode`, potentiel et plancher
+// lus via les relations d'exposition de ce paquet (lecture seule — un
+// paquet ne peut produire que ses propres relations, §190).
+
+@source(CCH_R822_4, CCH_R822_4_ED2023_04, CCH_R822_4_ED2023_09, CCH_R822_4_ED2023_12, CCH_R822_4_ED2026_07)
+rule RevenuNetCategorielMembre(m: Menage, p: fr.tax.income_for_apl::Person, debut: Date, fin: Date, brut: Money, plafond: Money, plancher: Money) strict {
+    label fr official "le revenu net catégoriel du membre est le revenu brut diminué de la déduction forfaitaire de l'article 83 3° du CGI";
+    label ru unofficial "чистый категориальный доход члена домохозяйства — брутто-доход минус форфейтный вычет ст. 83 3° CGI";
+    when revenu_brut_periode_membre(m, p, debut, fin, brut)
+        and fr.tax.income_for_apl::deduction_forfaitaire_plafond_courant(plafond)
+        and fr.tax.income_for_apl::deduction_forfaitaire_plancher_courant(plancher);
+    then revenu_net_categoriel_membre(m, p, debut, fin,
+        brut - min(max(min(brut * (1 / 10), plafond), plancher), brut));
+}
+
+// --- Link into ressources_retenues (D-APL-RES-LIEN, fork 4.1a) --------------
+//
+// Two strict producers of one head (the flat fact in ch. 02 and the computed
+// values here) are MUTUALLY EXCLUSIVE by case construction: a case gives ONE
+// resource source (`unless` is unavailable — §149 requires defeasible, while
+// 11 strict readers of ressources_retenues in four modules forbid the
+// cascade; double input is a key conflict — observable, not a silent pick).
+// The flat fact stays the path for pre-reform months and cases without
+// membres/periodes.
+// Reform gate: `effective [@2021-01-01, …)` — pre-reform droit months
+// (October–December 2020) stay on the flat fact (fork 4.1, option a);
+// rounding is the same centaine supérieure as the flat path (D. 823-17 4°).
+// APL owner-accession (L. 831-1) joins the new method only in May 2021
+// (decree 2020-1816 NOTA on R. 822-3…17): four sector rules, one head.
+
+@source(CCH_R822_3, CCH_R822_3_ED2023_04, CCH_R822_3_ED2023_09, CCH_R822_3_ED2023_12, CCH_R822_3_ED2026_07, CCH_R822_4, CCH_R822_4_ED2023_04, CCH_R822_4_ED2023_09, CCH_R822_4_ED2023_12, CCH_R822_4_ED2026_07, CCH_D823_17, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09, CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07)
+rule RessourcesRetenuesCalculeesLocatif(m: Menage, debut: Date, fin: Date, montant: Money) strict {
+    label fr official "R. 822-3/4/13/17 (réforme 01.01.2021, secteur locatif): les ressources retenues sont les ressources calculées du ménage, arrondies à la centaine d'euros supérieure";
+    label ru unofficial "R.822-3/4/13/17 (реформа 01.01.2021, наём): удерживаемые ресурсы — рассчитанные, округлённые вверх до сотни";
+    effective [@2021-01-01, infinity);
+    when secteur_locatif(m) and ressources_du_menage_calculee(m, debut, fin, montant);
+    then ressources_retenues(m, div_round(montant, 100.0, 0, "CEILING") * 100);
+}
+
+@source(CCH_R822_3, CCH_R822_3_ED2023_04, CCH_R822_3_ED2023_09, CCH_R822_3_ED2023_12, CCH_R822_3_ED2026_07, CCH_R822_4, CCH_R822_4_ED2023_04, CCH_R822_4_ED2023_09, CCH_R822_4_ED2023_12, CCH_R822_4_ED2026_07, CCH_D823_17, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09, CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07)
+rule RessourcesRetenuesCalculeesFoyer(m: Menage, debut: Date, fin: Date, montant: Money) strict {
+    label fr official "R. 822-3/4/13/17 (réforme 01.01.2021, logement-foyer): les ressources retenues sont les ressources calculées du ménage, arrondies à la centaine d'euros supérieure";
+    label ru unofficial "R.822-3/4/13/17 (реформа 01.01.2021, фойе): удерживаемые ресурсы — рассчитанные, округлённые вверх до сотни";
+    effective [@2021-01-01, infinity);
+    when secteur_logement_foyer(m) and ressources_du_menage_calculee(m, debut, fin, montant);
+    then ressources_retenues(m, div_round(montant, 100.0, 0, "CEILING") * 100);
+}
+
+@source(CCH_R822_3, CCH_R822_3_ED2023_04, CCH_R822_3_ED2023_09, CCH_R822_3_ED2023_12, CCH_R822_3_ED2026_07, CCH_R822_4, CCH_R822_4_ED2023_04, CCH_R822_4_ED2023_09, CCH_R822_4_ED2023_12, CCH_R822_4_ED2026_07, CCH_D823_17, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09, CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07)
+rule RessourcesRetenuesCalculeesAccessionAllocations(m: Menage, debut: Date, fin: Date, montant: Money) strict {
+    label fr official "R. 822-3/4/13/17 (réforme 01.01.2021, accession-allocations): les ressources retenues sont les ressources calculées du ménage, arrondies à la centaine d'euros supérieure";
+    label ru unofficial "R.822-3/4/13/17 (реформа 01.01.2021, приобретение-аллокации): удерживаемые ресурсы — рассчитанные, округлённые вверх до сотни";
+    effective [@2021-01-01, infinity);
+    when secteur_accession_allocations(m) and ressources_du_menage_calculee(m, debut, fin, montant);
+    then ressources_retenues(m, div_round(montant, 100.0, 0, "CEILING") * 100);
+}
+
+@source(CCH_R822_3, CCH_R822_3_ED2023_04, CCH_R822_3_ED2023_09, CCH_R822_3_ED2023_12, CCH_R822_3_ED2026_07, CCH_R822_4, CCH_R822_4_ED2023_04, CCH_R822_4_ED2023_09, CCH_R822_4_ED2023_12, CCH_R822_4_ED2026_07, CCH_D823_17, CCH_D823_17_ED2023_04, CCH_D823_17_ED2023_09, CCH_D823_17_ED2023_12, CCH_D823_17_ED2026_07)
+rule RessourcesRetenuesCalculeesAccessionAPL(m: Menage, debut: Date, fin: Date, montant: Money) strict {
+    label fr official "R. 822-3/4/13/17 (accession APL L. 831-1, méthode nouvelle à compter de mai 2021): les ressources retenues sont les ressources calculées du ménage, arrondies à la centaine d'euros supérieure";
+    label ru unofficial "R.822-3/4/13/17 (приобретение APL L.831-1, новый метод с мая 2021): удерживаемые ресурсы — рассчитанные, округлённые вверх до сотни";
+    effective [@2021-05-01, infinity);
+    when secteur_accession(m) and ressources_du_menage_calculee(m, debut, fin, montant);
+    then ressources_retenues(m, div_round(montant, 100.0, 0, "CEILING") * 100);
+}
+
+// --- Total du ménage (additif — voir la note de tête) ----------------------
+
+pub relation ressources_du_menage_calculee(m: Menage, debut: Date, fin: Date, montant: Money) kind institutional {
+    key(m, debut, fin);
+    label fr official "somme des revenus nets catégoriels de tous les membres du ménage sur la période, au sens de la section 2 du chapitre II (D. 823-17 4°) — NOUVELLE relation, additive, non branchée sur ressources_du_menage";
+    label ru unofficial "сумма чистых категориальных доходов всех членов домохозяйства за период по разделу 2 главы II (D.823-17 4°) — НОВОЕ отношение, аддитивное, не подключённое к ressources_du_menage";
+}
+
+@source(CCH_R822_2, CCH_R822_2_ED2023_04, CCH_R822_2_ED2023_09, CCH_R822_2_ED2023_12, CCH_R822_2_ED2026_07, CCH_R822_4, CCH_R822_4_ED2023_04, CCH_R822_4_ED2023_09, CCH_R822_4_ED2023_12, CCH_R822_4_ED2026_07)
+rule RessourcesDuMenageCalculee(m: Menage, p: fr.tax.income_for_apl::Person, debut: Date, fin: Date, montant0: Money) strict {
+    label fr official "les ressources calculées du ménage sont la somme des revenus nets catégoriels de ses membres pour la période";
+    label ru unofficial "расчётные ресурсы домохозяйства — сумма чистых категориальных доходов его членов за период";
+    when revenu_net_categoriel_membre(m, p, debut, fin, montant0)
+        and ((count all p2: fr.tax.income_for_apl::Person for montant: Money where membre_du_menage(m, p2)
+              and revenu_net_categoriel_membre(m, p2, debut, fin, montant)) >= 1);
+    then ressources_du_menage_calculee(m, debut, fin,
+        (sum all montant: Money for p: fr.tax.income_for_apl::Person where membre_du_menage(m, p)
+            and revenu_net_categoriel_membre(m, p, debut, fin, montant)));
+}
+

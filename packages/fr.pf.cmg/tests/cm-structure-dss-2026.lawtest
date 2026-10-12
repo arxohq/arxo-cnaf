@@ -1,0 +1,38 @@
+// DSS/2B/2026/46 barème (annexe II.4.1, pinned in fr.css.revalorisation):
+// reform structure childminder band-1 maximum, BMAF 478.16: 172.57 % x
+// 478.16 = 825.1607, rounded to the centime -> 825.16, the published
+// maximum (0-3 ans). Price factor 1.0 is a stated assumption: the 2026
+// factor chain reproducing the DSS/2B/2025/177 ceilings (20880/3453)
+// needs the 2021-2025 instructions (D-23, downloads pending); with
+// factor 1.0 the a-ceiling is the 17633+2917 nominal (20550), resources
+// 20000 sit in band 1. Expense 900: 85 % = 765.00 under the maximum,
+// due 765.00 (rounded served amount, MontantStructureDu).
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-structure-dss-2026" {
+    given {
+        context { decision_time @2026-06-20T12:00:00Z; knowledge_time @2026-06-20T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "struct-dss-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), entity_ref("urn:fr:pf-cmg:child:dss"), STRUCTURE) { origin case_input; }
+        assert "struct-dss-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026")) { origin case_input; }
+        assert "struct-dss-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), entity_ref("urn:fr:pf-cmg:child:dss")) { origin case_input; }
+        assert "struct-dss-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:dss"), 2) { origin case_input; }
+        assert "struct-dss-05": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), 1) { origin case_input; }
+        assert "struct-dss-06-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), 17633 EUR) { origin case_input; }
+        assert "struct-dss-06-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), 2917 EUR) { origin case_input; }
+        assert "struct-dss-06-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), 39184 EUR) { origin case_input; }
+        assert "struct-dss-06-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), 6482 EUR) { origin case_input; }
+        assert "struct-dss-07": ressources_annuelles(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), 20000 EUR) { origin case_input; }
+        assert "struct-dss-08": bmaf_retenu(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), 478.16 EUR) { origin case_input; }
+        assert "struct-dss-09": depense_engagee(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), entity_ref("urn:fr:pf-cmg:child:dss"), 900 EUR) { origin case_input; }
+    }
+    evaluate truth(maximum_structure(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), entity_ref("urn:fr:pf-cmg:child:dss"), 825.16 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_structure_du(entity_ref("urn:fr:pf-cmg:case:structure-dss-2026"), entity_ref("urn:fr:pf-cmg:child:dss"), 765.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

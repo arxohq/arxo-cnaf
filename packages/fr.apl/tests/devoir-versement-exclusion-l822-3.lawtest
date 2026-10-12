@@ -1,0 +1,36 @@
+// Deontics D2, L. 822-3 exclusion pair: the active-case inputs plus the
+// agency-established owner exclusion. droit_ouvert is defeated — no aide_due,
+// no duty: the position is absent. Control — devoir-versement-actif (without
+// the exclusion the position is ACTIVE).
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-devoir-versement-exclusion-l822-3" {
+    given {
+        // D-42: G-A13 migration (24-lecture-pp.law) — D. 823-17 "P0 ... ne peut etre
+        // inferieure a un montant minimum" has two readings in group SensMinimumPp
+        // (selection exactly_one); this hand suite selects the working reading, as
+        // the other hand suites do. No expectation changed.
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "devoir-versement-exclusion-01": secteur_locatif(entity_ref("urn:fr:apl:case:devoir-versement-exclusion")) { origin case_input; }
+        assert "devoir-versement-exclusion-02": zone_du_logement(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), ZONE_III) { origin case_input; }
+        assert "devoir-versement-exclusion-03": aide_demandee(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), APL) { origin case_input; }
+        assert "devoir-versement-exclusion-04": situation_familiale(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), PERSONNE_SEULE) { origin case_input; }
+        assert "devoir-versement-exclusion-05": personnes_a_charge(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), 0) { origin case_input; }
+        assert "devoir-versement-exclusion-06": loyer_principal(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), 280 EUR) { origin case_input; }
+        assert "devoir-versement-exclusion-07": ressources_du_menage(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), 12800 EUR) { origin case_input; }
+        assert "devoir-versement-exclusion-08": mode_location(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), LOCATION_SEULE) { origin case_input; }
+        assert "devoir-versement-exclusion-09": forme_logement(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "devoir-versement-exclusion-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), 0 EUR) { origin case_input; }
+        assert "devoir-versement-exclusion-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), false) { origin case_input; }
+        assert "devoir-versement-exclusion-12": territoire(entity_ref("urn:fr:apl:case:devoir-versement-exclusion"), METROPOLE) { origin case_input; }
+        assert "devoir-versement-exclusion-13": occupation_residence_principale(entity_ref("urn:fr:apl:case:devoir-versement-exclusion")) { origin case_input; }
+        assert "devoir-versement-exclusion-14": logement_decent(entity_ref("urn:fr:apl:case:devoir-versement-exclusion")) { origin adjudicated; }
+        assert "devoir-versement-exclusion-15": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:devoir-versement-exclusion")) { origin case_input; }
+        assert "devoir-versement-exclusion-16": exclusion_propriete_l822_3(entity_ref("urn:fr:apl:case:devoir-versement-exclusion")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserAideTheoriqueDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

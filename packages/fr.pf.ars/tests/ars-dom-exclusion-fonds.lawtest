@@ -1,0 +1,149 @@
+// Fund exclusion (R. 755-14-1): only ARS actually paid (versées)
+// in a department is excluded from the CAF health/social action fund
+// resources — on the base amount track (0.8972 x 400.00 = 358.88,
+// stated base) with matching ars_verse and department residence, and
+// on the standalone differential track (438.35 per child, stated
+// figures of the differential suite) with matching ars_verse for each
+// child. Due-but-unpaid (department household, no verse), mismatched
+// paid value (verse 300.00 against due 358.88), paid-but-not-resident
+// and paid collectivity-only (Saint-Martin: matching verse and
+// collectivity residence but no department fact) cases stay outside
+// the exclusion.
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-dom-exclusion-fonds" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "aef-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a-e1")) { origin case_input; }
+        assert "aef-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a-e1")) { origin case_input; }
+        assert "aef-03": date_naissance(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a-e1"), @2014-06-01) { origin case_input; }
+        assert "aef-04": seuil_six_ans(@2022-02-01) { origin case_input; }
+        assert "aef-05": seuil_dix_huit_ans(@2021-09-15) { origin case_input; }
+        assert "aef-06": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a-e1")) { origin case_input; }
+        assert "aef-07": date_reference_taux(@2021-12-31) { origin case_input; }
+        assert "aef-08": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a"), 400.00 EUR) { origin case_input; }
+        assert "aef-09": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a"), 1) { origin case_input; }
+        assert "aef-10": ressources_menage(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a"), 12000 EUR) { origin case_input; }
+        assert "aef-11": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a"), 10000 EUR) { origin case_input; }
+        assert "aef-12": residence_dom(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a")) { origin case_input; }
+        assert "aef-13": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e1")) { origin case_input; }
+        assert "aef-14": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e2")) { origin case_input; }
+        assert "aef-15": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e1")) { origin case_input; }
+        assert "aef-16": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e2")) { origin case_input; }
+        assert "aef-17": date_naissance(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e1"), @2014-06-01) { origin case_input; }
+        assert "aef-18": date_naissance(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e2"), @2005-06-01) { origin case_input; }
+        assert "aef-19": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e1")) { origin case_input; }
+        assert "aef-20": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e2")) { origin case_input; }
+        assert "aef-21": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), 2) { origin case_input; }
+        assert "aef-22": nb_bande(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), ARS_MOINS_11, 1) { origin case_input; }
+        assert "aef-23": nb_bande(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), ARS_11_14, 0) { origin case_input; }
+        assert "aef-24": nb_bande(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), ARS_15_PLUS, 1) { origin case_input; }
+        assert "aef-25": ressources_menage(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), 17000 EUR) { origin case_input; }
+        assert "aef-26": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), 10000 EUR) { origin case_input; }
+        assert "aef-27": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), 1000.00 EUR) { origin case_input; }
+        assert "aef-28": residence_dom(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b")) { origin case_input; }
+        assert "aef-29": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c-e3")) { origin case_input; }
+        assert "aef-30": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c-e3")) { origin case_input; }
+        assert "aef-31": date_naissance(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c-e3"), @2014-06-01) { origin case_input; }
+        assert "aef-32": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c-e3")) { origin case_input; }
+        assert "aef-33": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c"), 400.00 EUR) { origin case_input; }
+        assert "aef-34": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c"), 1) { origin case_input; }
+        assert "aef-35": ressources_menage(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c"), 12000 EUR) { origin case_input; }
+        assert "aef-36": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c"), 10000 EUR) { origin case_input; }
+        assert "aef-37": ars_verse(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a-e1"), 358.88 EUR) { origin case_input; }
+        assert "aef-38": ars_verse(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e1"), 438.35 EUR) { origin case_input; }
+        assert "aef-39": ars_verse(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e2"), 438.35 EUR) { origin case_input; }
+        assert "aef-40": residence_dom(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c")) { origin case_input; }
+        assert "aef-41": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d-e4")) { origin case_input; }
+        assert "aef-42": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d-e4")) { origin case_input; }
+        assert "aef-43": date_naissance(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d-e4"), @2014-06-01) { origin case_input; }
+        assert "aef-44": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d-e4")) { origin case_input; }
+        assert "aef-45": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d"), 400.00 EUR) { origin case_input; }
+        assert "aef-46": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d"), 1) { origin case_input; }
+        assert "aef-47": ressources_menage(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d"), 12000 EUR) { origin case_input; }
+        assert "aef-48": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d"), 10000 EUR) { origin case_input; }
+        assert "aef-49": residence_dom(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d")) { origin case_input; }
+        assert "aef-50": ars_verse(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d-e4"), 300.00 EUR) { origin case_input; }
+        assert "aef-51": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e-e5")) { origin case_input; }
+        assert "aef-52": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e-e5")) { origin case_input; }
+        assert "aef-53": date_naissance(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e-e5"), @2014-06-01) { origin case_input; }
+        assert "aef-54": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e-e5")) { origin case_input; }
+        assert "aef-55": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e"), 400.00 EUR) { origin case_input; }
+        assert "aef-56": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e"), 1) { origin case_input; }
+        assert "aef-57": ressources_menage(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e"), 12000 EUR) { origin case_input; }
+        assert "aef-58": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e"), 10000 EUR) { origin case_input; }
+        assert "aef-59": ars_verse(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e-e5"), 358.88 EUR) { origin case_input; }
+        assert "aef-60": residence_departement_dom(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a")) { origin case_input; }
+        assert "aef-61": residence_departement_dom(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b")) { origin case_input; }
+        assert "aef-62": residence_departement_dom(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c")) { origin case_input; }
+        assert "aef-63": residence_departement_dom(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d")) { origin case_input; }
+        assert "aef-64": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f-e6")) { origin case_input; }
+        assert "aef-65": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f-e6")) { origin case_input; }
+        assert "aef-66": date_naissance(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f-e6"), @2014-06-01) { origin case_input; }
+        assert "aef-67": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f-e6")) { origin case_input; }
+        assert "aef-68": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f"), 400.00 EUR) { origin case_input; }
+        assert "aef-69": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f"), 1) { origin case_input; }
+        assert "aef-70": ressources_menage(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f"), 12000 EUR) { origin case_input; }
+        assert "aef-71": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f"), 10000 EUR) { origin case_input; }
+        assert "aef-72": residence_dom(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f")) { origin case_input; }
+        assert "aef-73": ars_verse(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f"), entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f-e6"), 358.88 EUR) { origin case_input; }
+    }
+    evaluate truth(ars_montant_du(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a-e1"), 358.88 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_exclue_ressources_fonds(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-a-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_differentiel_du(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e1"), 438.35 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_differentiel_du(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e2"), 438.35 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_exclue_ressources_fonds(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_exclue_ressources_fonds(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-b-e2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_montant_du(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c-e3"), 358.88 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_exclue_ressources_fonds(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-c-e3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_montant_du(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d-e4"), 358.88 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_exclue_ressources_fonds(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-d-e4")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_montant_du(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e-e5"), 358.88 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_exclue_ressources_fonds(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-e-e5")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_montant_du(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f-e6"), 358.88 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_exclue_ressources_fonds(entity_ref("urn:fr:pf-ars:case:dom-exclusion-fonds-f-e6")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

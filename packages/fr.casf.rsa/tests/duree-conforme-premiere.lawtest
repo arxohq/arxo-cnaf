@@ -1,0 +1,19 @@
+// Pronounced suspension duration reviewed against the decree bounds
+// (G-A08): first breach two months conforms (R.262-68, R.262-68-1).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-duree-conforme-premiere" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dur-01": manquement(entity_ref("urn:fr:rsa:case:duree-conforme"), REFUS_CONTRAT) { origin case_input; }
+        assert "dur-02": notification_10j(entity_ref("urn:fr:rsa:case:duree-conforme")) { origin case_input; }
+        assert "dur-03": tenu_obligations_262_28(entity_ref("urn:fr:rsa:case:duree-conforme")) { origin case_input; }
+        assert "dur-04": suspension_duree_mois(entity_ref("urn:fr:rsa:case:duree-conforme"), 2) { origin case_input; }
+    }
+    evaluate truth(suspension_duree_conforme(entity_ref("urn:fr:rsa:case:duree-conforme")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

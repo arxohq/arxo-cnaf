@@ -1,0 +1,112 @@
+// Non-cumulation (L. 544-9): 2018 list vs 2025 list, part-time exception.
+//
+// Nine concurrent benefits each refuse cumulation for the beneficiary. Two
+// generations: the 2018 list (2021 to 2026) and the 2025 list (from 2026,
+// within the NOTA birth scope). The part-time sick exception («Toutefois»,
+// identical both versions) is an institutional mid-fact consumed with `not`
+// (pf-af `not`-on-institutional pattern): full sick pay refuses, part-time
+// cumulation does not. Input contract: one motif XOR the part-time pair per
+// world. The beneficiary head binds p; the 2025 NOTA scope binds the child
+// through the core charge link (parent_charge). Actual parental-presence
+// leave is never a non-cumulation premise: the pinned L. 544-9 sets the
+// test by same beneficiary plus the enumerated concurrent benefit, and its
+// NOTA scopes the amendment by child birth/adoption cohort (F05 repair;
+// the 2018 leaveless contract is pinned by ajpp-blind-22 with the exact
+// quote).
+
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+use self::{
+    CSS_L544_9,
+    CSS_L544_9_ED2026_01,
+    CSS_L544_9_ED2026_06,
+    CSS_L544_9_PRE2026_ED2020_09,
+    CSS_L544_9_PRE2026_ED2021_11,
+    CSS_L544_9_PRE2026_ED2022_01,
+    CSS_L544_9_PRE2026_ED2022_04,
+    CSS_L544_9_PRE2026_ED2022_07,
+    CSS_L544_9_PRE2026_ED2022_10,
+    CSS_L544_9_PRE2026_ED2023_01,
+    CSS_L544_9_PRE2026_ED2023_07,
+    CSS_L544_9_PRE2026_ED2024_02,
+    CSS_L544_9_PRE2026_ED2024_07,
+    MotifNonCumul2018,
+    MotifNonCumul2025,
+    activite_partielle_cumulee,
+    ajpp_cumul_refuse,
+    conge_presence_parentale,
+    jours_ajpp_partiels,
+    motif_non_cumul_2018,
+    motif_non_cumul_2025,
+    percoit_maladie_temps_partiel,
+    scope_2026,
+};
+
+// --- L. 544-9 (2018): nine items refuse cumulation -----------------------
+
+@source(
+    CSS_L544_9_PRE2026_ED2020_09,
+    CSS_L544_9_PRE2026_ED2021_11,
+    CSS_L544_9_PRE2026_ED2022_01,
+    CSS_L544_9_PRE2026_ED2022_04,
+    CSS_L544_9_PRE2026_ED2022_07,
+    CSS_L544_9_PRE2026_ED2022_10,
+    CSS_L544_9_PRE2026_ED2023_01,
+    CSS_L544_9_PRE2026_ED2023_07,
+    CSS_L544_9_PRE2026_ED2024_02,
+    CSS_L544_9_PRE2026_ED2024_07)
+rule NonCumul2018(p: fr.pf.core::Personne, motif: MotifNonCumul2018) strict {
+    effective [@2021-01-01, @2025-12-31);
+    label fr official "2018 : prestation concurrente pour le même bénéficiaire, cumul refusé";
+    label en unofficial "2018: concurrent benefit for the same beneficiary, cumulation refused";
+    when motif_non_cumul_2018(p, motif);
+    then ajpp_cumul_refuse(p);
+}
+
+// --- L. 544-9 (2025): nine extended items, NOTA birth scope -------------
+
+@source(
+    CSS_L544_9,
+    CSS_L544_9_ED2026_01,
+    CSS_L544_9_ED2026_06)
+rule NonCumul2025(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, motif: MotifNonCumul2025) strict {
+    effective [@2025-12-31, infinity);
+    label fr official "2025 : prestation concurrente, enfant du champ NOTA à charge, cumul refusé";
+    label en unofficial "2025: concurrent benefit, in-charge NOTA-scope child, cumulation refused";
+    when motif_non_cumul_2025(p, motif) and fr.pf.core::parent_charge(p, e)
+        and scope_2026(e);
+    then ajpp_cumul_refuse(p);
+}
+
+// --- L. 544-9 exception: in-right part-time sick cumulation --------------
+
+@source(
+    CSS_L544_9_PRE2026_ED2020_09,
+    CSS_L544_9_PRE2026_ED2021_11,
+    CSS_L544_9_PRE2026_ED2022_01,
+    CSS_L544_9_PRE2026_ED2022_04,
+    CSS_L544_9_PRE2026_ED2022_07,
+    CSS_L544_9_PRE2026_ED2022_10,
+    CSS_L544_9_PRE2026_ED2023_01,
+    CSS_L544_9_PRE2026_ED2023_07,
+    CSS_L544_9_PRE2026_ED2024_02,
+    CSS_L544_9_PRE2026_ED2024_07,
+    CSS_L544_9,
+    CSS_L544_9_ED2026_01,
+    CSS_L544_9_ED2026_06)
+rule CumulPartielMaladie(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "exception : jours partiels et maladie à temps partiel, cumul en cours de droit";
+    label en unofficial "exception: partial days and part-time sick leave, in-right cumulation";
+    when percoit_maladie_temps_partiel(p) and conge_presence_parentale(p, e)
+        and jours_ajpp_partiels(e);
+    then activite_partielle_cumulee(p);
+}
+
+// Item 3 (sick/work-accident leave) refuses through the motif rules above
+// when the leave is full-time: the part-time pair (CumulPartielMaladie
+// permission record) permits cumulation instead, and the input contract
+// never asserts both for one world (no negation, no closure: permission is
+// the absence of refusal plus the explicit permission record).

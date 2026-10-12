@@ -1,0 +1,108 @@
+// Disputes (21): administrative jurisdiction, prior-appeal admissibility
+// in both directions, the fifteen-day acknowledgement due date, the
+// remission-decision duty, and the two-month implied rejection.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-juridiction-ta" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fjuri-01": recours_contre_decision(entity_ref("urn:fr:apl:case:fjuri"), @2023-03-01) { origin case_input; }
+        // D-42: L. 825-1 gives the administrative court "sous reserve" of L. 114-17 CSS
+        // D-42: (fraud penalties go to the judicial court); the model (21) asks for the
+        // D-42: finding that the appeal is outside fraud penalties, omitted by the case.
+        assert "fjuri-02": recours_hors_penalites_fraude(entity_ref("urn:fr:apl:case:fjuri")) { origin case_input; }
+    }
+    evaluate truth(juridiction_competente(entity_ref("urn:fr:apl:case:fjuri"), TRIBUNAL_ADMINISTRATIF));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-recours-recevable-cra" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frec-01": recours_contre_decision(entity_ref("urn:fr:apl:case:frec"), @2023-03-01) { origin case_input; }
+        assert "frec-02": cra_depose_prealable(entity_ref("urn:fr:apl:case:frec")) { origin case_input; }
+    }
+    evaluate truth(recours_recevable_cra(entity_ref("urn:fr:apl:case:frec")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-recours-irrecevable-sans-cra" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "firr-01": recours_contre_decision(entity_ref("urn:fr:apl:case:firr"), @2023-03-01) { origin case_input; }
+        assert "firr-02": cra_prealable_absent(entity_ref("urn:fr:apl:case:firr")) { origin case_input; }
+        // D-42: R. 825-3 in fine: a remise decision "peut faire l'objet d'un recours
+        // D-42: contentieux sans recours administratif prealable"; the model (21
+        // D-42: RecoursIrrecevableSansCRA) asks for the finding that the appeal is not
+        // D-42: against a remise decision, omitted by the case.
+        assert "firr-03": recours_hors_decision_remise(entity_ref("urn:fr:apl:case:firr")) { origin case_input; }
+    }
+    evaluate truth(recours_irrecevable_cra(entity_ref("urn:fr:apl:case:firr")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-accuse-due-remise" {
+    given {
+        // D-42: R. 825-3 delays (15 days, two months) are calendar steps; they need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-01-15T12:00:00Z; knowledge_time @2023-01-15T12:00:00Z; legal_time @2023-01-15; timezone "Europe/Paris"; deadline_policy APL_RECOURS; interpretation PpPlancherFinal; }
+        assert "facc-01": demande_remise_gracieuse(entity_ref("urn:fr:apl:case:facc"), @2023-01-10) { origin case_input; }
+        // D-42: R. 825-3 applies "sans que soit conteste le bien-fonde de la dette";
+        // D-42: the model (21) takes that finding, omitted by the case.
+        assert "facc-bf": dette_bien_fonde_non_conteste(entity_ref("urn:fr:apl:case:facc")) { origin case_input; }
+    }
+    evaluate truth(accuse_due_avant_remise(entity_ref("urn:fr:apl:case:facc"), @2023-01-25));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-statuer-remise" {
+    given {
+        // D-42: R. 825-3 delays (15 days, two months) are calendar steps; they need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-01-15T12:00:00Z; knowledge_time @2023-01-15T12:00:00Z; legal_time @2023-01-15; timezone "Europe/Paris"; deadline_policy APL_RECOURS; interpretation PpPlancherFinal; }
+        assert "fsta-01": demande_remise_gracieuse(entity_ref("urn:fr:apl:case:fsta"), @2023-01-10) { origin case_input; }
+        assert "fsta-02": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fsta")) { origin case_input; }
+        // D-42: R. 825-3 applies "sans que soit conteste le bien-fonde de la dette";
+        // D-42: the model (21) takes that finding, omitted by the case.
+        assert "fsta-bf": dette_bien_fonde_non_conteste(entity_ref("urn:fr:apl:case:fsta")) { origin case_input; }
+        // D-42: R. 825-3: the director "statue sur la demande de remise gracieuse apres
+        // D-42: avis de la commission de recours amiable"; the model takes the opinion
+        // D-42: as a finding, omitted by the case.
+        assert "fsta-cra": avis_commission_recours_amiable(entity_ref("urn:fr:apl:case:fsta")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(StatuerRemiseGracieuse, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-rejet-implicite-remise" {
+    given {
+        // D-42: R. 825-3 delays (15 days, two months) are calendar steps; they need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-04-15T12:00:00Z; knowledge_time @2023-04-15T12:00:00Z; legal_time @2023-04-15; timezone "Europe/Paris"; deadline_policy APL_RECOURS; interpretation PpPlancherFinal; }
+        assert "frej-01": demande_remise_gracieuse(entity_ref("urn:fr:apl:case:frej"), @2023-01-10) { origin case_input; }
+        assert "frej-02": date_appreciation(entity_ref("urn:fr:apl:case:frej"), @2023-04-01) { origin case_input; }
+        assert "frej-03": aucune_decision_remise(entity_ref("urn:fr:apl:case:frej")) { origin case_input; }
+        // D-42: R. 825-3 applies "sans que soit conteste le bien-fonde de la dette";
+        // D-42: the model (21) takes that finding, omitted by the case.
+        assert "frej-bf": dette_bien_fonde_non_conteste(entity_ref("urn:fr:apl:case:frej")) { origin case_input; }
+    }
+    evaluate truth(rejet_implicite_remise(entity_ref("urn:fr:apl:case:frej")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

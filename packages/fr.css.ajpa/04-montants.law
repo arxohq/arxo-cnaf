@@ -1,0 +1,79 @@
+// Monthly totals (L. 168-9, L. 168-8).
+//
+// The daily rate is decree-set and unpinned in every generation (SMIC
+// revalorisation from 2022, single-carer majoration to 2023-07,
+// split/part-time modulation): retained rates arrive as case inputs with
+// provenance (B-PFAJPA-D168). The computation multiplies the retained
+// rate by the established month days. All keyed premises arrive bound
+// (per-carer, per-aided and per-month keys).
+
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+use self::{
+    CSS_L168_9,
+    CSS_L168_9_ED2025_12,
+    CSS_L168_9_PRE2022_ED2020_12,
+    CSS_L168_9_PRE2022_ED2021_01,
+    CSS_L168_9_PRE2023,
+    CSS_L168_9_PRE2025,
+    ajpa_droit_ouvert,
+    ajpa_montant_mois,
+    jours_ajpa_mois,
+    montant_journalier_majore_retenu,
+    montant_journalier_module_retenu,
+    montant_journalier_retenu,
+};
+
+function montant_mensuel_ajpa(taux: Money, jours: Integer) -> Money =
+    taux * jours;
+
+// --- L. 168-9: monthly total at the retained daily rate ------------------
+
+@source(
+    CSS_L168_9_PRE2022_ED2020_12,
+    CSS_L168_9_PRE2022_ED2021_01,
+    CSS_L168_9_PRE2023,
+    CSS_L168_9_PRE2025,
+    CSS_L168_9,
+    CSS_L168_9_ED2025_12)
+rule MontantMensuelNormal(p: fr.pf.core::Personne, a: fr.pf.core::Personne, mois: Date, jours: Integer, taux: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total mensuel : taux journalier retenu par jours du mois";
+    label en unofficial "monthly total: retained daily rate times month days";
+    when ajpa_droit_ouvert(p, a) and jours_ajpa_mois(p, a, mois, jours)
+        and montant_journalier_retenu(p, taux);
+    then ajpa_montant_mois(p, a, mois, montant_mensuel_ajpa(taux, jours));
+}
+
+// --- L. 168-9 (2019/2022): increased single-carer rate -------------------
+
+@source(
+    CSS_L168_9_PRE2022_ED2021_01,
+    CSS_L168_9_PRE2023)
+rule MontantMensuelMajore(p: fr.pf.core::Personne, a: fr.pf.core::Personne, mois: Date, jours: Integer, taux: Money) strict {
+    effective [@2021-01-01, @2023-07-21);
+    label fr official "total mensuel au taux majoré personne isolée";
+    label en unofficial "monthly total at the increased single-carer rate";
+    when ajpa_droit_ouvert(p, a) and jours_ajpa_mois(p, a, mois, jours)
+        and montant_journalier_majore_retenu(p, taux);
+    then ajpa_montant_mois(p, a, mois, montant_mensuel_ajpa(taux, jours));
+}
+
+// --- L. 168-9: modulated rate (split or part-time leave) -----------------
+
+@source(
+    CSS_L168_9_PRE2022_ED2021_01,
+    CSS_L168_9_PRE2023,
+    CSS_L168_9_PRE2025,
+    CSS_L168_9,
+    CSS_L168_9_ED2025_12)
+rule MontantMensuelModule(p: fr.pf.core::Personne, a: fr.pf.core::Personne, mois: Date, jours: Integer, taux: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "total mensuel au taux modulé, congé fractionné ou temps partiel";
+    label en unofficial "monthly total at the modulated rate, split or part-time leave";
+    when ajpa_droit_ouvert(p, a) and jours_ajpa_mois(p, a, mois, jours)
+        and montant_journalier_module_retenu(p, taux);
+    then ajpa_montant_mois(p, a, mois, montant_mensuel_ajpa(taux, jours));
+}

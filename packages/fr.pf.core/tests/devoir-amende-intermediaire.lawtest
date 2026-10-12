@@ -1,0 +1,15 @@
+// Paid intermediary: convicted intermediary - 4,500 EUR fine (L. 554-2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-amende-intermediaire" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-amende-intermediaire-01": intermediaire_convaincu(entity_ref("urn:fr:pf:case:intermediaire")) { origin case_input; }
+    }
+    evaluate truth(amende_encourue(entity_ref("urn:fr:pf:case:intermediaire"), 4500 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

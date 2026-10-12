@@ -1,0 +1,16 @@
+// Fraud management indemnity: 1000 EUR indu from fraud - 100 EUR indemnity (L. 553-2 paragraph 1).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-recouvrement-indemnite-dix-pourcent" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "recouvrement-indemnite-dix-pourcent-01": indu_constate(entity_ref("urn:fr:pf:case:indu-fraude"), 1000 EUR) { origin case_input; }
+        assert "recouvrement-indemnite-dix-pourcent-02": indu_frauduleux(entity_ref("urn:fr:pf:case:indu-fraude")) { origin case_input; }
+    }
+    evaluate truth(indemnite_frais_gestion(entity_ref("urn:fr:pf:case:indu-fraude"), 100 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

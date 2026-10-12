@@ -1,0 +1,28 @@
+// Young artist-author before 2023 without the old registration:
+// general-scheme affiliation, 30 months of activity and a sufficient
+// 2021 turnover (26000.00 >= 43 x 600.00) still do not open the
+// deeming, because the predecessor joins the artist clause with "et"
+// ("... d'une activité déclarée ... et, pour les artistes auteurs,
+// d'une affiliation ..."): the old-register entry or declared
+// activity is cumulative with the affiliation. Control pair of
+// jeune-tns-artiste-pre2023; contrast jeune-tns-artiste-2023, where
+// the in-force "ou" makes affiliation alone sufficient.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-jeune-tns-artiste-pre2023-sans-registre" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "jeun-01": jeune_18_25(entity_ref("urn:fr:rsa:case:jeune-tns-artiste-pre2023-sans-registre")) { origin case_input; }
+        assert "jeun-02": tns_non_agricole(entity_ref("urn:fr:rsa:case:jeune-tns-artiste-pre2023-sans-registre")) { origin case_input; }
+        assert "jeun-03": artiste_auteur_affilie(entity_ref("urn:fr:rsa:case:jeune-tns-artiste-pre2023-sans-registre")) { origin case_input; }
+        assert "jeun-04": tns_duree_activite_mois(entity_ref("urn:fr:rsa:case:jeune-tns-artiste-pre2023-sans-registre"), 30) { origin case_input; }
+        assert "jeun-05": tns_chiffre_affaires(entity_ref("urn:fr:rsa:case:jeune-tns-artiste-pre2023-sans-registre"), 2021, 26000.00 EUR) { origin case_input; }
+        assert "jeun-06": mf_reference_ca(entity_ref("urn:fr:rsa:case:jeune-tns-artiste-pre2023-sans-registre"), 2021, 600.00 EUR) { origin case_input; }
+    }
+    evaluate truth(condition_heures_jeune(entity_ref("urn:fr:rsa:case:jeune-tns-artiste-pre2023-sans-registre")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

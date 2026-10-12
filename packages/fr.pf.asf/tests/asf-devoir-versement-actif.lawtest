@@ -1,0 +1,21 @@
+// 112.52 due for the eligible orphan, payable no later than 2021-06-30: PayerAsfDu ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-devoir-versement-actif" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ova-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:devoir-versement-actif"), entity_ref("urn:fr:pf-asf:case:devoir-versement-actif-e1")) { origin case_input; }
+        assert "ova-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:devoir-versement-actif-e1")) { origin case_input; }
+        assert "ova-03": motif_asf(entity_ref("urn:fr:pf-asf:case:devoir-versement-actif-e1"), ORPHELIN_UN_PARENT) { origin case_input; }
+        assert "ova-04": demande_asf(entity_ref("urn:fr:pf-asf:case:devoir-versement-actif-e1")) { origin case_input; }
+        assert "ova-05": mois_ouverture_asf(@2021-04-01) { origin case_input; }
+        assert "ova-06": bmaf_retenu(entity_ref("urn:fr:pf-asf:case:devoir-versement-actif"), 400.00 EUR) { origin case_input; }
+        assert "ova-07": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-asf:org:caisse"), entity_ref("urn:fr:pf-asf:case:devoir-versement-actif")) { origin case_input; }
+        assert "ova-08": date_limite_versement(@2021-06-30) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(PayerAsfDu, ACTIVE);
+}

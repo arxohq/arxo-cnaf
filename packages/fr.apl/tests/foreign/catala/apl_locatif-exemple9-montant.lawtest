@@ -1,0 +1,31 @@
+// РАВНО ДО САНТИМА: их 211.06, наше точное 211.05532525. Их модель округляет
+// промежуточные величины до сантима, текст этого не велит — закреплён НАШ ответ.
+// ИСТОЧНИК: Catala, CatalaLang/catala-examples@2694b17d, aides_logement/tests/tests_calcul_apl_locatif.catala_fr, scope Exemple9.
+// ИХ ОЖИДАНИЕ: montant = 211.06.
+// Файл порождён corpus/tools/foreign/catala_tests.py по tools/foreign-map.json —
+// правится таблица, не файл.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-apl_locatif-exemple9-montant" {
+    given {
+        context { decision_time @2022-06-10T12:00:00Z; knowledge_time @2022-06-10T12:00:00Z; legal_time @2022-06-10; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "apl_locatif-exemple9-01": secteur_locatif(entity_ref("urn:fr:apl:case:apl_locatif-exemple9")) { origin case_input; }
+        assert "apl_locatif-exemple9-02": aide_demandee(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), APL) { origin case_input; }
+        assert "apl_locatif-exemple9-03": loyer_principal(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), 400 EUR) { origin case_input; }
+        assert "apl_locatif-exemple9-04": zone_du_logement(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), ZONE_I) { origin case_input; }
+        assert "apl_locatif-exemple9-05": situation_familiale(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), PERSONNE_SEULE) { origin case_input; }
+        assert "apl_locatif-exemple9-06": personnes_a_charge(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), 0) { origin case_input; }
+        assert "apl_locatif-exemple9-07": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), 0 EUR) { origin case_input; }
+        assert "apl_locatif-exemple9-08": ressources_du_menage(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), 7800 EUR) { origin case_input; }
+        assert "apl_locatif-exemple9-09": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), false) { origin case_input; }
+        assert "apl_locatif-exemple9-10": territoire(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), METROPOLE) { origin case_input; }
+        assert "apl_locatif-exemple9-11": mode_location(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), LOCATION_SEULE) { origin case_input; }
+        assert "apl_locatif-exemple9-12": forme_logement(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), LOGEMENT_ORDINAIRE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:apl_locatif-exemple9"), 211.05532525 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

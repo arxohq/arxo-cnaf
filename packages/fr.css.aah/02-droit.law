@@ -1,0 +1,266 @@
+// Right tracks (L. 821-1 at 80 %+, L. 821-2 at 50-79 % with RSDAE).
+//
+// «Toute personne ... dont l'incapacité permanente est au moins égale à
+// un pourcentage fixé par décret perçoit ... une allocation» (L. 821-1,
+// para. 1); the rate is 80 % (D. 821-1, para. 1). «L'allocation ... est
+// également versée à toute personne qui remplit l'ensemble des conditions
+// suivantes: 1° ... supérieure ou égale à [50 %]; 2° [RSDAE]» (L. 821-2,
+// D. 821-1, para. 2). The commission decision (L. 821-4, L. 146-9 CASF) is
+// the channel: the rate and the RSDAE arrive as established facts
+// (B-AAH-TETE). The L. 821-2 second paragraph (end of payment at
+// retirement age) needs pension facts: boundary B-AAH-VIEILLESSE.
+
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+use self::{
+    CSS_D821_1_ED2021_01_01,
+    CSS_D821_1_ED2021_05_01,
+    CSS_D821_1_ED2021_12_03,
+    CSS_D821_1_ED2022_01_01,
+    CSS_D821_1_ED2022_01_21,
+    CSS_D821_1_ED2022_06_17,
+    CSS_D821_1_ED2023_01_01,
+    CSS_D821_1_ED2023_09_01,
+    CSS_D821_1_ED2023_10_01,
+    CSS_D821_1_ED2024_12_01,
+    CSS_D821_1_ED2025_08_28,
+    CSS_D821_1_ED2026_01_01,
+    CSS_D821_1_ED2026_06_28,
+    CSS_D821_1_ED2026_07_23,
+    CSS_L821_1_ED2023_10_ED2023_10_01,
+    CSS_L821_1_ED2026_07_23,
+    CSS_L821_1_PRE2021_ED2021_01_01,
+    CSS_L821_1_PRE2023_10_ED2023_09_01,
+    CSS_L821_1_PRE2023_ED2021_05_01,
+    CSS_L821_1_PRE2023_ED2021_12_03,
+    CSS_L821_1_PRE2023_ED2022_01_01,
+    CSS_L821_1_PRE2023_ED2022_01_21,
+    CSS_L821_1_PRE2023_ED2022_06_17,
+    CSS_L821_1_PRE2023_ED2023_01_01,
+    CSS_L821_1_PRE2026_07_ED2026_01_01,
+    CSS_L821_1_PRE2026_07_ED2026_06_28,
+    CSS_L821_1_PRE2026_ED2024_12_01,
+    CSS_L821_1_PRE2026_ED2025_08_28,
+    CSS_L821_2_ED2024_12_01,
+    CSS_L821_2_ED2025_08_28,
+    CSS_L821_2_ED2026_01_01,
+    CSS_L821_2_ED2026_06_28,
+    CSS_L821_2_ED2026_07_23,
+    CSS_L821_2_PRE2024_ED2021_01_01,
+    CSS_L821_2_PRE2024_ED2021_05_01,
+    CSS_L821_2_PRE2024_ED2021_12_03,
+    CSS_L821_2_PRE2024_ED2022_01_01,
+    CSS_L821_2_PRE2024_ED2022_01_21,
+    CSS_L821_2_PRE2024_ED2022_06_17,
+    CSS_L821_2_PRE2024_ED2023_01_01,
+    CSS_L821_2_PRE2024_ED2023_09_01,
+    CSS_L821_2_PRE2024_ED2023_10_01,
+    CSS_L821_4_ED2021_01_01,
+    CSS_L821_4_ED2021_05_01,
+    CSS_L821_4_ED2021_12_03,
+    CSS_L821_4_ED2022_01_01,
+    CSS_L821_4_ED2022_01_21,
+    CSS_L821_4_ED2022_06_17,
+    CSS_L821_4_ED2023_01_01,
+    CSS_L821_4_ED2023_09_01,
+    CSS_L821_4_ED2023_10_01,
+    CSS_L821_4_ED2024_12_01,
+    CSS_L821_4_ED2025_08_28,
+    CSS_L821_4_ED2026_01_01,
+    CSS_L821_4_ED2026_06_28,
+    CSS_L821_4_ED2026_07_23,
+    Personne,
+    aah_droit_50_79,
+    aah_droit_80,
+    aah_droit_calcule,
+    age_droit_depasse,
+    decision_cdaph_50_79,
+    decision_cdaph_80,
+    residence_permanente,
+    rsdae_reconnue,
+    sejour_regulier,
+};
+
+// --- L. 821-1 / D. 821-1: 80 %+ track ------------------------------------
+
+@source(
+    CSS_L821_1_PRE2021_ED2021_01_01,
+    CSS_L821_1_PRE2023_ED2021_05_01,
+    CSS_L821_1_PRE2023_ED2021_12_03,
+    CSS_L821_1_PRE2023_ED2022_01_01,
+    CSS_L821_1_PRE2023_ED2022_01_21,
+    CSS_L821_1_PRE2023_ED2022_06_17,
+    CSS_L821_1_PRE2023_ED2023_01_01,
+    CSS_L821_1_PRE2023_10_ED2023_09_01,
+    CSS_L821_1_ED2023_10_ED2023_10_01,
+    CSS_L821_1_PRE2026_ED2024_12_01,
+    CSS_L821_1_PRE2026_ED2025_08_28,
+    CSS_L821_1_PRE2026_07_ED2026_01_01,
+    CSS_L821_1_PRE2026_07_ED2026_06_28,
+    CSS_L821_1_ED2026_07_23,
+    CSS_D821_1_ED2021_01_01,
+    CSS_D821_1_ED2021_05_01,
+    CSS_D821_1_ED2021_12_03,
+    CSS_D821_1_ED2022_01_01,
+    CSS_D821_1_ED2022_01_21,
+    CSS_D821_1_ED2022_06_17,
+    CSS_D821_1_ED2023_01_01,
+    CSS_D821_1_ED2023_09_01,
+    CSS_D821_1_ED2023_10_01,
+    CSS_D821_1_ED2024_12_01,
+    CSS_D821_1_ED2025_08_28,
+    CSS_D821_1_ED2026_01_01,
+    CSS_D821_1_ED2026_06_28,
+    CSS_D821_1_ED2026_07_23,
+    CSS_L821_4_ED2021_01_01,
+    CSS_L821_4_ED2021_05_01,
+    CSS_L821_4_ED2021_12_03,
+    CSS_L821_4_ED2022_01_01,
+    CSS_L821_4_ED2022_01_21,
+    CSS_L821_4_ED2022_06_17,
+    CSS_L821_4_ED2023_01_01,
+    CSS_L821_4_ED2023_09_01,
+    CSS_L821_4_ED2023_10_01,
+    CSS_L821_4_ED2024_12_01,
+    CSS_L821_4_ED2025_08_28,
+    CSS_L821_4_ED2026_01_01,
+    CSS_L821_4_ED2026_06_28,
+    CSS_L821_4_ED2026_07_23)
+rule Droit80(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "droit filière 80 % et plus: décision CDAPH, âge dépassé, résidence permanente, séjour régulier";
+    label en unofficial "80% and over track: CDAPH decision, age passed, permanent residence, regular stay";
+    when decision_cdaph_80(p) and age_droit_depasse(p) and residence_permanente(p) and sejour_regulier(p);
+    then aah_droit_80(p);
+}
+
+// --- L. 821-2 / D. 821-1: 50-79 % with RSDAE ------------------------------
+
+@source(
+    CSS_L821_2_PRE2024_ED2021_01_01,
+    CSS_L821_2_PRE2024_ED2021_05_01,
+    CSS_L821_2_PRE2024_ED2021_12_03,
+    CSS_L821_2_PRE2024_ED2022_01_01,
+    CSS_L821_2_PRE2024_ED2022_01_21,
+    CSS_L821_2_PRE2024_ED2022_06_17,
+    CSS_L821_2_PRE2024_ED2023_01_01,
+    CSS_L821_2_PRE2024_ED2023_09_01,
+    CSS_L821_2_PRE2024_ED2023_10_01,
+    CSS_L821_2_ED2024_12_01,
+    CSS_L821_2_ED2025_08_28,
+    CSS_L821_2_ED2026_01_01,
+    CSS_L821_2_ED2026_06_28,
+    CSS_L821_2_ED2026_07_23,
+    CSS_D821_1_ED2021_01_01,
+    CSS_D821_1_ED2021_05_01,
+    CSS_D821_1_ED2021_12_03,
+    CSS_D821_1_ED2022_01_01,
+    CSS_D821_1_ED2022_01_21,
+    CSS_D821_1_ED2022_06_17,
+    CSS_D821_1_ED2023_01_01,
+    CSS_D821_1_ED2023_09_01,
+    CSS_D821_1_ED2023_10_01,
+    CSS_D821_1_ED2024_12_01,
+    CSS_D821_1_ED2025_08_28,
+    CSS_D821_1_ED2026_01_01,
+    CSS_D821_1_ED2026_06_28,
+    CSS_D821_1_ED2026_07_23,
+    CSS_L821_4_ED2021_01_01,
+    CSS_L821_4_ED2021_05_01,
+    CSS_L821_4_ED2021_12_03,
+    CSS_L821_4_ED2022_01_01,
+    CSS_L821_4_ED2022_01_21,
+    CSS_L821_4_ED2022_06_17,
+    CSS_L821_4_ED2023_01_01,
+    CSS_L821_4_ED2023_09_01,
+    CSS_L821_4_ED2023_10_01,
+    CSS_L821_4_ED2024_12_01,
+    CSS_L821_4_ED2025_08_28,
+    CSS_L821_4_ED2026_01_01,
+    CSS_L821_4_ED2026_06_28,
+    CSS_L821_4_ED2026_07_23)
+rule Droit5079(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "droit filière 50-79 %: décision CDAPH, RSDAE reconnue, âge dépassé, résidence permanente, séjour régulier";
+    label en unofficial "50-79% track: CDAPH decision, recognised RSDAE, age passed, permanent residence, regular stay";
+    when decision_cdaph_50_79(p) and rsdae_reconnue(p) and age_droit_depasse(p) and residence_permanente(p) and sejour_regulier(p);
+    then aah_droit_50_79(p);
+}
+
+// --- Computation-level head (either track) --------------------------------
+
+@source(
+    CSS_L821_1_PRE2021_ED2021_01_01,
+    CSS_L821_1_PRE2023_ED2021_05_01,
+    CSS_L821_1_PRE2023_ED2021_12_03,
+    CSS_L821_1_PRE2023_ED2022_01_01,
+    CSS_L821_1_PRE2023_ED2022_01_21,
+    CSS_L821_1_PRE2023_ED2022_06_17,
+    CSS_L821_1_PRE2023_ED2023_01_01,
+    CSS_L821_1_PRE2023_10_ED2023_09_01,
+    CSS_L821_1_ED2023_10_ED2023_10_01,
+    CSS_L821_1_PRE2026_ED2024_12_01,
+    CSS_L821_1_PRE2026_ED2025_08_28,
+    CSS_L821_1_PRE2026_07_ED2026_01_01,
+    CSS_L821_1_PRE2026_07_ED2026_06_28,
+    CSS_L821_1_ED2026_07_23,
+    CSS_L821_2_PRE2024_ED2021_01_01,
+    CSS_L821_2_PRE2024_ED2021_05_01,
+    CSS_L821_2_PRE2024_ED2021_12_03,
+    CSS_L821_2_PRE2024_ED2022_01_01,
+    CSS_L821_2_PRE2024_ED2022_01_21,
+    CSS_L821_2_PRE2024_ED2022_06_17,
+    CSS_L821_2_PRE2024_ED2023_01_01,
+    CSS_L821_2_PRE2024_ED2023_09_01,
+    CSS_L821_2_PRE2024_ED2023_10_01,
+    CSS_L821_2_ED2024_12_01,
+    CSS_L821_2_ED2025_08_28,
+    CSS_L821_2_ED2026_01_01,
+    CSS_L821_2_ED2026_06_28,
+    CSS_L821_2_ED2026_07_23)
+rule TeteDroit80(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "tête de calcul: filière 80 % ouvre le droit au niveau calcul";
+    label en unofficial "computation head: 80% track opens the computation-level right";
+    when aah_droit_80(p);
+    then aah_droit_calcule(p);
+}
+
+@source(
+    CSS_L821_1_PRE2021_ED2021_01_01,
+    CSS_L821_1_PRE2023_ED2021_05_01,
+    CSS_L821_1_PRE2023_ED2021_12_03,
+    CSS_L821_1_PRE2023_ED2022_01_01,
+    CSS_L821_1_PRE2023_ED2022_01_21,
+    CSS_L821_1_PRE2023_ED2022_06_17,
+    CSS_L821_1_PRE2023_ED2023_01_01,
+    CSS_L821_1_PRE2023_10_ED2023_09_01,
+    CSS_L821_1_ED2023_10_ED2023_10_01,
+    CSS_L821_1_PRE2026_ED2024_12_01,
+    CSS_L821_1_PRE2026_ED2025_08_28,
+    CSS_L821_1_PRE2026_07_ED2026_01_01,
+    CSS_L821_1_PRE2026_07_ED2026_06_28,
+    CSS_L821_1_ED2026_07_23,
+    CSS_L821_2_PRE2024_ED2021_01_01,
+    CSS_L821_2_PRE2024_ED2021_05_01,
+    CSS_L821_2_PRE2024_ED2021_12_03,
+    CSS_L821_2_PRE2024_ED2022_01_01,
+    CSS_L821_2_PRE2024_ED2022_01_21,
+    CSS_L821_2_PRE2024_ED2022_06_17,
+    CSS_L821_2_PRE2024_ED2023_01_01,
+    CSS_L821_2_PRE2024_ED2023_09_01,
+    CSS_L821_2_PRE2024_ED2023_10_01,
+    CSS_L821_2_ED2024_12_01,
+    CSS_L821_2_ED2025_08_28,
+    CSS_L821_2_ED2026_01_01,
+    CSS_L821_2_ED2026_06_28,
+    CSS_L821_2_ED2026_07_23)
+rule TeteDroit5079(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "tête de calcul: filière 50-79 % avec RSDAE ouvre le droit au niveau calcul";
+    label en unofficial "computation head: 50-79% track with RSDAE opens the computation-level right";
+    when aah_droit_50_79(p);
+    then aah_droit_calcule(p);
+}

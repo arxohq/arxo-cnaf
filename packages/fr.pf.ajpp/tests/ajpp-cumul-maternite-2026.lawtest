@@ -1,0 +1,18 @@
+// 2025 list NOTA scoping: a 2025 maternity ground recorded, but
+// neither the charge link nor the 2026 birth scope is established
+// for any child — no refusal. The 2025 rule stays silent without
+// the in-charge NOTA-scope child (leave is never a premise).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-cumul-maternite-2026" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-cm26-01": motif_non_cumul_2025(entity_ref("urn:fr:pf-ajpp:case:parent-cm26"), MATERNITE_PATERNITE_NAISSANCE) { origin case_input; }
+    }
+    evaluate truth(ajpp_cumul_refuse(entity_ref("urn:fr:pf-ajpp:case:parent-cm26")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

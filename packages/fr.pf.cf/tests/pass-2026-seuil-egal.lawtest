@@ -1,0 +1,22 @@
+// D-84: PASS года отсчёта 2026 приходит из пакета fr.css.pass (arrêté du 22 décembre 2025, CPPS2536168A):
+// valeur mensuelle 4 005 € x 12 = 48 060 €. Год отсчёта 2026 даёт право 2028 года (ресурсы N-2 по R. 532-1).
+// Порог R. 522-2 al. 3: 13,6 % x 48 060 = 6 536,16; доход ровно 6 536,16 — условие «au moins égal» выполнено.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-pass-2026-seuil-egal" {
+    given {
+        context { decision_time @2028-06-15T12:00:00Z; knowledge_time @2028-06-15T12:00:00Z; legal_time @2028-06-15; timezone "Europe/Paris"; }
+        assert "p26se-01": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:pass-2026-seuil-egal"), 6536.16 EUR) { origin case_input; }
+        assert "p26se-02": annee_reference_ressources(entity_ref("urn:fr:pf-cf:case:pass-2026-seuil-egal"), 2026) { origin case_input; }
+    }
+    evaluate truth(pass_reference(entity_ref("urn:fr:pf-cf:case:pass-2026-seuil-egal"), 48060 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:pass-2026-seuil-egal")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

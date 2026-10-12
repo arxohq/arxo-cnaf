@@ -1,0 +1,161 @@
+// School-start allowance eligibility (L543-1, R543-1, R543-2, R543-4).
+//
+// READINGS. The standard opener (EligibleScolarise) conjoins the chapter:
+// in care at the rentree day (R543-1, fund-assessed through
+// parent_charge), six reached before 1 February of the following year
+// and under eighteen on 15 September (R543-2, both strict), enrolled
+// (R543-4 presumption: the fund asserts inscription_scolaire unless
+// contested or sanctioned). The young student (EligibleJeuneEtudiant,
+// L543-1 para. 2) stands below the six-year line, studies or
+// apprentices with capped pay: the undetermined age is read as the
+// R543-2 six-year line (adopted reading, blind probe PFARS-B-05).
+// The household right (ArsDroitOuvert) is strictly under the ceiling;
+// equality opens neither track (blind probe PFARS-B-08).
+
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+use self::{
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02,
+    CSS_R543_1,
+    CSS_R543_1_ED2001_12,
+    CSS_R543_1_ED2002_08,
+    CSS_R543_1_ED2004_01,
+    CSS_R543_1_ED2008_08,
+    CSS_R543_1_ED2012_06,
+    CSS_R543_1_ED2013_06,
+    CSS_R543_1_ED2014_08,
+    CSS_R543_1_ED2016_03,
+    CSS_R543_1_ED2016_10,
+    CSS_R543_1_ED2019_01,
+    CSS_R543_1_ED2022_01,
+    CSS_R543_1_ED2022_02,
+    CSS_R543_2,
+    CSS_R543_2_ED2012_06,
+    CSS_R543_2_ED2013_06,
+    CSS_R543_2_ED2014_08,
+    CSS_R543_2_ED2016_03,
+    CSS_R543_2_ED2016_10,
+    CSS_R543_2_ED2019_01,
+    CSS_R543_2_ED2022_01,
+    CSS_R543_2_ED2022_02,
+    CSS_R543_4,
+    CSS_R543_4_ED2016_03,
+    CSS_R543_4_ED2016_10,
+    CSS_R543_4_ED2019_01,
+    CSS_R543_4_ED2022_01,
+    CSS_R543_4_ED2022_02,
+    CSS_R543_5,
+    CSS_R543_5_ED2012_06,
+    CSS_R543_5_ED2013_06,
+    CSS_R543_5_ED2014_08,
+    CSS_R543_5_ED2016_03,
+    CSS_R543_5_ED2016_10,
+    CSS_R543_5_ED2019_01,
+    CSS_R543_5_ED2022_01,
+    CSS_R543_5_ED2022_02,
+    ars_droit_ouvert,
+    ars_enfant_eligible,
+    date_naissance,
+    etudes_apprentissage,
+    inscription_scolaire,
+    plafond_ars_applicable,
+    remuneration_bornee,
+    ressources_menage,
+    seuil_dix_huit_ans,
+    seuil_six_ans,
+};
+
+// Term policy for the R543-2 age cutoffs: ages are reached on the
+// birthday (same-day count, inclusive end), months are not rolled.
+// Tests evaluating child ages name this policy in context.
+deadline policy AGE_ATTEINT {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+@source(
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02,
+    CSS_R543_1,
+    CSS_R543_1_ED2001_12,
+    CSS_R543_1_ED2002_08,
+    CSS_R543_1_ED2004_01,
+    CSS_R543_1_ED2008_08,
+    CSS_R543_1_ED2012_06,
+    CSS_R543_1_ED2013_06,
+    CSS_R543_1_ED2014_08,
+    CSS_R543_1_ED2016_03,
+    CSS_R543_1_ED2016_10,
+    CSS_R543_1_ED2019_01,
+    CSS_R543_1_ED2022_01,
+    CSS_R543_1_ED2022_02,
+    CSS_R543_2,
+    CSS_R543_2_ED2012_06,
+    CSS_R543_2_ED2013_06,
+    CSS_R543_2_ED2014_08,
+    CSS_R543_2_ED2016_03,
+    CSS_R543_2_ED2016_10,
+    CSS_R543_2_ED2019_01,
+    CSS_R543_2_ED2022_01,
+    CSS_R543_2_ED2022_02,
+    CSS_R543_4,
+    CSS_R543_4_ED2016_03,
+    CSS_R543_4_ED2016_10,
+    CSS_R543_4_ED2019_01,
+    CSS_R543_4_ED2022_01,
+    CSS_R543_4_ED2022_02)
+rule EligibleScolarise(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, s6: Date, s18: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant à charge au jour de la rentrée, six ans avant le 1er février suivant et moins de dix-huit ans au 15 septembre, inscrit: ouvre droit (L. 543-1, R. 543-1, R. 543-2)";
+    label en unofficial "child in care at the rentree day, six before the following 1 February and under eighteen at 15 September, enrolled: opens right (L. 543-1, R. 543-1, R. 543-2)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and date_naissance(e, naissance)
+        and seuil_six_ans(s6) and add_calendar_period(naissance, 6 calendar_year) < s6
+        and seuil_dix_huit_ans(s18) and add_calendar_period(naissance, 18 calendar_year) > s18
+        and inscription_scolaire(e);
+    then ars_enfant_eligible(e);
+}
+
+@source(
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02)
+rule EligibleJeuneEtudiant(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, naissance: Date, s6: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant sous le seuil de six ans, études ou apprentissage, rémunération bornée: ouvre droit (L. 543-1 al. 2)";
+    label en unofficial "child below the six-year line, studying or apprenticed, capped pay: opens right (L. 543-1 para. 2)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and date_naissance(e, naissance)
+        and seuil_six_ans(s6) and add_calendar_period(naissance, 6 calendar_year) >= s6
+        and etudes_apprentissage(e) and remuneration_bornee(e);
+    then ars_enfant_eligible(e);
+}
+
+@source(
+    CSS_L543_1,
+    CSS_L543_1_ED2022_01,
+    CSS_L543_1_ED2022_02,
+    CSS_R543_5,
+    CSS_R543_5_ED2012_06,
+    CSS_R543_5_ED2013_06,
+    CSS_R543_5_ED2014_08,
+    CSS_R543_5_ED2016_03,
+    CSS_R543_5_ED2016_10,
+    CSS_R543_5_ED2019_01,
+    CSS_R543_5_ED2022_01,
+    CSS_R543_5_ED2022_02)
+rule ArsDroitOuvert(p: fr.pf.core::Personne, r: Money, plafond: Money, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ressources sous plafond et au moins un enfant éligible: droit ouvert (L. 543-1, R. 543-5)";
+    label en unofficial "resources within the ceiling and at least one eligible child: right open (L. 543-1, R. 543-5)";
+    when plafond_ars_applicable(p, plafond) and ressources_menage(p, r) and r < plafond
+        and ars_enfant_eligible(e);
+    then ars_droit_ouvert(p);
+}

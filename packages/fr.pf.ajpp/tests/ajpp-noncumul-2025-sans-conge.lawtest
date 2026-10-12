@@ -1,0 +1,23 @@
+// 2025 non-cumulation without parental leave (F05): an L. 544-8
+// special claimant (job-seeker track) in charge of a NOTA-scope
+// child records a 2025 concurrent benefit — the refusal holds
+// with NO leave fact anywhere. The pinned L. 544-9 sets the test
+// by same beneficiary plus the enumerated benefit; the NOTA
+// scopes it by child birth/adoption cohort, never by leave.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-noncumul-2025-sans-conge" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-n25-01": demandeur_emploi_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-n25")) { origin case_input; }
+        assert "ajpp-n25-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ajpp:case:parent-n25"), entity_ref("urn:fr:pf-ajpp:case:enfant-n25")) { origin case_input; }
+        assert "ajpp-n25-03": scope_2026(entity_ref("urn:fr:pf-ajpp:case:enfant-n25")) { origin case_input; }
+        assert "ajpp-n25-04": motif_non_cumul_2025(entity_ref("urn:fr:pf-ajpp:case:parent-n25"), CHOMAGE) { origin case_input; }
+    }
+    evaluate truth(ajpp_cumul_refuse(entity_ref("urn:fr:pf-ajpp:case:parent-n25")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

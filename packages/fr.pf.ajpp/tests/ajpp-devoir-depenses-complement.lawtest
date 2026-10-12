@@ -1,0 +1,29 @@
+// Monthly expense declaration duty (D8 active): complement awarded
+// under the D. 544-7 decree rule (built threshold), charge and debtor-body links and the
+// concerned month recorded — the DeclarerDepensesComplement position
+// is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-depenses-complement" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-ddc2-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-ddc2")) { origin adjudicated; }
+        assert "ajpp-ddc2-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-ddc2")) { origin adjudicated; }
+        assert "ajpp-ddc2-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-ddc2"), entity_ref("urn:fr:pf-ajpp:case:enfant-ddc2")) { origin case_input; }
+        assert "ajpp-ddc2-04": ressources_complement(entity_ref("urn:fr:pf-ajpp:case:enfant-ddc2"), 20000 EUR) { origin case_input; }
+        assert "ajpp-ddc2-05": plafond_ressources(entity_ref("urn:fr:pf-ajpp:case:enfant-ddc2"), 30000 EUR) { origin case_input; }
+        assert "ajpp-ddc2-06": depenses_complement(entity_ref("urn:fr:pf-ajpp:case:enfant-ddc2"), 5000 EUR) { origin case_input; }
+        // D-42: seuil_complement_retenu is no form of the package; the
+        // D. 544-7 threshold is built (seuil_complement_calcule = 27.19 %
+        // of the retained BMAF: 400.00 -> 108.76 <= 5000 expenses).
+        assert "ajpp-ddc2-07": bmaf_retenue_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-ddc2"), 400.00 EUR) { origin case_input; }
+        assert "ajpp-ddc2-08": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ajpp:case:parent-ddc2"), entity_ref("urn:fr:pf-ajpp:case:enfant-ddc2")) { origin case_input; }
+        assert "ajpp-ddc2-09": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-ddc2")) { origin case_input; }
+        assert "ajpp-ddc2-10": mois_concerne_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-ddc2"), @2024-03-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DeclarerDepensesComplement, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

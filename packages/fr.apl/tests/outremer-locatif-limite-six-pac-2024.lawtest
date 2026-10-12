@@ -1,0 +1,25 @@
+// Вторая половина пары о пределе шести иждивенцев (см. `*-2021`).
+//
+// ШАГ: тот же вход в 2024 году, когда правила предела в тексте УЖЕ НЕТ:
+// 38,99 € + 10,03 € × 8 = 119,23 €. Разница с 2021 годом — не переоценка чисел,
+// а исчезновение нормы.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-locatif-limite-six-pac-2024" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "outremer-locatif-limite-six-pac-2024-01": secteur_locatif(entity_ref("urn:fr:apl:case:om-loc-8pac-2024")) { origin case_input; }
+        assert "outremer-locatif-limite-six-pac-2024-02": aide_demandee(entity_ref("urn:fr:apl:case:om-loc-8pac-2024"), APL) { origin case_input; }
+        assert "outremer-locatif-limite-six-pac-2024-03": zone_du_logement(entity_ref("urn:fr:apl:case:om-loc-8pac-2024"), ZONE_II) { origin case_input; }
+        assert "outremer-locatif-limite-six-pac-2024-04": situation_familiale(entity_ref("urn:fr:apl:case:om-loc-8pac-2024"), COUPLE) { origin case_input; }
+        assert "outremer-locatif-limite-six-pac-2024-05": personnes_a_charge(entity_ref("urn:fr:apl:case:om-loc-8pac-2024"), 8) { origin case_input; }
+        assert "outremer-locatif-limite-six-pac-2024-06": mode_location(entity_ref("urn:fr:apl:case:om-loc-8pac-2024"), LOCATION_SEULE) { origin case_input; }
+        assert "outremer-locatif-limite-six-pac-2024-07": territoire(entity_ref("urn:fr:apl:case:om-loc-8pac-2024"), OUTRE_MER) { origin case_input; }
+    }
+    evaluate truth(forfait_charges(entity_ref("urn:fr:apl:case:om-loc-8pac-2024"), 119.23 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

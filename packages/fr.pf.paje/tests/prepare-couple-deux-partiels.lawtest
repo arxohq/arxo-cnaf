@@ -1,0 +1,27 @@
+// Couple boundary (B-PAJE2-COUPLE-CUMUL): two claimants of one household,
+// each part-time up to 50% — each individual amount computes (249.84 €);
+// the couple-wide sum cap and top-up of L. 531-4, III / D. 531-4 have no
+// rule, so the pair documents the boundary instead of enforcing it.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-couple-deux-partiels" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-c2-01": attestation_quotite(entity_ref("urn:fr:paje:benef:prepare-c2a"), JUSQUA_50) { origin adjudicated; }
+        assert "prepare-c2-02": attestation_quotite(entity_ref("urn:fr:paje:benef:prepare-c2b"), JUSQUA_50) { origin adjudicated; }
+        assert "prepare-c2-03": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-c2a"), entity_ref("urn:fr:paje:enfant:prepare-c2")) { origin adjudicated; }
+        assert "prepare-c2-04": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-c2b"), entity_ref("urn:fr:paje:enfant:prepare-c2")) { origin adjudicated; }
+        assert "prepare-c2-05": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-c2")) { origin adjudicated; }
+        assert "prepare-c2-06": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-c2a"), entity_ref("urn:fr:paje:case:prepare-c2")) { origin case_input; }
+        assert "prepare-c2-07": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-c2b"), entity_ref("urn:fr:paje:case:prepare-c2")) { origin case_input; }
+        assert "prepare-c2-08": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-c2"), 400.00 EUR) { origin case_input; }
+        assert "prepare-c2-09": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-c2a"), entity_ref("urn:fr:paje:enfant:prepare-c2"), @2025-07-01) { origin adjudicated; }
+        assert "prepare-c2-10": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-c2b"), entity_ref("urn:fr:paje:enfant:prepare-c2"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-c2a"), entity_ref("urn:fr:paje:enfant:prepare-c2"), 249.84 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,18 @@
+// France Travail board liberty: the board may decide to take on
+// the instruction of RSA claims (D. 262-27 al. 1). The empowerment
+// that opens the D. 262-26 e) venue additionally needs the
+// modalities convention (tested by depot-ft /
+// depot-ft-sans-convention).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-decision-instruction-ft" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "decft-01": est_france_travail(entity_ref("urn:fr:rsa:org:ft")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DeciderInstructionFT, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

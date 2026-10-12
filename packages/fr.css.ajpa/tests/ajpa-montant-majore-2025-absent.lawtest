@@ -1,0 +1,19 @@
+// Majoration removed from 2023-07-21: the increased rate recorded in
+// 2024 computes nothing — the MontantMensuelMajore window is closed.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-montant-majore-2025-absent" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-ma-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-ma"), entity_ref("urn:fr:css:ajpa:case:aide-ma")) { origin case_input; }
+        assert "ajpa-ma-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-ma")) { origin adjudicated; }
+        assert "ajpa-ma-03": jours_ajpa_mois(entity_ref("urn:fr:css:ajpa:case:aidant-ma"), entity_ref("urn:fr:css:ajpa:case:aide-ma"), @2024-03-01, 10) { origin case_input; }
+        assert "ajpa-ma-04": montant_journalier_majore_retenu(entity_ref("urn:fr:css:ajpa:case:aidant-ma"), 70.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ajpa_montant_mois(entity_ref("urn:fr:css:ajpa:case:aidant-ma"), entity_ref("urn:fr:css:ajpa:case:aide-ma"), @2024-03-01, 700.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

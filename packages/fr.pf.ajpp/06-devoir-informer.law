@@ -1,0 +1,56 @@
+// Fund information duty (L. 544-10, D1).
+//
+// «L'organisme débiteur des prestations familiales est tenu d'informer le
+// demandeur ou le bénéficiaire» of the AEEH/PCH award criteria and claim
+// steps. The debtor body is the empirical bearer (same pattern as the AEEH
+// fund duty); performance is the recorded information fact. No other
+// deontic positions in scope.
+
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+use self::{
+    CSS_L544_10_ED2020_09,
+    CSS_L544_10_ED2021_11,
+    CSS_L544_10_ED2022_01,
+    CSS_L544_10_ED2022_04,
+    CSS_L544_10_ED2022_07,
+    CSS_L544_10_ED2022_10,
+    CSS_L544_10_ED2023_01,
+    CSS_L544_10_ED2023_07,
+    CSS_L544_10_ED2024_02,
+    CSS_L544_10_ED2024_07,
+    CSS_L544_10_ED2025_12,
+    CSS_L544_10_ED2026_01,
+    CSS_L544_10_ED2026_06,
+    ajpp_droit_ouvert,
+    ajpp_informe,
+    conge_presence_parentale,
+};
+
+@source(
+    CSS_L544_10_ED2020_09,
+    CSS_L544_10_ED2021_11,
+    CSS_L544_10_ED2022_01,
+    CSS_L544_10_ED2022_04,
+    CSS_L544_10_ED2022_07,
+    CSS_L544_10_ED2022_10,
+    CSS_L544_10_ED2023_01,
+    CSS_L544_10_ED2023_07,
+    CSS_L544_10_ED2024_02,
+    CSS_L544_10_ED2024_07,
+    CSS_L544_10_ED2025_12,
+    CSS_L544_10_ED2026_01,
+    CSS_L544_10_ED2026_06)
+rule DevoirInformerAjpp(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    label fr official "l'organisme débiteur informe le demandeur ou le bénéficiaire des critères AEEH/PCH";
+    label en unofficial "the debtor body informs the applicant or beneficiary of the AEEH/PCH criteria";
+    when ajpp_droit_ouvert(e) and conge_presence_parentale(p, e)
+        and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty InformerDemandeurAjpp {
+        bearer o;
+        beneficiary p;
+        maintain ajpp_informe(p, e) during [@2021-01-01, infinity);
+    };
+}

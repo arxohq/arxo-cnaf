@@ -1,0 +1,21 @@
+// 2015 text: conditions end in May 2021 - cessation from 1 May 2021 (R. 552-3 I prev).
+// D-42: CessentMoisMemePrev (R. 552-3 I, "par derogation" II 1-3) reads the explicit negatives "not CMG,
+// not AJPP, not AEEH" (bare not over case facts, SPEC 69); the case lacked them. Same facts as the
+// current-text twin cessent-mois-meme. Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cessent-mois-meme-prev" {
+    given {
+        context { decision_time @2021-08-15T12:00:00Z; knowledge_time @2021-08-15T12:00:00Z; legal_time @2021-08-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "cessent-mois-meme-prev-01": conditions_cessent_mois(entity_ref("urn:fr:pf:case:cesse-prev"), @2021-05-01) { origin case_input; }
+        assert "cessent-mois-meme-prev-02": not prestation_cmg(entity_ref("urn:fr:pf:case:cesse-prev")) { origin case_input; }
+        assert "cessent-mois-meme-prev-03": not prestation_ajpp(entity_ref("urn:fr:pf:case:cesse-prev")) { origin case_input; }
+        assert "cessent-mois-meme-prev-04": not prestation_aeeh(entity_ref("urn:fr:pf:case:cesse-prev")) { origin case_input; }
+    }
+    evaluate truth(prestations_cessent_a_compter(entity_ref("urn:fr:pf:case:cesse-prev"), @2021-05-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

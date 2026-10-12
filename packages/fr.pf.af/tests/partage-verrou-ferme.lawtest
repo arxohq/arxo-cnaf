@@ -1,0 +1,18 @@
+// One-year lock closed: arrangements chosen 2022-06-01 cannot be
+// challenged in September 2022 (under a year). No conclusion either
+// way: the month carries no changement_modalite_possible record.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-partage-verrou-ferme" {
+    given {
+        context { deadline_policy VERROU_UN_AN; decision_time @2022-09-15T12:00:00Z; knowledge_time @2022-09-15T12:00:00Z; legal_time @2022-09-15; timezone "Europe/Paris"; }
+        assert "verrf-01": date_choix_modalite(entity_ref("urn:fr:pf-af:parent:pere-vf"), @2022-06-01) { origin case_input; }
+        assert "verrf-02": mois_droit(@2022-09-01) { origin case_input; }
+    }
+    evaluate truth(changement_modalite_possible(entity_ref("urn:fr:pf-af:parent:pere-vf")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

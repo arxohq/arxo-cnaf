@@ -1,0 +1,15 @@
+// SMIC Mayotte au 01.07.2026: 9,56 €/ч (arrêté 2026-05-22, art. 1, 2°).
+language "law.core" version "0.2";
+package fr.travail.smic version "0.1.0";
+namespace "urn:fr:corpus:clir:smic";
+
+test "urn:query:fr-smic-window2-mayotte" {
+    given {
+        context { decision_time @2026-07-01T12:00:00Z; knowledge_time @2026-07-01T12:00:00Z; legal_time @2026-07-01; timezone "Europe/Paris"; }
+        assert "smic-window2-mayotte-01": territoire_smic(entity_ref("urn:fr:smic:case:window2-mayotte"), MAYOTTE) { origin case_input; }
+    }
+    evaluate truth(smic_horaire(entity_ref("urn:fr:smic:case:window2-mayotte"), 9.56 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

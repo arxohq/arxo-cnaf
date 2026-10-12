@@ -1,0 +1,26 @@
+// Renewal payment branch: the L. 544-3 once-renewal is granted at
+// 310 days — new certificate, control agreement, and the renewal
+// requested before the end of the initially fixed term («et ce avant
+// la fin du terme initialement fixé», L. 544-3 para. 2) — so payment
+// runs without waiting for the end of the maximum duration
+// (D. 544-3 1°).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-versement-sans-attendre" {
+    given {
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; }
+        assert "ajpp-vsa-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-vsa")) { origin adjudicated; }
+        assert "ajpp-vsa-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-vsa")) { origin adjudicated; }
+        assert "ajpp-vsa-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-vsa"), entity_ref("urn:fr:pf-ajpp:case:enfant-vsa")) { origin case_input; }
+        assert "ajpp-vsa-04": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-vsa"), 310) { origin case_input; }
+        assert "ajpp-vsa-05": nouveau_certificat(entity_ref("urn:fr:pf-ajpp:case:enfant-vsa")) { origin adjudicated; }
+        assert "ajpp-vsa-06": accord_controle_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-vsa")) { origin adjudicated; }
+        assert "ajpp-vsa-07": avant_terme_initial(entity_ref("urn:fr:pf-ajpp:case:enfant-vsa")) { origin case_input; }
+    }
+    evaluate truth(versement_sans_attendre_fin_max(entity_ref("urn:fr:pf-ajpp:case:enfant-vsa")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

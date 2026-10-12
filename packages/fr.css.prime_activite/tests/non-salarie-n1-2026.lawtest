@@ -1,0 +1,39 @@
+// N-1 override: farm N-2 24000 and N-1 18000 both known and
+// full-year -> N-1 base 1500 monthly; BIC N-1 known but not
+// full-year -> N-2 12000 kept, 1000 monthly (R. 845-1/2).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-non-salarie-n1-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": n_2_agri_connu(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-02": benefices_agri_n_2(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01, 24000.00 EUR) { origin case_input; }
+        assert "ppa-03": annee_agri_complete(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-04": n_1_agri_connu(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-05": benefices_agri_n_1(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01, 18000.00 EUR) { origin case_input; }
+        assert "ppa-06": annee_agri_n_1_complete(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-07": n_2_bic_connu(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-08": benefices_bic_n_2(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01, 12000.00 EUR) { origin case_input; }
+        assert "ppa-09": annee_bic_complete(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-10": n_1_bic_connu(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-11": benefices_bic_n_1(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01, 6000.00 EUR) { origin case_input; }
+    }
+    evaluate truth(base_n_1_agri(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01, 1500.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(base_n_1_bic(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:non-salarie-n1-2026"), @2026-06-01, 1000.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

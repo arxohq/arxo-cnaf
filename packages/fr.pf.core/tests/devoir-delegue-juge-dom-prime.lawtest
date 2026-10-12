@@ -1,0 +1,18 @@
+// DOM designation excluded for prime: judicial measure in DOM but benefit is prime forfaitaire - no DOM liberty (L. 755-4 al. 1-2, PC-R03-09).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-juge-dom-prime" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-juge-dom-prime-01": mesure_judiciaire_aide_gestion(entity_ref("urn:fr:pf:case:budget-dom-prime")) { origin case_input; }
+        assert "devoir-juge-dom-prime-02": beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:budget-dom-prime")) { origin case_input; }
+        assert "devoir-juge-dom-prime-03": delegue_percoit_prime_forfaitaire(entity_ref("urn:fr:pf:case:budget-dom-prime")) { origin case_input; }
+        assert "devoir-juge-dom-prime-04": not delegue_percoit_prestation_eligible(entity_ref("urn:fr:pf:case:budget-dom-prime")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(DesignerDeleguePrestationsDOM, ACTIVE);
+    expect not position(DesignerDeleguePrestations, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

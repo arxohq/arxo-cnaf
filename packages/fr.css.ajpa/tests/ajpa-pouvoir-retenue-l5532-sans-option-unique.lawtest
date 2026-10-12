@@ -1,0 +1,24 @@
+// No subsidiary power without the recorded single-payment non-option
+// (P2 silent): the notified undue payment is recorded non-recoverable,
+// non-contestation and the instalment non-option are recorded, but the
+// separate «n'opte pas pour le remboursement en un seul versement»
+// fact is missing from the file — no RecouvrerParRetenueL5532 position,
+// although the debtor link is stated. The instalment non-option alone
+// does not entail the single-payment condition.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-pouvoir-retenue-l5532-sans-option-unique" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-plu-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-plu"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-plu-02": indu_notifie_non_recuperable(entity_ref("urn:fr:css:ajpa:case:aidant-plu"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-plu-03": indu_non_conteste(entity_ref("urn:fr:css:ajpa:case:aidant-plu"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-plu-04": indu_sans_option_remboursement(entity_ref("urn:fr:css:ajpa:case:aidant-plu"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-plu-05": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-plu")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(RecouvrerParRetenueL5532, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

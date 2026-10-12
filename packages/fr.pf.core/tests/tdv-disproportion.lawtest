@@ -1,0 +1,18 @@
+// Regulatory disproportion: schedule 50 000, ceiling 20 000, excluded 5 000 - disproportion found (R. 553-3-5).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-disproportion" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-disproportion-01": evaluation_forfaitaire_train_vie(entity_ref("urn:fr:pf:case:disproportion"), 50000.00 EUR) { origin case_input; }
+        assert "tdv-disproportion-02": plafond_prestation(entity_ref("urn:fr:pf:case:disproportion"), 20000.00 EUR) { origin case_input; }
+        assert "tdv-disproportion-03": revenus_exclus_evaluation(entity_ref("urn:fr:pf:case:disproportion"), 5000.00 EUR) { origin case_input; }
+        assert "tdv-disproportion-04": prestation_soumise_section(entity_ref("urn:fr:pf:case:disproportion")) { origin case_input; }
+    }
+    evaluate truth(disproportion_reglementaire_constatee(entity_ref("urn:fr:pf:case:disproportion")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,61 @@
+// L. 755-20 attribution across the six listed collectivities: entitled
+// children resident in Guadeloupe, Guyane, Martinique, Réunion,
+// Saint-Barthélemy and Saint-Martin get aeeh_attribuee_dom; entitled
+// children resident in METROPOLE or AUTRE stay silent (exclusion pair).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-dom-attribution-collectivites" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "dom-attr-01": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-gua")) { origin adjudicated; }
+        assert "dom-attr-02": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-gua"), GUADELOUPE) { origin case_input; }
+        assert "dom-attr-03": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-guy")) { origin adjudicated; }
+        assert "dom-attr-04": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-guy"), GUYANE) { origin case_input; }
+        assert "dom-attr-05": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-mar")) { origin adjudicated; }
+        assert "dom-attr-06": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-mar"), MARTINIQUE) { origin case_input; }
+        assert "dom-attr-07": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-reu")) { origin adjudicated; }
+        assert "dom-attr-08": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-reu"), REUNION) { origin case_input; }
+        assert "dom-attr-09": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-sb")) { origin adjudicated; }
+        assert "dom-attr-10": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-sb"), SAINT_BARTHELEMY) { origin case_input; }
+        assert "dom-attr-11": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-sm")) { origin adjudicated; }
+        assert "dom-attr-12": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-sm"), SAINT_MARTIN) { origin case_input; }
+        assert "dom-attr-13": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-metro")) { origin adjudicated; }
+        assert "dom-attr-14": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-metro"), METROPOLE) { origin case_input; }
+        assert "dom-attr-15": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-autre")) { origin adjudicated; }
+        assert "dom-attr-16": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-autre"), AUTRE) { origin case_input; }
+    }
+    evaluate truth(aeeh_attribuee_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-gua")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_attribuee_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-guy")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_attribuee_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-mar")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_attribuee_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-reu")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_attribuee_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-sb")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_attribuee_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-sm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_attribuee_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-metro")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_attribuee_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-autre")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

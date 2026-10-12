@@ -1,0 +1,114 @@
+// Duties: engagement contract and weekly activity (L.262-34, C.trav.
+// L.5411-6), adapted support (L.262-27, L.262-30).
+//
+// DEONTIC MAP: the 15-hour plan is the hard duty in this file; the rest
+// arrives established (signed contract, justified reduction, requested
+// waiver, registration) and the register/accompaniment positions are
+// derived as stated. Pre-2025 contract rules (old L.5411-6, old
+// L.262-27/34) are not modeled: B-RSA-AVANT-2025.
+
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+use self::{
+    CASF_L262_27,
+    CASF_L262_27_ED2025_06,
+    CASF_L262_27_ED2026_06,
+    CASF_L262_30,
+    CASF_L262_30_ED2025_06,
+    CASF_L262_30_ED2026_06,
+    CASF_L262_34,
+    CASF_L262_34_ED2025_06,
+    CASF_L262_34_ED2026_06,
+    CTRAV_L5411_6,
+    accompagnement_adapte,
+    contrat_heures,
+    contrat_heures_conforme,
+    contrat_signe,
+    dispense_heures,
+    droit_rsa,
+    minoration_justifiee,
+};
+
+// --- Weekly activity of the action plan (L.5411-6, II 3°) ---
+
+@source(
+    CTRAV_L5411_6,
+    CASF_L262_34,
+    CASF_L262_34_ED2025_06,
+    CASF_L262_34_ED2026_06)
+rule HeuresPleines(p: fr.minima.ressources::Personne, h: Integer) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "plan d'action à quinze heures ou plus : conforme (L. 5411-6, II 3°)";
+    label en unofficial "action plan at fifteen hours or more: compliant (L. 5411-6, II 3°)";
+    when contrat_signe(p)
+        and contrat_heures(p, h)
+        and h >= 15;
+    then contrat_heures_conforme(p);
+}
+
+@source(
+    CTRAV_L5411_6,
+    CASF_L262_34,
+    CASF_L262_34_ED2025_06,
+    CASF_L262_34_ED2026_06)
+rule HeuresMinorees(p: fr.minima.ressources::Personne, h: Integer) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "durée minorée non nulle et justifiée par la situation individuelle : conforme (L. 5411-6, II 3°)";
+    label en unofficial "non-zero reduced hours justified by the individual situation: compliant (L. 5411-6, II 3°)";
+    when contrat_signe(p)
+        and contrat_heures(p, h)
+        and h >= 1
+        and h < 15
+        and minoration_justifiee(p);
+    then contrat_heures_conforme(p);
+}
+
+@source(
+    CTRAV_L5411_6,
+    CASF_L262_34,
+    CASF_L262_34_ED2025_06,
+    CASF_L262_34_ED2026_06)
+rule HeuresInsuffisantes(p: fr.minima.ressources::Personne, h: Integer) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "moins de quinze heures sans minoration justifiée ni dispense : non conforme (L. 5411-6, II 3°)";
+    label en unofficial "below fifteen hours with no justified reduction or waiver: non-compliant (L. 5411-6, II 3°)";
+    when contrat_signe(p)
+        and contrat_heures(p, h)
+        and h < 15
+        and not_known(minoration_justifiee(p))
+        and not_known(dispense_heures(p));
+    then not contrat_heures_conforme(p);
+}
+
+@source(
+    CTRAV_L5411_6,
+    CASF_L262_34,
+    CASF_L262_34_ED2025_06,
+    CASF_L262_34_ED2026_06)
+rule HeuresDispense(p: fr.minima.ressources::Personne) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "plan sans durée hebdomadaire sur demande motivée (santé, handicap, invalidité, parent isolé sans garde) : conforme (L. 5411-6, II 3°)";
+    label en unofficial "plan without weekly hours on reasoned request (health, disability, invalidity, lone parent without childcare): compliant (L. 5411-6, II 3°)";
+    when contrat_signe(p)
+        and dispense_heures(p);
+    then contrat_heures_conforme(p);
+}
+
+// --- Adapted support with a single referrer (L.262-27, L.262-30) ---
+
+@source(
+    CASF_L262_27,
+    CASF_L262_27_ED2025_06,
+    CASF_L262_27_ED2026_06,
+    CASF_L262_30,
+    CASF_L262_30_ED2025_06,
+    CASF_L262_30_ED2026_06)
+rule AccompagnementAdapte(p: fr.minima.ressources::Personne, mois: Date) strict {
+    effective [@2025-01-01, infinity);
+    label fr official "bénéficiaire : accompagnement adapté organisé par un référent unique (L. 262-27 al. 1 ; L. 262-30)";
+    label en unofficial "claimant: adapted support organised by a single referrer (L. 262-27 al. 1; L. 262-30)";
+    when droit_rsa(p, mois);
+    then accompagnement_adapte(p);
+}

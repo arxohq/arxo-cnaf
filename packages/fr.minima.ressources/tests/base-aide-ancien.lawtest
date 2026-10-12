@@ -1,0 +1,48 @@
+// Housing aid flows into the quarterly base (old regime): review
+// February 2025, declared 300.00 each month, no service, MF 600.00.
+// Single owner-occupier: flat-rate 72.00 (R.262-9_PRE2024, 1°). Aid
+// 100.00 received in January is capped at the flat-rate (R.262-10).
+// The flat-rate joins every month of the base, the capped aid only
+// January: base 372.00 each month; due 228.00.
+// (R.262-7_PRE2025, II 2°; R.262-10.)
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-base-aide-ancien" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "baseaidanc-01": foyer_du_cas(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien")) { origin case_input; }
+        assert "baseaidanc-02": mois_demande(@2025-02-01) { origin case_input; }
+        assert "baseaidanc-03": mois_reference(@2024-11-01, @2024-12-01, @2025-01-01) { origin case_input; }
+        assert "baseaidanc-04": mf_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2024-11-01, 600.00 EUR) { origin case_input; }
+        assert "baseaidanc-05": mf_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2024-12-01, 600.00 EUR) { origin case_input; }
+        assert "baseaidanc-06": mf_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2025-01-01, 600.00 EUR) { origin case_input; }
+        assert "baseaidanc-07": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2024-11-01, 300.00 EUR) { origin case_input; }
+        assert "baseaidanc-08": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2024-12-01, 300.00 EUR) { origin case_input; }
+        assert "baseaidanc-09": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2025-01-01, 300.00 EUR) { origin case_input; }
+        assert "baseaidanc-10": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "baseaidanc-11": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2024-12-01, 0 EUR) { origin case_input; }
+        assert "baseaidanc-12": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2025-01-01, 0 EUR) { origin case_input; }
+        assert "baseaidanc-13": nb_personnes_forfait(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), 1) { origin case_input; }
+        assert "baseaidanc-14": logement(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), PROPRIETAIRE_SANS_AIDE) { origin case_input; }
+        assert "baseaidanc-15": mf_composition(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), 1, 600.00 EUR) { origin case_input; }
+        assert "baseaidanc-16": aide_logement_percue(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2025-01-01, 100.00 EUR) { origin case_input; }
+    }
+    evaluate truth(aide_logement_retenue(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2025-01-01, 72.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(base_ressources_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2025-01-01, 372.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(base_ressources_mois(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), @2024-11-01, 372.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_du_trimestre(entity_ref("urn:fr:minima-ressources:case:base-aide-ancien"), 228.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

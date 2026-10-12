@@ -1,0 +1,53 @@
+// D-81: опубликованные суммы 2018 — инструкция DSS/SD2B/2017/352 (фрагмент
+// DSS_SD2B_2017_352_PLAFOND_AF): база 56 286 / 78 770 €, надбавка 5 628 € за ребёнка.
+// Два ребёнка: I = 56 286 + 2 × 5 628 = 67 542 (строка «2 enfants ≤ 67 542»).
+// Прежний путь «номинал × коэффициент» эту сумму не даёт: (55 950 + 2 × 5 595) × 1,006
+// = 67 542,84, а 1,005 — 67 475,70 (база и надбавка округлены порознь, D. 521-3 III).
+// BMAF 411,92 € (01.04.2018; фрагмент DSS_SD2B_2019_65_COEFF: «porté de 411,92 € à
+// 413,16 €»). Ресурсы 67 602 > 67 542 — полоса 2: 0,16 × 411,92 = 65,9072;
+// дополнение (67 542 + 12 × 65,9072 − 67 602) / 12 = 60,9072; итого 126,8144 → 126,81.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-plafond-publie-2018-bande-2" {
+    given {
+        context { decision_time @2018-06-15T12:00:00Z; knowledge_time @2018-06-15T12:00:00Z; legal_time @2018-06-15; timezone "Europe/Paris"; }
+        assert "pp18-01": territoire(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), METROPOLE) { origin case_input; }
+        assert "pp18-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 2) { origin case_input; }
+        assert "pp18-03": ressources_menage(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 67602 EUR) { origin case_input; }
+        assert "pp18-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 56286 EUR) { origin case_input; }
+        assert "pp18-05": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 78770 EUR) { origin case_input; }
+        assert "pp18-06": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 5628 EUR) { origin case_input; }
+        assert "pp18-07": bmaf_retenu(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 411.92 EUR) { origin case_input; }
+        assert "pp18-08": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 0) { origin case_input; }
+        assert "pp18-09": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 0) { origin case_input; }
+        assert "pp18-10": forfait_total_menage(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 0 EUR) { origin case_input; }
+        assert "pp18-11": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 0) { origin case_input; }
+        assert "pp18-12": foyer_du_cas(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2")) { origin case_input; }
+    }
+    evaluate truth(plafond1_applicable(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 67542 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond2_applicable(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 90026 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), BANDE_2));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 65.9072 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(complement_degressif(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 60.9072 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:plafond-publie-2018-bande-2"), 126.81 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

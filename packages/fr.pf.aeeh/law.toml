@@ -1,0 +1,207 @@
+# Manifest §10 — package root marker (DECISION-0033). Headers §22 in the
+# .law files themselves are normative; the manifest must match them
+# (LDC-E1109, lawc check).
+[package]
+name = "fr.pf.aeeh"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:pf-aeeh"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after .law edits run
+# `law fix imports fr/pf-aeeh`; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+# Catalogue metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-pf-aeeh"
+title = "Allocation d'éducation de l'enfant handicapé (AEEH)"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française"
+verifiedAgainstSource = false
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Upstream premises: child in care and the debtor body are established by
+# fr.pf.core. The CDAPH decision and the internat exclusion arrive as this
+# package's own established facts (B-PFAEEH-TETE): the upstream
+# principle-level filters are package-internal (§24) and cannot be read.
+# Worlds below include both packages.
+[dependencies]
+"fr.pf.core" = "0.1.0"
+
+# Core right and amounts (L541-1/2, D541-1/2): base 32%, supplements by
+# category, BMAF as stated-assumption input (unpinned: B-PFAEEH-BMAF-EURO);
+# euro totals are illustrative of the logic, rate conclusions are the
+# assertions. One entitlement head for all periods on the package's own
+# decision fact (B-PFAEEH-TETE); the period-scoped L. 541-1 para. 4 internat
+# exclusion is a boundary (B-PFAEEH-INTERNAT).
+[[tests]]
+family = "fr.pf.aeeh#droit-montant"
+regression = false
+suites = [
+    "tests/aeeh-base-sans-complement.lawtest",
+    "tests/aeeh-base-dss-2026.lawtest",
+    "tests/aeeh-complement-categorie-3.lawtest",
+    "tests/aeeh-complement-categorie-6-mtp.lawtest",
+    "tests/aeeh-mpi-categorie-2.lawtest",
+    "tests/aeeh-mpi-sans.lawtest",
+    "tests/aeeh-sans-droit.lawtest",
+    "tests/aeeh-base-2026-05.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# Isolated-parent supplement (L541-4, D541-3/4): eligibility reasons and
+# amounts by granted category.
+[[tests]]
+family = "fr.pf.aeeh#mpi"
+regression = false
+suites = [
+    "tests/aeeh-mpi-pch.lawtest",
+    "tests/aeeh-mpi-categorie-1-sans-montant.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# Suspension liberty (L541-2 para. 2): positions ACTIVE / silent.
+[[tests]]
+family = "fr.pf.aeeh#pouvoir-suspension"
+regression = false
+suites = [
+    "tests/aeeh-suspension-active.lawtest",
+    "tests/aeeh-suspension-sans-audition.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# Fund payment duty (D1): positions ACTIVE / no right — no position.
+[[tests]]
+family = "fr.pf.aeeh#devoir-versement"
+regression = false
+suites = [
+    "tests/devoir-versement-actif.lawtest",
+    "tests/devoir-versement-sans-droit.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# OpenFisca-France cases (openfisca/openfisca-france@<see foreign REPORT>,
+# tests/formulas/aeeh.yaml): each case's expectation is THEIR number
+# (formula of their BMAF). Not regressions: measurement of third-party cases.
+[[tests]]
+family = "fr.pf.aeeh#openfisca-import"
+regression = false
+suites = [
+    "tests/foreign/openfisca/of-2012-01-couple-categorie.lawtest",
+    "tests/foreign/openfisca/of-2012-01-couple-sans-categorie.lawtest",
+    "tests/foreign/openfisca/of-2024-01-seul-sans-categorie.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# R. 541-1 thresholds, prise en charge, annual modality (05-seuils-taux):
+# threshold edges via multi-children files; computation only, no positions.
+[[tests]]
+family = "fr.pf.aeeh#seuils-taux"
+regression = false
+suites = [
+    "tests/r541-seuils-80.lawtest",
+    "tests/r541-seuils-50.lawtest",
+    "tests/r541-prise-en-charge.lawtest",
+    "tests/r541-modalite-annuelle.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# R. 541-2 category criteria skeleton (06-categories): one file per gate
+# group; the commission classification itself stays the established
+# categorie_attribuee fact (B-PFAEEH-CATEGORIE).
+[[tests]]
+family = "fr.pf.aeeh#categories"
+regression = false
+suites = [
+    "tests/r541-categorie-1-2.lawtest",
+    "tests/r541-categorie-3.lawtest",
+    "tests/r541-categorie-4-5.lawtest",
+    "tests/r541-categorie-6.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# R. 541-3/9/10 demande procedure and PCH interplay
+# (07-procedure-demande): completeness pair, duties ACTIVE, prohibition
+# ACTIVE with its expiry guard, missing-subtype silence and routing pairs.
+[[tests]]
+family = "fr.pf.aeeh#procedure-demande"
+regression = false
+suites = [
+    "tests/r541-demande-complete.lawtest",
+    "tests/r541-devoirs-demande.lawtest",
+    "tests/r541-devoirs-pch.lawtest",
+    "tests/r541-option-avant-echeance.lawtest",
+    "tests/r541-pch-silencieux.lawtest",
+    "tests/r541-pch-sous-types.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# R. 541-4/5 durations, revision, control, reexamination
+# (08-durees-revision): bounds, exclusive due-ends (50-80 % pair across
+# the 2026-04-01 reform, filing-cohort gated with old-cohort retention),
+# same-award derogation/ordinary pairs with the explicit regime input,
+# liberties and duties ACTIVE + silent.
+[[tests]]
+family = "fr.pf.aeeh#durees-revision"
+regression = false
+suites = [
+    "tests/r541-bornes-duree.lawtest",
+    "tests/r541-fin-exclusive.lawtest",
+    "tests/r541-cohorte-2026.lawtest",
+    "tests/r541-derogation-80.lawtest",
+    "tests/r541-derogation-5080.lawtest",
+    "tests/r541-revision-reexamen.lawtest",
+    "tests/r541-controle-saisine.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# R. 541-6/7/8 silence, effect dates, hospitalization
+# (09-dates-effet): date pairs, stated-assumption R. 512-2 bridge
+# (pf-af precedent), defeasible assimilation + defeater, liberty ACTIVE.
+[[tests]]
+family = "fr.pf.aeeh#dates-effet"
+regression = false
+suites = [
+    "tests/r541-rejet-implicite.lawtest",
+    "tests/r541-dates-debut-fin.lawtest",
+    "tests/r541-pont-r5122-pch.lawtest",
+    "tests/r541-hospitalisation.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# Death extension (10-deces-prolongation, R. 541-1 al. 5 + R. 541-4 V):
+# end date, both amount branches (L. 541-1 para. 4 scope pair),
+# edition pair across 2022-01-31, current-2026 proof.
+[[tests]]
+family = "fr.pf.aeeh#deces-prolongation"
+regression = false
+suites = [
+    "tests/r541-deces-date-fin.lawtest",
+    "tests/r541-deces-branches.lawtest",
+    "tests/r541-deces-pre2022.lawtest",
+    "tests/r541-deces-2026.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]
+
+# DOM transfer (11-dom-aeeh, L. 755-20 + D. 755-11, D-73): attribution
+# across the six listed collectivities with the metropole/autre silence
+# pair, amount build-first from inputs, presented-vs-built check pair,
+# 2021-edition proof. Institutional norms only, no new positions.
+[[tests]]
+family = "fr.pf.aeeh#dom-aeeh"
+regression = false
+suites = [
+    "tests/dom-attribution-collectivites.lawtest",
+    "tests/dom-montant-construit.lawtest",
+    "tests/dom-montant-verifie.lawtest",
+    "tests/dom-edition-2021.lawtest",
+]
+world = ["fr.pf.aeeh", "fr.pf.core"]

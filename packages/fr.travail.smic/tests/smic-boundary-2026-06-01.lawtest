@@ -1,0 +1,15 @@
+// Граница окон: 01.06.2026 — уже действуют ставки июня, MG 4,35 €.
+language "law.core" version "0.2";
+package fr.travail.smic version "0.1.0";
+namespace "urn:fr:corpus:clir:smic";
+
+test "urn:query:fr-smic-boundary-2026-06-01" {
+    given {
+        context { decision_time @2026-06-01T12:00:00Z; knowledge_time @2026-06-01T12:00:00Z; legal_time @2026-06-01; timezone "Europe/Paris"; }
+        assert "smic-boundary-2026-06-01-01": territoire_smic(entity_ref("urn:fr:smic:case:boundary-2026-06-01"), METROPOLE_ET_DOM) { origin case_input; }
+    }
+    evaluate truth(minimum_garanti(entity_ref("urn:fr:smic:case:boundary-2026-06-01"), 4.35 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

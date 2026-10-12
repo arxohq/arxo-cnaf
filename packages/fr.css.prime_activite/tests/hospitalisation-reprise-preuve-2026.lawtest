@@ -1,0 +1,23 @@
+// Next-review resumption (PA-R5-01): discharge alone does not restore
+// the full rate; restoration follows the periodic review after the end,
+// without a new request (R. 846-7 al. 3).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-hospitalisation-reprise-preuve-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": fin_hospitalisation(entity_ref("urn:fr:ppa:case:hospitalisation-fin-seule")) { origin case_input; }
+        assert "ppa-02": fin_hospitalisation(entity_ref("urn:fr:ppa:case:hospitalisation-reexamen")) { origin case_input; }
+        assert "ppa-03": reexamen_periodique_apres_hospitalisation(entity_ref("urn:fr:ppa:case:hospitalisation-reexamen")) { origin case_input; }
+    }
+    evaluate truth(reprise_taux_plein_hospitalisation(entity_ref("urn:fr:ppa:case:hospitalisation-fin-seule")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(reprise_taux_plein_hospitalisation(entity_ref("urn:fr:ppa:case:hospitalisation-reexamen")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

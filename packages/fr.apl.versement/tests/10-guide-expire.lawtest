@@ -1,0 +1,21 @@
+language "law.core" version "0.2";
+package fr.apl.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:apl:versement";
+
+// Boundary B-APL-VERSEMENT-POST2021, far side: same printed example as
+// 04-resultat-officiel (base 346.53 EUR -> 344 EUR), but legal_time past the
+// pinned September-2021 guide edition (in_force [@2021-01-01, @2021-10-01)).
+// No successor guide edition is pinned (ministry search JS-walled, DDG
+// bot-walled, Wayback holds no later "Elements de calcul" edition), so the
+// CRDS/rounding rules rest on no source here.
+// D-42 (08.10.2026): working reading of fr.apl (G-A13, PpPlancherFinal now pub) selected in context.
+test "urn:query:fr-apl-versement-guide-expire" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; interpretation fr.apl::PpPlancherFinal; }
+        assert "base": assiette_crds_auditee_openfisca(entity_ref("urn:fr:apl:versement:expire"), 346.53 EUR) { origin case_input; }
+        assert "territoire": fr.apl::territoire(entity_ref("urn:fr:apl:versement:expire"), fr.apl::METROPOLE) { origin case_input; }
+    }
+    evaluate truth(montant_verse(entity_ref("urn:fr:apl:versement:expire"), 344 EUR));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

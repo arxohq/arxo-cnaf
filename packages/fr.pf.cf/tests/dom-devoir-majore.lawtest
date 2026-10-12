@@ -1,0 +1,37 @@
+// Active DOM fund duty, increased track: 62.48 EUR due in Guadeloupe,
+// debtor fund recorded. Position PayerCfDomMajoreDu is ACTIVE.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-devoir-majore" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "ddj-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), entity_ref("urn:fr:pf-cf:case:dom-devoir-majore-e1")) { origin case_input; }
+        assert "ddj-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), entity_ref("urn:fr:pf-cf:case:dom-devoir-majore-e2")) { origin case_input; }
+        assert "ddj-03": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore-e1")) { origin case_input; }
+        assert "ddj-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore-e2")) { origin case_input; }
+        assert "ddj-05": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore-e1"), @2018-03-15) { origin case_input; }
+        assert "ddj-06": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore-e2"), @2016-03-15) { origin case_input; }
+        assert "ddj-07": mois_droit(@2023-03-01) { origin case_input; }
+        assert "ddj-08": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), 2) { origin case_input; }
+        assert "ddj-09": ressources_menage(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), 12000 EUR) { origin case_input; }
+        assert "ddj-10": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), 20000 EUR) { origin case_input; }
+        assert "ddj-10a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), 5000 EUR) { origin case_input; }
+        assert "ddj-10b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), 6000 EUR) { origin case_input; }
+        assert "ddj-10c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), 10000 EUR) { origin case_input; }
+        assert "ddj-10d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), 2500 EUR) { origin case_input; }
+        assert "ddj-10e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), 3000 EUR) { origin case_input; }
+        assert "ddj-11": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore")) { origin case_input; }
+        assert "ddj-12": territoire(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), GUADELOUPE) { origin case_input; }
+        assert "ddj-13": cadre_cf_dom_remplie(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore")) { origin case_input; }
+        assert "ddj-14": presence_jeune_dom(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore")) { origin case_input; }
+        assert "ddj-15": bmaf_retenu(entity_ref("urn:fr:pf-cf:case:dom-devoir-majore"), 100.00 EUR) { origin case_input; }
+        assert "ddj-16": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-cf:org:caisse"), entity_ref("urn:fr:pf-cf:case:dom-devoir-majore")) { origin case_input; }
+        assert "ddj-17": departement_l751_1(GUADELOUPE) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PayerCfDomMajoreDu, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

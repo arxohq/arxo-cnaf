@@ -1,0 +1,43 @@
+// Open differential, standalone track: two entitled children (7 and
+// 16), ceiling 16000, resources 17000. April-amount sum = 0.8972 x
+// 1000 x 1 + 0.9795 x 1000 x 1 = 1876.70, within band (17000 <
+// 17876.70). Per child: (16000 + 1876.70 - 17000) / 2 = 438.35, and
+// no base right opens.
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-differentiel-ouvert" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "afo-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert"), entity_ref("urn:fr:pf-ars:case:differentiel-ouvert-e1")) { origin case_input; }
+        assert "afo-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert"), entity_ref("urn:fr:pf-ars:case:differentiel-ouvert-e2")) { origin case_input; }
+        assert "afo-03": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert-e1")) { origin case_input; }
+        assert "afo-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert-e2")) { origin case_input; }
+        assert "afo-05": date_naissance(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert-e1"), @2014-06-01) { origin case_input; }
+        assert "afo-06": date_naissance(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert-e2"), @2005-06-01) { origin case_input; }
+        assert "afo-07": seuil_six_ans(@2022-02-01) { origin case_input; }
+        assert "afo-08": seuil_dix_huit_ans(@2021-09-15) { origin case_input; }
+        assert "afo-09": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert-e1")) { origin case_input; }
+        assert "afo-10": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert-e2")) { origin case_input; }
+        assert "afo-11": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert"), 2) { origin case_input; }
+        assert "afo-12": nb_bande(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert"), ARS_MOINS_11, 1) { origin case_input; }
+        assert "afo-13": nb_bande(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert"), ARS_11_14, 0) { origin case_input; }
+        assert "afo-14": nb_bande(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert"), ARS_15_PLUS, 1) { origin case_input; }
+        assert "afo-15": ressources_menage(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert"), 17000 EUR) { origin case_input; }
+        assert "afo-16": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert"), 10000 EUR) { origin case_input; }
+        assert "afo-17": bmaf_retenu(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert"), 1000.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ars_droit_ouvert(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_differentiel_du(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert-e1"), 438.35 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ars_differentiel_du(entity_ref("urn:fr:pf-ars:case:differentiel-ouvert-e2"), 438.35 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

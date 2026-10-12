@@ -1,0 +1,99 @@
+// droit_ouvert defeaters (12/13): owner shares at 10 %, insufficient
+// surface, and the L. 822-2 3 foreign-student exclusion each remove the
+// 09 payment duty (positions mirror of the L822-3 exclusion test).
+// D-42: contexts without a reading now select the G-A13 working reading
+// PpPlancherFinal (24-lecture-pp.law); explicit PpPlancherFinal/PpLitteral
+// contexts are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-defeater-parts" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdefp-01": secteur_locatif(entity_ref("urn:fr:apl:case:fdefp")) { origin case_input; }
+        assert "fdefp-02": zone_du_logement(entity_ref("urn:fr:apl:case:fdefp"), ZONE_III) { origin case_input; }
+        assert "fdefp-03": aide_demandee(entity_ref("urn:fr:apl:case:fdefp"), APL) { origin case_input; }
+        assert "fdefp-04": situation_familiale(entity_ref("urn:fr:apl:case:fdefp"), PERSONNE_SEULE) { origin case_input; }
+        assert "fdefp-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fdefp"), 0) { origin case_input; }
+        assert "fdefp-06": loyer_principal(entity_ref("urn:fr:apl:case:fdefp"), 280 EUR) { origin case_input; }
+        assert "fdefp-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fdefp"), 12800 EUR) { origin case_input; }
+        assert "fdefp-08": mode_location(entity_ref("urn:fr:apl:case:fdefp"), LOCATION_SEULE) { origin case_input; }
+        assert "fdefp-09": forme_logement(entity_ref("urn:fr:apl:case:fdefp"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fdefp-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fdefp"), 0 EUR) { origin case_input; }
+        assert "fdefp-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fdefp"), false) { origin case_input; }
+        assert "fdefp-12": territoire(entity_ref("urn:fr:apl:case:fdefp"), METROPOLE) { origin case_input; }
+        assert "fdefp-13": occupation_residence_principale(entity_ref("urn:fr:apl:case:fdefp")) { origin case_input; }
+        assert "fdefp-14": logement_decent(entity_ref("urn:fr:apl:case:fdefp")) { origin adjudicated; }
+        assert "fdefp-15": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fdefp")) { origin case_input; }
+        assert "fdefp-16": locataire_logement_parts(entity_ref("urn:fr:apl:case:fdefp")) { origin case_input; }
+        assert "fdefp-17": parts_logement_detentions(entity_ref("urn:fr:apl:case:fdefp"), 0.10) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserAideTheoriqueDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-defeater-surface" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdefs-01": secteur_locatif(entity_ref("urn:fr:apl:case:fdefs")) { origin case_input; }
+        assert "fdefs-02": zone_du_logement(entity_ref("urn:fr:apl:case:fdefs"), ZONE_III) { origin case_input; }
+        assert "fdefs-03": aide_demandee(entity_ref("urn:fr:apl:case:fdefs"), APL) { origin case_input; }
+        assert "fdefs-04": situation_familiale(entity_ref("urn:fr:apl:case:fdefs"), PERSONNE_SEULE) { origin case_input; }
+        assert "fdefs-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fdefs"), 0) { origin case_input; }
+        assert "fdefs-06": loyer_principal(entity_ref("urn:fr:apl:case:fdefs"), 280 EUR) { origin case_input; }
+        assert "fdefs-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fdefs"), 12800 EUR) { origin case_input; }
+        assert "fdefs-08": mode_location(entity_ref("urn:fr:apl:case:fdefs"), LOCATION_SEULE) { origin case_input; }
+        assert "fdefs-09": forme_logement(entity_ref("urn:fr:apl:case:fdefs"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fdefs-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fdefs"), 0 EUR) { origin case_input; }
+        assert "fdefs-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fdefs"), false) { origin case_input; }
+        assert "fdefs-12": territoire(entity_ref("urn:fr:apl:case:fdefs"), METROPOLE) { origin case_input; }
+        assert "fdefs-13": occupation_residence_principale(entity_ref("urn:fr:apl:case:fdefs")) { origin case_input; }
+        assert "fdefs-14": logement_decent(entity_ref("urn:fr:apl:case:fdefs")) { origin adjudicated; }
+        assert "fdefs-15": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fdefs")) { origin case_input; }
+        assert "fdefs-16": surface_habitable(entity_ref("urn:fr:apl:case:fdefs"), 8) { origin case_input; }
+        // D-42: the R. 822-25 surface floor is gated in the model (12
+        // D-42: InsuffisanceSurfaceLogement) on the dwelling being outside EHPAD/USLD and
+        // D-42: outside a foyer de jeunes travailleurs (R. 844-4 regimes); the case
+        // D-42: (an ordinary rented dwelling) omitted both findings.
+        assert "fdefs-17": logement_hors_ehpad_usld(entity_ref("urn:fr:apl:case:fdefs")) { origin case_input; }
+        // D-42: second finding of the same gate.
+        assert "fdefs-18": logement_hors_foyer_jeunes_travailleurs(entity_ref("urn:fr:apl:case:fdefs")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserAideTheoriqueDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-defeater-l8222-3" {
+    given {
+        context { decision_time @2026-08-15T12:00:00Z; knowledge_time @2026-08-15T12:00:00Z; legal_time @2026-08-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdef3-01": secteur_locatif(entity_ref("urn:fr:apl:case:fdef3")) { origin case_input; }
+        assert "fdef3-02": zone_du_logement(entity_ref("urn:fr:apl:case:fdef3"), ZONE_III) { origin case_input; }
+        assert "fdef3-03": aide_demandee(entity_ref("urn:fr:apl:case:fdef3"), APL) { origin case_input; }
+        assert "fdef3-04": situation_familiale(entity_ref("urn:fr:apl:case:fdef3"), PERSONNE_SEULE) { origin case_input; }
+        assert "fdef3-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fdef3"), 0) { origin case_input; }
+        assert "fdef3-06": loyer_principal(entity_ref("urn:fr:apl:case:fdef3"), 280 EUR) { origin case_input; }
+        assert "fdef3-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fdef3"), 12800 EUR) { origin case_input; }
+        assert "fdef3-08": mode_location(entity_ref("urn:fr:apl:case:fdef3"), LOCATION_SEULE) { origin case_input; }
+        assert "fdef3-09": forme_logement(entity_ref("urn:fr:apl:case:fdef3"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fdef3-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fdef3"), 0 EUR) { origin case_input; }
+        assert "fdef3-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fdef3"), false) { origin case_input; }
+        assert "fdef3-12": territoire(entity_ref("urn:fr:apl:case:fdef3"), METROPOLE) { origin case_input; }
+        assert "fdef3-13": occupation_residence_principale(entity_ref("urn:fr:apl:case:fdef3")) { origin case_input; }
+        assert "fdef3-14": logement_decent(entity_ref("urn:fr:apl:case:fdef3")) { origin adjudicated; }
+        assert "fdef3-15": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fdef3")) { origin case_input; }
+        assert "fdef3-16": etranger_visa_etudiant_l422(entity_ref("urn:fr:apl:case:fdef3")) { origin case_input; }
+        // D-42: the suite named an undeclared predicate (titulaire_aide_exclue_d8220_1,
+        // LDC-E2102). L. 822-2 I 3° excludes L. 422-1..7 visa holders "qui ne
+        // remplissent pas les conditions ... pour etre titulaires d'une bourse
+        // d'enseignement superieur sur criteres sociaux"; the model (13
+        // ExcluVisaEtudiantSansBourse) takes that established finding as
+        // non_eligible_bourse_criteres_sociaux.
+        assert "fdef3-17": non_eligible_bourse_criteres_sociaux(entity_ref("urn:fr:apl:case:fdef3")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserAideTheoriqueDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

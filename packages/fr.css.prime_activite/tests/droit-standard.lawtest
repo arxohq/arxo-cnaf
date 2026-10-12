@@ -1,0 +1,27 @@
+// Standard grant: 25, stable residence, professional income, stay and
+// spouse conditions met, demand June 2026 -> right open from June 2026
+// (L.842-1/2/5, L.843-2).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-droit-standard" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": age_plus_dix_huit(entity_ref("urn:fr:ppa:case:droit-standard")) { origin case_input; }
+        assert "ppa-02": residence_stable(entity_ref("urn:fr:ppa:case:droit-standard")) { origin case_input; }
+        assert "ppa-03": revenus_professionnels(entity_ref("urn:fr:ppa:case:droit-standard")) { origin case_input; }
+        assert "ppa-04": sejour_travail_ok(entity_ref("urn:fr:ppa:case:droit-standard")) { origin case_input; }
+        assert "ppa-05": conjoint_conditions_ok(entity_ref("urn:fr:ppa:case:droit-standard")) { origin case_input; }
+        assert "ppa-06": demande_deposee(entity_ref("urn:fr:ppa:case:droit-standard"), @2026-06-01) { origin case_input; }
+        assert "ppa-07": sans_exclusion_statutaire(entity_ref("urn:fr:ppa:case:droit-standard")) { origin case_input; }
+    }
+    evaluate truth(droit_ouvert(entity_ref("urn:fr:ppa:case:droit-standard")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droit_ouvert_compter(entity_ref("urn:fr:ppa:case:droit-standard"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

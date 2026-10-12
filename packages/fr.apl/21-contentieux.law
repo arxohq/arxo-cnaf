@@ -1,0 +1,390 @@
+// Disputes (L. 825-1/2/3, R. 825-1..4): administrative jurisdiction with
+// the L. 114-17 fraud-penalty exception to the judicial judge, the
+// mandatory prior administrative appeal (remission decisions exempt),
+// the director's reasoned decision after the commission opinion, gracious
+// remission with receipt and the two-month implied rejection (uncontested
+// debts only), and the directors' power to plead for the State in TA/CE
+// disputes on their own decisions (from 2019-07-26).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_L825_1_ED2020_01,
+    CCH_L825_1_ED2021_01,
+    CCH_L825_1_ED2023_04,
+    CCH_L825_1_ED2023_09,
+    CCH_L825_1_ED2023_12,
+    CCH_L825_1_ED2026_07,
+    CCH_L825_2_ED2020_01,
+    CCH_L825_2_ED2021_01,
+    CCH_L825_2_ED2023_04,
+    CCH_L825_2_ED2023_09,
+    CCH_L825_2_ED2023_12,
+    CCH_L825_2_ED2026_07,
+    CCH_L825_3_ED2020_01,
+    CCH_L825_3_ED2021_01,
+    CCH_L825_3_ED2023_04,
+    CCH_L825_3_ED2023_09,
+    CCH_L825_3_ED2023_12,
+    CCH_L825_3_ED2026_07,
+    CCH_R825_1_ED2020_01,
+    CCH_R825_1_ED2021_01,
+    CCH_R825_1_ED2023_04,
+    CCH_R825_1_ED2023_09,
+    CCH_R825_1_ED2023_12,
+    CCH_R825_1_ED2026_07,
+    CCH_R825_2_ED2020_01,
+    CCH_R825_2_ED2021_01,
+    CCH_R825_2_ED2023_04,
+    CCH_R825_2_ED2023_09,
+    CCH_R825_2_ED2023_12,
+    CCH_R825_2_ED2026_07,
+    CCH_R825_3_ED2020_01,
+    CCH_R825_3_ED2021_01,
+    CCH_R825_3_ED2023_04,
+    CCH_R825_3_ED2023_09,
+    CCH_R825_3_ED2023_12,
+    CCH_R825_3_ED2026_07,
+    CCH_R825_4,
+    CCH_R825_4_ED2019_12,
+    CCH_R825_4_ED2020_01,
+    CCH_R825_4_ED2021_01,
+    CCH_R825_4_ED2023_04,
+    CCH_R825_4_ED2023_09,
+    CCH_R825_4_ED2023_12,
+    CCH_R825_4_ED2026_07,
+    Menage,
+    Organisme,
+    date_appreciation,
+    organisme_debiteur,
+};
+
+pub deadline policy APL_RECOURS {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+pub relation recours_contre_decision(m: Menage, d: Date) kind empirical {
+    label fr official "recours contre une decision d'aide, date du recours (fait de dossier)";
+    label en unofficial "appeal against an aid decision, appeal date (case fact)";
+}
+
+@source(CCH_L825_1_ED2020_01, CCH_L825_1_ED2021_01, CCH_L825_1_ED2023_04,
+        CCH_L825_1_ED2023_09, CCH_L825_1_ED2023_12, CCH_L825_1_ED2026_07)
+pub enum JuridictionRecours {
+    label fr official "juridiction du recours, fraude L. 114-17 CSS exceptee L. 825-1";
+    label en unofficial "appeal court, CSS L. 114-17 fraud excepted L. 825-1";
+    TRIBUNAL_ADMINISTRATIF, TRIBUNAL_GRANDE_INSTANCE_FRAUDE
+}
+
+pub relation juridiction_competente(m: Menage, j: JuridictionRecours) kind institutional {
+    label fr official "juridiction competente pour le recours L. 825-1";
+    label en unofficial "court competent for the appeal L. 825-1";
+}
+
+pub relation contestation_penalites_fraude(m: Menage) kind empirical {
+    label fr official "recours portant sur des penalites pour fraude L. 114-17 CSS (constat L. 825-1)";
+    label en unofficial "appeal on fraud penalties under CSS L. 114-17 (L. 825-1 finding)";
+}
+
+pub relation recours_hors_penalites_fraude(m: Menage) kind empirical {
+    label fr official "recours etabli hors penalites pour fraude L. 114-17 CSS (classification positive L. 825-1)";
+    label en unofficial "appeal positively classified outside CSS L. 114-17 fraud penalties (L. 825-1)";
+}
+
+pub relation recours_hors_decision_remise(m: Menage) kind empirical {
+    label fr official "recours etabli hors recours contre une decision de remise gracieuse (classification positive R. 825-1/3)";
+    label en unofficial "appeal positively classified outside remission-decision appeals (R. 825-1/3)";
+}
+
+@source(CCH_L825_1_ED2020_01, CCH_L825_1_ED2021_01, CCH_L825_1_ED2023_04,
+        CCH_L825_1_ED2023_09, CCH_L825_1_ED2023_12, CCH_L825_1_ED2026_07)
+rule JuridictionTALogement(m: Menage, d: Date) strict {
+    label fr official "recours contre une decision d'aide, hors fraude etablie : juridiction administrative";
+    label en unofficial "aid-decision appeal, fraud affirmatively excluded: administrative court";
+    when recours_contre_decision(m, d) and recours_hors_penalites_fraude(m);
+    then juridiction_competente(m, TRIBUNAL_ADMINISTRATIF);
+}
+
+@source(CCH_L825_1_ED2020_01, CCH_L825_1_ED2021_01, CCH_L825_1_ED2023_04,
+        CCH_L825_1_ED2023_09, CCH_L825_1_ED2023_12, CCH_L825_1_ED2026_07)
+rule JuridictionJudiciaireFraude(m: Menage, d: Date) strict {
+    label fr official "L. 825-1 : penalites pour fraude, tribunal de grande instance L. 114-17 CSS";
+    label en unofficial "L. 825-1: fraud penalties, tribunal de grande instance under CSS L. 114-17";
+    when recours_contre_decision(m, d) and contestation_penalites_fraude(m);
+    then juridiction_competente(m, TRIBUNAL_GRANDE_INSTANCE_FRAUDE);
+}
+
+pub relation cra_depose_prealable(m: Menage) kind empirical {
+    label fr official "recours administratif prealable depose devant le directeur (fait)";
+    label en unofficial "prior administrative appeal filed with the director (fact)";
+}
+
+pub relation cra_prealable_absent(m: Menage) kind empirical {
+    label fr official "aucun recours administratif prealable (fait de dossier)";
+    label en unofficial "no prior administrative appeal (case fact)";
+}
+
+pub relation recours_recevable_cra(m: Menage) kind institutional {
+    label fr official "recours recevable : precede du recours prealable";
+    label en unofficial "appeal admissible: prior appeal filed first";
+}
+
+pub relation recours_irrecevable_cra(m: Menage) kind institutional {
+    label fr official "recours irrecevable : sans recours prealable";
+    label en unofficial "appeal inadmissible: no prior appeal";
+}
+
+@source(CCH_L825_2_ED2020_01, CCH_L825_2_ED2021_01, CCH_L825_2_ED2023_04,
+        CCH_L825_2_ED2023_09, CCH_L825_2_ED2023_12, CCH_L825_2_ED2026_07,
+        CCH_R825_1_ED2020_01, CCH_R825_1_ED2021_01, CCH_R825_1_ED2023_04,
+        CCH_R825_1_ED2023_09, CCH_R825_1_ED2023_12, CCH_R825_1_ED2026_07)
+rule RecoursRecevableCRA(m: Menage, d: Date) strict {
+    label fr official "recours precede du prealable : recevable";
+    label en unofficial "appeal filed after the prior one: admissible";
+    when recours_contre_decision(m, d) and cra_depose_prealable(m);
+    then recours_recevable_cra(m);
+}
+
+@source(CCH_L825_2_ED2020_01, CCH_L825_2_ED2021_01, CCH_L825_2_ED2023_04,
+        CCH_L825_2_ED2023_09, CCH_L825_2_ED2023_12, CCH_L825_2_ED2026_07,
+        CCH_R825_1_ED2020_01, CCH_R825_1_ED2021_01, CCH_R825_1_ED2023_04,
+        CCH_R825_1_ED2023_09, CCH_R825_1_ED2023_12, CCH_R825_1_ED2026_07)
+rule RecoursIrrecevableSansCRA(m: Menage, d: Date) strict {
+    label fr official "recours sans prealable, hors voie de remise gracieuse etablie : irrecevable";
+    label en unofficial "appeal with no prior one, remission path affirmatively excluded: inadmissible";
+    when recours_contre_decision(m, d) and cra_prealable_absent(m)
+        and recours_hors_decision_remise(m);
+    then recours_irrecevable_cra(m);
+}
+
+@source(CCH_R825_3_ED2020_01, CCH_R825_3_ED2021_01, CCH_R825_3_ED2023_04,
+        CCH_R825_3_ED2023_09, CCH_R825_3_ED2023_12, CCH_R825_3_ED2026_07)
+rule RecoursRecevableDecisionRemise(m: Menage, d: Date) strict {
+    label fr official "R. 825-3 al. 5 : recours contre une decision de remise sans prealable, recevable";
+    label en unofficial "R. 825-3 al. 5: appeal against a remission decision with no prior one, admissible";
+    when recours_contre_decision(m, d) and recours_contre_decision_remise(m);
+    then recours_recevable_cra(m);
+}
+
+pub relation decision_directeur_rendue(m: Menage) kind empirical {
+    label fr official "decision motivee du directeur sur le recours prealable (execution)";
+    label en unofficial "director's reasoned prior-appeal decision (performance)";
+}
+
+@source(CCH_L825_3_ED2020_01, CCH_L825_3_ED2021_01, CCH_L825_3_ED2023_04,
+        CCH_L825_3_ED2023_09, CCH_L825_3_ED2023_12, CCH_L825_3_ED2026_07,
+        CCH_R825_2_ED2020_01, CCH_R825_2_ED2021_01, CCH_R825_2_ED2023_04,
+        CCH_R825_2_ED2023_09, CCH_R825_2_ED2023_12, CCH_R825_2_ED2026_07)
+rule DevoirDirecteurStatuer(m: Menage, o: Organisme) strict {
+    label fr official "le directeur statue par decision motivee sur le recours prealable apres avis de la commission";
+    label en unofficial "the director decides the prior appeal by reasoned decision after the commission opinion";
+    when cra_depose_prealable(m) and avis_commission_recours_amiable(m)
+        and organisme_debiteur(o, m);
+    then duty DirecteurStatuerRecours {
+        bearer o;
+        beneficiary m;
+        maintain decision_directeur_rendue(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation demande_remise_gracieuse(m: Menage, d: Date) kind empirical {
+    label fr official "demande de remise gracieuse d'un trop-percu d'aide ou de prime, date de depot (fait de dossier R. 825-3)";
+    label en unofficial "gracious-remission request for an overpaid aid or bonus, filing date (R. 825-3 case fact)";
+}
+
+pub relation dette_bien_fonde_non_conteste(m: Menage) kind empirical {
+    label fr official "bien-fonde de la dette non conteste avec la demande de remise (constat R. 825-3 al. 1)";
+    label en unofficial "debt merits uncontested alongside the remission request (R. 825-3 al. 1 finding)";
+}
+
+pub relation avis_commission_recours_amiable(m: Menage) kind empirical {
+    label fr official "avis rendu par la commission de recours amiable R. 825-2 (fait de dossier)";
+    label en unofficial "friendly-appeal commission opinion rendered R. 825-2 (case fact)";
+}
+
+pub relation recours_contre_decision_remise(m: Menage) kind empirical {
+    label fr official "recours contre une decision de remise gracieuse R. 825-3 al. 5 (constat)";
+    label en unofficial "appeal against a gracious-remission decision R. 825-3 al. 5 (finding)";
+}
+
+pub relation accuse_reception_remise(m: Menage) kind empirical {
+    label fr official "accuse de reception de la demande de remise (execution)";
+    label en unofficial "remission-request acknowledgement (performance)";
+}
+
+pub relation accuse_due_avant_remise(m: Menage, d: Date) kind institutional {
+    label fr official "accuse de reception du dans les quinze jours R. 825-3";
+    label en unofficial "acknowledgement due within fifteen days under R. 825-3";
+}
+
+pub relation decision_remise_gracieuse_rendue(m: Menage) kind empirical {
+    label fr official "decision sur la remise gracieuse (execution)";
+    label en unofficial "gracious-remission decision (performance)";
+}
+
+pub relation statuer_due_avant_remise(m: Menage, d: Date) kind institutional {
+    label fr official "decision sur la remise due dans les deux mois R. 825-3";
+    label en unofficial "remission decision due within two months under R. 825-3";
+}
+
+pub relation aucune_decision_remise(m: Menage) kind empirical {
+    label fr official "aucune decision rendue a l'appreciation, silence garde (fait de dossier)";
+    label en unofficial "no decision by appreciation, silence kept (case fact)";
+}
+
+pub relation accuse_reception_remise_le(m: Menage, d: Date) kind empirical {
+    label fr official "accuse de reception de la demande de remise date (execution datee)";
+    label en unofficial "dated acknowledgement of the remission request (dated performance)";
+}
+
+pub relation accuse_reception_remise_dans_delai(m: Menage) kind institutional {
+    label fr official "accuse de reception de la remise dans les quinze jours (conformite au delai R. 825-3)";
+    label en unofficial "remission acknowledgement within fifteen days (R. 825-3 timeliness)";
+}
+
+pub relation decision_remise_gracieuse_rendue_le(m: Menage, d: Date) kind empirical {
+    label fr official "decision sur la remise gracieuse datee (execution datee)";
+    label en unofficial "dated gracious-remission decision (dated performance)";
+}
+
+pub relation decision_remise_dans_delai(m: Menage) kind institutional {
+    label fr official "decision sur la remise dans les deux mois (conformite au delai R. 825-3)";
+    label en unofficial "remission decision within two months (R. 825-3 timeliness)";
+}
+
+pub relation rejet_implicite_remise(m: Menage) kind institutional {
+    label fr official "silence de deux mois : rejet implicite de la remise R. 825-3";
+    label en unofficial "two months of silence: implied remission rejection under R. 825-3";
+}
+
+@source(CCH_R825_3_ED2020_01, CCH_R825_3_ED2021_01, CCH_R825_3_ED2023_04,
+        CCH_R825_3_ED2023_09, CCH_R825_3_ED2023_12, CCH_R825_3_ED2026_07)
+rule AccuseDueRemise(m: Menage, demande: Date) strict {
+    label fr official "remise sans contestation du bien-fonde : accuse de reception dans les quinze jours";
+    label en unofficial "uncontested remission: acknowledgement within fifteen days";
+    when demande_remise_gracieuse(m, demande) and dette_bien_fonde_non_conteste(m);
+    then accuse_due_avant_remise(m, add_calendar_period(demande, 15 calendar_day));
+}
+
+@source(CCH_R825_3_ED2020_01, CCH_R825_3_ED2021_01, CCH_R825_3_ED2023_04,
+        CCH_R825_3_ED2023_09, CCH_R825_3_ED2023_12, CCH_R825_3_ED2026_07)
+rule DevoirAccuserRemise(m: Menage, o: Organisme, demande: Date) strict {
+    label fr official "l'organisme accuse reception de la demande de remise non contestee";
+    label en unofficial "the body acknowledges the uncontested remission request";
+    when demande_remise_gracieuse(m, demande) and dette_bien_fonde_non_conteste(m)
+        and organisme_debiteur(o, m);
+    then duty AccuserReceptionRemise {
+        bearer o;
+        beneficiary m;
+        maintain accuse_reception_remise(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R825_3_ED2020_01, CCH_R825_3_ED2021_01, CCH_R825_3_ED2023_04,
+        CCH_R825_3_ED2023_09, CCH_R825_3_ED2023_12, CCH_R825_3_ED2026_07)
+rule StatuerDueRemise(m: Menage, demande: Date) strict {
+    label fr official "remise sans contestation du bien-fonde : decision dans les deux mois";
+    label en unofficial "uncontested remission: decision within two months";
+    when demande_remise_gracieuse(m, demande) and dette_bien_fonde_non_conteste(m);
+    then statuer_due_avant_remise(m, add_calendar_period(demande, 2 calendar_month));
+}
+
+@source(CCH_R825_3_ED2020_01, CCH_R825_3_ED2021_01, CCH_R825_3_ED2023_04,
+        CCH_R825_3_ED2023_09, CCH_R825_3_ED2023_12, CCH_R825_3_ED2026_07)
+rule DevoirStatuerRemise(m: Menage, o: Organisme, demande: Date) strict {
+    label fr official "le directeur statue sur la remise non contestee apres avis de la commission";
+    label en unofficial "the director decides the uncontested remission after the commission opinion";
+    when demande_remise_gracieuse(m, demande) and dette_bien_fonde_non_conteste(m)
+        and avis_commission_recours_amiable(m) and organisme_debiteur(o, m);
+    then duty StatuerRemiseGracieuse {
+        bearer o;
+        beneficiary m;
+        maintain decision_remise_gracieuse_rendue(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R825_3_ED2020_01, CCH_R825_3_ED2021_01, CCH_R825_3_ED2023_04,
+        CCH_R825_3_ED2023_09, CCH_R825_3_ED2023_12, CCH_R825_3_ED2026_07)
+rule AccuseRemiseDateVautExecution(m: Menage, d: Date) strict {
+    label fr official "accuse date : l'execution de l'obligation d'accuse est etablie";
+    label en unofficial "dated acknowledgement: the acknowledgement duty performance is established";
+    when accuse_reception_remise_le(m, d);
+    then accuse_reception_remise(m);
+}
+
+@source(CCH_R825_3_ED2020_01, CCH_R825_3_ED2021_01, CCH_R825_3_ED2023_04,
+        CCH_R825_3_ED2023_09, CCH_R825_3_ED2023_12, CCH_R825_3_ED2026_07)
+rule AccuseRemiseDansDelai(m: Menage, fait: Date, echeance: Date) strict {
+    label fr official "accuse date au plus tard a l'echeance des quinze jours : dans le delai";
+    label en unofficial "acknowledgement dated no later than the fifteen-day deadline: timely";
+    when accuse_reception_remise_le(m, fait) and accuse_due_avant_remise(m, echeance)
+        and fait <= echeance;
+    then accuse_reception_remise_dans_delai(m);
+}
+
+@source(CCH_R825_3_ED2020_01, CCH_R825_3_ED2021_01, CCH_R825_3_ED2023_04,
+        CCH_R825_3_ED2023_09, CCH_R825_3_ED2023_12, CCH_R825_3_ED2026_07)
+rule DecisionRemiseDateeVautExecution(m: Menage, d: Date) strict {
+    label fr official "decision datee : l'execution de l'obligation de statuer est etablie";
+    label en unofficial "dated decision: the decision-duty performance is established";
+    when decision_remise_gracieuse_rendue_le(m, d);
+    then decision_remise_gracieuse_rendue(m);
+}
+
+@source(CCH_R825_3_ED2020_01, CCH_R825_3_ED2021_01, CCH_R825_3_ED2023_04,
+        CCH_R825_3_ED2023_09, CCH_R825_3_ED2023_12, CCH_R825_3_ED2026_07)
+rule DecisionRemiseDansDelai(m: Menage, fait: Date, echeance: Date) strict {
+    label fr official "decision datee au plus tard a l'echeance des deux mois : dans le delai";
+    label en unofficial "decision dated no later than the two-month deadline: timely";
+    when decision_remise_gracieuse_rendue_le(m, fait) and statuer_due_avant_remise(m, echeance)
+        and fait <= echeance;
+    then decision_remise_dans_delai(m);
+}
+
+@source(CCH_R825_3_ED2020_01, CCH_R825_3_ED2021_01, CCH_R825_3_ED2023_04,
+        CCH_R825_3_ED2023_09, CCH_R825_3_ED2023_12, CCH_R825_3_ED2026_07)
+rule RejetImpliciteRemise(m: Menage, demande: Date, appreciation: Date) strict {
+    label fr official "silence de deux mois : la remise non contestee est implicitement rejetee";
+    label en unofficial "two months of silence: the uncontested remission is impliedly rejected";
+    when demande_remise_gracieuse(m, demande) and dette_bien_fonde_non_conteste(m)
+        and date_appreciation(m, appreciation)
+        and appreciation >= add_calendar_period(demande, 2 calendar_month)
+        and aucune_decision_remise(m);
+    then rejet_implicite_remise(m);
+}
+
+pub relation representation_en_justice(o: Organisme, m: Menage) kind empirical {
+    label fr official "directeur presentant l'affaire au nom de l'Etat (execution)";
+    label en unofficial "director arguing the case for the State (performance)";
+}
+
+pub relation litige_decision_directeur_ta_ce(m: Menage) kind empirical {
+    label fr official "litige sur une decision du directeur devant le TA ou le Conseil d'Etat (constat R. 825-4)";
+    label en unofficial "dispute on a director decision before the TA or the Conseil d'Etat (R. 825-4 finding)";
+}
+
+pub relation defense_presentee_nom_etat(m: Menage) kind empirical {
+    label fr official "defense presentee au nom de l'Etat (effet constate)";
+    label en unofficial "defence argued for the State (established effect)";
+}
+
+@source(CCH_R825_4, CCH_R825_4_ED2019_12, CCH_R825_4_ED2020_01,
+        CCH_R825_4_ED2021_01, CCH_R825_4_ED2023_04, CCH_R825_4_ED2023_09,
+        CCH_R825_4_ED2023_12, CCH_R825_4_ED2026_07)
+rule PouvoirRepresenterEtat(m: Menage, o: Organisme) strict {
+    label fr official "R. 825-4 : les directeurs presentent au nom de l'Etat les litiges TA et CE sur leurs decisions";
+    label en unofficial "R. 825-4: directors argue for the State the TA and CE disputes on their own decisions";
+    when litige_decision_directeur_ta_ce(m) and organisme_debiteur(o, m);
+    then power RepresenterEtatDirecteur {
+        holder o;
+        exercise representation_en_justice(o, m);
+        valid_when (litige_decision_directeur_ta_ce(m) and organisme_debiteur(o, m));
+        effect defense_presentee_nom_etat(m);
+        window [@2019-07-26, infinity);
+    };
+}

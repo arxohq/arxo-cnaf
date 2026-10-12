@@ -1,0 +1,42 @@
+// Open differential, standalone R. 522-3 track: resources 36120 exceed
+// the derived 36000 ceiling by 120, below twelve theoretical monthly
+// amounts (12 x 0.4165 x 240.00 = 1199.52). No base right opens
+// (NEITHER); the top-up is (36000 + 1199.52 - 36120) / 12 = 89.96.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-differentiel-ouvert" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "dfo-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), entity_ref("urn:fr:pf-cf:case:differentiel-ouvert-e1")) { origin case_input; }
+        assert "dfo-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), entity_ref("urn:fr:pf-cf:case:differentiel-ouvert-e2")) { origin case_input; }
+        assert "dfo-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), entity_ref("urn:fr:pf-cf:case:differentiel-ouvert-e3")) { origin case_input; }
+        assert "dfo-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert-e1")) { origin case_input; }
+        assert "dfo-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert-e2")) { origin case_input; }
+        assert "dfo-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert-e3")) { origin case_input; }
+        assert "dfo-07": date_naissance(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert-e1"), @2016-03-15) { origin case_input; }
+        assert "dfo-08": date_naissance(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert-e2"), @2014-03-15) { origin case_input; }
+        assert "dfo-09": date_naissance(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert-e3"), @2012-03-15) { origin case_input; }
+        assert "dfo-10": mois_droit(@2021-06-01) { origin case_input; }
+        assert "dfo-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), 3) { origin case_input; }
+        assert "dfo-12": ressources_menage(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), 36120 EUR) { origin case_input; }
+        assert "dfo-13": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), 20000 EUR) { origin case_input; }
+        assert "dfo-13a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), 5000 EUR) { origin case_input; }
+        assert "dfo-13b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), 6000 EUR) { origin case_input; }
+        assert "dfo-13c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), 10000 EUR) { origin case_input; }
+        assert "dfo-13d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), 2500 EUR) { origin case_input; }
+        assert "dfo-13e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), 3000 EUR) { origin case_input; }
+        assert "dfo-14": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert")) { origin case_input; }
+        assert "dfo-15": bmaf_retenu(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), 240.00 EUR) { origin case_input; }
+    }
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_differentiel_du(entity_ref("urn:fr:pf-cf:case:differentiel-ouvert"), 89.96 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

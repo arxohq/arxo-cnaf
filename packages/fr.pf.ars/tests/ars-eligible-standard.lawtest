@@ -1,0 +1,22 @@
+// Standard opener: 7-year-old in care at the rentree, inside both
+// R543-2 lines (6 reached before 2022-02-01, under 18 on 2021-09-15),
+// enrolled: eligible.
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-eligible-standard" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "aes-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:eligible-standard"), entity_ref("urn:fr:pf-ars:case:eligible-standard-e1")) { origin case_input; }
+        assert "aes-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:eligible-standard-e1")) { origin case_input; }
+        assert "aes-03": date_naissance(entity_ref("urn:fr:pf-ars:case:eligible-standard-e1"), @2014-06-01) { origin case_input; }
+        assert "aes-04": seuil_six_ans(@2022-02-01) { origin case_input; }
+        assert "aes-05": seuil_dix_huit_ans(@2021-09-15) { origin case_input; }
+        assert "aes-06": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:eligible-standard-e1")) { origin case_input; }
+    }
+    evaluate truth(ars_enfant_eligible(entity_ref("urn:fr:pf-ars:case:eligible-standard-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

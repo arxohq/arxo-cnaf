@@ -1,0 +1,20 @@
+// Boundary: commercial-traveller (VRP) assimilation alone opens
+// nothing. The certificate and agreement are established but no leave,
+// no cessation and no job-seeker record exists — L. 544-8 assimilations
+// beyond the two modelled channels are unmodelled (B-PFAJPP-D544),
+// so the right stays silent.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-special-vrp" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-vrp-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-vrp")) { origin adjudicated; }
+        assert "ajpp-vrp-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-vrp")) { origin adjudicated; }
+    }
+    evaluate truth(ajpp_droit_ouvert(entity_ref("urn:fr:pf-ajpp:case:enfant-vrp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

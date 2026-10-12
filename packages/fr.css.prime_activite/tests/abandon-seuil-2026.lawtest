@@ -1,0 +1,39 @@
+// Ceiling 40000 -> abandonment threshold 272.00; indu 100
+// recoverable under D. 553, abandonment pronounced takes effect;
+// D7 notification duty (director-qualified, PA-FE09-04) ACTIVE; no
+// seizure premise, so the D. 847-3 monthly-deduction flag stays
+// undetermined.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-abandon-seuil-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_recupere(entity_ref("urn:fr:ppa:case:abandon-seuil-2026"), 100.00 EUR) { origin case_input; }
+        assert "ppa-02": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:abandon-seuil-2026")) { origin case_input; }
+        assert "ppa-03": plafond_l241_3_applicable(40000.00 EUR) { origin case_input; }
+        assert "ppa-04": abandon_recouvrement_prononce(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:abandon-seuil-2026")) { origin case_input; }
+        assert "ppa-05": constat_indu(entity_ref("urn:fr:ppa:case:abandon-seuil-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-06": directeur_de(entity_ref("urn:fr:ppa:org:directeur"), entity_ref("urn:fr:ppa:org:caisse")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NotifierIndu, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(seuil_abandon_recouvrement(272.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recouvrement_d553_applicable(entity_ref("urn:fr:ppa:case:abandon-seuil-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(abandon_prend_effet(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:abandon-seuil-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(prelevements_saisie_mensuels(entity_ref("urn:fr:ppa:case:abandon-seuil-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,16 @@
+// Unemployment interruption from an L.5412-1 sanction: counting is kept
+// (R.262-13 al.2, from 01.06.2025).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-chomage-sanction" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "chomsan-01": interruption_sanction_chomage(entity_ref("urn:fr:minima-ressources:case:chomage-sanction")) { origin case_input; }
+    }
+    evaluate truth(chomage_maintenu_sanction(entity_ref("urn:fr:minima-ressources:case:chomage-sanction")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

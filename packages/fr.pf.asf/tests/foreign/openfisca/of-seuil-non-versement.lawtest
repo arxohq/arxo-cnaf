@@ -1,0 +1,21 @@
+// OpenFisca Seuil de non-versement (2020-01), period shaped to 2021: pension 112 against the 112.52 single rate gives a 0.52 differential. Their 0 is the 15 EUR floor (D. 523-3), which the engine cannot fold: class (c) divergence, B-PFASF-SEUIL.
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-of-seuil-non-versement" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ofn-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:foreign:of-seuil-non-versement"), entity_ref("urn:fr:pf-asf:foreign:of-seuil-non-versement-e1")) { origin case_input; }
+        assert "ofn-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:foreign:of-seuil-non-versement-e1")) { origin case_input; }
+        assert "ofn-03": motif_asf(entity_ref("urn:fr:pf-asf:foreign:of-seuil-non-versement-e1"), PENSION_PARTIELLE) { origin case_input; }
+        assert "ofn-04": manquement_debiteur(entity_ref("urn:fr:pf-asf:foreign:of-seuil-non-versement-e1"), @2021-03-01) { origin case_input; }
+        assert "ofn-05": mois_ouverture_asf(@2021-04-01) { origin case_input; }
+        assert "ofn-06": pension_recue(entity_ref("urn:fr:pf-asf:foreign:of-seuil-non-versement-e1"), 112.00 EUR) { origin case_input; }
+        assert "ofn-07": bmaf_retenu(entity_ref("urn:fr:pf-asf:foreign:of-seuil-non-versement"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(asf_differentiel_du(entity_ref("urn:fr:pf-asf:foreign:of-seuil-non-versement-e1"), 0.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

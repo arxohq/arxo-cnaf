@@ -1,0 +1,18 @@
+// Vehicle retained Bien-mismatch (PC-R06-01): valeur+date for auto-2, insurance 11 500 EUR for auto-1 only, no evidence for auto-2 - no retained value for auto-2 (R. 553-3-1 II 2° per-Bien linkage).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-valeur-retenue-bien-mismatch" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-retenue-mismatch-01": vehicule_bien_valeur(entity_ref("urn:fr:pf:case:retenue-mismatch"), entity_ref("urn:fr:pf:case:auto-2"), 12000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-retenue-mismatch-02": vehicule_bien_date(entity_ref("urn:fr:pf:case:retenue-mismatch"), entity_ref("urn:fr:pf:case:auto-2"), @2026-02-10) { origin case_input; }
+        assert "tdv-retenue-mismatch-03": vehicule_bien_preuve_assurance(entity_ref("urn:fr:pf:case:retenue-mismatch"), entity_ref("urn:fr:pf:case:auto-1"), 11500.00 EUR) { origin case_input; }
+        assert "tdv-retenue-mismatch-04": prestation_soumise_section(entity_ref("urn:fr:pf:case:retenue-mismatch")) { origin case_input; }
+    }
+    evaluate truth(vehicule_bien_valeur_retenue(entity_ref("urn:fr:pf:case:retenue-mismatch"), entity_ref("urn:fr:pf:case:auto-2"), 12000.00 EUR, 1.0, @2026-02-10));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

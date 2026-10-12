@@ -1,0 +1,17 @@
+// Not a two-earner couple: 5000 EUR stays below 13.6 % of the stated
+// annual ceiling (5440.00), so the status is absent (NEITHER).
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-conditions-non-biactif" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "cnb-01": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:cond-non-biactif"), 5000 EUR) { origin case_input; }
+        assert "cnb-02": pass_annuel(40000 EUR) { origin case_input; }
+    }
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:cond-non-biactif")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

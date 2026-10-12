@@ -1,0 +1,18 @@
+// Built mixed direct+fallback (PC-R05-03): one built with direct 5000 EUR, one built inapplicable with dwelling fallback 800 EUR; both apports sum (5800); complete inventory.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-batie-mixte" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tbm-01": batie_bien_valeur(entity_ref("urn:fr:pf:case:mixte"), entity_ref("urn:fr:pf:case:bien-direct"), 5000.00 EUR, 1.0) { origin case_input; }
+        assert "tbm-02": batie_bien_inapplicable(entity_ref("urn:fr:pf:case:mixte"), entity_ref("urn:fr:pf:case:bien-repli")) { origin case_input; }
+        assert "tbm-03": valeur_locative_batie_fallback_logement(entity_ref("urn:fr:pf:case:mixte"), 800.00 EUR, 1.0) { origin case_input; }
+        assert "tbm-04": prestation_soumise_section(entity_ref("urn:fr:pf:case:mixte")) { origin case_input; }
+        assert "tbm-05": inventaire_tdv_complet(entity_ref("urn:fr:pf:case:mixte")) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_train_vie(entity_ref("urn:fr:pf:case:mixte"), 5800.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

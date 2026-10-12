@@ -1,0 +1,32 @@
+// DOM plain ceiling, two children, two-earner couple: 20000 +
+// 0.25*20000*2 + 5000 = 35000. The biactif test reuses the metropolitan
+// R. 522-2 al. 3 reading: 6000 >= 13.6 % x 40000 = 5440.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-plafond-deux-enfants-biactif" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "dpd-01": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif"), 20000 EUR) { origin case_input; }
+        assert "dpd-01a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif"), 5000 EUR) { origin case_input; }
+        assert "dpd-01b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif"), 6000 EUR) { origin case_input; }
+        assert "dpd-01c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif"), 10000 EUR) { origin case_input; }
+        assert "dpd-01d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif"), 2500 EUR) { origin case_input; }
+        assert "dpd-01e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif"), 3000 EUR) { origin case_input; }
+        assert "dpd-02": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif"), 2) { origin case_input; }
+        assert "dpd-03": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif")) { origin case_input; }
+        assert "dpd-04": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif"), 6000 EUR) { origin case_input; }
+        assert "dpd-05": pass_annuel(40000 EUR) { origin case_input; }
+        assert "dpd-06": majoration_biactivite(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif"), 5000 EUR) { origin case_input; }
+    }
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_plafond(entity_ref("urn:fr:pf-cf:case:dom-plafond-deux-enfants-biactif"), 35000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

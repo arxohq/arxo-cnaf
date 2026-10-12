@@ -1,0 +1,17 @@
+// Claimant not bound by the L.262-28 obligations: the R.262-68
+// sanctions cannot touch them (R.262-68-7).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-suspension-non-tenu" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "suspnt-01": manquement(entity_ref("urn:fr:rsa:case:suspension-non-tenu"), NON_RESPECT_CONTRAT) { origin case_input; }
+        assert "suspnt-02": notification_10j(entity_ref("urn:fr:rsa:case:suspension-non-tenu")) { origin case_input; }
+    }
+    evaluate truth(sanction_suspension(entity_ref("urn:fr:rsa:case:suspension-non-tenu"), NON_RESPECT_CONTRAT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,18 @@
+// Proof-on-demand duty (D9 active): the fund requested the expense
+// proof, the sworn declaration stands for the concerned month — the
+// ProduirePiecesDepenses position is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-pieces-depenses-demande" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-dpdd-01": demande_pieces_organisme(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-dpdd")) { origin case_input; }
+        assert "ajpp-dpdd-02": declaration_depenses_transmise(entity_ref("urn:fr:pf-ajpp:case:parent-dpdd"), entity_ref("urn:fr:pf-ajpp:case:enfant-dpdd"), @2024-03-01) { origin case_input; }
+        assert "ajpp-dpdd-03": mois_concerne_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-dpdd"), @2024-03-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ProduirePiecesDepenses, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

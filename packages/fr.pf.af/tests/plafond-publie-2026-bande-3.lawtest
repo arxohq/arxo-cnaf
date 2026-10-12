@@ -1,0 +1,51 @@
+// D-81: опубликованные суммы 2026 — инструкция DSS/2B/2025/177 (фрагмент
+// DSS_2025_177_PLAFOND_AF): база 66 652 / 93 276 €, надбавка 6 664 €. Четыре
+// ребёнка: I = 93 308, II = 119 932 (строка «4 enfants ≤ 93 308 / ≤ 119 932»).
+// BMAF 478,16 € (01.04.2026, фрагмент DSS_2026_46_BMAF). Ресурсы 119 944 >
+// 119 932 — полоса 3: 0,08 × 478,16 + 0,1025 × 478,16 × 2 = 136,2756; дополнение
+// (119 932 + 12 × 136,2756 − 119 944) / 12 = 135,2756; итого 271,5512 → 271,55.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-plafond-publie-2026-bande-3" {
+    given {
+        context { decision_time @2026-05-15T12:00:00Z; knowledge_time @2026-05-15T12:00:00Z; legal_time @2026-05-15; timezone "Europe/Paris"; }
+        assert "pp26-01": territoire(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), METROPOLE) { origin case_input; }
+        assert "pp26-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 4) { origin case_input; }
+        assert "pp26-03": ressources_menage(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 119944 EUR) { origin case_input; }
+        assert "pp26-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 66652 EUR) { origin case_input; }
+        assert "pp26-05": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 93276 EUR) { origin case_input; }
+        assert "pp26-06": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 6664 EUR) { origin case_input; }
+        assert "pp26-07": bmaf_retenu(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 478.16 EUR) { origin case_input; }
+        assert "pp26-08": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 0) { origin case_input; }
+        assert "pp26-09": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 0) { origin case_input; }
+        assert "pp26-10": forfait_total_menage(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 0 EUR) { origin case_input; }
+        assert "pp26-11": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 0) { origin case_input; }
+        assert "pp26-12": foyer_du_cas(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3")) { origin case_input; }
+    }
+    evaluate truth(plafond1_applicable(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 93308 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(plafond2_applicable(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 119932 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), BANDE_3));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 136.2756 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(complement_degressif(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 135.2756 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:plafond-publie-2026-bande-3"), 271.55 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

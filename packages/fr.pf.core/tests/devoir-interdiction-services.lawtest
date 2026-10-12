@@ -1,0 +1,19 @@
+// Paid intermediary prohibition: convicted intermediary and an allocataire - offering paid services is prohibited (L. 554-2).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-interdiction-services" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-interdiction-services-01": intermediaire_convaincu(entity_ref("urn:fr:pf:case:intermediaire")) { origin case_input; }
+        assert "devoir-interdiction-services-02": parent_charge(entity_ref("urn:fr:pf:case:demarche"), entity_ref("urn:fr:pf:case:enfant-demarche")) { origin case_input; }
+        assert "devoir-interdiction-services-03": charge_effective_permanente(entity_ref("urn:fr:pf:case:demarche"), entity_ref("urn:fr:pf:case:enfant-demarche")) { origin adjudicated; }
+        assert "devoir-interdiction-services-04": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-demarche")) { origin case_input; }
+        assert "devoir-interdiction-services-05": reside_france_stable(entity_ref("urn:fr:pf:case:demarche")) { origin case_input; }
+        assert "devoir-interdiction-services-06": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-demarche")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(OffrirServicesRemuneres, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

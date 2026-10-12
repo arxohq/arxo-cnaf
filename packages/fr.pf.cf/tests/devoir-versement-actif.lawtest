@@ -1,0 +1,37 @@
+// Active fund duty, base track: 16.66 EUR due, debtor fund recorded.
+// Position PayerCfDu is ACTIVE.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-devoir-versement-actif" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "dva-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), entity_ref("urn:fr:pf-cf:case:devoir-versement-actif-e1")) { origin case_input; }
+        assert "dva-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), entity_ref("urn:fr:pf-cf:case:devoir-versement-actif-e2")) { origin case_input; }
+        assert "dva-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), entity_ref("urn:fr:pf-cf:case:devoir-versement-actif-e3")) { origin case_input; }
+        assert "dva-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif-e1")) { origin case_input; }
+        assert "dva-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif-e2")) { origin case_input; }
+        assert "dva-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif-e3")) { origin case_input; }
+        assert "dva-07": date_naissance(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif-e1"), @2016-03-15) { origin case_input; }
+        assert "dva-08": date_naissance(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif-e2"), @2014-03-15) { origin case_input; }
+        assert "dva-09": date_naissance(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif-e3"), @2012-03-15) { origin case_input; }
+        assert "dva-10": mois_droit(@2021-06-01) { origin case_input; }
+        assert "dva-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), 3) { origin case_input; }
+        assert "dva-12": ressources_menage(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), 30000 EUR) { origin case_input; }
+        assert "dva-13": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), 20000 EUR) { origin case_input; }
+        assert "dva-13a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), 5000 EUR) { origin case_input; }
+        assert "dva-13b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), 6000 EUR) { origin case_input; }
+        assert "dva-13c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), 10000 EUR) { origin case_input; }
+        assert "dva-13d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), 2500 EUR) { origin case_input; }
+        assert "dva-13e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), 3000 EUR) { origin case_input; }
+        assert "dva-14": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif")) { origin case_input; }
+        assert "dva-15": cadre_cf_remplie(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif")) { origin case_input; }
+        assert "dva-16": bmaf_retenu(entity_ref("urn:fr:pf-cf:case:devoir-versement-actif"), 40.00 EUR) { origin case_input; }
+        assert "dva-17": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-cf:org:caisse"), entity_ref("urn:fr:pf-cf:case:devoir-versement-actif")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PayerCfDu, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,15 @@
+// Deeming stops in 2023: revalorised figures unpinned - no deemed income (D. 553-1 III, B-VERS-D5531-REVALO).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-repute-2023" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "r-inc": ressources_inconnues(entity_ref("urn:fr:pv:case:inconnu23")) { origin case_input; }
+        assert "r-dec": declaration_montant_revenus_non_recue(entity_ref("urn:fr:pv:case:inconnu23")) { origin case_input; }
+    }
+    evaluate truth(revenu_pondere(entity_ref("urn:fr:pv:case:inconnu23"), 1096.00 EUR));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

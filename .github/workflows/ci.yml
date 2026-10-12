@@ -1,0 +1,65 @@
+# Generated file: it is rewritten whenever this set is re-published, so edits
+# here do not survive. Packages live in packages/<name>, the bootstrap is
+# tools/toolchain.py and the tool pin is toolchain.lock.json.
+# The private toolchain release is mirrored into this repository and pinned.
+name: packages
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  build:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - fr.css.aah
+          - fr.css.pass
+          - fr.css.prime_activite
+          - fr.css.revalorisation
+          - fr.minima.ressources
+          - fr.pf.paje
+          - fr.tax.income_for_apl
+          - fr.travail.smic
+          - fr.apl
+          - fr.casf.rsa
+          - fr.pf.core
+          - fr.apl.versement
+          - fr.css.ajpa
+          - fr.pf.aeeh
+          - fr.pf.af
+          - fr.pf.ajpp
+          - fr.pf.ars
+          - fr.pf.asf
+          - fr.pf.cf
+          - fr.pf.cmg
+          - fr.prestations.versement
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install package dependencies
+        run: python3 -m pip install --disable-pip-version-check jsonschema fastjsonschema referencing
+      - name: Restore pinned sources that are not redistributed (WITHHELD.json)
+        run: |
+          sudo apt-get install -y --no-install-recommends poppler-utils >/dev/null
+          python3 tools/fetch_withheld.py
+      - name: Fetch the pinned toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/toolchain.py download --lock toolchain.lock.json --out "$RUNNER_TEMP/law-tools-${{ github.run_id }}-${{ github.run_attempt }}"
+      - name: Build the package; run its scenarios, replay and rebuild
+        run: |
+          tools="$RUNNER_TEMP/law-tools-${{ github.run_id }}-${{ github.run_attempt }}"
+          python3 "$tools/package.py" "packages/${{ matrix.package }}" --lawc "$tools/law-cli" --offline --out "$RUNNER_TEMP/release-${{ github.run_id }}-${{ github.run_attempt }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.package }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/release-${{ github.run_id }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          if-no-files-found: error

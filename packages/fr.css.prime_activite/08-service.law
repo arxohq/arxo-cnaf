@@ -1,0 +1,1134 @@
+// Service of the bonus: non-payment floor (D. 846-2), request
+// (R. 846-1/2), payment rhythm (R. 846-3), payee designation
+// (R. 846-4), declaration duties (R. 846-5), MSA competence
+// (R. 846-6), hospital reduction (R. 846-7), incarceration
+// suspension (R. 846-8), financial centralisation (R. 846-9).
+//
+// «Le montant en dessous duquel la prime n'est pas versée est fixé
+// à 15 euros» (D. 846-2): built 15-euro floor; convergence with the
+// retained minimum_paiement of 03-montant is deferred (run phase).
+// «La demande ... est adressée au moyen du téléservice ... ou au
+// moyen d'un formulaire» (R. 846-1): channel validity; the RSA
+// activity declaration of an RSA payee counts as a request
+// (statutory fiction). Convergence with the retained
+// demande_deposee of 02-droit is deferred.
+// «La prime est due à compter du premier jour du mois civil au
+// cours duquel la demande a été déposée» (R. 846-2): month-start
+// date convention.
+// «La prime est versée mensuellement à terme échu» (R. 846-3):
+// literal rhythm head on the open right; merging into the D1 duty
+// rhythm is deferred to the reviewer.
+// «l'allocataire est celui qui est déjà allocataire ... A défaut,
+// l'allocataire est désigné d'un commun accord ... ne peut être
+// remis en cause ... qu'au bout d'un délai d'un an, sauf changement
+// de situation ... A défaut, l'allocataire est celui qui a déposé
+// la demande» (R. 846-4): cascade PF/RSA → joint designation →
+// filer, with the one-year lock and the situation-change exception;
+// RoleFoyer is closed (two values). Fallback branches need positive
+// no-payee/no-designation status (PA-R4-07); absence alone never
+// selects them.
+// «Le bénéficiaire est tenu de déclarer ... les informations»,
+// «Il est tenu de déclarer tout changement» (R. 846-5): duties D4a
+// (information) and D4b (changes), bearer the payee.
+// «relèvent de la MSA ... Toutefois ... sauf si les prestations
+// familiales sont versées par la CAF» (R. 846-6): MSA competence
+// derivation; convergence with organisme_serviteur deferred.
+// «Si un bénéficiaire qui n'a ni conjoint, ni partenaire lié par un
+// pacte civil de solidarité, ni concubin, ni personne à charge est
+// hospitalisé ... en bénéficiant d'une prise en charge par l'assurance
+// maladie, le montant ... est réduit de 50 % ... n'est pas applicable
+// aux personnes en état de grossesse» + «n'est opérée que pendant les
+// périodes ... effectivement accueilli ... à l'exclusion des périodes
+// de suspension de la prise en charge» + «repris au taux normal, sans
+// nouvelle demande, à compter du réexamen périodique suivant la fin»
+// (R. 846-7): halved prime from the second periodic revision for the
+// isolated beneficiary during the effective stay with active coverage,
+// pregnancy excepted, resumption at the next periodic review after
+// discharge (PA-R5-01: household gate + period coverage + next review).
+// «Le droit ... de la personne incarcérée qui n'a ni conjoint ... ni
+// personne à charge, est suspendu à partir de la deuxième révision» +
+// «Lorsque la personne incarcérée a un conjoint ... il est procédé au
+// terme du délai ... à un examen des droits ... le bénéficiaire n'étant
+// plus alors compté» + «repris à compter du réexamen périodique ...
+// suivant la fin» + «ne sont pas applicables aux personnes qui,
+// conservant un enfant à charge, ont droit à la majoration L. 842-7»
+// (R. 846-8): no-family suspension vs separate family examination at
+// the end of the first-paragraph period, both excepted for the
+// isolated-major with child, resumption at the next periodic review
+// after release (PA-R5-02: split branches + household + next review;
+// PA-R6-01: the family branch is keyed on the exact statutory union
+// «conjoint, partenaire PACS, concubin ou personne à charge»
+// (al. 2); generic family co-residence alone leaves both branches
+// underdetermined and never blocks the no-family suspension).
+// «La CNAF et la CCMSA centralisent les opérations financières et
+// comptables» (R. 846-9): literal head (no counterparty, no
+// positions needed).
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_D846_2_ED2021_01_01,
+    CSS_D846_2_ED2021_03_25,
+    CSS_D846_2_ED2021_06_01,
+    CSS_D846_2_ED2022_03_21,
+    CSS_D846_2_ED2023_12_31,
+    CSS_D846_2_ED2024_01_01,
+    CSS_D846_2_ED2024_07_01,
+    CSS_D846_2_ED2025_01_01,
+    CSS_D846_2_ED2025_02_28,
+    CSS_D846_2_ED2025_03_31,
+    CSS_D846_2_ED2026_04_01,
+    CSS_D846_2_ED2026_06_27,
+    CSS_R846_1_ED2021_01_01,
+    CSS_R846_1_ED2021_03_25,
+    CSS_R846_1_ED2021_06_01,
+    CSS_R846_1_ED2022_03_21,
+    CSS_R846_1_ED2023_12_31,
+    CSS_R846_1_ED2024_01_01,
+    CSS_R846_1_ED2024_07_01,
+    CSS_R846_1_ED2025_01_01,
+    CSS_R846_1_ED2025_02_28,
+    CSS_R846_1_ED2025_03_31,
+    CSS_R846_1_ED2026_04_01,
+    CSS_R846_1_ED2026_06_27,
+    CSS_R846_2_ED2021_01_01,
+    CSS_R846_2_ED2021_03_25,
+    CSS_R846_2_ED2021_06_01,
+    CSS_R846_2_ED2022_03_21,
+    CSS_R846_2_ED2023_12_31,
+    CSS_R846_2_ED2024_01_01,
+    CSS_R846_2_ED2024_07_01,
+    CSS_R846_2_ED2025_01_01,
+    CSS_R846_2_ED2025_02_28,
+    CSS_R846_2_ED2025_03_31,
+    CSS_R846_2_ED2026_04_01,
+    CSS_R846_2_ED2026_06_27,
+    CSS_R846_3_ED2021_01_01,
+    CSS_R846_3_ED2021_03_25,
+    CSS_R846_3_ED2021_06_01,
+    CSS_R846_3_ED2022_03_21,
+    CSS_R846_3_ED2023_12_31,
+    CSS_R846_3_ED2024_01_01,
+    CSS_R846_3_ED2024_07_01,
+    CSS_R846_3_ED2025_01_01,
+    CSS_R846_3_ED2025_02_28,
+    CSS_R846_3_ED2025_03_31,
+    CSS_R846_3_ED2026_04_01,
+    CSS_R846_3_ED2026_06_27,
+    CSS_R846_4_ED2021_01_01,
+    CSS_R846_4_ED2021_03_25,
+    CSS_R846_4_ED2021_06_01,
+    CSS_R846_4_ED2022_03_21,
+    CSS_R846_4_ED2023_12_31,
+    CSS_R846_4_ED2024_01_01,
+    CSS_R846_4_ED2024_07_01,
+    CSS_R846_4_ED2025_01_01,
+    CSS_R846_4_ED2025_02_28,
+    CSS_R846_4_ED2025_03_31,
+    CSS_R846_4_ED2026_04_01,
+    CSS_R846_4_ED2026_06_27,
+    CSS_R846_5_ED2021_01_01,
+    CSS_R846_5_ED2021_03_25,
+    CSS_R846_5_ED2021_06_01,
+    CSS_R846_5_ED2022_03_21,
+    CSS_R846_5_ED2023_12_31,
+    CSS_R846_5_ED2024_01_01,
+    CSS_R846_5_ED2024_07_01,
+    CSS_R846_5_ED2025_01_01,
+    CSS_R846_5_ED2025_02_28,
+    CSS_R846_5_ED2025_03_31,
+    CSS_R846_5_ED2026_04_01,
+    CSS_R846_5_ED2026_06_27,
+    CSS_R846_6_ED2021_01_01,
+    CSS_R846_6_ED2021_03_25,
+    CSS_R846_6_ED2021_06_01,
+    CSS_R846_6_ED2022_03_21,
+    CSS_R846_6_ED2023_12_31,
+    CSS_R846_6_ED2024_01_01,
+    CSS_R846_6_ED2024_07_01,
+    CSS_R846_6_ED2025_01_01,
+    CSS_R846_6_ED2025_02_28,
+    CSS_R846_6_ED2025_03_31,
+    CSS_R846_6_ED2026_04_01,
+    CSS_R846_6_ED2026_06_27,
+    CSS_R846_7_ED2021_01_01,
+    CSS_R846_7_ED2021_03_25,
+    CSS_R846_7_ED2021_06_01,
+    CSS_R846_7_ED2022_03_21,
+    CSS_R846_7_ED2023_12_31,
+    CSS_R846_7_ED2024_01_01,
+    CSS_R846_7_ED2024_07_01,
+    CSS_R846_7_ED2025_01_01,
+    CSS_R846_7_ED2025_02_28,
+    CSS_R846_7_ED2025_03_31,
+    CSS_R846_7_ED2026_04_01,
+    CSS_R846_7_ED2026_06_27,
+    CSS_R846_8_ED2021_01_01,
+    CSS_R846_8_ED2021_03_25,
+    CSS_R846_8_ED2021_06_01,
+    CSS_R846_8_ED2022_03_21,
+    CSS_R846_8_ED2023_12_31,
+    CSS_R846_8_ED2024_01_01,
+    CSS_R846_8_ED2024_07_01,
+    CSS_R846_8_ED2025_01_01,
+    CSS_R846_8_ED2025_02_28,
+    CSS_R846_8_ED2025_03_31,
+    CSS_R846_8_ED2026_04_01,
+    CSS_R846_8_ED2026_06_27,
+    CSS_R846_9_ED2021_01_01,
+    CSS_R846_9_ED2021_03_25,
+    CSS_R846_9_ED2021_06_01,
+    CSS_R846_9_ED2022_03_21,
+    CSS_R846_9_ED2023_12_31,
+    CSS_R846_9_ED2024_01_01,
+    CSS_R846_9_ED2024_07_01,
+    CSS_R846_9_ED2025_01_01,
+    CSS_R846_9_ED2025_02_28,
+    CSS_R846_9_ED2025_03_31,
+    CSS_R846_9_ED2026_04_01,
+    CSS_R846_9_ED2026_06_27,
+    Demandeur,
+    Organisme,
+    RoleFoyer,
+    droit_ouvert,
+    organisme_serviteur,
+    prime_due_trimestre,
+};
+
+pub relation seuil_non_versement(seuil: Money) kind institutional {
+    key();
+    label fr official "montant en dessous duquel la prime n'est pas versée: 15 euros (D. 846-2)";
+    label en unofficial "amount below which the bonus is not paid: 15 euros (D. 846-2)";
+}
+
+@source(
+    CSS_D846_2_ED2021_01_01,
+    CSS_D846_2_ED2021_03_25,
+    CSS_D846_2_ED2021_06_01,
+    CSS_D846_2_ED2022_03_21,
+    CSS_D846_2_ED2023_12_31,
+    CSS_D846_2_ED2024_01_01,
+    CSS_D846_2_ED2024_07_01,
+    CSS_D846_2_ED2025_01_01,
+    CSS_D846_2_ED2025_02_28,
+    CSS_D846_2_ED2025_03_31,
+    CSS_D846_2_ED2026_04_01,
+    CSS_D846_2_ED2026_06_27)
+rule Seuil15() strict {
+    effective [@2021-01-01, infinity);
+    label fr official "non-versement sous 15 euros (D. 846-2)";
+    label en unofficial "no payment under 15 euros (D. 846-2)";
+    when true;
+    then seuil_non_versement(15.00 EUR);
+}
+
+pub relation demande_teleservice(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "demande par le téléservice (R. 846-1; fait retenu)";
+    label en unofficial "request via the online service (R. 846-1; retained fact)";
+}
+
+pub relation demande_formulaire(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "demande par formulaire R. 846-1 (R. 846-1; fait retenu)";
+    label en unofficial "request on the R. 846-1 form (R. 846-1; retained fact)";
+}
+
+pub relation declaration_activite_rsa(d: Demandeur, date: Date) kind empirical {
+    key(d);
+    label fr official "déclaration d'activité du bénéficiaire du RSA, valant demande (R. 846-1; fait retenu)";
+    label en unofficial "RSA payee activity declaration counting as a request (R. 846-1; retained fact)";
+}
+
+pub relation demande_valide(d: Demandeur, date: Date) kind institutional {
+    key(d);
+    label fr official "demande valablement formée (R. 846-1)";
+    label en unofficial "validly filed request (R. 846-1)";
+}
+
+@source(
+    CSS_R846_1_ED2021_01_01,
+    CSS_R846_1_ED2021_03_25,
+    CSS_R846_1_ED2021_06_01,
+    CSS_R846_1_ED2022_03_21,
+    CSS_R846_1_ED2023_12_31,
+    CSS_R846_1_ED2024_01_01,
+    CSS_R846_1_ED2024_07_01,
+    CSS_R846_1_ED2025_01_01,
+    CSS_R846_1_ED2025_02_28,
+    CSS_R846_1_ED2025_03_31,
+    CSS_R846_1_ED2026_04_01,
+    CSS_R846_1_ED2026_06_27)
+rule DemandeTeleservice(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande par téléservice (R. 846-1)";
+    label en unofficial "online-service request (R. 846-1)";
+    when demande_teleservice(d, date);
+    then demande_valide(d, date);
+}
+
+@source(
+    CSS_R846_1_ED2021_01_01,
+    CSS_R846_1_ED2021_03_25,
+    CSS_R846_1_ED2021_06_01,
+    CSS_R846_1_ED2022_03_21,
+    CSS_R846_1_ED2023_12_31,
+    CSS_R846_1_ED2024_01_01,
+    CSS_R846_1_ED2024_07_01,
+    CSS_R846_1_ED2025_01_01,
+    CSS_R846_1_ED2025_02_28,
+    CSS_R846_1_ED2025_03_31,
+    CSS_R846_1_ED2026_04_01,
+    CSS_R846_1_ED2026_06_27)
+rule DemandeFormulaire(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "demande par formulaire (R. 846-1)";
+    label en unofficial "form request (R. 846-1)";
+    when demande_formulaire(d, date);
+    then demande_valide(d, date);
+}
+
+@source(
+    CSS_R846_1_ED2021_01_01,
+    CSS_R846_1_ED2021_03_25,
+    CSS_R846_1_ED2021_06_01,
+    CSS_R846_1_ED2022_03_21,
+    CSS_R846_1_ED2023_12_31,
+    CSS_R846_1_ED2024_01_01,
+    CSS_R846_1_ED2024_07_01,
+    CSS_R846_1_ED2025_01_01,
+    CSS_R846_1_ED2025_02_28,
+    CSS_R846_1_ED2025_03_31,
+    CSS_R846_1_ED2026_04_01,
+    CSS_R846_1_ED2026_06_27)
+rule DemandeFictionRSA(d: Demandeur, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "déclaration d'activité RSA valant demande (R. 846-1)";
+    label en unofficial "RSA activity declaration counting as a request (R. 846-1)";
+    when declaration_activite_rsa(d, date);
+    then demande_valide(d, date);
+}
+
+pub relation demande_mois(d: Demandeur, mois: Date) kind empirical {
+    key(d);
+    label fr official "mois civil du dépôt, au premier jour (R. 846-2; fait retenu)";
+    label en unofficial "civil month of filing, at the first day (R. 846-2; retained fact)";
+}
+
+pub relation droit_du_premier_jour(d: Demandeur, mois: Date) kind institutional {
+    key(d);
+    label fr official "prime due à compter du premier jour du mois du dépôt (R. 846-2)";
+    label en unofficial "bonus due from the first day of the filing month (R. 846-2)";
+}
+
+@source(
+    CSS_R846_2_ED2021_01_01,
+    CSS_R846_2_ED2021_03_25,
+    CSS_R846_2_ED2021_06_01,
+    CSS_R846_2_ED2022_03_21,
+    CSS_R846_2_ED2023_12_31,
+    CSS_R846_2_ED2024_01_01,
+    CSS_R846_2_ED2024_07_01,
+    CSS_R846_2_ED2025_01_01,
+    CSS_R846_2_ED2025_02_28,
+    CSS_R846_2_ED2025_03_31,
+    CSS_R846_2_ED2026_04_01,
+    CSS_R846_2_ED2026_06_27)
+rule DroitPremierJour(d: Demandeur, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "due à compter du premier jour du mois du dépôt (R. 846-2)";
+    label en unofficial "due from the first day of the filing month (R. 846-2)";
+    when demande_mois(d, mois);
+    then droit_du_premier_jour(d, mois);
+}
+
+pub relation versement_mensuel_terme_echu(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "versement mensuel à terme échu (R. 846-3)";
+    label en unofficial "monthly payment in arrears (R. 846-3)";
+}
+
+@source(
+    CSS_R846_3_ED2021_01_01,
+    CSS_R846_3_ED2021_03_25,
+    CSS_R846_3_ED2021_06_01,
+    CSS_R846_3_ED2022_03_21,
+    CSS_R846_3_ED2023_12_31,
+    CSS_R846_3_ED2024_01_01,
+    CSS_R846_3_ED2024_07_01,
+    CSS_R846_3_ED2025_01_01,
+    CSS_R846_3_ED2025_02_28,
+    CSS_R846_3_ED2025_03_31,
+    CSS_R846_3_ED2026_04_01,
+    CSS_R846_3_ED2026_06_27)
+rule RythmeMensuel(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "droit ouvert: versement mensuel à terme échu (R. 846-3)";
+    label en unofficial "open right: monthly payment in arrears (R. 846-3)";
+    when droit_ouvert(d);
+    then versement_mensuel_terme_echu(d);
+}
+
+pub relation pf_rsa_allocataire_role(d: Demandeur, rf: RoleFoyer) kind empirical {
+    key(d);
+    label fr official "déjà allocataire PF/RSA au rôle indiqué (R. 846-4; fait retenu)";
+    label en unofficial "already a PF/RSA payee in the stated role (R. 846-4; retained fact)";
+}
+
+pub relation designation_conjointe(d: Demandeur, rf: RoleFoyer) kind empirical {
+    key(d);
+    label fr official "allocataire désigné d'un commun accord (R. 846-4; fait retenu)";
+    label en unofficial "payee designated by mutual agreement (R. 846-4; retained fact)";
+}
+
+pub relation modification_designation(d: Demandeur, rf: RoleFoyer, date_prec: Date, date_dem: Date) kind empirical {
+    key(d);
+    label fr official "remise en cause: désignation précédente et demande (R. 846-4; fait retenu)";
+    label en unofficial "reopening: previous designation and request (R. 846-4; retained fact)";
+}
+
+pub relation modification_changement_situation(d: Demandeur, rf: RoleFoyer) kind empirical {
+    key(d);
+    label fr official "remise en cause sur changement de situation (R. 846-4; fait retenu)";
+    label en unofficial "reopening on a change of situation (R. 846-4; retained fact)";
+}
+
+pub relation changement_situation_foyer(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "changement de situation du foyer (R. 846-4; fait retenu)";
+    label en unofficial "change of the household situation (R. 846-4; retained fact)";
+}
+
+pub relation allocataire_designe(d: Demandeur, rf: RoleFoyer) kind institutional {
+    key(d);
+    label fr official "allocataire de la prime (R. 846-4)";
+    label en unofficial "bonus payee (R. 846-4)";
+}
+
+pub relation aucun_allocataire_pf_rsa(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "aucun membre du foyer déjà allocataire au titre des PF ou du RSA (R. 846-4; fait retenu)";
+    label en unofficial "no household member already a PF/RSA payee (R. 846-4; retained fact)";
+}
+
+pub relation aucune_designation_conjointe(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "droit d'option non exercé, aucune désignation d'un commun accord (R. 846-4; fait retenu)";
+    label en unofficial "option right not exercised, no mutual designation (R. 846-4; retained fact)";
+}
+
+@source(
+    CSS_R846_4_ED2021_01_01,
+    CSS_R846_4_ED2021_03_25,
+    CSS_R846_4_ED2021_06_01,
+    CSS_R846_4_ED2022_03_21,
+    CSS_R846_4_ED2023_12_31,
+    CSS_R846_4_ED2024_01_01,
+    CSS_R846_4_ED2024_07_01,
+    CSS_R846_4_ED2025_01_01,
+    CSS_R846_4_ED2025_02_28,
+    CSS_R846_4_ED2025_03_31,
+    CSS_R846_4_ED2026_04_01,
+    CSS_R846_4_ED2026_06_27)
+rule AllocatairePFRSA(d: Demandeur, rf: RoleFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "déjà allocataire PF/RSA: même allocataire (R. 846-4)";
+    label en unofficial "already a PF/RSA payee: same payee (R. 846-4)";
+    when pf_rsa_allocataire_role(d, rf);
+    then allocataire_designe(d, rf);
+}
+
+@source(
+    CSS_R846_4_ED2021_01_01,
+    CSS_R846_4_ED2021_03_25,
+    CSS_R846_4_ED2021_06_01,
+    CSS_R846_4_ED2022_03_21,
+    CSS_R846_4_ED2023_12_31,
+    CSS_R846_4_ED2024_01_01,
+    CSS_R846_4_ED2024_07_01,
+    CSS_R846_4_ED2025_01_01,
+    CSS_R846_4_ED2025_02_28,
+    CSS_R846_4_ED2025_03_31,
+    CSS_R846_4_ED2026_04_01,
+    CSS_R846_4_ED2026_06_27)
+rule DesignationSansPFRSA(d: Demandeur, rf: RoleFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "sans PF/RSA: désignation commune (R. 846-4)";
+    label en unofficial "no PF/RSA: mutual designation (R. 846-4)";
+    when designation_conjointe(d, rf)
+        and aucun_allocataire_pf_rsa(d)
+        and not_known(pf_rsa_allocataire_role(d, BENEFICIAIRE))
+        and not_known(pf_rsa_allocataire_role(d, CONJOINT));
+    then allocataire_designe(d, rf);
+}
+
+@source(
+    CSS_R846_4_ED2021_01_01,
+    CSS_R846_4_ED2021_03_25,
+    CSS_R846_4_ED2021_06_01,
+    CSS_R846_4_ED2022_03_21,
+    CSS_R846_4_ED2023_12_31,
+    CSS_R846_4_ED2024_01_01,
+    CSS_R846_4_ED2024_07_01,
+    CSS_R846_4_ED2025_01_01,
+    CSS_R846_4_ED2025_02_28,
+    CSS_R846_4_ED2025_03_31,
+    CSS_R846_4_ED2026_04_01,
+    CSS_R846_4_ED2026_06_27)
+rule DeposantDefaut(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "à défaut: le déposant de la demande (R. 846-4)";
+    label en unofficial "otherwise: the filer (R. 846-4)";
+    when aucun_allocataire_pf_rsa(d)
+        and not_known(pf_rsa_allocataire_role(d, BENEFICIAIRE))
+        and not_known(pf_rsa_allocataire_role(d, CONJOINT))
+        and aucune_designation_conjointe(d)
+        and not_known(designation_conjointe(d, BENEFICIAIRE))
+        and not_known(designation_conjointe(d, CONJOINT));
+    then allocataire_designe(d, BENEFICIAIRE);
+}
+
+@source(
+    CSS_R846_4_ED2021_01_01,
+    CSS_R846_4_ED2021_03_25,
+    CSS_R846_4_ED2021_06_01,
+    CSS_R846_4_ED2022_03_21,
+    CSS_R846_4_ED2023_12_31,
+    CSS_R846_4_ED2024_01_01,
+    CSS_R846_4_ED2024_07_01,
+    CSS_R846_4_ED2025_01_01,
+    CSS_R846_4_ED2025_02_28,
+    CSS_R846_4_ED2025_03_31,
+    CSS_R846_4_ED2026_04_01,
+    CSS_R846_4_ED2026_06_27)
+rule ModificationDelai(d: Demandeur, rf: RoleFoyer, dp: Date, dm: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "remise en cause au bout d'un an (R. 846-4)";
+    label en unofficial "reopening after one year (R. 846-4)";
+    when modification_designation(d, rf, dp, dm)
+        and dm >= add_calendar_period(dp, 12 calendar_month)
+        and aucun_allocataire_pf_rsa(d)
+        and not_known(pf_rsa_allocataire_role(d, BENEFICIAIRE))
+        and not_known(pf_rsa_allocataire_role(d, CONJOINT));
+    then allocataire_designe(d, rf);
+}
+
+@source(
+    CSS_R846_4_ED2021_01_01,
+    CSS_R846_4_ED2021_03_25,
+    CSS_R846_4_ED2021_06_01,
+    CSS_R846_4_ED2022_03_21,
+    CSS_R846_4_ED2023_12_31,
+    CSS_R846_4_ED2024_01_01,
+    CSS_R846_4_ED2024_07_01,
+    CSS_R846_4_ED2025_01_01,
+    CSS_R846_4_ED2025_02_28,
+    CSS_R846_4_ED2025_03_31,
+    CSS_R846_4_ED2026_04_01,
+    CSS_R846_4_ED2026_06_27)
+rule ModificationChangement(d: Demandeur, rf: RoleFoyer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "remise en cause sur changement de situation (R. 846-4)";
+    label en unofficial "reopening on a change of situation (R. 846-4)";
+    when modification_changement_situation(d, rf) and changement_situation_foyer(d)
+        and aucun_allocataire_pf_rsa(d)
+        and not_known(pf_rsa_allocataire_role(d, BENEFICIAIRE))
+        and not_known(pf_rsa_allocataire_role(d, CONJOINT));
+    then allocataire_designe(d, rf);
+}
+
+pub relation informations_declarees(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "informations relatives au foyer déclarées (R. 846-5; fait retenu)";
+    label en unofficial "household information declared (R. 846-5; retained fact)";
+}
+
+pub relation changements_declares(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "changements de situation déclarés (R. 846-5; fait retenu)";
+    label en unofficial "situation changes declared (R. 846-5; retained fact)";
+}
+
+@source(
+    CSS_R846_5_ED2021_01_01,
+    CSS_R846_5_ED2021_03_25,
+    CSS_R846_5_ED2021_06_01,
+    CSS_R846_5_ED2022_03_21,
+    CSS_R846_5_ED2023_12_31,
+    CSS_R846_5_ED2024_01_01,
+    CSS_R846_5_ED2024_07_01,
+    CSS_R846_5_ED2025_01_01,
+    CSS_R846_5_ED2025_02_28,
+    CSS_R846_5_ED2025_03_31,
+    CSS_R846_5_ED2026_04_01,
+    CSS_R846_5_ED2026_06_27)
+rule DevoirDeclarerInformations(d: Demandeur, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "D4a: le bénéficiaire déclare les informations (R. 846-5)";
+    label en unofficial "D4a: the payee declares the information (R. 846-5)";
+    when droit_ouvert(d) and organisme_serviteur(o, d);
+    then duty DeclarerInformations {
+        bearer d;
+        beneficiary o;
+        maintain informations_declarees(d) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R846_5_ED2021_01_01,
+    CSS_R846_5_ED2021_03_25,
+    CSS_R846_5_ED2021_06_01,
+    CSS_R846_5_ED2022_03_21,
+    CSS_R846_5_ED2023_12_31,
+    CSS_R846_5_ED2024_01_01,
+    CSS_R846_5_ED2024_07_01,
+    CSS_R846_5_ED2025_01_01,
+    CSS_R846_5_ED2025_02_28,
+    CSS_R846_5_ED2025_03_31,
+    CSS_R846_5_ED2026_04_01,
+    CSS_R846_5_ED2026_06_27)
+rule DevoirDeclarerChangements(d: Demandeur, o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "D4b: le bénéficiaire déclare les changements (R. 846-5)";
+    label en unofficial "D4b: the payee declares changes (R. 846-5)";
+    when droit_ouvert(d) and organisme_serviteur(o, d);
+    then duty DeclarerChangements {
+        bearer d;
+        beneficiary o;
+        maintain changements_declares(d) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation regime_agricole_non_salarie(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "régime agricole non salarié (R. 846-6; fait retenu)";
+    label en unofficial "non-salaried farm scheme (R. 846-6; retained fact)";
+}
+
+pub relation regime_agricole_salarie_ou_rural(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "salarié agricole, exploitant ou artisan rural (R. 846-6; fait retenu)";
+    label en unofficial "farm employee, operator or rural craft worker (R. 846-6; retained fact)";
+}
+
+pub relation pf_versee_par_caf(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "prestations familiales versées par la CAF (R. 846-6; fait retenu)";
+    label en unofficial "family benefits paid by the CAF (R. 846-6; retained fact)";
+}
+
+pub relation organisme_competent_msa(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "service par la MSA (R. 846-6)";
+    label en unofficial "served by the MSA (R. 846-6)";
+}
+
+pub relation pf_non_versee_par_caf(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "aucunes prestations familiales versées au foyer par une caisse d'allocations familiales (R. 846-6; fait retenu)";
+    label en unofficial "no family benefits paid to the household by a CAF (R. 846-6; retained fact)";
+}
+
+@source(
+    CSS_R846_6_ED2021_01_01,
+    CSS_R846_6_ED2021_03_25,
+    CSS_R846_6_ED2021_06_01,
+    CSS_R846_6_ED2022_03_21,
+    CSS_R846_6_ED2023_12_31,
+    CSS_R846_6_ED2024_01_01,
+    CSS_R846_6_ED2024_07_01,
+    CSS_R846_6_ED2025_01_01,
+    CSS_R846_6_ED2025_02_28,
+    CSS_R846_6_ED2025_03_31,
+    CSS_R846_6_ED2026_04_01,
+    CSS_R846_6_ED2026_06_27)
+rule MSANonSalarie(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "non-salarié agricole: MSA (R. 846-6)";
+    label en unofficial "non-salaried farm worker: MSA (R. 846-6)";
+    when regime_agricole_non_salarie(d);
+    then organisme_competent_msa(d);
+}
+
+@source(
+    CSS_R846_6_ED2021_01_01,
+    CSS_R846_6_ED2021_03_25,
+    CSS_R846_6_ED2021_06_01,
+    CSS_R846_6_ED2022_03_21,
+    CSS_R846_6_ED2023_12_31,
+    CSS_R846_6_ED2024_01_01,
+    CSS_R846_6_ED2024_07_01,
+    CSS_R846_6_ED2025_01_01,
+    CSS_R846_6_ED2025_02_28,
+    CSS_R846_6_ED2025_03_31,
+    CSS_R846_6_ED2026_04_01,
+    CSS_R846_6_ED2026_06_27)
+rule MSASalarieRural(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "salarié/exploitant/artisan rural hors PF CAF: MSA (R. 846-6)";
+    label en unofficial "rural worker outside CAF benefits: MSA (R. 846-6)";
+    when regime_agricole_salarie_ou_rural(d) and pf_non_versee_par_caf(d)
+        and not_known(pf_versee_par_caf(d));
+    then organisme_competent_msa(d);
+}
+
+pub relation hospitalisation_prise_en_charge(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "hospitalisation avec prise en charge (R. 846-7; fait retenu)";
+    label en unofficial "hospital stay with coverage (R. 846-7; retained fact)";
+}
+
+pub relation hospitalisation_en_cours(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "séjour hospitalier effectif en cours (R. 846-7; fait retenu)";
+    label en unofficial "effective hospital stay ongoing (R. 846-7; retained fact)";
+}
+
+pub relation deuxieme_revision_depassee(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "deuxième révision périodique depuis le début dépassée (R. 846-7; fait retenu)";
+    label en unofficial "second periodic revision since the start passed (R. 846-7; retained fact)";
+}
+
+pub relation grossesse_en_cours(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "femme en état de grossesse (R. 846-7; fait retenu)";
+    label en unofficial "pregnant woman (R. 846-7; retained fact)";
+}
+
+pub relation fin_hospitalisation(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "fin de l'hospitalisation (R. 846-7; fait retenu)";
+    label en unofficial "end of the hospital stay (R. 846-7; retained fact)";
+}
+
+pub relation grossesse_non_en_cours(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "pas d'état de grossesse constaté (R. 846-7; fait retenu)";
+    label en unofficial "no pregnancy state recorded (R. 846-7; retained fact)";
+}
+
+pub relation prise_en_charge_active(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "prise en charge par l'assurance maladie active sur la période réduite (R. 846-7; fait retenu)";
+    label en unofficial "health-insurance coverage active over the reduced period (R. 846-7; retained fact)";
+}
+
+pub relation suspension_prise_en_charge(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "suspension de la prise en charge par l'assurance maladie sur la période (R. 846-7; fait retenu)";
+    label en unofficial "suspension of health-insurance coverage over the period (R. 846-7; retained fact)";
+}
+
+pub relation reexamen_periodique_apres_hospitalisation(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "réexamen périodique suivant la fin de l'hospitalisation survenu (R. 846-7; fait retenu)";
+    label en unofficial "periodic review following the end of hospitalisation reached (R. 846-7; retained fact)";
+}
+
+pub relation prime_reduite_hospitalisation(d: Demandeur, montant: Money) kind institutional {
+    key(d);
+    label fr official "prime réduite de moitié à l'hospitalisation (R. 846-7)";
+    label en unofficial "bonus halved during hospitalisation (R. 846-7)";
+}
+
+pub relation reprise_taux_plein_hospitalisation(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "rétablissement sans nouvelle demande au réexamen suivant la sortie (R. 846-7)";
+    label en unofficial "restoration without a new request at the review after discharge (R. 846-7)";
+}
+
+@source(
+    CSS_R846_7_ED2021_01_01,
+    CSS_R846_7_ED2021_03_25,
+    CSS_R846_7_ED2021_06_01,
+    CSS_R846_7_ED2022_03_21,
+    CSS_R846_7_ED2023_12_31,
+    CSS_R846_7_ED2024_01_01,
+    CSS_R846_7_ED2024_07_01,
+    CSS_R846_7_ED2025_01_01,
+    CSS_R846_7_ED2025_02_28,
+    CSS_R846_7_ED2025_03_31,
+    CSS_R846_7_ED2026_04_01,
+    CSS_R846_7_ED2026_06_27)
+rule ReductionHospitalisation(d: Demandeur, p: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "hospitalisé isolé hors grossesse, couverture active: moitié dès la deuxième révision (R. 846-7)";
+    label en unofficial "isolated hospitalised outside pregnancy, active coverage: half from the second revision (R. 846-7)";
+    when hospitalisation_prise_en_charge(d) and deuxieme_revision_depassee(d)
+        and hospitalisation_en_cours(d)
+        and foyer_sans_conjoint_ni_charge(d)
+        and not_known(foyer_avec_conjoint_pacs_concubin_ou_charge(d))
+        and prise_en_charge_active(d)
+        and not_known(suspension_prise_en_charge(d))
+        and grossesse_non_en_cours(d)
+        and not_known(grossesse_en_cours(d))
+        and prime_due_trimestre(d, p);
+    then prime_reduite_hospitalisation(d, p * 0.5);
+}
+
+// D-42: affirmative refutations of the R. 846-7 half-rate. A failed
+// not_known guard leaves NEITHER, never FALSE; each excepting fact of
+// the text is written as an explicit contrary: «n'est pas applicable
+// aux personnes en état de grossesse» (al. 1), the household gate
+// «qui n'a ni conjoint, ni partenaire ..., ni concubin, ni personne à
+// charge» (al. 1), «à l'exclusion des périodes de suspension de la
+// prise en charge» (al. 2).
+@source(
+    CSS_R846_7_ED2021_01_01,
+    CSS_R846_7_ED2021_03_25,
+    CSS_R846_7_ED2021_06_01,
+    CSS_R846_7_ED2022_03_21,
+    CSS_R846_7_ED2023_12_31,
+    CSS_R846_7_ED2024_01_01,
+    CSS_R846_7_ED2024_07_01,
+    CSS_R846_7_ED2025_01_01,
+    CSS_R846_7_ED2025_02_28,
+    CSS_R846_7_ED2025_03_31,
+    CSS_R846_7_ED2026_04_01,
+    CSS_R846_7_ED2026_06_27)
+rule ReductionRefuteeGrossesse(d: Demandeur, p: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "grossesse: pas de réduction hospitalière (R. 846-7 al. 1)";
+    label en unofficial "pregnancy: no hospital reduction (R. 846-7 para 1)";
+    when hospitalisation_en_cours(d) and grossesse_en_cours(d)
+        and prime_due_trimestre(d, p);
+    then not prime_reduite_hospitalisation(d, p * 0.5);
+}
+
+@source(
+    CSS_R846_7_ED2021_01_01,
+    CSS_R846_7_ED2021_03_25,
+    CSS_R846_7_ED2021_06_01,
+    CSS_R846_7_ED2022_03_21,
+    CSS_R846_7_ED2023_12_31,
+    CSS_R846_7_ED2024_01_01,
+    CSS_R846_7_ED2024_07_01,
+    CSS_R846_7_ED2025_01_01,
+    CSS_R846_7_ED2025_02_28,
+    CSS_R846_7_ED2025_03_31,
+    CSS_R846_7_ED2026_04_01,
+    CSS_R846_7_ED2026_06_27)
+rule ReductionRefuteeFoyer(d: Demandeur, p: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "conjoint/PACS/concubin/personne à charge: pas de réduction hospitalière (R. 846-7 al. 1)";
+    label en unofficial "spouse/PACS/concubin/dependent: no hospital reduction (R. 846-7 para 1)";
+    when hospitalisation_en_cours(d)
+        and foyer_avec_conjoint_pacs_concubin_ou_charge(d)
+        and prime_due_trimestre(d, p);
+    then not prime_reduite_hospitalisation(d, p * 0.5);
+}
+
+@source(
+    CSS_R846_7_ED2021_01_01,
+    CSS_R846_7_ED2021_03_25,
+    CSS_R846_7_ED2021_06_01,
+    CSS_R846_7_ED2022_03_21,
+    CSS_R846_7_ED2023_12_31,
+    CSS_R846_7_ED2024_01_01,
+    CSS_R846_7_ED2024_07_01,
+    CSS_R846_7_ED2025_01_01,
+    CSS_R846_7_ED2025_02_28,
+    CSS_R846_7_ED2025_03_31,
+    CSS_R846_7_ED2026_04_01,
+    CSS_R846_7_ED2026_06_27)
+rule ReductionRefuteeSuspensionPriseEnCharge(d: Demandeur, p: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prise en charge suspendue: pas de réduction sur la période (R. 846-7 al. 2)";
+    label en unofficial "coverage suspended: no reduction over the period (R. 846-7 para 2)";
+    when hospitalisation_en_cours(d) and suspension_prise_en_charge(d)
+        and prime_due_trimestre(d, p);
+    then not prime_reduite_hospitalisation(d, p * 0.5);
+}
+
+@source(
+    CSS_R846_7_ED2021_01_01,
+    CSS_R846_7_ED2021_03_25,
+    CSS_R846_7_ED2021_06_01,
+    CSS_R846_7_ED2022_03_21,
+    CSS_R846_7_ED2023_12_31,
+    CSS_R846_7_ED2024_01_01,
+    CSS_R846_7_ED2024_07_01,
+    CSS_R846_7_ED2025_01_01,
+    CSS_R846_7_ED2025_02_28,
+    CSS_R846_7_ED2025_03_31,
+    CSS_R846_7_ED2026_04_01,
+    CSS_R846_7_ED2026_06_27)
+rule RepriseHospitalisation(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "rétablissement au réexamen suivant la fin, sans nouvelle demande (R. 846-7)";
+    label en unofficial "restoration at the review following discharge, no new request (R. 846-7)";
+    when fin_hospitalisation(d) and reexamen_periodique_apres_hospitalisation(d);
+    then reprise_taux_plein_hospitalisation(d);
+}
+
+pub relation incarceration_en_cours(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "incarcération en cours (R. 846-8; fait retenu)";
+    label en unofficial "ongoing imprisonment (R. 846-8; retained fact)";
+}
+
+pub relation deuxieme_reexamen_depasse(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "deuxième réexamen trimestriel dépassé (R. 846-8; fait retenu)";
+    label en unofficial "second quarterly re-examination passed (R. 846-8; retained fact)";
+}
+
+pub relation foyer_avec_famille(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "vit avec sa famille ou des cohabitants, sans qualification de conjoint, partenaire PACS, concubin ou personne à charge (fait retenu générique ; ne qualifie pas R. 846-7/8)";
+    label en unofficial "lives with family members or co-residents, with no spouse, PACS partner, concubin or dependent qualification (generic retained fact; does not qualify R. 846-7/8)";
+}
+
+pub relation foyer_avec_conjoint_pacs_concubin_ou_charge(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "a un conjoint, un partenaire lié par un pacte civil de solidarité, un concubin ou une personne à charge (R. 846-7/8 ; fait retenu qualifiant)";
+    label en unofficial "has a spouse, PACS partner, concubin or dependent (R. 846-7/8; qualifying retained fact)";
+}
+
+pub relation foyer_sans_conjoint_ni_charge(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "ni conjoint, ni partenaire PACS, ni concubin, ni personne à charge (R. 846-7/8; fait retenu)";
+    label en unofficial "no spouse, PACS partner, concubin or dependent (R. 846-7/8; retained fact)";
+}
+
+pub relation majo_isolee_avec_enfant(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "majoré isolé avec enfant à charge (R. 846-8; fait retenu)";
+    label en unofficial "isolated-major amount with a dependent child (R. 846-8; retained fact)";
+}
+
+pub relation fin_incarceration(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "fin de l'incarcération (R. 846-8; fait retenu)";
+    label en unofficial "end of imprisonment (R. 846-8; retained fact)";
+}
+
+pub relation reexamen_periodique_apres_incarceration(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "réexamen périodique du droit suivant la fin de l'incarcération survenu (R. 846-8; fait retenu)";
+    label en unofficial "periodic review of the right following release reached (R. 846-8; retained fact)";
+}
+
+pub relation sans_majo_isolee_avec_enfant(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "pas de majoration L. 842-7 avec enfant à charge conservé (R. 846-8; fait retenu)";
+    label en unofficial "no L. 842-7 majoration with a kept dependent child (R. 846-8; retained fact)";
+}
+
+pub relation prime_suspendue_incarceration(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "versement suspendu à l'incarcération (R. 846-8)";
+    label en unofficial "payment suspended during imprisonment (R. 846-8)";
+}
+
+pub relation droits_reexamines_sans_beneficiaire(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "droits réexaminés sans le bénéficiaire, conjoint/PACS/concubin/charge (R. 846-8 al. 2)";
+    label en unofficial "rights re-examined without the payee, spouse/PACS/concubin/dependent (R. 846-8 para 2)";
+}
+
+pub relation reprise_apres_incarceration(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "reprise au réexamen périodique suivant la fin de l'incarcération (R. 846-8)";
+    label en unofficial "resumption at the periodic review after release (R. 846-8)";
+}
+
+@source(
+    CSS_R846_8_ED2021_01_01,
+    CSS_R846_8_ED2021_03_25,
+    CSS_R846_8_ED2021_06_01,
+    CSS_R846_8_ED2022_03_21,
+    CSS_R846_8_ED2023_12_31,
+    CSS_R846_8_ED2024_01_01,
+    CSS_R846_8_ED2024_07_01,
+    CSS_R846_8_ED2025_01_01,
+    CSS_R846_8_ED2025_02_28,
+    CSS_R846_8_ED2025_03_31,
+    CSS_R846_8_ED2026_04_01,
+    CSS_R846_8_ED2026_06_27)
+rule SuspensionIncarceration(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "incarcéré isolé hors majoré isolé: suspension dès le deuxième réexamen (R. 846-8 al. 1)";
+    label en unofficial "isolated imprisoned outside isolated-major: suspension from the second review (R. 846-8 para 1)";
+    when incarceration_en_cours(d) and deuxieme_reexamen_depasse(d)
+        and foyer_sans_conjoint_ni_charge(d)
+        and not_known(foyer_avec_conjoint_pacs_concubin_ou_charge(d))
+        and sans_majo_isolee_avec_enfant(d)
+        and not_known(majo_isolee_avec_enfant(d));
+    then prime_suspendue_incarceration(d);
+}
+
+// D-42: affirmative refutations of the R. 846-8 branches. A failed
+// not_known guard leaves NEITHER, never FALSE: the suspension (al. 1)
+// is barred by the qualifying union «a un conjoint, un partenaire ...,
+// un concubin ou une personne à charge» (al. 2) and by the al. 4
+// exception «conservant un enfant à charge, ont droit à la majoration
+// mentionnée à l'article L. 842-7»; the family examination (al. 2) is
+// barred by the no-family record (al. 1) and by the same al. 4
+// exception.
+@source(
+    CSS_R846_8_ED2021_01_01,
+    CSS_R846_8_ED2021_03_25,
+    CSS_R846_8_ED2021_06_01,
+    CSS_R846_8_ED2022_03_21,
+    CSS_R846_8_ED2023_12_31,
+    CSS_R846_8_ED2024_01_01,
+    CSS_R846_8_ED2024_07_01,
+    CSS_R846_8_ED2025_01_01,
+    CSS_R846_8_ED2025_02_28,
+    CSS_R846_8_ED2025_03_31,
+    CSS_R846_8_ED2026_04_01,
+    CSS_R846_8_ED2026_06_27)
+rule SuspensionRefuteeFoyer(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "incarcéré avec conjoint/PACS/concubin/personne à charge: pas de suspension (R. 846-8 al. 1-2)";
+    label en unofficial "imprisoned with spouse/PACS/concubin/dependent: no suspension (R. 846-8 paras 1-2)";
+    when incarceration_en_cours(d)
+        and foyer_avec_conjoint_pacs_concubin_ou_charge(d);
+    then not prime_suspendue_incarceration(d);
+}
+
+@source(
+    CSS_R846_8_ED2021_01_01,
+    CSS_R846_8_ED2021_03_25,
+    CSS_R846_8_ED2021_06_01,
+    CSS_R846_8_ED2022_03_21,
+    CSS_R846_8_ED2023_12_31,
+    CSS_R846_8_ED2024_01_01,
+    CSS_R846_8_ED2024_07_01,
+    CSS_R846_8_ED2025_01_01,
+    CSS_R846_8_ED2025_02_28,
+    CSS_R846_8_ED2025_03_31,
+    CSS_R846_8_ED2026_04_01,
+    CSS_R846_8_ED2026_06_27)
+rule SuspensionRefuteeMajoration(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration L. 842-7 avec enfant à charge conservé: pas de suspension (R. 846-8 al. 4)";
+    label en unofficial "L. 842-7 majoration with a kept dependent child: no suspension (R. 846-8 para 4)";
+    when incarceration_en_cours(d) and majo_isolee_avec_enfant(d);
+    then not prime_suspendue_incarceration(d);
+}
+
+@source(
+    CSS_R846_8_ED2021_01_01,
+    CSS_R846_8_ED2021_03_25,
+    CSS_R846_8_ED2021_06_01,
+    CSS_R846_8_ED2022_03_21,
+    CSS_R846_8_ED2023_12_31,
+    CSS_R846_8_ED2024_01_01,
+    CSS_R846_8_ED2024_07_01,
+    CSS_R846_8_ED2025_01_01,
+    CSS_R846_8_ED2025_02_28,
+    CSS_R846_8_ED2025_03_31,
+    CSS_R846_8_ED2026_04_01,
+    CSS_R846_8_ED2026_06_27)
+rule ReexamenSansBeneficiaire(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "conjoint/PACS/concubin/charge, hors majoré isolé: réexamen sans le bénéficiaire au terme du délai (R. 846-8 al. 2)";
+    label en unofficial "spouse/PACS/concubin/dependent, outside isolated-major: re-examination without the payee at the end of the period (R. 846-8 para 2)";
+    when incarceration_en_cours(d) and deuxieme_reexamen_depasse(d)
+        and foyer_avec_conjoint_pacs_concubin_ou_charge(d)
+        and not_known(foyer_sans_conjoint_ni_charge(d))
+        and sans_majo_isolee_avec_enfant(d)
+        and not_known(majo_isolee_avec_enfant(d));
+    then droits_reexamines_sans_beneficiaire(d);
+}
+
+@source(
+    CSS_R846_8_ED2021_01_01,
+    CSS_R846_8_ED2021_03_25,
+    CSS_R846_8_ED2021_06_01,
+    CSS_R846_8_ED2022_03_21,
+    CSS_R846_8_ED2023_12_31,
+    CSS_R846_8_ED2024_01_01,
+    CSS_R846_8_ED2024_07_01,
+    CSS_R846_8_ED2025_01_01,
+    CSS_R846_8_ED2025_02_28,
+    CSS_R846_8_ED2025_03_31,
+    CSS_R846_8_ED2026_04_01,
+    CSS_R846_8_ED2026_06_27)
+rule ReexamenRefuteIsole(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "incarcéré sans conjoint ni personne à charge: pas d'examen des droits des autres (R. 846-8 al. 2)";
+    label en unofficial "imprisoned without spouse or dependent: no examination of others' rights (R. 846-8 para 2)";
+    when incarceration_en_cours(d) and foyer_sans_conjoint_ni_charge(d);
+    then not droits_reexamines_sans_beneficiaire(d);
+}
+
+@source(
+    CSS_R846_8_ED2021_01_01,
+    CSS_R846_8_ED2021_03_25,
+    CSS_R846_8_ED2021_06_01,
+    CSS_R846_8_ED2022_03_21,
+    CSS_R846_8_ED2023_12_31,
+    CSS_R846_8_ED2024_01_01,
+    CSS_R846_8_ED2024_07_01,
+    CSS_R846_8_ED2025_01_01,
+    CSS_R846_8_ED2025_02_28,
+    CSS_R846_8_ED2025_03_31,
+    CSS_R846_8_ED2026_04_01,
+    CSS_R846_8_ED2026_06_27)
+rule ReexamenRefuteMajoration(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration L. 842-7 avec enfant à charge conservé: pas d'examen sans le bénéficiaire (R. 846-8 al. 4)";
+    label en unofficial "L. 842-7 majoration with a kept dependent child: no examination without the payee (R. 846-8 para 4)";
+    when incarceration_en_cours(d) and majo_isolee_avec_enfant(d);
+    then not droits_reexamines_sans_beneficiaire(d);
+}
+
+@source(
+    CSS_R846_8_ED2021_01_01,
+    CSS_R846_8_ED2021_03_25,
+    CSS_R846_8_ED2021_06_01,
+    CSS_R846_8_ED2022_03_21,
+    CSS_R846_8_ED2023_12_31,
+    CSS_R846_8_ED2024_01_01,
+    CSS_R846_8_ED2024_07_01,
+    CSS_R846_8_ED2025_01_01,
+    CSS_R846_8_ED2025_02_28,
+    CSS_R846_8_ED2025_03_31,
+    CSS_R846_8_ED2026_04_01,
+    CSS_R846_8_ED2026_06_27)
+rule RepriseIncarceration(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "reprise au réexamen périodique suivant la fin de l'incarcération (R. 846-8 al. 3)";
+    label en unofficial "resumption at the periodic review after release (R. 846-8 para 3)";
+    when fin_incarceration(d) and reexamen_periodique_apres_incarceration(d);
+    then reprise_apres_incarceration(d);
+}
+
+pub relation operations_centralisees(o: Organisme) kind empirical {
+    key(o);
+    label fr official "opérations financières et comptables centralisées (R. 846-9; fait retenu)";
+    label en unofficial "financial and accounting operations centralised (R. 846-9; retained fact)";
+}
+
+pub relation centralisation_assuree(o: Organisme) kind institutional {
+    key(o);
+    label fr official "centralisation CNAF/CCMSA assurée (R. 846-9)";
+    label en unofficial "CNAF/CCMSA centralisation in place (R. 846-9)";
+}
+
+@source(
+    CSS_R846_9_ED2021_01_01,
+    CSS_R846_9_ED2021_03_25,
+    CSS_R846_9_ED2021_06_01,
+    CSS_R846_9_ED2022_03_21,
+    CSS_R846_9_ED2023_12_31,
+    CSS_R846_9_ED2024_01_01,
+    CSS_R846_9_ED2024_07_01,
+    CSS_R846_9_ED2025_01_01,
+    CSS_R846_9_ED2025_02_28,
+    CSS_R846_9_ED2025_03_31,
+    CSS_R846_9_ED2026_04_01,
+    CSS_R846_9_ED2026_06_27)
+rule CentralisationCnafCCMSA(o: Organisme) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "CNAF/CCMSA: opérations centralisées (R. 846-9)";
+    label en unofficial "CNAF/CCMSA: operations centralised (R. 846-9)";
+    when operations_centralisees(o);
+    then centralisation_assuree(o);
+}

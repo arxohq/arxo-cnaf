@@ -1,0 +1,37 @@
+// Q1 2026 data with all five items transmitted in May 2026:
+// conforming quarterly transmission; 2025 annual data with all
+// five items transmitted mid-April 2026: conforming annual
+// transmission (D. 848-1/2).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-stats-conformite-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": trimestre_stats_emetteur(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-01-01) { origin case_input; }
+        assert "ppa-02": trimestre_item1_effectifs(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-01-01) { origin case_input; }
+        assert "ppa-03": trimestre_item2_mensuels(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-01-01) { origin case_input; }
+        assert "ppa-04": trimestre_item3_statut_emploi(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-01-01) { origin case_input; }
+        assert "ppa-05": trimestre_item4_mouvements(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-01-01) { origin case_input; }
+        assert "ppa-06": trimestre_item5_depenses(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-01-01) { origin case_input; }
+        assert "ppa-07": transmission_trimestre_effectuee(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-01-01, @2026-05-15) { origin case_input; }
+        assert "ppa-16": trimestre_non_q4(@2026-01-01) { origin case_input; }
+        assert "ppa-08": annee_stats_emetteur(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), 2025) { origin case_input; }
+        assert "ppa-09": annuelle_item1_31dec(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), 2025) { origin case_input; }
+        assert "ppa-10": annuelle_item2_entres(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), 2025) { origin case_input; }
+        assert "ppa-11": annuelle_item3_depenses(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), 2025) { origin case_input; }
+        assert "ppa-12": annuelle_item4_instruction(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), 2025) { origin case_input; }
+        assert "ppa-13": annuelle_item5_service(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), 2025) { origin case_input; }
+        assert "ppa-14": transmission_annuelle_effectuee(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), 2025, @2026-04-15) { origin case_input; }
+        assert "ppa-15": echeance_avril_stats(2025, @2026-04-30) { origin case_input; }
+    }
+    evaluate truth(transmission_trimestre_conforme(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-01-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(transmission_annuelle_conforme(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), 2025));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

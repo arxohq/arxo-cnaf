@@ -1,0 +1,197 @@
+// G-A13 fork: the D. 823-17 personal share under both named readings.
+//
+// Below R0 the readings diverge on the SAME normative head
+// participation_personnelle and on downstream aide_formule (Af = L+C-Pp).
+// Above R0 they coincide (the floor does not bind). Without a selection
+// both queries report INTERPRETATION_REQUIRED (§152/§156).
+//
+// Minimal probe (below/no-selection tests): isolated household, 0 pac,
+// zero rent, zone II, metropole, legal_time 2024-06-15. Pinned bareme:
+// C = 58.08 (ForfaitChargesBase), P0 = max(58.08*0.085, 37.91) = 37.91,
+// TF = 0.0283, TL = 0 (rapport 0 < SeuilBasRL 0.45), Tp = 0.0283,
+// R0 = 5186. R = 4000: final Pp = max(37.91, 37.91+0.0283*(4000-5186))
+// = 37.91, Af = 20.17; literal Pp = 4.3462, Af = 53.7338.
+// Zero rent is deliberate: it pins TL = 0 and L = 0 exactly, isolating
+// the Pp fork from rent-tranche arithmetic (not a realistic aid claim).
+//
+// Above-R0 tests reuse the validated catala-07 inputs (couple, 6 pac,
+// zone II, rent 527, R = 32200 >> R0 = 9439, 2022-02-13): both readings
+// give Pp = 496.09695. The simple above-R0 pair reuses the isolated
+// zero-rent probe with R = 5800 (> R0 = 5186): P0 = 37.91, Tp = 0.0283,
+// Pp = 37.91 + 0.0283 * 614 = 55.2862 under BOTH readings (the floor
+// does not bind), Af = 58.08 - 55.2862 = 2.7938 under BOTH readings.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-lecture-pp-below-final" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fork-below-final-01": secteur_locatif(entity_ref("urn:fr:apl:case:fork-pp-below")) { origin case_input; }
+        assert "fork-below-final-02": zone_du_logement(entity_ref("urn:fr:apl:case:fork-pp-below"), ZONE_II) { origin case_input; }
+        assert "fork-below-final-03": aide_demandee(entity_ref("urn:fr:apl:case:fork-pp-below"), APL) { origin case_input; }
+        assert "fork-below-final-04": situation_familiale(entity_ref("urn:fr:apl:case:fork-pp-below"), PERSONNE_SEULE) { origin case_input; }
+        assert "fork-below-final-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fork-pp-below"), 0) { origin case_input; }
+        assert "fork-below-final-06": loyer_principal(entity_ref("urn:fr:apl:case:fork-pp-below"), 0 EUR) { origin case_input; }
+        assert "fork-below-final-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fork-pp-below"), 4000 EUR) { origin case_input; }
+        assert "fork-below-final-08": mode_location(entity_ref("urn:fr:apl:case:fork-pp-below"), LOCATION_SEULE) { origin case_input; }
+        assert "fork-below-final-09": forme_logement(entity_ref("urn:fr:apl:case:fork-pp-below"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fork-below-final-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fork-pp-below"), 0 EUR) { origin case_input; }
+        assert "fork-below-final-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fork-pp-below"), false) { origin case_input; }
+        assert "fork-below-final-12": territoire(entity_ref("urn:fr:apl:case:fork-pp-below"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(participation_personnelle(entity_ref("urn:fr:apl:case:fork-pp-below"), 37.91 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_formule(entity_ref("urn:fr:apl:case:fork-pp-below"), 20.17 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-lecture-pp-below-literal" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation PpLitteral; }
+        assert "fork-below-literal-01": secteur_locatif(entity_ref("urn:fr:apl:case:fork-pp-below")) { origin case_input; }
+        assert "fork-below-literal-02": zone_du_logement(entity_ref("urn:fr:apl:case:fork-pp-below"), ZONE_II) { origin case_input; }
+        assert "fork-below-literal-03": aide_demandee(entity_ref("urn:fr:apl:case:fork-pp-below"), APL) { origin case_input; }
+        assert "fork-below-literal-04": situation_familiale(entity_ref("urn:fr:apl:case:fork-pp-below"), PERSONNE_SEULE) { origin case_input; }
+        assert "fork-below-literal-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fork-pp-below"), 0) { origin case_input; }
+        assert "fork-below-literal-06": loyer_principal(entity_ref("urn:fr:apl:case:fork-pp-below"), 0 EUR) { origin case_input; }
+        assert "fork-below-literal-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fork-pp-below"), 4000 EUR) { origin case_input; }
+        assert "fork-below-literal-08": mode_location(entity_ref("urn:fr:apl:case:fork-pp-below"), LOCATION_SEULE) { origin case_input; }
+        assert "fork-below-literal-09": forme_logement(entity_ref("urn:fr:apl:case:fork-pp-below"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fork-below-literal-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fork-pp-below"), 0 EUR) { origin case_input; }
+        assert "fork-below-literal-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fork-pp-below"), false) { origin case_input; }
+        assert "fork-below-literal-12": territoire(entity_ref("urn:fr:apl:case:fork-pp-below"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(participation_personnelle(entity_ref("urn:fr:apl:case:fork-pp-below"), 4.3462 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_formule(entity_ref("urn:fr:apl:case:fork-pp-below"), 53.7338 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-lecture-pp-above-final" {
+    given {
+        context { decision_time @2022-02-13T12:00:00Z; knowledge_time @2022-02-13T12:00:00Z; legal_time @2022-02-13; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fork-above-final-01": secteur_locatif(entity_ref("urn:fr:apl:case:fork-pp-above")) { origin case_input; }
+        assert "fork-above-final-02": zone_du_logement(entity_ref("urn:fr:apl:case:fork-pp-above"), ZONE_II) { origin case_input; }
+        assert "fork-above-final-03": aide_demandee(entity_ref("urn:fr:apl:case:fork-pp-above"), APL) { origin case_input; }
+        assert "fork-above-final-04": situation_familiale(entity_ref("urn:fr:apl:case:fork-pp-above"), COUPLE) { origin case_input; }
+        assert "fork-above-final-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fork-pp-above"), 6) { origin case_input; }
+        assert "fork-above-final-06": loyer_principal(entity_ref("urn:fr:apl:case:fork-pp-above"), 527 EUR) { origin case_input; }
+        assert "fork-above-final-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fork-pp-above"), 32200 EUR) { origin case_input; }
+        assert "fork-above-final-08": mode_location(entity_ref("urn:fr:apl:case:fork-pp-above"), LOCATION_SEULE) { origin case_input; }
+        assert "fork-above-final-09": forme_logement(entity_ref("urn:fr:apl:case:fork-pp-above"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fork-above-final-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fork-pp-above"), 0 EUR) { origin case_input; }
+        assert "fork-above-final-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fork-pp-above"), false) { origin case_input; }
+        assert "fork-above-final-12": territoire(entity_ref("urn:fr:apl:case:fork-pp-above"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(participation_personnelle(entity_ref("urn:fr:apl:case:fork-pp-above"), 496.09695 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-lecture-pp-above-literal" {
+    given {
+        context { decision_time @2022-02-13T12:00:00Z; knowledge_time @2022-02-13T12:00:00Z; legal_time @2022-02-13; timezone "Europe/Paris"; interpretation PpLitteral; }
+        assert "fork-above-literal-01": secteur_locatif(entity_ref("urn:fr:apl:case:fork-pp-above")) { origin case_input; }
+        assert "fork-above-literal-02": zone_du_logement(entity_ref("urn:fr:apl:case:fork-pp-above"), ZONE_II) { origin case_input; }
+        assert "fork-above-literal-03": aide_demandee(entity_ref("urn:fr:apl:case:fork-pp-above"), APL) { origin case_input; }
+        assert "fork-above-literal-04": situation_familiale(entity_ref("urn:fr:apl:case:fork-pp-above"), COUPLE) { origin case_input; }
+        assert "fork-above-literal-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fork-pp-above"), 6) { origin case_input; }
+        assert "fork-above-literal-06": loyer_principal(entity_ref("urn:fr:apl:case:fork-pp-above"), 527 EUR) { origin case_input; }
+        assert "fork-above-literal-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fork-pp-above"), 32200 EUR) { origin case_input; }
+        assert "fork-above-literal-08": mode_location(entity_ref("urn:fr:apl:case:fork-pp-above"), LOCATION_SEULE) { origin case_input; }
+        assert "fork-above-literal-09": forme_logement(entity_ref("urn:fr:apl:case:fork-pp-above"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fork-above-literal-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fork-pp-above"), 0 EUR) { origin case_input; }
+        assert "fork-above-literal-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fork-pp-above"), false) { origin case_input; }
+        assert "fork-above-literal-12": territoire(entity_ref("urn:fr:apl:case:fork-pp-above"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(participation_personnelle(entity_ref("urn:fr:apl:case:fork-pp-above"), 496.09695 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-lecture-pp-above-simple-final" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fork-above-simple-final-01": secteur_locatif(entity_ref("urn:fr:apl:case:fork-pp-above-simple")) { origin case_input; }
+        assert "fork-above-simple-final-02": zone_du_logement(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), ZONE_II) { origin case_input; }
+        assert "fork-above-simple-final-03": aide_demandee(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), APL) { origin case_input; }
+        assert "fork-above-simple-final-04": situation_familiale(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), PERSONNE_SEULE) { origin case_input; }
+        assert "fork-above-simple-final-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 0) { origin case_input; }
+        assert "fork-above-simple-final-06": loyer_principal(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 0 EUR) { origin case_input; }
+        assert "fork-above-simple-final-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 5800 EUR) { origin case_input; }
+        assert "fork-above-simple-final-08": mode_location(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), LOCATION_SEULE) { origin case_input; }
+        assert "fork-above-simple-final-09": forme_logement(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fork-above-simple-final-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 0 EUR) { origin case_input; }
+        assert "fork-above-simple-final-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), false) { origin case_input; }
+        assert "fork-above-simple-final-12": territoire(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(participation_personnelle(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 55.2862 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_formule(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 2.7938 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-lecture-pp-above-simple-literal" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation PpLitteral; }
+        assert "fork-above-simple-literal-01": secteur_locatif(entity_ref("urn:fr:apl:case:fork-pp-above-simple")) { origin case_input; }
+        assert "fork-above-simple-literal-02": zone_du_logement(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), ZONE_II) { origin case_input; }
+        assert "fork-above-simple-literal-03": aide_demandee(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), APL) { origin case_input; }
+        assert "fork-above-simple-literal-04": situation_familiale(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), PERSONNE_SEULE) { origin case_input; }
+        assert "fork-above-simple-literal-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 0) { origin case_input; }
+        assert "fork-above-simple-literal-06": loyer_principal(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 0 EUR) { origin case_input; }
+        assert "fork-above-simple-literal-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 5800 EUR) { origin case_input; }
+        assert "fork-above-simple-literal-08": mode_location(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), LOCATION_SEULE) { origin case_input; }
+        assert "fork-above-simple-literal-09": forme_logement(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fork-above-simple-literal-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 0 EUR) { origin case_input; }
+        assert "fork-above-simple-literal-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), false) { origin case_input; }
+        assert "fork-above-simple-literal-12": territoire(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(participation_personnelle(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 55.2862 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_formule(entity_ref("urn:fr:apl:case:fork-pp-above-simple"), 2.7938 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-lecture-pp-no-selection" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "fork-noselect-01": secteur_locatif(entity_ref("urn:fr:apl:case:fork-pp-noselect")) { origin case_input; }
+        assert "fork-noselect-02": zone_du_logement(entity_ref("urn:fr:apl:case:fork-pp-noselect"), ZONE_II) { origin case_input; }
+        assert "fork-noselect-03": aide_demandee(entity_ref("urn:fr:apl:case:fork-pp-noselect"), APL) { origin case_input; }
+        assert "fork-noselect-04": situation_familiale(entity_ref("urn:fr:apl:case:fork-pp-noselect"), PERSONNE_SEULE) { origin case_input; }
+        assert "fork-noselect-05": personnes_a_charge(entity_ref("urn:fr:apl:case:fork-pp-noselect"), 0) { origin case_input; }
+        assert "fork-noselect-06": loyer_principal(entity_ref("urn:fr:apl:case:fork-pp-noselect"), 0 EUR) { origin case_input; }
+        assert "fork-noselect-07": ressources_du_menage(entity_ref("urn:fr:apl:case:fork-pp-noselect"), 4000 EUR) { origin case_input; }
+        assert "fork-noselect-08": mode_location(entity_ref("urn:fr:apl:case:fork-pp-noselect"), LOCATION_SEULE) { origin case_input; }
+        assert "fork-noselect-09": forme_logement(entity_ref("urn:fr:apl:case:fork-pp-noselect"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "fork-noselect-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:fork-pp-noselect"), 0 EUR) { origin case_input; }
+        assert "fork-noselect-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:fork-pp-noselect"), false) { origin case_input; }
+        assert "fork-noselect-12": territoire(entity_ref("urn:fr:apl:case:fork-pp-noselect"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(participation_personnelle(entity_ref("urn:fr:apl:case:fork-pp-noselect"), 37.91 EUR));
+    expect result_kind == PROPOSITION;
+    expect evaluation_status == INTERPRETATION_REQUIRED;
+    evaluate truth(aide_formule(entity_ref("urn:fr:apl:case:fork-pp-noselect"), 20.17 EUR));
+    expect result_kind == PROPOSITION;
+    expect evaluation_status == INTERPRETATION_REQUIRED;
+}

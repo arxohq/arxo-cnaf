@@ -1,0 +1,43 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Catala AF Test9 (2020-05-01, Guadeloupe, resources 75 786): two
+// children placed with the child-welfare service, no judge-kept
+// family payment. The service receives the evaluated total
+// (band 2, 64.00); the family receives nothing (their 0).
+// L. 521-2 applies here in its pre-2021 wording (pinned).
+// Their case -> our answer -> class: REPORT.md (Catala, 9).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-catala-test-09" {
+    given {
+        context { decision_time @2020-05-01T12:00:00Z; knowledge_time @2020-05-01T12:00:00Z; legal_time @2020-05-01; timezone "Europe/Paris"; }
+        assert "ct09-01": territoire(entity_ref("urn:fr:pf-af:foreign:catala-09"), GUADELOUPE) { origin case_input; }
+        assert "ct09-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:foreign:catala-09"), 2) { origin case_input; }
+        assert "ct09-03": ressources_menage(entity_ref("urn:fr:pf-af:foreign:catala-09"), 75786 EUR) { origin case_input; }
+        assert "ct09-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:foreign:catala-09"), 55950 EUR) { origin case_input; }
+        assert "ct09-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:foreign:catala-09"), 78300 EUR) { origin case_input; }
+        assert "ct09-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:foreign:catala-09"), 5595 EUR) { origin case_input; }
+        assert "ct09-05": bmaf_retenu(entity_ref("urn:fr:pf-af:foreign:catala-09"), 400.00 EUR) { origin case_input; }
+        assert "ct09-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:foreign:catala-09"), 0) { origin case_input; }
+        assert "ct09-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:foreign:catala-09"), 0) { origin case_input; }
+        assert "ct09-08": forfait_total_menage(entity_ref("urn:fr:pf-af:foreign:catala-09"), 0 EUR) { origin case_input; }
+        assert "ct09-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:foreign:catala-09"), 2) { origin case_input; }
+        assert "ct09-10": foyer_du_cas(entity_ref("urn:fr:pf-af:foreign:catala-09")) { origin case_input; }
+        assert "ct09-11": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:catala-09"), entity_ref("urn:fr:pf-af:foreign:catala-09-e0")) { origin case_input; }
+        assert "ct09-12": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:catala-09"), entity_ref("urn:fr:pf-af:foreign:catala-09-e1")) { origin case_input; }
+        assert "ct09-13": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:catala-09-e1")) { origin case_input; }
+        assert "ct09-14": enfant_confie_ase(entity_ref("urn:fr:pf-af:foreign:catala-09-e0")) { origin case_input; }
+        assert "ct09-15": enfant_confie_ase(entity_ref("urn:fr:pf-af:foreign:catala-09-e1")) { origin case_input; }
+        assert "ct09-16": garde(entity_ref("urn:fr:pf-af:foreign:catala-09-e0"), CONFIE_ASE_VERSEMENT_SERVICE) { origin case_input; }
+        assert "ct09-17": garde(entity_ref("urn:fr:pf-af:foreign:catala-09-e1"), CONFIE_ASE_VERSEMENT_SERVICE) { origin case_input; }
+    }
+    evaluate truth(service_ase_percoit(entity_ref("urn:fr:pf-af:foreign:catala-09"), 64.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

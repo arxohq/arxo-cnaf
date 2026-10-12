@@ -1,0 +1,19 @@
+// ARS decree threshold: death 10 July, 1 June threshold - ARS exceptionally due (D. 552-7).
+// D-42: the context lacked deadline_policy SERVICE_MOIS (B-PFCORE-POLICY-CONTEXT): the R. 552-4
+// gate MaintienOuvertureCondition steps one calendar_month (MISSING_POLICY without it). Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-ars-deces-seuil-decret" {
+    given {
+        context { decision_time @2026-09-15T12:00:00Z; knowledge_time @2026-09-15T12:00:00Z; legal_time @2026-09-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "ars-deces-seuil-decret-01": deces_le(entity_ref("urn:fr:pf:case:enfant-juillet"), @2026-07-10) { origin case_input; }
+        assert "ars-deces-seuil-decret-02": seuil_juin_rentree(entity_ref("urn:fr:pf:case:enfant-juillet"), @2026-06-01) { origin case_input; }
+        assert "ars-deces-seuil-decret-03": ouverture_droit_mois(entity_ref("urn:fr:pf:case:enfant-juillet"), @2025-06-01) { origin case_input; }
+    }
+    evaluate truth(ars_due_exceptionnellement(entity_ref("urn:fr:pf:case:enfant-juillet")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

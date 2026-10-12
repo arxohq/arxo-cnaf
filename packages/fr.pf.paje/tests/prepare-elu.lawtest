@@ -1,0 +1,21 @@
+// Elected official (D. 531-5): stopped activity, allowances within the
+// representative fraction → full rate, 386.48 €.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-elu" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-elu-01": condition_elu(entity_ref("urn:fr:paje:benef:prepare-elu")) { origin adjudicated; }
+        assert "prepare-elu-02": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-elu"), entity_ref("urn:fr:paje:enfant:prepare-elu")) { origin adjudicated; }
+        assert "prepare-elu-03": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-elu")) { origin adjudicated; }
+        assert "prepare-elu-04": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-elu"), entity_ref("urn:fr:paje:case:prepare-elu")) { origin case_input; }
+        assert "prepare-elu-05": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-elu"), 400.00 EUR) { origin case_input; }
+        assert "prepare-elu-06": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-elu"), entity_ref("urn:fr:paje:enfant:prepare-elu"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-elu"), entity_ref("urn:fr:paje:enfant:prepare-elu"), 386.48 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

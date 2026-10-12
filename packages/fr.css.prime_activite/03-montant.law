@@ -1,0 +1,1005 @@
+// Monthly amount (L. 842-3/4/7/8, D. 843-1/2/3/4, R. 843-1).
+//
+// «La prime est égale à la différence entre: 1° un montant forfaitaire
+// [composition + fraction des revenus pro + bonifications]; 2° les
+// ressources, réputées au moins égales au forfait» (L. 842-3).
+// Forfait scales (D. 843-1): couple +50 %, +30 % per extra dependent,
+// +40 % from the 3rd child where more than two children (spouse
+// excluded); isolated person 128.412 % + 42.804 % per dependent child
+// (or other dependent). Shapes are literal rules (RSA MF precedent).
+// Fraction (D. 843-3): 61 % before 2025-03-31, 59.85 % after (decree
+// 2025-292). Bonification per worker (D. 843-2): zero at or below 59x
+// hourly SMIC, linear to 138x (120x before 2026-04-01, decree 2026-222),
+// capped at 37.7 % (29.101 % before) of the single forfait.
+// L. 842-8 (AAH counted as professional income above the 29x SMIC
+// threshold of D. 843-4) arrives as the retained professional-income
+// facts: the AAH-mechanics boundary is not reopened here.
+// Minimum payment (L. 842-3 last al., figure by arrete): retained
+// minimum_paiement; below it the prime is not paid.
+// Trimestre (R. 843-1): average of the three monthly primes for M-4..M-2
+// (M-3..M-1 before 2025-02-28, decree 2025-185); month-end composition
+// facts are given net of the departed spouse (1°); the new-spouse
+// fiction (2°) is a retained composition fact.
+// The single forfait euros are forfait_base_du_mois of 11-forfait-chaine.law:
+// the pinned decree amount of the month (decrees 2020-491 ... 2026-222, chain
+// of the L. 161-25 coefficients built and checked there, DECISION-0452) or
+// the case-supplied forfait_base_retenu, which prevails over the decree. The
+// resources of the month are ressources_foyer_mois of 12-forfait-logement.law
+// (the retained total, or the retained total without housing plus the housing
+// item of R. 844-3 / R. 844-4 I). The SMIC hourly rate stays a retained
+// monthly fact (B-PPA-SMIC-MOIS: a rule cannot evaluate fr.travail.smic at a
+// reference month other than the legal time of the case).
+//
+// MONEY FORMS (pf-af convention): Money x Decimal, Money / Decimal.
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27,
+    CSS_D843_2_ED2026_04_01,
+    CSS_D843_2_ED2026_06_27,
+    CSS_D843_2_PRE2026_ED2021_01_01,
+    CSS_D843_2_PRE2026_ED2021_03_25,
+    CSS_D843_2_PRE2026_ED2021_06_01,
+    CSS_D843_2_PRE2026_ED2022_03_21,
+    CSS_D843_2_PRE2026_ED2023_12_31,
+    CSS_D843_2_PRE2026_ED2024_01_01,
+    CSS_D843_2_PRE2026_ED2024_07_01,
+    CSS_D843_2_PRE2026_ED2025_01_01,
+    CSS_D843_2_PRE2026_ED2025_02_28,
+    CSS_D843_2_PRE2026_ED2025_03_31,
+    CSS_D843_3_ED2025_03_31,
+    CSS_D843_3_ED2026_04_01,
+    CSS_D843_3_ED2026_06_27,
+    CSS_D843_3_PRE2025_ED2021_01_01,
+    CSS_D843_3_PRE2025_ED2021_03_25,
+    CSS_D843_3_PRE2025_ED2021_06_01,
+    CSS_D843_3_PRE2025_ED2022_03_21,
+    CSS_D843_3_PRE2025_ED2023_12_31,
+    CSS_D843_3_PRE2025_ED2024_01_01,
+    CSS_D843_3_PRE2025_ED2024_07_01,
+    CSS_D843_3_PRE2025_ED2025_01_01,
+    CSS_D843_3_PRE2025_ED2025_02_28,
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27,
+    CSS_R843_1_ED2025_02_28,
+    CSS_R843_1_ED2025_03_31,
+    CSS_R843_1_ED2026_04_01,
+    CSS_R843_1_ED2026_06_27,
+    CSS_R843_1_PRE2025_ED2021_01_01,
+    CSS_R843_1_PRE2025_ED2021_03_25,
+    CSS_R843_1_PRE2025_ED2021_06_01,
+    CSS_R843_1_PRE2025_ED2022_03_21,
+    CSS_R843_1_PRE2025_ED2023_12_31,
+    CSS_R843_1_PRE2025_ED2024_01_01,
+    CSS_R843_1_PRE2025_ED2024_07_01,
+    CSS_R843_1_PRE2025_ED2025_01_01,
+    Demandeur,
+    forfait_base_du_mois,
+    ressources_foyer_mois,
+};
+
+pub enum FormeFoyer {
+    label fr official "composition du foyer au dernier jour du mois (D. 843-1, R. 843-1 II)";
+    label en unofficial "household composition on the last day of the month (D. 843-1, R. 843-1 II)";
+    SEUL, COUPLE, COUPLE_1E, COUPLE_2E, COUPLE_3E, ISOLE, ISOLE_1E, ISOLE_2E
+}
+
+pub relation forfait_base_retenu(mois: Date, base: Money) kind empirical {
+    key(mois);
+    label fr official "montant forfaitaire personne seule en euros du mois fourni pour l'espèce (fait retenu ; prévaut sur le montant du décret épinglé)";
+    label en unofficial "single-person forfait euros of the month supplied for the case (retained fact; prevails over the pinned decree amount)";
+}
+
+pub relation smic_horaire_retenu(mois: Date, taux: Money) kind empirical {
+    key(mois);
+    label fr official "SMIC horaire brut du mois (fait retenu)";
+    label en unofficial "gross hourly SMIC of the month (retained fact)";
+}
+
+pub relation forme_foyer_retenue(d: Demandeur, mois: Date, forme: FormeFoyer) kind empirical {
+    key(d, mois);
+    label fr official "composition du foyer au dernier jour du mois, nette de l'ex-conjoint (D. 843-1, R. 843-1 II 1°; fait retenu)";
+    label en unofficial "household composition on the last day of the month, net of the departed spouse (D. 843-1, R. 843-1 II 1°; retained fact)";
+}
+
+pub relation revenus_mensuels_retenus(d: Demandeur, mois: Date, total: Money) kind empirical {
+    key(d, mois);
+    label fr official "ressources du foyer du mois, catégories L. 842-4 (fait retenu B-PPA-RESSOURCES-CALCUL)";
+    label en unofficial "household resources of the month, L. 842-4 categories (retained fact B-PPA-RESSOURCES-CALCUL)";
+}
+
+pub relation revenus_pro_demandeur(d: Demandeur, mois: Date, montant: Money) kind empirical {
+    key(d, mois);
+    label fr official "revenus professionnels mensuels du demandeur (dont AAH L. 842-8 le cas échéant; fait retenu)";
+    label en unofficial "monthly professional income of the claimant (incl. AAH under L. 842-8 where applicable; retained fact)";
+}
+
+pub relation revenus_pro_conjoint(d: Demandeur, mois: Date, montant: Money) kind empirical {
+    key(d, mois);
+    label fr official "revenus professionnels mensuels du conjoint/concubin/partenaire (fait retenu; absent: pas de bonification)";
+    label en unofficial "monthly professional income of the spouse/partner (retained fact; absent: no bonification)";
+}
+
+pub relation minimum_paiement_retenu(mois: Date, seuil: Money) kind empirical {
+    key(mois);
+    label fr official "montant minimal en dessous duquel la prime n'est pas versée (L. 842-3, décret; fait retenu)";
+    label en unofficial "minimum amount below which the bonus is not paid (L. 842-3, decree; retained fact)";
+}
+
+pub relation forfait_majore(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "montant forfaitaire après majorations de composition (D. 843-1)";
+    label en unofficial "forfait after composition majorations (D. 843-1)";
+}
+
+pub relation fraction_revenus_pro(taux: Decimal) kind institutional {
+    label fr official "fraction des revenus professionnels (D. 843-3: 61 % puis 59,85 %)";
+    label en unofficial "professional-income fraction (D. 843-3: 61 % then 59.85 %)";
+}
+
+pub relation bonification_mensuelle(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "bonification totale du foyer pour le mois (D. 843-2, par travailleur)";
+    label en unofficial "total household bonification for the month (D. 843-2, per worker)";
+}
+
+pub relation prime_mensuelle(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "prime mensuelle calculée L. 842-3 (avant seuil de paiement)";
+    label en unofficial "monthly bonus computed under L. 842-3 (before payment floor)";
+}
+
+pub relation prime_due_trimestre(d: Demandeur, montant: Money) kind institutional {
+    key(d);
+    label fr official "montant dû au foyer: moyenne trimestrielle servie (R. 843-1 I, seuil L. 842-3)";
+    label en unofficial "amount due to the household: served quarterly average (R. 843-1 I, L. 842-3 floor)";
+}
+
+// --- Forfait shapes (D. 843-1, all editions: stable text) ---
+
+@source(
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitSeul(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait personne seule (D. 843-1 al. 1)";
+    label en unofficial "single-person forfait (D. 843-1 para. 1)";
+    when forfait_base_du_mois(mois, base) and forme_foyer_retenue(d, mois, SEUL);
+    then forfait_majore(d, mois, base);
+}
+
+@source(
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitCouple(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait deux personnes: +50 % (D. 843-1 al. 1)";
+    label en unofficial "two-person forfait: +50 % (D. 843-1 para. 1)";
+    when forfait_base_du_mois(mois, base) and forme_foyer_retenue(d, mois, COUPLE);
+    then forfait_majore(d, mois, base * 1.5);
+}
+
+@source(
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitCouple1E(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait couple + 1 enfant: +30 % (D. 843-1 al. 1)";
+    label en unofficial "couple + 1 child forfait: +30 % (D. 843-1 para. 1)";
+    when forfait_base_du_mois(mois, base) and forme_foyer_retenue(d, mois, COUPLE_1E);
+    then forfait_majore(d, mois, base * 1.8);
+}
+
+@source(
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitCouple2E(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait couple + 2 enfants: +30 % x2 (D. 843-1 al. 1)";
+    label en unofficial "couple + 2 children forfait: +30 % x2 (D. 843-1 para. 1)";
+    when forfait_base_du_mois(mois, base) and forme_foyer_retenue(d, mois, COUPLE_2E);
+    then forfait_majore(d, mois, base * 2.1);
+}
+
+@source(
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitCouple3E(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait couple + 3 enfants: 30 %+30 %+40 % dès le troisième (D. 843-1 al. 1)";
+    label en unofficial "couple + 3 children forfait: 30 %+30 %+40 % from the third (D. 843-1 para. 1)";
+    when forfait_base_du_mois(mois, base) and forme_foyer_retenue(d, mois, COUPLE_3E);
+    then forfait_majore(d, mois, base * 2.5);
+}
+
+@source(
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitIsole(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait isolé L. 842-7: 128,412 % (D. 843-1 al. 2)";
+    label en unofficial "isolated-person forfait L. 842-7: 128.412 % (D. 843-1 para. 2)";
+    when forfait_base_du_mois(mois, base) and forme_foyer_retenue(d, mois, ISOLE);
+    then forfait_majore(d, mois, base * 1.28412);
+}
+
+@source(
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitIsole1E(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait isolé + 1 enfant: +42,804 % (D. 843-1 al. 2)";
+    label en unofficial "isolated + 1 child forfait: +42.804 % (D. 843-1 para. 2)";
+    when forfait_base_du_mois(mois, base) and forme_foyer_retenue(d, mois, ISOLE_1E);
+    then forfait_majore(d, mois, base * 1.71216);
+}
+
+@source(
+    CSS_D843_1_ED2021_01_01,
+    CSS_D843_1_ED2021_03_25,
+    CSS_D843_1_ED2021_06_01,
+    CSS_D843_1_ED2022_03_21,
+    CSS_D843_1_ED2023_12_31,
+    CSS_D843_1_ED2024_01_01,
+    CSS_D843_1_ED2024_07_01,
+    CSS_D843_1_ED2025_01_01,
+    CSS_D843_1_ED2025_02_28,
+    CSS_D843_1_ED2025_03_31,
+    CSS_D843_1_ED2026_04_01,
+    CSS_D843_1_ED2026_06_27)
+rule ForfaitIsole2E(d: Demandeur, mois: Date, base: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait isolé + 2 enfants: +42,804 % x2 (D. 843-1 al. 2)";
+    label en unofficial "isolated + 2 children forfait: +42.804 % x2 (D. 843-1 para. 2)";
+    when forfait_base_du_mois(mois, base) and forme_foyer_retenue(d, mois, ISOLE_2E);
+    then forfait_majore(d, mois, base * 2.1402);
+}
+
+// --- Fraction (D. 843-3, wording split 2025-03-31) ---
+
+@source(
+    CSS_D843_3_PRE2025_ED2021_01_01,
+    CSS_D843_3_PRE2025_ED2021_03_25,
+    CSS_D843_3_PRE2025_ED2021_06_01,
+    CSS_D843_3_PRE2025_ED2022_03_21,
+    CSS_D843_3_PRE2025_ED2023_12_31,
+    CSS_D843_3_PRE2025_ED2024_01_01,
+    CSS_D843_3_PRE2025_ED2024_07_01,
+    CSS_D843_3_PRE2025_ED2025_01_01,
+    CSS_D843_3_PRE2025_ED2025_02_28)
+rule Fraction61() strict {
+    effective [@2021-01-01, @2025-03-31);
+    label fr official "fraction 61 % (D. 843-3 avant décret 2025-292)";
+    label en unofficial "61 % fraction (D. 843-3 before decree 2025-292)";
+    when true;
+    then fraction_revenus_pro(0.61);
+}
+
+@source(
+    CSS_D843_3_ED2025_03_31,
+    CSS_D843_3_ED2026_04_01,
+    CSS_D843_3_ED2026_06_27)
+rule Fraction5985() strict {
+    effective [@2025-03-31, infinity);
+    label fr official "fraction 59,85 % (D. 843-3, décret 2025-292)";
+    label en unofficial "59.85 % fraction (D. 843-3, decree 2025-292)";
+    when true;
+    then fraction_revenus_pro(0.5985);
+}
+
+// --- Bonification per worker (D. 843-2) ---
+//
+// New wording (decree 2026-222, from 2026-04-01): zero at or below 59x
+// hourly SMIC, linear to 138x, cap 37.7 % of the single forfait.
+// Old wording (2018-2026-03): 120x, cap 29.101 %.
+
+@source(
+    CSS_D843_2_ED2026_04_01,
+    CSS_D843_2_ED2026_06_27)
+rule BoniNulle2026(d: Demandeur, mois: Date, flux: Integer, rev: Money, smic: Money, base: Money) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "bonification nulle à 59 SMIC horaires ou moins (D. 843-2, décret 2026-222)";
+    label en unofficial "zero bonification at or below 59 hourly SMIC (D. 843-2, decree 2026-222)";
+    when revenus_pro_d_un_actif(d, mois, flux, rev) and smic_horaire_retenu(mois, smic)
+        and forfait_base_du_mois(mois, base) and rev <= smic * 59.0;
+    then boni_un_actif(d, mois, flux, 0 EUR);
+}
+
+@source(
+    CSS_D843_2_ED2026_04_01,
+    CSS_D843_2_ED2026_06_27)
+rule BoniMax2026(d: Demandeur, mois: Date, flux: Integer, rev: Money, smic: Money, base: Money) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "bonification maximale 37,7 % dès 138 SMIC horaires (D. 843-2, décret 2026-222)";
+    label en unofficial "maximum 37.7 % bonification from 138 hourly SMIC (D. 843-2, decree 2026-222)";
+    when revenus_pro_d_un_actif(d, mois, flux, rev) and smic_horaire_retenu(mois, smic)
+        and forfait_base_du_mois(mois, base) and rev >= smic * 138.0;
+    then boni_un_actif(d, mois, flux, base * 0.377);
+}
+
+@source(
+    CSS_D843_2_ED2026_04_01,
+    CSS_D843_2_ED2026_06_27)
+rule BoniLineaire2026(d: Demandeur, mois: Date, flux: Integer, rev: Money, smic: Money, base: Money) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "bonification linéaire entre 59 et 138 SMIC horaires (D. 843-2, décret 2026-222)";
+    label en unofficial "linear bonification between 59 and 138 hourly SMIC (D. 843-2, decree 2026-222)";
+    when revenus_pro_d_un_actif(d, mois, flux, rev) and smic_horaire_retenu(mois, smic)
+        and forfait_base_du_mois(mois, base) and rev > smic * 59.0 and rev < smic * 138.0 and not_known(lecture_bonification_lineaire_arrondie());
+    then boni_un_actif(d, mois, flux, base * 0.377 * ((rev - smic * 59.0) / (smic * 79.0)));
+}
+
+@source(
+    CSS_D843_2_PRE2026_ED2021_01_01,
+    CSS_D843_2_PRE2026_ED2021_03_25,
+    CSS_D843_2_PRE2026_ED2021_06_01,
+    CSS_D843_2_PRE2026_ED2022_03_21,
+    CSS_D843_2_PRE2026_ED2023_12_31,
+    CSS_D843_2_PRE2026_ED2024_01_01,
+    CSS_D843_2_PRE2026_ED2024_07_01,
+    CSS_D843_2_PRE2026_ED2025_01_01,
+    CSS_D843_2_PRE2026_ED2025_02_28,
+    CSS_D843_2_PRE2026_ED2025_03_31)
+rule BoniNullePre2026(d: Demandeur, mois: Date, flux: Integer, rev: Money, smic: Money, base: Money) strict {
+    effective [@2021-01-01, @2026-04-01);
+    label fr official "bonification nulle à 59 SMIC horaires ou moins (D. 843-2 avant décret 2026-222)";
+    label en unofficial "zero bonification at or below 59 hourly SMIC (D. 843-2 before decree 2026-222)";
+    when revenus_pro_d_un_actif(d, mois, flux, rev) and smic_horaire_retenu(mois, smic)
+        and forfait_base_du_mois(mois, base) and rev <= smic * 59.0;
+    then boni_un_actif(d, mois, flux, 0 EUR);
+}
+
+@source(
+    CSS_D843_2_PRE2026_ED2021_01_01,
+    CSS_D843_2_PRE2026_ED2021_03_25,
+    CSS_D843_2_PRE2026_ED2021_06_01,
+    CSS_D843_2_PRE2026_ED2022_03_21,
+    CSS_D843_2_PRE2026_ED2023_12_31,
+    CSS_D843_2_PRE2026_ED2024_01_01,
+    CSS_D843_2_PRE2026_ED2024_07_01,
+    CSS_D843_2_PRE2026_ED2025_01_01,
+    CSS_D843_2_PRE2026_ED2025_02_28,
+    CSS_D843_2_PRE2026_ED2025_03_31)
+rule BoniMaxPre2026(d: Demandeur, mois: Date, flux: Integer, rev: Money, smic: Money, base: Money) strict {
+    effective [@2021-01-01, @2026-04-01);
+    label fr official "bonification maximale 29,101 % dès 120 SMIC horaires (D. 843-2 avant décret 2026-222)";
+    label en unofficial "maximum 29.101 % bonification from 120 hourly SMIC (D. 843-2 before decree 2026-222)";
+    when revenus_pro_d_un_actif(d, mois, flux, rev) and smic_horaire_retenu(mois, smic)
+        and forfait_base_du_mois(mois, base) and rev >= smic * 120.0;
+    then boni_un_actif(d, mois, flux, base * 0.29101);
+}
+
+@source(
+    CSS_D843_2_PRE2026_ED2021_01_01,
+    CSS_D843_2_PRE2026_ED2021_03_25,
+    CSS_D843_2_PRE2026_ED2021_06_01,
+    CSS_D843_2_PRE2026_ED2022_03_21,
+    CSS_D843_2_PRE2026_ED2023_12_31,
+    CSS_D843_2_PRE2026_ED2024_01_01,
+    CSS_D843_2_PRE2026_ED2024_07_01,
+    CSS_D843_2_PRE2026_ED2025_01_01,
+    CSS_D843_2_PRE2026_ED2025_02_28,
+    CSS_D843_2_PRE2026_ED2025_03_31)
+rule BoniLineairePre2026(d: Demandeur, mois: Date, flux: Integer, rev: Money, smic: Money, base: Money) strict {
+    effective [@2021-01-01, @2026-04-01);
+    label fr official "bonification linéaire entre 59 et 120 SMIC horaires (D. 843-2 avant décret 2026-222)";
+    label en unofficial "linear bonification between 59 and 120 hourly SMIC (D. 843-2 before decree 2026-222)";
+    when revenus_pro_d_un_actif(d, mois, flux, rev) and smic_horaire_retenu(mois, smic)
+        and forfait_base_du_mois(mois, base) and rev > smic * 59.0 and rev < smic * 120.0 and not_known(lecture_bonification_lineaire_arrondie());
+    then boni_un_actif(d, mois, flux, base * 0.29101 * ((rev - smic * 59.0) / (smic * 61.0)));
+}
+
+// --- Stream-tagged proxies (one worker = one stream) ---
+//
+// The band rules below fire per income stream. Streams are tagged 0
+// (claimant) and 1 (spouse): Integer keys (RSA precedent). Single and
+// isolated formes have no spouse by definition of the composition fact,
+// so the spouse stream defaults to zero positively per forme — no
+// absence test.
+
+pub relation revenus_pro_d_un_actif(d: Demandeur, mois: Date, flux: Integer, rev: Money) kind institutional {
+    key(d, mois, flux);
+    label fr official "revenus pro d'un travailleur du foyer, flux 0 demandeur / 1 conjoint (D. 843-2)";
+    label en unofficial "professional income of one household worker, stream 0 claimant / 1 spouse (D. 843-2)";
+}
+
+pub relation boni_un_actif(d: Demandeur, mois: Date, flux: Integer, montant: Money) kind institutional {
+    key(d, mois, flux);
+    label fr official "bonification d'un travailleur du foyer, flux 0/1 (D. 843-2)";
+    label en unofficial "one household worker's bonification, stream 0/1 (D. 843-2)";
+}
+
+pub relation revenus_pro_foyer(d: Demandeur, mois: Date, total: Money) kind institutional {
+    key(d, mois);
+    label fr official "revenus professionnels totaux du foyer (L. 842-3 1°)";
+    label en unofficial "total household professional income (L. 842-3 1°)";
+}
+
+rule BoniStreamDemandeur(d: Demandeur, mois: Date, rev: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "flux 0: revenus pro du demandeur (D. 843-2)";
+    label en unofficial "stream 0: claimant professional income (D. 843-2)";
+    when revenus_pro_demandeur(d, mois, rev);
+    then revenus_pro_d_un_actif(d, mois, 0, rev);
+}
+
+rule BoniStreamConjoint(d: Demandeur, mois: Date, rev: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "flux 1: revenus pro du conjoint (D. 843-2)";
+    label en unofficial "stream 1: spouse professional income (D. 843-2)";
+    when revenus_pro_conjoint(d, mois, rev);
+    then revenus_pro_d_un_actif(d, mois, 1, rev);
+}
+
+rule BoniConjointNulSeul(d: Demandeur, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "personne seule: pas de second travailleur (D. 843-1, D. 843-2)";
+    label en unofficial "single person: no second worker (D. 843-1, D. 843-2)";
+    when forme_foyer_retenue(d, mois, SEUL);
+    then boni_un_actif(d, mois, 1, 0 EUR);
+}
+
+rule BoniConjointNulIsole(d: Demandeur, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "isolé sans enfant: pas de second travailleur (D. 843-1, D. 843-2)";
+    label en unofficial "isolated without child: no second worker (D. 843-1, D. 843-2)";
+    when forme_foyer_retenue(d, mois, ISOLE);
+    then boni_un_actif(d, mois, 1, 0 EUR);
+}
+
+rule BoniConjointNulIsole1E(d: Demandeur, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "isolé + 1 enfant: pas de second travailleur (D. 843-1, D. 843-2)";
+    label en unofficial "isolated + 1 child: no second worker (D. 843-1, D. 843-2)";
+    when forme_foyer_retenue(d, mois, ISOLE_1E);
+    then boni_un_actif(d, mois, 1, 0 EUR);
+}
+
+rule BoniConjointNulIsole2E(d: Demandeur, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "isolé + 2 enfants: pas de second travailleur (D. 843-1, D. 843-2)";
+    label en unofficial "isolated + 2 children: no second worker (D. 843-1, D. 843-2)";
+    when forme_foyer_retenue(d, mois, ISOLE_2E);
+    then boni_un_actif(d, mois, 1, 0 EUR);
+}
+
+rule BoniFoyer(d: Demandeur, mois: Date, b0: Money, b1: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bonification du foyer: somme des travailleurs (D. 843-2)";
+    label en unofficial "household bonification: sum over workers (D. 843-2)";
+    when boni_un_actif(d, mois, 0, b0) and boni_un_actif(d, mois, 1, b1);
+    then bonification_mensuelle(d, mois, b0 + b1);
+}
+
+rule RevProFoyerSeul(d: Demandeur, mois: Date, r: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "revenus pro du foyer seul (L. 842-3 1°)";
+    label en unofficial "single-person household professional income (L. 842-3 1°)";
+    when revenus_pro_demandeur(d, mois, r) and forme_foyer_retenue(d, mois, SEUL);
+    then revenus_pro_foyer(d, mois, r);
+}
+
+rule RevProFoyerIsole(d: Demandeur, mois: Date, r: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "revenus pro du foyer isolé (L. 842-3 1°)";
+    label en unofficial "isolated household professional income (L. 842-3 1°)";
+    when revenus_pro_demandeur(d, mois, r)
+        and forme_foyer_retenue(d, mois, ISOLE);
+    then revenus_pro_foyer(d, mois, r);
+}
+
+rule RevProFoyerIsole1E(d: Demandeur, mois: Date, r: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "revenus pro du foyer isolé + 1 enfant (L. 842-3 1°)";
+    label en unofficial "isolated + 1 child household professional income (L. 842-3 1°)";
+    when revenus_pro_demandeur(d, mois, r)
+        and forme_foyer_retenue(d, mois, ISOLE_1E);
+    then revenus_pro_foyer(d, mois, r);
+}
+
+rule RevProFoyerIsole2E(d: Demandeur, mois: Date, r: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "revenus pro du foyer isolé + 2 enfants (L. 842-3 1°)";
+    label en unofficial "isolated + 2 children household professional income (L. 842-3 1°)";
+    when revenus_pro_demandeur(d, mois, r)
+        and forme_foyer_retenue(d, mois, ISOLE_2E);
+    then revenus_pro_foyer(d, mois, r);
+}
+
+rule RevProFoyerCouple(d: Demandeur, mois: Date, r1: Money, r2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "revenus pro du foyer en couple: demandeur + conjoint (L. 842-3 1°)";
+    label en unofficial "couple household professional income: claimant + spouse (L. 842-3 1°)";
+    when revenus_pro_demandeur(d, mois, r1) and revenus_pro_conjoint(d, mois, r2);
+    then revenus_pro_foyer(d, mois, r1 + r2);
+}
+
+// --- Monthly prime (L. 842-3 1°/2°) ---
+//
+// Resources are deemed at least equal to the forfait (2°): floor rules.
+// The computed difference cannot create a debt: floored at zero.
+
+pub relation ressources_retenues(d: Demandeur, mois: Date, montant: Money) kind institutional {
+    key(d, mois);
+    label fr official "ressources retenues: plancher forfaitaire L. 842-3 2°";
+    label en unofficial "retained resources: L. 842-3 2° forfait floor";
+}
+
+pub relation prime_trimestre(d: Demandeur, montant: Money) kind institutional {
+    key(d);
+    label fr official "moyenne trimestrielle des primes mensuelles (R. 843-1 I, avant seuil)";
+    label en unofficial "quarterly average of monthly bonuses (R. 843-1 I, before floor)";
+}
+
+deadline policy PPA_MOIS {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+pub relation mois_revue(d: Demandeur, revue: Date) kind empirical {
+    key(d);
+    label fr official "mois de la demande ou du réexamen périodique (R. 843-1 I; fait retenu)";
+    label en unofficial "month of the claim or periodic review (R. 843-1 I; retained fact)";
+}
+
+@source(
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule RessourcesPlancherHaut(d: Demandeur, mois: Date, res: Money, forfait: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ressources au-dessus du forfait: retenues telles quelles (L. 842-3 2°)";
+    label en unofficial "resources above forfait: retained as-is (L. 842-3 2°)";
+    when ressources_foyer_mois(d, mois, res) and forfait_majore(d, mois, forfait) and res >= forfait;
+    then ressources_retenues(d, mois, res);
+}
+
+@source(
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule RessourcesPlancherBas(d: Demandeur, mois: Date, res: Money, forfait: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ressources sous le forfait: réputées égales au forfait (L. 842-3 2°)";
+    label en unofficial "resources below forfait: deemed equal to forfait (L. 842-3 2°)";
+    when ressources_foyer_mois(d, mois, res) and forfait_majore(d, mois, forfait) and res < forfait;
+    then ressources_retenues(d, mois, forfait);
+}
+
+@source(
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule PrimeMensuellePositive(d: Demandeur, mois: Date, f: Money, q: Decimal, rpro: Money, boni: Money, res: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prime mensuelle: forfait + fraction + bonifications − ressources (L. 842-3)";
+    label en unofficial "monthly bonus: forfait + fraction + bonifications − resources (L. 842-3)";
+    when forfait_majore(d, mois, f) and fraction_revenus_pro(q) and revenus_pro_foyer(d, mois, rpro)
+        and bonification_mensuelle(d, mois, boni) and ressources_retenues(d, mois, res)
+        and f + q * rpro + boni - res >= 0 EUR;
+    then prime_mensuelle(d, mois, f + q * rpro + boni - res);
+}
+
+@source(
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule PrimeMensuelleNulle(d: Demandeur, mois: Date, f: Money, q: Decimal, rpro: Money, boni: Money, res: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "différence négative: pas de dette, prime nulle (L. 842-3)";
+    label en unofficial "negative difference: no debt, zero bonus (L. 842-3)";
+    when forfait_majore(d, mois, f) and fraction_revenus_pro(q) and revenus_pro_foyer(d, mois, rpro)
+        and bonification_mensuelle(d, mois, boni) and ressources_retenues(d, mois, res)
+        and f + q * rpro + boni - res < 0 EUR;
+    then prime_mensuelle(d, mois, 0 EUR);
+}
+
+// --- Trimestre (R. 843-1 I; wording split 2025-02-28) ---
+//
+// The due amount is the quarterly average; the L. 842-3 payment floor
+// applies to the served average.
+
+@source(
+    CSS_R843_1_ED2025_02_28,
+    CSS_R843_1_ED2025_03_31,
+    CSS_R843_1_ED2026_04_01,
+    CSS_R843_1_ED2026_06_27)
+rule TrimestreNouveau(d: Demandeur, revue: Date, m1: Date, m2: Date, m3: Date, p1: Money, p2: Money, p3: Money) strict {
+    effective [@2025-02-28, infinity);
+    label fr official "trimestre: moyenne des 4e, 3e et 2e mois précédents (R. 843-1 I)";
+    label en unofficial "quarter: average of the 4th, 3rd and 2nd previous months (R. 843-1 I)";
+    when mois_revue(d, revue) and prime_mensuelle(d, m1, p1) and prime_mensuelle(d, m2, p2) and prime_mensuelle(d, m3, p3)
+        and revue == add_calendar_period(m1, 4 calendar_month)
+        and m2 == add_calendar_period(m1, 1 calendar_month)
+        and m3 == add_calendar_period(m1, 2 calendar_month) and not_known(lecture_prime_moyenne_arrondie());
+    then prime_trimestre(d, (p1 + p2 + p3) / 3.0);
+}
+
+@source(
+    CSS_R843_1_PRE2025_ED2021_01_01,
+    CSS_R843_1_PRE2025_ED2021_03_25,
+    CSS_R843_1_PRE2025_ED2021_06_01,
+    CSS_R843_1_PRE2025_ED2022_03_21,
+    CSS_R843_1_PRE2025_ED2023_12_31,
+    CSS_R843_1_PRE2025_ED2024_01_01,
+    CSS_R843_1_PRE2025_ED2024_07_01,
+    CSS_R843_1_PRE2025_ED2025_01_01)
+rule TrimestreAncien(d: Demandeur, revue: Date, m1: Date, m2: Date, m3: Date, p1: Money, p2: Money, p3: Money) strict {
+    effective [@2021-01-01, @2025-02-28);
+    label fr official "trimestre: moyenne des trois mois précédents (R. 843-1 avant décret 2025-185)";
+    label en unofficial "quarter: average of the three previous months (R. 843-1 before decree 2025-185)";
+    when mois_revue(d, revue) and prime_mensuelle(d, m1, p1) and prime_mensuelle(d, m2, p2) and prime_mensuelle(d, m3, p3)
+        and revue == add_calendar_period(m1, 3 calendar_month)
+        and m2 == add_calendar_period(m1, 1 calendar_month)
+        and m3 == add_calendar_period(m1, 2 calendar_month) and not_known(lecture_prime_moyenne_arrondie());
+    then prime_trimestre(d, (p1 + p2 + p3) / 3.0);
+}
+
+@source(
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule PrimeDueSeuil(d: Demandeur, revue: Date, moyenne: Money, seuil: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "moyenne au-dessus du minimal: montant dû servi (L. 842-3 dernier al.)";
+    label en unofficial "average above the minimum: due amount served (L. 842-3 last para.)";
+    when prime_trimestre(d, moyenne) and minimum_paiement_retenu(revue, seuil) and moyenne >= seuil;
+    then prime_due_trimestre(d, moyenne);
+}
+
+@source(
+    CSS_L842_3_ED2021_01_01,
+    CSS_L842_3_ED2021_03_25,
+    CSS_L842_3_ED2021_06_01,
+    CSS_L842_3_ED2022_03_21,
+    CSS_L842_3_ED2023_12_31,
+    CSS_L842_3_ED2024_01_01,
+    CSS_L842_3_ED2024_07_01,
+    CSS_L842_3_ED2025_01_01,
+    CSS_L842_3_ED2025_02_28,
+    CSS_L842_3_ED2025_03_31,
+    CSS_L842_3_ED2026_04_01,
+    CSS_L842_3_ED2026_06_27)
+rule PrimeDueSousSeuil(d: Demandeur, revue: Date, moyenne: Money, seuil: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "moyenne sous le minimal: prime non versée (L. 842-3 dernier al.)";
+    label en unofficial "average below the minimum: bonus not paid (L. 842-3 last para.)";
+    when prime_trimestre(d, moyenne) and minimum_paiement_retenu(revue, seuil) and moyenne < seuil;
+    then prime_due_trimestre(d, 0 EUR);
+}
+
+// --- Reading D-82/D-83: quarterly average (R. 843-1) rounded to the centime ---
+//
+// R. 843-1 I speaks of the quarterly average of the three monthly primes and
+// states NO rounding. The base rules divide exactly: a quotient that does not
+// terminate makes the document NON_EXECUTABLE (INEXACT_DIVISION, SPEC 50/18:
+// rounding only by an explicit policy). The rounding is not a text of the law but
+// a READING (SPEC 152, owner decisions D-82 / D-83, 08.10.2026): the basis is the
+// practice of the funds (CNAF), under which the intermediate value (the average of
+// the monthly primes, before the L. 842-3 payment floor) is rounded to the centime,
+// HALF_UP. Outside any group: unselected it executes nothing and changes no
+// answer; selected (context { interpretation fr.css.prime_activite::PrimeMoyenneArrondieCentime; })
+// it replaces the exact division by div_round(p1 + p2 + p3, 3.0, 2, "HALF_UP") in both
+// wordings of R. 843-1 (M-4..M-2 and the three previous months), and the marker
+// silences the exact-division rules (not_known), so the head carries ONE value
+// under either choice. It rounds ALWAYS when selected, also where the exact quotient
+// is longer than two places (as the funds do).
+
+pub relation lecture_prime_moyenne_arrondie() kind institutional {
+    label fr official "lecture retenue : la moyenne trimestrielle des primes mensuelles (R. 843-1 I) est arrondie au centime (D-82, D-83 ; marqueur de la lecture PrimeMoyenneArrondieCentime)";
+    label en unofficial "selected reading: the quarterly average of the monthly bonuses (R. 843-1 I) is rounded to the centime (D-82, D-83; marker of the reading PrimeMoyenneArrondieCentime)";
+}
+
+@source(
+    CSS_R843_1_ED2025_02_28,
+    CSS_R843_1_ED2025_03_31,
+    CSS_R843_1_ED2026_04_01,
+    CSS_R843_1_ED2026_06_27,
+    CSS_R843_1_PRE2025_ED2021_01_01,
+    CSS_R843_1_PRE2025_ED2021_03_25,
+    CSS_R843_1_PRE2025_ED2021_06_01,
+    CSS_R843_1_PRE2025_ED2022_03_21,
+    CSS_R843_1_PRE2025_ED2023_12_31,
+    CSS_R843_1_PRE2025_ED2024_01_01,
+    CSS_R843_1_PRE2025_ED2024_07_01,
+    CSS_R843_1_PRE2025_ED2025_01_01)
+rule LecturePrimeMoyenneArrondie() strict {
+    effective [@2021-01-01, infinity);
+    label fr official "lecture retenue : la moyenne trimestrielle des primes (R. 843-1 I) est arrondie au centime (marqueur)";
+    label en unofficial "selected reading: the quarterly average of the bonuses (R. 843-1 I) is rounded to the centime (marker)";
+    when true;
+    then lecture_prime_moyenne_arrondie();
+}
+
+@source(
+    CSS_R843_1_ED2025_02_28,
+    CSS_R843_1_ED2025_03_31,
+    CSS_R843_1_ED2026_04_01,
+    CSS_R843_1_ED2026_06_27)
+rule TrimestreNouveauArrondi(d: Demandeur, revue: Date, m1: Date, m2: Date, m3: Date, p1: Money, p2: Money, p3: Money) strict {
+    effective [@2025-02-28, infinity);
+    label fr official "trimestre: moyenne des 4e, 3e et 2e mois précédents (R. 843-1 I), arrondi au centime (lecture D-82)";
+    label en unofficial "quarter: average of the 4th, 3rd and 2nd previous months (R. 843-1 I), rounded to the centime (reading D-82)";
+    when mois_revue(d, revue) and prime_mensuelle(d, m1, p1) and prime_mensuelle(d, m2, p2) and prime_mensuelle(d, m3, p3)
+        and revue == add_calendar_period(m1, 4 calendar_month)
+        and m2 == add_calendar_period(m1, 1 calendar_month)
+        and m3 == add_calendar_period(m1, 2 calendar_month);
+    then prime_trimestre(d, div_round(p1 + p2 + p3, 3.0, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_R843_1_PRE2025_ED2021_01_01,
+    CSS_R843_1_PRE2025_ED2021_03_25,
+    CSS_R843_1_PRE2025_ED2021_06_01,
+    CSS_R843_1_PRE2025_ED2022_03_21,
+    CSS_R843_1_PRE2025_ED2023_12_31,
+    CSS_R843_1_PRE2025_ED2024_01_01,
+    CSS_R843_1_PRE2025_ED2024_07_01,
+    CSS_R843_1_PRE2025_ED2025_01_01)
+rule TrimestreAncienArrondi(d: Demandeur, revue: Date, m1: Date, m2: Date, m3: Date, p1: Money, p2: Money, p3: Money) strict {
+    effective [@2021-01-01, @2025-02-28);
+    label fr official "trimestre: moyenne des trois mois précédents (R. 843-1 avant décret 2025-185), arrondi au centime (lecture D-82)";
+    label en unofficial "quarter: average of the three previous months (R. 843-1 before decree 2025-185), rounded to the centime (reading D-82)";
+    when mois_revue(d, revue) and prime_mensuelle(d, m1, p1) and prime_mensuelle(d, m2, p2) and prime_mensuelle(d, m3, p3)
+        and revue == add_calendar_period(m1, 3 calendar_month)
+        and m2 == add_calendar_period(m1, 1 calendar_month)
+        and m3 == add_calendar_period(m1, 2 calendar_month);
+    then prime_trimestre(d, div_round(p1 + p2 + p3, 3.0, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_R843_1_ED2025_02_28,
+    CSS_R843_1_ED2025_03_31,
+    CSS_R843_1_ED2026_04_01,
+    CSS_R843_1_ED2026_06_27,
+    CSS_R843_1_PRE2025_ED2021_01_01,
+    CSS_R843_1_PRE2025_ED2021_03_25,
+    CSS_R843_1_PRE2025_ED2021_06_01,
+    CSS_R843_1_PRE2025_ED2022_03_21,
+    CSS_R843_1_PRE2025_ED2023_12_31,
+    CSS_R843_1_PRE2025_ED2024_01_01,
+    CSS_R843_1_PRE2025_ED2024_07_01,
+    CSS_R843_1_PRE2025_ED2025_01_01)
+pub interpretation PrimeMoyenneArrondieCentime of CSS_R843_1_ED2026_06_27 {
+    status disputed;
+    label fr official "lecture : la moyenne trimestrielle des primes mensuelles de la R. 843-1 I, si la division n'est pas exacte, est arrondie au centime, demi vers le haut — pratique des caisses (CNAF) ; le texte de la R. 843-1 ne fixe aucun arrondi";
+    label en unofficial "reading: the R. 843-1 I quarterly average of the monthly bonuses, where the division is not exact, is rounded to the centime, half up - fund (CNAF) practice; the text of R. 843-1 states no rounding";
+    include LecturePrimeMoyenneArrondie;
+    include TrimestreNouveauArrondi;
+    include TrimestreAncienArrondi;
+}
+
+// --- Reading D-82/D-83: linear bonification (D. 843-2) rounded to the centime ---
+//
+// D. 843-2 gives the bonification of a worker as a fraction of the single forfait,
+// «croissant linéairement» between 59 and 138 (before 2026-04-01: 120) hourly SMIC:
+// base x rate x (income - 59 SMIC) / (span x SMIC). The ratio is a Money / Money
+// division that is rarely exact; the text states no rounding. The base rules divide
+// exactly (INEXACT_DIVISION on a non-terminating ratio). The reading
+// BonificationLineaireArrondieCentime (SPEC 152, D-82 / D-83, fund practice) rounds
+// the linear bonification of ONE worker, the euro amount base x rate x ratio, to the
+// centime, HALF_UP, as ONE division with rounding (the ratio itself is a fraction,
+// not rounded: div_round(base x rate x (income - 59 SMIC), span x SMIC, 2, "HALF_UP");
+// both money operands are divided by 1 EUR as in fr.apl). The maximum bonification
+// (base x rate, no division) and the zero band are not touched.
+
+pub relation lecture_bonification_lineaire_arrondie() kind institutional {
+    label fr official "lecture retenue : la bonification linéaire d'un travailleur (D. 843-2) est arrondie au centime (D-82, D-83 ; marqueur de la lecture BonificationLineaireArrondieCentime)";
+    label en unofficial "selected reading: the linear bonification of one worker (D. 843-2) is rounded to the centime (D-82, D-83; marker of the reading BonificationLineaireArrondieCentime)";
+}
+
+@source(
+    CSS_D843_2_ED2026_04_01,
+    CSS_D843_2_ED2026_06_27,
+    CSS_D843_2_PRE2026_ED2021_01_01,
+    CSS_D843_2_PRE2026_ED2021_03_25,
+    CSS_D843_2_PRE2026_ED2021_06_01,
+    CSS_D843_2_PRE2026_ED2022_03_21,
+    CSS_D843_2_PRE2026_ED2023_12_31,
+    CSS_D843_2_PRE2026_ED2024_01_01,
+    CSS_D843_2_PRE2026_ED2024_07_01,
+    CSS_D843_2_PRE2026_ED2025_01_01,
+    CSS_D843_2_PRE2026_ED2025_02_28,
+    CSS_D843_2_PRE2026_ED2025_03_31)
+rule LectureBonificationLineaireArrondie() strict {
+    effective [@2021-01-01, infinity);
+    label fr official "lecture retenue : la bonification linéaire (D. 843-2) est arrondie au centime (marqueur)";
+    label en unofficial "selected reading: the linear bonification (D. 843-2) is rounded to the centime (marker)";
+    when true;
+    then lecture_bonification_lineaire_arrondie();
+}
+
+@source(
+    CSS_D843_2_ED2026_04_01,
+    CSS_D843_2_ED2026_06_27)
+rule BoniLineaire2026Arrondi(d: Demandeur, mois: Date, flux: Integer, rev: Money, smic: Money, base: Money) strict {
+    effective [@2026-04-01, infinity);
+    label fr official "bonification linéaire entre 59 et 138 SMIC horaires (D. 843-2, décret 2026-222), arrondi au centime (lecture D-82)";
+    label en unofficial "linear bonification between 59 and 138 hourly SMIC (D. 843-2, decree 2026-222), rounded to the centime (reading D-82)";
+    when revenus_pro_d_un_actif(d, mois, flux, rev) and smic_horaire_retenu(mois, smic)
+        and forfait_base_du_mois(mois, base) and rev > smic * 59.0 and rev < smic * 138.0;
+    then boni_un_actif(d, mois, flux, div_round(base * 0.377 * ((rev - smic * 59.0) / 1 EUR), (smic * 79.0) / 1 EUR, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_D843_2_PRE2026_ED2021_01_01,
+    CSS_D843_2_PRE2026_ED2021_03_25,
+    CSS_D843_2_PRE2026_ED2021_06_01,
+    CSS_D843_2_PRE2026_ED2022_03_21,
+    CSS_D843_2_PRE2026_ED2023_12_31,
+    CSS_D843_2_PRE2026_ED2024_01_01,
+    CSS_D843_2_PRE2026_ED2024_07_01,
+    CSS_D843_2_PRE2026_ED2025_01_01,
+    CSS_D843_2_PRE2026_ED2025_02_28,
+    CSS_D843_2_PRE2026_ED2025_03_31)
+rule BoniLineairePre2026Arrondi(d: Demandeur, mois: Date, flux: Integer, rev: Money, smic: Money, base: Money) strict {
+    effective [@2021-01-01, @2026-04-01);
+    label fr official "bonification linéaire entre 59 et 120 SMIC horaires (D. 843-2 avant décret 2026-222), arrondi au centime (lecture D-82)";
+    label en unofficial "linear bonification between 59 and 120 hourly SMIC (D. 843-2 before decree 2026-222), rounded to the centime (reading D-82)";
+    when revenus_pro_d_un_actif(d, mois, flux, rev) and smic_horaire_retenu(mois, smic)
+        and forfait_base_du_mois(mois, base) and rev > smic * 59.0 and rev < smic * 120.0;
+    then boni_un_actif(d, mois, flux, div_round(base * 0.29101 * ((rev - smic * 59.0) / 1 EUR), (smic * 61.0) / 1 EUR, 2, "HALF_UP"));
+}
+
+@source(
+    CSS_D843_2_ED2026_04_01,
+    CSS_D843_2_ED2026_06_27,
+    CSS_D843_2_PRE2026_ED2021_01_01,
+    CSS_D843_2_PRE2026_ED2021_03_25,
+    CSS_D843_2_PRE2026_ED2021_06_01,
+    CSS_D843_2_PRE2026_ED2022_03_21,
+    CSS_D843_2_PRE2026_ED2023_12_31,
+    CSS_D843_2_PRE2026_ED2024_01_01,
+    CSS_D843_2_PRE2026_ED2024_07_01,
+    CSS_D843_2_PRE2026_ED2025_01_01,
+    CSS_D843_2_PRE2026_ED2025_02_28,
+    CSS_D843_2_PRE2026_ED2025_03_31)
+pub interpretation BonificationLineaireArrondieCentime of CSS_D843_2_ED2026_06_27 {
+    status disputed;
+    label fr official "lecture : la bonification linéaire d'un travailleur (D. 843-2, entre 59 et 138 SMIC horaires, avant le 01.04.2026 entre 59 et 120), si la division n'est pas exacte, est arrondie au centime, demi vers le haut — pratique des caisses (CNAF) ; le texte de la D. 843-2 ne fixe aucun arrondi";
+    label en unofficial "reading: the linear bonification of one worker (D. 843-2, between 59 and 138 hourly SMIC, between 59 and 120 before 01.04.2026), where the division is not exact, is rounded to the centime, half up - fund (CNAF) practice; the text of D. 843-2 states no rounding";
+    include LectureBonificationLineaireArrondie;
+    include BoniLineaire2026Arrondi;
+    include BoniLineairePre2026Arrondi;
+}

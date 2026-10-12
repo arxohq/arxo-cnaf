@@ -1,0 +1,93 @@
+// BMAF chain (L. 551-1 bases, L. 161-25 coefficient, DSS publications).
+//
+// L. 161-25: the yearly revalorisation of benefit amounts that refer to it
+// uses a coefficient equal to the change of the yearly mean of consumer
+// prices (ex-tobacco) over the last twelve monthly indices published by
+// INSEE by the next-to-last month before the revalorisation date. When the
+// coefficient is below one, it is raised to one.
+//
+// DECISION-0452 chain: BMAF(n) = BMAF(n-1) x L. 161-25 coefficient, rounded
+// to the centime. DSS/2B/2026/46 publishes the 2026 step: previous base
+// 474.37, coefficient 1.008 (+0.8 %), result 478.16. The INSEE series
+// pinned in phase 0 reproduces the published coefficient independently:
+// mean(2025-02..2026-01) / mean(2024-02..2025-01) = 1.008317, published at
+// three decimals as 1.008; 474.37 x 1.008 = 478.16496, published at the
+// centime as 478.16 (rounding note D-21).
+
+language "law.core" version "0.2";
+package fr.css.revalorisation version "0.1.0";
+namespace "urn:fr:corpus:clir:revalorisation";
+
+use self::{
+    CSS_L161_25,
+    DSS_2026_46_COEFF,
+};
+
+deadline policy REVALO_EXERCICE {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+entity Exercice {
+    label fr official "exercice de revalorisation annuelle (année de date d’effet)";
+    label en unofficial "yearly revalorisation exercise (year of the effective date)";
+}
+
+relation annee_exercice(e: Exercice, annee: Integer) kind empirical {
+    key(e);
+    label fr official "année de date d’effet de l’exercice";
+    label en unofficial "effective-date year of the exercise";
+}
+
+relation bmaf_precedente(e: Exercice, montant: Money) kind empirical {
+    key(e);
+    label fr official "base mensuelle de l’année précédente, publiée par la DSS (origine DSS)";
+    label en unofficial "previous-year monthly base published by the DSS (DSS origin)";
+}
+
+relation coefficient_annee(e: Exercice, coeff: Decimal) kind empirical {
+    key(e);
+    label fr official "coefficient L. 161-25 de l’année, publié par la DSS (origine DSS)";
+    label en unofficial "year L. 161-25 coefficient published by the DSS (DSS origin)";
+}
+
+relation coefficient_retenu(e: Exercice, coeff: Decimal) kind institutional {
+    key(e);
+    label fr official "coefficient applicable après le plancher L. 161-25 à un";
+    label en unofficial "applicable coefficient after the L. 161-25 floor at one";
+}
+
+relation bmaf_revalorisee(e: Exercice, montant: Money) kind institutional {
+    key(e);
+    label fr official "base mensuelle revalorisée de l’année (chaîne BMAF)";
+    label en unofficial "revalorised monthly base of the year (BMAF chain)";
+}
+
+@source(CSS_L161_25)
+rule CoeffPlancherUn(e: Exercice, c: Decimal) strict {
+    effective [@2016-01-01, infinity);
+    label fr official "Si ce coefficient est inférieur à un, il est porté à cette valeur";
+    label en unofficial "When the coefficient is below one, it is raised to one";
+    when coefficient_annee(e, c) and c < 1.0;
+    then coefficient_retenu(e, 1.0);
+}
+
+@source(CSS_L161_25)
+rule CoeffNominal(e: Exercice, c: Decimal) strict {
+    effective [@2016-01-01, infinity);
+    label fr official "Coefficient L. 161-25 applicable à sa valeur nominale à partir de un";
+    label en unofficial "L. 161-25 coefficient applied at its nominal value from one upward";
+    when coefficient_annee(e, c) and c >= 1.0;
+    then coefficient_retenu(e, c);
+}
+
+@source(CSS_L161_25, DSS_2026_46_COEFF)
+rule BmafChaine(e: Exercice, base: Money, c: Decimal) strict {
+    effective [@2016-01-01, infinity);
+    label fr official "BMAF(n) = BMAF(n-1) multipliée par le coefficient L. 161-25, arrondie au centime";
+    label en unofficial "BMAF(n) = BMAF(n-1) times the L. 161-25 coefficient, rounded to the centime";
+    when bmaf_precedente(e, base) and coefficient_retenu(e, c);
+    then bmaf_revalorisee(e, round(base * c, 2, "HALF_UP"));
+}

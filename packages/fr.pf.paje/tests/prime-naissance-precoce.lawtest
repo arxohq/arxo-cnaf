@@ -1,0 +1,21 @@
+// L. 531-2, para. 2, 1°: birth before the sixth expected month — right by
+// way of exception (exact award date — «date fixée par décret»,
+// B-PAJE-DATE-DECRET; right and amount only here).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-naissance-precoce" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "precoce-01": naissance_avant_terme_prevu(entity_ref("urn:fr:paje:enfant:precoce")) { origin adjudicated; }
+        assert "precoce-02": ressources_annuelles(entity_ref("urn:fr:paje:case:precoce"), 20000 EUR) { origin case_input; }
+        assert "precoce-03": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:precoce"), 30000 EUR) { origin case_input; }
+        assert "precoce-04": bmaf_applicable(entity_ref("urn:fr:paje:case:precoce"), 400.00 EUR) { origin case_input; }
+        assert "precoce-05": date_examen_situation(entity_ref("urn:fr:paje:case:precoce"), entity_ref("urn:fr:paje:enfant:precoce"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prime_attribuee(entity_ref("urn:fr:paje:case:precoce"), entity_ref("urn:fr:paje:enfant:precoce"), 919.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,22 @@
+// 52.52 differential due without request, payable no later than 2021-06-30: PayerAsfDifferentielDu ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-devoir-versement-differentiel" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ovd-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:devoir-versement-differentiel"), entity_ref("urn:fr:pf-asf:case:devoir-versement-differentiel-e1")) { origin case_input; }
+        assert "ovd-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:devoir-versement-differentiel-e1")) { origin case_input; }
+        assert "ovd-03": motif_asf(entity_ref("urn:fr:pf-asf:case:devoir-versement-differentiel-e1"), PENSION_PARTIELLE) { origin case_input; }
+        assert "ovd-04": manquement_debiteur(entity_ref("urn:fr:pf-asf:case:devoir-versement-differentiel-e1"), @2021-03-01) { origin case_input; }
+        assert "ovd-05": mois_ouverture_asf(@2021-04-01) { origin case_input; }
+        assert "ovd-06": pension_recue(entity_ref("urn:fr:pf-asf:case:devoir-versement-differentiel-e1"), 60.00 EUR) { origin case_input; }
+        assert "ovd-07": bmaf_retenu(entity_ref("urn:fr:pf-asf:case:devoir-versement-differentiel"), 400.00 EUR) { origin case_input; }
+        assert "ovd-08": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-asf:org:caisse"), entity_ref("urn:fr:pf-asf:case:devoir-versement-differentiel")) { origin case_input; }
+        assert "ovd-09": date_limite_versement(@2021-06-30) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+    expect position(PayerAsfDifferentielDu, ACTIVE);
+}

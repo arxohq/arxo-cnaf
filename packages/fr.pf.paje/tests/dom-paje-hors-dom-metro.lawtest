@@ -1,0 +1,17 @@
+// L. 755-19, para. 1, scope control: the household resides in metropolitan
+// France — the DOM applicability status does not conclude.
+// Control — dom-paje-applicable-guadeloupe.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-hors-dom-metro" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-metro-01": territoire(entity_ref("urn:fr:paje:case:dom-metro"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(paje_dom_applicable(entity_ref("urn:fr:paje:case:dom-metro")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

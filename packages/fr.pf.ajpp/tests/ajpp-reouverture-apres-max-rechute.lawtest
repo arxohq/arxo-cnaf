@@ -1,0 +1,31 @@
+// Reopening past the maximum on relapse: right established,
+// pathology relapsed, four elapsed years for the same cause — the
+// original duration expired («Au-delà de la durée maximale prévue au
+// premier alinéa», L. 544-3 para. 3), the right reopens and payment
+// runs beyond the maximum in a fresh application (D. 544-3 2°).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reouverture-apres-max-rechute" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-ram-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-ram")) { origin adjudicated; }
+        assert "ajpp-ram-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-ram")) { origin adjudicated; }
+        assert "ajpp-ram-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-ram"), entity_ref("urn:fr:pf-ajpp:case:enfant-ram")) { origin case_input; }
+        assert "ajpp-ram-04": rechute_pathologie(entity_ref("urn:fr:pf-ajpp:case:enfant-ram")) { origin case_input; }
+        assert "ajpp-ram-05": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-ram"), MALADIE, 4) { origin case_input; }
+    }
+    evaluate truth(duree_maximale_expiree(entity_ref("urn:fr:pf-ajpp:case:enfant-ram")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droit_rouvert(entity_ref("urn:fr:pf-ajpp:case:enfant-ram")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(versement_au_dela_max(entity_ref("urn:fr:pf-ajpp:case:enfant-ram")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

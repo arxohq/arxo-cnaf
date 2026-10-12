@@ -1,0 +1,31 @@
+// ГРАНИЦА R0, нижняя половина пары: ресурсы 4 600 € округляются до той же
+// сотни и остаются НИЖЕ форфейта R0 одинокого лица (4 683 € с 1 января
+// 2022 года). Второе слагаемое D. 823-17 отрицательно, участия ниже
+// минимального норма не знает — Pp равно P0 = 35,39 €.
+// Заметим: ресурсы, РОВНО равные R0, в этом акте невыразимы — R всегда
+// кратно сотне (D. 823-17 4°), а R0 одинокого лица сотне не кратен.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-ressources-sous-r0" {
+    given {
+        context { decision_time @2022-02-15T12:00:00Z; knowledge_time @2022-02-15T12:00:00Z; legal_time @2022-02-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frontiere-ressources-sous-r0-01": secteur_locatif(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0")) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-02": zone_du_logement(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), ZONE_I) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-03": aide_demandee(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), APL) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-04": situation_familiale(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), PERSONNE_SEULE) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-05": personnes_a_charge(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), 0) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-06": loyer_principal(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), 400 EUR) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-07": ressources_du_menage(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), 4600 EUR) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-08": mode_location(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), LOCATION_SEULE) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-09": forme_logement(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), 0 EUR) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), false) { origin case_input; }
+        assert "frontiere-ressources-sous-r0-12": territoire(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(participation_personnelle(entity_ref("urn:fr:apl:case:frontiere-ressources-sous-r0"), 35.39 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

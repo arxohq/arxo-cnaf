@@ -1,0 +1,39 @@
+// R. 541-1 al. 1/3, 80 % edge (Seuil80Atteint/Seuil50Atteint/Tranche5080):
+// first child rated exactly 80.0 reaches both thresholds and leaves the
+// 50-80 tranche; second child rated 79.0 reaches only the 50 % threshold
+// and falls inside the tranche.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-seuils-80" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-s80-01": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-80"), 80.0) { origin adjudicated; }
+        assert "r541-s80-02": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-79"), 79.0) { origin adjudicated; }
+    }
+    evaluate truth(seuil_80_atteint(entity_ref("urn:fr:pf-aeeh:case:enfant-80")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(seuil_50_atteint(entity_ref("urn:fr:pf-aeeh:case:enfant-80")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(tranche_50_80(entity_ref("urn:fr:pf-aeeh:case:enfant-80")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(seuil_80_atteint(entity_ref("urn:fr:pf-aeeh:case:enfant-79")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(seuil_50_atteint(entity_ref("urn:fr:pf-aeeh:case:enfant-79")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(tranche_50_80(entity_ref("urn:fr:pf-aeeh:case:enfant-79")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,22 @@
+// Social-fund advance full chain: allocataire, solicited benefit with assessable merits, established rights, legal-fund reimbursement - advance may be granted (L. 583-2, PC-R07-25).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-avance-fonds-sociaux" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-avance-fonds-sociaux-01": parent_charge(entity_ref("urn:fr:pf:case:creance-avf"), entity_ref("urn:fr:pf:case:enfant-avf")) { origin case_input; }
+        assert "creance-avance-fonds-sociaux-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:creance-avf"), entity_ref("urn:fr:pf:case:enfant-avf")) { origin adjudicated; }
+        assert "creance-avance-fonds-sociaux-03": avant_fin_scolarite(entity_ref("urn:fr:pf:case:enfant-avf")) { origin case_input; }
+        assert "creance-avance-fonds-sociaux-04": reside_france_stable(entity_ref("urn:fr:pf:case:creance-avf")) { origin case_input; }
+        assert "creance-avance-fonds-sociaux-05": enfant_reside_france(entity_ref("urn:fr:pf:case:enfant-avf")) { origin case_input; }
+        assert "creance-avance-fonds-sociaux-06": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:creance-avf")) { origin case_input; }
+        assert "creance-avance-fonds-sociaux-07": prestation_sollicitee_merites_evaluables(entity_ref("urn:fr:pf:case:creance-avf")) { origin case_input; }
+        assert "creance-avance-fonds-sociaux-08": avance_remboursable_fonds_legaux(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:creance-avf")) { origin case_input; }
+        assert "creance-avance-fonds-sociaux-09": droits_etablis_existant(entity_ref("urn:fr:pf:case:creance-avf")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(AccorderAvanceFondsSociaux, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

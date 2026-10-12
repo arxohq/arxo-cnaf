@@ -1,0 +1,32 @@
+// The reading changes nothing where the division is exact (and the quotient has at
+// most two decimals): same facts as trimestre-ancien-moyen (declared 200.00 each
+// month, service 50.00, MF 600.00), reading selected: average 200.00, due 350.00.
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-moyenne-arrondie-exacte" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; interpretation MoyenneArrondieCentime; }
+        assert "arr-exa-01": foyer_du_cas(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte")) { origin case_input; }
+        assert "arr-exa-02": mois_demande(@2024-06-01) { origin case_input; }
+        assert "arr-exa-03": mois_reference(@2024-03-01, @2024-04-01, @2024-05-01) { origin case_input; }
+        assert "arr-exa-04": mf_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), @2024-03-01, 600.00 EUR) { origin case_input; }
+        assert "arr-exa-05": mf_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), @2024-04-01, 600.00 EUR) { origin case_input; }
+        assert "arr-exa-06": mf_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), @2024-05-01, 600.00 EUR) { origin case_input; }
+        assert "arr-exa-07": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), @2024-03-01, 200.00 EUR) { origin case_input; }
+        assert "arr-exa-08": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), @2024-04-01, 200.00 EUR) { origin case_input; }
+        assert "arr-exa-09": declare_total_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), @2024-05-01, 200.00 EUR) { origin case_input; }
+        assert "arr-exa-10": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), @2024-03-01, 50.00 EUR) { origin case_input; }
+        assert "arr-exa-11": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), @2024-04-01, 50.00 EUR) { origin case_input; }
+        assert "arr-exa-12": prestation_service_mois(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), @2024-05-01, 50.00 EUR) { origin case_input; }
+    }
+    evaluate truth(moyenne_declaree(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), 200.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_du_trimestre(entity_ref("urn:fr:minima-ressources:case:moyenne-arrondie-exacte"), 350.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

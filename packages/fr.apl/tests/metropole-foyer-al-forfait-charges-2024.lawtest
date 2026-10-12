@@ -1,0 +1,23 @@
+// Противовес: тот же состав и месяц права, метрополия — 58,08 € + 13,17 € =
+// 71,25 € (ст. 40, редакция с 1 октября 2023 года).
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-metropole-foyer-al-forfait-charges-2024" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "metropole-foyer-al-forfait-charges-2024-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:mt-foyer-al-2024")) { origin case_input; }
+        assert "metropole-foyer-al-forfait-charges-2024-02": aide_demandee(entity_ref("urn:fr:apl:case:mt-foyer-al-2024"), ALF) { origin case_input; }
+        assert "metropole-foyer-al-forfait-charges-2024-03": zone_du_logement(entity_ref("urn:fr:apl:case:mt-foyer-al-2024"), ZONE_III) { origin case_input; }
+        assert "metropole-foyer-al-forfait-charges-2024-04": situation_familiale(entity_ref("urn:fr:apl:case:mt-foyer-al-2024"), COUPLE) { origin case_input; }
+        assert "metropole-foyer-al-forfait-charges-2024-05": personnes_a_charge(entity_ref("urn:fr:apl:case:mt-foyer-al-2024"), 1) { origin case_input; }
+        assert "metropole-foyer-al-forfait-charges-2024-06": categorie_equivalence_loyer(entity_ref("urn:fr:apl:case:mt-foyer-al-2024"), PERSONNES_AGEES) { origin case_input; }
+        assert "metropole-foyer-al-forfait-charges-2024-07": redevance(entity_ref("urn:fr:apl:case:mt-foyer-al-2024"), 400 EUR) { origin case_input; }
+        assert "metropole-foyer-al-forfait-charges-2024-08": territoire(entity_ref("urn:fr:apl:case:mt-foyer-al-2024"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(forfait_charges_foyer(entity_ref("urn:fr:apl:case:mt-foyer-al-2024"), 71.25 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

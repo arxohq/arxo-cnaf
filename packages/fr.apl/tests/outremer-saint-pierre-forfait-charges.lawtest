@@ -1,0 +1,39 @@
+// Дело Catala «Exemple2» сектора приобретения по линии аллокаций —
+// СЕН-ПЬЕР-И-МИКЕЛОН. Пара с четырьмя иждивенцами, зона II, сертификат от
+// 1 декабря 2021 года (винтаж «с 01/10/19»), мензуальность 500 €, ресурсы
+// 22 000 €, месяц права — апрель 2023 года.
+//
+// ШАГ: форфейт расходов — МЕТРОПОЛЬНЫЙ: 56,12 € + 12,72 € × 4 = 107,00 €.
+// Сен-Пьер-и-Микелон в список ст. 46 НЕ входит, а ст. 47 говорит только о главе
+// VII (фойе) и о форфейте R0. Поэтому в секторе приобретения он считается по
+// значениям метрополии — это чтение двух статей, а не умолчание.//
+// ПОЧЕМУ В ЭТОМ ДЕЛЕ НЕТ ФАКТА РЕСУРСОВ. Этому шагу они не нужны, и поданы
+// намеренно не были: с ними дело считает ещё и L0, а его отказ (непредставимое
+// частное либо отсутствие транш второго абзаца до 1 июля 2022 года) поражает ВЕСЬ
+// evaluation-документ. Измерено 14.09.2026: с фактом ресурсов сценарий краснеет
+// не потому, что его шаг неверен, а потому, что документ целиком неисполним.
+// L0 закреплён своими сценариями.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-saint-pierre-forfait-charges" {
+    given {
+        context { decision_time @2023-04-10T12:00:00Z; knowledge_time @2023-04-10T12:00:00Z; legal_time @2023-04-10; timezone "Europe/Paris"; }
+        assert "outremer-saint-pierre-forfait-charges-01": secteur_accession_allocations(entity_ref("urn:fr:apl:case:outremer-saint-pierre")) { origin case_input; }
+        assert "outremer-saint-pierre-forfait-charges-02": aide_demandee(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), ALF) { origin case_input; }
+        assert "outremer-saint-pierre-forfait-charges-03": zone_du_logement(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), ZONE_II) { origin case_input; }
+        assert "outremer-saint-pierre-forfait-charges-04": situation_familiale(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), COUPLE) { origin case_input; }
+        assert "outremer-saint-pierre-forfait-charges-05": personnes_a_charge(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), 4) { origin case_input; }
+        assert "outremer-saint-pierre-forfait-charges-06": vintage_certificat(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), CERTIFICAT_DEPUIS_01_10_2019) { origin case_input; }
+        assert "outremer-saint-pierre-forfait-charges-07": mode_propriete(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "outremer-saint-pierre-forfait-charges-08": territoire(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), SAINT_PIERRE_ET_MIQUELON) { origin case_input; }
+        assert "outremer-saint-pierre-forfait-charges-09": mensualite_declaree(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), 500 EUR) { origin case_input; }
+        assert "outremer-saint-pierre-forfait-charges-10": base_plancher_ressources(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), COEFFICIENT_MENSUALITE) { origin case_input; }
+        assert "outremer-saint-pierre-forfait-charges-11": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), false) { origin case_input; }
+    }
+    evaluate truth(forfait_charges_al_accession(entity_ref("urn:fr:apl:case:outremer-saint-pierre"), 107.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

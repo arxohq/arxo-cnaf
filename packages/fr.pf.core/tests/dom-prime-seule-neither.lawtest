@@ -1,0 +1,17 @@
+// DOM prime-only (PC-R05-08): measure + DOM + prime received, no eligible benefit; liberty does not fire (NEITHER, prime excluded, no eligible to delegate).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-dom-prime-seule-neither" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "dom-p1": mesure_judiciaire_aide_gestion(entity_ref("urn:fr:pf:case:dom-prime")) { origin case_input; }
+        assert "dom-p2": beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:dom-prime")) { origin case_input; }
+        assert "dom-p3": delegue_percoit_prime_forfaitaire(entity_ref("urn:fr:pf:case:dom-prime")) { origin case_input; }
+        assert "dom-p4": not delegue_percoit_prestation_eligible(entity_ref("urn:fr:pf:case:dom-prime")) { origin case_input; }
+    }
+    evaluate truth(designer_delegue_action(entity_ref("urn:fr:pf:case:tribunal"), entity_ref("urn:fr:pf:case:dom-prime")));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

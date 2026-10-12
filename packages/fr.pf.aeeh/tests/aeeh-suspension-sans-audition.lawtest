@@ -1,0 +1,22 @@
+// Suspension liberty silent without the hearing (L. 541-2, para. 2):
+// non-follow established but no hearing held, so the body holds no
+// SuspendreAeehNonSuivi position. The hearing is a cumulative condition.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-suspension-sans-audition" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "aeeh-suspsa-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-suspsa"), entity_ref("urn:fr:pf-aeeh:case:enfant-suspsa")) { origin case_input; }
+        assert "aeeh-suspsa-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-suspsa")) { origin adjudicated; }
+        assert "aeeh-suspsa-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-suspsa"), 400.00 EUR) { origin case_input; }
+        assert "aeeh-suspsa-04": sans_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-suspsa")) { origin case_input; }
+        assert "aeeh-suspsa-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-suspsa")) { origin case_input; }
+        assert "aeeh-suspsa-06": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-aeeh:org:caisse"), entity_ref("urn:fr:pf-aeeh:case:parent-suspsa")) { origin case_input; }
+        assert "aeeh-suspsa-07": non_suite_mesures(entity_ref("urn:fr:pf-aeeh:case:enfant-suspsa")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(SuspendreAeehNonSuivi, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

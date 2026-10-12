@@ -1,0 +1,21 @@
+// Childminder (D. 531-10): 10 care days for 2 children over 20 working
+// days — 10 × 2 = 20 ≤ 2 × 20 = 40, share at most 50% → 249.84 €.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-garde-50" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-g50-01": jours_garde(entity_ref("urn:fr:paje:benef:prepare-g50"), 10, 2, 20) { origin adjudicated; }
+        assert "prepare-g50-02": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-g50"), entity_ref("urn:fr:paje:enfant:prepare-g50")) { origin adjudicated; }
+        assert "prepare-g50-03": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-g50")) { origin adjudicated; }
+        assert "prepare-g50-04": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-g50"), entity_ref("urn:fr:paje:case:prepare-g50")) { origin case_input; }
+        assert "prepare-g50-05": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-g50"), 400.00 EUR) { origin case_input; }
+        assert "prepare-g50-06": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:prepare-g50"), entity_ref("urn:fr:paje:enfant:prepare-g50"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-g50"), entity_ref("urn:fr:paje:enfant:prepare-g50"), 249.84 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

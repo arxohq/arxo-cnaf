@@ -1,0 +1,18 @@
+// Vehicle band edge (PC-R05-04/PC-R06-01): one vehicle exactly 10 000 EUR retained with date+amount-bearing evidence - no apport (R. 553-3-1 5, strict threshold, no zero apport).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-vehicules-sous-seuil" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-vehicules-sous-seuil-01": vehicule_bien_valeur(entity_ref("urn:fr:pf:case:petite-auto"), entity_ref("urn:fr:pf:case:auto-1"), 10000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-vehicules-sous-seuil-02": prestation_soumise_section(entity_ref("urn:fr:pf:case:petite-auto")) { origin case_input; }
+        assert "tdv-vehicules-sous-seuil-03": vehicule_bien_date(entity_ref("urn:fr:pf:case:petite-auto"), entity_ref("urn:fr:pf:case:auto-1"), @2026-02-10) { origin case_input; }
+        assert "tdv-vehicules-sous-seuil-04": vehicule_bien_preuve_assurance(entity_ref("urn:fr:pf:case:petite-auto"), entity_ref("urn:fr:pf:case:auto-1"), 9800.00 EUR) { origin case_input; }
+    }
+    evaluate truth(apport_forfaitaire(entity_ref("urn:fr:pf:case:petite-auto"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

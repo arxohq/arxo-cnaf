@@ -1,0 +1,44 @@
+// Прочтение D-83 выбрано в context (`interpretation ArrondiLignesDss;`): суммы AF — округлённые
+// строки таблицы DSS, итог — их сумма (08-lecture-arrondi-lignes.law). Ожидания — строки
+// закреплённой таблицы DSS/2B/2026/46 (revalorisation/sources/dss-2026-46.txt), BMAF 478,16 €: forfait
+// «20,234 % 96,75» (:216). Ребёнок достиг предела возраста 15.09.2025, месяц права 01.05.2026 внутри года
+// [15.09.2025, 15.09.2026); трое детей, условия кроме возраста выполнены; полоса 1 (ресурсы 30 000 ≤
+// I(3) = 66 652 + 3 × 6 664 = 86 644, DSS_2025_177_PLAFOND_AF) — complément нулевой.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-lignes-dss-2026-forfait" {
+    given {
+        context { deadline_policy FORFAIT_UN_AN; decision_time @2026-05-15T12:00:00Z; knowledge_time @2026-05-15T12:00:00Z; legal_time @2026-05-15; timezone "Europe/Paris"; interpretation ArrondiLignesDss; }
+        assert "l83-01": territoire(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), METROPOLE) { origin case_input; }
+        assert "l83-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 3) { origin case_input; }
+        assert "l83-03": ressources_menage(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 30000 EUR) { origin case_input; }
+        assert "l83-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 66652 EUR) { origin case_input; }
+        assert "l83-05": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 93276 EUR) { origin case_input; }
+        assert "l83-06": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 6664 EUR) { origin case_input; }
+        assert "l83-07": bmaf_retenu(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 478.16 EUR) { origin case_input; }
+        assert "l83-08": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 0) { origin case_input; }
+        assert "l83-09": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 0) { origin case_input; }
+        assert "l83-10": forfait_total_menage(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 0 EUR) { origin case_input; }
+        assert "l83-11": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 0) { origin case_input; }
+        assert "l83-12": foyer_du_cas(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait")) { origin case_input; }
+        assert "l83-13": nb_enfants_charge_forfait(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), 3) { origin case_input; }
+        assert "l83-14": mois_droit(@2026-05-01) { origin case_input; }
+        assert "l83-15": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:lignes-dss-2026-forfait"), entity_ref("urn:fr:pf-af:child:forfait-l83")) { origin case_input; }
+        assert "l83-16": date_limite_age_atteinte(entity_ref("urn:fr:pf-af:child:forfait-l83"), @2025-09-15) { origin case_input; }
+        assert "l83-17": conditions_hormis_age(entity_ref("urn:fr:pf-af:child:forfait-l83")) { origin case_input; }
+    }
+    evaluate truth(forfait_ouvert(entity_ref("urn:fr:pf-af:child:forfait-l83")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_forfait(entity_ref("urn:fr:pf-af:child:forfait-l83"), 96.75 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(complement_forfait(entity_ref("urn:fr:pf-af:child:forfait-l83"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

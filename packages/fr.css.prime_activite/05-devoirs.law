@@ -1,0 +1,285 @@
+// Service, support, control and recourse (L. 843-1/6, L. 844-1, L. 845-1/2/6).
+//
+// D1 fund duty to serve: «attribuée, servie et contrôlée, pour le compte
+// de l'Etat, par les CAF et les MSA» (L. 843-1): the due quarterly
+// amount is paid to the payee — bearer the serving fund (empirical
+// link), performance the empirical prime_versee fact. State financing
+// (L. 843-6) is not a modelled norm.
+// Accompaniment (L. 844-1): a job-seeking payee has the right to adapted
+// support — plain institutional right on the retained job-seeker fact.
+// P1 control power (L. 845-1): fund directors control, investigate and
+// sanction under the listed articles — holder the director (empirical),
+// exercise the pronounced control/inquiry/sanction (empirical
+// controle_prononce), effect the distinct institutional consequence
+// controle_prend_effet (AAH AttributionCdaph pattern: an effect that
+// re-produces its own exercise refuses execution under norm runtime
+// completion on 0.2.7 — COMPARE PPA13 diagnosis, both engines).
+// D2 information duty (L. 845-2 al. 3): the payee is informed of the
+// claim/appeal routes — bearer the fund, maintain information_recours.
+// Amicable appeal first, then the administrative court (al. 1-2):
+// procedure, not modelled beyond D2.
+// Paid intermediation to obtain the bonus is punished under L. 554-2
+// (L. 845-6): the criminal scale is unmodelled; the retained
+// intermediation fact derives the institutional offence flag.
+//
+// Scenarios: tests/devoirs-*.lawtest (positions: ACTIVE / power
+// exercisable / offence flag / no right — no position).
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_L843_1_ED2021_01_01,
+    CSS_L843_1_ED2021_03_25,
+    CSS_L843_1_ED2021_06_01,
+    CSS_L843_1_ED2022_03_21,
+    CSS_L843_1_ED2023_12_31,
+    CSS_L843_1_ED2024_01_01,
+    CSS_L843_1_ED2024_07_01,
+    CSS_L843_1_ED2025_01_01,
+    CSS_L843_1_ED2025_02_28,
+    CSS_L843_1_ED2025_03_31,
+    CSS_L843_1_ED2026_04_01,
+    CSS_L843_1_ED2026_06_27,
+    CSS_L844_1_ED2021_01_01,
+    CSS_L844_1_ED2021_03_25,
+    CSS_L844_1_ED2021_06_01,
+    CSS_L844_1_ED2022_03_21,
+    CSS_L844_1_ED2023_12_31,
+    CSS_L844_1_ED2024_01_01,
+    CSS_L844_1_ED2024_07_01,
+    CSS_L844_1_ED2025_01_01,
+    CSS_L844_1_ED2025_02_28,
+    CSS_L844_1_ED2025_03_31,
+    CSS_L844_1_ED2026_04_01,
+    CSS_L844_1_ED2026_06_27,
+    CSS_L845_1_ED2021_01_01,
+    CSS_L845_1_ED2021_03_25,
+    CSS_L845_1_ED2021_06_01,
+    CSS_L845_1_ED2022_03_21,
+    CSS_L845_1_ED2023_12_31,
+    CSS_L845_1_ED2024_01_01,
+    CSS_L845_1_ED2024_07_01,
+    CSS_L845_1_ED2025_01_01,
+    CSS_L845_1_ED2025_02_28,
+    CSS_L845_1_ED2025_03_31,
+    CSS_L845_1_ED2026_04_01,
+    CSS_L845_1_ED2026_06_27,
+    CSS_L845_2_ED2021_01_01,
+    CSS_L845_2_ED2021_03_25,
+    CSS_L845_2_ED2021_06_01,
+    CSS_L845_2_ED2022_03_21,
+    CSS_L845_2_ED2023_12_31,
+    CSS_L845_2_ED2024_01_01,
+    CSS_L845_2_ED2024_07_01,
+    CSS_L845_2_ED2025_01_01,
+    CSS_L845_2_ED2025_02_28,
+    CSS_L845_2_ED2025_03_31,
+    CSS_L845_2_ED2026_04_01,
+    CSS_L845_2_ED2026_06_27,
+    CSS_L845_6_ED2021_01_01,
+    CSS_L845_6_ED2021_03_25,
+    CSS_L845_6_ED2021_06_01,
+    CSS_L845_6_ED2022_03_21,
+    CSS_L845_6_ED2023_12_31,
+    CSS_L845_6_ED2024_01_01,
+    CSS_L845_6_ED2024_07_01,
+    CSS_L845_6_ED2025_01_01,
+    CSS_L845_6_ED2025_02_28,
+    CSS_L845_6_ED2025_03_31,
+    CSS_L845_6_ED2026_04_01,
+    CSS_L845_6_ED2026_06_27,
+    Demandeur,
+    droit_ouvert,
+    prime_due_trimestre,
+};
+
+pub entity Organisme {
+    label fr official "caisse servant la prime (CAF ou MSA, pour le compte de l'Etat, L. 843-1)";
+    label en unofficial "fund serving the bonus (CAF or MSA, for the State account, L. 843-1)";
+}
+
+pub entity Directeur {
+    label fr official "directeur de l'organisme (contrôle et sanctions, L. 845-1)";
+    label en unofficial "fund director (control and sanctions, L. 845-1)";
+}
+
+pub relation organisme_serviteur(o: Organisme, d: Demandeur) kind empirical {
+    key(o, d);
+    label fr official "organisme chargé du service pour le demandeur (L. 843-1; fait retenu)";
+    label en unofficial "fund in charge of service for the claimant (L. 843-1; retained fact)";
+}
+
+pub relation prime_versee(d: Demandeur, montant: Money) kind empirical {
+    key(d);
+    label fr official "prime versée au bénéficiaire (exécution du devoir D1; fait retenu)";
+    label en unofficial "bonus paid to the payee (D1 performance; retained fact)";
+}
+
+pub relation demandeur_emploi(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "bénéficiaire en recherche d'emploi (L. 844-1; fait retenu)";
+    label en unofficial "payee seeking employment (L. 844-1; retained fact)";
+}
+
+pub relation directeur_de(c: Directeur, o: Organisme) kind empirical {
+    key(c);
+    label fr official "directeur de l'organisme (L. 845-1; fait retenu)";
+    label en unofficial "director of the fund (L. 845-1; retained fact)";
+}
+
+pub relation controle_prononce(c: Directeur, d: Demandeur) kind empirical {
+    key(c, d);
+    label fr official "contrôle/enquête/sanction prononcés (exercice du pouvoir P1; fait retenu)";
+    label en unofficial "control/inquiry/sanction pronounced (P1 exercise; retained fact)";
+}
+
+pub relation controle_prend_effet(c: Directeur, d: Demandeur) kind institutional {
+    key(c, d);
+    label fr official "le contrôle/l'enquête/la sanction prononcés prennent effet (L. 845-1)";
+    label en unofficial "the pronounced control/inquiry/sanction takes effect (L. 845-1)";
+}
+
+pub relation information_recours(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "bénéficiaire informé des voies de réclamation et recours (exécution D2; fait retenu)";
+    label en unofficial "payee informed of claim/appeal routes (D2 performance; retained fact)";
+}
+
+pub relation intermediaire_remunere(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "services d'intermédiaire rémunéré pour obtenir la prime (L. 845-6; fait retenu)";
+    label en unofficial "paid intermediary services to obtain the bonus (L. 845-6; retained fact)";
+}
+
+pub relation droit_accompagnement(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "droit à un accompagnement adapté (L. 844-1)";
+    label en unofficial "right to adapted support (L. 844-1)";
+}
+
+pub relation infraction_intermediaire(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "fait d'intermédiaire puni des peines L. 554-2 (L. 845-6; échelle pénale non modélisée)";
+    label en unofficial "intermediary offence under L. 554-2 penalties (L. 845-6; criminal scale unmodelled)";
+}
+
+@source(
+    CSS_L843_1_ED2021_01_01,
+    CSS_L843_1_ED2021_03_25,
+    CSS_L843_1_ED2021_06_01,
+    CSS_L843_1_ED2022_03_21,
+    CSS_L843_1_ED2023_12_31,
+    CSS_L843_1_ED2024_01_01,
+    CSS_L843_1_ED2024_07_01,
+    CSS_L843_1_ED2025_01_01,
+    CSS_L843_1_ED2025_02_28,
+    CSS_L843_1_ED2025_03_31,
+    CSS_L843_1_ED2026_04_01,
+    CSS_L843_1_ED2026_06_27)
+rule DevoirServirPrime(o: Organisme, d: Demandeur, montant: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "le montant dû est versé au bénéficiaire — devoir de l'organisme pour le compte de l'Etat";
+    label en unofficial "the due amount is paid to the payee — duty of the fund for the State account";
+    when prime_due_trimestre(d, montant) and organisme_serviteur(o, d);
+    then duty VerserPrimeDue {
+        bearer o;
+        beneficiary d;
+        maintain prime_versee(d, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_L844_1_ED2021_01_01,
+    CSS_L844_1_ED2021_03_25,
+    CSS_L844_1_ED2021_06_01,
+    CSS_L844_1_ED2022_03_21,
+    CSS_L844_1_ED2023_12_31,
+    CSS_L844_1_ED2024_01_01,
+    CSS_L844_1_ED2024_07_01,
+    CSS_L844_1_ED2025_01_01,
+    CSS_L844_1_ED2025_02_28,
+    CSS_L844_1_ED2025_03_31,
+    CSS_L844_1_ED2026_04_01,
+    CSS_L844_1_ED2026_06_27)
+rule DroitAccompagnement(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bénéficiaire en recherche d'emploi: accompagnement adapté (L. 844-1)";
+    label en unofficial "job-seeking payee: adapted support (L. 844-1)";
+    when droit_ouvert(d) and demandeur_emploi(d);
+    then droit_accompagnement(d);
+}
+
+@source(
+    CSS_L845_1_ED2021_01_01,
+    CSS_L845_1_ED2021_03_25,
+    CSS_L845_1_ED2021_06_01,
+    CSS_L845_1_ED2022_03_21,
+    CSS_L845_1_ED2023_12_31,
+    CSS_L845_1_ED2024_01_01,
+    CSS_L845_1_ED2024_07_01,
+    CSS_L845_1_ED2025_01_01,
+    CSS_L845_1_ED2025_02_28,
+    CSS_L845_1_ED2025_03_31,
+    CSS_L845_1_ED2026_04_01,
+    CSS_L845_1_ED2026_06_27)
+rule PouvoirControle(c: Directeur, o: Organisme, d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "directeurs: contrôles, enquêtes et sanctions (L. 845-1)";
+    label en unofficial "directors: controls, inquiries and sanctions (L. 845-1)";
+    when directeur_de(c, o) and organisme_serviteur(o, d) and droit_ouvert(d);
+    then power ControleDirecteur {
+        holder c;
+        exercise controle_prononce(c, d);
+        valid_when (directeur_de(c, o) and droit_ouvert(d));
+        effect controle_prend_effet(c, d);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_L845_2_ED2021_01_01,
+    CSS_L845_2_ED2021_03_25,
+    CSS_L845_2_ED2021_06_01,
+    CSS_L845_2_ED2022_03_21,
+    CSS_L845_2_ED2023_12_31,
+    CSS_L845_2_ED2024_01_01,
+    CSS_L845_2_ED2024_07_01,
+    CSS_L845_2_ED2025_01_01,
+    CSS_L845_2_ED2025_02_28,
+    CSS_L845_2_ED2025_03_31,
+    CSS_L845_2_ED2026_04_01,
+    CSS_L845_2_ED2026_06_27)
+rule DevoirInformerRecours(o: Organisme, d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bénéficiaire informé des réclamations et recours — devoir de l'organisme (L. 845-2 al. 3)";
+    label en unofficial "payee informed of claims and appeals — duty of the fund (L. 845-2 para. 3)";
+    when organisme_serviteur(o, d) and droit_ouvert(d);
+    then duty InformerRecours {
+        bearer o;
+        beneficiary d;
+        maintain information_recours(d) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_L845_6_ED2021_01_01,
+    CSS_L845_6_ED2021_03_25,
+    CSS_L845_6_ED2021_06_01,
+    CSS_L845_6_ED2022_03_21,
+    CSS_L845_6_ED2023_12_31,
+    CSS_L845_6_ED2024_01_01,
+    CSS_L845_6_ED2024_07_01,
+    CSS_L845_6_ED2025_01_01,
+    CSS_L845_6_ED2025_02_28,
+    CSS_L845_6_ED2025_03_31,
+    CSS_L845_6_ED2026_04_01,
+    CSS_L845_6_ED2026_06_27)
+rule InfractionIntermediaire(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "intermédiaire rémunéré: infraction punie des peines L. 554-2 (L. 845-6)";
+    label en unofficial "paid intermediary: offence under L. 554-2 penalties (L. 845-6)";
+    when intermediaire_remunere(d);
+    then infraction_intermediaire(d);
+}

@@ -1,0 +1,26 @@
+// Mayotte (wave 7): the D. 755-5-1 extension covers only the L. 751-1
+// departments, so no applicability status concludes (B-PFAF-MAYOTTE).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-dom-d521-mayotte-neither" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "d521m-01": territoire(entity_ref("urn:fr:pf-af:case:dom-d521-mayotte-neither"), MAYOTTE) { origin case_input; }
+        assert "d521m-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:dom-d521-mayotte-neither"), 2) { origin case_input; }
+        assert "d521m-03": foyer_du_cas(entity_ref("urn:fr:pf-af:case:dom-d521-mayotte-neither")) { origin case_input; }
+    }
+    evaluate truth(d521_2_applicable_dom(MAYOTTE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(d521_3_applicable_dom(MAYOTTE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(d521_4_applicable_dom(MAYOTTE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,19 @@
+// No title on single-parent request: threshold and information present but no joint request by separating parents - no title (L. 582-2 al. 1, PC-R07-23).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-titre-sans-conjointe" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-titre-sans-conjointe-01": not demande_conjointe_parents_separes(entity_ref("urn:fr:pf:case:creance-sconj")) { origin case_input; }
+        assert "creance-titre-sans-conjointe-02": attestation_absence_creance(entity_ref("urn:fr:pf:case:creance-sconj")) { origin case_input; }
+        assert "creance-titre-sans-conjointe-03": attestation_absence_demarche(entity_ref("urn:fr:pf:case:creance-sconj")) { origin case_input; }
+        assert "creance-titre-sans-conjointe-04": contribution_seuil_atteint(entity_ref("urn:fr:pf:case:creance-sconj")) { origin case_input; }
+        assert "creance-titre-sans-conjointe-05": infos_contribution_precisees(entity_ref("urn:fr:pf:case:creance-sconj")) { origin case_input; }
+    }
+    evaluate truth(titre_executoire_delivre(entity_ref("urn:fr:pf:case:creance-sconj")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

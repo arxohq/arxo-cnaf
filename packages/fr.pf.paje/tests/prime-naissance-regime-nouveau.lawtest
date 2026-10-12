@@ -1,0 +1,20 @@
+// D. 531-2 wording pair, new side: right month 05.2021 — the 2021-368
+// wording removed payment after birth; L. 531-2 pays before birth:
+// AVANT_NAISSANCE. Control — prime-naissance-regime-ancien (03.2021).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-naissance-regime-nouveau" {
+    given {
+        context { decision_time @2021-05-15T12:00:00Z; knowledge_time @2021-05-15T12:00:00Z; legal_time @2021-05-15; timezone "Europe/Paris"; }
+        assert "regime-nouveau-01": attente_naissance(entity_ref("urn:fr:paje:case:regime-nouveau"), entity_ref("urn:fr:paje:enfant:regime-nouveau")) { origin case_input; }
+        assert "regime-nouveau-02": ressources_annuelles(entity_ref("urn:fr:paje:case:regime-nouveau"), 20000 EUR) { origin case_input; }
+        assert "regime-nouveau-03": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:regime-nouveau"), 30000 EUR) { origin case_input; }
+        assert "regime-nouveau-04": bmaf_applicable(entity_ref("urn:fr:paje:case:regime-nouveau"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(regime_versement_naissance(entity_ref("urn:fr:paje:case:regime-nouveau"), entity_ref("urn:fr:paje:enfant:regime-nouveau"), AVANT_NAISSANCE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

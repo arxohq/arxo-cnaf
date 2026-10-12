@@ -1,0 +1,334 @@
+// Request, supporting documents and signals (R. 823-1/2/3, L. 823-6):
+// paying-fund routing, filing duties, the landlord DPE duty (2023+),
+// change justification, and move/early-repayment signals. The Bailleur
+// entity (lessor, lender, manager, agent) is declared here for reuse by
+// 17/18/19. The arrete-defined document list and the L. 823-6 regulatory
+// delays are unpinned (boundaries); annual-document default arrives as an
+// established finding.
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CCH_L823_6,
+    CCH_L823_6_ED2019_12,
+    CCH_L823_6_ED2020_01,
+    CCH_L823_6_ED2021_01,
+    CCH_L823_6_ED2023_04,
+    CCH_L823_6_ED2023_09,
+    CCH_L823_6_ED2023_12,
+    CCH_L823_6_ED2026_07,
+    CCH_R823_1,
+    CCH_R823_1_ED2019_12,
+    CCH_R823_1_ED2020_01,
+    CCH_R823_1_ED2021_01,
+    CCH_R823_1_ED2023_04,
+    CCH_R823_1_ED2023_09,
+    CCH_R823_1_ED2023_12,
+    CCH_R823_1_ED2026_07,
+    CCH_R823_2,
+    CCH_R823_2_ED2019_12,
+    CCH_R823_2_ED2020_01,
+    CCH_R823_2_ED2021_01,
+    CCH_R823_2_ED2023_04,
+    CCH_R823_2_ED2023_09,
+    CCH_R823_2_ED2023_12,
+    CCH_R823_2_ED2026_07,
+    CCH_R823_3,
+    CCH_R823_3_ED2019_12,
+    CCH_R823_3_ED2020_01,
+    CCH_R823_3_ED2021_01,
+    CCH_R823_3_ED2023_04,
+    CCH_R823_3_ED2023_09,
+    CCH_R823_3_ED2023_12,
+    CCH_R823_3_ED2026_07,
+    Menage,
+    Organisme,
+    TypeAide,
+    aide_demandee,
+    destinataire_aide,
+    organisme_debiteur,
+};
+
+pub entity Bailleur {
+    label fr official "bailleur, preteur, gestionnaire, etablissement habilite ou mandataire";
+    label en unofficial "lessor, lender, manager, approved body or agent";
+}
+
+pub enum RoleTiers {
+    label fr official "role du tiers au dossier d'aide";
+    label en unofficial "third-party role in the aid case";
+    BAILLEUR, PRETEUR, GESTIONNAIRE_FOYER, ETABLISSEMENT_HABILITE,
+    MANDATAIRE_GERANCE
+}
+
+pub relation role_tiers(b: Bailleur, r: RoleTiers) kind empirical {
+    label fr official "role du tiers au dossier (fait de dossier)";
+    label en unofficial "the third party's role in the case (case fact)";
+}
+
+pub relation bailleur_du_menage(b: Bailleur, m: Menage) kind empirical {
+    label fr official "tiers rattache au dossier du menage (fait de dossier)";
+    label en unofficial "third party attached to the household case (case fact)";
+}
+
+@source(CCH_R823_1, CCH_R823_1_ED2019_12, CCH_R823_1_ED2020_01,
+        CCH_R823_1_ED2021_01, CCH_R823_1_ED2023_04, CCH_R823_1_ED2023_09,
+        CCH_R823_1_ED2023_12, CCH_R823_1_ED2026_07)
+pub enum CaisseCompetente {
+    label fr official "caisse liquidatrice et payeuse (art. R. 823-1)";
+    label en unofficial "assessing and paying fund (art. R. 823-1)";
+    CAF, MSA
+}
+
+pub relation residence_france(m: Menage) kind empirical {
+    label fr official "residence du beneficiaire en France (constat)";
+    label en unofficial "recipient residence in France (finding)";
+}
+
+pub relation regime_agricole(m: Menage, oui: Boolean) kind empirical {
+    label fr official "releve d'un regime de protection sociale agricole (constat explicite)";
+    label en unofficial "under an agricultural social-protection scheme (explicit finding)";
+}
+
+pub relation caisse_competente(m: Menage, c: CaisseCompetente) kind institutional {
+    label fr official "caisse competente au regard de la residence et du regime";
+    label en unofficial "fund competent by residence and scheme";
+}
+
+@source(CCH_R823_1, CCH_R823_1_ED2019_12, CCH_R823_1_ED2020_01,
+        CCH_R823_1_ED2021_01, CCH_R823_1_ED2023_04, CCH_R823_1_ED2023_09,
+        CCH_R823_1_ED2023_12, CCH_R823_1_ED2026_07)
+rule CompetenceCAF(m: Menage) strict {
+    label fr official "regime general : caisse d'allocations familiales competente";
+    label en unofficial "general scheme: family allowances fund competent";
+    when residence_france(m) and regime_agricole(m, false);
+    then caisse_competente(m, CAF);
+}
+
+@source(CCH_R823_1, CCH_R823_1_ED2019_12, CCH_R823_1_ED2020_01,
+        CCH_R823_1_ED2021_01, CCH_R823_1_ED2023_04, CCH_R823_1_ED2023_09,
+        CCH_R823_1_ED2023_12, CCH_R823_1_ED2026_07)
+rule CompetenceMSA(m: Menage) strict {
+    label fr official "regime agricole : mutualite sociale agricole competente";
+    label en unofficial "agricultural scheme: agricultural fund competent";
+    when residence_france(m) and regime_agricole(m, true);
+    then caisse_competente(m, MSA);
+}
+
+pub relation pieces_justificatives_jointes(m: Menage) kind empirical {
+    label fr official "pieces justificatives arretees jointes a la demande (execution)";
+    label en unofficial "listed supporting documents attached to the request (performance)";
+}
+
+pub relation sejour_justifie_d512_1(m: Menage) kind empirical {
+    label fr official "regularite du sejour justifiee par un titre D. 512-1 CSS (execution)";
+    label en unofficial "lawful stay proven by a CSS D. 512-1 title (performance)";
+}
+
+pub relation attestation_bailleur_decence(m: Menage) kind empirical {
+    label fr official "attestation du bailleur sur la decence deposee (execution)";
+    label en unofficial "landlord decency certificate filed (performance)";
+}
+
+pub relation defaut_pieces_annuelles(m: Menage) kind empirical {
+    label fr official "defaut de pieces annuelles arretees avant la date fixee (constat)";
+    label en unofficial "listed annual documents missing past the set date (finding)";
+}
+
+pub relation suspension_paiement_pieces(m: Menage) kind institutional {
+    label fr official "suspension du paiement pour defaut de pieces annuelles R. 823-2";
+    label en unofficial "payment suspended for missing annual documents under R. 823-2";
+}
+
+@source(CCH_R823_2, CCH_R823_2_ED2019_12, CCH_R823_2_ED2020_01,
+        CCH_R823_2_ED2021_01, CCH_R823_2_ED2023_04, CCH_R823_2_ED2023_09,
+        CCH_R823_2_ED2023_12, CCH_R823_2_ED2026_07)
+rule DevoirJoindrePieces(m: Menage, o: Organisme, t: TypeAide) strict {
+    label fr official "la demande est assortie des pieces justificatives arretees";
+    label en unofficial "the request carries the listed supporting documents";
+    when aide_demandee(m, t) and organisme_debiteur(o, m);
+    then duty JoindrePiecesJustificatives {
+        bearer m;
+        beneficiary o;
+        maintain pieces_justificatives_jointes(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R823_2, CCH_R823_2_ED2019_12, CCH_R823_2_ED2020_01,
+        CCH_R823_2_ED2021_01, CCH_R823_2_ED2023_04, CCH_R823_2_ED2023_09,
+        CCH_R823_2_ED2023_12, CCH_R823_2_ED2026_07)
+rule DevoirJustifierSejour(m: Menage, o: Organisme, t: TypeAide) strict {
+    label fr official "l'etranger justifie de la regularite de son sejour (D. 512-1 CSS)";
+    label en unofficial "the foreigner proves lawful stay (CSS D. 512-1)";
+    when aide_demandee(m, t) and organisme_debiteur(o, m) and etranger_sejour_a_justifier(m);
+    then duty JustifierSejourRegulier {
+        bearer m;
+        beneficiary o;
+        maintain sejour_justifie_d512_1(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation etranger_sejour_a_justifier(m: Menage) kind empirical {
+    label fr official "demandeur etranger soumis a justification de sejour (constat)";
+    label en unofficial "foreign requester subject to stay proof (finding)";
+}
+
+@source(CCH_R823_2, CCH_R823_2_ED2019_12, CCH_R823_2_ED2020_01,
+        CCH_R823_2_ED2021_01, CCH_R823_2_ED2023_04, CCH_R823_2_ED2023_09,
+        CCH_R823_2_ED2023_12, CCH_R823_2_ED2026_07)
+rule DevoirAttestationBailleur(m: Menage, b: Bailleur, o: Organisme, t: TypeAide) strict {
+    label fr official "la decence est justifiee par une attestation du bailleur";
+    label en unofficial "decency is proven by a landlord certificate";
+    when aide_demandee(m, t) and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR)
+        and organisme_debiteur(o, m);
+    then duty DeposerAttestationBailleur {
+        bearer b;
+        beneficiary o;
+        maintain attestation_bailleur_decence(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_R823_2, CCH_R823_2_ED2019_12, CCH_R823_2_ED2020_01,
+        CCH_R823_2_ED2021_01, CCH_R823_2_ED2023_04, CCH_R823_2_ED2023_09,
+        CCH_R823_2_ED2023_12, CCH_R823_2_ED2026_07)
+rule SuspensionDefautPieces(m: Menage) strict {
+    label fr official "defaut de pieces annuelles : suspension du paiement";
+    label en unofficial "missing annual documents: payment suspended";
+    when defaut_pieces_annuelles(m);
+    then suspension_paiement_pieces(m);
+}
+
+pub relation demande_dpe_organisme(m: Menage) kind empirical {
+    label fr official "l'organisme payeur demande le diagnostic de performance energetique (fait)";
+    label en unofficial "the paying body requests the energy performance certificate (fact)";
+}
+
+pub relation dpe_presente(m: Menage) kind empirical {
+    label fr official "diagnostic de performance energetique presente par le bailleur (execution)";
+    label en unofficial "energy performance certificate produced by the landlord (performance)";
+}
+
+@source(CCH_R823_2, CCH_R823_2_ED2019_12, CCH_R823_2_ED2020_01,
+        CCH_R823_2_ED2021_01, CCH_R823_2_ED2023_04, CCH_R823_2_ED2023_09,
+        CCH_R823_2_ED2023_12, CCH_R823_2_ED2026_07)
+rule DevoirPresenterDPE(m: Menage, b: Bailleur, o: Organisme) strict {
+    label fr official "le bailleur presente le DPE a la demande de l'organisme (01.01.2023)";
+    label en unofficial "the landlord produces the EPC on the body's request (01.01.2023)";
+    effective [@2023-01-01, infinity);
+    when bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR)
+        and demande_dpe_organisme(m) and organisme_debiteur(o, m);
+    then duty PresenterDPE {
+        bearer b;
+        beneficiary o;
+        maintain dpe_presente(m) during [@2023-01-01, infinity);
+    };
+}
+
+pub relation changements_justifies(m: Menage) kind empirical {
+    label fr official "changements de situation justifies aupres de l'organisme (execution)";
+    label en unofficial "situation changes proven to the body (performance)";
+}
+
+pub relation changement_situation_periode_paiement(m: Menage) kind empirical {
+    label fr official "changement dans la situation du beneficiaire ou du menage pendant la periode de paiement (constat R. 823-3)";
+    label en unofficial "recipient or household situation change during the payment period (R. 823-3 finding)";
+}
+
+pub relation demande_revision_montant_aide(m: Menage) kind empirical {
+    label fr official "demande de revision du montant de l'aide deposee (fait de dossier R. 823-3)";
+    label en unofficial "filed request to revise the aid amount (R. 823-3 case fact)";
+}
+
+@source(CCH_R823_3, CCH_R823_3_ED2019_12, CCH_R823_3_ED2020_01,
+        CCH_R823_3_ED2021_01, CCH_R823_3_ED2023_04, CCH_R823_3_ED2023_09,
+        CCH_R823_3_ED2023_12, CCH_R823_3_ED2026_07)
+rule DevoirJustifierChangements(m: Menage, o: Organisme) strict {
+    label fr official "les changements en cours de paiement sont justifies avec la demande de revision";
+    label en unofficial "changes during payment are proven with the revision request";
+    when changement_situation_periode_paiement(m) and demande_revision_montant_aide(m)
+        and organisme_debiteur(o, m);
+    then duty JustifierChangements {
+        bearer m;
+        beneficiary o;
+        maintain changements_justifies(m) during [@2021-01-01, infinity);
+    };
+}
+
+pub relation demenagement_allocataire(m: Menage) kind empirical {
+    label fr official "demenagement de l'allocataire (evenement L. 823-6)";
+    label en unofficial "recipient move (L. 823-6 event)";
+}
+
+pub relation fin_bail_resiliation(m: Menage) kind empirical {
+    label fr official "fin ou resiliation du bail (evenement L. 823-6)";
+    label en unofficial "lease end or termination (L. 823-6 event)";
+}
+
+pub relation remboursement_anticipe_effectue(m: Menage) kind empirical {
+    label fr official "remboursement anticipe du pret effectue (evenement L. 823-6)";
+    label en unofficial "early loan repayment made (L. 823-6 event)";
+}
+
+pub relation demenagement_signale(m: Menage) kind empirical {
+    label fr official "demenagement signale par le bailleur (execution)";
+    label en unofficial "move reported by the landlord (performance)";
+}
+
+pub relation fin_bail_signalee(m: Menage) kind empirical {
+    label fr official "fin de bail signalee par le bailleur (execution)";
+    label en unofficial "lease end reported by the landlord (performance)";
+}
+
+pub relation remboursement_anticipe_signale(m: Menage) kind empirical {
+    label fr official "remboursement anticipe signale par le preteur (execution)";
+    label en unofficial "early repayment reported by the lender (performance)";
+}
+
+@source(CCH_L823_6, CCH_L823_6_ED2019_12, CCH_L823_6_ED2020_01,
+        CCH_L823_6_ED2021_01, CCH_L823_6_ED2023_04, CCH_L823_6_ED2023_09,
+        CCH_L823_6_ED2023_12, CCH_L823_6_ED2026_07)
+rule DevoirSignalerDemenagement(m: Menage, b: Bailleur, o: Organisme) strict {
+    label fr official "le bailleur signale le demenagement de l'allocataire (delais reglementaires non epingles)";
+    label en unofficial "the landlord reports the recipient move (regulatory delays unpinned)";
+    when demenagement_allocataire(m) and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR)
+        and destinataire_aide(m, b) and organisme_debiteur(o, m);
+    then duty BailleurSignalerDemenagement {
+        bearer b;
+        beneficiary o;
+        maintain demenagement_signale(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L823_6, CCH_L823_6_ED2019_12, CCH_L823_6_ED2020_01,
+        CCH_L823_6_ED2021_01, CCH_L823_6_ED2023_04, CCH_L823_6_ED2023_09,
+        CCH_L823_6_ED2023_12, CCH_L823_6_ED2026_07)
+rule DevoirSignalerFinBail(m: Menage, b: Bailleur, o: Organisme) strict {
+    label fr official "le bailleur signale la fin ou la resiliation du bail (delais reglementaires non epingles)";
+    label en unofficial "the landlord reports the lease end or termination (regulatory delays unpinned)";
+    when fin_bail_resiliation(m) and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR)
+        and destinataire_aide(m, b) and organisme_debiteur(o, m);
+    then duty BailleurSignalerFinBail {
+        bearer b;
+        beneficiary o;
+        maintain fin_bail_signalee(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L823_6, CCH_L823_6_ED2019_12, CCH_L823_6_ED2020_01,
+        CCH_L823_6_ED2021_01, CCH_L823_6_ED2023_04, CCH_L823_6_ED2023_09,
+        CCH_L823_6_ED2023_12, CCH_L823_6_ED2026_07)
+rule DevoirSignalerRemboursement(m: Menage, b: Bailleur, o: Organisme) strict {
+    label fr official "le preteur signale le remboursement anticipe (delais reglementaires non epingles)";
+    label en unofficial "the lender reports early repayment (regulatory delays unpinned)";
+    when remboursement_anticipe_effectue(m) and bailleur_du_menage(b, m) and role_tiers(b, PRETEUR)
+        and destinataire_aide(m, b) and organisme_debiteur(o, m);
+    then duty PreteurSignalerRemboursement {
+        bearer b;
+        beneficiary o;
+        maintain remboursement_anticipe_signale(m) during [@2021-01-01, infinity);
+    };
+}
+
+// H-MODEL-013 repaired 2026-10-08: R. 823-2 certificate duty now runs on the landlord (b); obligor lines are canonical same-line form (see line journal, obligor-line technique note).

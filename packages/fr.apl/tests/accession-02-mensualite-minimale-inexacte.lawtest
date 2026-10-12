@@ -1,0 +1,38 @@
+// Дело Catala «Exemple2» (сектор приобретения, APL), ресурсы 19 000 €.
+//
+// ИСПОЛНИМАЯ ГРАНИЦА, А НЕ ЧИСЛО. L0 ветви 1° есть (basse + haute) / 12, и на
+// этом входе сумма транш равна 4 409,0696 €, а её двенадцатая часть —
+// 367,42246666… €, десятично непредставимая. Норма делить велит («ce résultat
+// est divisé par douze»), а политики округления НЕ называет: §58 отдаёт
+// `Money / Decimal` тем же видом, что делимое, и при неточном частном
+// отказывает (`INEXACT_DIVISION`) вместо молчаливого округления.
+//
+// Catala на этом деле утверждает 367,42 € — то есть молчание текста заполнено
+// округлением их денежного типа. Чей выбор верен, решает не реализация; сценарий
+// закрепляет ОТКАЗ, и это ровно та же граница, что у пропорциональной
+// дегрессивности сектора найма.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-accession-02-mensualite-minimale-inexacte" {
+    given {
+        context { decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "accession-02-mensualite-minimale-inexacte-01": secteur_accession(entity_ref("urn:fr:apl:case:accession-02")) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-02": aide_demandee(entity_ref("urn:fr:apl:case:accession-02"), APL) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-03": zone_du_logement(entity_ref("urn:fr:apl:case:accession-02"), ZONE_III) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-04": situation_familiale(entity_ref("urn:fr:apl:case:accession-02"), COUPLE) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-05": personnes_a_charge(entity_ref("urn:fr:apl:case:accession-02"), 2) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-06": sous_cas_mensualite(entity_ref("urn:fr:apl:case:accession-02"), PRET_APRES_30_09_2019) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-07": finalite_operation(entity_ref("urn:fr:apl:case:accession-02"), LOGEMENT_ACQUIS_AMELIORE) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-08": type_travaux(entity_ref("urn:fr:apl:case:accession-02"), TRAVAUX_POUR_ACQUISITION) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-09": mode_propriete(entity_ref("urn:fr:apl:case:accession-02"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-10": mensualite_declaree(entity_ref("urn:fr:apl:case:accession-02"), 495.73 EUR) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-11": ressources_du_menage(entity_ref("urn:fr:apl:case:accession-02"), 19000 EUR) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-12": vintage_pret_depense_nette(entity_ref("urn:fr:apl:case:accession-02"), PRET_DEPUIS_OCTOBRE_1998) { origin case_input; }
+        assert "accession-02-mensualite-minimale-inexacte-13": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:accession-02"), false) { origin case_input; }
+    }
+    evaluate truth(mensualite_minimale(entity_ref("urn:fr:apl:case:accession-02"), 367.42 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}

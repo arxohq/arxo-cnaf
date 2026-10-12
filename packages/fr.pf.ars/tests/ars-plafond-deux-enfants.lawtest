@@ -1,0 +1,16 @@
+// Ceiling, two children: 10000 + 0.30*10000*2 = 16000.
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-plafond-deux-enfants" {
+    given {
+        context { decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "apl-01": plafond_base_ars(entity_ref("urn:fr:pf-ars:case:plafond-deux-enfants"), 10000 EUR) { origin case_input; }
+        assert "apl-02": nb_enfants_ars(entity_ref("urn:fr:pf-ars:case:plafond-deux-enfants"), 2) { origin case_input; }
+    }
+    evaluate truth(plafond_ars_applicable(entity_ref("urn:fr:pf-ars:case:plafond-deux-enfants"), 16000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,19 @@
+// Stated-weighted chain, single parent: R 1 200, N 2.5 derived; organ-stated weighted 480 - levy 120.40 (D. 553-1, B-VERS-D5531-PONDERE-FORMULE: no R/N division is computed).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-chaine-isole" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "ch-a": revenus_mensuels_a(entity_ref("urn:fr:pv:case:isole"), 900.00 EUR) { origin case_input; }
+        assert "ch-b": prestations_mensuelles_b(entity_ref("urn:fr:pv:case:isole"), 300.00 EUR) { origin case_input; }
+        assert "ch-c": charges_logement_c(entity_ref("urn:fr:pv:case:isole"), 0 EUR) { origin case_input; }
+        assert "ch-s": personne_seule(entity_ref("urn:fr:pv:case:isole")) { origin case_input; }
+        assert "ch-n": nb_enfants_charge(entity_ref("urn:fr:pv:case:isole"), 2) { origin case_input; }
+        assert "ch-w": revenu_pondere_calcule_organisme(entity_ref("urn:fr:pv:case:isole"), 480.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prelevement_mensuel(entity_ref("urn:fr:pv:case:isole"), 120.40 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

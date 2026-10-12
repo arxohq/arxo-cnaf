@@ -1,0 +1,30 @@
+// Job-seeker flat days under the current D. 544-8 version: 22
+// flat days at 60.00 in September 2024 = 1320.00. The count is
+// unchanged («est égal à 22», D. 544-8 LEGIARTI000049795053 from
+// 2024-07-01); only the operator wording changed (France Travail).
+// F05-01: envelope history qualifies the 1320 (66 days, 1 year).
+// Version-boundary control for ajpp-special-demandeur-emploi.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-forfait-22-apres-2024" {
+    given {
+        context { decision_time @2024-09-15T12:00:00Z; knowledge_time @2024-09-15T12:00:00Z; legal_time @2024-09-15; timezone "Europe/Paris"; }
+        assert "ajpp-f24-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-f24")) { origin adjudicated; }
+        assert "ajpp-f24-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-f24")) { origin adjudicated; }
+        assert "ajpp-f24-03": demandeur_emploi_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-f24")) { origin case_input; }
+        assert "ajpp-f24-04": jours_forfaitaires(entity_ref("urn:fr:pf-ajpp:case:enfant-f24"), @2024-09-01, 22) { origin case_input; }
+        assert "ajpp-f24-05": montant_journalier_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-f24"), 60.00 EUR) { origin case_input; }
+        assert "ajpp-f24-06": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-f24"), 66) { origin case_input; }
+        assert "ajpp-f24-07": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-f24"), MALADIE, 1) { origin case_input; }
+    }
+    evaluate truth(forfait_22_conforme(entity_ref("urn:fr:pf-ajpp:case:enfant-f24"), @2024-09-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-f24"), @2024-09-01, 1320.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

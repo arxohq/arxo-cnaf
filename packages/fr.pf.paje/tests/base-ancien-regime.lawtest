@@ -1,0 +1,23 @@
+// Old regime: child born 2016 (cohort AVANT), month of right 2021-02 —
+// the 2015 wording still governs (NOTA D. 531-3): 400 × 0.4595 = 183.80 €.
+// Pair — base-nouveau-regime (same child, 2021-05 → 166.60 €).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-base-ancien-regime" {
+    given {
+        context { decision_time @2021-02-15T12:00:00Z; knowledge_time @2021-02-15T12:00:00Z; legal_time @2021-02-15; timezone "Europe/Paris"; }
+        assert "base-ancien-01": enfant_en_charge(entity_ref("urn:fr:paje:case:base-ancien"), entity_ref("urn:fr:paje:enfant:base-ancien")) { origin case_input; }
+        assert "base-ancien-02": condition_age_base(entity_ref("urn:fr:paje:enfant:base-ancien")) { origin adjudicated; }
+        assert "base-ancien-03": cohorte_enfant(entity_ref("urn:fr:paje:enfant:base-ancien"), NE_AVANT_AVRIL_2018) { origin adjudicated; }
+        assert "base-ancien-04": ressources_annuelles(entity_ref("urn:fr:paje:case:base-ancien"), 20000 EUR) { origin case_input; }
+        assert "base-ancien-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:base-ancien"), 30000 EUR) { origin case_input; }
+        assert "base-ancien-06": bmaf_applicable(entity_ref("urn:fr:paje:case:base-ancien"), 400.00 EUR) { origin case_input; }
+        assert "base-ancien-07": mois_eligible_base(entity_ref("urn:fr:paje:case:base-ancien"), entity_ref("urn:fr:paje:enfant:base-ancien"), @2021-02-01) { origin adjudicated; }
+    }
+    evaluate truth(base_attribuee(entity_ref("urn:fr:paje:case:base-ancien"), entity_ref("urn:fr:paje:enfant:base-ancien"), 183.80 EUR, @2021-02-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

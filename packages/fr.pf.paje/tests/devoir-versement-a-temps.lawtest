@@ -1,0 +1,18 @@
+// Deadline, pair: payment on 15.08.2025 with deadline 31.08.2025 — on time,
+// versement_tardif is not derived. Control — devoir-versement-tardif.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-devoir-versement-a-temps" {
+    given {
+        context { decision_time @2025-09-01T12:00:00Z; knowledge_time @2025-09-01T12:00:00Z; legal_time @2025-09-01; timezone "Europe/Paris"; }
+        assert "temps-01": prime_versee(entity_ref("urn:fr:paje:case:temps"), entity_ref("urn:fr:paje:enfant:temps"), 919.00 EUR) { origin case_input; }
+        assert "temps-02": date_versement_prime(entity_ref("urn:fr:paje:case:temps"), entity_ref("urn:fr:paje:enfant:temps"), @2025-08-15) { origin case_input; }
+        assert "temps-03": date_limite_versement(entity_ref("urn:fr:paje:case:temps"), entity_ref("urn:fr:paje:enfant:temps"), @2025-08-31) { origin adjudicated; }
+    }
+    evaluate truth(versement_tardif(entity_ref("urn:fr:paje:case:temps"), entity_ref("urn:fr:paje:enfant:temps")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,17 @@
+// Earlier cohort with only the supplementary birth-leave indemnity: unlisted in the 2018 II, mapped to the dedicated 2026-only relation - no refusal under the predecessor text (L. 532-2 II prev, B-PFCORE-L5322-II-MAP).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cumul-indemnite-prev-conge-supp-neither" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "cumul-indemnite-prev-conge-supp-neither-01": beneficie_prepare_taux_plein(entity_ref("urn:fr:pf:case:prepare-prev-supp"), entity_ref("urn:fr:pf:case:enfant-2024")) { origin case_input; }
+        assert "cumul-indemnite-prev-conge-supp-neither-02": percoit_conge_supplementaire_naissance(entity_ref("urn:fr:pf:case:prepare-prev-supp")) { origin case_input; }
+        assert "cumul-indemnite-prev-conge-supp-neither-03": cohorte_avant_2026(entity_ref("urn:fr:pf:case:enfant-2024")) { origin case_input; }
+    }
+    evaluate truth(cumul_prepare_indemnite_refuse(entity_ref("urn:fr:pf:case:prepare-prev-supp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,33 @@
+// OpenFisca Non Passant 6 (2018-01): eldest is 21 (born 1996-06-01),
+// outside both bands without established pay, so the fund count holds
+// at two. Their cf = 0; ours: no conclusion. Class (c).
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-of-2018-np6" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2018-01-15T12:00:00Z; knowledge_time @2018-01-15T12:00:00Z; legal_time @2018-01-15; timezone "Europe/Paris"; }
+        assert "on6-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6"), entity_ref("urn:fr:pf-cf:foreign:of-2018-np6-e1")) { origin case_input; }
+        assert "on6-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6"), entity_ref("urn:fr:pf-cf:foreign:of-2018-np6-e2")) { origin case_input; }
+        assert "on6-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6"), entity_ref("urn:fr:pf-cf:foreign:of-2018-np6-e3")) { origin case_input; }
+        assert "on6-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6-e1")) { origin case_input; }
+        assert "on6-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6-e2")) { origin case_input; }
+        assert "on6-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6-e3")) { origin case_input; }
+        assert "on6-07": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6-e1"), @1996-06-01) { origin case_input; }
+        assert "on6-08": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6-e2"), @2005-06-01) { origin case_input; }
+        assert "on6-09": date_naissance(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6-e3"), @2007-06-01) { origin case_input; }
+        assert "on6-10": mois_droit(@2018-01-01) { origin case_input; }
+        assert "on6-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6"), 2) { origin case_input; }
+        assert "on6-12": ressources_menage(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6"), 35000 EUR) { origin case_input; }
+        assert "on6-13": cadre_cf_remplie(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6")) { origin case_input; }
+    }
+    evaluate truth(cf_enfant_qualifie(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:foreign:of-2018-np6")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

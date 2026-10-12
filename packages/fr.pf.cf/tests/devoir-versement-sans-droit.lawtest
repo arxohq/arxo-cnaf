@@ -1,0 +1,53 @@
+// No track opens: resources 50000 exceed the 41000 ceiling by 9000,
+// above twelve theoretical monthly amounts (1199.52), so neither the
+// base right nor the differential exists and no payment duty can fire.
+// The positions evaluate cleanly (COMPUTED) with nothing to pay.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-devoir-versement-sans-droit" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "dvs-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit-e1")) { origin case_input; }
+        assert "dvs-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit-e2")) { origin case_input; }
+        assert "dvs-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit-e3")) { origin case_input; }
+        assert "dvs-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit-e1")) { origin case_input; }
+        assert "dvs-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit-e2")) { origin case_input; }
+        assert "dvs-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit-e3")) { origin case_input; }
+        assert "dvs-07": date_naissance(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit-e1"), @2016-03-15) { origin case_input; }
+        assert "dvs-08": date_naissance(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit-e2"), @2014-03-15) { origin case_input; }
+        assert "dvs-09": date_naissance(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit-e3"), @2012-03-15) { origin case_input; }
+        assert "dvs-10": mois_droit(@2021-06-01) { origin case_input; }
+        assert "dvs-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 3) { origin case_input; }
+        assert "dvs-12": ressources_menage(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 50000 EUR) { origin case_input; }
+        assert "dvs-13": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 20000 EUR) { origin case_input; }
+        assert "dvs-13a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 5000 EUR) { origin case_input; }
+        assert "dvs-13b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 6000 EUR) { origin case_input; }
+        assert "dvs-13c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 10000 EUR) { origin case_input; }
+        assert "dvs-13d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 2500 EUR) { origin case_input; }
+        assert "dvs-13e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 3000 EUR) { origin case_input; }
+        assert "dvs-14": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit")) { origin case_input; }
+        assert "dvs-15": bmaf_retenu(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 240.00 EUR) { origin case_input; }
+        assert "dvs-16": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-cf:org:caisse"), entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit")) { origin case_input; }
+    }
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_montant_du(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_majore_du(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_differentiel_du(entity_ref("urn:fr:pf-cf:case:devoir-versement-sans-droit"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+}

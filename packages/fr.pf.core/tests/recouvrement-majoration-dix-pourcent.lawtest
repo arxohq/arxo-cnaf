@@ -1,0 +1,22 @@
+// Mise en demeure increase: eligible establishment, opening notice, rejected observations, registered demand 2026-01-10, 2000 EUR notice-sourced sums unpaid at the passed 2026-02-10 due date - 200 EUR increase (L. 553-2-1 al. 2-4, PC-R08-02).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-recouvrement-majoration-dix-pourcent" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "recouvrement-majoration-dix-pourcent-01": sommes_non_reglees(entity_ref("urn:fr:pf:case:indu-majorations"), 2000 EUR) { origin case_input; }
+        assert "recouvrement-majoration-dix-pourcent-02": etablissement_service_eligible_l5532_1(entity_ref("urn:fr:pf:case:indu-majorations")) { origin case_input; }
+        assert "recouvrement-majoration-dix-pourcent-03": mise_en_demeure_adressee_le(entity_ref("urn:fr:pf:case:indu-majorations"), @2026-01-10) { origin case_input; }
+        assert "recouvrement-majoration-dix-pourcent-04": sommes_mise_issues_notification(entity_ref("urn:fr:pf:case:indu-majorations"), 2000 EUR) { origin case_input; }
+        assert "recouvrement-majoration-dix-pourcent-05": date_exigibilite_mise_le(entity_ref("urn:fr:pf:case:indu-majorations"), @2026-02-10) { origin case_input; }
+        assert "recouvrement-majoration-dix-pourcent-06": date_appreciation(entity_ref("urn:fr:pf:case:indu-majorations"), @2026-03-15) { origin case_input; }
+        assert "recouvrement-majoration-dix-pourcent-07": notification_recouvrement_adressee(entity_ref("urn:fr:pf:case:indu-majorations")) { origin case_input; }
+        assert "recouvrement-majoration-dix-pourcent-08": observations_interesse_rejetees(entity_ref("urn:fr:pf:case:indu-majorations")) { origin case_input; }
+    }
+    evaluate truth(majoration_mise_en_demeure(entity_ref("urn:fr:pf:case:indu-majorations"), 200 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

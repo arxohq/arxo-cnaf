@@ -1,0 +1,17 @@
+// Earlier cohort: PreParE plus a family-complement claim - no cumulation under the 2018 text (L. 532-2 I prev).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cumul-cf-prev" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "cumul-cf-prev-01": beneficie_prepare(entity_ref("urn:fr:pf:case:prepare-cf-prev"), entity_ref("urn:fr:pf:case:enfant-2022")) { origin case_input; }
+        assert "cumul-cf-prev-02": demande_complement_familial(entity_ref("urn:fr:pf:case:prepare-cf-prev")) { origin case_input; }
+        assert "cumul-cf-prev-03": cohorte_avant_2026(entity_ref("urn:fr:pf:case:enfant-2022")) { origin case_input; }
+    }
+    evaluate truth(cumul_prepare_cf_refuse(entity_ref("urn:fr:pf:case:prepare-cf-prev"), entity_ref("urn:fr:pf:case:enfant-2022")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

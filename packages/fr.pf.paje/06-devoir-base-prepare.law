@@ -1,0 +1,55 @@
+// Deontic layer of the base allowance and PreParE: duties of the fund
+// to pay the awarded benefit (D1B/D1P, see the map in package.law).
+//
+// D1B/D1P. Each duty triggers on the awarded benefit (right + computed
+// amount + eligible month). the bearer (a rule variable) is the empirical
+// organisme_debiteur: the texts name only «versée», never the debtor.
+// Performance is base_versee / prepare_versee. No payment deadlines govern
+// monthly benefits in the pinned texts — hence no tardif rules (unlike the
+// grant). Scenarios: tests/devoir-base-*.lawtest and
+// tests/devoir-prepare-*.lawtest (families fr.pf.paje#allocation-base and
+// fr.pf.paje#prepare): ACTIVE / no right — no position.
+
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+use self::{
+    Beneficiaire,
+    CSS_L531_3_ED2015_01,
+    CSS_L531_3_ED2018_01,
+    CSS_L531_4_ED2015_01,
+    Enfant,
+    Menage,
+    Organisme,
+    base_attribuee,
+    base_versee,
+    menage_beneficiaire,
+    organisme_debiteur,
+    prepare_attribuee,
+    prepare_versee,
+};
+
+@source(CSS_L531_3_ED2018_01, CSS_L531_3_ED2015_01)
+rule DevoirVerserBase(o: Organisme, m: Menage, e: Enfant, montant: Money, mois: Date) strict {
+    label fr official "l'allocation de base attribuée est versée au ménage";
+    label en unofficial "the awarded base allowance is paid to the household — duty of the fund";
+    when base_attribuee(m, e, montant, mois) and organisme_debiteur(o, m);
+    then duty VerserBaseDue {
+        bearer o;
+        beneficiary m;
+        maintain base_versee(m, e, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L531_4_ED2015_01)
+rule DevoirVerserPrepare(o: Organisme, b: Beneficiaire, m: Menage, e: Enfant, montant: Money, mois: Date) strict {
+    label fr official "la PreParE attribuée est versée au demandeur";
+    label en unofficial "the awarded PreParE is paid to the claimant — duty of the fund";
+    when prepare_attribuee(b, e, montant, mois) and menage_beneficiaire(b, m) and organisme_debiteur(o, m);
+    then duty VerserPrepareDue {
+        bearer o;
+        beneficiary b;
+        maintain prepare_versee(b, e, montant) during [@2021-01-01, infinity);
+    };
+}

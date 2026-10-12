@@ -1,0 +1,21 @@
+// L. 531-9, 2025-12 wording: open right plus a daily allowance for
+// the same 2026-cohort child — the marker concludes.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-non-cumul-indemnite" {
+    given {
+        context { decision_time @2026-03-20T12:00:00Z; knowledge_time @2026-03-20T12:00:00Z; legal_time @2026-03-10; timezone "Europe/Paris"; }
+        assert "nci-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:nci"), entity_ref("urn:fr:pf-cmg:child:nci"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "nci-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:nci")) { origin case_input; }
+        assert "nci-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:nci"), entity_ref("urn:fr:pf-cmg:child:nci")) { origin case_input; }
+        assert "nci-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:nci"), 0) { origin case_input; }
+        assert "nci-05": indemnite_journaliere_meme_enfant(entity_ref("urn:fr:pf-cmg:case:nci"), entity_ref("urn:fr:pf-cmg:child:nci")) { origin case_input; }
+        assert "nci-06": cohorte_l5319_2026(entity_ref("urn:fr:pf-cmg:child:nci")) { origin case_input; }
+    }
+    evaluate truth(cumul_indemnite_interdit(entity_ref("urn:fr:pf-cmg:case:nci"), entity_ref("urn:fr:pf-cmg:child:nci")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

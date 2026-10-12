@@ -1,0 +1,19 @@
+// Single-carer majoration (2019/2022 text): 10 days at the retained
+// increased rate 70.00 in March 2022 = 700.00.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-montant-majore-2022" {
+    given {
+        context { decision_time @2022-03-15T12:00:00Z; knowledge_time @2022-03-15T12:00:00Z; legal_time @2022-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-mm-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-mm"), entity_ref("urn:fr:css:ajpa:case:aide-mm")) { origin case_input; }
+        assert "ajpa-mm-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-mm")) { origin adjudicated; }
+        assert "ajpa-mm-03": jours_ajpa_mois(entity_ref("urn:fr:css:ajpa:case:aidant-mm"), entity_ref("urn:fr:css:ajpa:case:aide-mm"), @2022-03-01, 10) { origin case_input; }
+        assert "ajpa-mm-04": montant_journalier_majore_retenu(entity_ref("urn:fr:css:ajpa:case:aidant-mm"), 70.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ajpa_montant_mois(entity_ref("urn:fr:css:ajpa:case:aidant-mm"), entity_ref("urn:fr:css:ajpa:case:aide-mm"), @2022-03-01, 700.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

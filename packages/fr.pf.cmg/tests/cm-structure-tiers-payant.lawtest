@@ -1,0 +1,37 @@
+// Third-party payment in its window: December 2024 structure case,
+// twenty paid hours, family request with agreement — the structure is
+// paid directly and position PayerStructureTiersPayant is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-structure-tiers-payant" {
+    given {
+        context { decision_time @2024-12-20T12:00:00Z; knowledge_time @2024-12-20T12:00:00Z; legal_time @2024-12-15; timezone "Europe/Paris"; }
+        assert "struct-tp-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), entity_ref("urn:fr:pf-cmg:child:tp"), STRUCTURE) { origin case_input; }
+        assert "struct-tp-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:structure-tiers")) { origin case_input; }
+        assert "struct-tp-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), entity_ref("urn:fr:pf-cmg:child:tp")) { origin case_input; }
+        assert "struct-tp-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:tp"), 2) { origin case_input; }
+        assert "struct-tp-05": age_base_ans(entity_ref("urn:fr:pf-cmg:child:tp"), 3) { origin case_input; }
+        assert "struct-tp-06": heures_remunerees(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), entity_ref("urn:fr:pf-cmg:child:tp"), 20.0) { origin case_input; }
+        assert "struct-tp-07": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), 1) { origin case_input; }
+        assert "struct-tp-08-p1": plafond_a_base_publie(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), 17633 EUR) { origin case_input; }
+        assert "struct-tp-08-p2": plafond_a_enfant_publie(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), 2917 EUR) { origin case_input; }
+        assert "struct-tp-08-p3": plafond_c_base_publie(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), 39184 EUR) { origin case_input; }
+        assert "struct-tp-08-p4": plafond_c_enfant_publie(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), 6482 EUR) { origin case_input; }
+        assert "struct-tp-09": ressources_annuelles(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), 15000 EUR) { origin case_input; }
+        assert "struct-tp-10": bmaf_retenu(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), 400.00 EUR) { origin case_input; }
+        assert "struct-tp-11": depense_engagee(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), entity_ref("urn:fr:pf-cmg:child:tp"), 500 EUR) { origin case_input; }
+        assert "struct-tp-12": tiers_payant_demande(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), entity_ref("urn:fr:pf-cmg:child:tp")) { origin case_input; }
+        assert "struct-tp-13": tiers_payant_accord(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), entity_ref("urn:fr:pf-cmg:child:tp")) { origin case_input; }
+        assert "struct-tp-14": justification_depenses(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), entity_ref("urn:fr:pf-cmg:child:tp"), @2024-12-10) { origin case_input; }
+        assert "struct-tp-15": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-cmg:org:caisse-tp"), entity_ref("urn:fr:pf-cmg:case:structure-tiers")) { origin case_input; }
+    }
+    evaluate truth(montant_structure_du(entity_ref("urn:fr:pf-cmg:case:structure-tiers"), entity_ref("urn:fr:pf-cmg:child:tp"), 425.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate positions();
+    expect position(PayerStructureTiersPayant, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,25 @@
+// L. 531-9, para. 1, unevaluated 2014 cohort (FULL RETURN 03, R02-06):
+// the isolated-parent case carries established non-VI PreParE but neither
+// the cohort gate nor the affirmative pre-cutoff input is established —
+// missing evidence proves nothing, the marker stays silent. Distinct from
+// cm-non-cumul-prepare-avant-2014 (affirmative pre-cutoff, NEITHER).
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-non-cumul-prepare-cohorte-non-etablie" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "ncpn-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:ncpn"), entity_ref("urn:fr:pf-cmg:child:ncpn"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "ncpn-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:ncpn")) { origin case_input; }
+        assert "ncpn-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:ncpn"), entity_ref("urn:fr:pf-cmg:child:ncpn")) { origin case_input; }
+        assert "ncpn-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:ncpn"), 11) { origin case_input; }
+        assert "ncpn-05": parent_isole(entity_ref("urn:fr:pf-cmg:case:ncpn")) { origin case_input; }
+        assert "ncpn-06": beneficie_prepare_plein(entity_ref("urn:fr:pf-cmg:case:ncpn"), entity_ref("urn:fr:pf-cmg:child:ncpn")) { origin case_input; }
+        assert "ncpn-07": prepare_plein_hors_vi(entity_ref("urn:fr:pf-cmg:case:ncpn"), entity_ref("urn:fr:pf-cmg:child:ncpn")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_prepare_plein_interdit(entity_ref("urn:fr:pf-cmg:case:ncpn"), entity_ref("urn:fr:pf-cmg:child:ncpn")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

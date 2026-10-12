@@ -1,0 +1,39 @@
+// СВОЙ сценарий, выведенный из закреплённого текста главы VI: дела Catala этого
+// сектора заданы для заморских территорий, и их числа проверяются отдельными
+// сценариями `*-guadeloupe-*` и `*-saint-pierre-*`.
+//
+// ШАГ: L0 по ВТОРОМУ абзацу D. 832-26 — пять СВОИХ транш (0 %, 2,40 %, 20,80 %,
+// 23,20 %, 32,80 %) с границами 1 423,03 / 2 047,61 / 2 629,85 / 4 095,05,
+// умноженными на доли N пункта 2° (при паре с двумя иждивенцами N = 3,0), плюс
+// форфейт 76,32 € без умножения на N, всё делённое на двенадцать: 281,5714600 €.
+//
+// МЕСЯЦ ПРАВА — МАРТ 2023 ГОДА, И ЭТО СУЩЕСТВЕННО. Транши второго абзаца названы
+// текстом лишь редакцией, применимой с 1 июля 2022 года; до неё ст. 31 давала
+// один набор ставок на всю D. 832-26. Поэтому строки этих параметров заведены
+// только этой редакцией, и на более раннем месяце права оценка ответит
+// MISSING_PARAMETER_VALUE — а не значением нормы, вступившей позже даты дела.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-al-accession-mensualite-minimale" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "frontiere-al-accession-mensualite-minimale-01": secteur_accession_allocations(entity_ref("urn:fr:apl:case:al-accession-a")) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-02": aide_demandee(entity_ref("urn:fr:apl:case:al-accession-a"), ALF) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-03": zone_du_logement(entity_ref("urn:fr:apl:case:al-accession-a"), ZONE_II) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-04": situation_familiale(entity_ref("urn:fr:apl:case:al-accession-a"), COUPLE) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-05": personnes_a_charge(entity_ref("urn:fr:apl:case:al-accession-a"), 2) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-06": vintage_certificat(entity_ref("urn:fr:apl:case:al-accession-a"), CERTIFICAT_DEPUIS_01_10_2019) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-07": mode_propriete(entity_ref("urn:fr:apl:case:al-accession-a"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-08": territoire(entity_ref("urn:fr:apl:case:al-accession-a"), METROPOLE) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-09": mensualite_declaree(entity_ref("urn:fr:apl:case:al-accession-a"), 500 EUR) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-10": ressources_du_menage(entity_ref("urn:fr:apl:case:al-accession-a"), 18000 EUR) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-11": base_plancher_ressources(entity_ref("urn:fr:apl:case:al-accession-a"), COEFFICIENT_MENSUALITE) { origin case_input; }
+        assert "frontiere-al-accession-mensualite-minimale-12": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:al-accession-a"), false) { origin case_input; }
+    }
+    evaluate truth(mensualite_minimale_al(entity_ref("urn:fr:apl:case:al-accession-a"), 281.5714600 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

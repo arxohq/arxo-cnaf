@@ -1,0 +1,41 @@
+// IT-2026-080 scale edges (foreign mapping, class a; document-anchored
+// 2026-10-06): pinned source CNAF_IT_2026_080 (official PDF bytes +
+// layout text, edition in force from 2026-04-01). Fragment
+// CNAF_IT_2026_080_BORNES (table, p. 2): 0.5 SMIC (59x) -> 709.18,
+// 1 SMIC (120x, upper edge until 31.03.2026) -> 1442.40, 1.15 SMIC
+// (138x, upper edge from 01.04.2026) -> 1658.76. Fragment
+// CNAF_IT_2026_080_MONTANTS (p. 2): 29.101 % -> 184.27, 37.70 % ->
+// 240.63. The edges equal 59x / 120x / 138x the 12.02 hourly SMIC —
+// the model's D.843-2 band edges. Single
+// person, base 640.00, SMIC 12.02: at 709.18 the bonification is zero
+// (59x edge, BoniNulle2026) -> monthly prime 640 + 424.44423 - 709.18
+// = 355.26423; at 1658.76 the bonification caps at 0.377x640 = 241.28
+// (138x edge, BoniMax2026) -> monthly prime 640 + 992.76786 + 241.28
+// - 1658.76 = 215.28786.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-seuils-it-2026-080" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": forfait_base_retenu(@2026-04-01, 640.00 EUR) { origin case_input; }
+        assert "ppa-02": forfait_base_retenu(@2026-05-01, 640.00 EUR) { origin case_input; }
+        assert "ppa-03": smic_horaire_retenu(@2026-04-01, 12.02 EUR) { origin case_input; }
+        assert "ppa-04": smic_horaire_retenu(@2026-05-01, 12.02 EUR) { origin case_input; }
+        assert "ppa-05": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:seuils-it"), @2026-04-01, SEUL) { origin case_input; }
+        assert "ppa-06": forme_foyer_retenue(entity_ref("urn:fr:ppa:case:seuils-it"), @2026-05-01, SEUL) { origin case_input; }
+        assert "ppa-07": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:seuils-it"), @2026-04-01, 709.18 EUR) { origin case_input; }
+        assert "ppa-08": revenus_pro_demandeur(entity_ref("urn:fr:ppa:case:seuils-it"), @2026-05-01, 1658.76 EUR) { origin case_input; }
+        assert "ppa-09": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:seuils-it"), @2026-04-01, 709.18 EUR) { origin case_input; }
+        assert "ppa-10": revenus_mensuels_retenus(entity_ref("urn:fr:ppa:case:seuils-it"), @2026-05-01, 1658.76 EUR) { origin case_input; }
+    }
+    evaluate truth(prime_mensuelle(entity_ref("urn:fr:ppa:case:seuils-it"), @2026-04-01, 355.26423 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(prime_mensuelle(entity_ref("urn:fr:ppa:case:seuils-it"), @2026-05-01, 215.28786 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

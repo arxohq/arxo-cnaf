@@ -1,0 +1,25 @@
+// No MPI although a supplement is granted: couple (not isolated),
+// category 2, sans_mpi stated. BMAF 400.00: base 128.00, supplement
+// 260.00, MPI 0, total 388.00. The zero closes the total.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-mpi-sans" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "aeeh-mpisans-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:couple-mpisans"), entity_ref("urn:fr:pf-aeeh:case:enfant-mpisans")) { origin case_input; }
+        assert "aeeh-mpisans-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-mpisans")) { origin adjudicated; }
+        assert "aeeh-mpisans-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-mpisans"), 400.00 EUR) { origin case_input; }
+        assert "aeeh-mpisans-04": categorie_attribuee(entity_ref("urn:fr:pf-aeeh:case:enfant-mpisans"), CATEGORIE_2) { origin adjudicated; }
+        assert "aeeh-mpisans-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-mpisans")) { origin case_input; }
+    }
+    evaluate truth(aeeh_montant_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-mpisans"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_total(entity_ref("urn:fr:pf-aeeh:case:enfant-mpisans"), 388.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

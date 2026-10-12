@@ -1,0 +1,40 @@
+// R. 541-7 al. 3/4, upstream bridge and PCH duties: the upstream
+// R. 512-2 entitlement (stated assumption, pf-af precedent) carries the
+// AEEH-side condition, silence without it; the PCH option ends the
+// supplement on the attribution date; the informed body holds
+// SuspendreComplementPCH, and on non-confirmation holds
+// RetablirComplementRetroactif.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-pont-r5122-pch" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-prp-01": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-prp")) { origin case_input; }
+        assert "r541-prp-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-prp"), entity_ref("urn:fr:pf-aeeh:case:enfant-prp")) { origin case_input; }
+        assert "r541-prp-03": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-aeeh:org:caisse"), entity_ref("urn:fr:pf-aeeh:case:parent-prp")) { origin case_input; }
+        assert "r541-prp-04": option_prestation_compensation(entity_ref("urn:fr:pf-aeeh:case:enfant-prp"), @2024-02-01) { origin case_input; }
+        assert "r541-prp-05": attribution_pch(entity_ref("urn:fr:pf-aeeh:case:enfant-prp"), @2024-03-01) { origin case_input; }
+        assert "r541-prp-06": information_attribution_pch(entity_ref("urn:fr:pf-aeeh:org:caisse"), entity_ref("urn:fr:pf-aeeh:case:enfant-prp"), @2024-03-05) { origin case_input; }
+        assert "r541-prp-07": complement_suspendu_pch(entity_ref("urn:fr:pf-aeeh:case:enfant-prp")) { origin case_input; }
+        assert "r541-prp-08": sans_confirmation_pch(entity_ref("urn:fr:pf-aeeh:case:enfant-prp")) { origin case_input; }
+        assert "r541-prp-09": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-prp-sans"), entity_ref("urn:fr:pf-aeeh:case:enfant-prp-sans")) { origin case_input; }
+    }
+    evaluate truth(aeeh_condition_r512_2(entity_ref("urn:fr:pf-aeeh:case:enfant-prp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_condition_r512_2(entity_ref("urn:fr:pf-aeeh:case:enfant-prp-sans")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(date_fin_complement_pch(entity_ref("urn:fr:pf-aeeh:case:enfant-prp"), @2024-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate positions();
+    expect position(SuspendreComplementPCH, ACTIVE);
+    expect position(RetablirComplementRetroactif, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,30 @@
+// OpenFisca 2018-04 two children, shaped as cas1 per child: 112.52 each, independent per-child amounts. Their 231.74 embeds their BMAF: class (b).
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-of-2018-04-cas2" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "of2-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2"), entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e1")) { origin case_input; }
+        assert "of2-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e1")) { origin case_input; }
+        assert "of2-03": motif_asf(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e1"), DEFAUT_SIMPLE) { origin case_input; }
+        assert "of2-04": demande_asf(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e1")) { origin case_input; }
+        assert "of2-05": manquement_debiteur(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e1"), @2021-03-01) { origin case_input; }
+        assert "of2-06": mois_ouverture_asf(@2021-04-01) { origin case_input; }
+        assert "of2-07": bmaf_retenu(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2"), 400.00 EUR) { origin case_input; }
+        assert "of2-08": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2"), entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e2")) { origin case_input; }
+        assert "of2-09": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e2")) { origin case_input; }
+        assert "of2-10": motif_asf(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e2"), DEFAUT_SIMPLE) { origin case_input; }
+        assert "of2-11": demande_asf(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e2")) { origin case_input; }
+        assert "of2-12": manquement_debiteur(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e2"), @2021-03-01) { origin case_input; }
+    }
+    evaluate truth(asf_montant_du(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e1"), 112.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_montant_du(entity_ref("urn:fr:pf-asf:foreign:of-2018-04-cas2-e2"), 112.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

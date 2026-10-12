@@ -1,0 +1,593 @@
+// Pinned decree figures: 22-day monthly cap, SMIC formula and 2021 BMAF
+// rates, half-day and part-time amounts, computed complement threshold,
+// job-seeker flat 22 (D. 544-4/6/7/8).
+//
+// D. 544-4 pins the monthly maximum at 22: the decree rule derives the
+// same within-limit head without a retained-max input. D. 544-6 builds
+// the daily rate from 2022 by the single formula A = (7*shn)/(1-a),
+// rounded to the cent (non-tie outputs are source-derived as
+// mode-indistinguishable; exact half-cent ties are case-flagged and
+// stay pending per D75, B-PFAJPP-TIE-ARRONDI; the division exactness
+// is qualified by the deferred run, B-PFAJPP-FORMULE-DIVISION),
+// halves it for half-days outside L. 5421-1,
+// and prices part-time months on the days not worked; the 2021 window
+// builds the BMAF percentage rates (10.63 / 12.63 / 5.315 / 6.315 %).
+// D. 544-7 builds the 27.19 % threshold and amount from the retained
+// BMAF; the decree threshold test is «supérieures ou égales» where the
+// L. 544-7 rule reads strict «supérieures» — the decree governs the
+// threshold it sets (proposed reading, journal). D. 544-8 checks the
+// job-seeker flat days against the decree 22 outside the
+// occasional-activity exception, which ends at the L. 544-1 boundary.
+// F05-01: decree monthly amounts gate on the month conformity (daily
+// 22 or flat 22) plus the qualified envelope, except demi-day and
+// part-time amounts, which gate on the envelope only (monthly
+// conversion boundary B-PFAJPP-DEMI-PLAFOND).
+
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+use self::{
+    CSS_D544_4_ED2020_09,
+    CSS_D544_4_ED2021_11,
+    CSS_D544_4_ED2022_01,
+    CSS_D544_4_ED2022_04,
+    CSS_D544_4_ED2022_07,
+    CSS_D544_4_ED2022_10,
+    CSS_D544_4_ED2023_01,
+    CSS_D544_4_ED2023_07,
+    CSS_D544_4_ED2024_02,
+    CSS_D544_4_ED2024_07,
+    CSS_D544_4_ED2025_12,
+    CSS_D544_4_ED2026_01,
+    CSS_D544_4_ED2026_06,
+    CSS_D544_6,
+    CSS_D544_6_ED2022_04,
+    CSS_D544_6_ED2022_07,
+    CSS_D544_6_ED2022_10,
+    CSS_D544_6_ED2023_01,
+    CSS_D544_6_ED2023_07,
+    CSS_D544_6_ED2024_02,
+    CSS_D544_6_ED2024_07,
+    CSS_D544_6_ED2025_12,
+    CSS_D544_6_ED2026_01,
+    CSS_D544_6_ED2026_06,
+    CSS_D544_6_PRE2022,
+    CSS_D544_6_PRE2022_ED2021_11,
+    CSS_D544_7_ED2020_09,
+    CSS_D544_7_ED2021_11,
+    CSS_D544_7_ED2022_01,
+    CSS_D544_7_ED2022_04,
+    CSS_D544_7_ED2022_07,
+    CSS_D544_7_ED2022_10,
+    CSS_D544_7_ED2023_01,
+    CSS_D544_7_ED2023_07,
+    CSS_D544_7_ED2024_02,
+    CSS_D544_7_ED2024_07,
+    CSS_D544_7_ED2025_12,
+    CSS_D544_7_ED2026_01,
+    CSS_D544_7_ED2026_06,
+    CSS_D544_8,
+    CSS_D544_8_ED2025_12,
+    CSS_D544_8_ED2026_01,
+    CSS_D544_8_ED2026_06,
+    CSS_D544_8_PRE2024,
+    CSS_D544_8_PRE2024_ED2021_11,
+    CSS_D544_8_PRE2024_ED2022_01,
+    CSS_D544_8_PRE2024_ED2022_04,
+    CSS_D544_8_PRE2024_ED2022_07,
+    CSS_D544_8_PRE2024_ED2022_10,
+    CSS_D544_8_PRE2024_ED2023_01,
+    CSS_D544_8_PRE2024_ED2023_07,
+    CSS_D544_8_PRE2024_ED2024_02,
+    activite_occasionnelle_remuneree,
+    ajpp_droit_ouvert,
+    ajpp_montant_complement,
+    ajpp_montant_mois,
+    bmaf_retenue_ajpp,
+    charge_isolee_2021,
+    charge_personne_seule,
+    chomeur_l5421,
+    complement_frais_attribue,
+    conge_presence_parentale,
+    demandeur_emploi_ajpp,
+    demies_journees_mois,
+    depenses_complement,
+    enveloppe_ajpp_qualifiee,
+    exception_forfait_l544_1,
+    forfait_22_conforme,
+    jours_ajpp_mois,
+    jours_forfaitaires,
+    jours_non_travailles_temps_partiel,
+    mensuel_dans_limite,
+    montant_journalier_retenu,
+    plafond_ressources,
+    ressources_complement,
+    seuil_complement_calcule,
+    smic_horaire_net_retenu,
+    statut_chomeur_l5421,
+    taux_crds_retenu,
+    taux_demi_journee_2021,
+    taux_demi_journee_calcule,
+    taux_journalier_2021,
+    taux_journalier_calcule,
+    taux_tie_en_attente,
+    tie_formule_taux,
+};
+
+// --- D. 544-4: 22-day monthly cap, decree rule --------------------------
+
+@source(
+    CSS_D544_4_ED2020_09,
+    CSS_D544_4_ED2021_11,
+    CSS_D544_4_ED2022_01,
+    CSS_D544_4_ED2022_04,
+    CSS_D544_4_ED2022_07,
+    CSS_D544_4_ED2022_10,
+    CSS_D544_4_ED2023_01,
+    CSS_D544_4_ED2023_07,
+    CSS_D544_4_ED2024_02,
+    CSS_D544_4_ED2024_07,
+    CSS_D544_4_ED2025_12,
+    CSS_D544_4_ED2026_01,
+    CSS_D544_4_ED2026_06)
+rule MensuelDansLimiteDecret(e: fr.pf.core::Enfant, mois: Date, jours: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "jours du mois dans le maximum décret de 22, sans maximum retenu";
+    label en unofficial "month days within the decree maximum of 22, no retained maximum";
+    when jours_ajpp_mois(e, mois, jours) and jours <= PlafondMensuel22Jours;
+    then mensuel_dans_limite(e, mois);
+}
+
+// --- D. 544-6: the SMIC formula -----------------------------------------
+// The HALF_UP argument is mechanical: round() requires a mode, and on
+// non-tie inputs every nearest-mode agrees (source-derived). Exact ties
+// never surface as legal assertions: the build rule is gated by
+// `not taux_tie_en_attente` (D75, B-PFAJPP-TIE-ARRONDI).
+
+// D-42: the quotient (7*shn)/(1-a) is non-terminating on ordinary inputs
+// (56/0.995): `/` refuses with INEXACT_DIVISION before `round` sees a
+// value (§58). div_round §50 (E-0036) rounds the exact quotient once —
+// the text's «arrondi au centième d'euro» (B-PFAJPP-FORMULE-DIVISION).
+function ajpp_taux_formule(s: Money, a: Decimal) -> Money =
+    div_round(s * 7, 1.0 - a, 2, "HALF_UP");
+
+@source(
+    CSS_D544_6,
+    CSS_D544_6_ED2022_04,
+    CSS_D544_6_ED2022_07,
+    CSS_D544_6_ED2022_10,
+    CSS_D544_6_ED2023_01,
+    CSS_D544_6_ED2023_07,
+    CSS_D544_6_ED2024_02,
+    CSS_D544_6_ED2024_07,
+    CSS_D544_6_ED2025_12,
+    CSS_D544_6_ED2026_01,
+    CSS_D544_6_ED2026_06)
+rule TauxJournalierFormule(e: fr.pf.core::Enfant, s: Money, a: Decimal) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "taux journalier construit : (7*shn)/(1-a), arrondi au centième, hors tie exact";
+    label en unofficial "built daily rate: (7*shn)/(1-a), rounded to the cent, except exact ties";
+    when smic_horaire_net_retenu(e, s) and taux_crds_retenu(e, a)
+        // D-42: «arrondi au centième d'euro» with exact ties pending (D75):
+        // the tie flag is case-asserted, never negated (no negative holder,
+        // §69/LDC-E4113) — "except an established tie" is not_known §67.
+        and not_known(taux_tie_en_attente(e));
+    then taux_journalier_calcule(e, ajpp_taux_formule(s, a));
+}
+
+// --- D. 544-6: exact half-cent ties stay pending ---------------------------
+// The pin sets rounding to the cent with no tie-breaking mode (D75):
+// a case-flagged exact tie yields the pending head, never a rounded
+// rate, until the owner records a tie policy.
+
+@source(
+    CSS_D544_6,
+    CSS_D544_6_ED2022_04,
+    CSS_D544_6_ED2022_07,
+    CSS_D544_6_ED2022_10,
+    CSS_D544_6_ED2023_01,
+    CSS_D544_6_ED2023_07,
+    CSS_D544_6_ED2024_02,
+    CSS_D544_6_ED2024_07,
+    CSS_D544_6_ED2025_12,
+    CSS_D544_6_ED2026_01,
+    CSS_D544_6_ED2026_06)
+rule TieTauxEnAttente(e: fr.pf.core::Enfant, s: Money, a: Decimal) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "tie exact au demi-centime : taux arrondi en attente de la politique de départage";
+    label en unofficial "exact half-cent tie: rounded rate pending the tie-breaking policy";
+    when smic_horaire_net_retenu(e, s) and taux_crds_retenu(e, a)
+        and tie_formule_taux(e);
+    then taux_tie_en_attente(e);
+}
+
+// --- D. 544-6: L. 5421-1 half-day exclusion ------------------------------
+
+@source(
+    CSS_D544_6,
+    CSS_D544_6_ED2022_04,
+    CSS_D544_6_ED2022_07,
+    CSS_D544_6_ED2022_10,
+    CSS_D544_6_ED2023_01,
+    CSS_D544_6_ED2023_07,
+    CSS_D544_6_ED2024_02,
+    CSS_D544_6_ED2024_07,
+    CSS_D544_6_ED2025_12,
+    CSS_D544_6_ED2026_01,
+    CSS_D544_6_ED2026_06,
+    CSS_D544_6_PRE2022,
+    CSS_D544_6_PRE2022_ED2021_11)
+rule StatutChomeur(p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "statut L. 5421-1 établi, intermédiaire d'exclusion";
+    label en unofficial "established L. 5421-1 status, exclusion intermediate";
+    when chomeur_l5421(p);
+    then statut_chomeur_l5421(p);
+}
+
+@source(
+    CSS_D544_6,
+    CSS_D544_6_ED2022_04,
+    CSS_D544_6_ED2022_07,
+    CSS_D544_6_ED2022_10,
+    CSS_D544_6_ED2023_01,
+    CSS_D544_6_ED2023_07,
+    CSS_D544_6_ED2024_02,
+    CSS_D544_6_ED2024_07,
+    CSS_D544_6_ED2025_12,
+    CSS_D544_6_ED2026_01,
+    CSS_D544_6_ED2026_06)
+rule TauxDemiJourneeFormule(e: fr.pf.core::Enfant, t: Money, p: fr.pf.core::Personne) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "demi-journée : moitié du taux calculé, hors L. 5421-1";
+    label en unofficial "half-day: half the computed rate, except L. 5421-1";
+    // D-42: «A l'exception des personnes mentionnées à l'article L. 5421-1»
+    // (D. 544-6): the status is a case fact with no negative holder (§69,
+    // LDC-E4113) — the exception reads not_known §67.
+    when taux_journalier_calcule(e, t) and fr.pf.core::parent_charge(p, e)
+        and not_known(statut_chomeur_l5421(p));
+    then taux_demi_journee_calcule(e, t / 2.0);
+}
+
+// --- D. 544-6, 2021: BMAF percentage rates ------------------------------
+
+function taux_couple_2021() -> Decimal = TauxJournalierCouple2021;
+
+function taux_isole_2021() -> Decimal = TauxJournalierIsole2021;
+
+function taux_demi_couple_2021() -> Decimal = TauxDemiJourneeCouple2021;
+
+function taux_demi_isole_2021() -> Decimal = TauxDemiJourneeIsole2021;
+
+@source(
+    CSS_D544_6_PRE2022,
+    CSS_D544_6_PRE2022_ED2021_11)
+rule TauxCouple2021(e: fr.pf.core::Enfant, b: Money) strict {
+    effective [@2021-01-01, @2022-01-01);
+    label fr official "taux journalier 2021 : 10,63 % de la BMAF retenue";
+    label en unofficial "2021 daily rate: 10.63% of the retained BMAF";
+    // D-42: «Lorsque la charge ... est assumée par une personne seule, le
+    // montant ... est fixé à 12,63 %» (D. 544-6 2020): the 10.63 % rate
+    // stands only outside the single-person case, else both rates fired
+    // on one key(e) (NON_EXECUTABLE). Child-level intermediate, not_known §67.
+    when bmaf_retenue_ajpp(e, b) and not_known(charge_isolee_2021(e));
+    then taux_journalier_2021(e, taux_couple_2021() * b);
+}
+
+@source(
+    CSS_D544_6_PRE2022,
+    CSS_D544_6_PRE2022_ED2021_11)
+rule TauxIsole2021(e: fr.pf.core::Enfant, b: Money, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, @2022-01-01);
+    label fr official "taux journalier 2021 personne seule : 12,63 % de la BMAF";
+    label en unofficial "2021 single-person daily rate: 12.63% of BMAF";
+    when bmaf_retenue_ajpp(e, b) and charge_personne_seule(p, e);
+    then taux_journalier_2021(e, taux_isole_2021() * b);
+}
+
+// D-42: child-level single-person marker for the 2021 couple/single split
+// (D. 544-6 2020 «assumée par une personne seule»).
+
+@source(
+    CSS_D544_6_PRE2022,
+    CSS_D544_6_PRE2022_ED2021_11)
+rule ChargeIsolee2021(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, @2022-01-01);
+    label fr official "charge de l'enfant assumée par une personne seule : taux personne seule 2021";
+    label en unofficial "child in the care of a single person: 2021 single-person rates";
+    when charge_personne_seule(p, e);
+    then charge_isolee_2021(e);
+}
+
+@source(
+    CSS_D544_6_PRE2022,
+    CSS_D544_6_PRE2022_ED2021_11)
+rule DemiCouple2021(e: fr.pf.core::Enfant, b: Money, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, @2022-01-01);
+    label fr official "demi-journée 2021 : 5,315 % de la BMAF, hors L. 5421-1";
+    label en unofficial "2021 half-day: 5.315% of BMAF, except L. 5421-1";
+    // D-42: L. 5421-1 exception and single-person split as in the daily
+    // rates (D. 544-6 2020): not_known §67, no negative holder (§69).
+    when bmaf_retenue_ajpp(e, b) and fr.pf.core::parent_charge(p, e)
+        and not_known(charge_isolee_2021(e))
+        and not_known(statut_chomeur_l5421(p));
+    then taux_demi_journee_2021(e, taux_demi_couple_2021() * b);
+}
+
+@source(
+    CSS_D544_6_PRE2022,
+    CSS_D544_6_PRE2022_ED2021_11)
+rule DemiIsole2021(e: fr.pf.core::Enfant, b: Money, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, @2022-01-01);
+    label fr official "demi-journée 2021 personne seule : 6,315 % de la BMAF, hors L. 5421-1";
+    label en unofficial "2021 single-person half-day: 6.315% of BMAF, except L. 5421-1";
+    // D-42: «A l'exception des personnes mentionnées à l'article L. 5421-1»
+    // — not_known §67 (no negative holder, §69, LDC-E4113).
+    when bmaf_retenue_ajpp(e, b) and charge_personne_seule(p, e)
+        and not_known(statut_chomeur_l5421(p));
+    then taux_demi_journee_2021(e, taux_demi_isole_2021() * b);
+}
+
+// --- D. 544-6: monthly totals from the built rates -----------------------
+
+@source(
+    CSS_D544_6,
+    CSS_D544_6_ED2022_04,
+    CSS_D544_6_ED2022_07,
+    CSS_D544_6_ED2022_10,
+    CSS_D544_6_ED2023_01,
+    CSS_D544_6_ED2023_07,
+    CSS_D544_6_ED2024_02,
+    CSS_D544_6_ED2024_07,
+    CSS_D544_6_ED2025_12,
+    CSS_D544_6_ED2026_01,
+    CSS_D544_6_ED2026_06)
+rule MontantMensuelTauxCalcule(e: fr.pf.core::Enfant, mois: Date, jours: Integer, t: Money) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "mensuel au taux calculé : jours par taux formule";
+    label en unofficial "monthly at the computed rate: days times formula rate";
+    when ajpp_droit_ouvert(e) and jours_ajpp_mois(e, mois, jours)
+        and taux_journalier_calcule(e, t)
+        and mensuel_dans_limite(e, mois) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, t * jours);
+}
+
+@source(
+    CSS_D544_6_PRE2022,
+    CSS_D544_6_PRE2022_ED2021_11)
+rule MontantMensuelTaux2021(e: fr.pf.core::Enfant, mois: Date, jours: Integer, t: Money) strict {
+    effective [@2021-01-01, @2022-01-01);
+    label fr official "mensuel 2021 : jours par taux BMAF construit";
+    label en unofficial "2021 monthly: days times built BMAF rate";
+    when ajpp_droit_ouvert(e) and jours_ajpp_mois(e, mois, jours)
+        and taux_journalier_2021(e, t)
+        and mensuel_dans_limite(e, mois) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, t * jours);
+}
+
+@source(
+    CSS_D544_6,
+    CSS_D544_6_ED2022_04,
+    CSS_D544_6_ED2022_07,
+    CSS_D544_6_ED2022_10,
+    CSS_D544_6_ED2023_01,
+    CSS_D544_6_ED2023_07,
+    CSS_D544_6_ED2024_02,
+    CSS_D544_6_ED2024_07,
+    CSS_D544_6_ED2025_12,
+    CSS_D544_6_ED2026_01,
+    CSS_D544_6_ED2026_06)
+rule MontantMensuelDemiCalcule(e: fr.pf.core::Enfant, mois: Date, demies: Integer, t: Money) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "mensuel à la demi-journée calculée : demies par demi-taux";
+    label en unofficial "monthly at the computed half-day: halves times half-rate";
+    when ajpp_droit_ouvert(e) and demies_journees_mois(e, mois, demies)
+        and taux_demi_journee_calcule(e, t) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, t * demies);
+}
+
+@source(
+    CSS_D544_6_PRE2022,
+    CSS_D544_6_PRE2022_ED2021_11)
+rule MontantMensuelDemi2021(e: fr.pf.core::Enfant, mois: Date, demies: Integer, t: Money) strict {
+    effective [@2021-01-01, @2022-01-01);
+    label fr official "mensuel 2021 à la demi-journée : demies par demi-taux BMAF";
+    label en unofficial "2021 monthly at the half-day: halves times BMAF half-rate";
+    when ajpp_droit_ouvert(e) and demies_journees_mois(e, mois, demies)
+        and taux_demi_journee_2021(e, t) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, t * demies);
+}
+
+@source(
+    CSS_D544_6,
+    CSS_D544_6_ED2022_04,
+    CSS_D544_6_ED2022_07,
+    CSS_D544_6_ED2022_10,
+    CSS_D544_6_ED2023_01,
+    CSS_D544_6_ED2023_07,
+    CSS_D544_6_ED2024_02,
+    CSS_D544_6_ED2024_07,
+    CSS_D544_6_ED2025_12,
+    CSS_D544_6_ED2026_01,
+    CSS_D544_6_ED2026_06)
+rule MontantTempsPartielCalcule(e: fr.pf.core::Enfant, mois: Date, j: Decimal, t: Money) strict {
+    effective [@2022-01-01, infinity);
+    label fr official "temps partiel au taux calculé : journées non travaillées par taux";
+    label en unofficial "part-time at the computed rate: days not worked times rate";
+    when ajpp_droit_ouvert(e) and jours_non_travailles_temps_partiel(e, mois, j)
+        and taux_journalier_calcule(e, t) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, t * j);
+}
+
+// The part-time paragraph is identical in both versions: the retained-rate
+// variant spans the whole coverage on both fragment lists.
+
+@source(
+    CSS_D544_6,
+    CSS_D544_6_ED2022_04,
+    CSS_D544_6_ED2022_07,
+    CSS_D544_6_ED2022_10,
+    CSS_D544_6_ED2023_01,
+    CSS_D544_6_ED2023_07,
+    CSS_D544_6_ED2024_02,
+    CSS_D544_6_ED2024_07,
+    CSS_D544_6_ED2025_12,
+    CSS_D544_6_ED2026_01,
+    CSS_D544_6_ED2026_06,
+    CSS_D544_6_PRE2022,
+    CSS_D544_6_PRE2022_ED2021_11)
+rule MontantTempsPartielRetenu(e: fr.pf.core::Enfant, mois: Date, j: Decimal, t: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "temps partiel au taux retenu : journées non travaillées par taux";
+    label en unofficial "part-time at the retained rate: days not worked times rate";
+    when ajpp_droit_ouvert(e) and jours_non_travailles_temps_partiel(e, mois, j)
+        and montant_journalier_retenu(e, t) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, t * j);
+}
+
+// --- D. 544-7: 27.19 % threshold and amount -----------------------------
+
+function taux_seuil_complement() -> Decimal = TauxSeuilComplementFrais;
+
+@source(
+    CSS_D544_7_ED2020_09,
+    CSS_D544_7_ED2021_11,
+    CSS_D544_7_ED2022_01,
+    CSS_D544_7_ED2022_04,
+    CSS_D544_7_ED2022_07,
+    CSS_D544_7_ED2022_10,
+    CSS_D544_7_ED2023_01,
+    CSS_D544_7_ED2023_07,
+    CSS_D544_7_ED2024_02,
+    CSS_D544_7_ED2024_07,
+    CSS_D544_7_ED2025_12,
+    CSS_D544_7_ED2026_01,
+    CSS_D544_7_ED2026_06)
+rule SeuilComplementConstruit(e: fr.pf.core::Enfant, b: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "seuil du complément construit : 27,19 % de la BMAF retenue";
+    label en unofficial "built supplement threshold: 27.19% of the retained BMAF";
+    when bmaf_retenue_ajpp(e, b);
+    then seuil_complement_calcule(e, taux_seuil_complement() * b);
+}
+
+@source(
+    CSS_D544_7_ED2020_09,
+    CSS_D544_7_ED2021_11,
+    CSS_D544_7_ED2022_01,
+    CSS_D544_7_ED2022_04,
+    CSS_D544_7_ED2022_07,
+    CSS_D544_7_ED2022_10,
+    CSS_D544_7_ED2023_01,
+    CSS_D544_7_ED2023_07,
+    CSS_D544_7_ED2024_02,
+    CSS_D544_7_ED2024_07,
+    CSS_D544_7_ED2025_12,
+    CSS_D544_7_ED2026_01,
+    CSS_D544_7_ED2026_06)
+rule ComplementFraisDecret(e: fr.pf.core::Enfant, res: Money, plaf: Money, dep: Money, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "dépenses au moins égales au seuil construit, ressources sous plafond : complément";
+    label en unofficial "expenses at or above the built threshold, resources under the ceiling: supplement";
+    when ajpp_droit_ouvert(e) and ressources_complement(e, res) and plafond_ressources(e, plaf)
+        and depenses_complement(e, dep) and seuil_complement_calcule(e, s)
+        and res <= plaf and dep >= s;
+    then complement_frais_attribue(e);
+}
+
+@source(
+    CSS_D544_7_ED2020_09,
+    CSS_D544_7_ED2021_11,
+    CSS_D544_7_ED2022_01,
+    CSS_D544_7_ED2022_04,
+    CSS_D544_7_ED2022_07,
+    CSS_D544_7_ED2022_10,
+    CSS_D544_7_ED2023_01,
+    CSS_D544_7_ED2023_07,
+    CSS_D544_7_ED2024_02,
+    CSS_D544_7_ED2024_07,
+    CSS_D544_7_ED2025_12,
+    CSS_D544_7_ED2026_01,
+    CSS_D544_7_ED2026_06)
+rule MontantComplementDecret(e: fr.pf.core::Enfant, s: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "complément attribué : montant égal au seuil construit";
+    label en unofficial "supplement awarded: amount equal to the built threshold";
+    when complement_frais_attribue(e) and seuil_complement_calcule(e, s);
+    then ajpp_montant_complement(e, s);
+}
+
+// --- D. 544-8: job-seeker flat 22 outside the exception -----------------
+
+@source(
+    CSS_D544_8,
+    CSS_D544_8_ED2025_12,
+    CSS_D544_8_ED2026_01,
+    CSS_D544_8_ED2026_06,
+    CSS_D544_8_PRE2024,
+    CSS_D544_8_PRE2024_ED2021_11,
+    CSS_D544_8_PRE2024_ED2022_01,
+    CSS_D544_8_PRE2024_ED2022_04,
+    CSS_D544_8_PRE2024_ED2022_07,
+    CSS_D544_8_PRE2024_ED2022_10,
+    CSS_D544_8_PRE2024_ED2023_01,
+    CSS_D544_8_PRE2024_ED2023_07,
+    CSS_D544_8_PRE2024_ED2024_02)
+rule ExceptionForfait(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "activité occasionnelle et congé : forfait écarté, L. 544-1 hors champ";
+    label en unofficial "occasional work and leave: flat rate set aside, L. 544-1 out of scope";
+    when activite_occasionnelle_remuneree(p) and conge_presence_parentale(p, e);
+    then exception_forfait_l544_1(p, e);
+}
+
+@source(
+    CSS_D544_8,
+    CSS_D544_8_ED2025_12,
+    CSS_D544_8_ED2026_01,
+    CSS_D544_8_ED2026_06,
+    CSS_D544_8_PRE2024,
+    CSS_D544_8_PRE2024_ED2021_11,
+    CSS_D544_8_PRE2024_ED2022_01,
+    CSS_D544_8_PRE2024_ED2022_04,
+    CSS_D544_8_PRE2024_ED2022_07,
+    CSS_D544_8_PRE2024_ED2022_10,
+    CSS_D544_8_PRE2024_ED2023_01,
+    CSS_D544_8_PRE2024_ED2023_07,
+    CSS_D544_8_PRE2024_ED2024_02)
+rule Forfait22Conforme(e: fr.pf.core::Enfant, mois: Date, jours: Integer, p: fr.pf.core::Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait du demandeur égal aux 22 décret, hors exception";
+    label en unofficial "claimant flat days equal to the decree 22, outside the exception";
+    when ajpp_droit_ouvert(e) and demandeur_emploi_ajpp(p)
+        and jours_forfaitaires(e, mois, jours) and jours == JoursForfaitairesDemandeur
+        // D-42: D. 544-8 sets the flat 22 aside only for the established
+        // occasional-activity exception; no negative holder (§69,
+        // LDC-E4113) — the exception reads not_known §67.
+        and not_known(exception_forfait_l544_1(p, e));
+    then forfait_22_conforme(e, mois);
+}
+
+@source(
+    CSS_D544_8,
+    CSS_D544_8_ED2025_12,
+    CSS_D544_8_ED2026_01,
+    CSS_D544_8_ED2026_06,
+    CSS_D544_8_PRE2024,
+    CSS_D544_8_PRE2024_ED2021_11,
+    CSS_D544_8_PRE2024_ED2022_01,
+    CSS_D544_8_PRE2024_ED2022_04,
+    CSS_D544_8_PRE2024_ED2022_07,
+    CSS_D544_8_PRE2024_ED2022_10,
+    CSS_D544_8_PRE2024_ED2023_01,
+    CSS_D544_8_PRE2024_ED2023_07,
+    CSS_D544_8_PRE2024_ED2024_02)
+rule MontantForfaitDecret(e: fr.pf.core::Enfant, mois: Date, jours: Integer, t: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "mensuel au forfait décret : 22 conformes par taux retenu";
+    label en unofficial "monthly at the decree flat: conforming 22 times retained rate";
+    when forfait_22_conforme(e, mois) and jours_forfaitaires(e, mois, jours)
+        and montant_journalier_retenu(e, t) and enveloppe_ajpp_qualifiee(e);
+    then ajpp_montant_mois(e, mois, t * jours);
+}

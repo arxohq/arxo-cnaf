@@ -1,0 +1,16 @@
+// Paid intermediation to obtain the bonus: offence flag under L.554-2
+// penalties (L.845-6; criminal scale unmodelled).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-infraction-intermediaire" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": intermediaire_remunere(entity_ref("urn:fr:ppa:case:intermediaire")) { origin case_input; }
+    }
+    evaluate truth(infraction_intermediaire(entity_ref("urn:fr:ppa:case:intermediaire")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,191 @@
+// Medical-exam duties (D. 532-1/D. 532-2, FINISH D72 transfer from the
+// income-pf line): the allocataire's duty to declare the pregnancy within
+// the first 14 weeks, and the suspension of PAJE payment on the PMI head
+// doctor's request when the L. 533-1 exams were missed without legitimate
+// reasons.
+//
+// D. 532-1, para. 1: «Une déclaration de grossesse doit être adressée par
+// l'allocataire dans les quatorze premières semaines de la grossesse à
+// l'organisme d'assurance maladie ainsi qu'à l'organisme débiteur de
+// prestations familiales de rattachement de l'intéressé.» Both wordings
+// (2004 and 2023) carry this paragraph identically — both anchors on every
+// rule below. The on-time status is built from the sending date against
+// the established start and the fund-established deadline (comparison
+// pattern of VersementTardifConstate, 03-devoir-versement.law); the duty
+// is a norm-conclusion with an achieve window on established dates
+// (one-time transmission pattern of the code-civil tutelle inventory
+// duties). Performance is derived, not asserted: the declaration counts as
+// made only from the both-destination sending plus the conforming medical
+// document (FULL RETURN 03, R02-01/02) plus the in-window timing (RETURN04,
+// R03-01: the `envoi >= debut and envoi <= limite` check is enforced in
+// the performance derivation itself, because the achieved head is timeless
+// and would otherwise let a late conforming send satisfy the duty —
+// E-0315). The window is closed [debut, limite]: «dans les quatorze
+// premières semaines» runs from the pregnancy start and includes the last
+// day (RETURN 2026-10-08: lower bound added). The duty-holder is the
+// lowercase-typed m: Menage.
+// The closed window is declared as data in
+// 07-examens-medicaux.deontic-window.toml; `law gen deontic-window --write`
+// is pending (GENERATED_OUTPUT_PENDING) — the inline rule below stays until
+// the generator writes the block.
+// D. 532-1, para. 2 (attestation by the prescribed medical document of the
+// first prenatal exam, conforming to the standard model — arrêté before
+// 2023, homologated form since) is the established documentary fact
+// document_medical_conforme, a premise of the derived performance; the
+// external form identity stays established-input provenance
+// (B-PAJE2-D532-FORMULAIRE, narrowed).
+// D. 532-2: «Si les examens mentionnés à l'article L. 533-1 ne sont pas
+// passés, en l'absence de motifs légitimes, l'organisme débiteur de
+// prestations familiales suspend le versement ... sur demande du médecin
+// responsable du service départemental de protection maternelle et
+// infantile. Cette suspension prend effet à compter du mois civil qui suit
+// celui au cours duquel est transmise la demande du médecin.» The fund's
+// duty to suspend is expressed as the literal head suspension_versement_paje
+// (no separate duty head — performance coincides with the institutional
+// effect; same rationale as fr.pf.cmg N1/N2 and fr.casf.rsa
+// sanction_suspension). «En l'absence de motifs légitimes» is an
+// affirmative established fact sans_motif_legitime_examens (RETURN
+// 2026-10-08: missing evidence must not prove absence; the RSA not_known
+// precedent is not followed). The effect on the D1/D1B/D1P payment duties
+// is fund/versement-stage applied, not a defeater (B-PAJE2-D532-EFFET).
+
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+use self::{
+    CSS_D532_1_ED2004_01,
+    CSS_D532_1_ED2023_01,
+    CSS_D532_2_ED2004_01,
+    Enfant,
+    Menage,
+    Organisme,
+    attente_naissance,
+    date_limite_declaration,
+    debut_grossesse,
+    declaration_grossesse_adressee,
+    declaration_grossesse_effectuee,
+    declaration_grossesse_en_delai,
+    declaration_grossesse_tardive,
+    demande_medecin_pmi,
+    document_medical_conforme,
+    examens_l5331_non_passes,
+    mois_effet_suspension,
+    organisme_debiteur,
+    sans_motif_legitime_examens,
+    suspension_versement_paje,
+};
+
+// --- D. 532-1: the declaration is on time ---------------------------------
+//
+// «... doit être adressée ... dans les quatorze premières semaines ...»
+// The status is built from the sending date against the established start
+// and the fund-established deadline; sending on the deadline day counts
+// as on time, sending before the pregnancy start is outside the window
+// (RETURN 2026-10-08: lower bound added; pre-start sends conclude neither
+// on-time nor late).
+
+@source(CSS_D532_1_ED2004_01, CSS_D532_1_ED2023_01)
+rule DeclarationGrossesseEnDelai(m: Menage, e: Enfant, envoi: Date, debut: Date, limite: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "déclaration adressée dans les quatorze premières semaines, du début au dernier jour inclus : dans les délais";
+    label en unofficial "declaration sent within the first fourteen weeks, from the start to the last day inclusive: on time";
+    when declaration_grossesse_adressee(m, e, envoi)
+        and debut_grossesse(m, e, debut)
+        and date_limite_declaration(m, e, limite)
+        and envoi >= debut
+        and envoi <= limite;
+    then declaration_grossesse_en_delai(m, e);
+}
+
+// --- D. 532-1: the declaration is late -------------------------------------
+
+@source(CSS_D532_1_ED2004_01, CSS_D532_1_ED2023_01)
+rule DeclarationGrossesseTardive(m: Menage, e: Enfant, envoi: Date, limite: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "déclaration adressée après les quatorze premières semaines : tardive";
+    label en unofficial "declaration sent after the first fourteen weeks: late";
+    when declaration_grossesse_adressee(m, e, envoi)
+        and date_limite_declaration(m, e, limite)
+        and envoi > limite;
+    then declaration_grossesse_tardive(m, e);
+}
+
+// --- D. 532-1: the declaration counts as made -------------------------------
+//
+// Both wordings, both paragraphs: «... adressée ... à l'organisme
+// d'assurance maladie ainsi qu'à l'organisme débiteur ...» (para. 1) +
+// «attestée par le document médical prévu à cet effet ...» (para. 2).
+// Performance is built from the both-destination sending, the conforming
+// medical document AND the in-window timing — a generic
+// performed-declaration assertion can no longer satisfy the duty below
+// without proof of both addressees, of the prescribed-model conformity
+// (FULL RETURN 03, R02-01/02) and of «dans les quatorze premières
+// semaines» (RETURN04, R03-01). The window check lives in this derivation
+// because the achieved head is timeless: per E-0315 a dateless support
+// counts in any window, so a late conforming send would otherwise satisfy
+// the duty. The send date stays a typed Date premise linked to [debut,
+// limite]; it is not copied into the head — head variables must be bound
+// by the duty-triggering premises (§190), and a Date argument alone does
+// not timestamp the head. Late sends stay visible as tardive (status
+// above) but do not derive performance.
+
+@source(CSS_D532_1_ED2004_01, CSS_D532_1_ED2023_01)
+rule DeclarationGrossesseEffectuee(m: Menage, e: Enfant, envoi: Date, debut: Date, limite: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "déclaration adressée aux deux organismes dans les quatorze premières semaines et attestée par le document médical prescrit conforme : déclaration effectuée";
+    label en unofficial "declaration sent to both bodies within the first fourteen weeks and attested by the conforming prescribed medical document: declaration made";
+    when declaration_grossesse_adressee(m, e, envoi)
+        and document_medical_conforme(m, e)
+        and debut_grossesse(m, e, debut)
+        and date_limite_declaration(m, e, limite)
+        and envoi >= debut
+        and envoi <= limite;
+    then declaration_grossesse_effectuee(m, e);
+}
+
+// --- D. 532-1: duty of the allocataire to declare ---------------------------
+//
+// The duty triggers on the pregnancy with its established dates; the debtor
+// fund is the modeled beneficiary party, and both statutory destinations
+// and the in-window timing are enforced through the derived performance
+// above (the sending fact
+// covers both addressees; the health-insurance body itself stays unmodeled
+// — B-PAJE2-D532-ASSURANCE-MALADIE, narrowed). No `effective`: package duty
+// convention (D1/D1B/D1P) — the window lives in the achieve clause.
+
+@source(CSS_D532_1_ED2004_01, CSS_D532_1_ED2023_01)
+rule DevoirDeclarerGrossesse(m: Menage, e: Enfant, o: Organisme, debut: Date, limite: Date) strict {
+    label fr official "l'allocataire adresse la déclaration de grossesse dans les quatorze premières semaines";
+    label en unofficial "the claimant sends the pregnancy declaration within the first fourteen weeks — duty of the allocataire";
+    when attente_naissance(m, e)
+        and debut_grossesse(m, e, debut)
+        and date_limite_declaration(m, e, limite)
+        and organisme_debiteur(o, m);
+    then duty DeclarerGrossesseEnDelai {
+        bearer m;
+        beneficiary o;
+        achieve declaration_grossesse_effectuee(m, e) during [debut, limite];
+    };
+}
+
+// --- D. 532-2: suspension takes effect --------------------------------------
+//
+// Premises: the L. 533-1 exams were missed (upstream substance —
+// B-PAJE2-D532-L5331-PLURIEL), the fund established the absence of
+// legitimate reasons (affirmative sans_motif_legitime_examens — RETURN
+// 2026-10-08; missing evidence must not prove absence), the PMI head
+// doctor's request was transmitted, and the fund set the effect month
+// (the «mois civil qui suit» derivation — B-PAJE2-D532-MOIS-EFFET).
+
+@source(CSS_D532_2_ED2004_01)
+rule SuspensionVersementPaje(m: Menage, e: Enfant, transmission: Date, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "examens non passés en l'absence établie de motifs légitimes, sur demande du médecin : suspension du versement à compter du mois civil suivant";
+    label en unofficial "exams missed with established absence of legitimate reasons, on the doctor's request: payment suspended from the following calendar month";
+    when examens_l5331_non_passes(m, e)
+        and sans_motif_legitime_examens(m, e)
+        and demande_medecin_pmi(m, e, transmission)
+        and mois_effet_suspension(m, e, mois);
+    then suspension_versement_paje(m, e, mois);
+}

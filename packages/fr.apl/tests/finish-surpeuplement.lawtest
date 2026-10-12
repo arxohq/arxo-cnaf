@@ -1,0 +1,79 @@
+// Overcrowding (20): the two-year derogation window, the board-and-prefect
+// information duty, birth-or-care maintenance with its expiry, the
+// one-month change-declaration due date, and the declaration duty.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-derogation-peuplement-fenetre" {
+    given {
+        // D-42: month-count steps of 20 (R. 822-25 windows) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2022-04-15T12:00:00Z; knowledge_time @2022-04-15T12:00:00Z; legal_time @2022-04-15; timezone "Europe/Paris"; deadline_policy APL_PEUPLMENT_MOIS; interpretation PpPlancherFinal; }
+        assert "fder-01": derogation_peuplement_accordee(entity_ref("urn:fr:apl:case:fder")) { origin case_input; }
+        assert "fder-02": derogation_peuplement_accordee_le(entity_ref("urn:fr:apl:case:fder"), @2022-03-01) { origin case_input; }
+    }
+    evaluate truth(derogation_peuplement_expire_le(entity_ref("urn:fr:apl:case:fder"), @2024-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-informer-conseil-prefet" {
+    given {
+        context { decision_time @2022-04-15T12:00:00Z; knowledge_time @2022-04-15T12:00:00Z; legal_time @2022-04-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "finf-01": derogation_peuplement_accordee(entity_ref("urn:fr:apl:case:finf")) { origin case_input; }
+        assert "finf-02": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:finf")) { origin case_input; }
+        assert "finf-03": conseil_organisme(entity_ref("urn:fr:apl:board:conseil-exemple"), entity_ref("urn:fr:apl:org:caisse-exemple")) { origin case_input; }
+        assert "finf-04": prefet_competent(entity_ref("urn:fr:apl:prefet:prefet-exemple"), entity_ref("urn:fr:apl:case:finf")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InformerConseilDerogation, ACTIVE);
+    expect position(InformerPrefetDerogation, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-maintien-naissance-surpeuplement" {
+    given {
+        // D-42: month-count steps of 20 (R. 822-25 windows) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; deadline_policy APL_PEUPLMENT_MOIS; interpretation PpPlancherFinal; }
+        assert "fnai-01": surpeuplement_naissance_prise_en_charge(entity_ref("urn:fr:apl:case:fnai"), @2023-05-20) { origin case_input; }
+        // D-42: the two-year maintenance window (20 MaintienNaissanceSurpeuplement) is
+        // D-42: read at the case appreciation date; set to the legal date of the case.
+        assert "fnai-02": date_appreciation(entity_ref("urn:fr:apl:case:fnai"), @2023-06-15) { origin case_input; }
+    }
+    evaluate truth(allocation_maintenue_surpeuplement(entity_ref("urn:fr:apl:case:fnai")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-declaration-due-peuplement" {
+    given {
+        // D-42: month-count steps of 20 (R. 822-25 windows) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; deadline_policy APL_PEUPLMENT_MOIS; interpretation PpPlancherFinal; }
+        assert "fdecl-01": changement_peuplement_le(entity_ref("urn:fr:apl:case:fdecl"), @2023-05-10) { origin case_input; }
+    }
+    evaluate truth(declaration_due_avant_peuplement(entity_ref("urn:fr:apl:case:fdecl"), @2023-06-10));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-declarer-peuplement" {
+    given {
+        // D-42: month-count steps of 20 (R. 822-25 windows) need the package calendar policy (MISSING_POLICY, E-0029 without it).
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; deadline_policy APL_PEUPLMENT_MOIS; interpretation PpPlancherFinal; }
+        assert "fdec2-01": changement_peuplement_le(entity_ref("urn:fr:apl:case:fdec2"), @2023-05-10) { origin case_input; }
+        assert "fdec2-02": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fdec2")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(DeclarerChangementPeuplement, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

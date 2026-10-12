@@ -1,0 +1,91 @@
+// Précompte CRDS: сумма пособия после удержания взноса плательщиком.
+//
+// D. 823-16 строит СУММУ ПОСОБИЯ вместе с представительной суммой взносов
+// («diminué d'un montant représentatif des contributions sociales qui s'y
+// appliquent, arrondi à l'euro inférieur, puis majoré de ce montant
+// représentatif») — это `aide_mensuelle`. Сам взнос удерживает плательщик:
+// ст. 14 II 7° ордонанса № 96-50 подчиняет аиды на жильё CRDS, ст. 14 III велит
+// «précomptée par l'organisme débiteur dans les conditions prévues à l'article
+// L. 131-1 du code de la sécurité sociale», ст. 19 ставит ставку 0,5 %. Здесь —
+// ровно эта отдельная стадия: сумма к перечислению = пособие − 0,5 % пособия.
+//
+// Основание стадии — пособие после RLS (D. 823-16: «ce résultat est réduit»),
+// то есть `aide_mensuelle`.
+//
+// ОКРУГЛЕНИЯ УДЕРЖАННОГО ВЗНОСА В ЗАКРЕПЛЁННОМ ТЕКСТЕ НЕТ (проверено 08.10.2026
+// по закреплённым байтам, а не по умолчанию):
+//   * L. 131-1 CSS — единственная норма, на которую отсылает ст. 14 III, —
+//     закреплена (CSS_L131_1) и говорит лишь, ЧТО взносы «sont … précomptées au
+//     moment du versement … par l'organisme débiteur»; о способе и точности
+//     удержания в ней ни слова;
+//   * ордонанс № 96-50: ни в одной из 115 версий его статей в глобальном дампе
+//     LEGI (ст. 1–21) нет слова «arrondi»; ст. 13 и 20 отдают «modalités
+//     d'application» декрету, и декрета в охват не входит;
+//   * L. 133-10 CSS («le montant des cotisations et contributions sociales et de
+//     leurs assiettes déclarées aux organismes de sécurité sociale … est arrondi
+//     à l'euro le plus proche») закреплена (CSS_L133_10) и ОБЪЯВЛЕНА неприменённой:
+//     она адресована суммам, ДЕКЛАРИРУЕМЫМ органам социального обеспечения, а
+//     удержание, которое делает сам плательщик пособия, деклараций не порождает.
+//     Распространить её на précompte значило бы округлять 0,5 % от ~200 € до
+//     целого евро — результат, которого текст не называет и никакая практика не
+//     подтверждает (OpenFisca округляет итог до цента, `round_(…, 2)`).
+// Поэтому пакет НЕ округляет: 0,5 % денежной суммы точны (§50, доля 10-гладкая),
+// а округление удержания остаётся объявленной границей (README пакета, раздел
+// «Округление удерживаемой CRDS»), без которой расхождение с их центом в
+// сверке OpenFisca не снимается.
+//
+// Сен-Пьер-и-Микелон: взносов нет — то же чтение LO 6414-1 II 1° CGCT, что у
+// `contributions_selon_territoire` (02-calcul-locatif.law); удерживать нечего.
+//
+// Стадия заведена 08.10.2026 для сверки с OpenFisca-France 176.1.2: их
+// `aide_logement` — сумма «net de CRDS» (`aide_logement_montant`), и сравнение
+// с `aide_mensuelle` смешивало стадии (аудит 14.09.2026,
+// docs/journal/reports/2026-09-14/2026-09-14-openfisca-caf-crds-audit.ru.md).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    CSS_L131_1,
+    Menage,
+    ORD9650_ART14_ED2019_09,
+    ORD9650_ART14_ED2020_01,
+    ORD9650_ART19_ED2019_09,
+    ORD9650_ART19_ED2020_01,
+    Territoire,
+    aide_mensuelle,
+    territoire,
+};
+
+pub relation aide_nette_precompte_crds(m: Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "montant de l'aide après précompte de la contribution pour le remboursement de la dette sociale par l'organisme débiteur";
+    label ru unofficial "сумма пособия после удержания CRDS плательщиком (ст. 14 III и 19 ордонанса № 96-50)";
+}
+
+@source(ORD9650_ART14_ED2019_09, ORD9650_ART14_ED2020_01,
+        ORD9650_ART19_ED2019_09, ORD9650_ART19_ED2020_01, CSS_L131_1)
+rule PrecompteCRDSMetropole(m: Menage, aide: Money) strict {
+    label fr official "la contribution due sur les aides personnelles au logement est précomptée par l'organisme débiteur ; son taux est fixé à 0,5 %";
+    label ru unofficial "CRDS 0,5 % с пособия удерживается плательщиком (метрополия)";
+    when aide_mensuelle(m, aide) and territoire(m, METROPOLE);
+    then aide_nette_precompte_crds(m, aide - aide * TauxCRDS);
+}
+
+@source(ORD9650_ART14_ED2019_09, ORD9650_ART14_ED2020_01,
+        ORD9650_ART19_ED2019_09, ORD9650_ART19_ED2020_01, CSS_L131_1)
+rule PrecompteCRDSOutreMer(m: Menage, aide: Money) strict {
+    label fr official "la contribution due sur les aides personnelles au logement est précomptée par l'organisme débiteur ; son taux est fixé à 0,5 %";
+    label ru unofficial "CRDS 0,5 % с пособия удерживается плательщиком (заморские департаменты)";
+    when aide_mensuelle(m, aide) and territoire(m, OUTRE_MER);
+    then aide_nette_precompte_crds(m, aide - aide * TauxCRDS);
+}
+
+@source(ORD9650_ART14_ED2019_09, ORD9650_ART14_ED2020_01, CSS_L131_1)
+rule PrecompteCRDSSaintPierre(m: Menage, aide: Money) strict {
+    label fr official "à Saint-Pierre-et-Miquelon la contribution n'est pas perçue : rien n'est précompté";
+    label ru unofficial "Сен-Пьер-и-Микелон: CRDS не взимается, удерживать нечего";
+    when aide_mensuelle(m, aide) and territoire(m, SAINT_PIERRE_ET_MIQUELON);
+    then aide_nette_precompte_crds(m, aide);
+}

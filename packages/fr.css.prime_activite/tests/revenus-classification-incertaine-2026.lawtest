@@ -1,0 +1,23 @@
+// Activity classification evidence (PA-R4-06): gross-minus-charges
+// without any classification stays undetermined; a classified
+// non-salaried flux affirmatively leaves the R.844-1 II formula.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-revenus-classification-incertaine-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": revenu_pro_elements(entity_ref("urn:fr:ppa:case:revenus-classification-incertaine-2026"), @2026-05-01, 0, ITEM_01_ACTIVITE, 2000.00 EUR, 400.00 EUR) { origin case_input; }
+        assert "ppa-02": revenu_pro_elements(entity_ref("urn:fr:ppa:case:revenus-classification-incertaine-2026"), @2026-05-01, 1, ITEM_01_ACTIVITE, 2000.00 EUR, 400.00 EUR) { origin case_input; }
+        assert "ppa-03": activite_non_salariee(entity_ref("urn:fr:ppa:case:revenus-classification-incertaine-2026"), @2026-05-01, 1) { origin case_input; }
+    }
+    evaluate truth(revenu_pro_montant_retenu(entity_ref("urn:fr:ppa:case:revenus-classification-incertaine-2026"), @2026-05-01, 0, ITEM_01_ACTIVITE, 1600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revenu_pro_montant_retenu(entity_ref("urn:fr:ppa:case:revenus-classification-incertaine-2026"), @2026-05-01, 1, ITEM_01_ACTIVITE, 1600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

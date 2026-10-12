@@ -1,0 +1,18 @@
+{
+  "format": "law.package-info/0.1",
+  "purpose": "Финализация фактической выплаты французской APL по министерскому Guide des aides au logement 2021: база после RLS, удержание CRDS с усечением до нижнего сантима, территориальное исключение Saint-Pierre-et-Miquelon и округление суммы выплаты вниз до евро. Расчёт права и входной суммы остаётся в fr.apl; предусмотренные запросы и границы перечислены в analysis/questions.json и QUESTIONS.md.",
+  "limitations": [
+    "Порядок удержания и округления взят из министерского Guide des aides au logement 2021 как из канона исполнения, а не выдан за текст закона; нормативные акты закрепляют ставку CRDS и территориальную применимость, но найденный корпус закона не содержит той же полной последовательности округлений.",
+    "Официальный пример на странице 24 печатает 346,53 EUR до CRDS, тогда как сложение приведённых там слагаемых даёт 346,69420 EUR; пакет проверяет напечатанный результат как вход стадии выплаты и не выдумывает отсутствующую операцию согласования.",
+    "Пакет отвечает только за стадию выплаты: расчёт входной суммы после RLS остаётся обязанностью fr.apl; отдельный эмпирический вход assiette_crds_auditee_openfisca существует лишь для воспроизведения аудита и не приписывается CAF/MSA."
+  ],
+  "examples": [
+    "tests/03-arrondi-euro.lawtest",
+    "tests/04-resultat-officiel.lawtest",
+    "tests/07-rls-non-nulle.lawtest",
+    "tests/08-saint-pierre.lawtest"
+  ],
+  "license": "Apache-2.0 (see LICENSE) for the model, its scenarios and case collections. Pages of the French Ministry of Ecological Transition (https://www.ecologie.gouv.fr/) are copies under the Licence Ouverte / Open Licence 2.0 stated in the site's legal notice (checked 2026-10-12). Not affiliated with the French State or the Cnaf.",
+  "maintainer": "Rifat Dzhumagulov (hi@arxo.io)",
+  "repository": "https://github.com/arxohq/arxo-cnaf"
+}

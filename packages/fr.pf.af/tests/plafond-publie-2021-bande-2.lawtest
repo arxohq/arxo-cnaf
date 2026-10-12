@@ -1,0 +1,52 @@
+// D-81: ресурсы дела Catala Test 8 (69 945 €, два ребёнка, младший 16 лет открывает
+// majoration, 01.01.2021) против опубликованных сумм 2021 — инструкция
+// DSS/2B/DB/2020/226 (фрагмент DSS_2B_DB_2020_226_PLAFOND_AF): база 58 279 / 81 558 €,
+// надбавка 5 827 €. I = 58 279 + 2 × 5 827 = 69 933 < 69 945 — полоса 2, а не 1.
+// Сценарий foreign/catala/catala-test-08 сохраняет прежний заявленный коэффициент
+// 1,05 (полоса 1, 192,00) как сверку логики. BMAF 414,40 € (01.04.2020, фрагмент
+// DSS_SD2B_2020_33_BMAF): 0,16 × 414,40 + 0,08 × 414,40 = 99,456; дополнение
+// (69 933 + 12 × 99,456 − 69 945) / 12 = 98,456; итого 197,912 → 197,91. Catala
+// публикует 197,90: это округление по строкам DSS (66,30 + 33,15 = 99,45; дополнение
+// 98,45) — та же стадия округления, что в деле OpenFisca 2018-01 Cas 6 (граница
+// B-PFAF-ARRONDI, README «Плафоны»).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-plafond-publie-2021-bande-2" {
+    given {
+        context { decision_time @2021-01-01T12:00:00Z; knowledge_time @2021-01-01T12:00:00Z; legal_time @2021-01-01; timezone "Europe/Paris"; }
+        assert "pp21-01": territoire(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), METROPOLE) { origin case_input; }
+        assert "pp21-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 2) { origin case_input; }
+        assert "pp21-03": ressources_menage(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 69945 EUR) { origin case_input; }
+        assert "pp21-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 58279 EUR) { origin case_input; }
+        assert "pp21-05": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 81558 EUR) { origin case_input; }
+        assert "pp21-06": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 5827 EUR) { origin case_input; }
+        assert "pp21-07": foyer_du_cas(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2")) { origin case_input; }
+        assert "pp21-08": bmaf_retenu(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 414.40 EUR) { origin case_input; }
+        assert "pp21-09": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 1) { origin case_input; }
+        assert "pp21-10": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 0) { origin case_input; }
+        assert "pp21-11": forfait_total_menage(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 0 EUR) { origin case_input; }
+        assert "pp21-12": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 0) { origin case_input; }
+    }
+    evaluate truth(plafond1_applicable(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 69933 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bande_ressources(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), BANDE_2));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 99.456 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(complement_degressif(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 98.456 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(af_montant_du(entity_ref("urn:fr:pf-af:case:plafond-publie-2021-bande-2"), 197.91 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

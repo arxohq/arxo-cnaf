@@ -1,0 +1,19 @@
+// No contribution transmission without an agreement amount: full title chain and competent body, but no contribution amount fixed in the agreement - no communication duty (L. 583-5 « le montant », PC-R07-27).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-transmettre-sans-montant" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-transmettre-sans-montant-01": demande_conjointe_parents_separes(entity_ref("urn:fr:pf:case:creance-smont")) { origin case_input; }
+        assert "creance-transmettre-sans-montant-02": attestation_absence_creance(entity_ref("urn:fr:pf:case:creance-smont")) { origin case_input; }
+        assert "creance-transmettre-sans-montant-03": attestation_absence_demarche(entity_ref("urn:fr:pf:case:creance-smont")) { origin case_input; }
+        assert "creance-transmettre-sans-montant-04": contribution_seuil_atteint(entity_ref("urn:fr:pf:case:creance-smont")) { origin case_input; }
+        assert "creance-transmettre-sans-montant-05": infos_contribution_precisees(entity_ref("urn:fr:pf:case:creance-smont")) { origin case_input; }
+        assert "creance-transmettre-sans-montant-06": titre_organisme_residence_allocataire(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:creance-smont")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(TransmettreContributionFisc, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

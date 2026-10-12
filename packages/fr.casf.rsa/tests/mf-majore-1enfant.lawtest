@@ -1,0 +1,18 @@
+// Lone parent with one child: 600 x 128.412 % + 600 x 42.804 %
+// = 770.472 + 256.824 = 1027.296 (R.262-1 al. 2; L.262-9).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-majore-1enfant" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "mfma-01": isole_majore(entity_ref("urn:fr:rsa:case:mf-majore-1enfant")) { origin case_input; }
+        assert "mfma-02": mf_base(entity_ref("urn:fr:rsa:case:mf-majore-1enfant"), 600.00 EUR) { origin case_input; }
+        assert "mfma-03": majore_nb_enfants(entity_ref("urn:fr:rsa:case:mf-majore-1enfant"), 1) { origin case_input; }
+    }
+    evaluate truth(mf_majore(entity_ref("urn:fr:rsa:case:mf-majore-1enfant"), 1027.296 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

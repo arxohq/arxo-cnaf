@@ -1,0 +1,23 @@
+// Withholding effected (P1): full grounds plus upcoming activity-premium
+// instalments as the recorded target plus the body's withholding act on
+// that target — ajpa_retenue_prestations is TRUE_ONLY.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-pouvoir-retenues-effet" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-pre-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-pre"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pre-02": indu_non_recupere_allocations(entity_ref("urn:fr:css:ajpa:case:aidant-pre"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pre-03": indu_non_conteste(entity_ref("urn:fr:css:ajpa:case:aidant-pre"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pre-04": indu_sans_option_remboursement(entity_ref("urn:fr:css:ajpa:case:aidant-pre"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-pre-05": retenue_cible_prestations(entity_ref("urn:fr:css:ajpa:case:aidant-pre"), 300.00 EUR, PRIME_ACTIVITE) { origin case_input; }
+        assert "ajpa-pre-06": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-pre")) { origin case_input; }
+        assert "ajpa-pre-07": retenue_prestations_exercee(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-pre"), 300.00 EUR, PRIME_ACTIVITE) { origin case_input; }
+    }
+    evaluate truth(ajpa_retenue_prestations(entity_ref("urn:fr:css:ajpa:case:aidant-pre"), 300.00 EUR, PRIME_ACTIVITE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

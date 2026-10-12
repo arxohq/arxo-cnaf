@@ -1,0 +1,16 @@
+// No cessation finding: no-entitlement evaluation alone - no cessation-based grant (R. 553-3-6).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-cessation-absente" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-cessation-absente-01": evaluation_sans_droit(entity_ref("urn:fr:pf:case:ordinaire")) { origin case_input; }
+        assert "tdv-cessation-absente-02": prestation_soumise_section(entity_ref("urn:fr:pf:case:ordinaire")) { origin case_input; }
+    }
+    evaluate truth(attribution_non_refusee_cessation(entity_ref("urn:fr:pf:case:ordinaire")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

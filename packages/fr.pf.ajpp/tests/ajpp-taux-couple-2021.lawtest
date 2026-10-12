@@ -1,0 +1,16 @@
+// 2021 couple daily rate: 10.63 % of the retained BMAF 400.00 —
+// 42.52 (D. 544-6 2020; the BMAF figure is a stated-assumption input).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-taux-couple-2021" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ajpp-tc-01": bmaf_retenue_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-tc"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(taux_journalier_2021(entity_ref("urn:fr:pf-ajpp:case:enfant-tc"), 42.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

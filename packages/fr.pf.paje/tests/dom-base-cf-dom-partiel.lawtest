@@ -1,0 +1,23 @@
+// L. 755-19, para. 3, base side, part-rate variant: Réunion household,
+// part-rate base right open (32000 € within the built 35841 € L. 531-2
+// ceiling), L. 755-16 complément familial served — the base/CF cumulation
+// is barred.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-base-cf-dom-partiel" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-cfpa-01": territoire(entity_ref("urn:fr:paje:case:dom-cfpa"), REUNION) { origin case_input; }
+        assert "dom-cfpa-02": enfant_en_charge(entity_ref("urn:fr:paje:case:dom-cfpa"), entity_ref("urn:fr:paje:enfant:dom-cfpa")) { origin case_input; }
+        assert "dom-cfpa-03": condition_age_base(entity_ref("urn:fr:paje:enfant:dom-cfpa")) { origin adjudicated; }
+        assert "dom-cfpa-04": ressources_annuelles(entity_ref("urn:fr:paje:case:dom-cfpa"), 32000 EUR) { origin case_input; }
+        assert "dom-cfpa-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:dom-cfpa"), 30000 EUR) { origin case_input; }
+        assert "dom-cfpa-06": cf_dom_l755_16_servi(entity_ref("urn:fr:paje:case:dom-cfpa")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_base_cf_dom_interdit(entity_ref("urn:fr:paje:case:dom-cfpa"), entity_ref("urn:fr:paje:enfant:dom-cfpa")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

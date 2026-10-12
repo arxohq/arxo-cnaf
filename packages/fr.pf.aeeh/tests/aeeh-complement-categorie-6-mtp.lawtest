@@ -1,0 +1,28 @@
+// Sixth-category supplement: the MTP amount passes through. Couple, one
+// disabled child, CDAPH decision established, category 6 granted, retained
+// MTP 1000.00 stated (B-PFAEEH-MTP, L. 341-4 out of scope), no MPI.
+// BMAF 400.00 retained for the child: base 128.00, supplement 1000.00,
+// total 1128.00.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-complement-categorie-6-mtp" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "aeeh-cat6-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:couple-cat6"), entity_ref("urn:fr:pf-aeeh:case:enfant-cat6")) { origin case_input; }
+        assert "aeeh-cat6-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-cat6")) { origin adjudicated; }
+        assert "aeeh-cat6-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-cat6"), 400.00 EUR) { origin case_input; }
+        assert "aeeh-cat6-04": categorie_attribuee(entity_ref("urn:fr:pf-aeeh:case:enfant-cat6"), CATEGORIE_6) { origin adjudicated; }
+        assert "aeeh-cat6-05": montant_mtp_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-cat6"), 1000.00 EUR) { origin case_input; }
+        assert "aeeh-cat6-06": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-cat6")) { origin case_input; }
+    }
+    evaluate truth(aeeh_montant_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-cat6"), 1000.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_total(entity_ref("urn:fr:pf-aeeh:case:enfant-cat6"), 1128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

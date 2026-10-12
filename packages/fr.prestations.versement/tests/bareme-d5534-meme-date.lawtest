@@ -1,0 +1,21 @@
+// D553-4 same-date smaller-balance first (PC-R05-01): A and B same date 2022-01-10, A 30 EUR before B 50 EUR; retention 40 EUR allocates 30 to A, 10 to B; complete ledger.
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-d5534-meme-date-montant" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "d5534-sd1": indu_constate_le(entity_ref("urn:fr:pv:case:indu-a"), entity_ref("urn:fr:pv:case:alloc"), @2022-01-10, 30.00 EUR) { origin case_input; }
+        assert "d5534-sd2": indu_constate_le(entity_ref("urn:fr:pv:case:indu-b"), entity_ref("urn:fr:pv:case:alloc"), @2022-01-10, 50.00 EUR) { origin case_input; }
+        assert "d5534-sd3": indu_solde_restant(entity_ref("urn:fr:pv:case:indu-a"), entity_ref("urn:fr:pv:case:alloc"), 30.00 EUR) { origin case_input; }
+        assert "d5534-sd4": indu_solde_restant(entity_ref("urn:fr:pv:case:indu-b"), entity_ref("urn:fr:pv:case:alloc"), 50.00 EUR) { origin case_input; }
+        assert "d5534-sd5": indus_multiples(entity_ref("urn:fr:pv:case:alloc")) { origin case_input; }
+        assert "d5534-sd6": retenue_unique_indus_multiples(entity_ref("urn:fr:pv:case:alloc")) { origin case_input; }
+        assert "d5534-sd7": registre_indus_complet(entity_ref("urn:fr:pv:case:alloc")) { origin case_input; }
+        assert "d5534-sd8": prelevement_mensuel(entity_ref("urn:fr:pv:case:alloc"), 40.00 EUR) { origin case_input; }
+    }
+    evaluate truth(retenue_affectee_montant(entity_ref("urn:fr:pv:case:indu-b"), entity_ref("urn:fr:pv:case:alloc"), 10.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

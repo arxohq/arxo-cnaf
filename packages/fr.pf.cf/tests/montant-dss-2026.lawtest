@@ -1,0 +1,48 @@
+// DSS/2B/2026/46 barème (annexe III.1, pinned in fr.css.revalorisation):
+// complément familial, BMAF 478.16: 0.4165 x 478.16 = 199.1536, rounded
+// to the centime -> 199.15, the published amount. Three qualifying
+// children, resources 30000 under the 2026 ceiling.
+// D-83: плафон строится из опубликованных сумм DSS/2B/2025/177 §2.1 и §2.2
+// (sources/dss-plafonds/dss-2025-177-cf.txt, -majore.txt): база 24 853, 25 % = 6 213,
+// 30 % = 7 456 -> 3 ребёнка: 24 853 + 2 x 6 213 + 7 456 = 44 735 (строка таблицы DSS);
+// montant majoré: база 12 429, 3 107, 3 729 -> 22 372. Прежние проценты давали 44 735,40 и
+// половину базы 12 426,5; ожидание теста (суммы 199,15) не менялось: ресурсы 30 000
+// выше потолка montant majoré в обоих чтениях.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-montant-dss-2026" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "mtd-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), entity_ref("urn:fr:pf-cf:case:montant-dss-2026-e1")) { origin case_input; }
+        assert "mtd-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), entity_ref("urn:fr:pf-cf:case:montant-dss-2026-e2")) { origin case_input; }
+        assert "mtd-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), entity_ref("urn:fr:pf-cf:case:montant-dss-2026-e3")) { origin case_input; }
+        assert "mtd-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:montant-dss-2026-e1")) { origin case_input; }
+        assert "mtd-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:montant-dss-2026-e2")) { origin case_input; }
+        assert "mtd-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:montant-dss-2026-e3")) { origin case_input; }
+        assert "mtd-07": date_naissance(entity_ref("urn:fr:pf-cf:case:montant-dss-2026-e1"), @2016-03-15) { origin case_input; }
+        assert "mtd-08": date_naissance(entity_ref("urn:fr:pf-cf:case:montant-dss-2026-e2"), @2014-03-15) { origin case_input; }
+        assert "mtd-09": date_naissance(entity_ref("urn:fr:pf-cf:case:montant-dss-2026-e3"), @2012-03-15) { origin case_input; }
+        assert "mtd-10": mois_droit(@2026-06-01) { origin case_input; }
+        assert "mtd-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), 3) { origin case_input; }
+        assert "mtd-12": ressources_menage(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), 30000 EUR) { origin case_input; }
+        assert "mtd-13": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), 24853 EUR) { origin case_input; }
+        assert "mtd-13a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), 6213 EUR) { origin case_input; }
+        assert "mtd-13b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), 7456 EUR) { origin case_input; }
+        assert "mtd-13c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), 12429 EUR) { origin case_input; }
+        assert "mtd-13d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), 3107 EUR) { origin case_input; }
+        assert "mtd-13e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), 3729 EUR) { origin case_input; }
+        assert "mtd-14": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:montant-dss-2026")) { origin case_input; }
+        assert "mtd-15": cadre_cf_remplie(entity_ref("urn:fr:pf-cf:case:montant-dss-2026")) { origin case_input; }
+        assert "mtd-16": bmaf_retenu(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), 478.16 EUR) { origin case_input; }
+    }
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:case:montant-dss-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_montant_du(entity_ref("urn:fr:pf-cf:case:montant-dss-2026"), 199.15 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

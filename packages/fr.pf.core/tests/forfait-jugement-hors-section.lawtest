@@ -1,0 +1,16 @@
+// Organ judgment outside section: marked disproportion found, no PAJE/CF/ARS scope - forfait counts (L. 553-5 hors section, PC-R03-04).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-forfait-jugement-hors-section" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "forfait-hors-section-01": disproportion_train_de_vie(entity_ref("urn:fr:pf:case:forfait-hors")) { origin case_input; }
+        assert "forfait-hors-section-02": prestation_hors_section(entity_ref("urn:fr:pf:case:forfait-hors")) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_possible(entity_ref("urn:fr:pf:case:forfait-hors")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

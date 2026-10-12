@@ -1,0 +1,17 @@
+// Open right: carer leave for the aided person plus stable residence
+// in France — the computation-level right opens.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-droit-ouvert" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-do-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-do"), entity_ref("urn:fr:css:ajpa:case:aide-do")) { origin case_input; }
+        assert "ajpa-do-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-do")) { origin adjudicated; }
+    }
+    evaluate truth(ajpa_droit_ouvert(entity_ref("urn:fr:css:ajpa:case:aidant-do"), entity_ref("urn:fr:css:ajpa:case:aide-do")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

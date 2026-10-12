@@ -1,0 +1,56 @@
+// No DOM track opens: resources 50000 exceed the two-child DOM ceiling
+// 30000 by 20000, above twelve theoretical DOM monthly amounts (1199.52),
+// so neither the DOM right nor the DOM differential exists and no DOM
+// payment duty can fire. The positions evaluate cleanly (COMPUTED) with
+// nothing to pay.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-dom-devoir-sans-droit" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "dds-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit-e1")) { origin case_input; }
+        assert "dds-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit-e2")) { origin case_input; }
+        assert "dds-03": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit-e1")) { origin case_input; }
+        assert "dds-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit-e2")) { origin case_input; }
+        assert "dds-05": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit-e1"), @2017-03-15) { origin case_input; }
+        assert "dds-06": date_naissance(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit-e2"), @2015-03-15) { origin case_input; }
+        assert "dds-07": mois_droit(@2021-06-01) { origin case_input; }
+        assert "dds-08": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 2) { origin case_input; }
+        assert "dds-09": ressources_menage(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 50000 EUR) { origin case_input; }
+        assert "dds-10": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 20000 EUR) { origin case_input; }
+        assert "dds-10a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 5000 EUR) { origin case_input; }
+        assert "dds-10b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 6000 EUR) { origin case_input; }
+        assert "dds-10c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 10000 EUR) { origin case_input; }
+        assert "dds-10d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 2500 EUR) { origin case_input; }
+        assert "dds-10e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 3000 EUR) { origin case_input; }
+        assert "dds-11": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit")) { origin case_input; }
+        assert "dds-12": territoire(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), GUYANE) { origin case_input; }
+        assert "dds-13": cadre_cf_dom_remplie(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit")) { origin case_input; }
+        assert "dds-14": presence_jeune_dom(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit")) { origin case_input; }
+        assert "dds-15": base_dom_retenue(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 240.00 EUR) { origin case_input; }
+        assert "dds-16": bmaf_retenu(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 100.00 EUR) { origin case_input; }
+        assert "dds-17": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-cf:org:caisse"), entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit")) { origin case_input; }
+        assert "dds-18": departement_l751_1(GUYANE) { origin case_input; }
+    }
+    evaluate truth(cf_dom_droit_ouvert(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_montant_du(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_majore_du(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_dom_differentiel_du(entity_ref("urn:fr:pf-cf:case:dom-devoir-sans-droit"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+}

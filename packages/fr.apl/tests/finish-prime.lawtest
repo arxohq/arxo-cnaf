@@ -1,0 +1,83 @@
+// Moving bonus (25): due on established move-in, child rank and opening
+// delay with no threshold condition, the payment duty, and the L. 821-4
+// difference built from the retained regulatory amount.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-prime-due" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fpri-01": demenagement_logement_ouvrant_droit(entity_ref("urn:fr:apl:case:fpri"), @2023-05-01) { origin case_input; }
+        assert "fpri-02": enfant_rang_prime_satisfait(entity_ref("urn:fr:apl:case:fpri")) { origin case_input; }
+        assert "fpri-03": droit_ouvert_delai_demenagement(entity_ref("urn:fr:apl:case:fpri")) { origin case_input; }
+    }
+    evaluate truth(prime_demenagement_due(entity_ref("urn:fr:apl:case:fpri")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-devoir-verser-prime" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fvp-01": demenagement_logement_ouvrant_droit(entity_ref("urn:fr:apl:case:fvp"), @2023-05-01) { origin case_input; }
+        assert "fvp-02": enfant_rang_prime_satisfait(entity_ref("urn:fr:apl:case:fvp")) { origin case_input; }
+        assert "fvp-03": droit_ouvert_delai_demenagement(entity_ref("urn:fr:apl:case:fvp")) { origin case_input; }
+        assert "fvp-04": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fvp")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(VerserPrimeDemenagement, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-difference-prime" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fdif-01": prime_montant_retenu(entity_ref("urn:fr:apl:case:fdif"), 1000.00 EUR) { origin case_input; }
+        assert "fdif-02": autre_prime_meme_objet(entity_ref("urn:fr:apl:case:fdif"), 300.00 EUR) { origin case_input; }
+        // D-42: L. 823-8 pays the difference of a DUE moving bonus; the model
+        // D-42: (25 DifferencePrimeMemeObjet) reads prime_demenagement_due, whose three
+        // D-42: findings (move-in, child rank, right opened in time) the case omitted.
+        assert "fdif-03": demenagement_logement_ouvrant_droit(entity_ref("urn:fr:apl:case:fdif"), @2023-05-01) { origin case_input; }
+        // D-42: L. 823-8 pays the difference of a DUE moving bonus; the model
+        // D-42: (25 DifferencePrimeMemeObjet) reads prime_demenagement_due, whose three
+        // D-42: findings (move-in, child rank, right opened in time) the case omitted.
+        assert "fdif-04": enfant_rang_prime_satisfait(entity_ref("urn:fr:apl:case:fdif")) { origin case_input; }
+        // D-42: L. 823-8 pays the difference of a DUE moving bonus; the model
+        // D-42: (25 DifferencePrimeMemeObjet) reads prime_demenagement_due, whose three
+        // D-42: findings (move-in, child rank, right opened in time) the case omitted.
+        assert "fdif-05": droit_ouvert_delai_demenagement(entity_ref("urn:fr:apl:case:fdif")) { origin case_input; }
+    }
+    evaluate truth(difference_prime_versee(entity_ref("urn:fr:apl:case:fdif"), 700.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-non-cumul-prime" {
+    given {
+        context { decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fncu-01": demenagement_logement_ouvrant_droit(entity_ref("urn:fr:apl:case:fncu"), @2023-05-01) { origin case_input; }
+        assert "fncu-02": enfant_rang_prime_satisfait(entity_ref("urn:fr:apl:case:fncu")) { origin case_input; }
+        assert "fncu-03": droit_ouvert_delai_demenagement(entity_ref("urn:fr:apl:case:fncu")) { origin case_input; }
+        assert "fncu-04": organisme_debiteur(entity_ref("urn:fr:apl:org:caisse-exemple"), entity_ref("urn:fr:apl:case:fncu")) { origin case_input; }
+        assert "fncu-05": prime_montant_retenu(entity_ref("urn:fr:apl:case:fncu"), 1000.00 EUR) { origin case_input; }
+        assert "fncu-06": autre_prime_meme_objet(entity_ref("urn:fr:apl:case:fncu"), 300.00 EUR) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(VerserPrimeDemenagement, ACTIVE);
+    expect position(VerserDifferencePrime, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(difference_prime_versee(entity_ref("urn:fr:apl:case:fncu"), 700.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

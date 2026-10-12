@@ -1,0 +1,15 @@
+// Parents must signal a revising change: change likely to revise the contribution amount - duty to report it to the debtor body (L. 582-2, PC-R08-04).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-signaler-changement" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-signaler-changement-01": changement_situation_revision_contribution(entity_ref("urn:fr:pf:case:creance-signal")) { origin case_input; }
+        assert "creance-signaler-changement-02": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:creance-signal")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SignalerChangementContribution, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,35 @@
+// Reform formula at the 8 500 ceiling: gross 9 000 retained as 8 500;
+// part b = 650 x (1 - 8500 x 0.0619 / 4.85) = -55.14925 — the bracket
+// goes negative, computed as is (B-CMG-FORMULE-NEGATIVE); total
+// 200.00 - 55.14925 = 144.85.
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-formule-plafond-atteint" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "formule-plaf-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), entity_ref("urn:fr:pf-cmg:child:plaf"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "formule-plaf-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:formule-plafond")) { origin case_input; }
+        assert "formule-plaf-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), entity_ref("urn:fr:pf-cmg:child:plaf")) { origin case_input; }
+        assert "formule-plaf-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:plaf"), 2) { origin case_input; }
+        assert "formule-plaf-05": nb_enfants_charge(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), 1) { origin case_input; }
+        assert "formule-plaf-06": facteur_smic(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), 1.0) { origin case_input; }
+        assert "formule-plaf-07": salaire_net_verse(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), entity_ref("urn:fr:pf-cmg:child:plaf"), 600 EUR) { origin case_input; }
+        assert "formule-plaf-08": indemnites_entretien_repas(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), entity_ref("urn:fr:pf-cmg:child:plaf"), 50 EUR) { origin case_input; }
+        assert "formule-plaf-09": heures_remunerees(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), entity_ref("urn:fr:pf-cmg:child:plaf"), 130.0) { origin case_input; }
+        assert "formule-plaf-10": cotisations_sociales(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), entity_ref("urn:fr:pf-cmg:child:plaf"), 200 EUR) { origin case_input; }
+        assert "formule-plaf-11": cout_reference_retenu(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), entity_ref("urn:fr:pf-cmg:child:plaf"), 4.85 EUR) { origin case_input; }
+        assert "formule-plaf-12": montant_forfaitaire_isole(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), 700 EUR) { origin case_input; }
+        assert "formule-plaf-13": forfait_logement(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), 100 EUR) { origin case_input; }
+        assert "formule-plaf-14": revenu_mensuel_brut(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), 9000 EUR) { origin case_input; }
+    }
+    evaluate truth(revenu_mensuel_retenu(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), 8500 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_cmg_du(entity_ref("urn:fr:pf-cmg:case:formule-plafond"), entity_ref("urn:fr:pf-cmg:child:plaf"), 144.85 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

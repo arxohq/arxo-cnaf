@@ -1,0 +1,27 @@
+// Art date missing: vehicles date present but no art disposal date - no evaluation (R. 553-3-1 II 2°, PC-R04-04).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-valeurs-sans-date-art" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-sans-date-a-01": valeur_locative_batie(entity_ref("urn:fr:pf:case:sans-date-a"), 5000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-sans-date-a-02": valeur_locative_non_batie(entity_ref("urn:fr:pf:case:sans-date-a"), 0 EUR, 1.0) { origin case_input; }
+        assert "tdv-sans-date-a-03": depenses_travaux(entity_ref("urn:fr:pf:case:sans-date-a"), 2000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-sans-date-a-04": depenses_domestiques(entity_ref("urn:fr:pf:case:sans-date-a"), 0 EUR, 1.0) { origin case_input; }
+        assert "tdv-sans-date-a-05": valeur_venale_vehicules(entity_ref("urn:fr:pf:case:sans-date-a"), 12000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-sans-date-a-06": depenses_equipement(entity_ref("urn:fr:pf:case:sans-date-a"), 1500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-sans-date-a-07": valeur_venale_art(entity_ref("urn:fr:pf:case:sans-date-a"), 0 EUR, 1.0) { origin case_input; }
+        assert "tdv-sans-date-a-08": depenses_loisirs(entity_ref("urn:fr:pf:case:sans-date-a"), 1000.00 EUR, 0.5) { origin case_input; }
+        assert "tdv-sans-date-a-09": depenses_clubs(entity_ref("urn:fr:pf:case:sans-date-a"), 500.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-sans-date-a-10": capitaux_fin_periode(entity_ref("urn:fr:pf:case:sans-date-a"), 10000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-sans-date-a-11": prestation_soumise_section(entity_ref("urn:fr:pf:case:sans-date-a")) { origin case_input; }
+        assert "tdv-sans-date-a-12": depenses_foyer_periode_reference(entity_ref("urn:fr:pf:case:sans-date-a")) { origin case_input; }
+        assert "tdv-sans-date-a-13": vehicules_date_disposition(entity_ref("urn:fr:pf:case:sans-date-a"), @2026-02-15) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_train_vie(entity_ref("urn:fr:pf:case:sans-date-a"), 12600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

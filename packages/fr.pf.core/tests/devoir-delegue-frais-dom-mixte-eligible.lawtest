@@ -1,0 +1,20 @@
+// DOM mixed prime plus eligible: delegate receives the prime and an eligible benefit, eligible highest payer stated - the DOM duty applies to the eligible payer despite the prime (L. 755-4 al. 2-3, PC-R04-05 benefit-specific).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-frais-dom-mixte-eligible" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-dom-mixte-01": delegue_percoit(entity_ref("urn:fr:pf:case:budget-dom-mixte")) { origin case_input; }
+        assert "devoir-dom-mixte-02": plusieurs_prestations_delegue(entity_ref("urn:fr:pf:case:budget-dom-mixte")) { origin case_input; }
+        assert "devoir-dom-mixte-03": organisme_montant_le_plus_eleve_eligible(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:budget-dom-mixte")) { origin case_input; }
+        assert "devoir-dom-mixte-04": beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:budget-dom-mixte")) { origin case_input; }
+        assert "devoir-dom-mixte-05": delegue_percoit_prestation_eligible(entity_ref("urn:fr:pf:case:budget-dom-mixte")) { origin case_input; }
+        assert "devoir-dom-mixte-06": delegue_percoit_prime_forfaitaire(entity_ref("urn:fr:pf:case:budget-dom-mixte")) { origin case_input; }
+        assert "devoir-dom-mixte-07": not prestation_delegue_unique(entity_ref("urn:fr:pf:case:budget-dom-mixte")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SupporterFraisMesureDOM, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

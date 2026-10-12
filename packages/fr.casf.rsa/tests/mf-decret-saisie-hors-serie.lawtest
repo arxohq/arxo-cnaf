@@ -1,0 +1,18 @@
+// Outside the pinned series (September 2022) a base supplied for the case is used as
+// is: 600.00 -> household flat-rate 600.00 (B-RSA-MF-EURO, DSS_PENDING).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-decret-saisie-hors-serie" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2022-09-15T12:00:00Z; knowledge_time @2022-09-15T12:00:00Z; legal_time @2022-09-15; timezone "Europe/Paris"; }
+        assert "mfdsh-01": mf_base(entity_ref("urn:fr:rsa:case:mf-decret-saisie-hors-serie"), 600.00 EUR) { origin case_input; }
+        assert "mfdsh-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-decret-saisie-hors-serie"), 1) { origin case_input; }
+        assert "mfdsh-03": mois_droit(entity_ref("urn:fr:rsa:case:mf-decret-saisie-hors-serie"), @2022-09-01) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-decret-saisie-hors-serie"), 600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

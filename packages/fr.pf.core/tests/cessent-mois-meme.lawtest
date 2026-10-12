@@ -1,0 +1,18 @@
+// Cessation default: conditions end in May - benefits cease from 1 May (R. 552-3 I).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-cessent-mois-meme" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "cessent-mois-meme-01": conditions_cessent_mois(entity_ref("urn:fr:pf:case:cesse"), @2026-05-01) { origin case_input; }
+        assert "cessent-mois-meme-02": not prestation_cmg(entity_ref("urn:fr:pf:case:cesse")) { origin case_input; }
+        assert "cessent-mois-meme-03": not prestation_ajpp(entity_ref("urn:fr:pf:case:cesse")) { origin case_input; }
+        assert "cessent-mois-meme-04": not prestation_aeeh(entity_ref("urn:fr:pf:case:cesse")) { origin case_input; }
+    }
+    evaluate truth(prestations_cessent_a_compter(entity_ref("urn:fr:pf:case:cesse"), @2026-05-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

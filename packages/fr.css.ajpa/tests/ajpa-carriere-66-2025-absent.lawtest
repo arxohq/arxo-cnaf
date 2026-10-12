@@ -1,0 +1,19 @@
+// 66-day career cap removed by the 2025 reform: 60 days recorded
+// in 2025 — the CSS_ED2025_01 wording carries a decree duration
+// ceiling instead of the career sentence, so the cap rule is silent.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-carriere-66-2025-absent" {
+    given {
+        context { decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "ajpa-c25-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-c25"), entity_ref("urn:fr:css:ajpa:case:aide-c25")) { origin case_input; }
+        assert "ajpa-c25-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-c25")) { origin adjudicated; }
+        assert "ajpa-c25-03": jours_ajpa_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-c25"), 60) { origin case_input; }
+    }
+    evaluate truth(ajpa_dans_limite_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-c25")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

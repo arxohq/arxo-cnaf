@@ -1,0 +1,61 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Shared custody at half rate: two full-custody children plus one in
+// résidence alternée (average 2 + 0.5 = 2.5 < 3). The GA child (2008,
+// non-eldest, 15 in June 2023) opens the supplement at half the band-1
+// rate: 0.16 x 400 / 2 = 32.00. Full-custody siblings follow the
+// three-child rule (eldest included): 64.00 each.
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-majoration-alternee-moitie" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "malt-01": territoire(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), METROPOLE) { origin case_input; }
+        assert "malt-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 3) { origin case_input; }
+        assert "malt-03": ressources_menage(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 30000 EUR) { origin case_input; }
+        assert "malt-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 55950 EUR) { origin case_input; }
+        assert "malt-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 78300 EUR) { origin case_input; }
+        assert "malt-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 5595 EUR) { origin case_input; }
+        assert "malt-05": bmaf_retenu(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 400.00 EUR) { origin case_input; }
+        assert "malt-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 2) { origin case_input; }
+        assert "malt-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 1) { origin case_input; }
+        assert "malt-08": forfait_total_menage(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 0 EUR) { origin case_input; }
+        assert "malt-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 0) { origin case_input; }
+        assert "malt-10": foyer_du_cas(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie")) { origin case_input; }
+        assert "malt-11": mois_droit(@2023-06-01) { origin case_input; }
+        assert "malt-12": enfants_propres(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), 2) { origin case_input; }
+        assert "malt-13": enfants_alternes(1) { origin case_input; }
+        assert "malt-14": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), entity_ref("urn:fr:pf-af:child:aine-ga")) { origin case_input; }
+        assert "malt-15": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), entity_ref("urn:fr:pf-af:child:cadet-ga")) { origin case_input; }
+        assert "malt-16": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:majoration-alternee-moitie"), entity_ref("urn:fr:pf-af:child:partage-ga")) { origin case_input; }
+        assert "malt-17": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:aine-ga")) { origin case_input; }
+        assert "malt-18": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:cadet-ga")) { origin case_input; }
+        assert "malt-19": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:child:partage-ga")) { origin case_input; }
+        assert "malt-20": date_naissance(entity_ref("urn:fr:pf-af:child:aine-ga"), @2004-02-01) { origin case_input; }
+        assert "malt-21": date_naissance(entity_ref("urn:fr:pf-af:child:cadet-ga"), @2006-09-01) { origin case_input; }
+        assert "malt-22": date_naissance(entity_ref("urn:fr:pf-af:child:partage-ga"), @2008-03-01) { origin case_input; }
+        assert "malt-23": enfant_du_cas(entity_ref("urn:fr:pf-af:child:aine-ga")) { origin case_input; }
+        assert "malt-24": enfant_du_cas(entity_ref("urn:fr:pf-af:child:cadet-ga")) { origin case_input; }
+        assert "malt-25": enfant_du_cas(entity_ref("urn:fr:pf-af:child:partage-ga")) { origin case_input; }
+        assert "malt-26": garde(entity_ref("urn:fr:pf-af:child:aine-ga"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "malt-27": garde(entity_ref("urn:fr:pf-af:child:cadet-ga"), CHARGE_EFFECTIVE_PERMANENTE) { origin case_input; }
+        assert "malt-28": garde(entity_ref("urn:fr:pf-af:child:partage-ga"), RESIDENCE_ALTERNEE_PARTAGE) { origin case_input; }
+    }
+    evaluate truth(majoration_eligible(entity_ref("urn:fr:pf-af:child:partage-ga")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:child:partage-ga"), 32.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_majoration(entity_ref("urn:fr:pf-af:child:aine-ga"), 64.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,16 @@
+// Non-cumulation 2019, item 8: daily parental-presence allowance
+// recorded for the beneficiary — cumulation refused (AJPP/AJPA bridge).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-noncumul-ajpp-2019" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-na-01": motif_non_cumul_2019(entity_ref("urn:fr:css:ajpa:case:aidant-na"), AJPP_2019) { origin case_input; }
+    }
+    evaluate truth(ajpa_cumul_refuse(entity_ref("urn:fr:css:ajpa:case:aidant-na")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

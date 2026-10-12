@@ -1,0 +1,18 @@
+// No recovery aid without a request: titled claim, age and ASF conditions met but help never requested - no aid (L. 581-6 « à sa demande », PC-R07-19).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-aide-sans-demande" {
+    given {
+        context { decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "creance-aide-sans-demande-01": creance_alimentaire_titre(entity_ref("urn:fr:pf:case:creance-sdem")) { origin case_input; }
+        assert "creance-aide-sans-demande-02": creance_enfant_avant_limite_age(entity_ref("urn:fr:pf:case:creance-sdem")) { origin case_input; }
+        assert "creance-aide-sans-demande-03": conditions_asf_non_remplies(entity_ref("urn:fr:pf:case:creance-sdem")) { origin case_input; }
+        assert "creance-aide-sans-demande-04": not aide_recouvrement_demandee(entity_ref("urn:fr:pf:case:creance-sdem")) { origin case_input; }
+    }
+    evaluate truth(aide_recouvrement_accordee(entity_ref("urn:fr:pf:case:creance-sdem")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

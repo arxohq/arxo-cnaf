@@ -1,0 +1,23 @@
+// OpenFisca 2015 lone-parent case, period shaped to 2021 and ground shaped to orphan-of-one (unstated upstream): eligible, 112.52. Their 96 embeds their 2015 rate and BMAF: class (b).
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-of-2015" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ofq-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:foreign:of-2015"), entity_ref("urn:fr:pf-asf:foreign:of-2015-e1")) { origin case_input; }
+        assert "ofq-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:foreign:of-2015-e1")) { origin case_input; }
+        assert "ofq-03": motif_asf(entity_ref("urn:fr:pf-asf:foreign:of-2015-e1"), ORPHELIN_UN_PARENT) { origin case_input; }
+        assert "ofq-04": demande_asf(entity_ref("urn:fr:pf-asf:foreign:of-2015-e1")) { origin case_input; }
+        assert "ofq-05": bmaf_retenu(entity_ref("urn:fr:pf-asf:foreign:of-2015"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(asf_enfant_eligible(entity_ref("urn:fr:pf-asf:foreign:of-2015-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_montant_du(entity_ref("urn:fr:pf-asf:foreign:of-2015-e1"), 112.52 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

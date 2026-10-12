@@ -1,0 +1,15 @@
+// BMAF base inclusion: allocations familiales claimed - under the monthly bases (L. 551-1, L. 511-1 2°).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-bmaf-prestation-ordinaire" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "bmaf-prestation-ordinaire-01": prestation_demandee(entity_ref("urn:fr:pf:case:bmaf-af"), ALLOCATIONS_FAMILIALES) { origin case_input; }
+    }
+    evaluate truth(base_bmaf_classee(entity_ref("urn:fr:pf:case:bmaf-af"), true));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,15 @@
+// L553-5 outside-section (PC-R05-06): other Livre V benefit with organ-found marked disproportion; hors-section attested, section negatively established; forfait possible.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-hors-section-positif" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "hs-01": disproportion_train_de_vie(entity_ref("urn:fr:pf:case:hors-section")) { origin case_input; }
+        assert "hs-02": prestation_hors_section(entity_ref("urn:fr:pf:case:hors-section")) { origin case_input; }
+    }
+    evaluate truth(evaluation_forfaitaire_possible(entity_ref("urn:fr:pf:case:hors-section")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

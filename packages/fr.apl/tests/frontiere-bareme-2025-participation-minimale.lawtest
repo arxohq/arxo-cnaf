@@ -1,0 +1,30 @@
+// БАРЕМ С 1 ОКТЯБРЯ 2025 ГОДА: пол минимального участия. 8,5 % от суммы
+// учитываемого найма и форфейта расходов (333,14 + 60,59 = 393,73 €) дают
+// 33,47 €, что НИЖЕ объявленного минимума 39,56 € (ст. 13 арретэ в
+// редакции 2025 года), поэтому P0 равно минимуму. В редакции 2022 года
+// этот минимум был 35,39 € — сценарий закрепляет именно новое число.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-bareme-2025-participation-minimale" {
+    given {
+        context { decision_time @2025-11-15T12:00:00Z; knowledge_time @2025-11-15T12:00:00Z; legal_time @2025-11-15; timezone "Europe/Paris"; }
+        assert "frontiere-bareme-2025-participation-minimale-01": secteur_locatif(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale")) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-02": zone_du_logement(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), ZONE_I) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-03": aide_demandee(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), APL) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-04": situation_familiale(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), PERSONNE_SEULE) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-05": personnes_a_charge(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), 0) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-06": loyer_principal(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), 400 EUR) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-07": ressources_du_menage(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), 7800 EUR) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-08": mode_location(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), LOCATION_SEULE) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-09": forme_logement(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), 0 EUR) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), false) { origin case_input; }
+        assert "frontiere-bareme-2025-participation-minimale-12": territoire(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(participation_minimale(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-participation-minimale"), 39.56 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

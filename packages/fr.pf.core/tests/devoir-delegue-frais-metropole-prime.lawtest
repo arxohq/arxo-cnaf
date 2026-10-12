@@ -1,0 +1,23 @@
+// Metropole prime not excluded: single prime benefit in metropole (metropole stated) - the serving body bears costs under L. 552-6 (PC-R03-09, no over-exclusion).
+// D-42: the case states "single prime benefit in metropole" but lacked the facts the model reads:
+// FraisMesureDelegueUnique (08) needs prestation_delegue_unique and the explicit negatives
+// "not several benefits" and "not DOM" (bare not over case facts, SPEC 69; territory is caller-stated,
+// B-PFCORE-DOM-LIVRE7), as in devoir-delegue-frais-unique. The prime fact stays. Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-delegue-frais-metropole-prime" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-metro-prime-01": delegue_percoit(entity_ref("urn:fr:pf:case:budget-metro-prime")) { origin case_input; }
+        assert "devoir-metro-prime-02": organisme_verse_prestation_delegue(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:budget-metro-prime")) { origin case_input; }
+        assert "devoir-metro-prime-03": delegue_percoit_prime_forfaitaire(entity_ref("urn:fr:pf:case:budget-metro-prime")) { origin case_input; }
+        assert "devoir-metro-prime-04": prestation_delegue_unique(entity_ref("urn:fr:pf:case:budget-metro-prime")) { origin case_input; }
+        assert "devoir-metro-prime-05": not plusieurs_prestations_delegue(entity_ref("urn:fr:pf:case:budget-metro-prime")) { origin case_input; }
+        assert "devoir-metro-prime-06": not beneficiaire_dom_l7554(entity_ref("urn:fr:pf:case:budget-metro-prime")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(SupporterFraisMesure, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

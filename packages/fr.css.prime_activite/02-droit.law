@@ -1,0 +1,374 @@
+// Right to the activity bonus (L. 842-1/2/5, opening L. 843-2).
+//
+// «Toute personne résidant en France de manière stable et effective qui
+// perçoit des revenus tirés d'une activité professionnelle a droit à une
+// prime d'activité» (L. 842-1): residence, professional income.
+// «Etre âgé de plus de dix-huit ans» (L. 842-2 1°): age fact.
+// Nationality/title, posted-worker, leave conditions (L. 842-2 2°/4°/5°)
+// arrive as retained case facts (titles and postings are neighbour
+// registers, not this package's texts). Student/trainee/apprentice status
+// (3°) excludes unless professional income exceeds the L. 512-3 ceiling
+// (retained ceiling fact) or the L. 842-7 isolated-person majoration
+// applies. Leave (5°) excludes only without professional income.
+// PA-R4-09: exclusions need positive exception-absence facts, and
+// eligibility a positive file check; unknown status stays undetermined.
+// The spouse/partner counts only under L. 842-5 conditions (retained).
+// «Le droit ... est ouvert à compter de la date de dépôt de la demande»
+// (L. 843-2): opening month is the demand month.
+// Condition timing across the trimestre (R. 842-2) is derived in
+// 06-ouverture from monthly retained facts; convergence of those with
+// the atemporal facts above is deferred (B-PPA-CONDITIONS-MENSUELLES).
+
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+use self::{
+    CSS_L842_1_ED2021_01_01,
+    CSS_L842_1_ED2021_03_25,
+    CSS_L842_1_ED2021_06_01,
+    CSS_L842_1_ED2022_03_21,
+    CSS_L842_1_ED2023_12_31,
+    CSS_L842_1_ED2024_01_01,
+    CSS_L842_1_ED2024_07_01,
+    CSS_L842_1_ED2025_01_01,
+    CSS_L842_1_ED2025_02_28,
+    CSS_L842_1_ED2025_03_31,
+    CSS_L842_1_ED2026_04_01,
+    CSS_L842_1_ED2026_06_27,
+    CSS_L842_2_ED2021_01_01,
+    CSS_L842_2_ED2021_03_25,
+    CSS_L842_2_ED2021_06_01,
+    CSS_L842_2_ED2022_03_21,
+    CSS_L842_2_ED2023_12_31,
+    CSS_L842_2_ED2024_01_01,
+    CSS_L842_2_ED2024_07_01,
+    CSS_L842_2_ED2025_01_01,
+    CSS_L842_2_ED2025_02_28,
+    CSS_L842_2_ED2025_03_31,
+    CSS_L842_2_ED2026_04_01,
+    CSS_L842_2_ED2026_06_27,
+    CSS_L842_5_ED2021_01_01,
+    CSS_L842_5_ED2021_03_25,
+    CSS_L842_5_ED2021_06_01,
+    CSS_L842_5_ED2022_03_21,
+    CSS_L842_5_ED2023_12_31,
+    CSS_L842_5_ED2024_01_01,
+    CSS_L842_5_ED2024_07_01,
+    CSS_L842_5_ED2025_01_01,
+    CSS_L842_5_ED2025_02_28,
+    CSS_L842_5_ED2025_03_31,
+    CSS_L842_5_ED2026_04_01,
+    CSS_L842_5_ED2026_06_27,
+    CSS_L843_2_ED2021_01_01,
+    CSS_L843_2_ED2021_03_25,
+    CSS_L843_2_ED2021_06_01,
+    CSS_L843_2_ED2022_03_21,
+    CSS_L843_2_ED2023_12_31,
+    CSS_L843_2_ED2024_01_01,
+    CSS_L843_2_ED2024_07_01,
+    CSS_L843_2_ED2025_01_01,
+    CSS_L843_2_ED2025_02_28,
+    CSS_L843_2_ED2025_03_31,
+    CSS_L843_2_ED2026_04_01,
+    CSS_L843_2_ED2026_06_27,
+};
+
+pub entity Demandeur {
+    label fr official "personne demandant la prime d'activité (titre IV du livre VIII du CSS)";
+    label en unofficial "person claiming the activity bonus (CSS book VIII title IV)";
+}
+
+pub relation age_plus_dix_huit(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "plus de dix-huit ans (L. 842-2 1°)";
+    label en unofficial "over eighteen (L. 842-2 1°)";
+}
+
+pub relation residence_stable(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "résidence stable et effective en France (L. 842-1)";
+    label en unofficial "stable and effective residence in France (L. 842-1)";
+}
+
+pub relation revenus_professionnels(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "perçoit des revenus d'activité professionnelle (L. 842-1)";
+    label en unofficial "receives professional-activity income (L. 842-1)";
+}
+
+pub relation sejour_travail_ok(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "condition de nationalité/titre de séjour autorisant à travailler remplie (L. 842-2 2°, fait retenu)";
+    label en unofficial "nationality/work-permit condition met (L. 842-2 2°, retained fact)";
+}
+
+pub relation etudiant_stagiaire_apprenti(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "élève, étudiant, stagiaire ou apprenti (L. 842-2 3°, fait retenu)";
+    label en unofficial "pupil, student, trainee or apprentice (L. 842-2 3°, retained fact)";
+}
+
+pub relation revenus_etudiant_plafond_depasse(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "revenus professionnels mensuels au-dessus du plafond L. 512-3 2° sur la période de référence (exception L. 842-2 3°, fait retenu)";
+    label en unofficial "monthly professional income above the L. 512-3 2° ceiling over the reference period (L. 842-2 3° exception, retained fact)";
+}
+
+pub relation detache_temporaire(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "travailleur détaché temporairement en France (L. 842-2 4°, fait retenu)";
+    label en unofficial "temporarily posted worker in France (L. 842-2 4°, retained fact)";
+}
+
+pub relation conge_sans_solde(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "congé parental, sabbatique, sans solde ou disponibilité (L. 842-2 5°, fait retenu)";
+    label en unofficial "parental, sabbatical, unpaid leave or secondment (L. 842-2 5°, retained fact)";
+}
+
+pub relation majoration_isole_droit(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "droit à la majoration isolé L. 842-7 (fait retenu; lève l'exclusion 3°)";
+    label en unofficial "isolated-person majoration right L. 842-7 (retained; lifts the 3° exclusion)";
+}
+
+pub relation revenus_etudiant_plafond_non_depasse(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "revenus professionnels mensuels ne dépassant pas le plafond L. 512-3 2° sur la période de référence (L. 842-2 3°; fait retenu d'absence d'exception)";
+    label en unofficial "monthly professional income not above the L. 512-3 2° ceiling over the reference period (L. 842-2 3°; retained exception-absence fact)";
+}
+
+pub relation sans_majoration_isole(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "pas de droit à la majoration isolé L. 842-7 (L. 842-2 3°; fait retenu d'absence d'exception)";
+    label en unofficial "no isolated-person majoration right L. 842-7 (L. 842-2 3°; retained exception-absence fact)";
+}
+
+pub relation sans_revenus_professionnels(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "aucun revenu d'activité professionnelle conservé pendant le congé (L. 842-2 5°; fait retenu)";
+    label en unofficial "no professional-activity income kept during the leave (L. 842-2 5°; retained fact)";
+}
+
+pub relation conjoint_conditions_ok(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "conjoint/concubin/partenaire remplit les 2°, 4° et 5° (L. 842-5, fait retenu; sans conjoint: vrai)";
+    label en unofficial "spouse/partner meets 2°, 4° and 5° (L. 842-5, retained; no spouse: true)";
+}
+
+pub relation demande_deposee(d: Demandeur, mois: Date) kind empirical {
+    key(d);
+    label fr official "mois de dépôt de la demande (L. 843-2)";
+    label en unofficial "month the claim was filed (L. 843-2)";
+}
+
+pub relation exclu_statut(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "exclusion statutaire L. 842-2 3°/4°/5°";
+    label en unofficial "L. 842-2 3°/4°/5° status exclusion";
+}
+
+pub relation sans_exclusion_statutaire(d: Demandeur) kind empirical {
+    key(d);
+    label fr official "contrôle du dossier: aucune exclusion L. 842-2 3°/4°/5° relevée (fait retenu)";
+    label en unofficial "file check: no L. 842-2 3°/4°/5° exclusion found (retained fact)";
+}
+
+pub relation droit_ouvert(d: Demandeur) kind institutional {
+    key(d);
+    label fr official "droit à la prime d'activité ouvert";
+    label en unofficial "activity-bonus right open";
+}
+
+pub relation droit_ouvert_compter(d: Demandeur, mois: Date) kind institutional {
+    key(d);
+    label fr official "droit ouvert à compter du mois de dépôt (L. 843-2)";
+    label en unofficial "right open from the filing month (L. 843-2)";
+}
+
+@source(
+    CSS_L842_2_ED2021_01_01,
+    CSS_L842_2_ED2021_03_25,
+    CSS_L842_2_ED2021_06_01,
+    CSS_L842_2_ED2022_03_21,
+    CSS_L842_2_ED2023_12_31,
+    CSS_L842_2_ED2024_01_01,
+    CSS_L842_2_ED2024_07_01,
+    CSS_L842_2_ED2025_01_01,
+    CSS_L842_2_ED2025_02_28,
+    CSS_L842_2_ED2025_03_31,
+    CSS_L842_2_ED2026_04_01,
+    CSS_L842_2_ED2026_06_27)
+rule ExcluEtudiant(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "élève/étudiant/stagiaire/apprenti exclu sauf revenus au-dessus du plafond ou majoration isolé (L. 842-2 3°)";
+    label en unofficial "pupil/student/trainee/apprentice excluded unless income above ceiling or isolated-person majoration (L. 842-2 3°)";
+    when etudiant_stagiaire_apprenti(d)
+        and revenus_etudiant_plafond_non_depasse(d)
+        and not_known(revenus_etudiant_plafond_depasse(d))
+        and sans_majoration_isole(d)
+        and not_known(majoration_isole_droit(d));
+    then exclu_statut(d);
+}
+
+@source(
+    CSS_L842_2_ED2021_01_01,
+    CSS_L842_2_ED2021_03_25,
+    CSS_L842_2_ED2021_06_01,
+    CSS_L842_2_ED2022_03_21,
+    CSS_L842_2_ED2023_12_31,
+    CSS_L842_2_ED2024_01_01,
+    CSS_L842_2_ED2024_07_01,
+    CSS_L842_2_ED2025_01_01,
+    CSS_L842_2_ED2025_02_28,
+    CSS_L842_2_ED2025_03_31,
+    CSS_L842_2_ED2026_04_01,
+    CSS_L842_2_ED2026_06_27)
+rule ExcluDetache(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "travailleur détaché exclu (L. 842-2 4°)";
+    label en unofficial "posted worker excluded (L. 842-2 4°)";
+    when detache_temporaire(d);
+    then exclu_statut(d);
+}
+
+@source(
+    CSS_L842_2_ED2021_01_01,
+    CSS_L842_2_ED2021_03_25,
+    CSS_L842_2_ED2021_06_01,
+    CSS_L842_2_ED2022_03_21,
+    CSS_L842_2_ED2023_12_31,
+    CSS_L842_2_ED2024_01_01,
+    CSS_L842_2_ED2024_07_01,
+    CSS_L842_2_ED2025_01_01,
+    CSS_L842_2_ED2025_02_28,
+    CSS_L842_2_ED2025_03_31,
+    CSS_L842_2_ED2026_04_01,
+    CSS_L842_2_ED2026_06_27)
+rule ExcluConge(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "congé sans activité professionnelle exclu (L. 842-2 5°)";
+    label en unofficial "leave without professional activity excluded (L. 842-2 5°)";
+    when conge_sans_solde(d) and sans_revenus_professionnels(d)
+        and not_known(revenus_professionnels(d));
+    then exclu_statut(d);
+}
+
+@source(
+    CSS_L842_1_ED2021_01_01,
+    CSS_L842_1_ED2021_03_25,
+    CSS_L842_1_ED2021_06_01,
+    CSS_L842_1_ED2022_03_21,
+    CSS_L842_1_ED2023_12_31,
+    CSS_L842_1_ED2024_01_01,
+    CSS_L842_1_ED2024_07_01,
+    CSS_L842_1_ED2025_01_01,
+    CSS_L842_1_ED2025_02_28,
+    CSS_L842_1_ED2025_03_31,
+    CSS_L842_1_ED2026_04_01,
+    CSS_L842_1_ED2026_06_27,
+    CSS_L842_2_ED2021_01_01,
+    CSS_L842_2_ED2021_03_25,
+    CSS_L842_2_ED2021_06_01,
+    CSS_L842_2_ED2022_03_21,
+    CSS_L842_2_ED2023_12_31,
+    CSS_L842_2_ED2024_01_01,
+    CSS_L842_2_ED2024_07_01,
+    CSS_L842_2_ED2025_01_01,
+    CSS_L842_2_ED2025_02_28,
+    CSS_L842_2_ED2025_03_31,
+    CSS_L842_2_ED2026_04_01,
+    CSS_L842_2_ED2026_06_27,
+    CSS_L842_5_ED2021_01_01,
+    CSS_L842_5_ED2021_03_25,
+    CSS_L842_5_ED2021_06_01,
+    CSS_L842_5_ED2022_03_21,
+    CSS_L842_5_ED2023_12_31,
+    CSS_L842_5_ED2024_01_01,
+    CSS_L842_5_ED2024_07_01,
+    CSS_L842_5_ED2025_01_01,
+    CSS_L842_5_ED2025_02_28,
+    CSS_L842_5_ED2025_03_31,
+    CSS_L842_5_ED2026_04_01,
+    CSS_L842_5_ED2026_06_27)
+rule DroitOuvert(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "droit ouvert: 18 ans, résidence, revenus pro, séjour, conjoint, sans exclusion (L. 842-1/2/5)";
+    label en unofficial "right open: 18, residence, professional income, stay, spouse, no exclusion (L. 842-1/2/5)";
+    when age_plus_dix_huit(d) and residence_stable(d)
+        and revenus_professionnels(d) and sejour_travail_ok(d)
+        and conjoint_conditions_ok(d) and sans_exclusion_statutaire(d)
+        and not_known(exclu_statut(d));
+    then droit_ouvert(d);
+}
+
+// D-42: «Le droit à la prime d'activité est subordonné au respect ...
+// des conditions suivantes» (L. 842-2): an established 3°/4°/5°
+// exclusion is the affirmative contrary of the open right (a failed
+// not_known guard alone leaves NEITHER).
+@source(
+    CSS_L842_1_ED2021_01_01,
+    CSS_L842_1_ED2021_03_25,
+    CSS_L842_1_ED2021_06_01,
+    CSS_L842_1_ED2022_03_21,
+    CSS_L842_1_ED2023_12_31,
+    CSS_L842_1_ED2024_01_01,
+    CSS_L842_1_ED2024_07_01,
+    CSS_L842_1_ED2025_01_01,
+    CSS_L842_1_ED2025_02_28,
+    CSS_L842_1_ED2025_03_31,
+    CSS_L842_1_ED2026_04_01,
+    CSS_L842_1_ED2026_06_27,
+    CSS_L842_2_ED2021_01_01,
+    CSS_L842_2_ED2021_03_25,
+    CSS_L842_2_ED2021_06_01,
+    CSS_L842_2_ED2022_03_21,
+    CSS_L842_2_ED2023_12_31,
+    CSS_L842_2_ED2024_01_01,
+    CSS_L842_2_ED2024_07_01,
+    CSS_L842_2_ED2025_01_01,
+    CSS_L842_2_ED2025_02_28,
+    CSS_L842_2_ED2025_03_31,
+    CSS_L842_2_ED2026_04_01,
+    CSS_L842_2_ED2026_06_27,
+    CSS_L842_5_ED2021_01_01,
+    CSS_L842_5_ED2021_03_25,
+    CSS_L842_5_ED2021_06_01,
+    CSS_L842_5_ED2022_03_21,
+    CSS_L842_5_ED2023_12_31,
+    CSS_L842_5_ED2024_01_01,
+    CSS_L842_5_ED2024_07_01,
+    CSS_L842_5_ED2025_01_01,
+    CSS_L842_5_ED2025_02_28,
+    CSS_L842_5_ED2025_03_31,
+    CSS_L842_5_ED2026_04_01,
+    CSS_L842_5_ED2026_06_27)
+rule DroitFermeExclusion(d: Demandeur) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "exclusion L. 842-2 3°/4°/5° établie: pas de droit ouvert (L. 842-2)";
+    label en unofficial "established L. 842-2 3°/4°/5° exclusion: no open right (L. 842-2)";
+    when exclu_statut(d);
+    then not droit_ouvert(d);
+}
+
+@source(
+    CSS_L843_2_ED2021_01_01,
+    CSS_L843_2_ED2021_03_25,
+    CSS_L843_2_ED2021_06_01,
+    CSS_L843_2_ED2022_03_21,
+    CSS_L843_2_ED2023_12_31,
+    CSS_L843_2_ED2024_01_01,
+    CSS_L843_2_ED2024_07_01,
+    CSS_L843_2_ED2025_01_01,
+    CSS_L843_2_ED2025_02_28,
+    CSS_L843_2_ED2025_03_31,
+    CSS_L843_2_ED2026_04_01,
+    CSS_L843_2_ED2026_06_27)
+rule OuvertureDepot(d: Demandeur, mois: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "droit ouvert à compter de la date de dépôt (L. 843-2)";
+    label en unofficial "right open from the filing date (L. 843-2)";
+    when droit_ouvert(d) and demande_deposee(d, mois);
+    then droit_ouvert_compter(d, mois);
+}

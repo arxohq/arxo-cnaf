@@ -1,0 +1,2261 @@
+// Cross-benefit recovery applied to payment.
+// Module 04-recouvrement.law of fr.prestations.versement (wave 5).
+// Effective window [@2024-01-01, infinity): L. 553-2 is pinned only
+// from CSS_ED2024_01 and the 10 % sentences run from 2024-01-01
+// (loi 2022-1616 art. 100); pre-2024 paragraphs are reserved, not encoded.
+//
+// WHAT THIS LAYER OWNS. For one monthly echeance of benefit Y, given
+// the recoverable debts charged to it and the fund-stated scale rate,
+// derive the monthly deduction and the net paid amount. Limitation is
+// per-debt, never echeance-wide (D-V5): PF prescription drops the PF
+// indu+indemnity via DetteAfPrescrit while the RSA carry survives;
+// RSA limitation arrives pre-encoded in the imported indu_recouvrable.
+// Norms owned elsewhere are NOT redefined (D-V1): L. 553-1/2/2-1/3/4/5
+// live in fr.pf.core modules 06/07; this layer only IMPORTS their heads
+// and applies them across benefits.
+//
+// FINDINGS (quotes in the S3 report; bytes pinned unless noted MIRROR):
+//   PF (reference) — L. 553-2 al. 1 (pinned, CSS_ED2024_01+): primary
+//     recovery by deductions from future benefits; overflow onto the
+//     future echeances of housing (CCH L. 821-1), AJPA (L. 168-8), book VIII
+//     titles II and IV (= AAH + PA on the mirror hierarchy reading —
+//     MIRROR-pending, never pinned; AAH-carry inputs stay fund-stated
+//     with the inference flagged), and RSA. 10 % fraud indemnity al. 1.
+//     Scale + uplift up
+//     to 50 % + doubling on repeat within 5 years al. 3; the scale
+//     sentence expressly covers the L. 821-5-1, L. 845-3, CCH L. 823-9
+//     and L. 262-46 retenues. Limitation L. 553-1: 2 years, 5 years on
+//     fraud, interruption while a listed recovery procedure runs.
+//   RSA — L. 262-46 al. 4 PINNED: overflow onto AJPA, PF (L. 511-1),
+//     PA (L. 841-1), book VIII title II (AAH only via the mirror
+//     hierarchy inference — MIRROR, same as the PF leg), housing
+//     (L. 821-1 CCH).
+//     10 % indemnity PINNED from 2024-01-01 (loi 2022-1616 art. 100;
+//     the PRE2024 text lacks it). Scale renvoi to L. 553-2 al. 3
+//     PINNED (both versions) → uplift + doubling apply. Limitation
+//     L. 262-45 PINNED: 2 years, "sauf en cas de fraude ou de fausse
+//     declaration" with NO 5-year period stated (SILENCE on the fraud
+//     duration). Appeals suspensive (al. 2) arrives pre-encoded in the
+//     imported indu_recouvrable — no defeater here. The 77 EUR floor
+//     (R. 262-92), remise, tiers-payant and R. 262-92-1 notification
+//     likewise arrive via indu_recouvrable/indemnite_fraude (rs 05).
+//   AAH — recovery article L. 821-5-1 MIRROR-ONLY (VIGUEUR 2024-01-01;
+//     overflow AJPA/PF/PA/housing/RSA; 10 % from 2024). Limitation
+//     L. 821-5 PINNED (2 years, fraud exception, no 5-year period).
+//     The deduction MATH for AAH retenues is pinned-grounded through
+//     L. 553-2 al. 3, whose scope sentence covers L. 821-5-1 retenues;
+//     the recovery permission itself awaits pinning (noted per rule).
+//   PA — neighbour package pinned (W4-PPA DONE) and WIRED here (Y = PA
+//     section, RSA pattern; B-PV-PA follow-up 6 closed): L. 845-3 al. 1-3
+//     (own recovery by deductions from future amounts; 10 % fraud
+//     indemnity from 2024-01-01, PRE2024 lacks it; suspensive appeals;
+//     single-repayment option; scale renvoi to L. 553-2 al. 3) and
+//     L. 845-4 ("L. 553-1 is applicable") arrive pre-encoded in the
+//     imported indu_recupere/indemnite_fraude. Incoming carries onto
+//     the PA echeance: RSA only (L. 262-46 al. 4 cites L. 841-1,
+//     pinned); PF/AAH/housing→PA pairs reserved (B-PV-PA-CARRY).
+//     Outgoing PA-source carries onto AF/RSA/AAH/housing are WIRED
+//     (L. 845-3 al. 3 destination list, FINISH-W2 cascade follow-up).
+//   Housing — L. 823-9 CCH MIRROR-ONLY: L. 553-2 "applicable au
+//     recouvrement" (overflow housing/AJPA/AAH+PA/RSA; PF is NOT in
+//     the overflow list — SILENCE, no housing-to-PF input). Housing
+//     LIMITATION is SILENCE in the current CCH (old L. 351-11, which
+//     held a 2-year rule, was abrogated 2019-09-01; L. 823-9 cites
+//     L. 553-2 but not L. 553-1): no defeater is possible even in
+//     principle. R. 825-2 is recours-administratif procedure only.
+//   L. 844-3 (cited by the pinned L. 553-1 text with a "(1)" marker)
+//     has NO article in the CSS mirror, abrogés included: orphan
+//     reference, reported, not encoded.
+//
+// INPUT CONTRACTS (caller-side shaping, 03 precedent; all amounts
+// explicit per case, zero when none):
+//   (a) The single-repayment option conditions the AF, RSA, PA, CF,
+//       ASF and ARS application rules directly (imported no-option
+//       facts); AAH and housing options are neighbour-internal: their
+//       charged inputs arrive net of any option taken. AJPA carries
+//       are gated by lawful-carry facts attesting the source options.
+//   (b) The monthly levy is a Money amount, never a rate: PF levies
+//       arrive computed from the 06 bareme layer (prelevement_mensuel);
+//       non-PF levies arrive fund-stated under the decree/DSS scale
+//       (DSS_PENDING: percentages and exact base unpinned). No scale
+//       percentage literal appears anywhere in this file, and no
+//       installment x rate product is derived (PC-R07-39).
+//   (c) The fraud uplift is the FIXED 50 % of D. 553-5 (x1.50),
+//       doubled on 5-year repeat (x2.00, L. 553-2 al. 3), computed
+//       in-section from a stated fraud/repeat status — never a
+//       fund-stated fraction (PC-R07-38). Repeat statuses are
+//       imported (PF) or stated per family (RSA/AAH/housing/PA/AJPA).
+//   (d) One recoverable debt per debtor per case, charged to ONE head
+//       per case: AF is the hub for PF indu + RSA/PA carries; CF/ASF/
+//       ARS take a caller-charged amount when the case routes recovery
+//       there. Multi-indu ledgers, month-to-month balance exhaustion
+//       and simultaneous multi-head deduction are OUT (NO-LEDGER):
+//       retenue = min(levy, echeance, dette) for the current month.
+//   (e) Missing inputs mean silence, not zero: without a stated debt,
+//       levy, carry or echeance, no payment fact derives. Compliant
+//       callers state all amounts explicitly, zero when none; every
+//       carry pair carries a lawful-carry gate fact (report_*_licite:
+//       no carry, or carry à défaut with no source single option).
+//   (f) PAJE (prime/base/prepare), CMG and AJPP recovery tracks are
+//       QUEUED (B-PV-PF-TRACKS, PC-R07-36 remainder): distinct debtor
+//       keys (PAJE Menage) and multi-child echeance allocation need a
+//       debtor-identity/allocation design this return does not invent.
+//       CF/ASF/ARS/AJPA tracks are WIRED below.
+//
+// CASCADE. Echeances are post-02/post-03: AF/CF/ASF/ARS read the
+// same-package montant_net_crds_* (02); RSA reads allocation_mensuelle
+// (neighbour applies the 6 EUR floor; CRDS-exempt); AAH reads
+// aah_montant_du (CRDS-exempt; 03 SILENCE, brut passes through);
+// housing reads fr.apl.versement::montant_verse (final net); PA reads
+// prime_due_trimestre (neighbour applies the minimum-payment floor;
+// no CRDS net for PA — B-PV-PA-CRDS; quarterly served amount —
+// B-PV-PA-TRIMESTRE); AJPA reads ajpa_montant_mois (neighbour brut,
+// silence benefits keep neighbour duties — no CRDS net). Whether CRDS
+// also bites the post-recovery remainder is 05's ordering, not
+// decided here.
+//
+// IDENTITY. Each family is keyed on its own neighbour person type;
+// there is no cross-package person-identity bridge in the corpus, so a
+// carried debt (e.g. an RSA indu deducted from AF) arrives as a
+// fund-stated input on the PAYEE's key. The legal permission for each
+// carried pair is documented on the input (pinned pairs only; mirror
+// pairs are reserved in the report, never encoded).
+//
+// BOUNDARIES (see README for the register).
+//   B-PV-PRESCRIPTION-SPLIT (D-V5/Q5). Limitation is encoded only for
+//     the debt whose key the echeance carries: PF prescription drops
+//     the PF component on AF echeances (DetteAfPrescrit); RSA-side
+//     limitation arrives via indu_recouvrable. PF-carried debts on
+//     RSA/AAH/housing echeances cannot be prescription-tested here
+//     (PF key unreachable from those keys — IDENTITY), and RSA/AAH
+//     own-limitation on non-RSA echeances is likewise unencoded.
+//   B-PV-DROIT-PAIEMENT (Q7). 05 duties are ENTITLEMENT duties (droit:
+//     the fund owes the computed net); 04 nets are PAYABLE amounts
+//     (paiement: entitlement minus lawful deductions). The fund
+//     discharges a 05 duty by paying the 04 net when 04 fires for
+//     that echeance, else the 02/03 net. No rule links the stages:
+//     linking needs the debt as a duty premise (18 more duties),
+//     refused as over-modelling.
+//   B-PV-SUBSIDIARITE (D9, explicit since PC-R07-36). "A défaut"
+//     is attested per carry pair by a lawful-carry gate fact
+//     (report_*_licite: no carry, or carry stated only after
+//     own-benefit recovery failed and with no source single-
+//     repayment option). No rule second-guesses the fund's
+//     chargeability assessment beyond requiring the gate.
+//
+// WIRING AT PROMOTION. (1) DONE: fr.casf.rsa / fr.css.aah imports
+// are in package.law/law.toml. (2) DONE: all 7 requested fr.pf.core
+// 06/07 heads are pub (f33466c281 + be74ee4ba6; journal request 1
+// closed); 6 are consumed here — indu_recupere_retenues stays
+// unreferenced (this layer derives its own retenue_appliquee_*).
+// (3) DONE: `law fix imports` is clean.
+// (4) RESOLVED: no `not` over qualified heads is used (not_known
+// throughout) and no defeaters remain. (5) PARTIAL (PC-R07-36):
+// CF/ASF/ARS/AJPA tracks WIRED below (AF pattern); PAJE/CMG/AJPP
+// tracks QUEUED under B-PV-PF-TRACKS (contract (f)).
+// (6) PA (B-PV-PA follow-up 6, FINISH-W2): DONE —
+// fr.css.prime_activite import + Y = PA section (RSA pattern,
+// 8 rules); PA-source carries onto AF/RSA/AAH/housing DONE
+// (cascade follow-up; remainder in B-PV-PA-CARRY per destination).
+//
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+use self::{
+    montant_net_crds_af,
+    montant_net_crds_ars,
+    montant_net_crds_asf,
+    montant_net_crds_cf,
+    prelevement_mensuel,
+};
+
+// --- Shared arithmetic (Decimal literals only; no Integer literals) ---
+
+function dette_totale2(a: Money, b: Money) -> Money =
+    a + b;
+
+function dette_totale3(a: Money, b: Money, c: Money) -> Money =
+    a + b + c;
+
+function dette_totale4(a: Money, b: Money, c: Money, d: Money) -> Money =
+    a + b + c + d;
+
+// D. 553-5: the fraud uplift rate is FIXED at 50 % (no fund-stated
+// fraction); doubled on repeat within five years (L. 553-2 al. 3).
+function retenue_majoree_fraude(retenue: Money) -> Money =
+    retenue * 1.50;
+
+function retenue_majoree_reiteration(retenue: Money) -> Money =
+    retenue * 2.00;
+
+// L. 553-2/D. 553-1: the single monthly retention, capped by the
+// current due installment actually available and the remaining debt.
+function retenue_plafonnee(retenue: Money, echeance: Money, dette: Money) -> Money =
+    min(min(retenue, echeance), dette);
+
+function net_apres_retenue(echeance: Money, retenue: Money) -> Money =
+    echeance - retenue;
+
+// --- Y = AF (PF family; full pf-core wiring) ----------------------------
+// Echeance: same-package montant_net_crds_af (02, post-CRDS). Own debt:
+// imported indu_constate + imported indemnite_frais_gestion (07 owns
+// the 10 %). Carried debts: RSA indu (L. 262-46 al. 4, pinned) and PA
+// indu (L. 845-3 al. 3 "prestations ... L. 511-1", pinned, FINISH-W2
+// cascade follow-up). AAH-carried pairs are mirror-only (L. 821-5-1):
+// reserved. Housing-carried: SILENCE (L. 553-2 overflow list has no
+// PF entry).
+
+pub relation rsa_indu_reporte_sur_pf(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu de RSA imputé par la caisse sur les prestations familiales à échoir (L. 262-46 al. 4), hors option unique";
+    label en unofficial "RSA overpayment charged by the fund to future family benefits (L. 262-46 para. 4), net of single-repayment option";
+}
+
+pub relation pa_indu_reporte_sur_pf(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu de prime d'activité imputé par la caisse sur les prestations familiales à échoir (L. 845-3 al. 3, L. 511-1), hors option unique";
+    label en unofficial "activity-bonus overpayment charged by the fund to future family benefits (L. 845-3 para. 3, L. 511-1), net of single-repayment option";
+}
+
+pub relation report_rsa_sur_pf_licite(p: fr.pf.core::Personne) kind empirical {
+    label fr official "report RSA→PF licite : aucun report imputé, ou report imputé à défaut de recouvrement sur le RSA et sans option unique RSA, fait constaté (L. 262-46 al. 4 « à défaut »)";
+    label en unofficial "lawful RSA→PF carry: no carry charged, or carry charged for want of RSA recovery with no RSA single option, stated fact (L. 262-46 para. 4 'à défaut')";
+}
+
+pub relation report_pa_sur_pf_licite(p: fr.pf.core::Personne) kind empirical {
+    label fr official "report PA→PF licite : aucun report imputé, ou report imputé à défaut de recouvrement sur la prime et sans option unique PA, fait constaté (L. 845-3 al. 3 « à défaut »)";
+    label en unofficial "lawful PA→PF carry: no carry charged, or carry charged for want of bonus recovery with no PA single option, stated fact (L. 845-3 para. 3 'à défaut')";
+}
+
+pub relation dette_recouvrable_af(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "dette totale imputée sur l'échéance d'AF du mois (indu PF + indemnité + reports RSA et PA)";
+    label en unofficial "total debt charged to the month's AF echeance (PF indu + indemnity + RSA and PA carries)";
+}
+
+pub relation retenue_effective_af(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "retenue mensuelle effective sur l'AF après majoration éventuelle : prélèvement D. 553-1, +50 % fraude, x2 réitération (L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "effective monthly AF retention after any uplift: D. 553-1 levy, +50% fraud, x2 repeat (L. 553-2 para. 3, D. 553-5)";
+}
+
+pub relation retenue_appliquee_af(p: fr.pf.core::Personne) kind institutional {
+    key(p);
+    label fr official "le recouvrement par retenues s'applique à l'échéance d'AF (option unique non exercée)";
+    label en unofficial "recovery by deductions applies to the AF echeance (single-repayment option not taken)";
+}
+
+pub relation retenue_mensuelle_af(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "retenue mensuelle prélevée sur l'échéance d'AF";
+    label en unofficial "monthly deduction taken from the AF echeance";
+}
+
+pub relation net_verse_af(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant d'AF versé après retenue (ou échéance entière si le recouvrement est écarté)";
+    label en unofficial "AF amount paid after deduction (or the full echeance when recovery is barred)";
+}
+
+// Dette = PF indu + RSA carry; no fraud, so no indemnity (07 derives
+// indemnite_frais_gestion exactly when indu_frauduleux holds).
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01)
+rule DetteAfNonFraude(p: fr.pf.core::Personne, indu: Money, reporte: Money, pa: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "dette AF hors fraude : indu PF + reports RSA et PA (L. 553-2 al. 1, L. 262-46 al. 4, L. 845-3 al. 3)";
+    label en unofficial "AF debt without fraud: PF indu + RSA and PA carries (L. 553-2 para. 1, L. 262-46 para. 4, L. 845-3 para. 3)";
+    when fr.pf.core::indu_constate(p, indu) and rsa_indu_reporte_sur_pf(p, reporte)
+        and pa_indu_reporte_sur_pf(p, pa)
+        and report_rsa_sur_pf_licite(p) and report_pa_sur_pf_licite(p)
+        and not_known(fr.pf.core::indu_frauduleux(p))
+        and not_known(fr.pf.core::action_prescrite(p));
+    then dette_recouvrable_af(p, dette_totale3(indu, reporte, pa));
+}
+
+// Dette with fraud: the imported 07 indemnity joins the debt (L. 553-2
+// al. 1: "recouvrée dans les mêmes conditions que les indus").
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01)
+rule DetteAfFraude(p: fr.pf.core::Personne, indu: Money, reporte: Money, indemnite: Money, pa: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "dette AF en cas de fraude : indu + indemnité 10 % + reports RSA et PA";
+    label en unofficial "AF debt on fraud: indu + 10% indemnity + RSA and PA carries";
+    when fr.pf.core::indu_constate(p, indu) and rsa_indu_reporte_sur_pf(p, reporte)
+        and pa_indu_reporte_sur_pf(p, pa)
+        and report_rsa_sur_pf_licite(p) and report_pa_sur_pf_licite(p)
+        and fr.pf.core::indu_frauduleux(p) and fr.pf.core::indemnite_frais_gestion(p, indemnite)
+        and not_known(fr.pf.core::action_prescrite(p));
+    then dette_recouvrable_af(p, dette_totale4(indu, reporte, indemnite, pa));
+}
+
+// D-V5 per-debt limitation: a time-barred PF action (L. 553-1) drops the
+// PF indu AND its indemnity from the debt, but the RSA carry (L. 262-46
+// al. 4 action) and the PA carry (L. 845-3 al. 3 action) survive — no
+// echeance-wide defeater (over/under-blocking both refused). Prescribed
+// + zero carries yields a zero dette, hence a zero retenue and the
+// full echeance.
+
+@source(fr.pf.core::CSS_L553_1, fr.pf.core::CSS_L553_1_CSS_ED2021_05,
+        fr.pf.core::CSS_L553_1_CSS_ED2021_11, fr.pf.core::CSS_L553_1_CSS_ED2021_12,
+        fr.pf.core::CSS_L553_1_CSS_ED2022_01, fr.pf.core::CSS_L553_1_CSS_ED2022_02,
+        fr.pf.core::CSS_L553_1_CSS_ED2022_03, fr.pf.core::CSS_L553_1_CSS_ED2022_09,
+        fr.pf.core::CSS_L553_1_CSS_ED2023_07, fr.pf.core::CSS_L553_1_CSS_ED2024_01,
+        fr.pf.core::CSS_L553_1_CSS_ED2025_02, fr.pf.core::CSS_L553_1_CSS_ED2025_09,
+        fr.pf.core::CSS_L553_1_CSS_ED2025_12, fr.pf.core::CSS_L553_1_CSS_ED2026_01,
+        fr.pf.core::CSS_L553_1_CSS_ED2026_04, fr.pf.core::CSS_L553_1_CSS_ED2026_06,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01)
+rule DetteAfPrescrit(p: fr.pf.core::Personne, indu: Money, reporte: Money, pa: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "action prescrite (L. 553-1) : seuls les reports RSA et PA restent recouvrables";
+    label en unofficial "action time-barred (L. 553-1): only the RSA and PA carries stay recoverable";
+    when fr.pf.core::indu_constate(p, indu) and rsa_indu_reporte_sur_pf(p, reporte)
+        and pa_indu_reporte_sur_pf(p, pa)
+        and report_rsa_sur_pf_licite(p) and report_pa_sur_pf_licite(p)
+        and fr.pf.core::action_prescrite(p);
+    then dette_recouvrable_af(p, dette_totale2(reporte, pa));
+}
+
+// Base retention without fraud: the D. 553-1 monthly levy (06 scale)
+// applies as is — no rate, no installment product.
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueBaseAf(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "hors fraude : le prélèvement mensuel D. 553-1 s'applique sans majoration";
+    label en unofficial "without fraud: the D. 553-1 monthly levy applies without uplift";
+    when prelevement_mensuel(p, base) and not_known(fr.pf.core::indu_frauduleux(p));
+    then retenue_effective_af(p, base);
+}
+
+// "En cas de fraude, le directeur ... peut majorer" — organ power,
+// hence defeasible; excluded on repeat so the strict doubling wins.
+// The uplift is the FIXED 50 % of D. 553-5 (x1.50), never a stated
+// fraction.
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueFraudeAf(p: fr.pf.core::Personne, base: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "en cas de fraude : majoration fixe de 50 % du prélèvement (pouvoir du directeur, L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "on fraud: fixed 50% uplift of the levy (director's power, L. 553-2 para. 3, D. 553-5)";
+    when prelevement_mensuel(p, base)
+        and fr.pf.core::indu_frauduleux(p) and not_known(fr.pf.core::fraude_reiteree(p));
+    then retenue_effective_af(p, retenue_majoree_fraude(base));
+}
+
+// "Ce taux est doublé en cas de réitération ..." — mandatory, strict,
+// driven by the imported 07 repeat-fraud status (5-year condition).
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueReiterationAf(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "réitération dans les cinq ans : la majoration de 50 % est doublée (x2,00)";
+    label en unofficial "repeat within five years: the 50% uplift is doubled (x2.00)";
+    when prelevement_mensuel(p, base)
+        and fr.pf.core::indu_frauduleux(p) and fr.pf.core::fraude_reiteree(p);
+    then retenue_effective_af(p, retenue_majoree_reiteration(base));
+}
+
+// Deductions apply unless the single-repayment option was taken (07
+// pattern). Defeasible so a future bar can remove the status without
+// touching the rule; limitation itself is per-debt (DetteAfPrescrit,
+// D-V5), never an echeance-wide defeater.
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule RetenueAppliqueeAf(p: fr.pf.core::Personne, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenues sur l'AF à échoir, sauf remboursement unique (L. 553-2 al. 1)";
+    label en unofficial "deductions from future AF, absent single repayment (L. 553-2 para. 1)";
+    when dette_recouvrable_af(p, dette) and retenue_effective_af(p, base)
+        and montant_net_crds_af(p, echeance) and not_known(fr.pf.core::option_remboursement_unique(p));
+    then retenue_appliquee_af(p);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule RetenueMontantAf(p: fr.pf.core::Personne, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenue AF du mois : prélèvement effectif, plafonné à l'échéance et à la dette";
+    label en unofficial "month's AF deduction: effective levy, capped at the echeance and the debt";
+    when retenue_appliquee_af(p) and dette_recouvrable_af(p, dette)
+        and retenue_effective_af(p, base) and montant_net_crds_af(p, echeance);
+    then retenue_mensuelle_af(p, retenue_plafonnee(base, echeance, dette));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule NetVerseAf(p: fr.pf.core::Personne, echeance: Money, retenue: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "AF versée : échéance nette de CRDS moins la retenue";
+    label en unofficial "AF paid: net-of-CRDS echeance minus the deduction";
+    when montant_net_crds_af(p, echeance) and retenue_mensuelle_af(p, retenue);
+    then net_verse_af(p, net_apres_retenue(echeance, retenue));
+}
+
+// Recovery assessed but barred by the single-repayment option: the
+// full echeance is paid. The dette + taux + echeance inputs prove the
+// assessment happened; absence of the status proves the option.
+// (Prescription is per-debt since D-V5: DetteAfPrescrit.)
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule NetSansRetenueAf(p: fr.pf.core::Personne, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "recouvrement écarté : l'échéance d'AF est versée entière";
+    label en unofficial "recovery barred: the AF echeance is paid in full";
+    when dette_recouvrable_af(p, dette) and retenue_effective_af(p, base)
+        and montant_net_crds_af(p, echeance) and not_known(retenue_appliquee_af(p));
+    then net_verse_af(p, echeance);
+}
+
+// --- Y = RSA (full pinned chain L. 262-46 + L. 553-2) -------------------
+// Echeance: imported allocation_mensuelle (neighbour applies the 6 EUR
+// floor; CRDS-exempt). Own debt: imported indu_recouvrable — the
+// neighbour's 05 chain (77 EUR floor, notification, 2-year/interrupted/
+// fraud limitation, no suspensive appeal) is consumed, never re-derived
+// (D-V1). The 10 % fraud indemnity is imported too
+// (fr.casf.rsa::indemnite_fraude). Carried debts: PF indu (L. 553-2
+// al. 1 overflow lists RSA, pinned) and PA indu (L. 845-3 al. 3
+// "RSA L. 262-1", pinned, FINISH-W2 cascade follow-up).
+// AAH/housing-carried pairs are mirror-only (L. 821-5-1/L. 823-9):
+// reserved. The RSA
+// single-repayment option conditions the application rule directly
+// (Q2 symmetry with PF). No appeal defeater: suspensif is already
+// encoded in indu_recouvrable (neighbour InduRecouvrable* requires
+// not_known(recours_suspensif)).
+
+pub relation retenue_mensuelle_rsa_declaree(p: fr.minima.ressources::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant mensuel du prélèvement appliqué par la caisse selon le barème D. 553-1 (renvoi L. 262-46, échelle DSS non épinglée : DSS_PENDING)";
+    label en unofficial "monthly levy amount applied by the fund under the D. 553-1 scale (L. 262-46 renvoi, DSS scale bytes unpinned: DSS_PENDING)";
+}
+
+pub relation fraude_repetee_5ans_rsa(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "réitération de la fraude dans les cinq ans suivant une précédente fraude, fait constaté (L. 553-2 al. 3 via renvoi L. 262-46)";
+    label en unofficial "repeat fraud within five years after a previous fraud, stated fact (L. 553-2 para. 3 via L. 262-46 renvoi)";
+}
+
+pub relation pf_indu_reporte_sur_rsa(p: fr.minima.ressources::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu de prestations familiales imputé par la caisse sur le RSA à échoir (L. 553-2 al. 1), hors option unique";
+    label en unofficial "family-benefit overpayment charged by the fund to future RSA (L. 553-2 para. 1), net of single-repayment option";
+}
+
+pub relation pa_indu_reporte_sur_rsa(p: fr.minima.ressources::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu de prime d'activité imputé par la caisse sur le RSA à échoir (L. 845-3 al. 3, L. 262-1), hors option unique";
+    label en unofficial "activity-bonus overpayment charged by the fund to future RSA (L. 845-3 para. 3, L. 262-1), net of single-repayment option";
+}
+
+pub relation report_pf_sur_rsa_licite(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "report PF→RSA licite : aucun report imputé, ou report imputé à défaut de recouvrement sur les prestations familiales et sans option unique PF, fait constaté (L. 553-2 al. 1 « à défaut »)";
+    label en unofficial "lawful PF→RSA carry: no carry charged, or carry charged for want of family-benefit recovery with no PF single option, stated fact (L. 553-2 para. 1 'à défaut')";
+}
+
+pub relation report_pa_sur_rsa_licite(p: fr.minima.ressources::Personne) kind empirical {
+    label fr official "report PA→RSA licite : aucun report imputé, ou report imputé à défaut de recouvrement sur la prime et sans option unique PA, fait constaté (L. 845-3 al. 3 « à défaut »)";
+    label en unofficial "lawful PA→RSA carry: no carry charged, or carry charged for want of bonus recovery with no PA single option, stated fact (L. 845-3 para. 3 'à défaut')";
+}
+
+pub relation dette_recouvrable_rsa(p: fr.minima.ressources::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "dette totale imputée sur l'échéance de RSA du mois (indu RSA + indemnité + reports PF et PA)";
+    label en unofficial "total debt charged to the month's RSA echeance (RSA indu + indemnity + PF and PA carries)";
+}
+
+pub relation retenue_effective_rsa(p: fr.minima.ressources::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "retenue mensuelle effective sur le RSA après majoration éventuelle : barème D. 553-1, +50 % fraude, x2 réitération (L. 262-46, renvoi L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "effective monthly RSA retention after any uplift: D. 553-1 scale, +50% fraud, x2 repeat (L. 262-46, renvoi to L. 553-2 para. 3, D. 553-5)";
+}
+
+pub relation retenue_appliquee_rsa(p: fr.minima.ressources::Personne) kind institutional {
+    key(p);
+    label fr official "le recouvrement par retenues s'applique à l'échéance de RSA (option unique non exercée)";
+    label en unofficial "recovery by deductions applies to the RSA echeance (single-repayment option not taken)";
+}
+
+pub relation retenue_mensuelle_rsa(p: fr.minima.ressources::Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "retenue mensuelle prélevée sur l'échéance de RSA du mois";
+    label en unofficial "monthly deduction taken from the month's RSA echeance";
+}
+
+pub relation net_verse_rsa(p: fr.minima.ressources::Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "montant de RSA versé après retenue (ou échéance entière si le recouvrement est écarté)";
+    label en unofficial "RSA amount paid after deduction (or the full echeance when recovery is barred)";
+}
+
+@source(fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01)
+rule DetteRsaNonFraude(p: fr.minima.ressources::Personne, indu: Money, reporte: Money, pa: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette RSA hors fraude : indu recouvrable + reports PF et PA (L. 262-46 al. 3, L. 553-2 al. 1, L. 845-3 al. 3)";
+    label en unofficial "RSA debt without fraud: recoverable indu + PF and PA carries (L. 262-46 para. 3, L. 553-2 para. 1, L. 845-3 para. 3)";
+    when fr.casf.rsa::indu_recouvrable(p, indu) and pf_indu_reporte_sur_rsa(p, reporte)
+        and pa_indu_reporte_sur_rsa(p, pa)
+        and report_pf_sur_rsa_licite(p) and report_pa_sur_rsa_licite(p)
+        and not_known(fr.casf.rsa::indu_fraude(p));
+    then dette_recouvrable_rsa(p, dette_totale3(indu, reporte, pa));
+}
+
+@source(fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01)
+rule DetteRsaFraude(p: fr.minima.ressources::Personne, indu: Money, reporte: Money, indemnite: Money, pa: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette RSA en cas de fraude : indu recouvrable + indemnité 10 % + reports PF et PA";
+    label en unofficial "RSA debt on fraud: recoverable indu + 10% indemnity + PF and PA carries";
+    when fr.casf.rsa::indu_recouvrable(p, indu) and pf_indu_reporte_sur_rsa(p, reporte)
+        and pa_indu_reporte_sur_rsa(p, pa)
+        and report_pf_sur_rsa_licite(p) and report_pa_sur_rsa_licite(p)
+        and fr.casf.rsa::indu_fraude(p) and fr.casf.rsa::indemnite_fraude(p, indemnite);
+    then dette_recouvrable_rsa(p, dette_totale4(indu, reporte, indemnite, pa));
+}
+
+// Scale mechanics reach RSA through the pinned renvoi ("Les retenues
+// ... sont déterminées en application des règles prévues au troisième
+// alinéa de l'article L. 553-2"), so both fragments ground these rules.
+
+@source(fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueBaseRsa(p: fr.minima.ressources::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "hors fraude : le prélèvement mensuel déclaré s'applique sans majoration";
+    label en unofficial "without fraud: the stated monthly levy applies without uplift";
+    when retenue_mensuelle_rsa_declaree(p, base) and not_known(fr.casf.rsa::indu_fraude(p));
+    then retenue_effective_rsa(p, base);
+}
+
+// "Peut majorer" stays defeasible, mirroring the PF rule; the uplift
+// is the FIXED 50 % of D. 553-5 (x1.50). Repeat doubling is governed
+// by the stated 5-year repeat status (strict rule below).
+
+@source(fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueFraudeRsa(p: fr.minima.ressources::Personne, base: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "en cas de fraude : majoration fixe de 50 % du prélèvement (pouvoir du directeur)";
+    label en unofficial "on fraud: fixed 50% uplift of the levy (director's power)";
+    when retenue_mensuelle_rsa_declaree(p, base)
+        and fr.casf.rsa::indu_fraude(p) and not_known(fraude_repetee_5ans_rsa(p));
+    then retenue_effective_rsa(p, retenue_majoree_fraude(base));
+}
+
+@source(fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueReiterationRsa(p: fr.minima.ressources::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "réitération dans les cinq ans : la majoration de 50 % est doublée (x2,00)";
+    label en unofficial "repeat within five years: the 50% uplift is doubled (x2.00)";
+    when retenue_mensuelle_rsa_declaree(p, base)
+        and fr.casf.rsa::indu_fraude(p) and fraude_repetee_5ans_rsa(p);
+    then retenue_effective_rsa(p, retenue_majoree_reiteration(base));
+}
+
+@source(fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueAppliqueeRsa(p: fr.minima.ressources::Personne, dette: Money, base: Money, mois: Date, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenues sur le RSA à échoir, sauf remboursement unique (L. 262-46 al. 3)";
+    label en unofficial "deductions from future RSA, absent single repayment (L. 262-46 para. 3)";
+    when dette_recouvrable_rsa(p, dette) and retenue_effective_rsa(p, base)
+        and fr.casf.rsa::allocation_mensuelle(p, mois, echeance)
+        and not_known(fr.casf.rsa::remboursement_unique(p));
+    then retenue_appliquee_rsa(p);
+}
+
+@source(fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueMontantRsa(p: fr.minima.ressources::Personne, dette: Money, base: Money, mois: Date, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenue RSA du mois : prélèvement effectif, plafonné à l'échéance et à la dette";
+    label en unofficial "month's RSA deduction: effective levy, capped at the echeance and the debt";
+    when retenue_appliquee_rsa(p) and dette_recouvrable_rsa(p, dette)
+        and retenue_effective_rsa(p, base) and fr.casf.rsa::allocation_mensuelle(p, mois, echeance);
+    then retenue_mensuelle_rsa(p, mois, retenue_plafonnee(base, echeance, dette));
+}
+
+@source(fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule NetVerseRsa(p: fr.minima.ressources::Personne, mois: Date, echeance: Money, retenue: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "RSA versé : allocation mensuelle moins la retenue";
+    label en unofficial "RSA paid: monthly allowance minus the deduction";
+    when fr.casf.rsa::allocation_mensuelle(p, mois, echeance) and retenue_mensuelle_rsa(p, mois, retenue);
+    then net_verse_rsa(p, mois, net_apres_retenue(echeance, retenue));
+}
+
+@source(fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule NetSansRetenueRsa(p: fr.minima.ressources::Personne, dette: Money, base: Money, mois: Date, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "recouvrement écarté : l'échéance de RSA est versée entière";
+    label en unofficial "recovery barred: the RSA echeance is paid in full";
+    when dette_recouvrable_rsa(p, dette) and retenue_effective_rsa(p, base)
+        and fr.casf.rsa::allocation_mensuelle(p, mois, echeance) and not_known(retenue_appliquee_rsa(p));
+    then net_verse_rsa(p, mois, echeance);
+}
+
+// --- Y = AAH (scale via L. 553-2 scope sentence, pinned) -----------------
+// Echeance: imported aah_montant_du (CRDS-exempt; 03 SILENCE, brut
+// passes through). Own indu and fraud flag are local inputs: fr.css.aah
+// publishes no indu heads yet. NO 10 % indemnity: the sentence sits in
+// mirror-only L. 821-5-1 (boundary). NO limitation defeater: L. 821-5
+// is pinned but its status is neighbour-owned (session in progress).
+// Carried debts: PF (L. 553-2 "titres II et IV du livre VIII"),
+// RSA (L. 262-46 "titre II") and PA (L. 845-3 al. 3 "titre II du
+// livre VIII") — titre II = AAH per the code hierarchy in ALL
+// cases (MIRROR inference, flagged on all three inputs).
+// Housing-carried pairs are mirror-only (L. 823-9): reserved.
+// The scale MATH below is pinned-grounded: L. 553-2 al. 3 expressly
+// covers "les retenues mentionnées à l'article L. 821-5-1". The own-AAH
+// recovery permission itself (L. 821-5-1 al. 1) is mirror-only and is
+// NOT derived here; the fund asserts it by stating the debt.
+
+pub relation indu_aah_retenu(p: fr.css.aah::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu d'AAH imputé sur l'allocation à venir (permission L. 821-5-1 : MIRROR, non épinglé ; la dette reste fund-stated même après épinglage), hors option unique";
+    label en unofficial "AAH overpayment charged to the future allowance (L. 821-5-1 permission: MIRROR, unpinned), net of single-repayment option";
+}
+
+pub relation indu_aah_frauduleux(p: fr.css.aah::Personne) kind empirical {
+    label fr official "l'indu d'AAH résulte d'une fraude du bénéficiaire (fait de l'espèce)";
+    label en unofficial "the AAH overpayment results from the beneficiary's fraud (case fact)";
+}
+
+pub relation retenue_mensuelle_aah_declaree(p: fr.css.aah::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant mensuel du prélèvement appliqué par la caisse selon le barème D. 553-1 (phrase de portée L. 553-2 al. 3, échelle DSS non épinglée : DSS_PENDING)";
+    label en unofficial "monthly levy amount applied by the fund under the D. 553-1 scale (L. 553-2 para. 3 scope sentence, DSS scale bytes unpinned: DSS_PENDING)";
+}
+
+pub relation fraude_repetee_5ans_aah(p: fr.css.aah::Personne) kind empirical {
+    label fr official "réitération de la fraude dans les cinq ans suivant une précédente fraude, fait constaté (L. 553-2 al. 3, phrase de portée)";
+    label en unofficial "repeat fraud within five years after a previous fraud, stated fact (L. 553-2 para. 3, scope sentence)";
+}
+
+pub relation pf_indu_reporte_sur_aah(p: fr.css.aah::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu de prestations familiales imputé sur l'AAH à échoir (L. 553-2 al. 1, titre II : MIRROR, non épinglé), hors option unique";
+    label en unofficial "family-benefit overpayment charged to future AAH (L. 553-2 para. 1, title II: MIRROR, unpinned), net of single-repayment option";
+}
+
+pub relation rsa_indu_reporte_sur_aah(p: fr.css.aah::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu de RSA imputé sur l'AAH à échoir (L. 262-46 al. 4, titre II : MIRROR, non épinglé), hors option unique";
+    label en unofficial "RSA overpayment charged to future AAH (L. 262-46 para. 4, title II: MIRROR, unpinned), net of single-repayment option";
+}
+
+pub relation pa_indu_reporte_sur_aah(p: fr.css.aah::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu de prime d'activité imputé sur l'AAH à échoir (L. 845-3 al. 3, titre II du livre VIII : MIRROR, non épinglé), hors option unique";
+    label en unofficial "activity-bonus overpayment charged to future AAH (L. 845-3 para. 3, book VIII title II: MIRROR, unpinned), net of single-repayment option";
+}
+
+pub relation report_pf_sur_aah_licite(p: fr.css.aah::Personne) kind empirical {
+    label fr official "report PF→AAH licite : aucun report imputé, ou report imputé à défaut de recouvrement sur les prestations familiales et sans option unique PF, fait constaté (L. 553-2 al. 1 « à défaut », destination MIRROR)";
+    label en unofficial "lawful PF→AAH carry: no carry charged, or carry charged for want of family-benefit recovery with no PF single option, stated fact (L. 553-2 para. 1 'à défaut', MIRROR destination)";
+}
+
+pub relation report_rsa_sur_aah_licite(p: fr.css.aah::Personne) kind empirical {
+    label fr official "report RSA→AAH licite : aucun report imputé, ou report imputé à défaut de recouvrement sur le RSA et sans option unique RSA, fait constaté (L. 262-46 al. 4 « à défaut », destination MIRROR)";
+    label en unofficial "lawful RSA→AAH carry: no carry charged, or carry charged for want of RSA recovery with no RSA single option, stated fact (L. 262-46 para. 4 'à défaut', MIRROR destination)";
+}
+
+pub relation report_pa_sur_aah_licite(p: fr.css.aah::Personne) kind empirical {
+    label fr official "report PA→AAH licite : aucun report imputé, ou report imputé à défaut de recouvrement sur la prime et sans option unique PA, fait constaté (L. 845-3 al. 3 « à défaut », destination MIRROR)";
+    label en unofficial "lawful PA→AAH carry: no carry charged, or carry charged for want of bonus recovery with no PA single option, stated fact (L. 845-3 para. 3 'à défaut', MIRROR destination)";
+}
+
+pub relation dette_recouvrable_aah(p: fr.css.aah::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "dette totale imputée sur l'échéance d'AAH du mois (indu AAH + reports PF, RSA et PA)";
+    label en unofficial "total debt charged to the month's AAH echeance (AAH indu + PF, RSA and PA carries)";
+}
+
+pub relation retenue_effective_aah(p: fr.css.aah::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "retenue mensuelle effective sur l'AAH après majoration éventuelle : barème D. 553-1, +50 % fraude, x2 réitération (L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "effective monthly AAH retention after any uplift: D. 553-1 scale, +50% fraud, x2 repeat (L. 553-2 para. 3, D. 553-5)";
+}
+
+pub relation retenue_appliquee_aah(p: fr.css.aah::Personne) kind institutional {
+    key(p);
+    label fr official "le recouvrement par retenues s'applique à l'échéance d'AAH";
+    label en unofficial "recovery by deductions applies to the AAH echeance";
+}
+
+pub relation retenue_mensuelle_aah(p: fr.css.aah::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "retenue mensuelle prélevée sur l'échéance d'AAH";
+    label en unofficial "monthly deduction taken from the AAH echeance";
+}
+
+pub relation net_verse_aah(p: fr.css.aah::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant d'AAH versé après retenue";
+    label en unofficial "AAH amount paid after deduction";
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01)
+rule DetteAah(p: fr.css.aah::Personne, indu: Money, pf: Money, rsa: Money, pa: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette AAH : indu AAH + reports PF, RSA et PA (MIRROR, listes L. 553-2 al. 1, L. 262-46 al. 4, L. 845-3 al. 3)";
+    label en unofficial "AAH debt: AAH indu + PF, RSA and PA carries (MIRROR, L. 553-2 para. 1, L. 262-46 para. 4, L. 845-3 para. 3 lists)";
+    when indu_aah_retenu(p, indu) and pf_indu_reporte_sur_aah(p, pf)
+        and rsa_indu_reporte_sur_aah(p, rsa) and pa_indu_reporte_sur_aah(p, pa)
+        and report_pf_sur_aah_licite(p) and report_rsa_sur_aah_licite(p)
+        and report_pa_sur_aah_licite(p);
+    then dette_recouvrable_aah(p, dette_totale4(indu, pf, rsa, pa));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueBaseAah(p: fr.css.aah::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "hors fraude : le prélèvement mensuel déclaré s'applique sans majoration";
+    label en unofficial "without fraud: the stated monthly levy applies without uplift";
+    when retenue_mensuelle_aah_declaree(p, base) and not_known(indu_aah_frauduleux(p));
+    then retenue_effective_aah(p, base);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueFraudeAah(p: fr.css.aah::Personne, base: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "en cas de fraude : majoration fixe de 50 % du prélèvement (pouvoir du directeur, D. 553-5)";
+    label en unofficial "on fraud: fixed 50% uplift of the levy (director's power, D. 553-5)";
+    when retenue_mensuelle_aah_declaree(p, base)
+        and indu_aah_frauduleux(p) and not_known(fraude_repetee_5ans_aah(p));
+    then retenue_effective_aah(p, retenue_majoree_fraude(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueReiterationAah(p: fr.css.aah::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "réitération dans les cinq ans : la majoration de 50 % est doublée (x2,00)";
+    label en unofficial "repeat within five years: the 50% uplift is doubled (x2.00)";
+    when retenue_mensuelle_aah_declaree(p, base)
+        and indu_aah_frauduleux(p) and fraude_repetee_5ans_aah(p);
+    then retenue_effective_aah(p, retenue_majoree_reiteration(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule RetenueAppliqueeAah(p: fr.css.aah::Personne, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenues sur l'AAH à échoir";
+    label en unofficial "deductions from future AAH";
+    when dette_recouvrable_aah(p, dette) and retenue_effective_aah(p, base)
+        and fr.css.aah::aah_montant_du(p, echeance);
+    then retenue_appliquee_aah(p);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule RetenueMontantAah(p: fr.css.aah::Personne, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenue AAH du mois : prélèvement effectif, plafonné à l'échéance et à la dette";
+    label en unofficial "month's AAH deduction: effective levy, capped at the echeance and the debt";
+    when retenue_appliquee_aah(p) and dette_recouvrable_aah(p, dette)
+        and retenue_effective_aah(p, base) and fr.css.aah::aah_montant_du(p, echeance);
+    then retenue_mensuelle_aah(p, retenue_plafonnee(base, echeance, dette));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule NetVerseAah(p: fr.css.aah::Personne, echeance: Money, retenue: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "AAH versée : montant dû moins la retenue";
+    label en unofficial "AAH paid: amount due minus the deduction";
+    when fr.css.aah::aah_montant_du(p, echeance) and retenue_mensuelle_aah(p, retenue);
+    then net_verse_aah(p, net_apres_retenue(echeance, retenue));
+}
+
+// NO full-payment witness for AAH (CH2-7): the application rule has
+// no negative condition and no defeater exists, so a NetSans rule
+// could never fire. Without a stated debt the layer is silent
+// (contract (e)); the echeance is paid whole outside this layer,
+// as in the RSA suspensif case.
+
+// --- Y = housing (APL/ALF/ALS; scale via L. 553-2, pinned) ---------------
+// Echeance: imported fr.apl.versement::montant_verse (final net: CRDS,
+// floor and rounding already applied by the neighbour). Own indu and
+// fraud flag are local inputs. NO 10 % indemnity: it reaches housing
+// only through the mirror-only L. 823-9 renvoi (boundary). NO
+// limitation defeater is possible: housing limitation is SILENCE in
+// the current CCH (see header). Carried debts: PF (L. 553-2 al. 1
+// cites CCH L. 821-1 directly), RSA (L. 262-46 al. 4 cites CCH
+// L. 821-1 directly) and PA (L. 845-3 al. 3 cites APL and CCH
+// livre VIII housing aid directly, pinned, FINISH-W2 cascade
+// follow-up). AAH-carried pairs are mirror-only (L. 821-5-1):
+// reserved. The own-housing recovery permission
+// (L. 823-9) is mirror-only and NOT derived; the fund asserts it by
+// stating the debt. The scale MATH is pinned-grounded (L. 553-2 al. 3
+// covers L. 823-9 retenues).
+
+pub relation indu_logement_retenu(m: fr.apl::Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "indu d'aide au logement imputé sur l'aide à venir (permission L. 823-9 : MIRROR, non épinglé ; la dette reste fund-stated même après épinglage), hors option unique";
+    label en unofficial "housing-aid overpayment charged to future aid (L. 823-9 permission: MIRROR, unpinned), net of single-repayment option";
+}
+
+pub relation indu_logement_frauduleux(m: fr.apl::Menage) kind empirical {
+    label fr official "l'indu d'aide au logement résulte d'une fraude du bénéficiaire (fait de l'espèce)";
+    label en unofficial "the housing-aid overpayment results from the beneficiary's fraud (case fact)";
+}
+
+pub relation retenue_mensuelle_logement_declaree(m: fr.apl::Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "montant mensuel du prélèvement appliqué par la caisse selon le barème D. 553-1 (phrase de portée L. 553-2 al. 3, CCH L. 823-9, échelle DSS non épinglée : DSS_PENDING)";
+    label en unofficial "monthly levy amount applied by the fund under the D. 553-1 scale (L. 553-2 para. 3 scope sentence, CCH L. 823-9, DSS scale bytes unpinned: DSS_PENDING)";
+}
+
+pub relation fraude_repetee_5ans_logement(m: fr.apl::Menage) kind empirical {
+    label fr official "réitération de la fraude dans les cinq ans suivant une précédente fraude, fait constaté (L. 553-2 al. 3, phrase de portée)";
+    label en unofficial "repeat fraud within five years after a previous fraud, stated fact (L. 553-2 para. 3, scope sentence)";
+}
+
+pub relation pf_indu_reporte_sur_logement(m: fr.apl::Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "indu de prestations familiales imputé sur l'aide au logement à échoir (L. 553-2 al. 1, CCH L. 821-1), hors option unique";
+    label en unofficial "family-benefit overpayment charged to future housing aid (L. 553-2 para. 1, CCH L. 821-1), net of single-repayment option";
+}
+
+pub relation rsa_indu_reporte_sur_logement(m: fr.apl::Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "indu de RSA imputé sur l'aide au logement à échoir (L. 262-46 al. 4, CCH L. 821-1), hors option unique";
+    label en unofficial "RSA overpayment charged to future housing aid (L. 262-46 para. 4, CCH L. 821-1), net of single-repayment option";
+}
+
+pub relation pa_indu_reporte_sur_logement(m: fr.apl::Menage, montant: Money) kind empirical {
+    key(m);
+    label fr official "indu de prime d'activité imputé sur l'aide au logement à échoir (L. 845-3 al. 3, APL et allocations de logement CCH livre VIII), hors option unique";
+    label en unofficial "activity-bonus overpayment charged to future housing aid (L. 845-3 para. 3, APL and CCH book VIII housing aid), net of single-repayment option";
+}
+
+pub relation report_pf_sur_logement_licite(m: fr.apl::Menage) kind empirical {
+    label fr official "report PF→logement licite : aucun report imputé, ou report imputé à défaut de recouvrement sur les prestations familiales et sans option unique PF, fait constaté (L. 553-2 al. 1 « à défaut »)";
+    label en unofficial "lawful PF→housing carry: no carry charged, or carry charged for want of family-benefit recovery with no PF single option, stated fact (L. 553-2 para. 1 'à défaut')";
+}
+
+pub relation report_rsa_sur_logement_licite(m: fr.apl::Menage) kind empirical {
+    label fr official "report RSA→logement licite : aucun report imputé, ou report imputé à défaut de recouvrement sur le RSA et sans option unique RSA, fait constaté (L. 262-46 al. 4 « à défaut »)";
+    label en unofficial "lawful RSA→housing carry: no carry charged, or carry charged for want of RSA recovery with no RSA single option, stated fact (L. 262-46 para. 4 'à défaut')";
+}
+
+pub relation report_pa_sur_logement_licite(m: fr.apl::Menage) kind empirical {
+    label fr official "report PA→logement licite : aucun report imputé, ou report imputé à défaut de recouvrement sur la prime et sans option unique PA, fait constaté (L. 845-3 al. 3 « à défaut »)";
+    label en unofficial "lawful PA→housing carry: no carry charged, or carry charged for want of bonus recovery with no PA single option, stated fact (L. 845-3 para. 3 'à défaut')";
+}
+
+pub relation dette_recouvrable_logement(m: fr.apl::Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "dette totale imputée sur l'échéance d'aide au logement du mois (indu logement + reports PF, RSA et PA)";
+    label en unofficial "total debt charged to the month's housing-aid echeance (housing indu + PF, RSA and PA carries)";
+}
+
+pub relation retenue_effective_logement(m: fr.apl::Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "retenue mensuelle effective sur l'aide au logement après majoration éventuelle : barème D. 553-1, +50 % fraude, x2 réitération (L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "effective monthly housing-aid retention after any uplift: D. 553-1 scale, +50% fraud, x2 repeat (L. 553-2 para. 3, D. 553-5)";
+}
+
+pub relation retenue_appliquee_logement(m: fr.apl::Menage) kind institutional {
+    key(m);
+    label fr official "le recouvrement par retenues s'applique à l'échéance d'aide au logement";
+    label en unofficial "recovery by deductions applies to the housing-aid echeance";
+}
+
+pub relation retenue_mensuelle_logement(m: fr.apl::Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "retenue mensuelle prélevée sur l'échéance d'aide au logement";
+    label en unofficial "monthly deduction taken from the housing-aid echeance";
+}
+
+pub relation net_verse_logement(m: fr.apl::Menage, montant: Money) kind institutional {
+    key(m);
+    label fr official "montant d'aide au logement versé après retenue";
+    label en unofficial "housing-aid amount paid after deduction";
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06,
+        fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01)
+rule DetteLogement(m: fr.apl::Menage, indu: Money, pf: Money, rsa: Money, pa: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette logement : indu logement + reports PF, RSA et PA (listes L. 553-2 al. 1, L. 262-46 al. 4, L. 845-3 al. 3)";
+    label en unofficial "housing debt: housing indu + PF, RSA and PA carries (L. 553-2 para. 1, L. 262-46 para. 4, L. 845-3 para. 3 lists)";
+    when indu_logement_retenu(m, indu) and pf_indu_reporte_sur_logement(m, pf)
+        and rsa_indu_reporte_sur_logement(m, rsa) and pa_indu_reporte_sur_logement(m, pa)
+        and report_pf_sur_logement_licite(m) and report_rsa_sur_logement_licite(m)
+        and report_pa_sur_logement_licite(m);
+    then dette_recouvrable_logement(m, dette_totale4(indu, pf, rsa, pa));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueBaseLogement(m: fr.apl::Menage, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "hors fraude : le prélèvement mensuel déclaré s'applique sans majoration";
+    label en unofficial "without fraud: the stated monthly levy applies without uplift";
+    when retenue_mensuelle_logement_declaree(m, base) and not_known(indu_logement_frauduleux(m));
+    then retenue_effective_logement(m, base);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueFraudeLogement(m: fr.apl::Menage, base: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "en cas de fraude : majoration fixe de 50 % du prélèvement (pouvoir du directeur, D. 553-5)";
+    label en unofficial "on fraud: fixed 50% uplift of the levy (director's power, D. 553-5)";
+    when retenue_mensuelle_logement_declaree(m, base)
+        and indu_logement_frauduleux(m) and not_known(fraude_repetee_5ans_logement(m));
+    then retenue_effective_logement(m, retenue_majoree_fraude(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueReiterationLogement(m: fr.apl::Menage, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "réitération dans les cinq ans : la majoration de 50 % est doublée (x2,00)";
+    label en unofficial "repeat within five years: the 50% uplift is doubled (x2.00)";
+    when retenue_mensuelle_logement_declaree(m, base)
+        and indu_logement_frauduleux(m) and fraude_repetee_5ans_logement(m);
+    then retenue_effective_logement(m, retenue_majoree_reiteration(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule RetenueAppliqueeLogement(m: fr.apl::Menage, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenues sur l'aide au logement à échoir";
+    label en unofficial "deductions from future housing aid";
+    when dette_recouvrable_logement(m, dette) and retenue_effective_logement(m, base)
+        and fr.apl.versement::montant_verse(m, echeance);
+    then retenue_appliquee_logement(m);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule RetenueMontantLogement(m: fr.apl::Menage, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenue logement du mois : prélèvement effectif, plafonné à l'échéance et à la dette";
+    label en unofficial "month's housing deduction: effective levy, capped at the echeance and the debt";
+    when retenue_appliquee_logement(m) and dette_recouvrable_logement(m, dette)
+        and retenue_effective_logement(m, base) and fr.apl.versement::montant_verse(m, echeance);
+    then retenue_mensuelle_logement(m, retenue_plafonnee(base, echeance, dette));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06, fr.casf.rsa::CASF_L262_46,
+        fr.casf.rsa::CASF_L262_46_ED2025_01, fr.casf.rsa::CASF_L262_46_ED2025_06,
+        fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule NetVerseLogement(m: fr.apl::Menage, echeance: Money, retenue: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "aide au logement versée : montant net moins la retenue";
+    label en unofficial "housing aid paid: net amount minus the deduction";
+    when fr.apl.versement::montant_verse(m, echeance) and retenue_mensuelle_logement(m, retenue);
+    then net_verse_logement(m, net_apres_retenue(echeance, retenue));
+}
+
+// NO full-payment witness for housing either (CH2-7): same reason
+// as AAH — the application rule is unconditional, so a witness
+// could never fire. Silence per contract (e).
+
+// --- Y = PA (prime d'activité; RSA pattern on the served quarter) -----
+// Echeance: imported prime_due_trimestre (served quarterly average;
+// neighbour applies the minimum-payment floor, L. 842-3 last al.;
+// no CRDS net for PA — B-PV-PA-CRDS). Own debt: imported
+// indu_recupere — the neighbour's 04 chain (limitation via L. 845-4
+// → L. 553-1, no suspensive appeal, decree floor and remise upstream)
+// is consumed, never re-derived (D-V1). The 10 % fraud indemnity is
+// imported too (fr.css.prime_activite::indemnite_fraude). Carried
+// debt: RSA indu only (L. 262-46 al. 4 cites L. 841-1, pinned).
+// PF→PA via the L. 553-2 "titre IV" inference is MIRROR (reserved);
+// AAH/housing→PA pairs are mirror-only (L. 821-5-1/L. 823-9,
+// reserved). PA-source carries onto AF/RSA/AAH/housing are WIRED
+// (pa_indu_reporte_sur_* on those echeances, same L. 845-3 al. 3).
+// The single-repayment option conditions the
+// application rule directly (Q2 symmetry with PF/RSA). No appeal or
+// prescription defeater: both arrive pre-encoded in indu_recupere
+// (neighbour InduRecupere requires not_known of each).
+// GRANULARITY (B-PV-PA-TRIMESTRE): the echeance is the quarterly
+// served amount, so retenue/net are keyed (d) like AAH, not (d, mois)
+// like RSA; monthly apportionment of the served quarter is
+// unmodelled (no neighbour head).
+
+pub relation retenue_trimestrielle_pa_declaree(d: fr.css.prime_activite::Demandeur, montant: Money) kind empirical {
+    key(d);
+    label fr official "montant du prélèvement sur l'échéance trimestrielle appliqué par la caisse selon le barème D. 553-1 (renvoi L. 845-3, échelle DSS non épinglée : DSS_PENDING)";
+    label en unofficial "levy amount on the quarterly echeance applied by the fund under the D. 553-1 scale (L. 845-3 renvoi, DSS scale bytes unpinned: DSS_PENDING)";
+}
+
+pub relation fraude_repetee_5ans_pa(d: fr.css.prime_activite::Demandeur) kind empirical {
+    label fr official "réitération de la fraude dans les cinq ans suivant une précédente fraude, fait constaté (L. 553-2 al. 3 via renvoi L. 845-3)";
+    label en unofficial "repeat fraud within five years after a previous fraud, stated fact (L. 553-2 para. 3 via L. 845-3 renvoi)";
+}
+
+pub relation rsa_indu_reporte_sur_pa(d: fr.css.prime_activite::Demandeur, montant: Money) kind empirical {
+    key(d);
+    label fr official "indu de RSA imputé par la caisse sur la prime à échoir (L. 262-46 al. 4, L. 841-1), hors option unique";
+    label en unofficial "RSA overpayment charged by the fund to the future bonus (L. 262-46 para. 4, L. 841-1), net of single-repayment option";
+}
+
+pub relation report_rsa_sur_pa_licite(d: fr.css.prime_activite::Demandeur) kind empirical {
+    label fr official "report RSA→PA licite : aucun report imputé, ou report imputé à défaut de recouvrement sur le RSA et sans option unique RSA, fait constaté (L. 262-46 al. 4 « à défaut »)";
+    label en unofficial "lawful RSA→PA carry: no carry charged, or carry charged for want of RSA recovery with no RSA single option, stated fact (L. 262-46 para. 4 'à défaut')";
+}
+
+pub relation dette_recouvrable_pa(d: fr.css.prime_activite::Demandeur, montant: Money) kind institutional {
+    key(d);
+    label fr official "dette totale imputée sur l'échéance de prime du trimestre (indu PA + report RSA)";
+    label en unofficial "total debt charged to the quarter's bonus echeance (PA indu + RSA carry)";
+}
+
+pub relation retenue_effective_pa(d: fr.css.prime_activite::Demandeur, montant: Money) kind institutional {
+    key(d);
+    label fr official "retenue effective sur la prime après majoration éventuelle : barème D. 553-1, +50 % fraude, x2 réitération (L. 845-3, renvoi L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "effective bonus retention after any uplift: D. 553-1 scale, +50% fraud, x2 repeat (L. 845-3, renvoi to L. 553-2 para. 3, D. 553-5)";
+}
+
+pub relation retenue_appliquee_pa(d: fr.css.prime_activite::Demandeur) kind institutional {
+    key(d);
+    label fr official "le recouvrement par retenues s'applique à l'échéance de prime (option unique non exercée)";
+    label en unofficial "recovery by deductions applies to the bonus echeance (single-repayment option not taken)";
+}
+
+pub relation retenue_mensuelle_pa(d: fr.css.prime_activite::Demandeur, montant: Money) kind institutional {
+    key(d);
+    label fr official "retenue prélevée sur l'échéance de prime servie";
+    label en unofficial "deduction taken from the served bonus echeance";
+}
+
+pub relation net_verse_pa(d: fr.css.prime_activite::Demandeur, montant: Money) kind institutional {
+    key(d);
+    label fr official "montant de prime versé après retenue (ou échéance entière si le recouvrement est écarté)";
+    label en unofficial "bonus amount paid after deduction (or the full echeance when recovery is barred)";
+}
+
+@source(fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule DettePaNonFraude(d: fr.css.prime_activite::Demandeur, indu: Money, reporte: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette PA hors fraude : indu recouvré + report RSA (L. 845-3 al. 3, L. 262-46 al. 4)";
+    label en unofficial "PA debt without fraud: recovered indu + RSA carry (L. 845-3 para. 3, L. 262-46 para. 4)";
+    when fr.css.prime_activite::indu_recupere(d, indu) and rsa_indu_reporte_sur_pa(d, reporte)
+        and report_rsa_sur_pa_licite(d)
+        and not_known(fr.css.prime_activite::indu_frauduleux(d));
+    then dette_recouvrable_pa(d, dette_totale2(indu, reporte));
+}
+
+@source(fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule DettePaFraude(d: fr.css.prime_activite::Demandeur, indu: Money, reporte: Money, indemnite: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette PA en cas de fraude : indu recouvré + indemnité 10 % + report RSA";
+    label en unofficial "PA debt on fraud: recovered indu + 10% indemnity + RSA carry";
+    when fr.css.prime_activite::indu_recupere(d, indu) and rsa_indu_reporte_sur_pa(d, reporte)
+        and report_rsa_sur_pa_licite(d)
+        and fr.css.prime_activite::indu_frauduleux(d) and fr.css.prime_activite::indemnite_fraude(d, indemnite);
+    then dette_recouvrable_pa(d, dette_totale3(indu, reporte, indemnite));
+}
+
+// Scale mechanics reach PA through the pinned renvoi ("Les retenues
+// ... sont déterminées en application des règles prévues au troisième
+// alinéa de l'article L. 553-2"), so both fragments ground these rules.
+
+@source(fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueBasePa(d: fr.css.prime_activite::Demandeur, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "hors fraude : le prélèvement déclaré s'applique sans majoration";
+    label en unofficial "without fraud: the stated levy applies without uplift";
+    when retenue_trimestrielle_pa_declaree(d, base) and not_known(fr.css.prime_activite::indu_frauduleux(d));
+    then retenue_effective_pa(d, base);
+}
+
+// "Peut majorer" stays defeasible, mirroring the PF rule; the uplift
+// is the FIXED 50 % of D. 553-5 (x1.50), repeat doubling governed by
+// the stated 5-year repeat status (strict rule below).
+
+@source(fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueFraudePa(d: fr.css.prime_activite::Demandeur, base: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "en cas de fraude : majoration fixe de 50 % du prélèvement (pouvoir du directeur, D. 553-5)";
+    label en unofficial "on fraud: fixed 50% uplift of the levy (director's power, D. 553-5)";
+    when retenue_trimestrielle_pa_declaree(d, base)
+        and fr.css.prime_activite::indu_frauduleux(d) and not_known(fraude_repetee_5ans_pa(d));
+    then retenue_effective_pa(d, retenue_majoree_fraude(base));
+}
+
+@source(fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueReiterationPa(d: fr.css.prime_activite::Demandeur, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "réitération dans les cinq ans : la majoration de 50 % est doublée (x2,00)";
+    label en unofficial "repeat within five years: the 50% uplift is doubled (x2.00)";
+    when retenue_trimestrielle_pa_declaree(d, base)
+        and fr.css.prime_activite::indu_frauduleux(d) and fraude_repetee_5ans_pa(d);
+    then retenue_effective_pa(d, retenue_majoree_reiteration(base));
+}
+
+@source(fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule RetenueAppliqueePa(d: fr.css.prime_activite::Demandeur, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenues sur la prime à échoir, sauf remboursement unique (L. 845-3 al. 3)";
+    label en unofficial "deductions from the future bonus, absent single repayment (L. 845-3 para. 3)";
+    when dette_recouvrable_pa(d, dette) and retenue_effective_pa(d, base)
+        and fr.css.prime_activite::prime_due_trimestre(d, echeance)
+        and not_known(fr.css.prime_activite::option_remboursement_unique(d));
+    then retenue_appliquee_pa(d);
+}
+
+@source(fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule RetenueMontantPa(d: fr.css.prime_activite::Demandeur, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenue PA du trimestre : prélèvement effectif, plafonné à l'échéance et à la dette";
+    label en unofficial "quarter's PA deduction: effective levy, capped at the echeance and the debt";
+    when retenue_appliquee_pa(d) and dette_recouvrable_pa(d, dette)
+        and retenue_effective_pa(d, base) and fr.css.prime_activite::prime_due_trimestre(d, echeance);
+    then retenue_mensuelle_pa(d, retenue_plafonnee(base, echeance, dette));
+}
+
+@source(fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule NetVersePa(d: fr.css.prime_activite::Demandeur, echeance: Money, retenue: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "prime versée : montant dû servi moins la retenue";
+    label en unofficial "bonus paid: served due amount minus the deduction";
+    when fr.css.prime_activite::prime_due_trimestre(d, echeance) and retenue_mensuelle_pa(d, retenue);
+    then net_verse_pa(d, net_apres_retenue(echeance, retenue));
+}
+
+@source(fr.css.prime_activite::CSS_L845_3_ED2024_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_01_01,
+        fr.css.prime_activite::CSS_L845_3_ED2025_02_28,
+        fr.css.prime_activite::CSS_L845_3_ED2025_03_31,
+        fr.css.prime_activite::CSS_L845_3_ED2026_04_01,
+        fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule NetSansRetenuePa(d: fr.css.prime_activite::Demandeur, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "recouvrement écarté : l'échéance de prime est versée entière";
+    label en unofficial "recovery barred: the bonus echeance is paid in full";
+    when dette_recouvrable_pa(d, dette) and retenue_effective_pa(d, base)
+        and fr.css.prime_activite::prime_due_trimestre(d, echeance) and not_known(retenue_appliquee_pa(d));
+    then net_verse_pa(d, echeance);
+}
+
+// --- Y = CF (complément familial, L. 553-2 al. 1, PF head) ---------------
+//
+// Same-debtor PF head: the D. 553-1 monthly levy (06) is shared with
+// AF; only one head is charged per case (contract (d)). The charged
+// amount arrives caller-shaped net of prescription and single option
+// (contract (a)); the fraud indemnity joins here when the case charges
+// the fraud debt to CF.
+
+pub relation dette_chargee_cf(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "dette imputée par la caisse sur le CF à échoir, indemnité 10 % incluse en cas de fraude, nette de prescription et d'option unique (L. 553-2 al. 1, contrat d'entrée)";
+    label en unofficial "debt charged by the fund to future CF, 10% indemnity included on fraud, net of prescription and single option (L. 553-2 para. 1, input contract)";
+}
+
+pub relation dette_recouvrable_cf(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "dette recouvrable sur le CF (L. 553-2 al. 1)";
+    label en unofficial "debt recoverable from CF (L. 553-2 para. 1)";
+}
+
+pub relation retenue_effective_cf(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "retenue mensuelle effective sur le CF après majoration éventuelle : prélèvement D. 553-1, +50 % fraude, x2 réitération (L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "effective monthly CF retention after any uplift: D. 553-1 levy, +50% fraud, x2 repeat (L. 553-2 para. 3, D. 553-5)";
+}
+
+pub relation retenue_appliquee_cf(p: fr.pf.core::Personne) kind institutional {
+    label fr official "retenues appliquées sur le CF à échoir (L. 553-2 al. 1)";
+    label en unofficial "deductions applied to future CF (L. 553-2 para. 1)";
+}
+
+pub relation retenue_mensuelle_cf(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "montant de la retenue mensuelle sur le CF (D. 553-1, L. 553-2 al. 3)";
+    label en unofficial "monthly CF deduction amount (D. 553-1, L. 553-2 para. 3)";
+}
+
+pub relation net_verse_cf(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "CF net versé après retenue éventuelle";
+    label en unofficial "CF net paid after any deduction";
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule DetteCfNonFraude(p: fr.pf.core::Personne, montant: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette CF hors fraude : montant imputé par la caisse";
+    label en unofficial "CF debt without fraud: fund-charged amount";
+    when dette_chargee_cf(p, montant) and not_known(fr.pf.core::indu_frauduleux(p));
+    then dette_recouvrable_cf(p, montant);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule DetteCfFraude(p: fr.pf.core::Personne, montant: Money, indemnite: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette CF en cas de fraude : montant imputé + indemnité 10 % (L. 553-2 al. 1)";
+    label en unofficial "CF debt on fraud: charged amount + 10% indemnity (L. 553-2 para. 1)";
+    when dette_chargee_cf(p, montant)
+        and fr.pf.core::indu_frauduleux(p) and fr.pf.core::indemnite_frais_gestion(p, indemnite);
+    then dette_recouvrable_cf(p, dette_totale2(montant, indemnite));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueBaseCf(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "hors fraude : le prélèvement mensuel D. 553-1 s'applique sans majoration";
+    label en unofficial "without fraud: the D. 553-1 monthly levy applies without uplift";
+    when prelevement_mensuel(p, base) and not_known(fr.pf.core::indu_frauduleux(p));
+    then retenue_effective_cf(p, base);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueFraudeCf(p: fr.pf.core::Personne, base: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "en cas de fraude : majoration fixe de 50 % du prélèvement (pouvoir du directeur, L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "on fraud: fixed 50% uplift of the levy (director's power, L. 553-2 para. 3, D. 553-5)";
+    when prelevement_mensuel(p, base)
+        and fr.pf.core::indu_frauduleux(p) and not_known(fr.pf.core::fraude_reiteree(p));
+    then retenue_effective_cf(p, retenue_majoree_fraude(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueReiterationCf(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "réitération dans les cinq ans : la majoration de 50 % est doublée (x2,00)";
+    label en unofficial "repeat within five years: the 50% uplift is doubled (x2.00)";
+    when prelevement_mensuel(p, base)
+        and fr.pf.core::indu_frauduleux(p) and fr.pf.core::fraude_reiteree(p);
+    then retenue_effective_cf(p, retenue_majoree_reiteration(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueAppliqueeCf(p: fr.pf.core::Personne, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenues sur le CF à échoir, sauf remboursement unique (L. 553-2 al. 1)";
+    label en unofficial "deductions from future CF, absent single repayment (L. 553-2 para. 1)";
+    when dette_recouvrable_cf(p, dette) and retenue_effective_cf(p, base)
+        and montant_net_crds_cf(p, echeance) and not_known(fr.pf.core::option_remboursement_unique(p));
+    then retenue_appliquee_cf(p);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueMontantCf(p: fr.pf.core::Personne, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenue CF du mois : prélèvement effectif, plafonné à l'échéance et à la dette";
+    label en unofficial "month's CF deduction: effective levy, capped at the echeance and the debt";
+    when retenue_appliquee_cf(p) and dette_recouvrable_cf(p, dette)
+        and retenue_effective_cf(p, base) and montant_net_crds_cf(p, echeance);
+    then retenue_mensuelle_cf(p, retenue_plafonnee(base, echeance, dette));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule NetVerseCf(p: fr.pf.core::Personne, echeance: Money, retenue: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "CF net après retenue";
+    label en unofficial "CF net after deduction";
+    when retenue_mensuelle_cf(p, retenue) and montant_net_crds_cf(p, echeance);
+    then net_verse_cf(p, net_apres_retenue(echeance, retenue));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule NetSansRetenueCf(p: fr.pf.core::Personne, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "recouvrement écarté : l'échéance de CF est versée entière";
+    label en unofficial "recovery barred: the CF echeance is paid in full";
+    when dette_recouvrable_cf(p, dette) and retenue_effective_cf(p, base)
+        and montant_net_crds_cf(p, echeance) and not_known(retenue_appliquee_cf(p));
+    then net_verse_cf(p, echeance);
+}
+
+// --- Y = ASF (L. 553-2 al. 1, PF head, echeance per child) -------------
+//
+// Echeance keyed on the child (02 net); retention and debt keyed on
+// the debtor, mirroring the 05 ASF duty (no parent/child link,
+// single-head-per-case contract (d)).
+
+pub relation dette_chargee_asf(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "dette imputée par la caisse sur l'ASF à échoir, indemnité 10 % incluse en cas de fraude, nette de prescription et d'option unique (L. 553-2 al. 1, contrat d'entrée)";
+    label en unofficial "debt charged by the fund to future ASF, 10% indemnity included on fraud, net of prescription and single option (L. 553-2 para. 1, input contract)";
+}
+
+pub relation dette_recouvrable_asf(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "dette recouvrable sur l'ASF (L. 553-2 al. 1)";
+    label en unofficial "debt recoverable from ASF (L. 553-2 para. 1)";
+}
+
+pub relation retenue_effective_asf(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "retenue mensuelle effective sur l'ASF après majoration éventuelle : prélèvement D. 553-1, +50 % fraude, x2 réitération (L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "effective monthly ASF retention after any uplift: D. 553-1 levy, +50% fraud, x2 repeat (L. 553-2 para. 3, D. 553-5)";
+}
+
+pub relation retenue_appliquee_asf(p: fr.pf.core::Personne) kind institutional {
+    label fr official "retenues appliquées sur l'ASF à échoir (L. 553-2 al. 1)";
+    label en unofficial "deductions applied to future ASF (L. 553-2 para. 1)";
+}
+
+pub relation retenue_mensuelle_asf(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(p, e);
+    label fr official "montant de la retenue mensuelle sur l'ASF de l'enfant (D. 553-1, L. 553-2 al. 3)";
+    label en unofficial "monthly ASF deduction amount for the child (D. 553-1, L. 553-2 para. 3)";
+}
+
+pub relation net_verse_asf(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(p, e);
+    label fr official "ASF nette versée après retenue éventuelle";
+    label en unofficial "ASF net paid after any deduction";
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule DetteAsfNonFraude(p: fr.pf.core::Personne, montant: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette ASF hors fraude : montant imputé par la caisse";
+    label en unofficial "ASF debt without fraud: fund-charged amount";
+    when dette_chargee_asf(p, montant) and not_known(fr.pf.core::indu_frauduleux(p));
+    then dette_recouvrable_asf(p, montant);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule DetteAsfFraude(p: fr.pf.core::Personne, montant: Money, indemnite: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette ASF en cas de fraude : montant imputé + indemnité 10 % (L. 553-2 al. 1)";
+    label en unofficial "ASF debt on fraud: charged amount + 10% indemnity (L. 553-2 para. 1)";
+    when dette_chargee_asf(p, montant)
+        and fr.pf.core::indu_frauduleux(p) and fr.pf.core::indemnite_frais_gestion(p, indemnite);
+    then dette_recouvrable_asf(p, dette_totale2(montant, indemnite));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueBaseAsf(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "hors fraude : le prélèvement mensuel D. 553-1 s'applique sans majoration";
+    label en unofficial "without fraud: the D. 553-1 monthly levy applies without uplift";
+    when prelevement_mensuel(p, base) and not_known(fr.pf.core::indu_frauduleux(p));
+    then retenue_effective_asf(p, base);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueFraudeAsf(p: fr.pf.core::Personne, base: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "en cas de fraude : majoration fixe de 50 % du prélèvement (pouvoir du directeur, L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "on fraud: fixed 50% uplift of the levy (director's power, L. 553-2 para. 3, D. 553-5)";
+    when prelevement_mensuel(p, base)
+        and fr.pf.core::indu_frauduleux(p) and not_known(fr.pf.core::fraude_reiteree(p));
+    then retenue_effective_asf(p, retenue_majoree_fraude(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueReiterationAsf(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "réitération dans les cinq ans : la majoration de 50 % est doublée (x2,00)";
+    label en unofficial "repeat within five years: the 50% uplift is doubled (x2.00)";
+    when prelevement_mensuel(p, base)
+        and fr.pf.core::indu_frauduleux(p) and fr.pf.core::fraude_reiteree(p);
+    then retenue_effective_asf(p, retenue_majoree_reiteration(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueAppliqueeAsf(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenues sur l'ASF à échoir, sauf remboursement unique (L. 553-2 al. 1)";
+    label en unofficial "deductions from future ASF, absent single repayment (L. 553-2 para. 1)";
+    when dette_recouvrable_asf(p, dette) and retenue_effective_asf(p, base)
+        and montant_net_crds_asf(e, echeance) and not_known(fr.pf.core::option_remboursement_unique(p));
+    then retenue_appliquee_asf(p);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueMontantAsf(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenue ASF du mois : prélèvement effectif, plafonné à l'échéance et à la dette";
+    label en unofficial "month's ASF deduction: effective levy, capped at the echeance and the debt";
+    when retenue_appliquee_asf(p) and dette_recouvrable_asf(p, dette)
+        and retenue_effective_asf(p, base) and montant_net_crds_asf(e, echeance);
+    then retenue_mensuelle_asf(p, e, retenue_plafonnee(base, echeance, dette));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule NetVerseAsf(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, echeance: Money, retenue: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "ASF nette après retenue";
+    label en unofficial "ASF net after deduction";
+    when retenue_mensuelle_asf(p, e, retenue) and montant_net_crds_asf(e, echeance);
+    then net_verse_asf(p, e, net_apres_retenue(echeance, retenue));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule NetSansRetenueAsf(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "recouvrement écarté : l'échéance d'ASF est versée entière";
+    label en unofficial "recovery barred: the ASF echeance is paid in full";
+    when dette_recouvrable_asf(p, dette) and retenue_effective_asf(p, base)
+        and montant_net_crds_asf(e, echeance) and not_known(retenue_appliquee_asf(p));
+    then net_verse_asf(p, e, echeance);
+}
+
+// --- Y = ARS (L. 553-2 al. 1, PF head, echeance per child) --------------
+//
+// Annual back-to-school echeance keyed on the child (02 net); same
+// monthly-levy mechanics as the other PF heads (single-head-per-case
+// contract (d)).
+
+pub relation dette_chargee_ars(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "dette imputée par la caisse sur l'ARS à échoir, indemnité 10 % incluse en cas de fraude, nette de prescription et d'option unique (L. 553-2 al. 1, contrat d'entrée)";
+    label en unofficial "debt charged by the fund to future ARS, 10% indemnity included on fraud, net of prescription and single option (L. 553-2 para. 1, input contract)";
+}
+
+pub relation dette_recouvrable_ars(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "dette recouvrable sur l'ARS (L. 553-2 al. 1)";
+    label en unofficial "debt recoverable from ARS (L. 553-2 para. 1)";
+}
+
+pub relation retenue_effective_ars(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "retenue effective sur l'ARS après majoration éventuelle : prélèvement D. 553-1, +50 % fraude, x2 réitération (L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "effective ARS retention after any uplift: D. 553-1 levy, +50% fraud, x2 repeat (L. 553-2 para. 3, D. 553-5)";
+}
+
+pub relation retenue_appliquee_ars(p: fr.pf.core::Personne) kind institutional {
+    label fr official "retenues appliquées sur l'ARS à échoir (L. 553-2 al. 1)";
+    label en unofficial "deductions applied to future ARS (L. 553-2 para. 1)";
+}
+
+pub relation retenue_mensuelle_ars(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(p, e);
+    label fr official "montant de la retenue sur l'ARS de l'enfant (D. 553-1, L. 553-2 al. 3)";
+    label en unofficial "ARS deduction amount for the child (D. 553-1, L. 553-2 para. 3)";
+}
+
+pub relation net_verse_ars(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, montant: Money) kind institutional {
+    key(p, e);
+    label fr official "ARS nette versée après retenue éventuelle";
+    label en unofficial "ARS net paid after any deduction";
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule DetteArsNonFraude(p: fr.pf.core::Personne, montant: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette ARS hors fraude : montant imputé par la caisse";
+    label en unofficial "ARS debt without fraud: fund-charged amount";
+    when dette_chargee_ars(p, montant) and not_known(fr.pf.core::indu_frauduleux(p));
+    then dette_recouvrable_ars(p, montant);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule DetteArsFraude(p: fr.pf.core::Personne, montant: Money, indemnite: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette ARS en cas de fraude : montant imputé + indemnité 10 % (L. 553-2 al. 1)";
+    label en unofficial "ARS debt on fraud: charged amount + 10% indemnity (L. 553-2 para. 1)";
+    when dette_chargee_ars(p, montant)
+        and fr.pf.core::indu_frauduleux(p) and fr.pf.core::indemnite_frais_gestion(p, indemnite);
+    then dette_recouvrable_ars(p, dette_totale2(montant, indemnite));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueBaseArs(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "hors fraude : le prélèvement mensuel D. 553-1 s'applique sans majoration";
+    label en unofficial "without fraud: the D. 553-1 monthly levy applies without uplift";
+    when prelevement_mensuel(p, base) and not_known(fr.pf.core::indu_frauduleux(p));
+    then retenue_effective_ars(p, base);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueFraudeArs(p: fr.pf.core::Personne, base: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "en cas de fraude : majoration fixe de 50 % du prélèvement (pouvoir du directeur, L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "on fraud: fixed 50% uplift of the levy (director's power, L. 553-2 para. 3, D. 553-5)";
+    when prelevement_mensuel(p, base)
+        and fr.pf.core::indu_frauduleux(p) and not_known(fr.pf.core::fraude_reiteree(p));
+    then retenue_effective_ars(p, retenue_majoree_fraude(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueReiterationArs(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "réitération dans les cinq ans : la majoration de 50 % est doublée (x2,00)";
+    label en unofficial "repeat within five years: the 50% uplift is doubled (x2.00)";
+    when prelevement_mensuel(p, base)
+        and fr.pf.core::indu_frauduleux(p) and fr.pf.core::fraude_reiteree(p);
+    then retenue_effective_ars(p, retenue_majoree_reiteration(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueAppliqueeArs(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenues sur l'ARS à échoir, sauf remboursement unique (L. 553-2 al. 1)";
+    label en unofficial "deductions from future ARS, absent single repayment (L. 553-2 para. 1)";
+    when dette_recouvrable_ars(p, dette) and retenue_effective_ars(p, base)
+        and montant_net_crds_ars(e, echeance) and not_known(fr.pf.core::option_remboursement_unique(p));
+    then retenue_appliquee_ars(p);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueMontantArs(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenue ARS : prélèvement effectif, plafonné à l'échéance et à la dette";
+    label en unofficial "ARS deduction: effective levy, capped at the echeance and the debt";
+    when retenue_appliquee_ars(p) and dette_recouvrable_ars(p, dette)
+        and retenue_effective_ars(p, base) and montant_net_crds_ars(e, echeance);
+    then retenue_mensuelle_ars(p, e, retenue_plafonnee(base, echeance, dette));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule NetVerseArs(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, echeance: Money, retenue: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "ARS nette après retenue";
+    label en unofficial "ARS net after deduction";
+    when retenue_mensuelle_ars(p, e, retenue) and montant_net_crds_ars(e, echeance);
+    then net_verse_ars(p, e, net_apres_retenue(echeance, retenue));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule NetSansRetenueArs(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, dette: Money, base: Money, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "recouvrement écarté : l'échéance d'ARS est versée entière";
+    label en unofficial "recovery barred: the ARS echeance is paid in full";
+    when dette_recouvrable_ars(p, dette) and retenue_effective_ars(p, base)
+        and montant_net_crds_ars(e, echeance) and not_known(retenue_appliquee_ars(p));
+    then net_verse_ars(p, e, echeance);
+}
+
+// --- Y = AJPA (L. 553-2 al. 1 « à défaut », destination stream) --------
+//
+// AJPA is a DESTINATION head here: PF and RSA indus carried onto
+// future AJPA echeances (L. 553-2 al. 1 list via L. 168-8; L. 262-46
+// list). AJPA-own recovery stays neighbour-owned (fr.css.ajpa).
+// The monthly levy is fund-stated on the AJPA payee key (IDENTITY:
+// the PF/RSA debtor key cannot join); fraud status of the carried
+// debt is stated on the payee key, the 50 %/x2 uplift itself is
+// computed in-section (never a stated fraction).
+
+pub relation pf_indu_reporte_sur_ajpa(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu de prestations familiales imputé sur l'AJPA à échoir, indemnité 10 % incluse en cas de fraude, hors option unique PF (L. 553-2 al. 1 « à défaut »)";
+    label en unofficial "family-benefit overpayment charged to future AJPA, 10% indemnity included on fraud, net of PF single option (L. 553-2 para. 1 'à défaut')";
+}
+
+pub relation rsa_indu_reporte_sur_ajpa(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "indu de RSA imputé sur l'AJPA à échoir, indemnité incluse en cas de fraude, hors option unique RSA (L. 262-46 al. 4 « à défaut »)";
+    label en unofficial "RSA overpayment charged to future AJPA, indemnity included on fraud, net of RSA single option (L. 262-46 para. 4 'à défaut')";
+}
+
+pub relation report_pf_sur_ajpa_licite(p: fr.pf.core::Personne) kind empirical {
+    label fr official "report PF→AJPA licite : aucun report imputé, ou report imputé à défaut de recouvrement sur les prestations familiales et sans option unique PF, fait constaté (L. 553-2 al. 1 « à défaut »)";
+    label en unofficial "lawful PF→AJPA carry: no carry charged, or carry charged for want of family-benefit recovery with no PF single option, stated fact (L. 553-2 para. 1 'à défaut')";
+}
+
+pub relation report_rsa_sur_ajpa_licite(p: fr.pf.core::Personne) kind empirical {
+    label fr official "report RSA→AJPA licite : aucun report imputé, ou report imputé à défaut de recouvrement sur le RSA et sans option unique RSA, fait constaté (L. 262-46 al. 4 « à défaut »)";
+    label en unofficial "lawful RSA→AJPA carry: no carry charged, or carry charged for want of RSA recovery with no RSA single option, stated fact (L. 262-46 para. 4 'à défaut')";
+}
+
+pub relation retenue_mensuelle_ajpa_declaree(p: fr.pf.core::Personne, montant: Money) kind empirical {
+    key(p);
+    label fr official "montant mensuel du prélèvement sur l'AJPA appliqué par la caisse selon le barème D. 553-1 (phrase de portée L. 553-2 al. 3, échelle DSS non épinglée : DSS_PENDING)";
+    label en unofficial "monthly AJPA levy amount applied by the fund under the D. 553-1 scale (L. 553-2 para. 3 scope sentence, DSS scale bytes unpinned: DSS_PENDING)";
+}
+
+pub relation reporte_ajpa_frauduleux(p: fr.pf.core::Personne) kind empirical {
+    label fr official "la dette reportée sur l'AJPA résulte d'une fraude du débiteur, fait constaté sur la clé allocataire (L. 553-2 al. 3)";
+    label en unofficial "the debt carried onto AJPA results from the debtor's fraud, stated fact on the payee key (L. 553-2 para. 3)";
+}
+
+pub relation fraude_repetee_5ans_ajpa(p: fr.pf.core::Personne) kind empirical {
+    label fr official "réitération de la fraude dans les cinq ans suivant une précédente fraude, fait constaté (L. 553-2 al. 3)";
+    label en unofficial "repeat fraud within five years after a previous fraud, stated fact (L. 553-2 para. 3)";
+}
+
+pub relation dette_recouvrable_ajpa(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "dette recouvrable sur l'AJPA (reports PF/RSA, L. 553-2 al. 1, L. 262-46 al. 4)";
+    label en unofficial "debt recoverable from AJPA (PF/RSA carries, L. 553-2 para. 1, L. 262-46 para. 4)";
+}
+
+pub relation retenue_effective_ajpa(p: fr.pf.core::Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "retenue mensuelle effective sur l'AJPA après majoration éventuelle : barème D. 553-1, +50 % fraude, x2 réitération (L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "effective monthly AJPA retention after any uplift: D. 553-1 scale, +50% fraud, x2 repeat (L. 553-2 para. 3, D. 553-5)";
+}
+
+pub relation retenue_appliquee_ajpa(p: fr.pf.core::Personne) kind institutional {
+    label fr official "retenues appliquées sur l'AJPA à échoir (L. 553-2 al. 1 « à défaut »)";
+    label en unofficial "deductions applied to future AJPA (L. 553-2 para. 1 'à défaut')";
+}
+
+pub relation retenue_mensuelle_ajpa(p: fr.pf.core::Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "montant de la retenue mensuelle sur l'AJPA (D. 553-1, L. 553-2 al. 3)";
+    label en unofficial "monthly AJPA deduction amount (D. 553-1, L. 553-2 para. 3)";
+}
+
+pub relation net_verse_ajpa(p: fr.pf.core::Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "AJPA nette versée après retenue éventuelle";
+    label en unofficial "AJPA net paid after any deduction";
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule DetteAjpaReport(p: fr.pf.core::Personne, pf: Money, rsa: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "dette AJPA : reports PF et RSA licites (L. 553-2 al. 1 et L. 262-46 al. 4 « à défaut »)";
+    label en unofficial "AJPA debt: lawful PF and RSA carries (L. 553-2 para. 1 and L. 262-46 para. 4 'à défaut')";
+    when pf_indu_reporte_sur_ajpa(p, pf) and rsa_indu_reporte_sur_ajpa(p, rsa)
+        and report_pf_sur_ajpa_licite(p) and report_rsa_sur_ajpa_licite(p);
+    then dette_recouvrable_ajpa(p, dette_totale2(pf, rsa));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06)
+rule RetenueBaseAjpa(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "hors fraude : le prélèvement mensuel déclaré s'applique sans majoration";
+    label en unofficial "without fraud: the stated monthly levy applies without uplift";
+    when retenue_mensuelle_ajpa_declaree(p, base) and not_known(reporte_ajpa_frauduleux(p));
+    then retenue_effective_ajpa(p, base);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueFraudeAjpa(p: fr.pf.core::Personne, base: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "dette reportée frauduleuse : majoration fixe de 50 % du prélèvement (pouvoir du directeur, L. 553-2 al. 3, D. 553-5)";
+    label en unofficial "fraudulent carried debt: fixed 50% uplift of the levy (director's power, L. 553-2 para. 3, D. 553-5)";
+    when retenue_mensuelle_ajpa_declaree(p, base)
+        and reporte_ajpa_frauduleux(p) and not_known(fraude_repetee_5ans_ajpa(p));
+    then retenue_effective_ajpa(p, retenue_majoree_fraude(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.pf.core::CSS_D553_5, fr.pf.core::CSS_D553_5_CSS_ED2021_05,
+        fr.pf.core::CSS_D553_5_CSS_ED2021_11, fr.pf.core::CSS_D553_5_CSS_ED2021_12,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_01, fr.pf.core::CSS_D553_5_CSS_ED2022_02,
+        fr.pf.core::CSS_D553_5_CSS_ED2022_03, fr.pf.core::CSS_D553_5_CSS_ED2022_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2023_07, fr.pf.core::CSS_D553_5_CSS_ED2024_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_02, fr.pf.core::CSS_D553_5_CSS_ED2025_09,
+        fr.pf.core::CSS_D553_5_CSS_ED2025_12, fr.pf.core::CSS_D553_5_CSS_ED2026_01,
+        fr.pf.core::CSS_D553_5_CSS_ED2026_04, fr.pf.core::CSS_D553_5_CSS_ED2026_06)
+rule RetenueReiterationAjpa(p: fr.pf.core::Personne, base: Money) strict {
+    effective [@2024-01-01, infinity);
+    label fr official "réitération dans les cinq ans : la majoration de 50 % est doublée (x2,00)";
+    label en unofficial "repeat within five years: the 50% uplift is doubled (x2.00)";
+    when retenue_mensuelle_ajpa_declaree(p, base)
+        and reporte_ajpa_frauduleux(p) and fraude_repetee_5ans_ajpa(p);
+    then retenue_effective_ajpa(p, retenue_majoree_reiteration(base));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule RetenueAppliqueeAjpa(p: fr.pf.core::Personne, a: fr.pf.core::Personne, dette: Money, base: Money, mois: Date, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenues sur l'AJPA à échoir, reports licites (options sources couvertes par les reports, L. 553-2 al. 1 et L. 262-46 al. 4 « à défaut »)";
+    label en unofficial "deductions from future AJPA, lawful carries (source options covered by the carries, L. 553-2 para. 1 and L. 262-46 para. 4 'à défaut')";
+    when dette_recouvrable_ajpa(p, dette) and retenue_effective_ajpa(p, base)
+        and fr.css.ajpa::ajpa_montant_mois(p, a, mois, echeance);
+    then retenue_appliquee_ajpa(p);
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule RetenueMontantAjpa(p: fr.pf.core::Personne, a: fr.pf.core::Personne, dette: Money, base: Money, mois: Date, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "retenue AJPA du mois : prélèvement effectif, plafonné à l'échéance et à la dette";
+    label en unofficial "month's AJPA deduction: effective levy, capped at the echeance and the debt";
+    when retenue_appliquee_ajpa(p) and dette_recouvrable_ajpa(p, dette)
+        and retenue_effective_ajpa(p, base) and fr.css.ajpa::ajpa_montant_mois(p, a, mois, echeance);
+    then retenue_mensuelle_ajpa(p, mois, retenue_plafonnee(base, echeance, dette));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule NetVerseAjpa(p: fr.pf.core::Personne, a: fr.pf.core::Personne, mois: Date, echeance: Money, retenue: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "AJPA nette après retenue";
+    label en unofficial "AJPA net after deduction";
+    when retenue_mensuelle_ajpa(p, mois, retenue) and fr.css.ajpa::ajpa_montant_mois(p, a, mois, echeance);
+    then net_verse_ajpa(p, mois, net_apres_retenue(echeance, retenue));
+}
+
+@source(fr.pf.core::CSS_L553_2, fr.pf.core::CSS_L553_2_CSS_ED2025_02,
+        fr.pf.core::CSS_L553_2_CSS_ED2025_09, fr.pf.core::CSS_L553_2_CSS_ED2025_12,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_01, fr.pf.core::CSS_L553_2_CSS_ED2026_04,
+        fr.pf.core::CSS_L553_2_CSS_ED2026_06,
+        fr.casf.rsa::CASF_L262_46, fr.casf.rsa::CASF_L262_46_ED2025_01,
+        fr.casf.rsa::CASF_L262_46_ED2025_06, fr.casf.rsa::CASF_L262_46_ED2026_06)
+rule NetSansRetenueAjpa(p: fr.pf.core::Personne, a: fr.pf.core::Personne, dette: Money, base: Money, mois: Date, echeance: Money) defeasible {
+    effective [@2024-01-01, infinity);
+    label fr official "recouvrement écarté : l'échéance d'AJPA est versée entière";
+    label en unofficial "recovery barred: the AJPA echeance is paid in full";
+    when dette_recouvrable_ajpa(p, dette) and retenue_effective_ajpa(p, base)
+        and fr.css.ajpa::ajpa_montant_mois(p, a, mois, echeance) and not_known(retenue_appliquee_ajpa(p));
+    then net_verse_ajpa(p, mois, echeance);
+}
+
+// --- BOUNDARIES (silence is a finding; no rules) --------------------------
+//
+// DSS scale (DSS_PENDING). The monthly-levy amounts and their exact base
+// sit in an unpinned decree/DSS instruction (cf. B-PFCORE-DATES-MOIS).
+// PF levies arrive computed from the 06 bareme layer
+// (prelevement_mensuel); non-PF levies arrive as fund-stated Money
+// inputs; no scale percentage literal is hardcoded in this file, and no
+// installment x rate product is derived anywhere (PC-R07-39).
+//
+// Pre-2024 mechanics. RSA L. 262-46 PRE2024 (pinned, 2021-2023) carries
+// the same cross-benefit list and L. 553-2 renvoi without the 10 %
+// sentence; L. 553-2 itself is pinned only from CSS_ED2024_01. All
+// rules start 2024-01-01; the identical pre-2024 paragraphs are
+// reserved, not encoded.
+//
+// RSA 77 EUR floor + recouvrable status (R. 262-92, L. 262-46 al. 12).
+// Consumed via the imported indu_recouvrable (rs 05 live: floor,
+// notification, limitation, no suspensive appeal — never re-derived).
+//
+// RSA/AAH limitation (L. 262-45, L. 821-5). Both pinned (2 years,
+// fraud exception, no 5-year period). RSA limitation arrives inside
+// indu_recouvrable; AAH own-limitation is unencoded
+// (B-PV-PRESCRIPTION-SPLIT: only the debt on the echeance's own key
+// can be limitation-tested here). No defeaters remain in this file.
+//
+// RSA tiers-payant, remise, L. 133-4-1 cascade, L. 161-1-5,
+// R. 262-92-1 notification. Neighbour-owned procedure, encoded
+// upstream of indu_recouvrable. The single-repayment option alone
+// conditions RetenueRsaApplication directly (contract (a)).
+//
+// PA prime d'activité. WIRED (B-PV-PA follow-up 6 closed, FINISH-W2):
+// Y = PA section above (RSA pattern, 8 rules). PA-source carries
+// onto AF/RSA/AAH/housing WIRED (L. 845-3 al. 3 destination list,
+// FINISH-W2 cascade follow-up): pa_indu_reporte_sur_* inputs join
+// the Dette rules of those echeances. Remainder reserved
+// (B-PV-PA-CARRY): PF→PA carry (titre IV inference, MIRROR),
+// AAH/housing→PA carries (L. 821-5-1/L. 823-9 mirror-only),
+// PA→AJPA (L. 168-8: no AJPA echeance in this layer),
+// L. 845-3 al. 4 tiers-payant and al. 6 L. 133-4-1/livre III
+// destinations (decree modalities unpinned / outside surveyed
+// benefits). Quarterly served echeance (B-PV-PA-TRIMESTRE); no
+// CRDS net (B-PV-PA-CRDS); payment-stage rounding silence
+// (B-PV-PA-ARRONDI).
+//
+// AAH/housing 10 % indemnity and own-recovery permissions
+// (L. 821-5-1, L. 823-9). Mirror-only; reserved pending pinning.
+// PA left this paragraph: L. 845-3 is pinned in the neighbour and its
+// 10 % indemnity arrives via indemnite_fraude (Y = PA section). The
+// scale math for AAH/housing retenues stays pinned-grounded via the
+// L. 553-2 al. 3 scope sentence (see per-family comments).
+//
+// Housing limitation. SILENCE in the current CCH: no defeater exists
+// or can exist for retenue_appliquee_logement. If a future text bars
+// housing recovery, add the defeater then.
+//
+// Repeat-fraud doubling. WIRED (PC-R07-38): every family has a
+// strict RetenueReiteration* rule (x2.00) driven by the imported PF
+// 07 repeat status or a stated per-family 5-year repeat fact
+// (RSA/AAH/housing/PA/AJPA). The uplift itself is always the fixed
+// 50 % (x1.50) of D. 553-5, never a stated fraction.
+//
+// NO-LEDGER. No month-to-month debt exhaustion, no allocation of one
+// indu across several same-month echeances beyond the fund's stated
+// split, no simultaneous multi-head deduction (contract (d):
+// single-head-per-case), no cross-identity join (see IDENTITY in
+// the header). The 06 bareme layer carries the ordered-debt ledger
+// (D. 553-4 oldest-first allocation); this layer applies the single
+// monthly levy to one echeance.
+//
+// AJPA. WIRED as a destination head (PC-R07-36, Y = AJPA section):
+// PF/RSA carries onto future AJPA echeances (L. 553-2 al. 1 list via
+// L. 168-8; L. 262-46 list), stated monthly levy, fixed 50 %/x2
+// uplift from a stated carried-debt fraud status. AJPA-own recovery
+// (L. 168-13/14) stays owned by fr.css.ajpa. Remainder reserved:
+// PA→AJPA (L. 845-3 destination list does not name AJPA — SILENCE,
+// no input), AAH/housing→AJPA (mirror-only permissions).
+//
+// Tiers-payant indu (L. 553-2, "par dérogation" sentence). An indu
+// on a tiers-payant benefit is recovered from other directly-paid
+// benefits under decree modalities; the decree is unpinned and no
+// tiers-payant flag exists in this layer. SILENCE, noted.
+//
+// Subsidised loans (L. 553-2 "prêts" sentence). Same recovery rules
+// apply to unreimbursed fund loans; no loan head exists in this
+// layer. SILENCE, noted.
+//
+// Remission for hardship (L. 553-2 "créance réduite ou remise").
+// Organ power except on fraud/false declaration; no hardship or
+// remission head exists here. SILENCE, noted.
+//
+// Final-paragraph overflow (L. 553-2, cash benefits of L. 133-4-1
+// bodies; titles IV/V of book III; title I of book VIII). Manager
+// agreement + no prior indu on those benefits + decree modalities;
+// outside the surveyed benefits. SILENCE, noted.

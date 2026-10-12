@@ -1,0 +1,18 @@
+// 66-day career cap met: 60 days recorded in 2024 against the
+// statutory sixty-six (bareme NombreMaxCarriere66).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-carriere-66-ok" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-c66-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-c66"), entity_ref("urn:fr:css:ajpa:case:aide-c66")) { origin case_input; }
+        assert "ajpa-c66-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-c66")) { origin adjudicated; }
+        assert "ajpa-c66-03": jours_ajpa_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-c66"), 60) { origin case_input; }
+    }
+    evaluate truth(ajpa_dans_limite_carriere(entity_ref("urn:fr:css:ajpa:case:aidant-c66")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

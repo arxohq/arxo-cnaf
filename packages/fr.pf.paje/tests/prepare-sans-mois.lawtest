@@ -1,0 +1,20 @@
+// Without an eligible month (no mois_eligible_prepare) PreParE is not
+// awarded — right and amount present, no prepare_attribuee.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-prepare-sans-mois" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "prepare-sm-01": arret_activite(entity_ref("urn:fr:paje:benef:prepare-sm"), entity_ref("urn:fr:paje:enfant:prepare-sm")) { origin adjudicated; }
+        assert "prepare-sm-02": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:prepare-sm"), entity_ref("urn:fr:paje:enfant:prepare-sm")) { origin adjudicated; }
+        assert "prepare-sm-03": condition_age_prepare(entity_ref("urn:fr:paje:enfant:prepare-sm")) { origin adjudicated; }
+        assert "prepare-sm-04": menage_beneficiaire(entity_ref("urn:fr:paje:benef:prepare-sm"), entity_ref("urn:fr:paje:case:prepare-sm")) { origin case_input; }
+        assert "prepare-sm-05": bmaf_applicable(entity_ref("urn:fr:paje:case:prepare-sm"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prepare_attribuee(entity_ref("urn:fr:paje:benef:prepare-sm"), entity_ref("urn:fr:paje:enfant:prepare-sm"), 386.48 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

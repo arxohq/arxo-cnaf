@@ -1,0 +1,19 @@
+// Oldest-first ordering: two indus January and March, both owed - January recovers first and gets the single levy (D. 553-4 al. 3, PC-R04-03).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-indus-ordre-anciennete" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "indus-anciennete-01": indus_multiples(entity_ref("urn:fr:pv:case:multi-ancien")) { origin case_input; }
+        assert "indus-anciennete-02": indu_constate_le(entity_ref("urn:fr:pv:indu:ancien"), entity_ref("urn:fr:pv:case:multi-ancien"), @2026-01-10, 800.00 EUR) { origin case_input; }
+        assert "indus-anciennete-03": indu_constate_le(entity_ref("urn:fr:pv:indu:recent"), entity_ref("urn:fr:pv:case:multi-ancien"), @2026-03-05, 400.00 EUR) { origin case_input; }
+        assert "indus-anciennete-04": indu_solde_restant(entity_ref("urn:fr:pv:indu:ancien"), entity_ref("urn:fr:pv:case:multi-ancien"), 800.00 EUR) { origin case_input; }
+        assert "indus-anciennete-05": indu_solde_restant(entity_ref("urn:fr:pv:indu:recent"), entity_ref("urn:fr:pv:case:multi-ancien"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(indu_recouvre_avant(entity_ref("urn:fr:pv:indu:ancien"), entity_ref("urn:fr:pv:indu:recent"), entity_ref("urn:fr:pv:case:multi-ancien")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

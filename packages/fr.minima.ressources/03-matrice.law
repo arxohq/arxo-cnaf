@@ -1,0 +1,1055 @@
+// Resource matrix (R.262-6, R.262-10-1 to R.262-25).
+//
+// DEONTIC MAP: computation only, plus three presidential decision
+// channels (no must/must-not here):
+// - TNS annual evaluation (R.262-23/24): the evaluated figure arrives
+//   established (tns_evalue_annuel); the 25 % quarterly take (R.262-22)
+//   is built, the reference years (R.262-18/19), the article-62 rule
+//   (R.262-20) and the deficit/IPC mechanics (R.262-21) are input
+//   contract on that figure (B-MINRES-TNS-REFERENCE: IPC rate from the
+//   unpinned PLF report);
+// - individual gift disregard (R.262-14): adjudicated channel
+//   (decision_individuelle_liberalites);
+// - resignation neutralisation veto (R.262-13 al.5): channel
+//   (maintien_demission_decide).
+//
+// DUAL FEED (B-MINRES-DUAL-FEED). The per-category conclusions below
+// (montant_retenu_mois) demonstrate the matrix one category at a time;
+// the quarterly mechanics (02-trimestre.law) run on fund-established
+// block totals. Cases assert both sides under the consistency contract
+// (block total = sum of the retained category amounts).
+
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+use self::{
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06,
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_12,
+    CASF_R262_12_PRE2024,
+    CASF_R262_12_PRE2024_ED2021_03,
+    CASF_R262_12_PRE2024_ED2022_03,
+    CASF_R262_12_PRE2026,
+    CASF_R262_12_PRE2026_ED2025_02,
+    CASF_R262_12_PRE2026_ED2025_06,
+    CASF_R262_13,
+    CASF_R262_13_ED2026_06,
+    CASF_R262_13_PRE2025,
+    CASF_R262_13_PRE202506,
+    CASF_R262_13_PRE2025_ED2021_03,
+    CASF_R262_13_PRE2025_ED2022_03,
+    CASF_R262_13_PRE2025_ED2023_12,
+    CASF_R262_14,
+    CASF_R262_14_ED2021_03,
+    CASF_R262_14_ED2022_03,
+    CASF_R262_14_ED2023_12,
+    CASF_R262_14_ED2025_02,
+    CASF_R262_14_ED2025_06,
+    CASF_R262_14_ED2026_06,
+    CASF_R262_22,
+    CASF_R262_22_ED2021_03,
+    CASF_R262_22_ED2022_03,
+    CASF_R262_22_ED2023_12,
+    CASF_R262_22_ED2025_02,
+    CASF_R262_22_ED2025_06,
+    CASF_R262_22_ED2026_06,
+    CASF_R262_23,
+    CASF_R262_23_ED2021_03,
+    CASF_R262_23_ED2022_03,
+    CASF_R262_23_ED2023_12,
+    CASF_R262_23_ED2025_02,
+    CASF_R262_23_ED2025_06,
+    CASF_R262_23_ED2026_06,
+    CASF_R262_25,
+    CASF_R262_25_ED2021_03,
+    CASF_R262_25_ED2022_03,
+    CASF_R262_25_ED2023_12,
+    CASF_R262_25_ED2025_02,
+    CASF_R262_25_ED2025_06,
+    CASF_R262_25_ED2026_06,
+    CASF_R262_6,
+    CASF_R262_6_ED2021_03,
+    CASF_R262_6_ED2022_03,
+    CASF_R262_6_ED2023_12,
+    CASF_R262_6_ED2025_02,
+    CASF_R262_6_ED2025_06,
+    CASF_R262_6_ED2026_06,
+    CategorieRessource,
+    ClasseAsf,
+    ItemExclusion,
+    Personne,
+    activite_saisonniere,
+    asf_percue,
+    asf_rang_present,
+    asf_retenu_rang,
+    barrage_saisonnier,
+    bmaf_retenue,
+    brut_pro_declare_mois,
+    cotisations_pro_mois,
+    decision_individuelle_liberalites,
+    demission_interruption,
+    dispense_president_interruption,
+    interruption_autres_plafond,
+    interruption_sanction_chomage,
+    liberalites_foyer,
+    maintien_demission_decide,
+    mf_reference_annuelle,
+    modification_situation_pro,
+    montant_retenu_mois,
+    neutralisation_revenu,
+    perception_interrompue,
+    prestation_exclue_mois,
+    prestation_service_mois,
+    ressource_declaree_mois,
+    ressources_n_moins_2,
+    situation_exceptionnelle_insertion,
+    tns_evalue_annuel,
+};
+
+relation tns_trimestre(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "revenu non salarié retenu pour le trimestre : 25 % de l'annuel arrêté (R. 262-22)";
+    label en unofficial "non-salaried income retained for the quarter: 25 % of the set annual figure (R. 262-22)";
+}
+
+relation revenu_maintenu_demission(p: Personne) kind institutional {
+    key(p);
+    label fr official "revenu maintenu après démission sur décision individuelle (R. 262-13 al. 5)";
+    label en unofficial "income kept after resignation by individual decision (R. 262-13 para. 5)";
+}
+
+relation chomage_maintenu_sanction(p: Personne) kind institutional {
+    key(p);
+    label fr official "allocation chômage maintenue : interruption issue d'une sanction L. 5412-1 (R. 262-13 al. 2)";
+    label en unofficial "unemployment benefit kept: interruption from an L. 5412-1 sanction (R. 262-13 para. 2)";
+}
+
+relation seuil_saisonnier(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "seuil saisonnier : douze fois le MF du 1er janvier N-2 (R. 262-25)";
+    label en unofficial "seasonal threshold: twelve times the 1 January N-2 MF (R. 262-25)";
+}
+
+// --- All household resources count unless excluded or capped (R.262-6) ---
+
+@source(
+    CASF_R262_6,
+    CASF_R262_6_ED2021_03,
+    CASF_R262_6_ED2022_03,
+    CASF_R262_6_ED2023_12,
+    CASF_R262_6_ED2025_02,
+    CASF_R262_6_ED2025_06,
+    CASF_R262_6_ED2026_06)
+rule CompteChomage(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "allocations chômage comptées (R. 262-6)";
+    label en unofficial "unemployment benefits counted (R. 262-6)";
+    when ressource_declaree_mois(p, mois, ALLOCATION_CHOMAGE, v);
+    then montant_retenu_mois(p, mois, ALLOCATION_CHOMAGE, v);
+}
+
+@source(
+    CASF_R262_6,
+    CASF_R262_6_ED2021_03,
+    CASF_R262_6_ED2022_03,
+    CASF_R262_6_ED2023_12,
+    CASF_R262_6_ED2025_02,
+    CASF_R262_6_ED2025_06,
+    CASF_R262_6_ED2026_06)
+rule ComptePension(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "pensions comptées (R. 262-6)";
+    label en unofficial "pensions counted (R. 262-6)";
+    when ressource_declaree_mois(p, mois, PENSION, v);
+    then montant_retenu_mois(p, mois, PENSION, v);
+}
+
+@source(
+    CASF_R262_6,
+    CASF_R262_6_ED2021_03,
+    CASF_R262_6_ED2022_03,
+    CASF_R262_6_ED2023_12,
+    CASF_R262_6_ED2025_02,
+    CASF_R262_6_ED2025_06,
+    CASF_R262_6_ED2026_06)
+rule CompteCapital(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "revenus des biens et capitaux comptés ; évaluation du capital (R. 132-1) établie en amont (R. 262-6)";
+    label en unofficial "property and capital income counted; capital valuation (R. 132-1) established upstream (R. 262-6)";
+    when ressource_declaree_mois(p, mois, REVENU_CAPITAL, v);
+    then montant_retenu_mois(p, mois, REVENU_CAPITAL, v);
+}
+
+@source(
+    CASF_R262_6,
+    CASF_R262_6_ED2021_03,
+    CASF_R262_6_ED2022_03,
+    CASF_R262_6_ED2023_12,
+    CASF_R262_6_ED2025_02,
+    CASF_R262_6_ED2025_06,
+    CASF_R262_6_ED2026_06)
+rule CompteAfBase(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "allocations familiales de base comptées (R. 262-6 ; wave-5 cascade : B-RSA-PF-CASCADE)";
+    label en unofficial "base family benefits counted (R. 262-6; wave-5 cascade: B-RSA-PF-CASCADE)";
+    when ressource_declaree_mois(p, mois, AF_BASE, v);
+    then montant_retenu_mois(p, mois, AF_BASE, v);
+}
+
+@source(
+    CASF_R262_6,
+    CASF_R262_6_ED2021_03,
+    CASF_R262_6_ED2022_03,
+    CASF_R262_6_ED2023_12,
+    CASF_R262_6_ED2025_02,
+    CASF_R262_6_ED2025_06,
+    CASF_R262_6_ED2026_06)
+rule CompteCfBase(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "complément familial de base compté (R. 262-6 ; B-RSA-PF-CASCADE)";
+    label en unofficial "base complément familial counted (R. 262-6; B-RSA-PF-CASCADE)";
+    when ressource_declaree_mois(p, mois, CF_BASE, v);
+    then montant_retenu_mois(p, mois, CF_BASE, v);
+}
+
+@source(
+    CASF_R262_6,
+    CASF_R262_6_ED2021_03,
+    CASF_R262_6_ED2022_03,
+    CASF_R262_6_ED2023_12,
+    CASF_R262_6_ED2025_02,
+    CASF_R262_6_ED2025_06,
+    CASF_R262_6_ED2026_06)
+rule CompteAutre(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "autres ressources comptées (R. 262-6)";
+    label en unofficial "other resources counted (R. 262-6)";
+    when ressource_declaree_mois(p, mois, AUTRE_COMPTEE, v);
+    then montant_retenu_mois(p, mois, AUTRE_COMPTEE, v);
+}
+
+@source(
+    CASF_R262_6,
+    CASF_R262_6_ED2021_03,
+    CASF_R262_6_ED2022_03,
+    CASF_R262_6_ED2023_12,
+    CASF_R262_6_ED2025_02,
+    CASF_R262_6_ED2025_06,
+    CASF_R262_6_ED2026_06)
+rule ComptePrestationService(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prestations de service comptées au mois de perception (R. 262-6, R. 262-7 II 3°)";
+    label en unofficial "service benefits counted in the perception month (R. 262-6, R. 262-7 II 3°)";
+    when prestation_service_mois(p, mois, v);
+    then montant_retenu_mois(p, mois, PRESTATION_SERVICE, v);
+}
+
+// --- Declared professional income: gross minus contributions (R.262-12, II) ---
+
+@source(
+    CASF_R262_12_PRE2026,
+    CASF_R262_12_PRE2026_ED2025_02,
+    CASF_R262_12_PRE2026_ED2025_06,
+    CASF_R262_12)
+rule ProDeclareNet(p: Personne, mois: Date, brut: Money, cotis: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "revenu professionnel déclaré hors TNS : brut moins cotisations (R. 262-12, II)";
+    label en unofficial "declared professional income outside TNS: gross minus contributions (R. 262-12, II)";
+    when brut_pro_declare_mois(p, mois, brut) and cotisations_pro_mois(p, mois, cotis);
+    then montant_retenu_mois(p, mois, REVENU_PRO_SALARIE, brut - cotis);
+}
+
+@source(
+    CASF_R262_12_PRE2024,
+    CASF_R262_12_PRE2024_ED2021_03,
+    CASF_R262_12_PRE2024_ED2022_03)
+rule ProDeclareAncien(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, @2023-12-31);
+    label fr official "revenu professionnel déclaré avant 2024 : retenu tel qu'établi, sans règle brut-net au texte (R. 262-12_PRE2024 ; B-MINRES-PRO-PRE2024)";
+    label en unofficial "pre-2024 declared professional income: retained as established, no gross-net rule in the text (R. 262-12_PRE2024; B-MINRES-PRO-PRE2024)";
+    when ressource_declaree_mois(p, mois, REVENU_PRO_SALARIE, v);
+    then montant_retenu_mois(p, mois, REVENU_PRO_SALARIE, v);
+}
+
+// --- Non-salaried: 25 % of the evaluated annual figure (R.262-22, R.262-23) ---
+
+@source(
+    CASF_R262_22,
+    CASF_R262_22_ED2021_03,
+    CASF_R262_22_ED2022_03,
+    CASF_R262_22_ED2023_12,
+    CASF_R262_22_ED2025_02,
+    CASF_R262_22_ED2025_06,
+    CASF_R262_22_ED2026_06,
+    CASF_R262_23,
+    CASF_R262_23_ED2021_03,
+    CASF_R262_23_ED2022_03,
+    CASF_R262_23_ED2023_12,
+    CASF_R262_23_ED2025_02,
+    CASF_R262_23_ED2025_06,
+    CASF_R262_23_ED2026_06)
+rule TnsTrimestriel(p: Personne, annuel: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "TNS hors dernier alinéa R. 262-19 : 25 % de l'annuel arrêté par le président (R. 262-22, R. 262-23 ; années de référence et IPC : B-MINRES-TNS-REFERENCE)";
+    label en unofficial "TNS outside the last paragraph of R. 262-19: 25 % of the president-set annual figure (R. 262-22, R. 262-23; reference years and IPC: B-MINRES-TNS-REFERENCE)";
+    when tns_evalue_annuel(p, annuel);
+    then tns_trimestre(p, annuel * 0.25);
+}
+
+// --- Certain interruption disregards professional and unemployment income (R.262-13 al.1) ---
+
+@source(
+    CASF_R262_13_PRE2025,
+    CASF_R262_13_PRE2025_ED2021_03,
+    CASF_R262_13_PRE2025_ED2022_03,
+    CASF_R262_13_PRE2025_ED2023_12,
+    CASF_R262_13_PRE202506,
+    CASF_R262_13,
+    CASF_R262_13_ED2026_06)
+rule NeutralisationPro(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "revenu professionnel certainement interrompu, sans substitut : pas de prise en compte, sauf veto démission (R. 262-13 al. 1 et 5)";
+    label en unofficial "certainly interrupted professional income, no substitute: disregarded, save the resignation veto (R. 262-13 paras. 1 and 5)";
+    when perception_interrompue(p, REVENU_PRO_SALARIE)
+        and not_known(maintien_demission_decide(p));
+    then neutralisation_revenu(p, REVENU_PRO_SALARIE);
+}
+
+@source(
+    CASF_R262_13_PRE2025,
+    CASF_R262_13_PRE2025_ED2021_03,
+    CASF_R262_13_PRE2025_ED2022_03,
+    CASF_R262_13_PRE2025_ED2023_12,
+    CASF_R262_13_PRE202506,
+    CASF_R262_13,
+    CASF_R262_13_ED2026_06)
+rule NeutralisationTns(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "revenu non salarié certainement interrompu, sans substitut : pas de prise en compte, sauf veto démission (R. 262-13 al. 1 et 5)";
+    label en unofficial "certainly interrupted non-salaried income, no substitute: disregarded, save the resignation veto (R. 262-13 paras. 1 and 5)";
+    when perception_interrompue(p, REVENU_PRO_NON_SALARIE)
+        and not_known(maintien_demission_decide(p));
+    then neutralisation_revenu(p, REVENU_PRO_NON_SALARIE);
+}
+
+@source(
+    CASF_R262_13_PRE2025,
+    CASF_R262_13_PRE2025_ED2021_03,
+    CASF_R262_13_PRE2025_ED2022_03,
+    CASF_R262_13_PRE2025_ED2023_12,
+    CASF_R262_13_PRE202506,
+    CASF_R262_13,
+    CASF_R262_13_ED2026_06)
+rule NeutralisationChomage(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "allocation chômage certainement interrompue, sans substitut, hors sanction L. 5412-1 : pas de prise en compte (R. 262-13 al. 1 et 2)";
+    label en unofficial "certainly interrupted unemployment benefit, no substitute, outside an L. 5412-1 sanction: disregarded (R. 262-13 paras. 1 and 2)";
+    when perception_interrompue(p, ALLOCATION_CHOMAGE)
+        and not_known(interruption_sanction_chomage(p));
+    then neutralisation_revenu(p, ALLOCATION_CHOMAGE);
+}
+
+@source(
+    CASF_R262_13,
+    CASF_R262_13_ED2026_06)
+rule ChomageSanctionMaintenu(p: Personne) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "interruption chômage issue d'une sanction L. 5412-1 : prise en compte maintenue sauf dispense du président (R. 262-13 al. 2)";
+    label en unofficial "unemployment interruption from an L. 5412-1 sanction: counting kept absent presidential dispensation (R. 262-13 para. 2)";
+    when interruption_sanction_chomage(p)
+        and not_known(dispense_president_interruption(p));
+    then chomage_maintenu_sanction(p);
+}
+
+@source(
+    CASF_R262_13,
+    CASF_R262_13_ED2026_06)
+rule DispensePresidentChomage(p: Personne) strict {
+    effective [@2025-06-01, infinity);
+    label fr official "dispense du président au vu de la situation particulière : neutralisation malgré la sanction (R. 262-13 al. 2)";
+    label en unofficial "presidential dispensation on the particular situation: disregard despite the sanction (R. 262-13 para. 2)";
+    when interruption_sanction_chomage(p)
+        and dispense_president_interruption(p);
+    then neutralisation_revenu(p, ALLOCATION_CHOMAGE);
+}
+
+@source(
+    CASF_R262_13_PRE2025,
+    CASF_R262_13_PRE2025_ED2021_03,
+    CASF_R262_13_PRE2025_ED2022_03,
+    CASF_R262_13_PRE2025_ED2023_12,
+    CASF_R262_13_PRE202506,
+    CASF_R262_13,
+    CASF_R262_13_ED2026_06)
+rule MaintienApresDemission(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "décision individuelle après démission en situation exceptionnelle : pas de neutralisation (R. 262-13 al. 5, canal)";
+    label en unofficial "individual decision after resignation in an exceptional situation: no disregard (R. 262-13 para. 5, channel)";
+    when demission_interruption(p)
+        and situation_exceptionnelle_insertion(p)
+        and maintien_demission_decide(p);
+    then revenu_maintenu_demission(p);
+}
+
+@source(
+    CASF_R262_13_PRE2025,
+    CASF_R262_13_PRE2025_ED2021_03,
+    CASF_R262_13_PRE2025_ED2022_03,
+    CASF_R262_13_PRE2025_ED2023_12,
+    CASF_R262_13_PRE202506,
+    CASF_R262_13,
+    CASF_R262_13_ED2026_06)
+rule NeutralisationAutres(p: Personne, cat: CategorieRessource) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "autres ressources interrompues dans la limite du MF personne seule : pas de prise en compte, limite établie (R. 262-13 al. 3)";
+    label en unofficial "other resources interrupted within the single-person MF limit: disregarded, limit established (R. 262-13 para. 3)";
+    when interruption_autres_plafond(p, cat);
+    then neutralisation_revenu(p, cat);
+}
+
+// --- Individual gift disregard (R.262-14, adjudicated channel) ---
+
+@source(
+    CASF_R262_14,
+    CASF_R262_14_ED2021_03,
+    CASF_R262_14_ED2022_03,
+    CASF_R262_14_ED2023_12,
+    CASF_R262_14_ED2025_02,
+    CASF_R262_14_ED2025_06,
+    CASF_R262_14_ED2026_06)
+rule LiberalitesEcartees(p: Personne, mois: Date, motif: ItemExclusion, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "libéralités écartées sur décision individuelle en situation exceptionnelle (R. 262-14, canal)";
+    label en unofficial "gifts set aside by individual decision in an exceptional situation (R. 262-14, channel)";
+    when liberalites_foyer(p, mois, v)
+        and situation_exceptionnelle_insertion(p)
+        and decision_individuelle_liberalites(p);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+// --- Seasonal bar: N-2 above twelve times the January MF (R.262-25) ---
+
+@source(
+    CASF_R262_25,
+    CASF_R262_25_ED2021_03,
+    CASF_R262_25_ED2022_03,
+    CASF_R262_25_ED2023_12,
+    CASF_R262_25_ED2025_02,
+    CASF_R262_25_ED2025_06,
+    CASF_R262_25_ED2026_06)
+rule SeuilSaisonnier(p: Personne, mf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "seuil saisonnier : douze fois le MF du 1er janvier N-2 (R. 262-25)";
+    label en unofficial "seasonal threshold: twelve times the 1 January N-2 MF (R. 262-25)";
+    when mf_reference_annuelle(p, mf);
+    then seuil_saisonnier(p, mf * 12.0);
+}
+
+@source(
+    CASF_R262_25,
+    CASF_R262_25_ED2021_03,
+    CASF_R262_25_ED2022_03,
+    CASF_R262_25_ED2023_12,
+    CASF_R262_25_ED2025_02,
+    CASF_R262_25_ED2025_06,
+    CASF_R262_25_ED2026_06)
+rule BarrageSaisonnier(p: Personne, r: Money, seuil: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "saisonnier au-dessus du seuil : pas de droit sauf modification effective justifiée (R. 262-25)";
+    label en unofficial "seasonal worker above the threshold: no right absent a justified effective change (R. 262-25)";
+    when activite_saisonniere(p)
+        and ressources_n_moins_2(p, r)
+        and seuil_saisonnier(p, seuil)
+        and r > seuil
+        and not_known(modification_situation_pro(p));
+    then barrage_saisonnier(p);
+}
+
+// --- Increased CF and ASF counted up to flat-rates (R.262-10-1) ---
+
+@source(
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06)
+rule CfMajoreSousPlafond(p: Personne, mois: Date, percu: Money, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "complément familial majoré sous le forfait 41,65 % : compté tel quel (R. 262-10-1, I)";
+    label en unofficial "increased CF below the 41.65 % flat-rate: counted as is (R. 262-10-1, I)";
+    when ressource_declaree_mois(p, mois, CF_MAJORE, percu)
+        and bmaf_retenue(p, bmaf)
+        and percu <= bmaf * TauxCfMajoreForfait;
+    then montant_retenu_mois(p, mois, CF_MAJORE, percu);
+}
+
+@source(
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06)
+rule CfMajorePlafonne(p: Personne, mois: Date, percu: Money, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "complément familial majoré au-delà du forfait 41,65 % : compté à hauteur du forfait (R. 262-10-1, I)";
+    label en unofficial "increased CF above the 41.65 % flat-rate: counted up to the flat-rate (R. 262-10-1, I)";
+    when ressource_declaree_mois(p, mois, CF_MAJORE, percu)
+        and bmaf_retenue(p, bmaf)
+        and percu > bmaf * TauxCfMajoreForfait;
+    then montant_retenu_mois(p, mois, CF_MAJORE, bmaf * TauxCfMajoreForfait);
+}
+
+@source(
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06)
+rule AsfRang1SousPlafond(p: Personne, mois: Date, percu: Money, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF rang 1 sous le forfait 30 % : comptée telle quelle (R. 262-10-1, II 1°)";
+    label en unofficial "class-1 ASF below the 30 % flat-rate: counted as is (R. 262-10-1, II 1°)";
+    when asf_percue(p, mois, RANG_1, percu)
+        and bmaf_retenue(p, bmaf)
+        and percu <= bmaf * TauxAsfForfaitRang1;
+    then asf_retenu_rang(p, mois, RANG_1, percu);
+}
+
+@source(
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06)
+rule AsfRang1Plafonnee(p: Personne, mois: Date, percu: Money, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF rang 1 au-delà du forfait 30 % : comptée à hauteur du forfait (R. 262-10-1, II 1°)";
+    label en unofficial "class-1 ASF above the 30 % flat-rate: counted up to the flat-rate (R. 262-10-1, II 1°)";
+    when asf_percue(p, mois, RANG_1, percu)
+        and bmaf_retenue(p, bmaf)
+        and percu > bmaf * TauxAsfForfaitRang1;
+    then asf_retenu_rang(p, mois, RANG_1, bmaf * TauxAsfForfaitRang1);
+}
+
+@source(
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06)
+rule AsfRang2SousPlafond(p: Personne, mois: Date, percu: Money, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF rang 2 sous le forfait 22,5 % : comptée telle quelle (R. 262-10-1, II 2°)";
+    label en unofficial "class-2 ASF below the 22.5 % flat-rate: counted as is (R. 262-10-1, II 2°)";
+    when asf_percue(p, mois, RANG_2, percu)
+        and bmaf_retenue(p, bmaf)
+        and percu <= bmaf * TauxAsfForfaitRang2;
+    then asf_retenu_rang(p, mois, RANG_2, percu);
+}
+
+@source(
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06)
+rule AsfRang2Plafonnee(p: Personne, mois: Date, percu: Money, bmaf: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF rang 2 au-delà du forfait 22,5 % : comptée à hauteur du forfait (R. 262-10-1, II 2°)";
+    label en unofficial "class-2 ASF above the 22.5 % flat-rate: counted up to the flat-rate (R. 262-10-1, II 2°)";
+    when asf_percue(p, mois, RANG_2, percu)
+        and bmaf_retenue(p, bmaf)
+        and percu > bmaf * TauxAsfForfaitRang2;
+    then asf_retenu_rang(p, mois, RANG_2, bmaf * TauxAsfForfaitRang2);
+}
+
+// --- ASF monthly total: one retained amount per category (key(p, mois,
+// cat) on montant_retenu_mois). Both classes together are summed; a lone
+// class is kept alone, guarded by the absence of the other class. ---
+
+@source(
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06)
+rule AsfRangPresent(p: Personne, mois: Date, classe: ClasseAsf, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "classe ASF servie dès qu'un montant est perçu (R. 262-10-1, II)";
+    label en unofficial "ASF class served as soon as an amount is received (R. 262-10-1, II)";
+    when asf_percue(p, mois, classe, v);
+    then asf_rang_present(p, mois, classe);
+}
+
+@source(
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06)
+rule AsfTotalDeuxRangs(p: Personne, mois: Date, c1: Money, c2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF deux classes : somme des montants retenus par rang (R. 262-10-1, II)";
+    label en unofficial "ASF in both classes: sum of the per-class retained amounts (R. 262-10-1, II)";
+    when asf_retenu_rang(p, mois, RANG_1, c1)
+        and asf_retenu_rang(p, mois, RANG_2, c2);
+    then montant_retenu_mois(p, mois, ASF_PERCUE, c1 + c2);
+}
+
+@source(
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06)
+rule AsfTotalRang1Seul(p: Personne, mois: Date, c1: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF rang 1 seul : montant retenu du rang 1 (R. 262-10-1, II 1°)";
+    label en unofficial "class-1 ASF only: the class-1 retained amount (R. 262-10-1, II 1°)";
+    when asf_retenu_rang(p, mois, RANG_1, c1)
+        and not_known(asf_rang_present(p, mois, RANG_2));
+    then montant_retenu_mois(p, mois, ASF_PERCUE, c1);
+}
+
+@source(
+    CASF_R262_10_1,
+    CASF_R262_10_1_ED2021_03,
+    CASF_R262_10_1_ED2022_03,
+    CASF_R262_10_1_ED2023_12,
+    CASF_R262_10_1_ED2025_02,
+    CASF_R262_10_1_ED2025_06,
+    CASF_R262_10_1_ED2026_06)
+rule AsfTotalRang2Seul(p: Personne, mois: Date, c2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ASF rang 2 seul : montant retenu du rang 2 (R. 262-10-1, II 2°)";
+    label en unofficial "class-2 ASF only: the class-2 retained amount (R. 262-10-1, II 2°)";
+    when asf_retenu_rang(p, mois, RANG_2, c2)
+        and not_known(asf_rang_present(p, mois, RANG_1));
+    then montant_retenu_mois(p, mois, ASF_PERCUE, c2);
+}
+
+// --- R.262-11 exclusions, stable items (editions 2021-01 on) ---
+//
+// One rule per exclusion group; each concludes a zero retained amount in
+// the EXCLUE bucket (idempotent across groups). The @source set covers
+// every edition: one fragment per R.262-11 version in force.
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionPfNaissance(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prime naissance/adoption non comptée (R. 262-11, 1°)";
+    label en unofficial "birth/adoption grant not counted (R. 262-11, 1°)";
+    when prestation_exclue_mois(p, mois, EXCL_PF_NAISSANCE, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionPfBaseNaissance(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "allocation de base du mois de naissance (trois mois si majoré) non comptée (R. 262-11, 2°)";
+    label en unofficial "base allowance of the birth month (three months if increased) not counted (R. 262-11, 2°)";
+    when prestation_exclue_mois(p, mois, EXCL_PF_BASE_NAISSANCE, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionMajoAgeForfait(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "majoration pour âge et allocation forfaitaire L. 521-1 non comptées (R. 262-11, 3°)";
+    label en unofficial "age supplement and L. 521-1 lump-sum not counted (R. 262-11, 3°)";
+    when prestation_exclue_mois(p, mois, EXCL_PF_MAJO_AGE_FORFAIT, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionArsCmgAeehAjpp(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ARS, CMG, AEEH et compléments, AJPP non comptés (R. 262-11, 4° à 7°)";
+    label en unofficial "ARS, CMG, AEEH and top-ups, AJPP not counted (R. 262-11, 4° to 7°)";
+    when prestation_exclue_mois(p, mois, EXCL_ARS_CMG_AEEH_AJPP, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionDemenagement(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "primes de déménagement non comptées (R. 262-11, 8°)";
+    label en unofficial "moving grants not counted (R. 262-11, 8°)";
+    when prestation_exclue_mois(p, mois, EXCL_DEMENAGEMENT, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionPch(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prestation de compensation du handicap non comptée (R. 262-11, 9°)";
+    label en unofficial "disability compensation benefit not counted (R. 262-11, 9°)";
+    when prestation_exclue_mois(p, mois, EXCL_PCH, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionPrestationNature(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prestations en nature maladie/maternité/AT-MP et AME non comptées (R. 262-11, 10°)";
+    label en unofficial "in-kind health/maternity/work-injury benefits and AME not counted (R. 262-11, 10°)";
+    when prestation_exclue_mois(p, mois, EXCL_PRESTATION_NATURE, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionRemplacement(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "indemnités de remplacement L. 663-1/2 et rurales non comptées (R. 262-11, 11°)";
+    label en unofficial "replacement allowances (L. 663-1/2, rural) not counted (R. 262-11, 11°)";
+    when prestation_exclue_mois(p, mois, EXCL_REMPLACEMENT, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionCapitalAt(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "indemnité en capital AT non comptée (R. 262-11, 12°)";
+    label en unofficial "work-injury capital indemnity not counted (R. 262-11, 12°)";
+    when prestation_exclue_mois(p, mois, EXCL_CAPITAL_AT, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionReeducation(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prime de rééducation et prêt d'honneur non comptés (R. 262-11, 13°)";
+    label en unofficial "rehabilitation grant and honour loan not counted (R. 262-11, 13°)";
+    when prestation_exclue_mois(p, mois, EXCL_REEDUCATION, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionSecoursIrregulier(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "secours irréguliers et aides d'insertion non comptés (R. 262-11, 14°)";
+    label en unofficial "irregular relief and integration aid not counted (R. 262-11, 14°)";
+    when prestation_exclue_mois(p, mois, EXCL_SECOURS_IRREGULIER, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionRetourEmploi(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prime de retour à l'emploi et aides L. 5133-1/8 et L. 5131-6 non comptées (R. 262-11, 15°)";
+    label en unofficial "return-to-work grant and L. 5133-1/8, L. 5131-6 aid not counted (R. 262-11, 15°)";
+    when prestation_exclue_mois(p, mois, EXCL_RETOUR_EMPLOI, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionBourse(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "bourses d'études et allocation diversité non comptées (R. 262-11, 16°)";
+    label en unofficial "study grants and diversity allowance not counted (R. 262-11, 16°)";
+    when prestation_exclue_mois(p, mois, EXCL_BOURSE, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionDecesCapital(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "frais funéraires, capital décès et allocation conjoint non comptés (R. 262-11, 17° et 18°)";
+    label en unofficial "funeral costs, death capital and spouse allowance not counted (R. 262-11, 17° and 18°)";
+    when prestation_exclue_mois(p, mois, EXCL_DECES_CAPITAL, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionAnciensCombattants(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "allocations anciens combattants, supplétifs et reconnaissance non comptées (R. 262-11, 19° à 21°)";
+    label en unofficial "veterans, suppletif-spouse and recognition allowances not counted (R. 262-11, 19° to 21°)";
+    when prestation_exclue_mois(p, mois, EXCL_ANCIENS_COMBATTANTS, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionReparation(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "mesures de réparation 2000/2004 non comptées (R. 262-11, 22° et 23°)";
+    label en unofficial "2000/2004 reparation measures not counted (R. 262-11, 22° and 23°)";
+    when prestation_exclue_mois(p, mois, EXCL_REPARATION, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionRso(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "revenu de solidarité L. 522-14 non compté (R. 262-11, 24°)";
+    label en unofficial "L. 522-14 solidarity income not counted (R. 262-11, 24°)";
+    when prestation_exclue_mois(p, mois, EXCL_RSO, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionPrimeActivite(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "prime d'activité non comptée (R. 262-11, 25° ; B-MINRES-PA-TRIMESTRE)";
+    label en unofficial "prime d'activité not counted (R. 262-11, 25°; B-MINRES-PA-TRIMESTRE)";
+    when prestation_exclue_mois(p, mois, EXCL_PRIME_ACTIVITE, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionAidant(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "dédommagement aidant familial non compté (R. 262-11, 26°)";
+    label en unofficial "family-carer compensation not counted (R. 262-11, 26°)";
+    when prestation_exclue_mois(p, mois, EXCL_AIDANT, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE202103,
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionAjpa(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "AJPA L. 168-8 non comptée (R. 262-11, 27°)";
+    label en unofficial "L. 168-8 AJPA not counted (R. 262-11, 27°)";
+    when prestation_exclue_mois(p, mois, EXCL_AJPA, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+// --- R.262-11 exclusions added later ---
+
+@source(
+    CASF_R262_11_PRE202203,
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionDecesEnfant(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-03-25, infinity);
+    label fr official "allocation forfaitaire décès d'enfant L. 545-1 non comptée (R. 262-11, 28°)";
+    label en unofficial "L. 545-1 child-death lump sum not counted (R. 262-11, 28°)";
+    when prestation_exclue_mois(p, mois, EXCL_DECES_ENFANT, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE2024,
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionViagere2015(p: Personne, mois: Date, v: Money) strict {
+    effective [@2022-03-21, infinity);
+    label fr official "allocation viagère 2015-1785 non comptée (R. 262-11, 21° bis)";
+    label en unofficial "2015-1785 life annuity not counted (R. 262-11, 21° bis)";
+    when prestation_exclue_mois(p, mois, EXCL_VIAGERE_2015, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionAutonomieTierce(p: Personne, mois: Date, v: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "entretien enfant, APA et majorations tierce personne non comptés (R. 262-11, 29° à 36°)";
+    label en unofficial "child maintenance, APA and third-party top-ups not counted (R. 262-11, 29° to 36°)";
+    when prestation_exclue_mois(p, mois, EXCL_AUTONOMIE_TIERCE, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11_PRE2025,
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionFinVieUrgence(p: Personne, mois: Date, v: Money) strict {
+    effective [@2023-12-31, infinity);
+    label fr official "allocation fin de vie et aide violences conjugales non comptées (R. 262-11, 37° et 38°)";
+    label en unofficial "end-of-life allowance and domestic-violence aid not counted (R. 262-11, 37° and 38°)";
+    when prestation_exclue_mois(p, mois, EXCL_FIN_VIE_URGENCE, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}
+
+@source(
+    CASF_R262_11,
+    CASF_R262_11_ED2025_06,
+    CASF_R262_11_ED2026_06)
+rule ExclusionSecoursFamille(p: Personne, mois: Date, v: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "secours familiaux non comptés (R. 262-11, 14° bis, décret 2025-185)";
+    label en unofficial "family relief not counted (R. 262-11, 14° bis, decree 2025-185)";
+    when prestation_exclue_mois(p, mois, EXCL_SECOURS_FAMILLE, v);
+    then montant_retenu_mois(p, mois, EXCLUE, 0 EUR);
+}

@@ -1,0 +1,39 @@
+// R. 541-9/10, missing-subtype silence (open world): a carer with a
+// competent MDPH but no pursued third-element request holds no
+// DeposerDemandePCH; simultaneous requests without the third element
+// exclude nothing; a supplement beneficiary filing for PCH without the
+// non-tierce-expense subtype triggers no revision; a PCH renewal
+// request without the L. 245-1 III 1° status and the handicap/factor
+// evolution triggers no re-examination; an early supplement option
+// with lump-sum elements of an unlisted subtype (fact not asserted)
+// trips no prohibition.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-pch-silencieux" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-ps-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-ps"), entity_ref("urn:fr:pf-aeeh:case:enfant-ps")) { origin case_input; }
+        assert "r541-ps-02": mdph_competente(entity_ref("urn:fr:pf-aeeh:mdph:mdph-75"), entity_ref("urn:fr:pf-aeeh:case:enfant-ps")) { origin case_input; }
+        assert "r541-ps-03": commission_competente(entity_ref("urn:fr:pf-aeeh:commission:cdaph-75"), entity_ref("urn:fr:pf-aeeh:case:enfant-ps")) { origin case_input; }
+        assert "r541-ps-04": beneficiaire_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-ps")) { origin case_input; }
+        assert "r541-ps-05": demande_pch_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-ps")) { origin case_input; }
+        assert "r541-ps-06": demande_renouvellement_pch(entity_ref("urn:fr:pf-aeeh:case:enfant-ps")) { origin case_input; }
+        assert "r541-ps-07": demande_simultanee_aeeh_pch(entity_ref("urn:fr:pf-aeeh:case:enfant-ps")) { origin case_input; }
+        assert "r541-ps-08": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-ps-opt"), entity_ref("urn:fr:pf-aeeh:case:enfant-ps-opt")) { origin case_input; }
+        assert "r541-ps-09": echeance_elements_pch(entity_ref("urn:fr:pf-aeeh:case:enfant-ps-opt"), @2025-01-01) { origin case_input; }
+        assert "r541-ps-10": date_appreciation(entity_ref("urn:fr:pf-aeeh:case:enfant-ps-opt"), @2024-03-15) { origin case_input; }
+        assert "r541-ps-11": option_complement_anticipee(entity_ref("urn:fr:pf-aeeh:case:enfant-ps-opt")) { origin case_input; }
+    }
+    evaluate truth(charges_pch_exclues_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-ps")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate positions();
+    expect not position(DeposerDemandePCH, ACTIVE);
+    expect not position(ReviserDecisionPCH, ACTIVE);
+    expect not position(ReexaminerComplementPCH, ACTIVE);
+    expect not position(OpterComplementAvantEcheance, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

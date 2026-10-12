@@ -1,0 +1,17 @@
+// Vehicle retained evidence-missing (PC-R06-01): valeur+date with section but no amount-bearing evidence nor attested absence - no retained value (R. 553-3-1 II 2° support required).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-valeur-retenue-preuve-manquante" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-retenue-manquante-01": vehicule_bien_valeur(entity_ref("urn:fr:pf:case:retenue-manquante"), entity_ref("urn:fr:pf:case:auto-1"), 12000.00 EUR, 1.0) { origin case_input; }
+        assert "tdv-retenue-manquante-02": vehicule_bien_date(entity_ref("urn:fr:pf:case:retenue-manquante"), entity_ref("urn:fr:pf:case:auto-1"), @2026-02-10) { origin case_input; }
+        assert "tdv-retenue-manquante-03": prestation_soumise_section(entity_ref("urn:fr:pf:case:retenue-manquante")) { origin case_input; }
+    }
+    evaluate truth(vehicule_bien_valeur_retenue(entity_ref("urn:fr:pf:case:retenue-manquante"), entity_ref("urn:fr:pf:case:auto-1"), 12000.00 EUR, 1.0, @2026-02-10));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

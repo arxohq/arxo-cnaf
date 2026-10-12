@@ -1,0 +1,18 @@
+// 50-79 % without RSDAE: no track opens, computation head stays silent.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-droit-50-79-sans-rsdae" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "droitss-01": decision_cdaph_50_79(entity_ref("urn:fr:css-aah:case:seul-60-sans")) { origin adjudicated; }
+        assert "droitss-03": age_droit_depasse(entity_ref("urn:fr:css-aah:case:seul-60-sans")) { origin case_input; }
+        assert "droitss-04": residence_permanente(entity_ref("urn:fr:css-aah:case:seul-60-sans")) { origin case_input; }
+        assert "droitss-05": sejour_regulier(entity_ref("urn:fr:css-aah:case:seul-60-sans")) { origin case_input; }
+    }
+    evaluate truth(aah_droit_calcule(entity_ref("urn:fr:css-aah:case:seul-60-sans")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

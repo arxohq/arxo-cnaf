@@ -1,0 +1,21 @@
+// No increase without rejected observations: eligible establishment, opening notice, registered demand, notice-sourced sums unpaid past exigibility, but no rejection of observations - no 10% (L. 553-2-1 al. 2-4, PC-R08-02).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-recouvrement-majoration-sans-rejet" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "recouvrement-majoration-sans-rejet-01": etablissement_service_eligible_l5532_1(entity_ref("urn:fr:pf:case:indu-sans-rejet")) { origin case_input; }
+        assert "recouvrement-majoration-sans-rejet-02": mise_en_demeure_adressee_le(entity_ref("urn:fr:pf:case:indu-sans-rejet"), @2026-01-10) { origin case_input; }
+        assert "recouvrement-majoration-sans-rejet-03": sommes_mise_issues_notification(entity_ref("urn:fr:pf:case:indu-sans-rejet"), 2000 EUR) { origin case_input; }
+        assert "recouvrement-majoration-sans-rejet-04": sommes_non_reglees(entity_ref("urn:fr:pf:case:indu-sans-rejet"), 2000 EUR) { origin case_input; }
+        assert "recouvrement-majoration-sans-rejet-05": date_exigibilite_mise_le(entity_ref("urn:fr:pf:case:indu-sans-rejet"), @2026-02-10) { origin case_input; }
+        assert "recouvrement-majoration-sans-rejet-06": date_appreciation(entity_ref("urn:fr:pf:case:indu-sans-rejet"), @2026-03-15) { origin case_input; }
+        assert "recouvrement-majoration-sans-rejet-07": notification_recouvrement_adressee(entity_ref("urn:fr:pf:case:indu-sans-rejet")) { origin case_input; }
+    }
+    evaluate truth(majoration_mise_en_demeure(entity_ref("urn:fr:pf:case:indu-sans-rejet"), 200 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

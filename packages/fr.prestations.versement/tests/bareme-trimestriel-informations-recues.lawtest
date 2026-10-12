@@ -1,0 +1,16 @@
+// Quarterly right where current quarterly information has since arrived: last-known 400 is no longer applicable without the still-unknown fact - no kept amount (D. 553-1 III, PC-R02-01).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-trimestriel-informations-recues" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "t-ouv": droit_trimestriel_ouvert(entity_ref("urn:fr:pv:case:trimestriel-recu")) { origin case_input; }
+        assert "t-pond": pond_trimestriel_connu(entity_ref("urn:fr:pv:case:trimestriel-recu"), 400.00 EUR) { origin case_input; }
+        assert "t-dec": declaration_montant_revenus_non_recue(entity_ref("urn:fr:pv:case:trimestriel-recu")) { origin case_input; }
+    }
+    evaluate truth(revenu_pondere(entity_ref("urn:fr:pv:case:trimestriel-recu"), 400.00 EUR));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

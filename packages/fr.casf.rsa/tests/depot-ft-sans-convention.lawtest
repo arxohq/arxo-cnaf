@@ -1,0 +1,20 @@
+// France Travail board decided but no modalities convention: the
+// empowerment does not hold, so the D. 262-26 e) venue does not open
+// (D. 262-27). Pair of depot-ft.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-depot-ft-sans-convention" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "depot-01": demande_rsa_deposee(entity_ref("urn:fr:rsa:case:depot-ft-sans-convention")) { origin case_input; }
+        assert "depot-02": est_france_travail(entity_ref("urn:fr:rsa:org:ft")) { origin case_input; }
+        assert "depot-03": decision_ca_instruire(entity_ref("urn:fr:rsa:org:ft")) { origin case_input; }
+        assert "depot-04": organisme_competent(entity_ref("urn:fr:rsa:org:ft"), entity_ref("urn:fr:rsa:case:depot-ft-sans-convention")) { origin case_input; }
+    }
+    evaluate truth(ft_habilite_instruire(entity_ref("urn:fr:rsa:org:ft")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

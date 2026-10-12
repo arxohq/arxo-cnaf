@@ -1,0 +1,200 @@
+// Меблированный наём (D. 842-2 CCH, D-85 09.10.2026): loyer principal — две трети уплаченной цены
+//
+// ИСТОЧНИК (закреплён 09.10.2026, sources/fr-apl/cch-2023-12.txt, «Article D842-1» и
+// «Article D842-2»): D. 842-1 — расчёт AL в найме по D. 823-16 «sous réserve des dispositions
+// des articles D. 842-2»; D. 842-2 — «lorsque l'allocataire occupe un logement loué en meublé,
+// le prix du loyer est remplacé par les deux tiers du prix effectivement payé dans la limite du
+// loyer-plafond». APL — последний абзац D. 823-18 (версия с 11.01.2020): «Lorsque le logement
+// est loué ou sous-loué en meublé, les dispositions de l'article D. 842-2 s'appliquent le cas
+// échéant pour la détermination des loyers pris en compte».
+//
+// ДЕЛО — факты LexImpact 2024 ass_01_personne_seule (их прогон): одинокое лицо, зона II,
+// ресурсы 0 €, меблированный наём 700 €, ALS, январь 2024 года.
+//
+// ОЖИДАНИЯ — из независимой реплики на дробях (Fraction) по закреплённому барему пакета
+// (bareme/*.lawparam.json, редакция 2024-01), не из их кода:
+//   две трети: 700 × 2 / 3 = 466,666… — не конечная дробь; под D-82 (ArrondiCentimeHalfUp)
+//   до сантима HALF_UP 466,67; без выбора прочтения — отказ (INEXACT_DIVISION);
+//   L = min(466,67; плафон зоны II 278,28) = 278,28; C = 58,08; P0 = max(8,5 % × 336,36; 37,91)
+//   = 37,91; R = 0 → Pp = P0; Af = 278,28 + 58,08 − 37,91 = 298,45;
+//   плафон дегрессивности 278,28 × 2,5 = 695,70: 466,67 ≤ 695,70 — уменьшения нет;
+//   минорация −5 → 293,45; взносы 0,5 % = 1,46725; ⌊291,98275⌋ = 291; 291 + 1,46725 =
+//   292,46725 (aide_mensuelle); после удержания CRDS 292,46725 × 0,995 = 291,00491375
+//   (aide_nette_precompte_crds).
+// Без правила двух третей (наём 700 €): 700 > 695,70 → пропорция → 284,001656 после CRDS.
+// Их код: 291,98 = round2(293,45 × 0,995) — две трети у них тоже (round_(700 × 2/3) = 467);
+// остаток 0,975 € — их шаг взносов без «arrondi à l'euro inférieur» (класс (б)).
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+test "urn:query:fr-apl-meuble-als-2024-01-d82" {
+    given {
+        context { decision_time @2024-01-15T12:00:00Z; knowledge_time @2024-01-15T12:00:00Z; legal_time @2024-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "meuble-als-a-01": secteur_locatif(entity_ref("urn:fr:apl:case:meuble-als-2024-01")) { origin case_input; }
+        assert "meuble-als-a-02": aide_demandee(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), ALS) { origin case_input; }
+        assert "meuble-als-a-03": zone_du_logement(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), ZONE_II) { origin case_input; }
+        assert "meuble-als-a-04": situation_familiale(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), PERSONNE_SEULE) { origin case_input; }
+        assert "meuble-als-a-05": personnes_a_charge(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), 0) { origin case_input; }
+        assert "meuble-als-a-06": ressources_du_menage(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), 0 EUR) { origin case_input; }
+        assert "meuble-als-a-07": prix_paye_logement_meuble(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), 700 EUR) { origin case_input; }
+        assert "meuble-als-a-08": mode_location(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), LOCATION_SEULE) { origin case_input; }
+        assert "meuble-als-a-09": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), 0 EUR) { origin case_input; }
+        assert "meuble-als-a-10": territoire(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), METROPOLE) { origin case_input; }
+        assert "meuble-als-a-11": forme_logement(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "meuble-als-a-12": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), false) { origin case_input; }
+    }
+    evaluate truth(loyer_principal(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), 466.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(loyer_eligible(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), 278.28 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_apres_degressivite(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), 298.45 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), 292.46725 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_nette_precompte_crds(entity_ref("urn:fr:apl:case:meuble-als-2024-01"), 291.00491375 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Контроль: то же дело без выбора D-82 — две трети 700 € не конечная дробь, loyer principal
+// не выводится (отказ INEXACT_DIVISION), пособие не считается.
+test "urn:query:fr-apl-meuble-als-2024-01-sans-lecture" {
+    given {
+        context { decision_time @2024-01-15T12:00:00Z; knowledge_time @2024-01-15T12:00:00Z; legal_time @2024-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "meuble-als-b-01": secteur_locatif(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl")) { origin case_input; }
+        assert "meuble-als-b-02": aide_demandee(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), ALS) { origin case_input; }
+        assert "meuble-als-b-03": zone_du_logement(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), ZONE_II) { origin case_input; }
+        assert "meuble-als-b-04": situation_familiale(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), PERSONNE_SEULE) { origin case_input; }
+        assert "meuble-als-b-05": personnes_a_charge(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), 0) { origin case_input; }
+        assert "meuble-als-b-06": ressources_du_menage(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), 0 EUR) { origin case_input; }
+        assert "meuble-als-b-07": prix_paye_logement_meuble(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), 700 EUR) { origin case_input; }
+        assert "meuble-als-b-08": mode_location(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), LOCATION_SEULE) { origin case_input; }
+        assert "meuble-als-b-09": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), 0 EUR) { origin case_input; }
+        assert "meuble-als-b-10": territoire(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), METROPOLE) { origin case_input; }
+        assert "meuble-als-b-11": forme_logement(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "meuble-als-b-12": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), false) { origin case_input; }
+    }
+    evaluate truth(loyer_principal(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), 466.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:meuble-als-2024-01-sl"), 292.46725 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}
+
+// Точные две трети без прочтения: цена 1 050 € → loyer principal 700 € (конечная дробь).
+test "urn:query:fr-apl-meuble-als-2024-01-exact" {
+    given {
+        context { decision_time @2024-01-15T12:00:00Z; knowledge_time @2024-01-15T12:00:00Z; legal_time @2024-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "meuble-als-c-01": secteur_locatif(entity_ref("urn:fr:apl:case:meuble-als-1050")) { origin case_input; }
+        assert "meuble-als-c-02": aide_demandee(entity_ref("urn:fr:apl:case:meuble-als-1050"), ALS) { origin case_input; }
+        assert "meuble-als-c-03": zone_du_logement(entity_ref("urn:fr:apl:case:meuble-als-1050"), ZONE_II) { origin case_input; }
+        assert "meuble-als-c-04": situation_familiale(entity_ref("urn:fr:apl:case:meuble-als-1050"), PERSONNE_SEULE) { origin case_input; }
+        assert "meuble-als-c-05": personnes_a_charge(entity_ref("urn:fr:apl:case:meuble-als-1050"), 0) { origin case_input; }
+        assert "meuble-als-c-06": ressources_du_menage(entity_ref("urn:fr:apl:case:meuble-als-1050"), 0 EUR) { origin case_input; }
+        assert "meuble-als-c-07": prix_paye_logement_meuble(entity_ref("urn:fr:apl:case:meuble-als-1050"), 1050 EUR) { origin case_input; }
+        assert "meuble-als-c-08": mode_location(entity_ref("urn:fr:apl:case:meuble-als-1050"), LOCATION_SEULE) { origin case_input; }
+        assert "meuble-als-c-09": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:meuble-als-1050"), 0 EUR) { origin case_input; }
+        assert "meuble-als-c-10": territoire(entity_ref("urn:fr:apl:case:meuble-als-1050"), METROPOLE) { origin case_input; }
+        assert "meuble-als-c-11": forme_logement(entity_ref("urn:fr:apl:case:meuble-als-1050"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "meuble-als-c-12": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:meuble-als-1050"), false) { origin case_input; }
+    }
+    evaluate truth(loyer_principal(entity_ref("urn:fr:apl:case:meuble-als-1050"), 700 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(loyer_eligible(entity_ref("urn:fr:apl:case:meuble-als-1050"), 278.28 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Под D-82 цена 1 050 € (две трети 700 €, выше плафона дегрессивности 695,70 €): пропорция
+// 298,45 × (862,668 − 700) / (862,668 − 695,70) = 290,758… → 290,76; −5 → 285,76; взносы
+// 1,4288; ⌊284,3312⌋ = 284 → 285,4288; после CRDS 284,001656 — то же, что у немеблированного
+// найма 700 € (реплика выше): правило двух третей переводит цену в тот же наём.
+test "urn:query:fr-apl-meuble-als-2024-01-exact-degressivite" {
+    given {
+        context { decision_time @2024-01-15T12:00:00Z; knowledge_time @2024-01-15T12:00:00Z; legal_time @2024-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "meuble-als-d-01": secteur_locatif(entity_ref("urn:fr:apl:case:meuble-als-1050-d82")) { origin case_input; }
+        assert "meuble-als-d-02": aide_demandee(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), ALS) { origin case_input; }
+        assert "meuble-als-d-03": zone_du_logement(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), ZONE_II) { origin case_input; }
+        assert "meuble-als-d-04": situation_familiale(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), PERSONNE_SEULE) { origin case_input; }
+        assert "meuble-als-d-05": personnes_a_charge(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), 0) { origin case_input; }
+        assert "meuble-als-d-06": ressources_du_menage(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), 0 EUR) { origin case_input; }
+        assert "meuble-als-d-07": prix_paye_logement_meuble(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), 1050 EUR) { origin case_input; }
+        assert "meuble-als-d-08": mode_location(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), LOCATION_SEULE) { origin case_input; }
+        assert "meuble-als-d-09": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), 0 EUR) { origin case_input; }
+        assert "meuble-als-d-10": territoire(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), METROPOLE) { origin case_input; }
+        assert "meuble-als-d-11": forme_logement(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "meuble-als-d-12": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), false) { origin case_input; }
+    }
+    evaluate truth(aide_apres_degressivite(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), 290.76 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aide_nette_precompte_crds(entity_ref("urn:fr:apl:case:meuble-als-1050-d82"), 284.001656 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// APL с 11.01.2020: отсылка D. 823-18 к D. 842-2 — те же две трети (под D-82 466,67 €).
+test "urn:query:fr-apl-meuble-apl-2024-01-d82" {
+    given {
+        context { decision_time @2024-01-15T12:00:00Z; knowledge_time @2024-01-15T12:00:00Z; legal_time @2024-01-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "meuble-apl-a-01": secteur_locatif(entity_ref("urn:fr:apl:case:meuble-apl-2024-01")) { origin case_input; }
+        assert "meuble-apl-a-02": aide_demandee(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), APL) { origin case_input; }
+        assert "meuble-apl-a-03": zone_du_logement(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), ZONE_II) { origin case_input; }
+        assert "meuble-apl-a-04": situation_familiale(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), PERSONNE_SEULE) { origin case_input; }
+        assert "meuble-apl-a-05": personnes_a_charge(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), 0) { origin case_input; }
+        assert "meuble-apl-a-06": ressources_du_menage(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), 0 EUR) { origin case_input; }
+        assert "meuble-apl-a-07": prix_paye_logement_meuble(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), 700 EUR) { origin case_input; }
+        assert "meuble-apl-a-08": mode_location(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), LOCATION_SEULE) { origin case_input; }
+        assert "meuble-apl-a-09": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), 0 EUR) { origin case_input; }
+        assert "meuble-apl-a-10": territoire(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), METROPOLE) { origin case_input; }
+        assert "meuble-apl-a-11": forme_logement(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "meuble-apl-a-12": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), false) { origin case_input; }
+    }
+    evaluate truth(loyer_principal(entity_ref("urn:fr:apl:case:meuble-apl-2024-01"), 466.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// APL до 11.01.2020: абзаца D. 823-18 о меблированном найме ещё нет (версия
+// LEGIARTI000038878901, cch-2019-12.txt) — loyer principal равен уплаченной цене 700 €.
+test "urn:query:fr-apl-meuble-apl-2019-12-avant-renvoi" {
+    given {
+        context { decision_time @2019-12-15T12:00:00Z; knowledge_time @2019-12-15T12:00:00Z; legal_time @2019-12-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; interpretation ArrondiCentimeHalfUp; }
+        assert "meuble-apl-b-01": secteur_locatif(entity_ref("urn:fr:apl:case:meuble-apl-2019-12")) { origin case_input; }
+        assert "meuble-apl-b-02": aide_demandee(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), APL) { origin case_input; }
+        assert "meuble-apl-b-03": zone_du_logement(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), ZONE_II) { origin case_input; }
+        assert "meuble-apl-b-04": situation_familiale(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), PERSONNE_SEULE) { origin case_input; }
+        assert "meuble-apl-b-05": personnes_a_charge(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), 0) { origin case_input; }
+        assert "meuble-apl-b-06": ressources_du_menage(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), 0 EUR) { origin case_input; }
+        assert "meuble-apl-b-07": prix_paye_logement_meuble(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), 700 EUR) { origin case_input; }
+        assert "meuble-apl-b-08": mode_location(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), LOCATION_SEULE) { origin case_input; }
+        assert "meuble-apl-b-09": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), 0 EUR) { origin case_input; }
+        assert "meuble-apl-b-10": territoire(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), METROPOLE) { origin case_input; }
+        assert "meuble-apl-b-11": forme_logement(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "meuble-apl-b-12": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), false) { origin case_input; }
+    }
+    evaluate truth(loyer_principal(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), 700 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(loyer_principal(entity_ref("urn:fr:apl:case:meuble-apl-2019-12"), 466.67 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

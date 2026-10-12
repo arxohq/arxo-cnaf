@@ -1,0 +1,18 @@
+// IJ transmission: 800 EUR L. 431-1 2° allowances due by the compulsory scheme - the scheme must communicate them to the fisc (L. 583-4, PC-R07-26).
+// D-42: the case lacked the competent tax administration: DevoirTransmettreIJ (09b) binds the
+// duty beneficiary through administration_fiscale_competente (L. 583-4 "a l'administration fiscale").
+// Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-creance-transmettre-ij" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "creance-transmettre-ij-01": ij_l4311_dues(entity_ref("urn:fr:pf:org:regime-maladie"), entity_ref("urn:fr:pf:case:assure-ij"), 800 EUR) { origin case_input; }
+        assert "creance-transmettre-ij-02": administration_fiscale_competente(entity_ref("urn:fr:pf:org:dgfip"), entity_ref("urn:fr:pf:case:assure-ij")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreIndemnitesJournalieres, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

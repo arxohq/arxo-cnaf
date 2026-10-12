@@ -1,0 +1,15 @@
+// Concubinage total: both partners' reference-year resources count (R. 532-3 last paragraph).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-ressources-concubinage-total" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ressources-concubinage-total-01": ressources_concubin(entity_ref("urn:fr:pf:case:ressources-concubins"), 15000 EUR, 10000 EUR) { origin case_input; }
+    }
+    evaluate truth(ressources_totales(entity_ref("urn:fr:pf:case:ressources-concubins"), 25000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

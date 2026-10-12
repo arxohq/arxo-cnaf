@@ -1,0 +1,358 @@
+{
+ "$comment": "Blind-read cases for fr.prestations.versement (W5-VERS): facts + legal_time + probed relations only, NO answers. An independent reader (session G, prompt C) fills answers from pinned sources without opening .law/tests/bareme. Coverage: CRDS per track + AEEH exception + AJPA silence, 15 EUR floor edges, recovery base/fraud/reiteration/prescription/suspensif/carry/debt-cap, duty positions, pre-2024 reserve, PA border.",
+ "cases": [
+  {
+   "boundary": "CRDS core: AF monthly brut",
+   "facts": {
+    "af_montant_du": "192.00 EUR"
+   },
+   "id": "pv-blind-01",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "crds_precomptee_af",
+    "montant_net_crds_af"
+   ]
+  },
+  {
+   "boundary": "CRDS exactness: sub-centime product kept, no rounding rule in text",
+   "facts": {
+    "af_montant_du": "10.10 EUR"
+   },
+   "id": "pv-blind-02",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "crds_precomptee_af",
+    "montant_net_crds_af"
+   ]
+  },
+  {
+   "boundary": "CRDS CF triple track: base",
+   "facts": {
+    "cf_montant_du": "100.00 EUR"
+   },
+   "id": "pv-blind-03",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "crds_precomptee_cf",
+    "montant_net_crds_cf"
+   ]
+  },
+  {
+   "boundary": "CRDS ARS annual per-child track",
+   "facts": {
+    "ars_montant_du": "400.00 EUR"
+   },
+   "id": "pv-blind-04",
+   "legal_time": "2024-08-15",
+   "probe": [
+    "crds_precomptee_ars",
+    "montant_net_crds_ars"
+   ]
+  },
+  {
+   "boundary": "CRDS ASF differential track",
+   "facts": {
+    "asf_differentiel_du": "30.00 EUR"
+   },
+   "id": "pv-blind-05",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "crds_precomptee_asf_differentiel",
+    "montant_net_crds_asf_differentiel"
+   ]
+  },
+  {
+   "boundary": "CRDS PAJE one-shot prime track",
+   "facts": {
+    "prime_attribuee": "1000.00 EUR"
+   },
+   "id": "pv-blind-06",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "crds_precomptee_prime",
+    "montant_net_crds_prime"
+   ]
+  },
+  {
+   "boundary": "CRDS CMG structure track (reform window)",
+   "facts": {
+    "montant_structure_du": "500.00 EUR"
+   },
+   "id": "pv-blind-07",
+   "legal_time": "2026-01-15",
+   "probe": [
+    "crds_precomptee_cmg_structure",
+    "montant_net_crds_cmg_structure"
+   ]
+  },
+  {
+   "boundary": "CRDS AJPP monthly track",
+   "facts": {
+    "ajpp_montant_mois": "600.00 EUR"
+   },
+   "id": "pv-blind-08",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "crds_precomptee_ajpp",
+    "montant_net_crds_ajpp"
+   ]
+  },
+  {
+   "boundary": "CRDS exception: AEEH excluded by art. 14 II 8 degrees",
+   "facts": {
+    "aeeh_montant_total": "300.00 EUR"
+   },
+   "id": "pv-blind-09",
+   "legal_time": "2024-03-15",
+   "probe": []
+  },
+  {
+   "boundary": "CRDS silence: AJPA outside L. 511-1, no rule",
+   "facts": {
+    "ajpa_montant_mois": "500.00 EUR"
+   },
+   "id": "pv-blind-10",
+   "legal_time": "2024-03-15",
+   "probe": []
+  },
+  {
+   "boundary": "ASF floor edge below: 14.99 not paid",
+   "facts": {
+    "total_menage_asf_retenu": "14.99 EUR"
+   },
+   "id": "pv-blind-11",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "asf_total_non_verse"
+   ]
+  },
+  {
+   "boundary": "ASF floor edge exact: 15.00 paid",
+   "facts": {
+    "total_menage_asf_retenu": "15.00 EUR"
+   },
+   "id": "pv-blind-12",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "asf_total_verse"
+   ]
+  },
+  {
+   "boundary": "ARS floor edge above: 15.01 paid",
+   "facts": {
+    "total_menage_ars_retenu": "15.01 EUR"
+   },
+   "id": "pv-blind-13",
+   "legal_time": "2024-08-15",
+   "probe": [
+    "ars_total_verse"
+   ]
+  },
+  {
+   "boundary": "Recovery base: PF indu on AF echeance, no fraud",
+   "facts": {
+    "af_montant_du": "192.00 EUR",
+    "indu_constate": "100.00 EUR",
+    "rsa_indu_reporte_sur_pf": "0 EUR",
+    "taux_retenue_pf_retenu": "0.25"
+   },
+   "id": "pv-blind-14",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "dette_recouvrable_af",
+    "taux_effectif_af",
+    "retenue_mensuelle_af",
+    "net_verse_af"
+   ]
+  },
+  {
+   "boundary": "Recovery fraud: 10 percent indemnity joins debt, uplift applies",
+   "facts": {
+    "af_montant_du": "192.00 EUR",
+    "indemnite_frais_gestion": "100.00 EUR",
+    "indu_constate": "1000.00 EUR",
+    "indu_frauduleux": true,
+    "rsa_indu_reporte_sur_pf": "0 EUR",
+    "taux_majoration_fraude_pf_retenu": "0.50",
+    "taux_retenue_pf_retenu": "0.25"
+   },
+   "id": "pv-blind-15",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "dette_recouvrable_af",
+    "taux_effectif_af",
+    "net_verse_af"
+   ]
+  },
+  {
+   "boundary": "Recovery reiteration: uplift doubled",
+   "facts": {
+    "af_montant_du": "192.00 EUR",
+    "fraude_reiteree": true,
+    "indemnite_frais_gestion": "100.00 EUR",
+    "indu_constate": "1000.00 EUR",
+    "indu_frauduleux": true,
+    "rsa_indu_reporte_sur_pf": "0 EUR",
+    "taux_majoration_fraude_pf_retenu": "0.50",
+    "taux_retenue_pf_retenu": "0.25"
+   },
+   "id": "pv-blind-16",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "taux_effectif_af",
+    "net_verse_af"
+   ]
+  },
+  {
+   "boundary": "Recovery barred: prescription drops the PF debt (D-V5; a carry would survive), full echeance paid",
+   "facts": {
+    "action_prescrite": true,
+    "af_montant_du": "192.00 EUR",
+    "indu_constate": "100.00 EUR",
+    "rsa_indu_reporte_sur_pf": "0 EUR",
+    "taux_retenue_pf_retenu": "0.25"
+   },
+   "id": "pv-blind-17",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "net_verse_af"
+   ]
+  },
+  {
+   "boundary": "Recovery debt cap: deduction capped at debt, not echeance-times-rate",
+   "facts": {
+    "af_montant_du": "192.00 EUR",
+    "indu_constate": "10.00 EUR",
+    "rsa_indu_reporte_sur_pf": "0 EUR",
+    "taux_retenue_pf_retenu": "0.25"
+   },
+   "id": "pv-blind-18",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "retenue_mensuelle_af",
+    "net_verse_af"
+   ]
+  },
+  {
+   "boundary": "Cross-benefit carry: RSA indu deducted from AF",
+   "facts": {
+    "af_montant_du": "192.00 EUR",
+    "indu_constate": "0 EUR",
+    "rsa_indu_reporte_sur_pf": "200.00 EUR",
+    "taux_retenue_pf_retenu": "0.25"
+   },
+   "id": "pv-blind-19",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "dette_recouvrable_af",
+    "net_verse_af"
+   ]
+  },
+  {
+   "boundary": "RSA recovery with suspensive appeal: neighbour withholds recouvrable, no recovery fact derives",
+   "facts": {
+    "allocation_mensuelle": "600.00 EUR",
+    "pf_indu_reporte_sur_rsa": "0 EUR",
+    "recours_suspensif": true,
+    "taux_retenue_rsa_retenu": "0.30"
+   },
+   "id": "pv-blind-20",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "net_verse_rsa"
+   ]
+  },
+  {
+   "boundary": "Housing recovery: PF+RSA carries on versement net",
+   "facts": {
+    "indu_logement_retenu": "50.00 EUR",
+    "montant_verse": "344.00 EUR",
+    "pf_indu_reporte_sur_logement": "50.00 EUR",
+    "rsa_indu_reporte_sur_logement": "50.00 EUR",
+    "taux_retenue_logement_retenu": "0.25"
+   },
+   "id": "pv-blind-21",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "dette_recouvrable_logement",
+    "net_verse_logement"
+   ]
+  },
+  {
+   "boundary": "Duty position: fund owes net AF",
+   "facts": {
+    "af_montant_du": "192.00 EUR",
+    "organisme_debiteur_pf": true
+   },
+   "id": "pv-blind-22",
+   "legal_time": "2024-03-15",
+   "probe": [
+    "af_net_verse"
+   ]
+  },
+  {
+   "boundary": "Pre-2024 reserve: recovery rules start 2024-01-01",
+   "facts": {
+    "af_montant_du": "192.00 EUR",
+    "indu_constate": "100.00 EUR",
+    "rsa_indu_reporte_sur_pf": "0 EUR",
+    "taux_retenue_pf_retenu": "0.25"
+   },
+   "id": "pv-blind-23",
+   "legal_time": "2023-06-15",
+   "probe": [
+    "net_verse_af"
+   ]
+  },
+  {
+   "boundary": "PA border: package exists (fr.css.prime_activite), not wired here — nothing derived",
+   "facts": {
+    "prime_mensuelle": "300.00 EUR"
+   },
+   "id": "pv-blind-24",
+   "legal_time": "2024-03-15",
+   "probe": []
+  },
+  {
+   "id": "pv-blind-25",
+   "legal_time": "2024-03-15",
+   "boundary": "D-V5: prescribed PF indu drops but the RSA carry survives on the AF echeance",
+   "facts": {
+    "af_montant_du": "192.00 EUR",
+    "indu_constate": "100.00 EUR",
+    "rsa_indu_reporte_sur_pf": "50.00 EUR",
+    "taux_retenue_pf_retenu": "0.25",
+    "action_prescrite": true
+   },
+   "probe": [
+    "dette_recouvrable_af",
+    "net_verse_af"
+   ]
+  },
+  {
+   "id": "pv-blind-26",
+   "legal_time": "2024-03-15",
+   "boundary": "RSA single-repayment option bars deduction: echeance paid whole",
+   "facts": {
+    "allocation_mensuelle": "600.00 EUR",
+    "indu_recouvrable": "500.00 EUR",
+    "pf_indu_reporte_sur_rsa": "0 EUR",
+    "taux_retenue_rsa_retenu": "0.30",
+    "remboursement_unique": true
+   },
+   "probe": [
+    "net_verse_rsa"
+   ]
+  }
+ ],
+ "method": "record benefit brut or debt inputs + legal_time + probed payment-stage relations + boundary note; no amounts derived, no answers",
+ "source_anchors": [
+  "ORD9650_ART14",
+  "ORD9650_ART19",
+  "CSS_D523_3",
+  "CSS_D543_2",
+  "CSS_L553_1",
+  "CSS_L553_2",
+  "CASF_L262_46"
+ ]
+}

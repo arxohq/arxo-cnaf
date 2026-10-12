@@ -1,0 +1,20 @@
+// Paid trainee channel: trainee in paid vocational training,
+// certificate and agreement established — the right opens through the
+// L. 544-8 para. 2 channel (demandeur_emploi_ajpp covers job-seekers
+// and paid trainees; unpaid training absence alone is a boundary).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-special-formation" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-fm-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-fm")) { origin adjudicated; }
+        assert "ajpp-fm-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-fm")) { origin adjudicated; }
+        assert "ajpp-fm-03": demandeur_emploi_ajpp(entity_ref("urn:fr:pf-ajpp:case:parent-fm")) { origin case_input; }
+    }
+    evaluate truth(ajpp_droit_ouvert(entity_ref("urn:fr:pf-ajpp:case:enfant-fm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

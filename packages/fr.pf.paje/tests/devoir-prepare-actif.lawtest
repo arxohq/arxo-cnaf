@@ -1,0 +1,21 @@
+// Deontics D1P, active duty: awarded PreParE of 386.48 € + debtor fund
+// of the household. VerserPrepareDue position — ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-devoir-prepare-actif" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "devoir-pp-01": arret_activite(entity_ref("urn:fr:paje:benef:devoir-pp"), entity_ref("urn:fr:paje:enfant:devoir-pp")) { origin adjudicated; }
+        assert "devoir-pp-02": activite_anterieure_suffisante(entity_ref("urn:fr:paje:benef:devoir-pp"), entity_ref("urn:fr:paje:enfant:devoir-pp")) { origin adjudicated; }
+        assert "devoir-pp-03": condition_age_prepare(entity_ref("urn:fr:paje:enfant:devoir-pp")) { origin adjudicated; }
+        assert "devoir-pp-04": menage_beneficiaire(entity_ref("urn:fr:paje:benef:devoir-pp"), entity_ref("urn:fr:paje:case:devoir-pp")) { origin case_input; }
+        assert "devoir-pp-05": bmaf_applicable(entity_ref("urn:fr:paje:case:devoir-pp"), 400.00 EUR) { origin case_input; }
+        assert "devoir-pp-06": mois_eligible_prepare(entity_ref("urn:fr:paje:benef:devoir-pp"), entity_ref("urn:fr:paje:enfant:devoir-pp"), @2025-07-01) { origin adjudicated; }
+        assert "devoir-pp-07": organisme_debiteur(entity_ref("urn:fr:paje:org:caisse"), entity_ref("urn:fr:paje:case:devoir-pp")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(VerserPrepareDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

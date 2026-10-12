@@ -1,0 +1,42 @@
+// Base monthly amount, full chain: three qualifying children, right
+// open (30000 <= 41000 derived), BMAF 40.00 EUR stated illustrative:
+// 0.4165 x 40.00 = 16.66.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-montant-base" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "mtb-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:montant-base"), entity_ref("urn:fr:pf-cf:case:montant-base-e1")) { origin case_input; }
+        assert "mtb-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:montant-base"), entity_ref("urn:fr:pf-cf:case:montant-base-e2")) { origin case_input; }
+        assert "mtb-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:montant-base"), entity_ref("urn:fr:pf-cf:case:montant-base-e3")) { origin case_input; }
+        assert "mtb-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:montant-base-e1")) { origin case_input; }
+        assert "mtb-05": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:montant-base-e2")) { origin case_input; }
+        assert "mtb-06": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:montant-base-e3")) { origin case_input; }
+        assert "mtb-07": date_naissance(entity_ref("urn:fr:pf-cf:case:montant-base-e1"), @2016-03-15) { origin case_input; }
+        assert "mtb-08": date_naissance(entity_ref("urn:fr:pf-cf:case:montant-base-e2"), @2014-03-15) { origin case_input; }
+        assert "mtb-09": date_naissance(entity_ref("urn:fr:pf-cf:case:montant-base-e3"), @2012-03-15) { origin case_input; }
+        assert "mtb-10": mois_droit(@2021-06-01) { origin case_input; }
+        assert "mtb-11": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:montant-base"), 3) { origin case_input; }
+        assert "mtb-12": ressources_menage(entity_ref("urn:fr:pf-cf:case:montant-base"), 30000 EUR) { origin case_input; }
+        assert "mtb-13": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:montant-base"), 20000 EUR) { origin case_input; }
+        assert "mtb-13a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:montant-base"), 5000 EUR) { origin case_input; }
+        assert "mtb-13b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:montant-base"), 6000 EUR) { origin case_input; }
+        assert "mtb-13c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:montant-base"), 10000 EUR) { origin case_input; }
+        assert "mtb-13d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:montant-base"), 2500 EUR) { origin case_input; }
+        assert "mtb-13e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:montant-base"), 3000 EUR) { origin case_input; }
+        assert "mtb-14": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:montant-base")) { origin case_input; }
+        assert "mtb-15": cadre_cf_remplie(entity_ref("urn:fr:pf-cf:case:montant-base")) { origin case_input; }
+        assert "mtb-16": bmaf_retenu(entity_ref("urn:fr:pf-cf:case:montant-base"), 40.00 EUR) { origin case_input; }
+    }
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:case:montant-base")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_montant_du(entity_ref("urn:fr:pf-cf:case:montant-base"), 16.66 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

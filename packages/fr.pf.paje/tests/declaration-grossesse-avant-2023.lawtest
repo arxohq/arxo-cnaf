@@ -1,0 +1,21 @@
+// D. 532-1, wording pair: in 2022 the predecessor wording (2004–2023,
+// «arrêté» form) governs; the fourteen-week norm is identical, so the
+// declaration sent 2022-05-20 (deadline 2022-06-13) is on time. Control —
+// declaration-grossesse-en-delai (2023 wording).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-declaration-avant-2023" {
+    given {
+        context { decision_time @2022-05-10T12:00:00Z; knowledge_time @2022-05-10T12:00:00Z; legal_time @2022-05-10; timezone "Europe/Paris"; }
+        assert "decl-2022-01": attente_naissance(entity_ref("urn:fr:paje:case:decl-2022"), entity_ref("urn:fr:paje:enfant:decl-2022")) { origin case_input; }
+        assert "decl-2022-02": debut_grossesse(entity_ref("urn:fr:paje:case:decl-2022"), entity_ref("urn:fr:paje:enfant:decl-2022"), @2022-03-07) { origin adjudicated; }
+        assert "decl-2022-03": date_limite_declaration(entity_ref("urn:fr:paje:case:decl-2022"), entity_ref("urn:fr:paje:enfant:decl-2022"), @2022-06-13) { origin adjudicated; }
+        assert "decl-2022-04": declaration_grossesse_adressee(entity_ref("urn:fr:paje:case:decl-2022"), entity_ref("urn:fr:paje:enfant:decl-2022"), @2022-05-20) { origin adjudicated; }
+    }
+    evaluate truth(declaration_grossesse_en_delai(entity_ref("urn:fr:paje:case:decl-2022"), entity_ref("urn:fr:paje:enfant:decl-2022")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

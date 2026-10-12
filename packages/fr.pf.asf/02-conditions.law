@@ -1,0 +1,249 @@
+// Per-child eligibility by opening ground (L523-1, R523-1, R523-2).
+//
+// READINGS. Each opener conjoins the chapter: child in care, upstream
+// opener, the fund-stated ground, and the request (R523-2: the allowance
+// is due upon request, the hors-etat recourse upkeep folded into the
+// same demande_asf input). Orphanhood of one or both parents opens
+// without carence (1 and 2, hors-etat track opened by D523-2). The
+// single-default and partial-pension grounds (3 and 4) open only once
+// the one-month default period has run: the opening month is at least
+// the month after the default month, both stated first-of-month
+// (R523-1 carence, D523-1 monthly opening). The double default of both
+// debtors (5) opened the double rate until 2022-11-01 (same effect as
+// the orphan-of-both rate in the 2021 window); from 2022-11-01 the
+// 2022 reading folds it into the full-rate opener (L523-1 2022-11,
+// blind probe PFASF-B-01). The RSA plein-droit opener (1 IV) is an
+// upstream assessment, out of scope (B-PFASF-RSA).
+
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+use self::{
+    CSS_D523_1,
+    CSS_D523_1_ED2019_12,
+    CSS_D523_1_ED2021_12,
+    CSS_D523_1_ED2022_11,
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_R523_1,
+    CSS_R523_1_ED2018_04,
+    CSS_R523_1_ED2018_07,
+    CSS_R523_1_ED2018_07_27,
+    CSS_R523_1_ED2019_12,
+    CSS_R523_1_ED2021_12,
+    CSS_R523_1_ED2022_11,
+    CSS_R523_2,
+    CSS_R523_2_ED1999_11,
+    CSS_R523_2_ED2011_12,
+    CSS_R523_2_ED2014_04,
+    CSS_R523_2_ED2015_04,
+    CSS_R523_2_ED2016_04,
+    CSS_R523_2_ED2017_04,
+    CSS_R523_2_ED2018_04,
+    CSS_R523_2_ED2018_07,
+    CSS_R523_2_ED2018_07_27,
+    CSS_R523_2_ED2019_12,
+    CSS_R523_2_ED2021_12,
+    CSS_R523_2_ED2022_11,
+    MotifAsf,
+    asf_enfant_eligible,
+    demande_asf,
+    manquement_debiteur,
+    mois_ouverture_asf,
+    motif_asf,
+    pension_recue,
+};
+
+@source(
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_R523_2,
+    CSS_R523_2_ED1999_11,
+    CSS_R523_2_ED2011_12,
+    CSS_R523_2_ED2014_04,
+    CSS_R523_2_ED2015_04,
+    CSS_R523_2_ED2016_04,
+    CSS_R523_2_ED2017_04,
+    CSS_R523_2_ED2018_04,
+    CSS_R523_2_ED2018_07,
+    CSS_R523_2_ED2018_07_27,
+    CSS_R523_2_ED2019_12,
+    CSS_R523_2_ED2021_12,
+    CSS_R523_2_ED2022_11)
+rule EligibleOrphelinUnParent(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "orphelin d'un parent: ouvre droit sans carence (L. 523-1 1°)";
+    label en unofficial "orphan of one parent: opens right without carence (L. 523-1 1°)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and motif_asf(e, ORPHELIN_UN_PARENT) and demande_asf(e);
+    then asf_enfant_eligible(e);
+}
+
+@source(
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_R523_2,
+    CSS_R523_2_ED1999_11,
+    CSS_R523_2_ED2011_12,
+    CSS_R523_2_ED2014_04,
+    CSS_R523_2_ED2015_04,
+    CSS_R523_2_ED2016_04,
+    CSS_R523_2_ED2017_04,
+    CSS_R523_2_ED2018_04,
+    CSS_R523_2_ED2018_07,
+    CSS_R523_2_ED2018_07_27,
+    CSS_R523_2_ED2019_12,
+    CSS_R523_2_ED2021_12,
+    CSS_R523_2_ED2022_11)
+rule EligibleOrphelinDeuxParents(p: fr.pf.core::Personne, e: fr.pf.core::Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "orphelin des deux parents: ouvre droit sans carence (L. 523-1 1°)";
+    label en unofficial "orphan of both parents: opens right without carence (L. 523-1 1°)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and motif_asf(e, ORPHELIN_DEUX_PARENTS) and demande_asf(e);
+    then asf_enfant_eligible(e);
+}
+
+@source(
+    CSS_D523_1,
+    CSS_D523_1_ED2019_12,
+    CSS_D523_1_ED2021_12,
+    CSS_D523_1_ED2022_11,
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_R523_1,
+    CSS_R523_1_ED2018_04,
+    CSS_R523_1_ED2018_07,
+    CSS_R523_1_ED2018_07_27,
+    CSS_R523_1_ED2019_12,
+    CSS_R523_1_ED2021_12,
+    CSS_R523_1_ED2022_11,
+    CSS_R523_2,
+    CSS_R523_2_ED1999_11,
+    CSS_R523_2_ED2011_12,
+    CSS_R523_2_ED2014_04,
+    CSS_R523_2_ED2015_04,
+    CSS_R523_2_ED2016_04,
+    CSS_R523_2_ED2017_04,
+    CSS_R523_2_ED2018_04,
+    CSS_R523_2_ED2018_07,
+    CSS_R523_2_ED2018_07_27,
+    CSS_R523_2_ED2019_12,
+    CSS_R523_2_ED2021_12,
+    CSS_R523_2_ED2022_11)
+rule EligibleDefautCarence(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, manq: Date, m0: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "defaillance d'un debiteur, delai d'un mois purge: ouvre droit (L. 523-1 3°, R. 523-1, D. 523-1)";
+    label en unofficial "single debtor default, one-month period served: opens right (L. 523-1 3°, R. 523-1, D. 523-1)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and motif_asf(e, DEFAUT_SIMPLE) and demande_asf(e)
+        and manquement_debiteur(e, manq) and mois_ouverture_asf(m0)
+        and m0 >= add_calendar_period(manq, 1 calendar_month);
+    then asf_enfant_eligible(e);
+}
+
+@source(
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_R523_1,
+    CSS_R523_1_ED2018_04,
+    CSS_R523_1_ED2018_07,
+    CSS_R523_1_ED2018_07_27,
+    CSS_R523_1_ED2019_12,
+    CSS_R523_1_ED2021_12,
+    CSS_R523_1_ED2022_11)
+rule EligibleDefautDouble2022(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, manq: Date, m0: Date) strict {
+    effective [@2021-01-01, @2022-11-01);
+    label fr official "defaillance des deux debiteurs avant novembre 2022: ouvre droit au taux double (L. 523-1 5°)";
+    label en unofficial "double debtor default before November 2022: opens right at the double rate (L. 523-1 5°)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and motif_asf(e, DEFAUT_DOUBLE) and demande_asf(e)
+        and manquement_debiteur(e, manq) and mois_ouverture_asf(m0)
+        and m0 >= add_calendar_period(manq, 1 calendar_month);
+    then asf_enfant_eligible(e);
+}
+
+@source(
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_R523_1,
+    CSS_R523_1_ED2018_04,
+    CSS_R523_1_ED2018_07,
+    CSS_R523_1_ED2018_07_27,
+    CSS_R523_1_ED2019_12,
+    CSS_R523_1_ED2021_12,
+    CSS_R523_1_ED2022_11)
+rule EligibleDefautDoubleApres2022(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, manq: Date, m0: Date) strict {
+    effective [@2022-11-01, infinity);
+    label fr official "defaillance des deux debiteurs depuis novembre 2022: ouvre droit, 3° pour les pere et mere, situation assimilee a l'orphelin des deux parents (L. 523-1 I 3°, L. 523-3 1°; lecture adoptee Q-PFASF-1)";
+    label en unofficial "double debtor default since November 2022: opens right, 3rd ground for both parents, situation assimilated to an orphan of both (L. 523-1 I 3, L. 523-3 1; adopted reading Q-PFASF-1)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and motif_asf(e, DEFAUT_DOUBLE) and demande_asf(e)
+        and manquement_debiteur(e, manq) and mois_ouverture_asf(m0)
+        and m0 >= add_calendar_period(manq, 1 calendar_month);
+    then asf_enfant_eligible(e);
+}
+
+@source(
+    CSS_L523_1,
+    CSS_L523_1_ED2022_11,
+    CSS_L523_1_PRE2019,
+    CSS_L523_1_PRE2019_ED2018_07,
+    CSS_L523_1_PRE2019_ED2018_07_27,
+    CSS_L523_1_PREV,
+    CSS_R523_1,
+    CSS_R523_1_ED2018_04,
+    CSS_R523_1_ED2018_07,
+    CSS_R523_1_ED2018_07_27,
+    CSS_R523_1_ED2019_12,
+    CSS_R523_1_ED2021_12,
+    CSS_R523_1_ED2022_11,
+    CSS_R523_2,
+    CSS_R523_2_ED1999_11,
+    CSS_R523_2_ED2011_12,
+    CSS_R523_2_ED2014_04,
+    CSS_R523_2_ED2015_04,
+    CSS_R523_2_ED2016_04,
+    CSS_R523_2_ED2017_04,
+    CSS_R523_2_ED2018_04,
+    CSS_R523_2_ED2018_07,
+    CSS_R523_2_ED2018_07_27,
+    CSS_R523_2_ED2019_12,
+    CSS_R523_2_ED2021_12,
+    CSS_R523_2_ED2022_11)
+rule EligiblePensionPartielle(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, pension: Money, manq: Date, m0: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "pension percue sous le montant de l'allocation, delai d'un mois purge: ouvre droit (L. 523-1 4°, R. 523-1)";
+    label en unofficial "pension received below the allowance amount, one-month period served: opens right (L. 523-1 4°, R. 523-1)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and motif_asf(e, PENSION_PARTIELLE) and demande_asf(e)
+        and pension_recue(e, pension)
+        and manquement_debiteur(e, manq) and mois_ouverture_asf(m0)
+        and m0 >= add_calendar_period(manq, 1 calendar_month);
+    then asf_enfant_eligible(e);
+}

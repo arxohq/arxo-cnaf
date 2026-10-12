@@ -1,0 +1,48 @@
+// D-81 (08.10.2026): вход facteur_revalorisation(1.0) заменён плафонами-входами
+// D. 521-3: база I 55950, база II 78300, надбавка 5595 за ребёнка =
+// суммы D. 521-3 I/II × 1.0 — заявленные иллюстративные суммы, не опубликованные
+// DSS на дату дела. (база + надбавка × n) × F = база·F + надбавка·F × n — ожидания
+// не меняются.
+// Forfait open inside the year: aged-out child (limit reached
+// 2022-06-15), claimed month 2023-06-01 within [2022-06-15, 2023-06-15),
+// three children, non-age conditions met. Band 1 (resources 30 000):
+// 0.20234 x 1 000.00 = 202.34, no top-up. BMAF 1 000.00 EUR is a stated
+// illustrative assumption (exact decimals, B-PFAF-BMAF-EURO).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-forfait-ouvert" {
+    given {
+        context { deadline_policy FORFAIT_UN_AN; decision_time @2023-06-15T12:00:00Z; knowledge_time @2023-06-15T12:00:00Z; legal_time @2023-06-15; timezone "Europe/Paris"; }
+        assert "forf-01": territoire(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), METROPOLE) { origin case_input; }
+        assert "forf-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 3) { origin case_input; }
+        assert "forf-02f": nb_enfants_charge_forfait(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 3) { origin case_input; }
+        assert "forf-03": ressources_menage(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 30000 EUR) { origin case_input; }
+        assert "forf-04": plafond_base_tranche1_publie(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 55950 EUR) { origin case_input; }
+        assert "forf-04b": plafond_base_tranche2_publie(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 78300 EUR) { origin case_input; }
+        assert "forf-04c": majoration_plafond_enfant_publiee(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 5595 EUR) { origin case_input; }
+        assert "forf-05": bmaf_retenu(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 1000.00 EUR) { origin case_input; }
+        assert "forf-06": nb_majorations_pleines(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 0) { origin case_input; }
+        assert "forf-07": nb_majorations_demi(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 0) { origin case_input; }
+        assert "forf-08": forfait_total_menage(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 0 EUR) { origin case_input; }
+        assert "forf-09": nb_enfants_ase_service(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), 0) { origin case_input; }
+        assert "forf-10": foyer_du_cas(entity_ref("urn:fr:pf-af:case:forfait-ouvert")) { origin case_input; }
+        assert "forf-11": mois_droit(@2023-06-01) { origin case_input; }
+        assert "forf-12": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:case:forfait-ouvert"), entity_ref("urn:fr:pf-af:child:aged-out")) { origin case_input; }
+        assert "forf-13": date_limite_age_atteinte(entity_ref("urn:fr:pf-af:child:aged-out"), @2022-06-15) { origin case_input; }
+        assert "forf-14": conditions_hormis_age(entity_ref("urn:fr:pf-af:child:aged-out")) { origin case_input; }
+    }
+    evaluate truth(forfait_ouvert(entity_ref("urn:fr:pf-af:child:aged-out")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_forfait(entity_ref("urn:fr:pf-af:child:aged-out"), 202.34 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(complement_forfait(entity_ref("urn:fr:pf-af:child:aged-out"), 0 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

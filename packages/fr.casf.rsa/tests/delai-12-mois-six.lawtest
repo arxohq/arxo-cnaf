@@ -1,0 +1,20 @@
+// Twelve-month period refused at the boundary: six months of prior
+// support is not "supérieure à six mois" (D. 262-65-2-1). Pair of
+// delai-12-mois.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-delai-12-mois-six" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "del-01": vulnerabilite_constatee(entity_ref("urn:fr:rsa:case:delai-12-mois-six"), LOGEMENT) { origin case_input; }
+        assert "del-02": diagnostic_global(entity_ref("urn:fr:rsa:case:delai-12-mois-six")) { origin case_input; }
+        assert "del-03": obstacle_engagement_emploi(entity_ref("urn:fr:rsa:case:delai-12-mois-six")) { origin case_input; }
+        assert "del-04": duree_accompagnement_mois(entity_ref("urn:fr:rsa:case:delai-12-mois-six"), 6) { origin case_input; }
+    }
+    evaluate truth(delai_porte_12_mois(entity_ref("urn:fr:rsa:case:delai-12-mois-six")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,20 @@
+// Duties income limb at the threshold: monthly average exactly 500.00,
+// and "en deçà" is strict -> the limb does not hold (D. 262-65).
+// Boundary pair of devoirs-revenus-sous-seuil.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-devoirs-revenus-au-seuil" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "rev-01": mois_trimestre_reference(entity_ref("urn:fr:rsa:case:devoirs-revenus-au-seuil"), @2025-02-01, @2025-03-01, @2025-04-01) { origin case_input; }
+        assert "rev-02": revenus_pro_mois(entity_ref("urn:fr:rsa:case:devoirs-revenus-au-seuil"), @2025-02-01, 500.00 EUR) { origin case_input; }
+        assert "rev-03": revenus_pro_mois(entity_ref("urn:fr:rsa:case:devoirs-revenus-au-seuil"), @2025-03-01, 500.00 EUR) { origin case_input; }
+        assert "rev-04": revenus_pro_mois(entity_ref("urn:fr:rsa:case:devoirs-revenus-au-seuil"), @2025-04-01, 500.00 EUR) { origin case_input; }
+    }
+    evaluate truth(condition_revenus_l262_28(entity_ref("urn:fr:rsa:case:devoirs-revenus-au-seuil")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

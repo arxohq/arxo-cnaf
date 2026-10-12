@@ -1,0 +1,17 @@
+// AJPP non-cumul items 8-9: AJPP beneficiary receiving AAH and the PCH element - combination refused (L. 544-9 I 8°-9°, PC-R07-10).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-ajpp-noncumul-aah-pch" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-noncumul-aah-pch-01": beneficie_ajpp(entity_ref("urn:fr:pf:case:ajpp-nc-aah")) { origin case_input; }
+        assert "ajpp-noncumul-aah-pch-02": percoit_aah_concurrente_ajpp(entity_ref("urn:fr:pf:case:ajpp-nc-aah")) { origin case_input; }
+        assert "ajpp-noncumul-aah-pch-03": percoit_pch_element_concurrent_ajpp(entity_ref("urn:fr:pf:case:ajpp-nc-aah")) { origin case_input; }
+    }
+    evaluate truth(cumul_ajpp_refuse(entity_ref("urn:fr:pf:case:ajpp-nc-aah")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,22 @@
+// L. 755-19, window control: Guadeloupe household with a full-rate base
+// case and a CF award, but legal_time 2020 — outside the package coverage
+// window, the DOM rules are silent. Control — dom-base-cf-dom-plein.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-non-cumul-avant-2021" {
+    given {
+        context { decision_time @2020-07-15T12:00:00Z; knowledge_time @2020-07-15T12:00:00Z; legal_time @2020-07-15; timezone "Europe/Paris"; }
+        assert "dom-w0-01": territoire(entity_ref("urn:fr:paje:case:dom-w0"), GUADELOUPE) { origin case_input; }
+        assert "dom-w0-02": enfant_en_charge(entity_ref("urn:fr:paje:case:dom-w0"), entity_ref("urn:fr:paje:enfant:dom-w0")) { origin case_input; }
+        assert "dom-w0-03": condition_age_base(entity_ref("urn:fr:paje:enfant:dom-w0")) { origin adjudicated; }
+        assert "dom-w0-04": ressources_annuelles(entity_ref("urn:fr:paje:case:dom-w0"), 20000 EUR) { origin case_input; }
+        assert "dom-w0-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:dom-w0"), 30000 EUR) { origin case_input; }
+        assert "dom-w0-06": cf_dom_l755_16_servi(entity_ref("urn:fr:paje:case:dom-w0")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_base_cf_dom_interdit(entity_ref("urn:fr:paje:case:dom-w0"), entity_ref("urn:fr:paje:enfant:dom-w0")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

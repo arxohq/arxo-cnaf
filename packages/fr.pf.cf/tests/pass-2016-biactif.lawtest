@@ -1,0 +1,22 @@
+// D-83: PASS года отсчёта 2016 строится из закреплённого arrêté du 17 décembre 2015 (AFSS1530064A):
+// valeur mensuelle 3 218 € x 12 = 38 616 € (пакет fr.css.pass: sources/pass/arrete-2015-12-17-art1.txt, D-84). Порог R. 522-2 al. 3:
+// 13,6 % x 38 616 = 5 251,776; доход 5 251,78 его достигает (граница сверху) -> couple_biactif.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-pass-2016-biactif" {
+    given {
+        context { decision_time @2018-06-15T12:00:00Z; knowledge_time @2018-06-15T12:00:00Z; legal_time @2018-06-15; timezone "Europe/Paris"; }
+        assert "p2b-01": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:pass-2016-biactif"), 5251.78 EUR) { origin case_input; }
+        assert "p2b-02": annee_reference_ressources(entity_ref("urn:fr:pf-cf:case:pass-2016-biactif"), 2016) { origin case_input; }
+    }
+    evaluate truth(pass_reference(entity_ref("urn:fr:pf-cf:case:pass-2016-biactif"), 38616 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:pass-2016-biactif")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

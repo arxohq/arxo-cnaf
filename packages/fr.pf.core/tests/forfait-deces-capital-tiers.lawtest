@@ -1,0 +1,18 @@
+// Death lump-sum excluded by third-party capital: eligible case but death capital received in respect of that death by another heir - payment excluded (L. 545-1, PC-R07-13 any-heir scope).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-forfait-deces-capital-tiers" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "forfait-deces-capital-tiers-01": forfait_deces_demande(entity_ref("urn:fr:pf:case:forfait-cap"), entity_ref("urn:fr:pf:case:forfait-enf-cap")) { origin case_input; }
+        assert "forfait-deces-capital-tiers-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:forfait-cap"), entity_ref("urn:fr:pf:case:forfait-enf-cap")) { origin adjudicated; }
+        assert "forfait-deces-capital-tiers-03": deces_enfant_avant_limite_age(entity_ref("urn:fr:pf:case:forfait-enf-cap")) { origin case_input; }
+        assert "forfait-deces-capital-tiers-04": capital_deces_percu_pour_deces(entity_ref("urn:fr:pf:case:forfait-enf-cap")) { origin case_input; }
+    }
+    evaluate truth(forfait_deces_eligible(entity_ref("urn:fr:pf:case:forfait-cap"), entity_ref("urn:fr:pf:case:forfait-enf-cap")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

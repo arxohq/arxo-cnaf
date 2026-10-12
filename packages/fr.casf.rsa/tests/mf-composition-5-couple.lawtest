@@ -1,0 +1,159 @@
+// Five persons, couple, third child at 40 %: 600 + 300 + 180 + 180
+// + 240 = 1500.00 (R.262-1; k = 1, m = 0).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-composition-5-couple" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "mfc5c-01": mf_base(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), 600.00 EUR) { origin case_input; }
+        assert "mfc5c-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), 5) { origin case_input; }
+        assert "mfc5c-03": foyer_nb_parents(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), 2) { origin case_input; }
+        assert "mf-composition-5-couple-rank-1": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), entity_ref("urn:fr:rsa:case:mf-composition-5-couple:member-1"), 1) { origin case_input; }
+        assert "mf-composition-5-couple-rank-2": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), entity_ref("urn:fr:rsa:case:mf-composition-5-couple:member-2"), 2) { origin case_input; }
+        assert "mf-composition-5-couple-rank-3": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), entity_ref("urn:fr:rsa:case:mf-composition-5-couple:member-3"), 3) { origin case_input; }
+        assert "mf-composition-5-couple-child-3": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), entity_ref("urn:fr:rsa:case:mf-composition-5-couple:member-3")) { origin case_input; }
+        assert "mf-composition-5-couple-rank-4": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), entity_ref("urn:fr:rsa:case:mf-composition-5-couple:member-4"), 4) { origin case_input; }
+        assert "mf-composition-5-couple-child-4": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), entity_ref("urn:fr:rsa:case:mf-composition-5-couple:member-4")) { origin case_input; }
+        assert "mf-composition-5-couple-rank-5": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), entity_ref("urn:fr:rsa:case:mf-composition-5-couple:member-5"), 5) { origin case_input; }
+        assert "mf-composition-5-couple-child-5": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), entity_ref("urn:fr:rsa:case:mf-composition-5-couple:member-5")) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-composition-5-couple"), 1500.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+// R. 262-1: couple with four dependent children; fifth and sixth persons
+// each receive 40 %. No rate-class count is supplied by the case.
+test "urn:query:fr-rsa-mf-rangs-6-couple" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "r6-01": mf_base(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), 600.00 EUR) { origin case_input; }
+        assert "r6-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), 6) { origin case_input; }
+        assert "r6-03": foyer_nb_parents(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), 2) { origin case_input; }
+        assert "mf-rangs-6-couple-rank-1": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), entity_ref("urn:fr:rsa:case:mf-rangs-6-couple:member-1"), 1) { origin case_input; }
+        assert "mf-rangs-6-couple-rank-2": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), entity_ref("urn:fr:rsa:case:mf-rangs-6-couple:member-2"), 2) { origin case_input; }
+        assert "mf-rangs-6-couple-rank-3": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), entity_ref("urn:fr:rsa:case:mf-rangs-6-couple:member-3"), 3) { origin case_input; }
+        assert "mf-rangs-6-couple-child-3": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), entity_ref("urn:fr:rsa:case:mf-rangs-6-couple:member-3")) { origin case_input; }
+        assert "mf-rangs-6-couple-rank-4": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), entity_ref("urn:fr:rsa:case:mf-rangs-6-couple:member-4"), 4) { origin case_input; }
+        assert "mf-rangs-6-couple-child-4": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), entity_ref("urn:fr:rsa:case:mf-rangs-6-couple:member-4")) { origin case_input; }
+        assert "mf-rangs-6-couple-rank-5": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), entity_ref("urn:fr:rsa:case:mf-rangs-6-couple:member-5"), 5) { origin case_input; }
+        assert "mf-rangs-6-couple-child-5": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), entity_ref("urn:fr:rsa:case:mf-rangs-6-couple:member-5")) { origin case_input; }
+        assert "mf-rangs-6-couple-rank-6": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), entity_ref("urn:fr:rsa:case:mf-rangs-6-couple:member-6"), 6) { origin case_input; }
+        assert "mf-rangs-6-couple-child-6": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), entity_ref("urn:fr:rsa:case:mf-rangs-6-couple:member-6")) { origin case_input; }
+    }
+    evaluate truth(foyer_sup_taux40(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), 2));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(foyer_sup_taux30(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), 0));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-rangs-6-couple"), 1740.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Exact age-25 boundary at the last day of June: July birthday qualifies;
+// June birthday has already reached 25 and receives 30 %.
+
+test "urn:query:fr-rsa-mf-rang5-jeune-24" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "mf-rang5-jeune-24-base": mf_base(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), 600.00 EUR) { origin case_input; }
+        assert "mf-rang5-jeune-24-n": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), 5) { origin case_input; }
+        assert "mf-rang5-jeune-24-parents": foyer_nb_parents(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), 2) { origin case_input; }
+        assert "mf-rang5-jeune-24-month": mois_droit(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), @2025-06-01) { origin case_input; }
+        assert "mf-rang5-jeune-24-rank-1": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24:member-1"), 1) { origin case_input; }
+        assert "mf-rang5-jeune-24-rank-2": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24:member-2"), 2) { origin case_input; }
+        assert "mf-rang5-jeune-24-rank-3": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24:member-3"), 3) { origin case_input; }
+        assert "mf-rang5-jeune-24-child-3": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24:member-3")) { origin case_input; }
+        assert "mf-rang5-jeune-24-rank-4": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24:member-4"), 4) { origin case_input; }
+        assert "mf-rang5-jeune-24-child-4": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24:member-4")) { origin case_input; }
+        assert "mf-rang5-jeune-24-rank-5": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24:member-5"), 5) { origin case_input; }
+        assert "mf-rang5-jeune-24-other-5": foyer_autre_charge(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24:member-5")) { origin case_input; }
+        assert "mf-rang5-jeune-24-birth-5": foyer_naissance(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24:member-5"), @2000-07-01) { origin case_input; }
+    }
+    evaluate truth(foyer_sup_taux40(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), 1));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(foyer_sup_taux30(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), 0));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-rang5-jeune-24"), 1500.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-rsa-mf-rang5-autre-25" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "mf-rang5-autre-25-base": mf_base(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), 600.00 EUR) { origin case_input; }
+        assert "mf-rang5-autre-25-n": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), 5) { origin case_input; }
+        assert "mf-rang5-autre-25-parents": foyer_nb_parents(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), 2) { origin case_input; }
+        assert "mf-rang5-autre-25-month": mois_droit(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), @2025-06-01) { origin case_input; }
+        assert "mf-rang5-autre-25-rank-1": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), entity_ref("urn:fr:rsa:case:mf-rang5-autre-25:member-1"), 1) { origin case_input; }
+        assert "mf-rang5-autre-25-rank-2": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), entity_ref("urn:fr:rsa:case:mf-rang5-autre-25:member-2"), 2) { origin case_input; }
+        assert "mf-rang5-autre-25-rank-3": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), entity_ref("urn:fr:rsa:case:mf-rang5-autre-25:member-3"), 3) { origin case_input; }
+        assert "mf-rang5-autre-25-child-3": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), entity_ref("urn:fr:rsa:case:mf-rang5-autre-25:member-3")) { origin case_input; }
+        assert "mf-rang5-autre-25-rank-4": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), entity_ref("urn:fr:rsa:case:mf-rang5-autre-25:member-4"), 4) { origin case_input; }
+        assert "mf-rang5-autre-25-child-4": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), entity_ref("urn:fr:rsa:case:mf-rang5-autre-25:member-4")) { origin case_input; }
+        assert "mf-rang5-autre-25-rank-5": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), entity_ref("urn:fr:rsa:case:mf-rang5-autre-25:member-5"), 5) { origin case_input; }
+        assert "mf-rang5-autre-25-other-5": foyer_autre_charge(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), entity_ref("urn:fr:rsa:case:mf-rang5-autre-25:member-5")) { origin case_input; }
+        assert "mf-rang5-autre-25-birth-5": foyer_naissance(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), entity_ref("urn:fr:rsa:case:mf-rang5-autre-25:member-5"), @2000-06-30) { origin case_input; }
+    }
+    evaluate truth(foyer_sup_taux40(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), 0));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(foyer_sup_taux30(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), 1));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-rang5-autre-25"), 1440.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+// Mixed ranks: fifth person age 25 receives 30 %, sixth young dependent 40 %.
+
+test "urn:query:fr-rsa-mf-rangs-mixtes" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "mf-rangs-mixtes-base": mf_base(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), 600.00 EUR) { origin case_input; }
+        assert "mf-rangs-mixtes-n": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), 6) { origin case_input; }
+        assert "mf-rangs-mixtes-parents": foyer_nb_parents(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), 2) { origin case_input; }
+        assert "mf-rangs-mixtes-month": mois_droit(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), @2025-06-01) { origin case_input; }
+        assert "mf-rangs-mixtes-rank-1": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-1"), 1) { origin case_input; }
+        assert "mf-rangs-mixtes-rank-2": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-2"), 2) { origin case_input; }
+        assert "mf-rangs-mixtes-rank-3": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-3"), 3) { origin case_input; }
+        assert "mf-rangs-mixtes-child-3": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-3")) { origin case_input; }
+        assert "mf-rangs-mixtes-rank-4": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-4"), 4) { origin case_input; }
+        assert "mf-rangs-mixtes-child-4": foyer_enfant_charge(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-4")) { origin case_input; }
+        assert "mf-rangs-mixtes-rank-5": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-5"), 5) { origin case_input; }
+        assert "mf-rangs-mixtes-other-5": foyer_autre_charge(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-5")) { origin case_input; }
+        assert "mf-rangs-mixtes-birth-5": foyer_naissance(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-5"), @2000-06-30) { origin case_input; }
+        assert "mf-rangs-mixtes-rank-6": foyer_membre_rang(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-6"), 6) { origin case_input; }
+        assert "mf-rangs-mixtes-other-6": foyer_autre_charge(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-6")) { origin case_input; }
+        assert "mf-rangs-mixtes-birth-6": foyer_naissance(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), entity_ref("urn:fr:rsa:case:mf-rangs-mixtes:member-6"), @2000-07-01) { origin case_input; }
+    }
+    evaluate truth(foyer_sup_taux40(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), 1));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(foyer_sup_taux30(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), 1));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-rangs-mixtes"), 1680.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

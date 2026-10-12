@@ -1,0 +1,22 @@
+// Young worker, direct hours route, below the minimum: 3000.00 worked
+// + 100.00 occasional = 3100.00 < twice the retained annual reference
+// 1607.00 (= 3214.00), two capped excluded months (D. 262-25-1).
+// Boundary pair of jeune-heures-directes.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-jeune-heures-insuffisantes" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "jeun-01": jeune_18_25(entity_ref("urn:fr:rsa:case:jeune-heures-insuffisantes")) { origin case_input; }
+        assert "jeun-02": heures_travail_reference(entity_ref("urn:fr:rsa:case:jeune-heures-insuffisantes"), 3000.0) { origin case_input; }
+        assert "jeun-03": heures_occasionnelles(entity_ref("urn:fr:rsa:case:jeune-heures-insuffisantes"), 100.0) { origin case_input; }
+        assert "jeun-04": heures_annuelles_reference(entity_ref("urn:fr:rsa:case:jeune-heures-insuffisantes"), 1607.0) { origin case_input; }
+        assert "jeun-05": mois_prestations_exclus(entity_ref("urn:fr:rsa:case:jeune-heures-insuffisantes"), 2) { origin case_input; }
+    }
+    evaluate truth(condition_heures_jeune(entity_ref("urn:fr:rsa:case:jeune-heures-insuffisantes")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

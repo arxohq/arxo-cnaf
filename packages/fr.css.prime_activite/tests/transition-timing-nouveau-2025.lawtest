@@ -1,0 +1,44 @@
+// Timing at the NOTA boundary, new side: single, review 1 March
+// 2025, M-4..M-2 Nov 2024..Jan 2025, new slot assignment
+// (R. 842-2 nouveau).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-transition-timing-nouveau-2025" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-04-15T12:00:00Z; knowledge_time @2025-04-15T12:00:00Z; legal_time @2025-04-15; timezone "Europe/Paris"; }
+        assert "ppa-01": mois_revue(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-03-01) { origin case_input; }
+        assert "ppa-02": mois_du_droit(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-03-01) { origin case_input; }
+        assert "ppa-19": regime_general(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025")) { origin case_input; }
+        assert "ppa-20": sans_conjoint(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025")) { origin case_input; }
+        assert "ppa-03": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-03-01, BENEFICIAIRE, COND_L8422_1) { origin case_input; }
+        assert "ppa-04": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-03-01, BENEFICIAIRE, COND_L8422_2) { origin case_input; }
+        assert "ppa-05": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2024-11-01, BENEFICIAIRE, COND_L8422_3) { origin case_input; }
+        assert "ppa-06": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2024-12-01, BENEFICIAIRE, COND_L8422_3) { origin case_input; }
+        assert "ppa-07": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-01-01, BENEFICIAIRE, COND_L8422_3) { origin case_input; }
+        assert "ppa-08": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2024-11-01, BENEFICIAIRE, COND_L8422_5) { origin case_input; }
+        assert "ppa-09": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2024-12-01, BENEFICIAIRE, COND_L8422_5) { origin case_input; }
+        assert "ppa-10": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-01-01, BENEFICIAIRE, COND_L8422_5) { origin case_input; }
+        assert "ppa-11": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2024-11-01, BENEFICIAIRE, COND_L8421) { origin case_input; }
+        assert "ppa-12": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2024-12-01, BENEFICIAIRE, COND_L8421) { origin case_input; }
+        assert "ppa-13": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-01-01, BENEFICIAIRE, COND_L8421) { origin case_input; }
+        assert "ppa-14": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-03-01, BENEFICIAIRE, COND_L8421) { origin case_input; }
+        assert "ppa-15": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2024-11-01, BENEFICIAIRE, COND_L8422_4) { origin case_input; }
+        assert "ppa-16": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2024-12-01, BENEFICIAIRE, COND_L8422_4) { origin case_input; }
+        assert "ppa-17": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-01-01, BENEFICIAIRE, COND_L8422_4) { origin case_input; }
+        assert "ppa-18": condition_mensuelle(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-03-01, BENEFICIAIRE, COND_L8422_4) { origin case_input; }
+    }
+    evaluate truth(dispositions_nouvelles_2025(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(conditions_beneficiaire_ok(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(conditions_temporelles_ok(entity_ref("urn:fr:ppa:case:transition-timing-nouveau-2025"), @2025-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,23 @@
+// BMAF 2017 chain (DSS/SD2B/2017/97, COEFF fragment): previous base 406.62,
+// published coefficient 1.003 (rate 0.3 %) -> 406.62 x 1.003 = 407.83986,
+// rounded to the centime -> 407.84, the published 1 April 2017 base.
+language "law.core" version "0.2";
+package fr.css.revalorisation version "0.1.0";
+namespace "urn:fr:corpus:clir:revalorisation";
+
+test "urn:query:fr-revalorisation-bmaf-chaine-2017" {
+    given {
+        context { deadline_policy REVALO_EXERCICE; decision_time @2017-04-01T12:00:00Z; knowledge_time @2017-04-01T12:00:00Z; legal_time @2017-04-01; timezone "Europe/Paris"; }
+        assert "bmaf-01": annee_exercice(entity_ref("urn:fr:revalorisation:exercice:2017"), 2017) { origin case_input; }
+        assert "bmaf-02": bmaf_precedente(entity_ref("urn:fr:revalorisation:exercice:2017"), 406.62 EUR) { origin case_input; }
+        assert "bmaf-03": coefficient_annee(entity_ref("urn:fr:revalorisation:exercice:2017"), 1.003) { origin case_input; }
+    }
+    evaluate truth(coefficient_retenu(entity_ref("urn:fr:revalorisation:exercice:2017"), 1.003));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bmaf_revalorisee(entity_ref("urn:fr:revalorisation:exercice:2017"), 407.84 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,429 @@
+# Manifest 10 - package root marker (DECISION-0033). Headers 22
+# in the .law files are normative; the manifest must match them (LDC-E1109, lawc check).
+[package]
+name = "fr.pf.core"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:pf-core"
+
+# Explicit package (DECISION-0386, SPEC 23.2): after .law edits run
+# `law fix imports <package>`; do not maintain `use self::{...}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+# Catalogue metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-pf-core"
+title = "Prestations familiales, socle commun : enfant à charge (R. 512-2, 55 % SMIC × 169 h), allocataire (L. 513-1), BMAF (L. 551-1), ressources N-2 (R. 532-3), prescription et recouvrement (L. 553-1/2), devoir de payer et sanctions"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+issuer = "République française"
+legalStatus = "in_force"
+verifiedAgainstSource = false
+
+[dependencies]
+"fr.travail.smic" = "0.1.0"
+
+# First scenario of each capability gives only inputs and expects a value
+# (DECISION-0452). The socle layer has no foreign cases: Catala/OpenFisca hold
+# no socle cases; cross-check is blind reading (analysis/blind-read-cases.json).
+[[tests]]
+family = "fr.pf.core#enfant-charge"
+regression = false
+suites = [
+    "tests/enfant-charge-20-ans-salaire-sous-plafond.lawtest",
+    "tests/enfant-charge-20-ans-salaire-sur-plafond.lawtest",
+    "tests/enfant-charge-scolarite-obligatoire.lawtest",
+    "tests/enfant-charge-scolarite-avec-remuneration.lawtest",
+    "tests/enfant-charge-21-ans.lawtest",
+    "tests/enfant-charge-residence-sejour-court.lawtest",
+    "tests/enfant-charge-residence-sejour-long.lawtest",
+          "tests/catalog/css-l512-2.lawtest",
+          "tests/catalog/css-l522-1.lawtest",
+          "tests/catalog/css-l532-2.lawtest",
+          "tests/catalog/css-l542-9.lawtest",
+          "tests/catalog/css-l543-1.lawtest",
+          "tests/catalog/css-l544-10.lawtest",
+          "tests/catalog/css-l544-9.lawtest",
+          "tests/catalog/css-l545-1.lawtest",
+          "tests/catalog/css-l552-6.lawtest",
+          "tests/catalog/css-l553-4.lawtest",
+          "tests/catalog/css-l553-5.lawtest",
+          "tests/catalog/css-l554-3.lawtest",
+          "tests/catalog/css-l581-1.lawtest",
+          "tests/catalog/css-l581-10.lawtest",
+          "tests/catalog/css-l581-2.lawtest",
+          "tests/catalog/css-l581-3.lawtest",
+          "tests/catalog/css-l581-4.lawtest",
+          "tests/catalog/css-l581-6.lawtest",
+          "tests/catalog/css-l581-9.lawtest",
+          "tests/catalog/css-l582-1.lawtest",
+          "tests/catalog/css-l582-2.lawtest",
+          "tests/catalog/css-l583-2.lawtest",
+          "tests/catalog/css-l583-4.lawtest",
+          "tests/catalog/css-l583-5.lawtest",
+          "tests/catalog/general.lawtest"]
+world = ["fr.pf.core", "fr.travail.smic"]
+
+[[tests]]
+family = "fr.pf.core#allocataire"
+regression = false
+suites = [
+    "tests/allocataire-charge-effective.lawtest",
+    "tests/allocataire-sans-charge.lawtest",
+    "tests/allocataire-enfant-beneficiaire-personnel.lawtest",
+    "tests/allocataire-adoption-decision-francaise.lawtest",
+    "tests/allocataire-differentielle-etranger.lawtest",
+    "tests/allocataire-dom-metropole.lawtest",
+]
+world = ["fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.core#bmaf-socle"
+regression = false
+suites = [
+    "tests/bmaf-exclusion-cmg-ajpp.lawtest",
+    "tests/bmaf-prestation-ordinaire.lawtest",
+]
+world = ["fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.core#ressources-n2"
+regression = false
+suites = [
+    "tests/ressources-annee-reference.lawtest",
+    "tests/ressources-n2-lien-aval.lawtest",
+    "tests/ressources-concubinage-total.lawtest",
+]
+world = ["fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.core#prescription"
+regression = false
+suites = [
+    "tests/prescription-deux-ans-acquise.lawtest",
+    "tests/prescription-deux-ans-non-acquise.lawtest",
+    "tests/prescription-fraude-cinq-ans.lawtest",
+    "tests/prescription-interrompue-recouvrement.lawtest",
+]
+world = ["fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.core#recouvrement"
+regression = false
+suites = [
+    "tests/recouvrement-indemnite-dix-pourcent.lawtest",
+    "tests/recouvrement-mise-en-demeure-delai.lawtest",
+    "tests/recouvrement-majoration-dix-pourcent.lawtest",
+    "tests/recouvrement-priorite-prestations.lawtest",
+    "tests/priorite-exclusion-totale.lawtest",
+    "tests/priorite-sans-enfant.lawtest",
+    "tests/priorite-non-enumereree.lawtest",
+    "tests/priorite-exception-logement.lawtest",
+    "tests/priorite-exclusion-asf.lawtest",
+    "tests/recouvrement-insaisissabilite.lawtest",
+    "tests/recouvrement-saisie-alimentaire.lawtest",
+    "tests/saisie-aeeh-2degre.lawtest",
+    "tests/saisie-mauvaise-prestation.lawtest",
+    "tests/paiement-direct-aeeh.lawtest",
+    "tests/paiement-direct-aeeh-payes.lawtest",
+    "tests/pension-intermediation-accord.lawtest",
+    "tests/pension-intermediation-sans-accord.lawtest",
+    "tests/cotisations-volontaires.lawtest",
+    "tests/cotisations-logement-exclu.lawtest",
+    "tests/protection-compte-bloque.lawtest",
+    "tests/retrait-fonds-compte.lawtest",
+    "tests/retrait-fonds-liberte.lawtest",
+    "tests/forfait-reglementaire-section.lawtest",
+    "tests/forfait-jugement-hors-section.lawtest",
+    "tests/forfait-jugement-section-insuffisant.lawtest",
+    "tests/recouvrement-contrainte-sans-notification.lawtest",
+    "tests/recouvrement-majoration-avant-exigibilite.lawtest",
+    "tests/recouvrement-remise-majoration.lawtest",
+    "tests/recouvrement-saisie-fausse-declaration.lawtest",
+    "tests/forfait-deces-eligible.lawtest",
+    "tests/forfait-deces-hors-limite-age.lawtest",
+    "tests/forfait-deces-capital-tiers.lawtest",
+    "tests/hors-section-positif.lawtest",
+    "tests/recouvrement-majoration-sans-notification.lawtest",
+    "tests/recouvrement-majoration-sans-rejet.lawtest",
+]
+world = ["fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.core#devoir-paiement"
+regression = false
+suites = [
+    "tests/devoir-paiement-actif.lawtest",
+    "tests/devoir-paiement-sans-droit.lawtest",
+    "tests/devoir-information-concours.lawtest",
+    "tests/devoir-suspension-controle.lawtest",
+    "tests/devoir-amende-intermediaire.lawtest",
+    "tests/devoir-cout-insertion.lawtest",
+    "tests/devoir-suspension-certificats.lawtest",
+    "tests/devoir-interdiction-services.lawtest",
+    "tests/devoir-suspension-certificats-scolaire.lawtest",
+    "tests/devoir-interdiction-faire-offrir.lawtest",
+    "tests/devoir-delegue-juge.lawtest",
+    "tests/devoir-delegue-sans-mesure.lawtest",
+    "tests/devoir-delegue-frais-unique.lawtest",
+    "tests/devoir-delegue-frais-plusieurs.lawtest",
+    "tests/devoir-delegue-frais-plusieurs-sans-choix.lawtest",
+    "tests/devoir-delegue-frais-prime-exclue.lawtest",
+    "tests/devoir-delegue-frais-prime-plusieurs.lawtest",
+    "tests/devoir-delegue-frais-dom-unique.lawtest",
+    "tests/devoir-delegue-frais-dom-plusieurs.lawtest",
+    "tests/devoir-delegue-juge-dom.lawtest",
+    "tests/devoir-delegue-juge-dom-prime.lawtest",
+    "tests/devoir-delegue-frais-metropole-prime.lawtest",
+    "tests/devoir-delegue-frais-dom-mixte-eligible.lawtest",
+    "tests/devoir-delegue-frais-dom-eligible-inconnu.lawtest",
+    "tests/delegue-unique-positif.lawtest",
+    "tests/delegue-nombre-inconnu-neither.lawtest",
+    "tests/devoir-information-sans-demande.lawtest",
+    "tests/devoir-paiement-sans-conditions.lawtest",
+    "tests/dom-mixte-prime-eligible.lawtest",
+    "tests/dom-prime-seule-neither.lawtest",
+]
+world = ["fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.core#prestations-renvois"
+regression = false
+suites = [
+    "tests/renvoi-asf-orphelin.lawtest",
+    "tests/renvoi-asf-cessation-couple.lawtest",
+    "tests/renvoi-aeeh-cdaph.lawtest",
+    "tests/renvoi-ajpp-plafond-310.lawtest",
+    "tests/renvoi-ajpp-depassement-310.lawtest",
+    "tests/renvoi-ars-csd-deces-juin.lawtest",
+    "tests/renvoi-non-cumul-base-cf.lawtest",
+    "tests/renvoi-prime-naissance-examen.lawtest",
+    "tests/renvoi-maintien-deces-duree-manquante.lawtest",
+    "tests/cumul-cf-2026.lawtest",
+    "tests/cumul-cf-prev.lawtest",
+    "tests/cumul-partiel-ouverture-prev.lawtest",
+    "tests/cumul-partiel-encours-2026.lawtest",
+    "tests/cumul-enfant-unique-prev.lawtest",
+    "tests/cumul-option-2026.lawtest",
+    "tests/cumul-partiel-ouverture-2026.lawtest",
+    "tests/cumul-partiel-encours-prev.lawtest",
+    "tests/cumul-enfant-unique-2026.lawtest",
+    "tests/cumul-option-prev.lawtest",
+    "tests/cumul-cf-prev-2026.lawtest",
+    "tests/cumul-cf-nota-terme.lawtest",
+    "tests/cumul-sans-cohorte.lawtest",
+    "tests/cumul-2026-avant-entree.lawtest",
+    "tests/cumul-partiel-ouverture-2026-sans-indemnites.lawtest",
+    "tests/cumul-enfant-unique-2026-deux-enfants.lawtest",
+    "tests/cumul-option-2026-sans-option.lawtest",
+    "tests/cumul-indemnite-prev.lawtest",
+    "tests/cumul-indemnite-prev-2026.lawtest",
+    "tests/cumul-indemnite-2026-conge-supp.lawtest",
+    "tests/cumul-indemnite-2026-l6232.lawtest",
+    "tests/cumul-indemnite-prev-conge-supp-neither.lawtest",
+    "tests/cumul-indemnite-sans-concurrent-neither.lawtest",
+    "tests/ajpp-noncumul-indemnites.lawtest",
+    "tests/ajpp-noncumul-prepare.lawtest",
+    "tests/ajpp-noncumul-aeeh.lawtest",
+    "tests/ajpp-noncumul-aah-pch.lawtest",
+    "tests/ajpp-cumul-temps-partiel.lawtest",
+    "tests/ajpp-informer-demandeur.lawtest",
+    "tests/ajpp-informer-beneficiaire.lawtest",
+    "tests/aeeh-exclusion-internat.lawtest",
+    "tests/aeeh-internat-conges.lawtest",
+    "tests/asf-defaillance-soustrait.lawtest",
+    "tests/asf-hors-etat-qualifie.lawtest",
+    "tests/asf-hors-etat-non-qualifie.lawtest",
+    "tests/asf-differentielle-qualifiee.lawtest",
+    "tests/asf-differentielle-sans-instrument.lawtest",
+    "tests/asf-differentielle-partielle.lawtest",
+]
+world = ["fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.core#service-dates"
+regression = false
+suites = [
+    "tests/service-caf-defaut.lawtest",
+    "tests/service-derogation-msa.lawtest",
+    "tests/service-caf-derogee.lawtest",
+    "tests/service-derogation-etat.lawtest",
+    "tests/service-transfert-regime.lawtest",
+    "tests/service-remboursement-regimes.lawtest",
+    "tests/dues-mois-suivant.lawtest",
+    "tests/dues-prepare-meme-mois.lawtest",
+    "tests/dues-cmg-mois-precedent.lawtest",
+    "tests/dues-cmg-mois-meme.lawtest",
+    "tests/dues-cmg-droit-ouvert.lawtest",
+    "tests/dues-ajpp-mois-demande.lawtest",
+    "tests/dues-asf-mois-suivant.lawtest",
+    "tests/dues-asf-juge-recouvrement.lawtest",
+    "tests/dues-asf-juge-plancher.lawtest",
+    "tests/dues-asf-juge-egalite.lawtest",
+    "tests/dues-cmg-chevauchement-precedent-neither.lawtest",
+    "tests/dues-cmg-chevauchement-meme-vrai.lawtest",
+    "tests/dues-cmg-chevauchement-droit-neither.lawtest",
+    "tests/dues-general-exclu-cmg.lawtest",
+    "tests/dues-general-exclu-ajpp.lawtest",
+    "tests/dues-general-exclu-asf.lawtest",
+    "tests/dues-general-exclu-aeeh.lawtest",
+    "tests/cessent-mois-meme.lawtest",
+    "tests/cessent-general-exclu-aeeh.lawtest",
+    "tests/cessent-mois-meme-prev.lawtest",
+    "tests/cessent-cmg-mois-suivant.lawtest",
+    "tests/cessent-ajpp-mois-suivant.lawtest",
+    "tests/cessent-deces-mois-suivant.lawtest",
+    "tests/cessent-deces-prev-simple.lawtest",
+    "tests/cessent-deces-prev-exception.lawtest",
+    "tests/maintien-fin-troisieme-mois.lawtest",
+    "tests/maintien-fin-controle-jour.lawtest",
+    "tests/enfant-compte-fin-controle.lawtest",
+    "tests/aeeh-tiers-controle-jour.lawtest",
+    "tests/dasen-autorite-competente.lawtest",
+    "tests/dasen-delegue-autorite-competente.lawtest",
+    "tests/dasen-autorite-sans-charge.lawtest",
+    "tests/arrete-l5524-ministres.lawtest",
+    "tests/arrete-l5525-ministres.lawtest",
+    "tests/service-avant-regularisation.lawtest",
+    "tests/service-apres-regularisation.lawtest",
+    "tests/regularisation-intervenue.lawtest",
+    "tests/remboursement-apres-regularisation.lawtest",
+    "tests/maintien-ouverture-condition.lawtest",
+    "tests/maintien-ouverture-trop-tot.lawtest",
+    "tests/montant-maintenu-egal.lawtest",
+    "tests/enfant-compte-fin.lawtest",
+    "tests/aeeh-tiers-maintenue.lawtest",
+    "tests/conditions-maintien-applicables.lawtest",
+    "tests/dues-scolarite-inscription.lawtest",
+    "tests/dues-scolarite-prev-famille.lawtest",
+    "tests/versement-bloque-sans-piece.lawtest",
+    "tests/retroactif-motifs.lawtest",
+    "tests/retroactif-sans-motifs.lawtest",
+    "tests/ressources-pacs.lawtest",
+    "tests/enfant-compte-apres-deces.lawtest",
+    "tests/asf-avance-acquise.lawtest",
+    "tests/ars-deces-seuil-decret.lawtest",
+    "tests/maintien-deces-forfait.lawtest",
+    "tests/maintien-deces-aeeh-asf.lawtest",
+    "tests/maintien-deces-sans-prestation.lawtest",
+    "tests/maintien-hors-charge.lawtest",
+    "tests/dues-ajpp-sans-conditions.lawtest",
+    "tests/dues-asf-juge-sans-conditions.lawtest",
+    "tests/dues-scolarite-hors-obligation.lawtest",
+    "tests/maintien-ouverture-tardive.lawtest",
+    "tests/maintien-sans-ouverture.lawtest",
+]
+world = ["fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.core#creances"
+regression = false
+suites = [
+    "tests/creance-aide-sans-asf.lawtest",
+    "tests/creance-aide-sans-demande.lawtest",
+    "tests/creance-interdiction-directe.lawtest",
+    "tests/creance-directe-apres-cessation.lawtest",
+    "tests/creance-subrogation-caf.lawtest",
+    "tests/creance-subrogation-hors-caf.lawtest",
+    "tests/creance-intermediation-titre.lawtest",
+    "tests/creance-intermediation-sans-titre.lawtest",
+    "tests/creance-titre-executoire.lawtest",
+    "tests/creance-titre-sans-conjointe.lawtest",
+    "tests/creance-titre-nullite.lawtest",
+    "tests/creance-avance-fonds-sociaux.lawtest",
+    "tests/creance-avance-sans-droits.lawtest",
+    "tests/creance-transmettre-ij.lawtest",
+    "tests/creance-transmettre-ij-sans-du.lawtest",
+    "tests/creance-transmettre-contribution.lawtest",
+    "tests/creance-transmettre-sans-titre.lawtest",
+    "tests/creance-intermediation-demande-conjointe.lawtest",
+    "tests/creance-intermediation-demande-violences.lawtest",
+    "tests/creance-intermediation-fin-titre.lawtest",
+    "tests/creance-intermediation-hors-etat-violences.lawtest",
+    "tests/creance-intermediation-nouveau-titre.lawtest",
+    "tests/creance-intermediation-pension-non-exigible.lawtest",
+    "tests/creance-intermediation-suspendue-hors-etat.lawtest",
+    "tests/creance-nouvel-accord-sans-accord.lawtest",
+    "tests/creance-nouvel-accord-sans-modification.lawtest",
+    "tests/creance-signaler-changement.lawtest",
+    "tests/creance-signaler-sans-changement.lawtest",
+    "tests/creance-titre-competent-allocataire.lawtest",
+    "tests/creance-titre-competent-creancier-defaut.lawtest",
+    "tests/creance-titre-competent-sans-repli.lawtest",
+    "tests/creance-titre-jugement-anterieur.lawtest",
+    "tests/creance-titre-jugement-posterieur.lawtest",
+    "tests/creance-transmettre-jugement-posterieur.lawtest",
+    "tests/creance-transmettre-nouvel-accord.lawtest",
+    "tests/creance-transmettre-sans-montant.lawtest",
+]
+world = ["fr.pf.core"]
+
+[[tests]]
+family = "fr.pf.core#train-de-vie"
+regression = false
+suites = [
+    "tests/tdv-section-applicable.lawtest",
+    "tests/tdv-vehicules-seuil.lawtest",
+    "tests/tdv-vehicules-sous-seuil.lawtest",
+    "tests/tdv-equipement-seuil.lawtest",
+    "tests/tdv-equipement-sous-seuil.lawtest",
+    "tests/tdv-total.lawtest",
+    "tests/tdv-bareme-corrige.lawtest",
+    "tests/tdv-disproportion.lawtest",
+    "tests/tdv-disproportion-absente.lawtest",
+    "tests/tdv-informer-procedure.lawtest",
+    "tests/tdv-echeance-questionnaire.lawtest",
+    "tests/tdv-echeance-sans-invitation.lawtest",
+    "tests/tdv-lettre-conforme.lawtest",
+    "tests/tdv-lettre-contenu-manquant.lawtest",
+    "tests/tdv-circonstances.lawtest",
+    "tests/tdv-circonstances-absentes.lawtest",
+    "tests/tdv-cessation-disproportion.lawtest",
+    "tests/tdv-cessation-absente.lawtest",
+    "tests/tdv-notifier-refus.lawtest",
+    "tests/tdv-compte-rendu.lawtest",
+    "tests/tdv-bilan-ministre.lawtest",
+    "tests/tdv-lettre-sans-accuse.lawtest",
+    "tests/tdv-refus-conforme.lawtest",
+    "tests/tdv-refus-sans-accuse.lawtest",
+    "tests/tdv-compte-rendu-conforme.lawtest",
+    "tests/tdv-compte-rendu-sanction-fraude.lawtest",
+    "tests/tdv-compte-rendu-sanction-fausse-declaration.lawtest",
+    "tests/tdv-compte-rendu-sans-delai.lawtest",
+    "tests/tdv-compte-rendu-sans-sens.lawtest",
+    "tests/tdv-compte-rendu-sans-elements.lawtest",
+    "tests/tdv-compte-rendu-sans-sanction.lawtest",
+    "tests/tdv-compte-rendu-sans-reponse.lawtest",
+    "tests/tdv-compte-rendu-sans-anonymisation.lawtest",
+    "tests/tdv-hors-section-bareme.lawtest",
+    "tests/tdv-hors-section-procedure.lawtest",
+    "tests/tdv-compte-rendu-tardive-attribution.lawtest",
+    "tests/tdv-bilan-conforme.lawtest",
+    "tests/tdv-bilan-sans-elements.lawtest",
+    "tests/tdv-batie-fallback-logement.lawtest",
+    "tests/tdv-non-batie-fallback-logement.lawtest",
+    "tests/tdv-batie-fallback-manquant.lawtest",
+    "tests/tdv-depenses-hors-foyer-periode.lawtest",
+    "tests/tdv-valeurs-sans-date-vehicules.lawtest",
+    "tests/tdv-valeurs-sans-date-art.lawtest",
+    "tests/tdv-preuve-assurance.lawtest",
+    "tests/tdv-preuve-estimation.lawtest",
+    "tests/tdv-preuve-publication.lawtest",
+    "tests/tdv-preuve-absente.lawtest",
+    "tests/tdv-vehicules-deux-biens.lawtest",
+    "tests/tdv-valeur-retenue-assurance-differente.lawtest",
+    "tests/tdv-valeur-retenue-estimation.lawtest",
+    "tests/tdv-valeur-retenue-publication.lawtest",
+    "tests/tdv-art-valeur-retenue-assurance.lawtest",
+    "tests/tdv-art-valeur-retenue-estimation.lawtest",
+    "tests/tdv-art-valeur-retenue-publication.lawtest",
+    "tests/tdv-valeur-retenue-bien-mismatch.lawtest",
+    "tests/tdv-valeur-retenue-preuve-manquante.lawtest",
+    "tests/tdv-valeur-retenue-sans-date.lawtest",
+    "tests/tdv-sans-depenses.lawtest",
+    "tests/tdv-batie-mixte.lawtest",
+]
+world = ["fr.pf.core"]

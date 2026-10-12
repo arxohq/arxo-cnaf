@@ -1,0 +1,24 @@
+// No right without the CDAPH decision: the computation-level right and
+// the total carry no record either way. Boundary of the channel (the
+// commission decision arrives as an established fact).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-sans-droit" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "aeeh-sdroit-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:couple-sdroit"), entity_ref("urn:fr:pf-aeeh:case:enfant-sdroit")) { origin case_input; }
+        assert "aeeh-sdroit-02": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-sdroit"), 400.00 EUR) { origin case_input; }
+        assert "aeeh-sdroit-03": sans_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-sdroit")) { origin case_input; }
+        assert "aeeh-sdroit-04": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-sdroit")) { origin case_input; }
+    }
+    evaluate truth(aeeh_droit_calcule(entity_ref("urn:fr:pf-aeeh:case:enfant-sdroit")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aeeh_montant_total(entity_ref("urn:fr:pf-aeeh:case:enfant-sdroit"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,19 @@
+// AEEH to the third party: child in care, death 10 March, costs still owed, no termination asked - maintained up to 30 June (R. 552-3 IV 3, PC-R07-33/34).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-aeeh-tiers-maintenue" {
+    given {
+        context { decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "aeeh-tiers-maintenue-01": deces_le(entity_ref("urn:fr:pf:case:enfant-aeeh"), @2026-03-10) { origin case_input; }
+        assert "aeeh-tiers-maintenue-02": frais_tiers_restent_dus(entity_ref("urn:fr:pf:case:enfant-aeeh")) { origin case_input; }
+        assert "aeeh-tiers-maintenue-03": deces_enfant_charge(entity_ref("urn:fr:pf:case:enfant-aeeh")) { origin case_input; }
+        assert "aeeh-tiers-maintenue-04": not interruption_versement_demandee(entity_ref("urn:fr:pf:case:enfant-aeeh")) { origin case_input; }
+        assert "aeeh-tiers-maintenue-05": ouverture_droit_mois(entity_ref("urn:fr:pf:case:enfant-aeeh"), @2025-06-01) { origin case_input; }
+    }
+    evaluate truth(aeeh_tiers_maintenue_fin(entity_ref("urn:fr:pf:case:enfant-aeeh"), @2026-06-30));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

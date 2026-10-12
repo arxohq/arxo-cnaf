@@ -1,0 +1,16 @@
+// Motivated refusal: refusal decided on the evaluation - the fund must notify it motivated with remedies (R. 553-3-6).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-notifier-refus" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-notifier-refus-01": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:refuse")) { origin case_input; }
+        assert "tdv-notifier-refus-02": refus_train_vie_decide(entity_ref("urn:fr:pf:case:refuse")) { origin case_input; }
+        assert "tdv-notifier-refus-03": prestation_soumise_section(entity_ref("urn:fr:pf:case:refuse")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NotifierRefusMotive, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

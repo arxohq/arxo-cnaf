@@ -1,0 +1,19 @@
+// 2025 monthly cap met: 20 days in March 2026 against a retained
+// maximum of 22 (decree figure as assumed input, B-PFAJPA-D168).
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-mensuel-2025-ok" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-m25-01": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-m25"), entity_ref("urn:fr:css:ajpa:case:aide-m25")) { origin case_input; }
+        assert "ajpa-m25-02": residence_stable_france(entity_ref("urn:fr:css:ajpa:case:aidant-m25")) { origin adjudicated; }
+        assert "ajpa-m25-03": jours_ajpa_mois(entity_ref("urn:fr:css:ajpa:case:aidant-m25"), entity_ref("urn:fr:css:ajpa:case:aide-m25"), @2026-03-01, 20) { origin case_input; }
+        assert "ajpa-m25-04": plafond_mensuel_retenu(entity_ref("urn:fr:css:ajpa:case:aidant-m25"), 22) { origin case_input; }
+    }
+    evaluate truth(mensuel_dans_limite(entity_ref("urn:fr:css:ajpa:case:aidant-m25"), entity_ref("urn:fr:css:ajpa:case:aide-m25"), @2026-03-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

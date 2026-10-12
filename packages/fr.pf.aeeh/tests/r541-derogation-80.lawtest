@@ -1,0 +1,77 @@
+// R. 541-4 I, 80 % derogation vs ordinary due-end on the SAME award
+// (legal_time 2024-03, 2022 edition — the «Par dérogation aux
+// dispositions des deuxième et troisième alinéas» paragraph displaces
+// the ordinary 1°/2° in every wording). The derogation child carries the
+// prospect, the team proposal, the derogation regime AND the AAH trigger:
+// only the 3-5 year bounds conclude. Each ordinary child carries the AAH
+// trigger with the adjudicated ordinary regime and an affirmative record
+// that one statutory trigger is absent — the certificate expressly
+// records no prospect (team proposal still present) or the file contains
+// no team proposal (prospect still present): only the due-end concludes.
+// No ordinary child asserts both triggers with the ordinary regime.
+// A child with the full trigger set but no regime stays silent on both
+// heads (pending, not false).
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-derogation-80" {
+    given {
+        context { deadline_policy AEEH_DUREES; decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-d80-01": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-der80"), 80.0) { origin adjudicated; }
+        assert "r541-d80-02": date_attribution_aeeh(entity_ref("urn:fr:pf-aeeh:case:enfant-der80"), @2024-03-15) { origin case_input; }
+        assert "r541-d80-03": perspective_amelioration(entity_ref("urn:fr:pf-aeeh:case:enfant-der80")) { origin case_input; }
+        assert "r541-d80-04": proposition_equipe_pluridisciplinaire(entity_ref("urn:fr:pf-aeeh:case:enfant-der80")) { origin adjudicated; }
+        assert "r541-d80-05": attribution_derogation_r5414(entity_ref("urn:fr:pf-aeeh:case:enfant-der80")) { origin adjudicated; }
+        assert "r541-d80-06": ouverture_droit_aah(entity_ref("urn:fr:pf-aeeh:case:enfant-der80"), @2026-06-15) { origin case_input; }
+        assert "r541-d80-07": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-sp"), 80.0) { origin adjudicated; }
+        assert "r541-d80-08": date_attribution_aeeh(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-sp"), @2024-03-15) { origin case_input; }
+        assert "r541-d80-09": proposition_equipe_pluridisciplinaire(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-sp")) { origin adjudicated; }
+        assert "r541-d80-10": certificat_sans_perspective(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-sp")) { origin adjudicated; }
+        assert "r541-d80-11": attribution_ordinaire_r5414(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-sp")) { origin adjudicated; }
+        assert "r541-d80-12": ouverture_droit_aah(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-sp"), @2026-06-15) { origin case_input; }
+        assert "r541-d80-13": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-se"), 80.0) { origin adjudicated; }
+        assert "r541-d80-14": date_attribution_aeeh(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-se"), @2024-03-15) { origin case_input; }
+        assert "r541-d80-15": perspective_amelioration(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-se")) { origin case_input; }
+        assert "r541-d80-16": equipe_sans_proposition(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-se")) { origin adjudicated; }
+        assert "r541-d80-17": attribution_ordinaire_r5414(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-se")) { origin adjudicated; }
+        assert "r541-d80-18": ouverture_droit_aah(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-se"), @2026-06-15) { origin case_input; }
+        assert "r541-d80-19": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-sans80"), 80.0) { origin adjudicated; }
+        assert "r541-d80-20": date_attribution_aeeh(entity_ref("urn:fr:pf-aeeh:case:enfant-sans80"), @2024-03-15) { origin case_input; }
+        assert "r541-d80-21": perspective_amelioration(entity_ref("urn:fr:pf-aeeh:case:enfant-sans80")) { origin case_input; }
+        assert "r541-d80-22": proposition_equipe_pluridisciplinaire(entity_ref("urn:fr:pf-aeeh:case:enfant-sans80")) { origin adjudicated; }
+        assert "r541-d80-23": ouverture_droit_aah(entity_ref("urn:fr:pf-aeeh:case:enfant-sans80"), @2026-06-15) { origin case_input; }
+    }
+    evaluate truth(bornes_duree_attribution(entity_ref("urn:fr:pf-aeeh:case:enfant-der80"), @2027-03-15, @2029-03-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-der80"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-sp"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bornes_duree_attribution(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-sp"), @2027-03-15, @2029-03-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-se"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bornes_duree_attribution(entity_ref("urn:fr:pf-aeeh:case:enfant-ord80-se"), @2027-03-15, @2029-03-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(bornes_duree_attribution(entity_ref("urn:fr:pf-aeeh:case:enfant-sans80"), @2027-03-15, @2029-03-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-sans80"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

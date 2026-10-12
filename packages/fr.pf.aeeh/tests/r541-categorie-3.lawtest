@@ -1,0 +1,50 @@
+// R. 541-2, 3° gates: (a) 50 % reduction and twenty weekly hours each
+// suffice; (b) pairs 20 % / eight hours with further expenses at the
+// arrêté amount; (c) expenses alone. A child with only a 20 % reduction
+// and no expenses meets none of the three.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-categorie-3" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-c3-01": seuil_depenses_retenu(CATEGORIE_3, 150.00 EUR) { origin case_input; }
+        assert "r541-c3-02": taux_reduction_activite(entity_ref("urn:fr:pf-aeeh:case:enfant-c3ar"), 50.0) { origin adjudicated; }
+        assert "r541-c3-03": heures_tierce_remuneree(entity_ref("urn:fr:pf-aeeh:case:enfant-c3at"), 20.0) { origin adjudicated; }
+        assert "r541-c3-04": taux_reduction_activite(entity_ref("urn:fr:pf-aeeh:case:enfant-c3br"), 20.0) { origin adjudicated; }
+        assert "r541-c3-05": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c3br"), 150.00 EUR) { origin case_input; }
+        assert "r541-c3-06": heures_tierce_remuneree(entity_ref("urn:fr:pf-aeeh:case:enfant-c3bt"), 8.0) { origin adjudicated; }
+        assert "r541-c3-07": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c3bt"), 150.00 EUR) { origin case_input; }
+        assert "r541-c3-08": depenses_supplementaires(entity_ref("urn:fr:pf-aeeh:case:enfant-c3c"), 300.00 EUR) { origin case_input; }
+        assert "r541-c3-09": taux_reduction_activite(entity_ref("urn:fr:pf-aeeh:case:enfant-c3-silencieux"), 20.0) { origin adjudicated; }
+    }
+    evaluate truth(categorie3a_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c3ar")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie3a_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c3at")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie3b_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c3br")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie3b_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c3bt")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie3c_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c3c")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie3a_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c3-silencieux")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(categorie3b_criteres_remplis(entity_ref("urn:fr:pf-aeeh:case:enfant-c3-silencieux")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

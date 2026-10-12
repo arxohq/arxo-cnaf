@@ -1,0 +1,32 @@
+// Rectification on the reception day itself (first date of the
+// window, inclusive) of a date-certain notice: P2 interruption
+// holds; observed past one month but before three months, II 1°
+// rejection holds while II 2° recovery does not yet (R. 847-1-1
+// I.2.a, II, III; PA-FE09-03).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-rectification-jour-reception-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; }
+        assert "ppa-01": notification_recouvrement(entity_ref("urn:fr:ppa:case:rectification-jour-reception-2026"), @2026-05-31) { origin case_input; }
+        assert "ppa-02": reception_notification(entity_ref("urn:fr:ppa:case:rectification-jour-reception-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-03": demande_rectification(entity_ref("urn:fr:ppa:case:rectification-jour-reception-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-04": date_observation_recours(entity_ref("urn:fr:ppa:case:rectification-jour-reception-2026"), @2026-07-15) { origin case_input; }
+        assert "ppa-05": absence_decision_rectification(entity_ref("urn:fr:ppa:case:rectification-jour-reception-2026")) { origin case_input; }
+        assert "ppa-06": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:rectification-jour-reception-2026")) { origin case_input; }
+    }
+    evaluate truth(interruption_delai_cra(entity_ref("urn:fr:ppa:case:rectification-jour-reception-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_implicite_rectification(entity_ref("urn:fr:ppa:case:rectification-jour-reception-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recouvrement_apres_demande(entity_ref("urn:fr:ppa:case:rectification-jour-reception-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

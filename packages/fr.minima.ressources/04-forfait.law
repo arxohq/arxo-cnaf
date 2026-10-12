@@ -1,0 +1,305 @@
+// Housing flat-rate and housing-aid cap (R.262-9, R.262-10).
+//
+// DEONTIC MAP: computation only; no positions here.
+//
+// APL-FORFAIT-PENDING. The W2-APL package (IN_PROGRESS) publishes no
+// housing-aid amount usable as an import, and the R.262-9 flat-rate is
+// self-contained in the CASF text (12/16/16.5 % of the MF by household
+// size): no formal dep on fr.apl is declared. The received housing aid
+// (aide_logement_percue) arrives as a case input with provenance under
+// the input contract (equals the fr.apl computation once that lane
+// lands; the wave-5 cascade wires it). The MF-by-size figures arrive
+// from fr.casf.rsa (same lane) under B-RSA-MF-INPUT-CONTRACT.
+// Garden benefits (last paragraph) are never counted: cases assert no
+// such fact (background exclusion).
+
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+use self::{
+    CASF_R262_10,
+    CASF_R262_10_ED2021_03,
+    CASF_R262_10_ED2022_03,
+    CASF_R262_10_ED2023_12,
+    CASF_R262_10_ED2025_02,
+    CASF_R262_10_ED2025_06,
+    CASF_R262_10_ED2026_06,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06,
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    Logement,
+    Personne,
+    aide_logement_connue,
+    aide_logement_percue,
+    aide_logement_retenue,
+    forfait_logement,
+    forfait_logement_connu,
+    forfait_logement_element_pro,
+    logement,
+    mf_composition,
+    nb_personnes_forfait,
+    plafond_forfait_logement,
+};
+
+// --- Housing flat-rate by household size (R.262-9) ---
+//
+// Percentages are identical in the 2016 and 2023 wordings (only the
+// opening reservation on professional income was added in 2023), so one
+// rule triple covers the whole coverage with both fragment sets.
+
+@source(
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06)
+rule ForfaitLogement1(p: Personne, mf1: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 12 % du MF personne seule (R. 262-9, 1°)";
+    label en unofficial "housing flat-rate: 12 % of the single-person MF (R. 262-9, 1°)";
+    when nb_personnes_forfait(p, 1)
+        and logement(p, PROPRIETAIRE_SANS_AIDE)
+        and mf_composition(p, 1, mf1)
+        and not_known(forfait_logement_element_pro(p));
+    then forfait_logement(p, mf1 * TauxForfaitLogement1);
+}
+
+@source(
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06)
+rule ForfaitLogement1Gratuit(p: Personne, mf1: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement à titre gratuit, une personne : 12 % (R. 262-9, 1°)";
+    label en unofficial "free housing flat-rate, one person: 12 % (R. 262-9, 1°)";
+    when nb_personnes_forfait(p, 1)
+        and logement(p, LOGE_GRATUIT)
+        and mf_composition(p, 1, mf1)
+        and not_known(forfait_logement_element_pro(p));
+    then forfait_logement(p, mf1 * TauxForfaitLogement1);
+}
+
+@source(
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06)
+rule ForfaitLogement2(p: Personne, mf2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 16 % du MF deux personnes (R. 262-9, 2°)";
+    label en unofficial "housing flat-rate: 16 % of the two-person MF (R. 262-9, 2°)";
+    when nb_personnes_forfait(p, 2)
+        and logement(p, PROPRIETAIRE_SANS_AIDE)
+        and mf_composition(p, 2, mf2)
+        and not_known(forfait_logement_element_pro(p));
+    then forfait_logement(p, mf2 * TauxForfaitLogement2);
+}
+
+@source(
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06)
+rule ForfaitLogement2Gratuit(p: Personne, mf2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement à titre gratuit, deux personnes : 16 % (R. 262-9, 2°)";
+    label en unofficial "free housing flat-rate, two persons: 16 % (R. 262-9, 2°)";
+    when nb_personnes_forfait(p, 2)
+        and logement(p, LOGE_GRATUIT)
+        and mf_composition(p, 2, mf2)
+        and not_known(forfait_logement_element_pro(p));
+    then forfait_logement(p, mf2 * TauxForfaitLogement2);
+}
+
+@source(
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06)
+rule ForfaitLogement3Plus(p: Personne, n: Integer, mf3: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement : 16,5 % du MF trois personnes, foyer de trois ou plus (R. 262-9, 3°)";
+    label en unofficial "housing flat-rate: 16.5 % of the three-person MF, household of three or more (R. 262-9, 3°)";
+    when nb_personnes_forfait(p, n)
+        and n >= 3
+        and logement(p, PROPRIETAIRE_SANS_AIDE)
+        and mf_composition(p, 3, mf3)
+        and not_known(forfait_logement_element_pro(p));
+    then forfait_logement(p, mf3 * TauxForfaitLogement3Plus);
+}
+
+@source(
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06)
+rule ForfaitLogement3PlusGratuit(p: Personne, n: Integer, mf3: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "forfait logement à titre gratuit, trois ou plus : 16,5 % (R. 262-9, 3°)";
+    label en unofficial "free housing flat-rate, three or more: 16.5 % (R. 262-9, 3°)";
+    when nb_personnes_forfait(p, n)
+        and n >= 3
+        and logement(p, LOGE_GRATUIT)
+        and mf_composition(p, 3, mf3)
+        and not_known(forfait_logement_element_pro(p));
+    then forfait_logement(p, mf3 * TauxForfaitLogement3Plus);
+}
+
+// --- Flat-rate scale as such (R.262-9): the cap for received aid ------
+//
+// The scale value exists independently of the housing situation: for a
+// tenant receiving aid (R.262-10) it caps the counted aid although no
+// in-kind flat-rate is deducted (G-A06). The deduction rules above keep
+// reading forfait_logement; the aid rules below read this scale.
+
+@source(
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06)
+rule EchelleForfaitLogement1(p: Personne, mf1: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "barème du forfait logement, une personne : 12 % du MF (R. 262-9, 1°)";
+    label en unofficial "housing flat-rate scale, one person: 12 % of the MF (R. 262-9, 1°)";
+    when nb_personnes_forfait(p, 1)
+        and mf_composition(p, 1, mf1);
+    then plafond_forfait_logement(p, mf1 * TauxForfaitLogement1);
+}
+
+@source(
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06)
+rule EchelleForfaitLogement2(p: Personne, mf2: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "barème du forfait logement, deux personnes : 16 % du MF (R. 262-9, 2°)";
+    label en unofficial "housing flat-rate scale, two persons: 16 % of the MF (R. 262-9, 2°)";
+    when nb_personnes_forfait(p, 2)
+        and mf_composition(p, 2, mf2);
+    then plafond_forfait_logement(p, mf2 * TauxForfaitLogement2);
+}
+
+@source(
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06)
+rule EchelleForfaitLogement3Plus(p: Personne, n: Integer, mf3: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "barème du forfait logement, trois ou plus : 16,5 % du MF (R. 262-9, 3°)";
+    label en unofficial "housing flat-rate scale, three or more: 16.5 % of the MF (R. 262-9, 3°)";
+    when nb_personnes_forfait(p, n)
+        and n >= 3
+        and mf_composition(p, 3, mf3);
+    then plafond_forfait_logement(p, mf3 * TauxForfaitLogement3Plus);
+}
+
+// --- Housing aid counted up to the flat-rate (R.262-10) ---
+//
+// Second paragraph (household members not counted for the housing aid
+// are left out of the flat-rate): the received-aid figure arrives
+// established with that filter applied (input contract, APL-FORFAIT-PENDING).
+
+@source(
+    CASF_R262_10,
+    CASF_R262_10_ED2021_03,
+    CASF_R262_10_ED2022_03,
+    CASF_R262_10_ED2023_12,
+    CASF_R262_10_ED2025_02,
+    CASF_R262_10_ED2025_06,
+    CASF_R262_10_ED2026_06)
+rule AideLogementSousForfait(p: Personne, mois: Date, percu: Money, forfait: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "aide au logement sous le forfait : comptée telle quelle (R. 262-10)";
+    label en unofficial "housing aid below the flat-rate: counted as is (R. 262-10)";
+    when aide_logement_percue(p, mois, percu)
+        and plafond_forfait_logement(p, forfait)
+        and percu <= forfait;
+    then aide_logement_retenue(p, mois, percu);
+}
+
+@source(
+    CASF_R262_10,
+    CASF_R262_10_ED2021_03,
+    CASF_R262_10_ED2022_03,
+    CASF_R262_10_ED2023_12,
+    CASF_R262_10_ED2025_02,
+    CASF_R262_10_ED2025_06,
+    CASF_R262_10_ED2026_06)
+rule AideLogementPlafonnee(p: Personne, mois: Date, percu: Money, forfait: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "aide au logement au-delà du forfait : comptée à hauteur du forfait (R. 262-10)";
+    label en unofficial "housing aid above the flat-rate: counted up to the flat-rate (R. 262-10)";
+    when aide_logement_percue(p, mois, percu)
+        and plafond_forfait_logement(p, forfait)
+        and percu > forfait;
+    then aide_logement_retenue(p, mois, forfait);
+}
+
+// --- Presence helpers: project the amounts away so the quarterly base
+// can test absence with full-arity not_known (R.262-9, R.262-10) ---
+
+@source(
+    CASF_R262_10,
+    CASF_R262_10_ED2021_03,
+    CASF_R262_10_ED2022_03,
+    CASF_R262_10_ED2023_12,
+    CASF_R262_10_ED2025_02,
+    CASF_R262_10_ED2025_06,
+    CASF_R262_10_ED2026_06)
+rule AideLogementConnue(p: Personne, mois: Date, aide: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "présence d'une aide retenue dès qu'un montant est retenu (R. 262-10)";
+    label en unofficial "a retained aid is present whenever an amount is retained (R. 262-10)";
+    when aide_logement_retenue(p, mois, aide);
+    then aide_logement_connue(p, mois);
+}
+
+@source(
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06,
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03)
+rule ForfaitLogementConnu(p: Personne, forfait: Money) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "présence d'un forfait dès qu'un montant est fixé (R. 262-9)";
+    label en unofficial "a flat-rate is present whenever an amount is set (R. 262-9)";
+    when forfait_logement(p, forfait);
+    then forfait_logement_connu(p);
+}

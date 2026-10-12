@@ -1,0 +1,31 @@
+// Reopening within the decree delay: right opened at month 200,
+// relapse at 210, 100 days paid, L. 544-2 channel facts — the D. 544-3
+// para. 1 in-period reopening holds. No duration expiry is recorded,
+// so the L. 544-3 para. 3 beyond-maximum route stays silent: payment
+// beyond the maximum is NEITHER here (D. 544-3 2° needs «en
+// application du troisième alinéa de l'article L. 544-3», not the
+// in-period delay).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reouverture-delai" {
+    given {
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; }
+        assert "ajpp-rod-01": ouverture_droit_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rod"), 200) { origin case_input; }
+        assert "ajpp-rod-02": rechute_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rod"), 210) { origin case_input; }
+        assert "ajpp-rod-03": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-rod"), 100) { origin case_input; }
+        assert "ajpp-rod-04": rechute_pathologie(entity_ref("urn:fr:pf-ajpp:case:enfant-rod")) { origin case_input; }
+        assert "ajpp-rod-05": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-rod")) { origin adjudicated; }
+        assert "ajpp-rod-06": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-rod")) { origin adjudicated; }
+        assert "ajpp-rod-07": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-rod"), entity_ref("urn:fr:pf-ajpp:case:enfant-rod")) { origin case_input; }
+    }
+    evaluate truth(reouverture_dans_delai(entity_ref("urn:fr:pf-ajpp:case:enfant-rod")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(versement_au_dela_max(entity_ref("urn:fr:pf-ajpp:case:enfant-rod")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

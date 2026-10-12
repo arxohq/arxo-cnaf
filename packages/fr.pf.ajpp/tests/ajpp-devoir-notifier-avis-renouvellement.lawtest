@@ -1,0 +1,20 @@
+// Renewal notification duty (D10 active, 2023): renewal requested,
+// control agreed, the body knows the opinion — the
+// NotifierAvisRenouvellement position is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-devoir-notifier-avis-renouvellement" {
+    given {
+        context { decision_time @2023-05-15T12:00:00Z; knowledge_time @2023-05-15T12:00:00Z; legal_time @2023-05-15; timezone "Europe/Paris"; }
+        assert "ajpp-dnr-01": demande_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-dnr")) { origin case_input; }
+        assert "ajpp-dnr-02": accord_controle_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-dnr")) { origin adjudicated; }
+        assert "ajpp-dnr-03": organisme_connait_avis(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:enfant-dnr")) { origin case_input; }
+        assert "ajpp-dnr-04": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-dnr"), entity_ref("urn:fr:pf-ajpp:case:enfant-dnr")) { origin case_input; }
+        assert "ajpp-dnr-05": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-ajpp:org:caisse"), entity_ref("urn:fr:pf-ajpp:case:parent-dnr")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NotifierAvisRenouvellement, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

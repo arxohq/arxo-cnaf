@@ -1,0 +1,22 @@
+// Joint designation of the spouse, no PF/RSA payee; filing month
+// June -> right from 1 June (R. 846-4/2).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-allocataire-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": designation_conjointe(entity_ref("urn:fr:ppa:case:allocataire-2026"), CONJOINT) { origin case_input; }
+        assert "ppa-02": demande_mois(entity_ref("urn:fr:ppa:case:allocataire-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-03": aucun_allocataire_pf_rsa(entity_ref("urn:fr:ppa:case:allocataire-2026")) { origin case_input; }
+    }
+    evaluate truth(allocataire_designe(entity_ref("urn:fr:ppa:case:allocataire-2026"), CONJOINT));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droit_du_premier_jour(entity_ref("urn:fr:ppa:case:allocataire-2026"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

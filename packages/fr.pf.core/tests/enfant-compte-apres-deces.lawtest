@@ -1,0 +1,16 @@
+// Deceased child counts: dependent child dead, maintien applies - counted for other benefits (L. 552-7).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-enfant-compte-apres-deces" {
+    given {
+        context { decision_time @2026-07-15T12:00:00Z; knowledge_time @2026-07-15T12:00:00Z; legal_time @2026-07-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "enfant-compte-apres-deces-01": deces_enfant_charge(entity_ref("urn:fr:pf:case:enfant-decede")) { origin case_input; }
+        assert "enfant-compte-apres-deces-02": maintien_applicable(entity_ref("urn:fr:pf:case:enfant-decede")) { origin case_input; }
+    }
+    evaluate truth(enfant_compte_apres_deces(entity_ref("urn:fr:pf:case:enfant-decede")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

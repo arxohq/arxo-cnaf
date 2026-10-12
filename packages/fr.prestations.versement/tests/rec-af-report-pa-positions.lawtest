@@ -1,0 +1,33 @@
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+// Positions with a PA-source carry on the AF echeance: the carry
+// joins the 04 debt (deduction mechanics), while the payment
+// duties fire through the real neighbour and this layer —
+// fr.pf.af::PayerAllocationsFamilialesDues on the brut head and
+// PayerAfNet on the CRDS net (entitlement vs payable split,
+// B-PV-DROIT-PAIEMENT). Both ACTIVE, demonstrated by execution.
+
+test "urn:query:fr-pv-rec-af-report-pa-positions" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; interpretation fr.apl::PpPlancherFinal; interpretation fr.css.aah::MaintienTantQue; }
+        assert "brut": fr.pf.af::af_montant_du(entity_ref("urn:fr:pv:case:allocataire"), 192.00 EUR) { origin case_input; }
+        assert "percoit": fr.pf.af::famille_percoit(entity_ref("urn:fr:pv:case:allocataire"), 192.00 EUR) { origin case_input; }
+        assert "org": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pv:case:caisse"), entity_ref("urn:fr:pv:case:allocataire")) { origin case_input; }
+        assert "indu": fr.pf.core::indu_constate(entity_ref("urn:fr:pv:case:allocataire"), 100.00 EUR) { origin case_input; }
+        assert "report": rsa_indu_reporte_sur_pf(entity_ref("urn:fr:pv:case:allocataire"), 0 EUR) { origin case_input; }
+        assert "pa": pa_indu_reporte_sur_pf(entity_ref("urn:fr:pv:case:allocataire"), 150.00 EUR) { origin case_input; }
+        // D-42: the stated scale rate 0.25 is gone (contract (b), PC-R07-39): the levy
+        // arrives as the Money amount the fund applies; same case, 0.25 x AF echeance net of CRDS
+        // 191.04 = 47.76 EUR. Carry pairs carry their lawful-carry gate (PC-R07-36).
+        assert "levy": prelevement_mensuel_declare(entity_ref("urn:fr:pv:case:allocataire"), 47.76 EUR) { origin case_input; }
+        assert "levy-rsa-licite": report_rsa_sur_pf_licite(entity_ref("urn:fr:pv:case:allocataire")) { origin case_input; }
+        assert "levy-pa-licite": report_pa_sur_pf_licite(entity_ref("urn:fr:pv:case:allocataire")) { origin case_input; }
+    }
+    evaluate positions();
+    // D-42 (08.10.2026): working reading selected in context (G-A13, fr.apl PpPlancherFinal now pub).
+    expect position(fr.pf.af::PayerAllocationsFamilialesDues, ACTIVE);
+    expect position(PayerAfNet, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

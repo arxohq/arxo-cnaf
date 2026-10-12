@@ -1,0 +1,27 @@
+// Re-exam request in the last month before the point: treatment
+// starts at month 120, foreseeable 8 months, request at 127 — the point
+// builds to 128, the delay to 1, the request is admissible; with the new
+// duration set and both remainders positive the right is renewed.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reexamen-recevable" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-rxr-01": debut_traitement_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rxr"), 120) { origin case_input; }
+        assert "ajpp-rxr-02": duree_previsible_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rxr"), 8) { origin case_input; }
+        assert "ajpp-rxr-03": demande_reexamen_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rxr"), 127) { origin case_input; }
+        assert "ajpp-rxr-04": nouvelle_duree_fixee(entity_ref("urn:fr:pf-ajpp:case:enfant-rxr")) { origin case_input; }
+        assert "ajpp-rxr-05": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-rxr"), MALADIE, 1) { origin case_input; }
+        assert "ajpp-rxr-06": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-rxr"), 100) { origin case_input; }
+    }
+    evaluate truth(reexamen_demande_recevable(entity_ref("urn:fr:pf-ajpp:case:enfant-rxr")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(droit_renouvele_reexamen(entity_ref("urn:fr:pf-ajpp:case:enfant-rxr")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

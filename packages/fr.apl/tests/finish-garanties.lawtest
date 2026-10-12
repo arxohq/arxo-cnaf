@@ -1,0 +1,81 @@
+// Guarantees and recovery (22): the two recovery exception channels to
+// unseizability, the October bareme indexation list, the Q2-IRL selector
+// from 18.08.2022, and tenant-side recovery routing for undisputed
+// landlord-deducted overpayments.
+// D-42: the given blocks were written with bare `legal_time @D;` and
+// `using fr.apl version ...;` lines, which the .lawtest grammar does not
+// parse ("test not parsed" on both evaluators). Rewritten to the context
+// form of the other hand suites (decision/knowledge time at noon of the
+// legal date, Europe/Paris), carrying the suite's deadline_policy and the
+// G-A13 working reading PpPlancherFinal (24-lecture-pp.law). Facts, queries
+// and expectations are unchanged.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-finish-exception-recouvrement-organisme" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fexr-01": recouvrement_organisme_l553_2(entity_ref("urn:fr:apl:case:fexr")) { origin case_input; }
+    }
+    evaluate truth(saisie_exception_autorisee(entity_ref("urn:fr:apl:case:fexr"), RECOUVREMENT_ORGANISME_L553_2));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-exception-creances-l581" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fex5-01": creance_l581_recouvrement(entity_ref("urn:fr:apl:case:fex5")) { origin case_input; }
+    }
+    evaluate truth(saisie_exception_autorisee(entity_ref("urn:fr:apl:case:fex5"), CREANCES_L581));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-element-indexe-plafonds" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "fidx-01": aide_demandee(entity_ref("urn:fr:apl:case:fidx"), APL) { origin case_input; }
+    }
+    evaluate truth(element_indexe_irl(entity_ref("urn:fr:apl:case:fidx"), PLAFONDS_LOYER));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-selecteur-irl-t2" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "firl-01": aide_demandee(entity_ref("urn:fr:apl:case:firl"), ALF) { origin case_input; }
+    }
+    evaluate truth(indice_revision_irl_trimestre2(entity_ref("urn:fr:apl:case:firl")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-apl-finish-recouvrement-locataire" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frecl-01": trop_percu_deduit_bailleur(entity_ref("urn:fr:apl:case:frecl"), 120.00 EUR) { origin case_input; }
+        assert "frecl-02": contestation_recouvrement(entity_ref("urn:fr:apl:case:frecl"), false) { origin case_input; }
+        // D-42: R. 823-23: recovery from the tenant applies when "le bailleur ... justifie
+        // D-42: qu'il a ... deduit les sommes"; the model (22 CibleRecouvrementLocataire)
+        // D-42: asks for that finding plus the landlord, its role and the letting mode,
+        // D-42: which the case omitted.
+        assert "frecl-03": justification_deduction_indu(entity_ref("urn:fr:apl:case:frecl")) { origin case_input; }
+        // D-42: same R. 823-23 premise: the landlord of the household.
+        assert "frecl-04": bailleur_du_menage(entity_ref("urn:fr:apl:bail:frecl"), entity_ref("urn:fr:apl:case:frecl")) { origin case_input; }
+        // D-42: same: its role is BAILLEUR.
+        assert "frecl-05": role_tiers(entity_ref("urn:fr:apl:bail:frecl"), BAILLEUR) { origin case_input; }
+        // D-42: same: "aupres du locataire" — a letting (mode_location).
+        assert "frecl-06": mode_location(entity_ref("urn:fr:apl:case:frecl"), LOCATION_SEULE) { origin case_input; }
+    }
+    evaluate truth(recouvrement_aupres_locataire(entity_ref("urn:fr:apl:case:frecl"), 120.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

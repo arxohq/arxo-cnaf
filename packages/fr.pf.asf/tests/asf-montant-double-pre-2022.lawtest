@@ -1,0 +1,20 @@
+// Eligible orphan of both parents at 2021, stated BMAF 400: 0.375 x 400 = 150.00 (R. 523-7 2018 row).
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-montant-double-pre-2022" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "omp-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:montant-double-pre-2022"), entity_ref("urn:fr:pf-asf:case:montant-double-pre-2022-e1")) { origin case_input; }
+        assert "omp-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:montant-double-pre-2022-e1")) { origin case_input; }
+        assert "omp-03": motif_asf(entity_ref("urn:fr:pf-asf:case:montant-double-pre-2022-e1"), ORPHELIN_DEUX_PARENTS) { origin case_input; }
+        assert "omp-04": demande_asf(entity_ref("urn:fr:pf-asf:case:montant-double-pre-2022-e1")) { origin case_input; }
+        assert "omp-05": mois_ouverture_asf(@2021-04-01) { origin case_input; }
+        assert "omp-06": bmaf_retenu(entity_ref("urn:fr:pf-asf:case:montant-double-pre-2022"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(asf_montant_du(entity_ref("urn:fr:pf-asf:case:montant-double-pre-2022-e1"), 150.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

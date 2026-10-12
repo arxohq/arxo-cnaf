@@ -1,0 +1,36 @@
+// Same facts as moyenne-arrondie-couple with NO reading selected: the exact average rule
+// refuses the non-terminating quotient (INEXACT_DIVISION, SPEC 50/18): the document is not
+// executable (document status RUNTIME_ERROR, issue INEXACT_DIVISION). The rounding of the average is a reading (SPEC 152), not applied silently.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-moy-sel-rsa" {
+    given {
+        context { decision_time @2025-01-15T12:00:00Z; knowledge_time @2025-01-15T12:00:00Z; legal_time @2025-01-15; timezone "Europe/Paris"; deadline_policy RSA_MOIS; }
+        assert "moy-sel-01": fr.minima.ressources::foyer_du_cas(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture")) { origin case_input; }
+        assert "moy-sel-02": fr.minima.ressources::mois_demande(@2025-01-01) { origin case_input; }
+        assert "moy-sel-03": fr.minima.ressources::mois_reference(@2024-10-01, @2024-11-01, @2024-12-01) { origin case_input; }
+        assert "moy-sel-04": fr.minima.ressources::nb_personnes_forfait(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), 2) { origin case_input; }
+        assert "moy-sel-05": fr.minima.ressources::logement(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), AUTRE) { origin case_input; }
+        assert "moy-sel-06": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), 2) { origin case_input; }
+        assert "moy-sel-07": mois_droit(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2025-01-01) { origin case_input; }
+        assert "moy-sel-08": residence_stable(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture")) { origin case_input; }
+        assert "moy-sel-09": sejour_travail_condition(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture")) { origin case_input; }
+        assert "moy-sel-10": conjoint_enfants_comptes(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture")) { origin case_input; }
+        assert "moy-sel-11": age_charge_condition(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture")) { origin case_input; }
+        assert "moy-sel-12": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2024-10-01, 167.00 EUR) { origin case_input; }
+        assert "moy-sel-13": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2024-10-01, 0 EUR) { origin case_input; }
+        assert "moy-sel-14": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2024-10-01, 200.00 EUR) { origin case_input; }
+        assert "moy-sel-15": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2024-11-01, 167.00 EUR) { origin case_input; }
+        assert "moy-sel-16": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2024-11-01, 0 EUR) { origin case_input; }
+        assert "moy-sel-17": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2024-11-01, 200.00 EUR) { origin case_input; }
+        assert "moy-sel-18": fr.minima.ressources::declare_total_mois(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2024-12-01, 0.00 EUR) { origin case_input; }
+        assert "moy-sel-19": fr.minima.ressources::prestation_service_mois(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2024-12-01, 0 EUR) { origin case_input; }
+        assert "moy-sel-20": fr.minima.ressources::aide_logement_percue(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2024-12-01, 200.00 EUR) { origin case_input; }
+    }
+    evaluate truth(allocation_mensuelle(entity_ref("urn:fr:rsa:case:moyenne-inexacte-sans-lecture"), @2025-01-01, 689.66 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}

@@ -1,0 +1,18 @@
+// Two persons housed for free: MF 900.00 -> 16 % flat-rate 144.00
+// (R.262-9, 2°).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-forfait-gratuit-2" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "forfgrat-01": nb_personnes_forfait(entity_ref("urn:fr:minima-ressources:case:forfait-gratuit-2"), 2) { origin case_input; }
+        assert "forfgrat-02": logement(entity_ref("urn:fr:minima-ressources:case:forfait-gratuit-2"), LOGE_GRATUIT) { origin case_input; }
+        assert "forfgrat-03": mf_composition(entity_ref("urn:fr:minima-ressources:case:forfait-gratuit-2"), 2, 900.00 EUR) { origin case_input; }
+    }
+    evaluate truth(forfait_logement(entity_ref("urn:fr:minima-ressources:case:forfait-gratuit-2"), 144.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,17 @@
+// Death lump-sum past the age limit: charge and request present but death beyond the decree age limit explicitly - not awardable (L. 545-1, PC-R07-12 explicit negative).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-forfait-deces-hors-limite-age" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "forfait-deces-hors-limite-age-01": forfait_deces_demande(entity_ref("urn:fr:pf:case:forfait-hors"), entity_ref("urn:fr:pf:case:forfait-enf-hors")) { origin case_input; }
+        assert "forfait-deces-hors-limite-age-02": charge_effective_permanente(entity_ref("urn:fr:pf:case:forfait-hors"), entity_ref("urn:fr:pf:case:forfait-enf-hors")) { origin adjudicated; }
+        assert "forfait-deces-hors-limite-age-03": not deces_enfant_avant_limite_age(entity_ref("urn:fr:pf:case:forfait-enf-hors")) { origin case_input; }
+    }
+    evaluate truth(forfait_deces_eligible(entity_ref("urn:fr:pf:case:forfait-hors"), entity_ref("urn:fr:pf:case:forfait-enf-hors")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

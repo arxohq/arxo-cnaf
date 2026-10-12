@@ -1,0 +1,15 @@
+// No evidence: section applies but no insurance/estimate/publication - no justification, evaluation unaffected (R. 553-3-1 II 2° "lorsqu'ils existent", PC-R04-04).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-tdv-preuve-absente" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "tdv-preuve-absente-01": prestation_soumise_section(entity_ref("urn:fr:pf:case:preuve-absente")) { origin case_input; }
+    }
+    evaluate truth(valeurs_venales_justifiees(entity_ref("urn:fr:pf:case:preuve-absente")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,302 @@
+// Sheltered-workshop cap (D. 821-5, both wordings of decree 2023-360).
+//
+// «Pour l'application du dernier alinéa de l'article L. 821-1, le cumul
+// de l'allocation ... et de la rémunération garantie ... ne peut excéder
+// 100 % du salaire minimum brut de croissance calculé pour 151,67
+// heures.» Former wording: «Lorsque l'allocataire est marié ... ce
+// pourcentage est majoré de 30 %.» Both wordings: «Lorsqu'il a un enfant
+// ... ou un ascendant à sa charge ..., ce pourcentage est majoré de
+// 15 %.» The majorations read as added percentage points on the base
+// (130 %, 115 %, 145 % combined; README notes the alternative relative
+// compounding 149,5 %). The cap applies to the regime-chosen figure:
+// the former wording before 01.10.2023 and under maintenance, the new
+// wording otherwise.
+
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+use self::{
+    CSS_D821_5_ED2023_10_01,
+    CSS_D821_5_ED2024_12_01,
+    CSS_D821_5_ED2025_08_28,
+    CSS_D821_5_ED2026_01_01,
+    CSS_D821_5_ED2026_06_28,
+    CSS_D821_5_ED2026_07_23,
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01,
+    Personne,
+    aah_maintien_ancien_calcul,
+    aah_montant_ancien,
+    aah_montant_du,
+    aah_montant_nouveau,
+    ascendant_charge,
+    en_couple,
+    enfants_charge,
+    majoration_enfant_esat,
+    personne_seule,
+    remuneration_garantie_retenue,
+    smic_brut_mensuel_retenu,
+};
+
+function cap_esat_nouveau(s: Money) -> Money =
+    s * PlafondCumulEsat;
+
+function cap_esat_nouveau_enfant(s: Money) -> Money =
+    s * (PlafondCumulEsat + MajorationEsatEnfantAscendant);
+
+function cap_esat_ancien_couple(s: Money) -> Money =
+    s * (PlafondCumulEsat + MajorationEsatCoupleAncien);
+
+function cap_esat_ancien_couple_enfant(s: Money) -> Money =
+    s * (PlafondCumulEsat + MajorationEsatCoupleAncien + MajorationEsatEnfantAscendant);
+
+// --- Child/ascendant marker (+15 %, both wordings) ------------------------
+
+@source(
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01,
+    CSS_D821_5_ED2023_10_01,
+    CSS_D821_5_ED2024_12_01,
+    CSS_D821_5_ED2025_08_28,
+    CSS_D821_5_ED2026_01_01,
+    CSS_D821_5_ED2026_06_28,
+    CSS_D821_5_ED2026_07_23)
+rule MarqueurEnfantNombre(n: Integer) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "enfant à charge: majoration ESAT +15 % applicable";
+    label en unofficial "dependent child: +15% sheltered-workshop increase applies";
+    when enfants_charge(n) and n >= 1;
+    then majoration_enfant_esat();
+}
+
+@source(
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01,
+    CSS_D821_5_ED2023_10_01,
+    CSS_D821_5_ED2024_12_01,
+    CSS_D821_5_ED2025_08_28,
+    CSS_D821_5_ED2026_01_01,
+    CSS_D821_5_ED2026_06_28,
+    CSS_D821_5_ED2026_07_23)
+rule MarqueurAscendant(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "ascendant à charge: majoration ESAT +15 % applicable";
+    label en unofficial "dependent ascendant: +15% sheltered-workshop increase applies";
+    when ascendant_charge(p);
+    then majoration_enfant_esat();
+}
+
+// --- Former wording, direct (before 01.10.2023) ----------------------------
+
+@source(
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01)
+rule EsatAncienDirectCouple(p: Personne, a: Money, g: Money, s: Money) strict {
+    effective [@2021-01-01, @2023-10-01);
+    label fr official "ESAT, rédaction antérieure, couple sans enfant: cumul plafonné à 130 % du SMIC brut";
+    label en unofficial "sheltered work, former direct wording, couple without children: joint amount capped at 130% of gross SMIC";
+    when aah_montant_ancien(p, a) and remuneration_garantie_retenue(p, g) and smic_brut_mensuel_retenu(s) and en_couple(p) and not_known(majoration_enfant_esat());
+    then aah_montant_du(p, min(a, cap_esat_ancien_couple(s) - g));
+}
+
+@source(
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01)
+rule EsatAncienDirectCoupleEnfant(p: Personne, a: Money, g: Money, s: Money) strict {
+    effective [@2021-01-01, @2023-10-01);
+    label fr official "ESAT, rédaction antérieure, couple avec enfant ou ascendant: cumul plafonné à 145 % du SMIC brut";
+    label en unofficial "sheltered work, former direct wording, couple with child or ascendant: joint amount capped at 145% of gross SMIC";
+    when aah_montant_ancien(p, a) and remuneration_garantie_retenue(p, g) and smic_brut_mensuel_retenu(s) and en_couple(p) and majoration_enfant_esat();
+    then aah_montant_du(p, min(a, cap_esat_ancien_couple_enfant(s) - g));
+}
+
+@source(
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01)
+rule EsatAncienDirectSeul(p: Personne, a: Money, g: Money, s: Money) strict {
+    effective [@2021-01-01, @2023-10-01);
+    label fr official "ESAT, rédaction antérieure, personne seule sans enfant: cumul plafonné à 100 % du SMIC brut";
+    label en unofficial "sheltered work, former direct wording, single person without children: joint amount capped at 100% of gross SMIC";
+    when aah_montant_ancien(p, a) and remuneration_garantie_retenue(p, g) and smic_brut_mensuel_retenu(s) and personne_seule(p) and not_known(majoration_enfant_esat());
+    then aah_montant_du(p, min(a, cap_esat_nouveau(s) - g));
+}
+
+@source(
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01)
+rule EsatAncienDirectSeulEnfant(p: Personne, a: Money, g: Money, s: Money) strict {
+    effective [@2021-01-01, @2023-10-01);
+    label fr official "ESAT, rédaction antérieure, personne seule avec enfant ou ascendant: cumul plafonné à 115 % du SMIC brut";
+    label en unofficial "sheltered work, former direct wording, single person with child or ascendant: joint amount capped at 115% of gross SMIC";
+    when aah_montant_ancien(p, a) and remuneration_garantie_retenue(p, g) and smic_brut_mensuel_retenu(s) and personne_seule(p) and majoration_enfant_esat();
+    then aah_montant_du(p, min(a, cap_esat_nouveau_enfant(s) - g));
+}
+
+// --- Former wording under maintenance (from 01.10.2023) --------------------
+
+@source(
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01,
+    CSS_D821_5_ED2023_10_01,
+    CSS_D821_5_ED2024_12_01,
+    CSS_D821_5_ED2025_08_28,
+    CSS_D821_5_ED2026_01_01,
+    CSS_D821_5_ED2026_06_28,
+    CSS_D821_5_ED2026_07_23)
+rule EsatAncienMaintienCouple(p: Personne, a: Money, g: Money, s: Money) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "ESAT sous maintien, couple sans enfant: cumul plafonné à 130 % du SMIC brut (rédaction antérieure)";
+    label en unofficial "sheltered work under maintenance, couple without children: joint amount capped at 130% of gross SMIC (former wording)";
+    when aah_maintien_ancien_calcul(p) and aah_montant_ancien(p, a) and remuneration_garantie_retenue(p, g) and smic_brut_mensuel_retenu(s) and en_couple(p) and not_known(majoration_enfant_esat());
+    then aah_montant_du(p, min(a, cap_esat_ancien_couple(s) - g));
+}
+
+@source(
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01,
+    CSS_D821_5_ED2023_10_01,
+    CSS_D821_5_ED2024_12_01,
+    CSS_D821_5_ED2025_08_28,
+    CSS_D821_5_ED2026_01_01,
+    CSS_D821_5_ED2026_06_28,
+    CSS_D821_5_ED2026_07_23)
+rule EsatAncienMaintienCoupleEnfant(p: Personne, a: Money, g: Money, s: Money) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "ESAT sous maintien, couple avec enfant ou ascendant: cumul plafonné à 145 % du SMIC brut (rédaction antérieure)";
+    label en unofficial "sheltered work under maintenance, couple with child or ascendant: joint amount capped at 145% of gross SMIC (former wording)";
+    when aah_maintien_ancien_calcul(p) and aah_montant_ancien(p, a) and remuneration_garantie_retenue(p, g) and smic_brut_mensuel_retenu(s) and en_couple(p) and majoration_enfant_esat();
+    then aah_montant_du(p, min(a, cap_esat_ancien_couple_enfant(s) - g));
+}
+
+@source(
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01,
+    CSS_D821_5_ED2023_10_01,
+    CSS_D821_5_ED2024_12_01,
+    CSS_D821_5_ED2025_08_28,
+    CSS_D821_5_ED2026_01_01,
+    CSS_D821_5_ED2026_06_28,
+    CSS_D821_5_ED2026_07_23)
+rule EsatAncienMaintienSeul(p: Personne, a: Money, g: Money, s: Money) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "ESAT sous maintien, personne seule sans enfant: cumul plafonné à 100 % du SMIC brut (rédaction antérieure)";
+    label en unofficial "sheltered work under maintenance, single person without children: joint amount capped at 100% of gross SMIC (former wording)";
+    when aah_maintien_ancien_calcul(p) and aah_montant_ancien(p, a) and remuneration_garantie_retenue(p, g) and smic_brut_mensuel_retenu(s) and personne_seule(p) and not_known(majoration_enfant_esat());
+    then aah_montant_du(p, min(a, cap_esat_nouveau(s) - g));
+}
+
+@source(
+    CSS_D821_5_PRE2023_ED2021_01_01,
+    CSS_D821_5_PRE2023_ED2021_05_01,
+    CSS_D821_5_PRE2023_ED2021_12_03,
+    CSS_D821_5_PRE2023_ED2022_01_01,
+    CSS_D821_5_PRE2023_ED2022_01_21,
+    CSS_D821_5_PRE2023_ED2022_06_17,
+    CSS_D821_5_PRE2023_ED2023_01_01,
+    CSS_D821_5_PRE2023_ED2023_09_01,
+    CSS_D821_5_ED2023_10_01,
+    CSS_D821_5_ED2024_12_01,
+    CSS_D821_5_ED2025_08_28,
+    CSS_D821_5_ED2026_01_01,
+    CSS_D821_5_ED2026_06_28,
+    CSS_D821_5_ED2026_07_23)
+rule EsatAncienMaintienSeulEnfant(p: Personne, a: Money, g: Money, s: Money) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "ESAT sous maintien, personne seule avec enfant ou ascendant: cumul plafonné à 115 % du SMIC brut (rédaction antérieure)";
+    label en unofficial "sheltered work under maintenance, single person with child or ascendant: joint amount capped at 115% of gross SMIC (former wording)";
+    when aah_maintien_ancien_calcul(p) and aah_montant_ancien(p, a) and remuneration_garantie_retenue(p, g) and smic_brut_mensuel_retenu(s) and personne_seule(p) and majoration_enfant_esat();
+    then aah_montant_du(p, min(a, cap_esat_nouveau_enfant(s) - g));
+}
+
+// --- New wording (from 01.10.2023, no maintenance) --------------------------
+
+@source(
+    CSS_D821_5_ED2023_10_01,
+    CSS_D821_5_ED2024_12_01,
+    CSS_D821_5_ED2025_08_28,
+    CSS_D821_5_ED2026_01_01,
+    CSS_D821_5_ED2026_06_28,
+    CSS_D821_5_ED2026_07_23)
+rule EsatNouveau(p: Personne, n: Money, g: Money, s: Money) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "ESAT, rédaction en vigueur, sans enfant: cumul plafonné à 100 % du SMIC brut";
+    label en unofficial "sheltered work, current wording, no children: joint amount capped at 100% of gross SMIC";
+    when aah_montant_nouveau(p, n) and remuneration_garantie_retenue(p, g) and smic_brut_mensuel_retenu(s) and not_known(aah_maintien_ancien_calcul(p)) and not_known(majoration_enfant_esat());
+    then aah_montant_du(p, min(n, cap_esat_nouveau(s) - g));
+}
+
+@source(
+    CSS_D821_5_ED2023_10_01,
+    CSS_D821_5_ED2024_12_01,
+    CSS_D821_5_ED2025_08_28,
+    CSS_D821_5_ED2026_01_01,
+    CSS_D821_5_ED2026_06_28,
+    CSS_D821_5_ED2026_07_23)
+rule EsatNouveauEnfant(p: Personne, n: Money, g: Money, s: Money) strict {
+    effective [@2023-10-01, infinity);
+    label fr official "ESAT, rédaction en vigueur, avec enfant ou ascendant: cumul plafonné à 115 % du SMIC brut";
+    label en unofficial "sheltered work, current wording, with child or ascendant: joint amount capped at 115% of gross SMIC";
+    when aah_montant_nouveau(p, n) and remuneration_garantie_retenue(p, g) and smic_brut_mensuel_retenu(s) and not_known(aah_maintien_ancien_calcul(p)) and majoration_enfant_esat();
+    then aah_montant_du(p, min(n, cap_esat_nouveau_enfant(s) - g));
+}

@@ -1,0 +1,482 @@
+// Age supplement (L521-3, R521-1 in two editions, R521-4 half for
+// shared custody).
+//
+// DEONTIC MAP: right-conferring rules only (institutional eligibility and
+// amounts). No must/must-not positions; the duty to pay the computed total
+// lives in 07-devoir-versement.law.
+//
+// READINGS (recorded; open questions - report Q-PFAF-1/2):
+// - "le plus âgé" (L521-3 al. 1) = eldest among the SIBLINGS linked by
+//   parent_charge, whether or not they open the right. This keeps D755-5
+//   II operative (a single dependent child who is not the eldest DOES open
+//   the supplement) and matches the foreign expectation structure
+//   (Catala Test3: only child, eldest -> no supplement).
+// - Twins (same birthdate): strict < comparison, so neither is "older" and
+//   both stay eligible under the under-three rule (B-PFAF-JUMEAUX).
+// - Shared-custody children (both GA modes): half supplement (R521-4 al. 2,
+//   physical reading of "sont en résidence alternée"); the >= 3 opening
+//   test counts opening children like full-custody ones (L. 521-3 al. 2).
+//   R. 521-4 al. 1 refers the count to the R. 521-3 average convention;
+//   the adopted construction follows the benchmark rule text (plain opener
+//   count, as the full-custody rule does) and records the strain as
+//   B-PFAF-SEUIL-MOYENNE.
+// - GA child in an agreed-single-allocataire foyer: normal full count for
+//   the >= 3 test (R521-3 al. 1 covers only 1°/2° situations),
+//   half amount (D-PFAF-ALTERNEE-UNIQUE).
+
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+use self::{
+    BandeRessources,
+    CNAF_LR_2026_051_RESUME,
+    CNAF_LR_2026_051_SYNTHESE,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03,
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03,
+    CSS_R521_1,
+    CSS_R521_1_PRE2026,
+    CSS_R521_1_PRE2026_ED2014_12,
+    CSS_R521_1_PRE2026_ED2015_03,
+    CSS_R521_1_PRE2026_ED2015_07,
+    CSS_R521_1_PRE2026_ED2015_10,
+    CSS_R521_1_PRE2026_ED2021_09,
+    CSS_R521_1_PRE2026_ED2022_01,
+    CSS_R521_4,
+    CSS_R521_4_ED2008_04,
+    CSS_R521_4_ED2014_12,
+    CSS_R521_4_ED2015_03,
+    CSS_R521_4_ED2015_07,
+    CSS_R521_4_ED2015_10,
+    CSS_R521_4_ED2021_09,
+    CSS_R521_4_ED2022_01,
+    CSS_R521_4_ED2026_03,
+    ModeGarde,
+    Territoire,
+    arrondi_lignes_dss,
+    bande_ressources,
+    bmaf_retenu,
+    date_naissance,
+    enfant_du_cas,
+    garde,
+    mois_droit,
+    montant_majoration,
+    nb_enfants_charge,
+    taux_majo,
+    territoire,
+};
+
+deadline policy AGE_ATTEINT {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+relation plus_age_que(e: fr.pf.core::Enfant, naissance_e: Date, a: fr.pf.core::Enfant, naissance_a: Date) kind institutional {
+    label fr official "e est plus jeune que a (même fratrie)";
+    label en unofficial "e is younger than a (same siblings)";
+}
+
+relation nest_pas_aine(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant n'est pas l'aîné de la fratrie";
+    label en unofficial "child is not the eldest sibling";
+}
+
+relation est_aine(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant est l'aîné de la fratrie (L. 521-3 al. 1)";
+    label en unofficial "child is the eldest sibling (L. 521-3 para. 1)";
+}
+
+relation age_requis_atteint(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant a atteint l'âge d'ouverture de la majoration pour le mois";
+    label en unofficial "child has reached the supplement opening age for the month";
+}
+
+relation majoration_eligible(e: fr.pf.core::Enfant) kind institutional {
+    key(e);
+    label fr official "l'enfant ouvre droit à la majoration pour le mois (L. 521-3, R. 521-1, R. 521-4)";
+    label en unofficial "child opens the supplement right for the month (L. 521-3, R. 521-1, R. 521-4)";
+}
+
+@source(
+    CSS_R521_1_PRE2026,
+    CSS_R521_1_PRE2026_ED2014_12,
+    CSS_R521_1_PRE2026_ED2015_03,
+    CSS_R521_1_PRE2026_ED2015_07,
+    CSS_R521_1_PRE2026_ED2015_10,
+    CSS_R521_1_PRE2026_ED2021_09,
+    CSS_R521_1_PRE2026_ED2022_01,
+    CSS_R521_1)
+rule PlusAgeQue(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, ne: Date, a: fr.pf.core::Enfant, na: Date) strict {
+    effective [@2008-04-30, infinity);
+    label fr official "comparaison des naissances dans la fratrie (charge commune)";
+    label en unofficial "birthdate comparison within the siblings (shared charge)";
+    when fr.pf.core::parent_charge(p, e) and date_naissance(e, ne)
+        and fr.pf.core::parent_charge(p, a) and date_naissance(a, na)
+        and na < ne;
+    then plus_age_que(e, ne, a, na);
+}
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03)
+rule NestPasAine(e: fr.pf.core::Enfant, ne: Date, a: fr.pf.core::Enfant, na: Date) strict {
+    effective [@2008-04-30, infinity);
+    label fr official "un aîné établi: l'enfant n'est pas l'aîné";
+    label en unofficial "an elder established: the child is not the eldest";
+    when plus_age_que(e, ne, a, na);
+    then nest_pas_aine(e);
+}
+
+// §70 closures: the ouvre-droit children recorded in the case exhaust the
+// sibling set for the eldest rule and the age test. Without them `not` in
+// the strict bodies below would never fire (E4113: absence of a record is
+// not a negative, §69).
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03)
+closure NestPasAineEstClos {
+    label fr official "les enfants ouvrant droit décrits par le cas épuisent la fratrie pour la règle de l'aîné";
+    label en unofficial "the right-opening children recorded in the case exhaust the siblings for the eldest rule";
+    predicate nest_pas_aine;
+    domain enfant_du_cas;
+    snapshot "urn:fr:corpus:clir:pf-af:snapshot:nest-pas-aine";
+    complete_as_of @2008-04-30T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03,
+    CSS_R521_1_PRE2026,
+    CSS_R521_1_PRE2026_ED2014_12,
+    CSS_R521_1_PRE2026_ED2015_03,
+    CSS_R521_1_PRE2026_ED2015_07,
+    CSS_R521_1_PRE2026_ED2015_10,
+    CSS_R521_1_PRE2026_ED2021_09,
+    CSS_R521_1_PRE2026_ED2022_01,
+    CSS_R521_1)
+closure AgeRequisEstClos {
+    label fr official "les enfants ouvrant droit décrits par le cas portent l'appréciation de l'âge d'ouverture";
+    label en unofficial "the right-opening children recorded in the case carry the opening-age assessment";
+    predicate age_requis_atteint;
+    domain enfant_du_cas;
+    snapshot "urn:fr:corpus:clir:pf-af:snapshot:age-requis";
+    complete_as_of @2008-04-30T00:00:00Z;
+    derive_explicit_negative true;
+}
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03)
+rule EstAine(e: fr.pf.core::Enfant) strict {
+    effective [@2008-04-30, infinity);
+    label fr official "aucun aîné établi: l'enfant est l'aîné (L. 521-3 al. 1)";
+    label en unofficial "no elder established: the child is the eldest (L. 521-3 para. 1)";
+    when fr.pf.core::enfant_ouvre_droit(e) and not nest_pas_aine(e);
+    then est_aine(e);
+}
+
+@source(
+    CSS_R521_1_PRE2026,
+    CSS_R521_1_PRE2026_ED2014_12,
+    CSS_R521_1_PRE2026_ED2015_03,
+    CSS_R521_1_PRE2026_ED2015_07,
+    CSS_R521_1_PRE2026_ED2015_10,
+    CSS_R521_1_PRE2026_ED2021_09,
+    CSS_R521_1_PRE2026_ED2022_01)
+rule Age14Avant2026(e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2008-04-30, @2026-03-01);
+    label fr official "âge d'ouverture: 14 ans (édition antérieure au décret 2026-138)";
+    label en unofficial "opening age: 14 (pre-decree-2026-138 edition)";
+    when fr.pf.core::enfant_ouvre_droit(e) and date_naissance(e, naissance)
+        and mois_droit(mois)
+        and mois >= add_calendar_period(naissance, 14 calendar_year);
+    then age_requis_atteint(e);
+}
+
+@source(CSS_R521_1, CNAF_LR_2026_051_SYNTHESE, CNAF_LR_2026_051_RESUME)
+rule Age14Apres2026(e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2026-03-01, infinity);
+    label fr official "enfant dont le 14e anniversaire précède le 1er mars 2026: 14 ans maintenus (art. 2 du décret 2026-138)";
+    label en unofficial "child whose 14th birthday predates 1 March 2026: 14 kept (decree 2026-138 art. 2)";
+    when fr.pf.core::enfant_ouvre_droit(e) and date_naissance(e, naissance)
+        and naissance < @2012-03-01 and mois_droit(mois)
+        and mois >= add_calendar_period(naissance, 14 calendar_year);
+    then age_requis_atteint(e);
+}
+
+@source(CSS_R521_1, CNAF_LR_2026_051_SYNTHESE, CNAF_LR_2026_051_RESUME)
+rule Age18NouveauRegime(e: fr.pf.core::Enfant, naissance: Date, mois: Date) strict {
+    effective [@2026-03-01, infinity);
+    label fr official "enfant dont le 14e anniversaire intervient à compter du 1er mars 2026: 18 ans (R. 521-1 nouveau)";
+    label en unofficial "child whose 14th birthday falls on or after 1 March 2026: 18 (new R. 521-1)";
+    when fr.pf.core::enfant_ouvre_droit(e) and date_naissance(e, naissance)
+        and naissance >= @2012-03-01 and mois_droit(mois)
+        and mois >= add_calendar_period(naissance, 18 calendar_year);
+    then age_requis_atteint(e);
+}
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03,
+    CSS_R521_1_PRE2026,
+    CSS_R521_1_PRE2026_ED2014_12,
+    CSS_R521_1_PRE2026_ED2015_03,
+    CSS_R521_1_PRE2026_ED2015_07,
+    CSS_R521_1_PRE2026_ED2015_10,
+    CSS_R521_1_PRE2026_ED2021_09,
+    CSS_R521_1_PRE2026_ED2022_01,
+    CSS_R521_1)
+rule EligibleTroisPlein(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2008-04-30, infinity);
+    label fr official "trois enfants ou plus: chaque enfant d'âge requis ouvre droit (L. 521-3 al. 2)";
+    label en unofficial "three or more children: every age-qualified child opens the right (L. 521-3 para. 2)";
+    when fr.pf.core::parent_charge(p, e) and nb_enfants_charge(p, n) and n >= 3
+        and garde(e, CHARGE_EFFECTIVE_PERMANENTE) and age_requis_atteint(e);
+    then majoration_eligible(e);
+}
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03,
+    CSS_R521_1_PRE2026,
+    CSS_R521_1_PRE2026_ED2014_12,
+    CSS_R521_1_PRE2026_ED2015_03,
+    CSS_R521_1_PRE2026_ED2015_07,
+    CSS_R521_1_PRE2026_ED2015_10,
+    CSS_R521_1_PRE2026_ED2021_09,
+    CSS_R521_1_PRE2026_ED2022_01,
+    CSS_R521_1)
+rule EligibleTroisAlternee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2008-04-30, infinity);
+    label fr official "enfant en garde alternée: trois enfants ou plus, comme pour la garde exclusive (L. 521-3 al. 2)";
+    label en unofficial "shared-custody child: three or more children, as in full custody (L. 521-3 para. 2)";
+    when fr.pf.core::parent_charge(p, e) and nb_enfants_charge(p, n) and n >= 3
+        and garde(e, RESIDENCE_ALTERNEE_PARTAGE)
+        and age_requis_atteint(e);
+    then majoration_eligible(e);
+}
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03)
+rule EligibleCadet(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2008-04-30, infinity);
+    label fr official "moins de trois enfants: chaque enfant non aîné d'âge requis ouvre droit (L. 521-3 al. 1)";
+    label en unofficial "fewer than three children: every non-eldest age-qualified child opens the right (L. 521-3 para. 1)";
+    when fr.pf.core::parent_charge(p, e) and nb_enfants_charge(p, n)
+        and n >= 2 and n < 3
+        and garde(e, CHARGE_EFFECTIVE_PERMANENTE) and age_requis_atteint(e)
+        and nest_pas_aine(e);
+    then majoration_eligible(e);
+}
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03,
+    CSS_R521_4,
+    CSS_R521_4_ED2008_04,
+    CSS_R521_4_ED2014_12,
+    CSS_R521_4_ED2015_03,
+    CSS_R521_4_ED2015_07,
+    CSS_R521_4_ED2015_10,
+    CSS_R521_4_ED2021_09,
+    CSS_R521_4_ED2022_01,
+    CSS_R521_4_ED2026_03)
+rule EligibleCadetAlternee(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, n: Integer) strict {
+    effective [@2008-04-30, infinity);
+    label fr official "garde alternée sous le seuil de trois: non-aîné d'âge requis (L. 521-3 al. 1, R. 521-4)";
+    label en unofficial "shared custody below the three threshold: non-eldest age-qualified child (L. 521-3 para. 1, R. 521-4)";
+    when fr.pf.core::parent_charge(p, e) and nb_enfants_charge(p, n)
+        and n >= 2 and n < 3 and garde(e, RESIDENCE_ALTERNEE_PARTAGE)
+        and age_requis_atteint(e) and nest_pas_aine(e);
+    then majoration_eligible(e);
+}
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule MajorationMontantPlein(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, b: BandeRessources, bmaf: Money) strict {
+    effective [@2015-07-01, infinity);
+    label fr official "montant de la majoration: taux de la tranche par la base (D. 521-1, I)";
+    label en unofficial "supplement amount: band rate times the base (D. 521-1, I)";
+    when majoration_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, b) and bmaf_retenu(p, bmaf)
+        and garde(e, CHARGE_EFFECTIVE_PERMANENTE)
+        and not_known(arrondi_lignes_dss(p));
+    then montant_majoration(e, taux_majo(b) * bmaf);
+}
+
+@source(
+    CSS_R521_4,
+    CSS_R521_4_ED2008_04,
+    CSS_R521_4_ED2014_12,
+    CSS_R521_4_ED2015_03,
+    CSS_R521_4_ED2015_07,
+    CSS_R521_4_ED2015_10,
+    CSS_R521_4_ED2021_09,
+    CSS_R521_4_ED2022_01,
+    CSS_R521_4_ED2026_03,
+    CSS_D521_1,
+    CSS_D521_1_ED2015_10,
+    CSS_D521_1_ED2021_09,
+    CSS_D521_1_ED2022_01,
+    CSS_D521_1_ED2026_03)
+rule MajorationMontantMoitié(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, b: BandeRessources, bmaf: Money) strict {
+    effective [@2007-05-01, infinity);
+    label fr official "enfant ouvrant droit en résidence alternée: majoration réduite de moitié (R. 521-4 al. 2)";
+    label en unofficial "supplement-opening child in shared custody: supplement halved (R. 521-4 para. 2)";
+    when majoration_eligible(e) and fr.pf.core::parent_charge(p, e)
+        and bande_ressources(p, b) and bmaf_retenu(p, bmaf)
+        and garde(e, RESIDENCE_ALTERNEE_PARTAGE)
+        and not_known(arrondi_lignes_dss(p));
+    then montant_majoration(e, taux_majo(b) * bmaf / 2.0);
+}
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03)
+rule MajorationZeroAge(e: fr.pf.core::Enfant, p: fr.pf.core::Personne) strict {
+    effective [@2008-04-30, infinity);
+    label fr official "âge non atteint en métropole: pas de majoration (l'enfant unique des DOM suit D. 755-5, II)";
+    label en unofficial "age not reached in metropolitan France: no supplement (DOM single children follow D. 755-5, II)";
+    when fr.pf.core::enfant_ouvre_droit(e) and not age_requis_atteint(e)
+        and fr.pf.core::parent_charge(p, e) and territoire(p, METROPOLE);
+    then montant_majoration(e, 0 EUR);
+}
+
+@source(
+    CSS_L521_3,
+    CSS_L521_3_ED1998_12,
+    CSS_L521_3_ED2007_05,
+    CSS_L521_3_ED2008_04,
+    CSS_L521_3_ED2014_12,
+    CSS_L521_3_ED2015_03,
+    CSS_L521_3_ED2015_07,
+    CSS_L521_3_ED2015_10,
+    CSS_L521_3_ED2021_09,
+    CSS_L521_3_ED2022_01,
+    CSS_L521_3_ED2026_03)
+rule MajorationZeroAine(e: fr.pf.core::Enfant, p: fr.pf.core::Personne, n: Integer) strict {
+    effective [@2008-04-30, infinity);
+    label fr official "aîné d'âge requis en métropole dans un foyer de moins de trois: pas de majoration (L. 521-3 al. 1)";
+    label en unofficial "age-qualified eldest in metropolitan France in a household of fewer than three: no supplement (L. 521-3 para. 1)";
+    when fr.pf.core::enfant_ouvre_droit(e) and age_requis_atteint(e)
+        and fr.pf.core::parent_charge(p, e) and nb_enfants_charge(p, n) and n < 3
+        and territoire(p, METROPOLE) and est_aine(e);
+    then montant_majoration(e, 0 EUR);
+}

@@ -1,0 +1,36 @@
+// Recovery notification with all four content items sent by a
+// date-certain means: the notice is complete; explicit rejection
+// within a month and the new notification complete (R. 847-1-1 I,
+// III; PA-FE09-03).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-notification-contenu-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-25T12:00:00Z; knowledge_time @2026-06-25T12:00:00Z; legal_time @2026-06-25; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_recupere(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), 300.00 EUR) { origin case_input; }
+        assert "ppa-02": constat_indu(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-03": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:notification-contenu-2026")) { origin case_input; }
+        assert "ppa-04": notification_recouvrement(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-05": notification_contenu_base(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-06": notification_modalites_rectification(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-07": notification_possibilite_recouvrement(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-08": notification_voies_recours(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-05-20) { origin case_input; }
+        assert "ppa-09": demande_rectification(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-06-10) { origin case_input; }
+        assert "ppa-10": decision_rectification_rejet(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-06-20) { origin case_input; }
+        assert "ppa-11": nouvelle_notification_rejet(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-06-20) { origin case_input; }
+        assert "ppa-12": nouvelle_notification_motif(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-06-20) { origin case_input; }
+        assert "ppa-13": nouvelle_notification_recouvrement(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-06-20) { origin case_input; }
+        assert "ppa-14": nouvelle_notification_voies(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-06-20) { origin case_input; }
+        assert "ppa-15": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:notification-contenu-2026")) { origin case_input; }
+    }
+    evaluate truth(notification_recouvrement_complete(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-05-20));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(nouvelle_notification_complete(entity_ref("urn:fr:ppa:case:notification-contenu-2026"), @2026-06-20));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

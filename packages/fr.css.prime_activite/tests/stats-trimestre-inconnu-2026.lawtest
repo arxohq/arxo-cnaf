@@ -1,0 +1,27 @@
+// Quarter classification evidence (PA-R4-02): complete Q2 2026
+// data transmitted in May without any quarter classification
+// establishes neither timeliness nor conformity (D.848-1).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-stats-trimestre-inconnu-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": trimestre_stats_emetteur(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-04-01) { origin case_input; }
+        assert "ppa-02": trimestre_item1_effectifs(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-04-01) { origin case_input; }
+        assert "ppa-03": trimestre_item2_mensuels(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-04-01) { origin case_input; }
+        assert "ppa-04": trimestre_item3_statut_emploi(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-04-01) { origin case_input; }
+        assert "ppa-05": trimestre_item4_mouvements(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-04-01) { origin case_input; }
+        assert "ppa-06": trimestre_item5_depenses(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-04-01) { origin case_input; }
+        assert "ppa-07": transmission_trimestre_effectuee(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-04-01, @2026-05-15) { origin case_input; }
+    }
+    evaluate truth(transmission_trimestre_dans_delai(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(transmission_trimestre_conforme(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

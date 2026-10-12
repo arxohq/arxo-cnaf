@@ -1,0 +1,759 @@
+// Quarter mechanics and averaging (R.262-4, R.262-4-1, R.262-4-2, R.262-7).
+//
+// DEONTIC MAP: computation only. The articles set how the quarterly amount
+// is derived from monthly figures; no must/must-not positions here. The
+// fund duty to pay the computed RSA lives in fr.casf.rsa. Two evaluative
+// channels feed this module as established inputs:
+// - monthly block totals (DSN professional, other DSN, declared): figures
+//   arrive established by the fund (facts with provenance); DSN extraction
+//   itself is out of scope (plan §1.1);
+// - exceptional character of professional income (old II 3°): the arrêté
+//   criteria are unpinned, so the fund-established premise
+//   caractere_exceptionnel_pro carries it (B-MINRES-ARRETE-EXCEPTIONNEL).
+//
+// DUAL FEED (B-MINRES-DUAL-FEED, APL precedent D-APL-RES-LIEN). The
+// quarterly mechanics below run on fund-established monthly block totals.
+// The per-category matrix (03-matrice.law) demonstrates the same euros one
+// category at a time; cases assert both sides under the consistency
+// contract (block total = sum of the retained category amounts).
+//
+// REFORM 2025-185. From 01.03.2025 (NOTA, decree applies to claims and
+// reviews from that date) the reference window is M-4…M-2 with DSN
+// prefill (three statutory resource blocks); before, the three previous
+// months of declared resources with exceptional professional income
+// affected to the perception month. Edition pairs around 2025-02-28 and
+// date pairs around 01.03.2025 carry the change.
+//
+// MONEY FORMS. Averages are (v1 + v2 + v3) / 3.0 (Money + Money, then
+// Money / Decimal, APL convention): exact division, a non-terminating
+// quotient is INEXACT_DIVISION. The rounding of such a quotient is the READING
+// MoyenneArrondieCentime (section "Reading" below), selected in the context of the
+// case. Month offsets use forward
+// add_calendar_period from the earliest reference month.
+
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+use self::{
+    CASF_R262_10,
+    CASF_R262_10_ED2021_03,
+    CASF_R262_10_ED2022_03,
+    CASF_R262_10_ED2023_12,
+    CASF_R262_10_ED2025_02,
+    CASF_R262_10_ED2025_06,
+    CASF_R262_10_ED2026_06,
+    CASF_R262_4,
+    CASF_R262_4_1,
+    CASF_R262_4_1_ED2021_03,
+    CASF_R262_4_1_ED2022_03,
+    CASF_R262_4_1_ED2023_12,
+    CASF_R262_4_1_ED2025_02,
+    CASF_R262_4_1_ED2025_06,
+    CASF_R262_4_1_ED2026_06,
+    CASF_R262_4_2,
+    CASF_R262_4_2_ED2021_03,
+    CASF_R262_4_2_ED2022_03,
+    CASF_R262_4_2_ED2023_12,
+    CASF_R262_4_2_ED2025_02,
+    CASF_R262_4_2_ED2025_06,
+    CASF_R262_4_2_ED2026_06,
+    CASF_R262_4_ED2025_06,
+    CASF_R262_4_ED2026_06,
+    CASF_R262_4_PRE2025,
+    CASF_R262_4_PRE2025_ED2021_03,
+    CASF_R262_4_PRE2025_ED2022_03,
+    CASF_R262_4_PRE2025_ED2023_12,
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06,
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06,
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03,
+    CategorieRessource,
+    Personne,
+    aide_logement_connue,
+    aide_logement_retenue,
+    ancien_conjoint_sorti,
+    caractere_exceptionnel_pro,
+    conditions_mois_droit,
+    conjoint_repute_present,
+    declare_total_mois,
+    dsn_autre_mois,
+    dsn_pro_mois,
+    forfait_logement,
+    forfait_logement_connu,
+    foyer_du_cas,
+    mf_mois,
+    mois_demande,
+    mois_reference,
+    montant_du_trimestre,
+    montant_intermediaire,
+    neutralisation_revenu,
+    prestation_service_mois,
+    pro_exceptionnel_mois,
+    revision_mi_trimestre,
+    trimestre_reference,
+};
+
+deadline policy RSA_TRIMESTRE {
+    start_count same_day;
+    include_end true;
+    roll no_roll;
+    month_end last_day_of_month;
+}
+
+
+// --- Module-local intermediates ---
+
+relation dsn_pro_retenu_mois(p: Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "total DSN professionnel mensuel retenu après mise à zéro (R. 262-7, III 1°)";
+    label en unofficial "monthly professional DSN total retained after zeroing (R. 262-7, III 1°)";
+}
+
+relation dsn_autre_retenu_mois(p: Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "total DSN mensuel des autres catégories retenu après mise à zéro (R. 262-7, III 2°)";
+    label en unofficial "monthly DSN total of the other categories retained after zeroing (R. 262-7, III 2°)";
+}
+
+// Marker of the reading MoyenneArrondieCentime (section "Reading: rounding of
+// the quarterly average" below). It is derived only while that reading is
+// selected in the context; the exact-division averaging rules stay silent
+// then (not_known), so the head carries ONE value under either choice.
+relation lecture_moyenne_arrondie(p: Personne) kind institutional {
+    label fr official "la lecture « moyenne arrondie au centime » (pratique des caisses) est retenue pour le foyer";
+    label en unofficial "the reading \"average rounded to the centime\" (fund practice) is selected for the household";
+}
+
+relation moyenne_dsn_pro(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "moyenne mensuelle DSN professionnelle sur le trimestre (R. 262-7, II 1°)";
+    label en unofficial "quarterly monthly professional DSN average (R. 262-7, II 1°)";
+}
+
+relation moyenne_dsn_autre(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "moyenne mensuelle DSN des autres catégories sur le trimestre (R. 262-7, II 1°)";
+    label en unofficial "quarterly monthly DSN average of the other categories (R. 262-7, II 1°)";
+}
+
+relation moyenne_declaree(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "moyenne mensuelle déclarée hors DSN sur le trimestre (R. 262-7, II 2°)";
+    label en unofficial "quarterly monthly declared average outside the DSN (R. 262-7, II 2°)";
+}
+
+relation base_ressources_mois(p: Personne, mois: Date, montant: Money) kind institutional {
+    key(p, mois);
+    label fr official "assiette mensuelle des ressources pour l'intermédiaire (R. 262-7, II et III)";
+    label en unofficial "monthly resource base for the intermediate amount (R. 262-7, II and III)";
+}
+
+relation conditions_mois_droit_etablies(p: Personne) kind empirical {
+    label fr official "conditions L. 262-2 et L. 262-4 remplies le mois du droit, établies par la caisse (R. 262-4-2, canal)";
+    label en unofficial "L. 262-2 and L. 262-4 conditions met in the month of right, established by the fund (R. 262-4-2, channel)";
+}
+
+// --- Reference window, new regime (M-4…M-2) ---
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule TrimestreReferenceNouveau(p: Personne, d: Date, m1: Date, m2: Date, m3: Date) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "trimestre de référence : quatrième, troisième et deuxième mois précédant la demande ou le réexamen (R. 262-7, I et II)";
+    label en unofficial "reference quarter: fourth, third and second months before the claim or review (R. 262-7, I and II)";
+    when foyer_du_cas(p) and mois_demande(d) and mois_reference(m1, m2, m3)
+        and d == add_calendar_period(m1, 4 calendar_month)
+        and m2 == add_calendar_period(m1, 1 calendar_month)
+        and m3 == add_calendar_period(m1, 2 calendar_month);
+    then trimestre_reference(p, m1, m2, m3);
+}
+
+// --- Reference window, old regime (three previous months) ---
+
+@source(
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12)
+rule TrimestreReferenceAncien(p: Personne, d: Date, m1: Date, m2: Date, m3: Date) strict {
+    effective [@2021-01-01, @2025-03-01);
+    label fr official "trimestre de référence : les trois mois précédant l'examen ou le réexamen (R. 262-7_PRE2025, I et II)";
+    label en unofficial "reference quarter: the three months before the examination or review (R. 262-7_PRE2025, I and II)";
+    when foyer_du_cas(p) and mois_demande(d) and mois_reference(m1, m2, m3)
+        and d == add_calendar_period(m1, 3 calendar_month)
+        and m2 == add_calendar_period(m1, 1 calendar_month)
+        and m3 == add_calendar_period(m1, 2 calendar_month);
+    then trimestre_reference(p, m1, m2, m3);
+}
+
+// --- DSN negative monthly totals are zeroed (new III) ---
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule DsnProNegatifZero(p: Personne, mois: Date, v: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "total professionnel DSN mensuel négatif : montant retenu nul (R. 262-7, III 1°)";
+    label en unofficial "negative monthly professional DSN total: retained amount zero (R. 262-7, III 1°)";
+    when dsn_pro_mois(p, mois, v) and v < 0 EUR;
+    then dsn_pro_retenu_mois(p, mois, 0 EUR);
+}
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule DsnProPositifRetenu(p: Personne, mois: Date, v: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "total professionnel DSN mensuel positif ou nul : retenu tel quel (R. 262-7, III 1°)";
+    label en unofficial "non-negative monthly professional DSN total: retained as is (R. 262-7, III 1°)";
+    when dsn_pro_mois(p, mois, v) and v >= 0 EUR;
+    then dsn_pro_retenu_mois(p, mois, v);
+}
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule DsnAutreNegatifZero(p: Personne, mois: Date, v: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "total DSN mensuel négatif d'une autre catégorie : montant retenu nul (R. 262-7, III 2°)";
+    label en unofficial "negative monthly DSN total of another category: retained amount zero (R. 262-7, III 2°)";
+    when dsn_autre_mois(p, mois, v) and v < 0 EUR;
+    then dsn_autre_retenu_mois(p, mois, 0 EUR);
+}
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule DsnAutrePositifRetenu(p: Personne, mois: Date, v: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "total DSN mensuel positif ou nul d'une autre catégorie : retenu tel quel (R. 262-7, III 2°)";
+    label en unofficial "non-negative monthly DSN total of another category: retained as is (R. 262-7, III 2°)";
+    when dsn_autre_mois(p, mois, v) and v >= 0 EUR;
+    then dsn_autre_retenu_mois(p, mois, v);
+}
+
+// --- Quarterly DSN averages (new II 1°) ---
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule MoyenneDsnPro(p: Personne, m1: Date, m2: Date, m3: Date, v1: Money, v2: Money, v3: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "moyenne mensuelle du DSN professionnel versé M-4…M-2 (R. 262-7, II 1°)";
+    label en unofficial "monthly average of professional DSN paid over M-4…M-2 (R. 262-7, II 1°)";
+    when trimestre_reference(p, m1, m2, m3)
+        and dsn_pro_retenu_mois(p, m1, v1)
+        and dsn_pro_retenu_mois(p, m2, v2)
+        and dsn_pro_retenu_mois(p, m3, v3)
+        and not_known(lecture_moyenne_arrondie(p));
+    then moyenne_dsn_pro(p, (v1 + v2 + v3) / 3.0);
+}
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule MoyenneDsnAutre(p: Personne, m1: Date, m2: Date, m3: Date, v1: Money, v2: Money, v3: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "moyenne mensuelle des autres DSN versés M-4…M-2 (R. 262-7, II 1°)";
+    label en unofficial "monthly average of other DSN paid over M-4…M-2 (R. 262-7, II 1°)";
+    when trimestre_reference(p, m1, m2, m3)
+        and dsn_autre_retenu_mois(p, m1, v1)
+        and dsn_autre_retenu_mois(p, m2, v2)
+        and dsn_autre_retenu_mois(p, m3, v3)
+        and not_known(lecture_moyenne_arrondie(p));
+    then moyenne_dsn_autre(p, (v1 + v2 + v3) / 3.0);
+}
+
+// --- Quarterly declared average (new II 2°) ---
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule MoyenneDeclareeNouvelle(p: Personne, m1: Date, m2: Date, m3: Date, v1: Money, v2: Money, v3: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "moyenne mensuelle du déclaré hors DSN perçu M-4…M-2 (R. 262-7, II 2°)";
+    label en unofficial "monthly average of non-DSN declared received over M-4…M-2 (R. 262-7, II 2°)";
+    when trimestre_reference(p, m1, m2, m3)
+        and declare_total_mois(p, m1, v1)
+        and declare_total_mois(p, m2, v2)
+        and declare_total_mois(p, m3, v3)
+        and not_known(lecture_moyenne_arrondie(p));
+    then moyenne_declaree(p, (v1 + v2 + v3) / 3.0);
+}
+
+// --- Old regime quarterly declared average (three previous months) ---
+
+@source(
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12)
+rule MoyenneDeclareeAncienne(p: Personne, m1: Date, m2: Date, m3: Date, v1: Money, v2: Money, v3: Money) strict {
+    effective [@2021-01-01, @2025-03-01);
+    label fr official "moyenne mensuelle du déclaré perçu les trois mois précédents (R. 262-7_PRE2025, II 1°)";
+    label en unofficial "monthly average of declared received over the three previous months (R. 262-7_PRE2025, II 1°)";
+    when trimestre_reference(p, m1, m2, m3)
+        and declare_total_mois(p, m1, v1)
+        and declare_total_mois(p, m2, v2)
+        and declare_total_mois(p, m3, v3)
+        and not_known(lecture_moyenne_arrondie(p));
+    then moyenne_declaree(p, (v1 + v2 + v3) / 3.0);
+}
+
+// --- Exceptional professional income affected to the perception month (old II 3°) ---
+
+@source(
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12)
+rule ProExceptionnelMoisPerception(p: Personne, mois: Date, v: Money) strict {
+    effective [@2021-01-01, @2025-03-01);
+    label fr official "revenu professionnel exceptionnel intégralement affecté au mois de perception (R. 262-7_PRE2025, II 3°)";
+    label en unofficial "exceptional professional income allocated in full to the perception month (R. 262-7_PRE2025, II 3°)";
+    when pro_exceptionnel_mois(p, mois, v)
+        and caractere_exceptionnel_pro(p, mois);
+    then base_ressources_mois(p, mois, v);
+}
+
+// --- Monthly resource base (new regime): quarterly averages plus perception-month service benefits ---
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule BaseRessourcesMoisNouveau(p: Personne, mois: Date, avg_pro: Money, avg_autre: Money, avg_decl: Money, prest: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "assiette du mois sans aide ni forfait : moyennes du trimestre plus prestations du mois de perception (R. 262-7, II 3° et III)";
+    label en unofficial "monthly base with no aid or flat-rate: quarterly averages plus perception-month benefits (R. 262-7, II 3° and III)";
+    when moyenne_dsn_pro(p, avg_pro)
+        and moyenne_dsn_autre(p, avg_autre)
+        and moyenne_declaree(p, avg_decl)
+        and prestation_service_mois(p, mois, prest)
+        and not_known(aide_logement_connue(p, mois))
+        and not_known(forfait_logement_connu(p));
+    then base_ressources_mois(p, mois, avg_pro + avg_autre + avg_decl + prest);
+}
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06,
+    CASF_R262_10,
+    CASF_R262_10_ED2021_03,
+    CASF_R262_10_ED2022_03,
+    CASF_R262_10_ED2023_12,
+    CASF_R262_10_ED2025_02,
+    CASF_R262_10_ED2025_06,
+    CASF_R262_10_ED2026_06)
+rule BaseRessourcesMoisNouveauAide(p: Personne, mois: Date, avg_pro: Money, avg_autre: Money, avg_decl: Money, prest: Money, aide: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "assiette du mois avec aide au logement plafonnée au forfait, affectée au mois de perception (R. 262-7, II 3° ; R. 262-10)";
+    label en unofficial "monthly base with housing aid capped at the flat-rate, allocated to the perception month (R. 262-7, II 3°; R. 262-10)";
+    when moyenne_dsn_pro(p, avg_pro)
+        and moyenne_dsn_autre(p, avg_autre)
+        and moyenne_declaree(p, avg_decl)
+        and prestation_service_mois(p, mois, prest)
+        and aide_logement_retenue(p, mois, aide);
+    then base_ressources_mois(p, mois, avg_pro + avg_autre + avg_decl + prest + aide);
+}
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06)
+rule BaseRessourcesMoisNouveauForfait(p: Personne, mois: Date, avg_pro: Money, avg_autre: Money, avg_decl: Money, prest: Money, forfait: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "assiette du mois avec forfait logement en nature, sans aide perçue (R. 262-7, II 3° ; R. 262-9)";
+    label en unofficial "monthly base with the in-kind housing flat-rate, no aid received (R. 262-7, II 3°; R. 262-9)";
+    when moyenne_dsn_pro(p, avg_pro)
+        and moyenne_dsn_autre(p, avg_autre)
+        and moyenne_declaree(p, avg_decl)
+        and prestation_service_mois(p, mois, prest)
+        and not_known(aide_logement_connue(p, mois))
+        and forfait_logement(p, forfait);
+    then base_ressources_mois(p, mois, avg_pro + avg_autre + avg_decl + prest + forfait);
+}
+
+// --- Monthly resource base (old regime): declared average plus perception-month service benefits ---
+
+@source(
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12)
+rule BaseRessourcesMoisAncien(p: Personne, mois: Date, avg_decl: Money, prest: Money) strict {
+    effective [@2021-01-01, @2025-03-01);
+    label fr official "assiette du mois avant 03.2025 sans aide ni forfait : moyenne déclarée plus prestations du mois de perception (R. 262-7_PRE2025, II 1° et 2°)";
+    label en unofficial "pre-03.2025 monthly base with no aid or flat-rate: declared average plus perception-month benefits (R. 262-7_PRE2025, II 1° and 2°)";
+    when moyenne_declaree(p, avg_decl)
+        and prestation_service_mois(p, mois, prest)
+        and not_known(aide_logement_connue(p, mois))
+        and not_known(forfait_logement_connu(p));
+    then base_ressources_mois(p, mois, avg_decl + prest);
+}
+
+@source(
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12,
+    CASF_R262_10,
+    CASF_R262_10_ED2021_03,
+    CASF_R262_10_ED2022_03,
+    CASF_R262_10_ED2023_12,
+    CASF_R262_10_ED2025_02,
+    CASF_R262_10_ED2025_06,
+    CASF_R262_10_ED2026_06)
+rule BaseRessourcesMoisAncienAide(p: Personne, mois: Date, avg_decl: Money, prest: Money, aide: Money) strict {
+    effective [@2021-01-01, @2025-03-01);
+    label fr official "assiette du mois avant 03.2025 avec aide au logement plafonnée, affectée au mois de perception (R. 262-7_PRE2025, II 2° ; R. 262-10)";
+    label en unofficial "pre-03.2025 monthly base with capped housing aid, allocated to the perception month (R. 262-7_PRE2025, II 2°; R. 262-10)";
+    when moyenne_declaree(p, avg_decl)
+        and prestation_service_mois(p, mois, prest)
+        and aide_logement_retenue(p, mois, aide);
+    then base_ressources_mois(p, mois, avg_decl + prest + aide);
+}
+
+@source(
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12,
+    CASF_R262_9,
+    CASF_R262_9_ED2025_02,
+    CASF_R262_9_ED2025_06,
+    CASF_R262_9_ED2026_06,
+    CASF_R262_9_PRE2024,
+    CASF_R262_9_PRE2024_ED2021_03,
+    CASF_R262_9_PRE2024_ED2022_03)
+rule BaseRessourcesMoisAncienForfait(p: Personne, mois: Date, avg_decl: Money, prest: Money, forfait: Money) strict {
+    effective [@2021-01-01, @2025-03-01);
+    label fr official "assiette du mois avant 03.2025 avec forfait logement en nature, sans aide perçue (R. 262-7_PRE2025, II 2° ; R. 262-9_PRE2024)";
+    label en unofficial "pre-03.2025 monthly base with the in-kind housing flat-rate, no aid received (R. 262-7_PRE2025, II 2°; R. 262-9_PRE2024)";
+    when moyenne_declaree(p, avg_decl)
+        and prestation_service_mois(p, mois, prest)
+        and not_known(aide_logement_connue(p, mois))
+        and forfait_logement(p, forfait);
+    then base_ressources_mois(p, mois, avg_decl + prest + forfait);
+}
+
+// --- Intermediate monthly amount: MF minus retained resources (I) ---
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule MontantIntermediaireNouveau(p: Personne, mois: Date, mf: Money, base: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "montant intermédiaire du mois du trimestre (R. 262-7, I)";
+    label en unofficial "quarter monthly intermediate amount (R. 262-7, I)";
+    when mf_mois(p, mois, mf) and base_ressources_mois(p, mois, base);
+    then montant_intermediaire(p, mois, mf - base);
+}
+
+@source(
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12)
+rule MontantIntermediaireAncien(p: Personne, mois: Date, mf: Money, base: Money) strict {
+    effective [@2021-01-01, @2025-03-01);
+    label fr official "montant intermédiaire du mois du trimestre avant 03.2025 (R. 262-7_PRE2025, I)";
+    label en unofficial "pre-03.2025 quarter monthly intermediate amount (R. 262-7_PRE2025, I)";
+    when mf_mois(p, mois, mf) and base_ressources_mois(p, mois, base);
+    then montant_intermediaire(p, mois, mf - base);
+}
+
+// --- Amount due: average of the three intermediate amounts (I) ---
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule MontantDuTrimestreNouveau(p: Personne, m1: Date, m2: Date, m3: Date, i1: Money, i2: Money, i3: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "montant dû : moyenne des montants intermédiaires M-4…M-2 (R. 262-7, I)";
+    label en unofficial "amount due: average of the M-4…M-2 intermediate amounts (R. 262-7, I)";
+    when trimestre_reference(p, m1, m2, m3)
+        and montant_intermediaire(p, m1, i1)
+        and montant_intermediaire(p, m2, i2)
+        and montant_intermediaire(p, m3, i3)
+        and not_known(lecture_moyenne_arrondie(p));
+    then montant_du_trimestre(p, (i1 + i2 + i3) / 3.0);
+}
+
+@source(
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12)
+rule MontantDuTrimestreAncien(p: Personne, m1: Date, m2: Date, m3: Date, i1: Money, i2: Money, i3: Money) strict {
+    effective [@2021-01-01, @2025-03-01);
+    label fr official "montant dû avant 03.2025 : moyenne des trois montants intermédiaires (R. 262-7_PRE2025, I)";
+    label en unofficial "pre-03.2025 amount due: average of the three intermediate amounts (R. 262-7_PRE2025, I)";
+    when trimestre_reference(p, m1, m2, m3)
+        and montant_intermediaire(p, m1, i1)
+        and montant_intermediaire(p, m2, i2)
+        and montant_intermediaire(p, m3, i3)
+        and not_known(lecture_moyenne_arrondie(p));
+    then montant_du_trimestre(p, (i1 + i2 + i3) / 3.0);
+}
+
+// --- Reading: rounding of the quarterly average (B-MINRES-MOYENNE-INEXACTE) ---
+//
+// R. 262-7 (I and II) speaks of "la moyenne mensuelle" of three monthly
+// figures and states NO rounding rule. The default (base) rules above divide
+// exactly: a quotient that does not terminate (167 + 167 + 0 over three
+// months = 111.333...) makes the document NON_EXECUTABLE (INEXACT_DIVISION,
+// SPEC 50/18: rounding only by an explicit policy). The rounding is therefore
+// not a text of the law but a READING (SPEC 152, owner decision 08.10.2026):
+// the basis is the practice of the funds (CNAF), under which the intermediate
+// value (the quotient) is rounded to the centime, HALF_UP. The reading is
+// outside any group (CORE-LIMITS, evaluative-elements): unselected it executes
+// nothing and changes no answer, selected (context { interpretation
+// fr.minima.ressources::MoyenneArrondieCentime; }) it replaces the exact
+// division by div_round(sum, 3.0, 2, "HALF_UP") in all six averaging rules
+// (DSN professional, other DSN, declared old and new regime, amount due old
+// and new regime). Where the division is exact the two give the same value.
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06,
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12)
+rule LectureMoyenneArrondie(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "lecture retenue : les moyennes de la R. 262-7 sont arrondies au centime (marqueur)";
+    label en unofficial "selected reading: the R. 262-7 averages are rounded to the centime (marker)";
+    when foyer_du_cas(p);
+    then lecture_moyenne_arrondie(p);
+}
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule MoyenneDsnProArrondie(p: Personne, m1: Date, m2: Date, m3: Date, v1: Money, v2: Money, v3: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "moyenne mensuelle du DSN professionnel M-4…M-2, arrondie au centime (R. 262-7, II 1°)";
+    label en unofficial "monthly average of professional DSN over M-4…M-2, rounded to the centime (R. 262-7, II 1°)";
+    when trimestre_reference(p, m1, m2, m3)
+        and dsn_pro_retenu_mois(p, m1, v1)
+        and dsn_pro_retenu_mois(p, m2, v2)
+        and dsn_pro_retenu_mois(p, m3, v3);
+    then moyenne_dsn_pro(p, div_round(v1 + v2 + v3, 3.0, 2, "HALF_UP"));
+}
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule MoyenneDsnAutreArrondie(p: Personne, m1: Date, m2: Date, m3: Date, v1: Money, v2: Money, v3: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "moyenne mensuelle des autres DSN M-4…M-2, arrondie au centime (R. 262-7, II 1°)";
+    label en unofficial "monthly average of other DSN over M-4…M-2, rounded to the centime (R. 262-7, II 1°)";
+    when trimestre_reference(p, m1, m2, m3)
+        and dsn_autre_retenu_mois(p, m1, v1)
+        and dsn_autre_retenu_mois(p, m2, v2)
+        and dsn_autre_retenu_mois(p, m3, v3);
+    then moyenne_dsn_autre(p, div_round(v1 + v2 + v3, 3.0, 2, "HALF_UP"));
+}
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule MoyenneDeclareeNouvelleArrondie(p: Personne, m1: Date, m2: Date, m3: Date, v1: Money, v2: Money, v3: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "moyenne mensuelle du déclaré hors DSN M-4…M-2, arrondie au centime (R. 262-7, II 2°)";
+    label en unofficial "monthly average of non-DSN declared over M-4…M-2, rounded to the centime (R. 262-7, II 2°)";
+    when trimestre_reference(p, m1, m2, m3)
+        and declare_total_mois(p, m1, v1)
+        and declare_total_mois(p, m2, v2)
+        and declare_total_mois(p, m3, v3);
+    then moyenne_declaree(p, div_round(v1 + v2 + v3, 3.0, 2, "HALF_UP"));
+}
+
+@source(
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12)
+rule MoyenneDeclareeAncienneArrondie(p: Personne, m1: Date, m2: Date, m3: Date, v1: Money, v2: Money, v3: Money) strict {
+    effective [@2021-01-01, @2025-03-01);
+    label fr official "moyenne mensuelle du déclaré perçu les trois mois précédents, arrondie au centime (R. 262-7_PRE2025, II 1°)";
+    label en unofficial "monthly average of declared received over the three previous months, rounded to the centime (R. 262-7_PRE2025, II 1°)";
+    when trimestre_reference(p, m1, m2, m3)
+        and declare_total_mois(p, m1, v1)
+        and declare_total_mois(p, m2, v2)
+        and declare_total_mois(p, m3, v3);
+    then moyenne_declaree(p, div_round(v1 + v2 + v3, 3.0, 2, "HALF_UP"));
+}
+
+@source(
+    CASF_R262_7,
+    CASF_R262_7_ED2025_06,
+    CASF_R262_7_ED2026_06)
+rule MontantDuTrimestreNouveauArrondi(p: Personne, m1: Date, m2: Date, m3: Date, i1: Money, i2: Money, i3: Money) strict {
+    effective [@2025-03-01, infinity);
+    label fr official "montant dû : moyenne des montants intermédiaires M-4…M-2, arrondie au centime (R. 262-7, I)";
+    label en unofficial "amount due: average of the M-4…M-2 intermediate amounts, rounded to the centime (R. 262-7, I)";
+    when trimestre_reference(p, m1, m2, m3)
+        and montant_intermediaire(p, m1, i1)
+        and montant_intermediaire(p, m2, i2)
+        and montant_intermediaire(p, m3, i3);
+    then montant_du_trimestre(p, div_round(i1 + i2 + i3, 3.0, 2, "HALF_UP"));
+}
+
+@source(
+    CASF_R262_7_PRE2025,
+    CASF_R262_7_PRE2025_ED2021_03,
+    CASF_R262_7_PRE2025_ED2022_03,
+    CASF_R262_7_PRE2025_ED2023_12)
+rule MontantDuTrimestreAncienArrondi(p: Personne, m1: Date, m2: Date, m3: Date, i1: Money, i2: Money, i3: Money) strict {
+    effective [@2021-01-01, @2025-03-01);
+    label fr official "montant dû avant 03.2025 : moyenne des trois montants intermédiaires, arrondie au centime (R. 262-7_PRE2025, I)";
+    label en unofficial "pre-03.2025 amount due: average of the three intermediate amounts, rounded to the centime (R. 262-7_PRE2025, I)";
+    when trimestre_reference(p, m1, m2, m3)
+        and montant_intermediaire(p, m1, i1)
+        and montant_intermediaire(p, m2, i2)
+        and montant_intermediaire(p, m3, i3);
+    then montant_du_trimestre(p, div_round(i1 + i2 + i3, 3.0, 2, "HALF_UP"));
+}
+
+@source(CASF_R262_7, CASF_R262_7_PRE2025)
+pub interpretation MoyenneArrondieCentime of CASF_R262_7 {
+    status disputed;
+    label fr official "lecture : la moyenne trimestrielle de la R. 262-7 (ressources et montant dû), si la division n'est pas exacte, est arrondie au centime, demi vers le haut — pratique des caisses (CNAF) ; le texte de la R. 262-7 ne fixe aucun arrondi";
+    label en unofficial "reading: the R. 262-7 quarterly average (resources and amount due), where the division is not exact, is rounded to the centime, half up - fund (CNAF) practice; the text of R. 262-7 states no rounding";
+    include LectureMoyenneArrondie;
+    include MoyenneDsnProArrondie;
+    include MoyenneDsnAutreArrondie;
+    include MoyenneDeclareeNouvelleArrondie;
+    include MoyenneDeclareeAncienneArrondie;
+    include MontantDuTrimestreNouveauArrondi;
+    include MontantDuTrimestreAncienArrondi;
+}
+
+// --- Former spouse out, new spouse deemed present all quarter (R.262-4, 1° and 2°) ---
+
+@source(
+    CASF_R262_4,
+    CASF_R262_4_ED2025_06,
+    CASF_R262_4_ED2026_06)
+rule ExclusionAncienConjoint(p: Personne) strict {
+    effective [@2025-02-28, infinity);
+    label fr official "ancien conjoint sorti : ni lui ni ses ressources ne comptent (R. 262-4, 1°)";
+    label en unofficial "former spouse out: neither they nor their resources count (R. 262-4, 1°)";
+    when ancien_conjoint_sorti(p);
+    then neutralisation_revenu(p, EXCLUE);
+}
+
+@source(
+    CASF_R262_4_PRE2025,
+    CASF_R262_4_PRE2025_ED2021_03,
+    CASF_R262_4_PRE2025_ED2022_03,
+    CASF_R262_4_PRE2025_ED2023_12)
+rule ExclusionAncienConjointAncienne(p: Personne) strict {
+    effective [@2021-01-01, @2025-02-28);
+    label fr official "ancien conjoint sorti avant le 28.02.2025 (R. 262-4_PRE2025, 1°)";
+    label en unofficial "former spouse out before 28.02.2025 (R. 262-4_PRE2025, 1°)";
+    when ancien_conjoint_sorti(p);
+    then neutralisation_revenu(p, EXCLUE);
+}
+
+// --- Mid-quarter revision on listed changes (R.262-4-1) ---
+
+@source(
+    CASF_R262_4_1,
+    CASF_R262_4_1_ED2021_03,
+    CASF_R262_4_1_ED2022_03,
+    CASF_R262_4_1_ED2023_12,
+    CASF_R262_4_1_ED2025_02,
+    CASF_R262_4_1_ED2025_06,
+    CASF_R262_4_1_ED2026_06)
+rule RevisionMiTrimestreInterruption(p: Personne, cat: CategorieRessource) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "révision entre réexamens : perception de ressources interrompue (R. 262-13) (R. 262-4-1, 1°)";
+    label en unofficial "mid-quarter revision: resource receipt interrupted (R. 262-13) (R. 262-4-1, 1°)";
+    when neutralisation_revenu(p, cat);
+    then revision_mi_trimestre(p);
+}
+
+@source(
+    CASF_R262_4_1,
+    CASF_R262_4_1_ED2021_03,
+    CASF_R262_4_1_ED2022_03,
+    CASF_R262_4_1_ED2023_12,
+    CASF_R262_4_1_ED2025_02,
+    CASF_R262_4_1_ED2025_06,
+    CASF_R262_4_1_ED2026_06)
+rule RevisionMiTrimestreVieCommune(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "révision entre réexamens : interruption de la vie commune (R. 262-4-1, 2°)";
+    label en unofficial "mid-quarter revision: household breakup (R. 262-4-1, 2°)";
+    when ancien_conjoint_sorti(p);
+    then revision_mi_trimestre(p);
+}
+
+@source(
+    CASF_R262_4_1,
+    CASF_R262_4_1_ED2021_03,
+    CASF_R262_4_1_ED2022_03,
+    CASF_R262_4_1_ED2023_12,
+    CASF_R262_4_1_ED2025_02,
+    CASF_R262_4_1_ED2025_06,
+    CASF_R262_4_1_ED2026_06)
+rule RevisionMiTrimestreIsolement(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "révision entre réexamens : entrée en isolement L. 262-9, établie en amont (R. 262-4-1, 3°)";
+    label en unofficial "mid-quarter revision: entry into L. 262-9 isolation, established upstream (R. 262-4-1, 3°)";
+    when conditions_mois_droit_etablies(p) and conjoint_repute_present(p);
+    then revision_mi_trimestre(p);
+}
+
+// --- L.262-2/L.262-4 conditions met in the month of right (R.262-4-2, channel) ---
+
+@source(
+    CASF_R262_4_2,
+    CASF_R262_4_2_ED2021_03,
+    CASF_R262_4_2_ED2022_03,
+    CASF_R262_4_2_ED2023_12,
+    CASF_R262_4_2_ED2025_02,
+    CASF_R262_4_2_ED2025_06,
+    CASF_R262_4_2_ED2026_06)
+rule ConditionsMoisDroit(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "conditions L. 262-2 et L. 262-4 remplies le mois du droit (R. 262-4-2)";
+    label en unofficial "L. 262-2 and L. 262-4 conditions met in the month of right (R. 262-4-2)";
+    when conditions_mois_droit_etablies(p);
+    then conditions_mois_droit(p);
+}

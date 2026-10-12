@@ -1,0 +1,31 @@
+// L. 531-9, para. 1, 2014-cohort gate, affirmative pre-cutoff (FULL RETURN
+// 03, R02-06): the 2014 NOTA restricts the PreParE bar to children
+// born/adopted from 01.10.2014. This isolated-parent case (age 11 at
+// 2025-10-15, so the <12 isolated gate holds the CMG right open; the child
+// was born in September 2014) carries established non-VI PreParE and the
+// affirmative pre-cutoff birth input — the cohort gate is absent, so the
+// marker stays silent. The 30.09/01.10.2014 boundary is fund-established
+// civil-record input. Controls — cm-non-cumul-prepare-2014-limite
+// (at-cutoff, TRUE) and cm-non-cumul-prepare-cohorte-non-etablie
+// (unevaluated, NEITHER).
+language "law.core" version "0.2";
+package fr.pf.cmg version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cmg";
+
+test "urn:query:fr-pf-cmg-non-cumul-prepare-avant-2014" {
+    given {
+        context { decision_time @2025-10-20T12:00:00Z; knowledge_time @2025-10-20T12:00:00Z; legal_time @2025-10-15; timezone "Europe/Paris"; }
+        assert "ncpa-01": mode_garde(entity_ref("urn:fr:pf-cmg:case:ncpa"), entity_ref("urn:fr:pf-cmg:child:ncpa"), ASSISTANT_MATERNEL) { origin case_input; }
+        assert "ncpa-02": exerce_activite(entity_ref("urn:fr:pf-cmg:case:ncpa")) { origin case_input; }
+        assert "ncpa-03": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cmg:case:ncpa"), entity_ref("urn:fr:pf-cmg:child:ncpa")) { origin case_input; }
+        assert "ncpa-04": age_revolu_ans(entity_ref("urn:fr:pf-cmg:child:ncpa"), 11) { origin case_input; }
+        assert "ncpa-05": parent_isole(entity_ref("urn:fr:pf-cmg:case:ncpa")) { origin case_input; }
+        assert "ncpa-06": beneficie_prepare_plein(entity_ref("urn:fr:pf-cmg:case:ncpa"), entity_ref("urn:fr:pf-cmg:child:ncpa")) { origin case_input; }
+        assert "ncpa-07": prepare_plein_hors_vi(entity_ref("urn:fr:pf-cmg:case:ncpa"), entity_ref("urn:fr:pf-cmg:child:ncpa")) { origin adjudicated; }
+        assert "ncpa-08": hors_cohorte_l5319_2014(entity_ref("urn:fr:pf-cmg:child:ncpa")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_prepare_plein_interdit(entity_ref("urn:fr:pf-cmg:case:ncpa"), entity_ref("urn:fr:pf-cmg:child:ncpa")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

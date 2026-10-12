@@ -1,0 +1,17 @@
+// Service before settlement: transfer regularised 15 April, appreciation 1 March - service on the original scheme (R. 552-1, PC-R03-08).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-service-avant-regularisation" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "service-avant-reg-01": transfert_regime(entity_ref("urn:fr:pf:case:transfere-avant")) { origin case_input; }
+        assert "service-avant-reg-02": regularisation_administrative_le(entity_ref("urn:fr:pf:case:transfere-avant"), @2026-04-15) { origin case_input; }
+        assert "service-avant-reg-03": date_appreciation(entity_ref("urn:fr:pf:case:transfere-avant"), @2026-03-01) { origin case_input; }
+    }
+    evaluate truth(service_incombe_regime_primitif(entity_ref("urn:fr:pf:case:transfere-avant")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

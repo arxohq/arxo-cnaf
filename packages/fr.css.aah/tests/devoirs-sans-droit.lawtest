@@ -1,0 +1,19 @@
+// No right, no positions: 50-79 % without RSDAE, debtor body established.
+// The duty has no trigger; the commission power has no ground.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-devoirs-sans-droit" {
+    given {
+        context { decision_time @2024-06-15T12:00:00Z; knowledge_time @2024-06-15T12:00:00Z; legal_time @2024-06-15; timezone "Europe/Paris"; }
+        assert "dev2-01": decision_cdaph_50_79(entity_ref("urn:fr:css-aah:case:dev-2")) { origin adjudicated; }
+        assert "dev2-03": age_droit_depasse(entity_ref("urn:fr:css-aah:case:dev-2")) { origin case_input; }
+        assert "dev2-04": residence_permanente(entity_ref("urn:fr:css-aah:case:dev-2")) { origin case_input; }
+        assert "dev2-05": sejour_regulier(entity_ref("urn:fr:css-aah:case:dev-2")) { origin case_input; }
+        assert "dev2-06": organisme_debiteur_aah(entity_ref("urn:fr:css-aah:org:caisse"), entity_ref("urn:fr:css-aah:case:dev-2")) { origin case_input; }
+        assert "dev2-07": commission_competente(entity_ref("urn:fr:css-aah:org:cdaph"), entity_ref("urn:fr:css-aah:case:dev-2")) { origin case_input; }
+    }
+    evaluate positions();
+    expect evaluation_status == COMPUTED;
+}

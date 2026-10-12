@@ -1,0 +1,17 @@
+language "law.core" version "0.2";
+package fr.apl.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:apl:versement";
+
+// 100,492462 € donne 0,50 € de CRDS après troncature, soit 99,992462 € net:
+// la frontière x,99… est arrondie à x, sans arrondi préalable au centime.
+// D-42 (08.10.2026): working reading of fr.apl (G-A13, PpPlancherFinal now pub) selected in context.
+test "urn:query:fr-apl-versement-arrondi-euro" {
+    given {
+        context { decision_time @2021-01-15T12:00:00Z; knowledge_time @2021-01-15T12:00:00Z; legal_time @2021-01-15; timezone "Europe/Paris"; interpretation fr.apl::PpPlancherFinal; }
+        assert "base": assiette_crds_auditee_openfisca(entity_ref("urn:fr:apl:versement:arrondi"), 100.492462 EUR) { origin case_input; }
+        assert "territoire": fr.apl::territoire(entity_ref("urn:fr:apl:versement:arrondi"), fr.apl::METROPOLE) { origin case_input; }
+    }
+    evaluate truth(montant_verse(entity_ref("urn:fr:apl:versement:arrondi"), 99 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

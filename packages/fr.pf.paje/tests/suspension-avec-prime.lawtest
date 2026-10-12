@@ -1,0 +1,28 @@
+// D. 532-2, interaction pair (B-PAJE2-D532-EFFET): the birth grant is fully
+// awardable (resources 20000 under the 119.47% ceiling of 30000, BMAF 400 —
+// the 919.00 award of prime-naissance-montant) while the suspension premises
+// hold — the suspension concludes and is NOT wired as a defeater into the
+// payment duties; the fund applies the effect at the versement stage.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-suspension-avec-prime" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "susp-prime-01": attente_naissance(entity_ref("urn:fr:paje:case:susp-prime"), entity_ref("urn:fr:paje:enfant:susp-prime")) { origin case_input; }
+        assert "susp-prime-02": ressources_annuelles(entity_ref("urn:fr:paje:case:susp-prime"), 20000 EUR) { origin case_input; }
+        assert "susp-prime-03": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:susp-prime"), 30000 EUR) { origin case_input; }
+        assert "susp-prime-04": bmaf_applicable(entity_ref("urn:fr:paje:case:susp-prime"), 400.00 EUR) { origin case_input; }
+        assert "susp-prime-05": date_examen_situation(entity_ref("urn:fr:paje:case:susp-prime"), entity_ref("urn:fr:paje:enfant:susp-prime"), @2025-07-01) { origin adjudicated; }
+        assert "susp-prime-06": organisme_debiteur(entity_ref("urn:fr:paje:org:caisse"), entity_ref("urn:fr:paje:case:susp-prime")) { origin case_input; }
+        assert "susp-prime-07": examens_l5331_non_passes(entity_ref("urn:fr:paje:case:susp-prime"), entity_ref("urn:fr:paje:enfant:susp-prime")) { origin adjudicated; }
+        assert "susp-prime-08": sans_motif_legitime_examens(entity_ref("urn:fr:paje:case:susp-prime"), entity_ref("urn:fr:paje:enfant:susp-prime")) { origin adjudicated; }
+        assert "susp-prime-09": demande_medecin_pmi(entity_ref("urn:fr:paje:case:susp-prime"), entity_ref("urn:fr:paje:enfant:susp-prime"), @2025-06-10) { origin adjudicated; }
+        assert "susp-prime-10": mois_effet_suspension(entity_ref("urn:fr:paje:case:susp-prime"), entity_ref("urn:fr:paje:enfant:susp-prime"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(suspension_versement_paje(entity_ref("urn:fr:paje:case:susp-prime"), entity_ref("urn:fr:paje:enfant:susp-prime"), @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

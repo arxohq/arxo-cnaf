@@ -1,0 +1,1859 @@
+// Provenance S1: two INSEE Melodi datasets (data.gouv.fr, organisation
+// INSEE) - monthly IPC Ensemble (input of L. 161-25) and 1er quintile hors
+// tabac (input of the SMIC relevement, decret 2025-1228 art. 3). Series are
+// extracted by corpus/laws/fr/revalorisation/tools/fetch_insee_ipc.py from
+// the pinned bytes sources/insee/.cache/*.zip into
+// sources/insee/insee-ipc-series.json. Do not edit by hand.
+//
+// Package window (phase 0): IPC series 1996/2011 -> 2026-08/09, base 2025
+// (INSEE republished the history in base 2025 in full - no splice needed;
+// the 2015->2025 splice is fixed by the bytes themselves). L. 161-25 text
+// pinned from the CSS mirror dump (LEGIARTI000031781092, VIGUEUR from
+// 2016-01-01). DSS instructions DSS/2B/2026/46 (revalorisation at
+// 2026-04-01) and DSS/2B/2025/177 (resource ceilings at 2026-01-01) pinned
+// as official PDF bytes plus extracted layout text (inbox 2026-10-06,
+// provenance.json with URL, sha256, date). Rules - next phase, see README.
+
+language "law.core" version "0.2";
+package fr.css.revalorisation version "0.1.0";
+namespace "urn:fr:corpus:clir:revalorisation";
+
+@id("urn:fr:source:insee-ipc-princ")
+source INSEE_IPC_PRINC {
+    kind rates_publication;
+    jurisdiction FR;
+    number "DS_IPC_PRINC — Indice des prix à la consommation, jeu de données principal (base 2025)";
+    label fr official "Indice des prix à la consommation - jeu de données principal, Institut national de la statistique et des études économiques";
+    label ru unofficial "ИПЦ INSEE, основной набор (база 2025): месячный ряд Ensemble — вход L. 161-25";
+}
+
+@id("urn:fr:source:insee-ipc-ind-cat")
+source INSEE_IPC_IND_CAT {
+    kind rates_publication;
+    jurisdiction FR;
+    number "DS_IPC_IND_CAT — Indice des prix à la consommation, indices catégoriels (base 2025)";
+    label fr official "Indice des prix à la consommation - indices catégoriels, Institut national de la statistique et des études économiques";
+    label ru unofficial "ИПЦ INSEE, категориальные ряды (база 2025): 1er quintile hors tabac — вход relèvement SMIC";
+}
+
+@id("urn:fr:source:insee-ipc-princ:2026-10-05:fr")
+edition INSEE_IPC_PRINC_ED2026 of INSEE_IPC_PRINC {
+    language fr;
+    officiality official;
+    materialization_status PINNED_OFFICIAL_BYTES;
+    in_force [@1996-01-01, infinity);
+    label fr official "DS_IPC_PRINC, état téléchargé le 5 octobre 2026 : IPC mensuel brut, France, Ensemble COICOP 00, 1996-01 → 2026-09";
+    label ru unofficial "DS_IPC_PRINC на 05.10.2026: месячный брутто-ИПЦ, Франция, Ensemble, 1996-01 → 2026-09";
+}
+
+@id("urn:fr:source:insee-ipc-ind-cat:2026-10-05:fr")
+edition INSEE_IPC_IND_CAT_ED2026 of INSEE_IPC_IND_CAT {
+    language fr;
+    officiality official;
+    materialization_status PINNED_OFFICIAL_BYTES;
+    in_force [@2011-01-01, infinity);
+    label fr official "DS_IPC_IND_CAT, état téléchargé le 5 octobre 2026 : IPC mensuel brut, France, 1er quintile hors tabac, 2011-01 → 2026-08";
+    label ru unofficial "DS_IPC_IND_CAT на 05.10.2026: месячный брутто-ИПЦ, Франция, 1-й квинтиль hors tabac, 2011-01 → 2026-08";
+}
+
+// BEGIN GENERATED FR-REVALORISATION PUBLICATIONS
+
+publication INSEE_IPC_PRINC_ED2026_DATA of INSEE_IPC_PRINC_ED2026 {
+    media_type "application/zip";
+    uri "https://api.insee.fr/melodi/file/DS_IPC_PRINC/DS_IPC_PRINC_CSV_FR";
+    retrieved_at @2026-10-05T17:06:42Z;
+    content_hash "sha256:9d34d301b75bef122e41cafb848f896495476b9e1c0460da61e45d065a9d6337";
+    local_path "sources/insee/.cache/DS_IPC_PRINC.zip";
+}
+
+publication INSEE_IPC_IND_CAT_ED2026_DATA of INSEE_IPC_IND_CAT_ED2026 {
+    media_type "application/zip";
+    uri "https://api.insee.fr/melodi/file/DS_IPC_IND_CAT/DS_IPC_IND_CAT_CSV_FR";
+    retrieved_at @2026-10-05T17:07:18Z;
+    content_hash "sha256:80cbf3a7b4f32cb35f8398c01779df09747b97dd027c159a6e8fe5054ac5f4e3";
+    local_path "sources/insee/.cache/DS_IPC_IND_CAT.zip";
+}
+
+// END GENERATED FR-REVALORISATION PUBLICATIONS
+
+// DSS AND L161-25 PINS (phase W0-06, 2026-10-06)
+
+source CSS {
+    kind code;
+    jurisdiction FR;
+    label fr official "Code de la sécurité sociale";
+    label en unofficial "French Social Security Code";
+}
+
+edition CSS_L161_25_ED2016 of CSS {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2016-01-01, infinity);
+    label fr official "Code de la sécurité sociale, article L. 161-25 en vigueur à compter du 2016-01-01 (miroir DILA LEGI, LEGIARTI000031781092)";
+    label en unofficial "French Social Security Code, article L. 161-25 as in force from 2016-01-01 (DILA LEGI mirror, LEGIARTI000031781092)";
+}
+
+publication CSS_L161_25_ED2016_TEXT of CSS_L161_25_ED2016 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:6c362fd782b87908692452ac0e3c5d6d28f224f824b8981f4fc3ec858a5104ca";
+    local_path "sources/L161-25.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#CSS_L161_25")
+pub fragment CSS_L161_25 in CSS_L161_25_ED2016 {
+    kind article;
+    locator "article/L161-25";
+    text fr official """Article L161-25
+La revalorisation annuelle des montants de prestations dont les dispositions renvoient au présent article est effectuée sur la base d'un coefficient égal à l'évolution de la moyenne annuelle des prix à la consommation, hors tabac, calculée sur les douze derniers indices mensuels de ces prix publiés par l'Institut national de la statistique et des études économiques l'avant-dernier mois qui précède la date de revalorisation des prestations concernées.
+Si ce coefficient est inférieur à un, il est porté à cette valeur.
+""";
+    content_hash "sha256:6c362fd782b87908692452ac0e3c5d6d28f224f824b8981f4fc3ec858a5104ca";
+}
+
+source DSS_2026_46 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/2B/2026/46 du 20 mars 2026 relative à la revalorisation au 1er avril 2026 des prestations familiales";
+    label en unofficial "Interministerial instruction DSS/2B/2026/46 of 20 March 2026 on the 1 April 2026 revalorisation of family benefits";
+}
+
+edition DSS_2026_46_PDF of DSS_2026_46 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_OFFICIAL_BYTES;
+    in_force [@2026-04-01, infinity);
+    label fr official "DSS/2B/2026/46 : bytes officiels du PDF (Bulletin officiel Santé)";
+    label en unofficial "DSS/2B/2026/46: official PDF bytes (Bulletin officiel Sante)";
+}
+
+publication DSS_2026_46_PDF_BYTES of DSS_2026_46_PDF {
+    media_type "application/pdf";
+    uri "https://bulletins-officiels.social.gouv.fr/sites/textes-officiels/files/2026-03/SFHS2607952J.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:5288475881ca40b7ee82e53d8b77bd2767f0051258f39ecb5ce541704b9e0756";
+    local_path "sources/dss-2026-46.pdf";
+}
+
+edition DSS_2026_46_TEXT of DSS_2026_46 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_OFFICIAL_BYTES;
+    in_force [@2026-04-01, infinity);
+    label fr official "DSS/2B/2026/46 : texte de mise en page extrait du PDF officiel";
+    label en unofficial "DSS/2B/2026/46: layout text extracted from the official PDF";
+}
+
+publication DSS_2026_46_TEXT_TXT of DSS_2026_46_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://bulletins-officiels.social.gouv.fr/sites/textes-officiels/files/2026-03/SFHS2607952J.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:e99e176f704aa78098475a297edc51b7f395cc32729300887502ae2ce89abdfe";
+    local_path "sources/dss-2026-46.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2026_46_COEFF")
+pub fragment DSS_2026_46_COEFF in DSS_2026_46_TEXT {
+    kind guidance;
+    locator "instruction/DSS-2B-2026-46/page/2/coefficient";
+    text fr official """Au 1er avril 2026, le coefficient de revalorisation de la base mensuelle des allocations familiales
+(BMAF) mentionné à l’article L. 551-1 du code de la sécurité sociale 1 est fixé à 1,008 soit un
+taux de revalorisation de la BMAF de 0,8 %.
+
+Le montant de cette base mensuelle, en pourcentage duquel sont fixées les prestations
+familiales, est donc porté de 474,37 € (depuis le 1er avril 2025) à 478,16 € au 1er avril 2026.
+""";
+    content_hash "sha256:bdd2aa8abf1cdde81f527301bc383888539a965c7fbd92792a9f1370f20f9a85";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2026_46_BMAF")
+pub fragment DSS_2026_46_BMAF in DSS_2026_46_TEXT {
+    kind table;
+    locator "instruction/DSS-2B-2026-46/annexe/table/BMAF";
+    text fr official """Base mensuelle de calcul des allocations familiales à compter du 1er avril 2026 : 478,16 €
+""";
+    content_hash "sha256:f5cbedf85de2136af1feab1ea322a80ac6468c9874ca4c9a7ef13008d1a9c645";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2026_46_AF")
+pub fragment DSS_2026_46_AF in DSS_2026_46_TEXT {
+    kind table;
+    locator "instruction/DSS-2B-2026-46/annexe/table/I.1-allocations-familiales";
+    text fr official """I.1 Montant des allocations familiales (par famille à compter de 2 enfants à charge)
+
+      Nbre            Montant maximal         Montant intermédiaire         Montant minimal
+   d'enfants à
+     charge         % BMAF        En euros     % BMAF       En euros      % BMAF       En euros
+
+    2 enfants         32 %         153,01        16 %         76,51         8%           38,25
+
+    3 enfants         73 %         349,06       36,5 %       174,53       18,25 %        87,26
+
+    4 enfants        114 %         545,1         57 %        272,55        28,5 %       136,28
+
+    5 enfants        155 %         741,15       77,5 %       370,57       38,75 %       185,29
+
+   Par enfant
+                      41 %        196,05        20,5 %        98,02       10,25 %        49,01
+     supp
+""";
+    content_hash "sha256:6f5c6fe6dba0a57e97caace37108ecdb058a2ade28d291ebfd85a71b1c57a59c";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2026_46_MAJO")
+pub fragment DSS_2026_46_MAJO in DSS_2026_46_TEXT {
+    kind table;
+    locator "instruction/DSS-2B-2026-46/annexe/table/I.2-majoration-age";
+    text fr official """I.2 Montant de la majoration pour âge (à l’exception de l’aîné des familles de deux enfants)
+
+                      Montant maximal         Montant intermédiaire         Montant minimal
+   Majoration
+  pour âge de       % BMAF        En euros     % BMAF       En euros      % BMAF       En euros
+    l'enfant
+                      16 %         76,51          8%          38,25         4%           19,13
+""";
+    content_hash "sha256:a559459971e235fe1ac07ef50d8e74fe31386195fa6d24b2ab7e2e840a817234";
+}
+
+source DSS_2025_177 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/2B/2025/177 du 18 décembre 2025 relative à la revalorisation, au 1er janvier 2026, des plafonds de ressources d’attribution de certaines prestations familiales";
+    label en unofficial "Interministerial instruction DSS/2B/2025/177 of 18 December 2025 on the 1 January 2026 revalorisation of resource ceilings for certain family benefits";
+}
+
+edition DSS_2025_177_PDF of DSS_2025_177 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_OFFICIAL_BYTES;
+    in_force [@2026-01-01, @2027-01-01);
+    label fr official "DSS/2B/2025/177 : bytes officiels du PDF (Bulletin officiel Santé)";
+    label en unofficial "DSS/2B/2025/177: official PDF bytes (Bulletin officiel Sante)";
+}
+
+publication DSS_2025_177_PDF_BYTES of DSS_2025_177_PDF {
+    media_type "application/pdf";
+    uri "https://bulletins-officiels.social.gouv.fr/sites/textes-officiels/files/2025-12/SFHS2535630J_0.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:a51de9474b15cbc0f746ebf9811c3c0e2f823db1e7e7e2bc34fc985dc730e161";
+    local_path "sources/dss-2025-177.pdf";
+}
+
+edition DSS_2025_177_TEXT of DSS_2025_177 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_OFFICIAL_BYTES;
+    in_force [@2026-01-01, @2027-01-01);
+    label fr official "DSS/2B/2025/177 : texte de mise en page extrait du PDF officiel";
+    label en unofficial "DSS/2B/2025/177: layout text extracted from the official PDF";
+}
+
+publication DSS_2025_177_TEXT_TXT of DSS_2025_177_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://bulletins-officiels.social.gouv.fr/sites/textes-officiels/files/2025-12/SFHS2535630J_0.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:5b89e337e71b5309efe46e90393b4ca7c78ee2fa36edae969eaedf886afb6059";
+    local_path "sources/dss-2025-177.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2025_177_PLAFOND_AF")
+pub fragment DSS_2025_177_PLAFOND_AF in DSS_2025_177_TEXT {
+    kind table;
+    locator "instruction/DSS-2B-2025-177/section/1/plafonds-allocations-familiales";
+    text fr official """Plafonds de ressources applicables pour l’attribution du montant modulé des allocations
+familiales, de la majoration pour âge et de l’allocation forfaitaire, du 1er janvier 2026 au
+31 décembre 2026 (à comparer au revenu net catégoriel de l'année 2024)
+
+                                                Tranche 1                 Tranche 2                 Tranche 3
+ Nombre d'enfants à charge
+                                                (en euros)                (en euros)                (en euros)
+              2 enfants                          ≤ 79 980                  ≤ 106 604                 > 106 604
+              3 enfants                          ≤ 86 644                  ≤ 113 268                 > 113 268
+              4 enfants                          ≤ 93 308                  ≤ 119 932                 > 119 932
+              5 enfants                          ≤ 99 972                  ≤ 126 596                 > 126 596
+
+   Par enfant supplémentaire                      + 6 664                   + 6 664                    +6 664
+NB : la première tranche est celle dont les revenus sont inférieurs ou égaux à un plafond de base de 66 652 euros majoré
+de 6 664 euros par enfant à charge. La deuxième tranche est celle dont les revenus sont supérieurs à un plafond de base
+de 66 652 euros majoré de 6 664 euros par enfant à charge, mais inférieurs ou égaux au plafond de base de 93 276 euros
+majoré de 6 664 euros par enfant à charge. La troisième tranche est celle dont les revenus sont supérieurs au plafond de
+base de 93 276 euros majoré de 6 664 euros par enfant à charge.
+""";
+    content_hash "sha256:556796b0431a9159b2bfcadea475b96ecbfc6b1d28d263d0634e452dc0ee6024";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2025_177_PLAFOND_CF")
+pub fragment DSS_2025_177_PLAFOND_CF in DSS_2025_177_TEXT {
+    kind table;
+    locator "instruction/DSS-2B-2025-177/section/2.1/plafonds-complement-familial";
+    text fr official """2.1 Plafonds de ressources applicables pour l'attribution du complément familial et du
+complément pour frais de l’allocation journalière de présence parentale, du 1er janvier 2026
+au 31 décembre 2026 (à comparer au revenu net catégoriel de l'année 2024)
+
+Plafond de base : 24 853 €
+Majorations :
+
+- 25 % par enfant à charge                                                              6 213 €
+- 30 % par enfant à charge à partir du 3ème                                             7 456 €
+- pour double activité ou pour isolement                                                9 989 €
+""";
+    content_hash "sha256:cb3e43f106d53e187c832b49e886c72a8e34a12d2aa51b6fa23bfaee87ea97fa";
+}
+
+// DSS BACK-CHAIN PINS (D-24, 2026-10-06): April 2022-2025 revalorisation
+// instructions + January 2022-2025 plafond instructions, sliced from full
+// BO Sante bulletins (Internet Archive id_ snapshots) by
+// tools/fetch_dss_bo.py. Fragments are byte-verbatim slices of the .txt.
+// Session 1 of 2026-10-08 extends the chain back to 2015: April BMAF
+// instructions 2015-2021 (2018: not found, see PROVENANCE.md) and January
+// resource-ceiling instructions 2015, 2017-2021 (2016: not found) follow below.
+
+source DSS_2B_2022_82 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/2B/2022/82 du 28 mars 2022 relative à la revalorisation au 1er avril 2022 des prestations familiales";
+    label en unofficial "Interministerial instruction DSS/2B/2022/82 of 28 mars 2022 on the 1 April 2022 revalorisation of family benefits";
+}
+
+edition DSS_2B_2022_82_PDF of DSS_2B_2022_82 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2022-04-01, infinity);
+    label fr official "DSS/2B/2022/82 (NOR SSAS2209926J) : extrait pages 404-413 du BO Santé n° 2022/8, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/2B/2022/82 (NOR SSAS2209926J): pages 404-413 extract of BO Sante no. 2022/8, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_2B_2022_82_PDF_BYTES of DSS_2B_2022_82_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20240309145501id_/https://sante.gouv.fr/fichiers/bo/2022/2022.8.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:ae121608393a18982ac09971129c219da1e67e712c7c24a46ac73dd27750292b";
+    local_path "sources/dss-2022-82.pdf";
+}
+
+edition DSS_2B_2022_82_TEXT of DSS_2B_2022_82 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2022-04-01, infinity);
+    label fr official "DSS/2B/2022/82 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/2B/2022/82: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_2B_2022_82_TEXT_TXT of DSS_2B_2022_82_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20240309145501id_/https://sante.gouv.fr/fichiers/bo/2022/2022.8.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:8257ed00550d1703f884df4f7de1a00b7571ce6289e41c8fd1dedf52214fc585";
+    local_path "sources/dss-2022-82.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2022_82_COEFF")
+pub fragment DSS_2B_2022_82_COEFF in DSS_2B_2022_82_TEXT {
+    kind guidance;
+    locator "instruction/dss-2b-2022-82/coefficient";
+    text fr official """        Au 1er avril 2022, le coefficient de revalorisation de la base mensuelle de calcul des
+allocations familiales (BMAF) est ainsi fixé à 1,018 soit un taux de revalorisation de la BMAF
+de 1,8 %. Le montant de cette base mensuelle, en pourcentage duquel sont fixées les
+prestations familiales, est donc porté de 414,81 € au 1er avril 2021 à 422,28 € au 1er avril 2022.
+""";
+    content_hash "sha256:a162443ef95a4b3882c21d99dcb3123e879ed4a8bfadc380e1fc4cc1aee7df35";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2022_82_BMAF")
+pub fragment DSS_2B_2022_82_BMAF in DSS_2B_2022_82_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2022-82/annexe/table/BMAF";
+    text fr official """Base mensuelle de calcul des allocations familiales à compter du 1er avril 2022 : 422,28 €
+""";
+    content_hash "sha256:7cdccbfc89ed5eafa4b46f0eec53c9f59d7f8c8a5cad750e7d112bdd48586f90";
+}
+
+source DSS_2B_2023_41 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/2B/2023/41 du 24 mars 2023 relative à la revalorisation au 1er avril 2023 des prestations familiales";
+    label en unofficial "Interministerial instruction DSS/2B/2023/41 of 24 mars 2023 on the 1 April 2023 revalorisation of family benefits";
+}
+
+edition DSS_2B_2023_41_PDF of DSS_2B_2023_41 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2023-04-01, infinity);
+    label fr official "DSS/2B/2023/41 (NOR APHS2308236J) : extrait pages 119-129 du BO Santé n° 2023/6, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/2B/2023/41 (NOR APHS2308236J): pages 119-129 extract of BO Sante no. 2023/6, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_2B_2023_41_PDF_BYTES of DSS_2B_2023_41_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20230331123522id_/https://sante.gouv.fr/fichiers/bo/2023/2023.6.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:628434c066d9fe27505b1819a9dcb026afe7a921d8e3747dd8ecadb5041f9caa";
+    local_path "sources/dss-2023-41.pdf";
+}
+
+edition DSS_2B_2023_41_TEXT of DSS_2B_2023_41 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2023-04-01, infinity);
+    label fr official "DSS/2B/2023/41 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/2B/2023/41: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_2B_2023_41_TEXT_TXT of DSS_2B_2023_41_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20230331123522id_/https://sante.gouv.fr/fichiers/bo/2023/2023.6.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:89e0b6e620f9977e791d712b2748ce5742ec6fc6709e4fe10bd5a69a44882611";
+    local_path "sources/dss-2023-41.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2023_41_COEFF")
+pub fragment DSS_2B_2023_41_COEFF in DSS_2B_2023_41_TEXT {
+    kind guidance;
+    locator "instruction/dss-2b-2023-41/coefficient";
+    text fr official """        Au 1er avril 2023, le coefficient de revalorisation de la base mensuelle des allocations
+familiales (BMAF) mentionné à l’article L. 551-1 du code de la sécurité sociale 1 est fixé à 1,056
+soit un taux de revalorisation de la BMAF de 5,6 %, déduction faite de la revalorisation
+anticipée de 4% entrée en vigueur en juillet 2022 et introduite par l’article 9 de la loi n° 2022-
+1158 du 16 août 2022 portant mesures d'urgence pour la protection du pouvoir d'achat.
+Le montant de cette base mensuelle, en pourcentage duquel sont fixées les prestations
+familiales, est donc porté à 445,93 €.
+""";
+    content_hash "sha256:461ae97ef4aa9ae5ef8b443ad4e09fa587dbcbd2f994728a76a870938f11a802";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2023_41_BMAF")
+pub fragment DSS_2B_2023_41_BMAF in DSS_2B_2023_41_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2023-41/annexe/table/BMAF";
+    text fr official """Base mensuelle de calcul des allocations familiales à compter du 1er avril 2023 : 445,93 €
+""";
+    content_hash "sha256:b0222a1dc03b4a1ad6f68d9e6fb4db783026196ad470663aaba7bcb125d9bd47";
+}
+
+source DSS_2B_2024_43 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/2B/2024/43 du 20 mars 2024 relative à la revalorisation au 1er avril 2024 des prestations familiales";
+    label en unofficial "Interministerial instruction DSS/2B/2024/43 of 20 mars 2024 on the 1 April 2024 revalorisation of family benefits";
+}
+
+edition DSS_2B_2024_43_PDF of DSS_2B_2024_43 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2024-04-01, infinity);
+    label fr official "DSS/2B/2024/43 (NOR TSSS2408365J) : extrait pages 86-97 du BO Santé n° 2024/6, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/2B/2024/43 (NOR TSSS2408365J): pages 86-97 extract of BO Sante no. 2024/6, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_2B_2024_43_PDF_BYTES of DSS_2B_2024_43_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20240403124929id_/https://sante.gouv.fr/fichiers/bo/2024/2024.6.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:693c0a794cc4cb5ef6aabe43299a41a7df8084b91439f7bbc7d357794f5c80fd";
+    local_path "sources/dss-2024-43.pdf";
+}
+
+edition DSS_2B_2024_43_TEXT of DSS_2B_2024_43 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2024-04-01, infinity);
+    label fr official "DSS/2B/2024/43 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/2B/2024/43: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_2B_2024_43_TEXT_TXT of DSS_2B_2024_43_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20240403124929id_/https://sante.gouv.fr/fichiers/bo/2024/2024.6.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:6705d15c37a1e092b81139ae02dcef894bcdd5426818c6608ab973bd433b8fc4";
+    local_path "sources/dss-2024-43.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2024_43_COEFF")
+pub fragment DSS_2B_2024_43_COEFF in DSS_2B_2024_43_TEXT {
+    kind guidance;
+    locator "instruction/dss-2b-2024-43/coefficient";
+    text fr official """Au 1er avril 2024, le coefficient de revalorisation de la base mensuelle des allocations familiales
+(BMAF) mentionné à l’article L. 551-1 du code de la sécurité sociale 1 est fixé à 1,046 soit un
+taux de revalorisation de la BMAF de 4,6 %.
+
+Le montant de cette base mensuelle, en pourcentage duquel sont fixées les prestations
+familiales, est donc porté de 445,93 € (depuis le 1er avril 2023) à 466,44 € au 1er avril 2024.
+""";
+    content_hash "sha256:bb900fc60b1ffce163c65e551b6a2409e1e6ff758018b1cb885c45fd274fef5b";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2024_43_BMAF")
+pub fragment DSS_2B_2024_43_BMAF in DSS_2B_2024_43_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2024-43/annexe/table/BMAF";
+    text fr official """Base mensuelle de calcul des allocations familiales à compter du 1er avril 2024 : 466,44 €
+""";
+    content_hash "sha256:23a2ae0a474a8e326176097aa9aeb87dc9dc7f77260bdf8ef997300acafaac0d";
+}
+
+source DSS_2B_2025_38 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/2B/2025/38 du 17 mars 2025 relative à la revalorisation au 1er avril 2025 des prestations familiales";
+    label en unofficial "Interministerial instruction DSS/2B/2025/38 of 17 mars 2025 on the 1 April 2025 revalorisation of family benefits";
+}
+
+edition DSS_2B_2025_38_PDF of DSS_2B_2025_38 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2025-04-01, infinity);
+    label fr official "DSS/2B/2025/38 (NOR TSSS2508202J) : extrait pages 27-38 du BO Santé n° 2025/6, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/2B/2025/38 (NOR TSSS2508202J): pages 27-38 extract of BO Sante no. 2025/6, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_2B_2025_38_PDF_BYTES of DSS_2B_2025_38_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20250401012620id_/https://sante.gouv.fr/fichiers/bo/2025/2025.6.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:f9018e16b45a8bc3bd0cbc2bc49684ab6a0a625f4d2fdd3a384a7039ded694a0";
+    local_path "sources/dss-2025-38.pdf";
+}
+
+edition DSS_2B_2025_38_TEXT of DSS_2B_2025_38 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2025-04-01, infinity);
+    label fr official "DSS/2B/2025/38 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/2B/2025/38: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_2B_2025_38_TEXT_TXT of DSS_2B_2025_38_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20250401012620id_/https://sante.gouv.fr/fichiers/bo/2025/2025.6.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:bc4a3399b528fd77446a8ec6705aa5abdbffb2eb8f269b2958c4aa5734bf0e84";
+    local_path "sources/dss-2025-38.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2025_38_COEFF")
+pub fragment DSS_2B_2025_38_COEFF in DSS_2B_2025_38_TEXT {
+    kind guidance;
+    locator "instruction/dss-2b-2025-38/coefficient";
+    text fr official """Au 1er avril 2025, le coefficient de revalorisation de la base mensuelle des allocations familiales
+(BMAF) mentionné à l’article L. 551-1 du code de la sécurité sociale 1 est fixé à 1,017 soit un
+taux de revalorisation de la BMAF de 1,7 %.
+
+Le montant de cette base mensuelle, en pourcentage duquel sont fixées les prestations
+familiales, est donc porté de 466,44 € (depuis le 1er avril 2024) à 474,37 € au 1er avril 2025.
+""";
+    content_hash "sha256:26dda7323d28333539635975cec8615b48ec890920ef864342b2fa53f30a8f71";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2025_38_BMAF")
+pub fragment DSS_2B_2025_38_BMAF in DSS_2B_2025_38_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2025-38/annexe/table/BMAF";
+    text fr official """Base mensuelle de calcul des allocations familiales à compter du 1er avril 2025 : 474,37 €
+""";
+    content_hash "sha256:470883ec7a91551f254bae3d8a875687ea65778f10c1cbbdde6c2f8651155a1b";
+}
+
+source DSS_2B_2021_247 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/2B/2021/247 du 14 décembre 2021 relative à la revalorisation, au 1er janvier 2022, des plafonds de ressources d’attribution de certaines prestations familiales";
+    label en unofficial "Interministerial instruction DSS/2B/2021/247 of 14 décembre 2021 on the 1 January 2022 revalorisation of resource ceilings for certain family benefits";
+}
+
+edition DSS_2B_2021_247_PDF of DSS_2B_2021_247 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2022-01-01, @2023-01-01);
+    label fr official "DSS/2B/2021/247 (NOR SSAS2137492J) : extrait pages 162-170 du BO Santé n° 2021/24, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/2B/2021/247 (NOR SSAS2137492J): pages 162-170 extract of BO Sante no. 2021/24, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_2B_2021_247_PDF_BYTES of DSS_2B_2021_247_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20230407184317id_/https://sante.gouv.fr/fichiers/bo/2021/2021.24.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:f7fa037ac65a127c165c46d5eaf8a3d8813ea12f982ce58f6f2937c577894d0e";
+    local_path "sources/dss-2021-247.pdf";
+}
+
+edition DSS_2B_2021_247_TEXT of DSS_2B_2021_247 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2022-01-01, @2023-01-01);
+    label fr official "DSS/2B/2021/247 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/2B/2021/247: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_2B_2021_247_TEXT_TXT of DSS_2B_2021_247_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20230407184317id_/https://sante.gouv.fr/fichiers/bo/2021/2021.24.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:83751230269006af7989a8244b2264e0fea399b1eb64893f1d84f6d8f37402cc";
+    local_path "sources/dss-2021-247.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2021_247_PLAFOND_AF")
+pub fragment DSS_2B_2021_247_PLAFOND_AF in DSS_2B_2021_247_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2021-247/section/1/plafonds-allocations-familiales";
+    text fr official """Plafonds de ressources applicables pour l’attribution du montant modulé des allocations
+familiales, de la majoration pour âge et de l’allocation forfaitaire, du 1er janvier 2022 au
+31 décembre 2022 (à comparer au revenu net catégoriel de l'année 2020)
+
+                                                  Tranche 1                Tranche 2                 Tranche 3
+     Nombre d'enfants à charge
+                                                  (en euros)               (en euros)                (en euros)
+                 2 enfants                         ≤ 70 074                 ≤ 93 399                  > 93 399
+                 3 enfants                         ≤ 75 913                 ≤ 99 238                  > 99 238
+                 4 enfants                         ≤ 81 752                 ≤ 105 077                > 105 077
+                 5 enfants                         ≤ 87 591                 ≤ 110 916                > 110 916
+
+       Par enfant supplémentaire                    + 5 839                  + 5 839                   + 5 839
+NB : La première tranche est celle dont les revenus sont inférieurs ou égaux à un plafond de base de 58 396 euros majoré de
+5 839 euros par enfant à charge. La deuxième tranche est celle dont les revenus sont supérieurs à un plafond de base d e
+58 396 euros majoré de 5 839 euros par enfant à charge mais inférieurs ou égaux au plafond de base de 81 721 euros majoré
+de 5 839 euros par enfant à charge. La troisième tranche est celle dont les revenus sont supérieurs au plafond de base de
+81 721 euros majoré de 5 839 euros par enfant à charge.
+""";
+    content_hash "sha256:ee0a04fc6ce75e9deb1260123f38c9749f0ae5bc3b1de452ecd912286e7d5ad5";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2021_247_PLAFOND_CF")
+pub fragment DSS_2B_2021_247_PLAFOND_CF in DSS_2B_2021_247_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2021-247/section/2.1/plafonds-complement-familial";
+    text fr official """2.1 - Plafonds de ressources applicables pour l'attribution du complément familial et du
+complément pour frais de l’allocation journalière de présence parentale, du 1er janvier 2022
+au 31 décembre 2022 (à comparer au revenu net catégoriel de l'année 2020)
+
+Plafond de base : 21 775 €
+Majorations :
+- 25 % par enfant à charge                                                                5 444 €
+- 30 % par enfant à charge à partir du 3ème                                               6 533 €
+- pour double activité ou pour isolement                                                  8 752 €
+""";
+    content_hash "sha256:b8039fa221ef418ffc09ef83360ad5307d86eaab184d515f07c5dd08ab479237";
+}
+
+source DSS_SD2B_2022_283 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/SD2B/2022/283 du 21 décembre 2022 relative à la revalorisation, au 1er janvier 2023, des plafonds de ressources d’attribution de certaines prestations familiales";
+    label en unofficial "Interministerial instruction DSS/SD2B/2022/283 of 21 décembre 2022 on the 1 January 2023 revalorisation of resource ceilings for certain family benefits";
+}
+
+edition DSS_SD2B_2022_283_PDF of DSS_SD2B_2022_283 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2023-01-01, @2024-01-01);
+    label fr official "DSS/SD2B/2022/283 (NOR APHS2237054J) : extrait pages 171-180 du BO Santé n° 2022/26, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2022/283 (NOR APHS2237054J): pages 171-180 extract of BO Sante no. 2022/26, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2022_283_PDF_BYTES of DSS_SD2B_2022_283_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20230130162057id_/https://sante.gouv.fr/fichiers/bo/2022/2022.26.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:9a014ec3bde4884373df935cb1b34a7427cca35b94a72839551731ca01f2d06c";
+    local_path "sources/dss-2022-283.pdf";
+}
+
+edition DSS_SD2B_2022_283_TEXT of DSS_SD2B_2022_283 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2023-01-01, @2024-01-01);
+    label fr official "DSS/SD2B/2022/283 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2022/283: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2022_283_TEXT_TXT of DSS_SD2B_2022_283_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20230130162057id_/https://sante.gouv.fr/fichiers/bo/2022/2022.26.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:1eee3bca6acfefeedb1a1be1afbfdf876590e9381297927fe07d6a26a0cbbfa2";
+    local_path "sources/dss-2022-283.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2022_283_PLAFOND_AF")
+pub fragment DSS_SD2B_2022_283_PLAFOND_AF in DSS_SD2B_2022_283_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2022-283/section/1/plafonds-allocations-familiales";
+    text fr official """Plafonds de ressources applicables pour l’attribution du montant modulé des allocations
+familiales, de la majoration pour âge et de l’allocation forfaitaire, du 1er janvier 2023 au
+31 décembre 2023 (à comparer au revenu net catégoriel de l'année 2021).
+
+                                                 Tranche 1                  Tranche 2                  Tranche 3
+   Nombre d'enfants à charge
+                                                 (en euros)                 (en euros)                 (en euros)
+               2 enfants                          ≤ 71 194                   ≤ 94 893                   > 94 893
+               3 enfants                          ≤ 77 126                   ≤ 100 825                  > 100 825
+               4 enfants                          ≤ 83 058                   ≤ 106 757                  > 106 757
+               5 enfants                          ≤ 88 990                   ≤ 112 689                  > 112 689
+
+     Par enfant supplémentaire                      + 5 932                   + 5 932                    + 5 932
+NB : La première tranche est celle dont les revenus sont inférieurs ou égaux à un plafond de base de 59 330 euros majoré de 5 932
+euros par enfant à charge. La deuxième tranche est celle dont les revenus sont supérieurs à un plafond de base de 59 330 euros
+majoré de 5 932 euros par enfant à charge mais inférieurs ou égaux au plafond de base de 83 029 euros majoré de 5 932 euros par
+enfant à charge. La troisième tranche est celle dont les revenus sont supérieurs au plafond de base de 83 029 euros majoré de
+5 932 euros par enfant à charge.
+""";
+    content_hash "sha256:2ba80d63bd85fe51f019ef83e000912eadca365951d5397fad433cacbdd485bc";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2022_283_PLAFOND_CF")
+pub fragment DSS_SD2B_2022_283_PLAFOND_CF in DSS_SD2B_2022_283_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2022-283/section/2.1/plafonds-complement-familial";
+    text fr official """2.1 - Plafonds de ressources applicables pour l'attribution du complément familial et du
+complément pour frais de l’allocation journalière de présence parentale, du 1er janvier 2023 au
+31 décembre 2023 (à comparer au revenu net catégoriel de l'année 2021).
+
+Plafond de base : 22 123 €
+Majorations :
+- 25 % par enfant à charge                                                           5 531 €
+- 30 % par enfant à charge à partir du 3ème                                          6 637 €
+- pour double activité ou pour isolement                                             8 892 €
+""";
+    content_hash "sha256:903abb1e42c3b0db11a0d76854b2a069977b9e47f5837ca817c207b20b671911";
+}
+
+source DSS_2B_2023_205 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/2B/2023/205 du 21 décembre 2023 relative à la revalorisation, au 1er janvier 2024, des plafonds de ressources d’attribution de certaines prestations familiales";
+    label en unofficial "Interministerial instruction DSS/2B/2023/205 of 21 décembre 2023 on the 1 January 2024 revalorisation of resource ceilings for certain family benefits";
+}
+
+edition DSS_2B_2023_205_PDF of DSS_2B_2023_205 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2024-01-01, @2025-01-01);
+    label fr official "DSS/2B/2023/205 (NOR FAMS2335370J) : extrait pages 72-81 du BO Santé n° 2023/24, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/2B/2023/205 (NOR FAMS2335370J): pages 72-81 extract of BO Sante no. 2023/24, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_2B_2023_205_PDF_BYTES of DSS_2B_2023_205_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20231231050117id_/https://sante.gouv.fr/fichiers/bo/2023/2023.24.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:89da3de4729c84288b1cfda79a8f3347e2d7ae25e40a39b509db5547c5422f19";
+    local_path "sources/dss-2023-205.pdf";
+}
+
+edition DSS_2B_2023_205_TEXT of DSS_2B_2023_205 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2024-01-01, @2025-01-01);
+    label fr official "DSS/2B/2023/205 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/2B/2023/205: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_2B_2023_205_TEXT_TXT of DSS_2B_2023_205_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20231231050117id_/https://sante.gouv.fr/fichiers/bo/2023/2023.24.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:a3d4e559096b8bb62b4b06db5a14058e215ae660fc8c6f0bf4c68af37f4d3731";
+    local_path "sources/dss-2023-205.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2023_205_PLAFOND_AF")
+pub fragment DSS_2B_2023_205_PLAFOND_AF in DSS_2B_2023_205_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2023-205/section/1/plafonds-allocations-familiales";
+    text fr official """Plafonds de ressources applicables pour l’attribution du montant modulé des allocations
+familiales, de la majoration pour âge et de l’allocation forfaitaire, du 1er janvier 2024 au
+31 décembre 2024 (à comparer au revenu net catégoriel de l'année 2022).
+
+                                                  Tranche 1                  Tranche 2                  Tranche 3
+  Nombre d'enfants à charge
+                                                  (en euros)                 (en euros)                 (en euros)
+               2 enfants                           ≤ 74 966                  ≤ 99 922                   > 99 922
+               3 enfants                           ≤ 81 212                  ≤ 106 168                  > 106 168
+               4 enfants                           ≤ 87 458                  ≤ 112 414                  > 112 414
+               5 enfants                           ≤ 93 704                  ≤ 118 660                  > 118 660
+
+    Par enfant supplémentaire                       + 6 246                    + 6 246                    + 6 246
+NB : la première tranche est celle dont les revenus sont inférieurs ou égaux à un plafond de base de 62 474 euros, majoré de
+6 246 euros par enfant à charge. La deuxième tranche est celle dont les revenus sont supérieurs à un plafond de base de
+62 474 euros, majoré de 6 246 euros par enfant à charge mais inférieurs ou égaux au plafond de base de 87 430 euros,
+majoré de 6 246 euros par enfant à charge. La troisième tranche est celle dont les revenus sont supérieurs au plafond de
+base de 87 430, majoré de 6 246 euros par enfant à charge.
+""";
+    content_hash "sha256:925209485aa3c0ffca194b5f197a875d741d685d28c7b4112b9d91930ac7bd7e";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2023_205_PLAFOND_CF")
+pub fragment DSS_2B_2023_205_PLAFOND_CF in DSS_2B_2023_205_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2023-205/section/2.1/plafonds-complement-familial";
+    text fr official """2.1 Plafonds de ressources applicables pour l'attribution du complément familial et du
+complément pour frais de l’allocation journalière de présence parentale, du 1er janvier 2024
+au 31 décembre 2024 (à comparer au revenu net catégoriel de l'année 2022).
+
+Plafond de base : 23 296 €.
+Majorations :
+- 25 % par enfant à charge                                                              5 824 €
+- 30 % par enfant à charge à partir du 3ème                                             6 989 €
+- pour double activité ou pour isolement                                                9 363 €
+""";
+    content_hash "sha256:6c957155cd0b9ad5b5b1445bf355802846e296893896247c26ee23ec54a367ec";
+}
+
+source DSS_2B_2024_181 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/2B/2024/181 du 20 décembre 2024 relative à la revalorisation, au 1er janvier 2025, des plafonds de ressources d’attribution de certaines prestations familiales";
+    label en unofficial "Interministerial instruction DSS/2B/2024/181 of 20 décembre 2024 on the 1 January 2025 revalorisation of resource ceilings for certain family benefits";
+}
+
+edition DSS_2B_2024_181_PDF of DSS_2B_2024_181 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2025-01-01, @2026-01-01);
+    label fr official "DSS/2B/2024/181 (NOR SAES2434195J) : extrait pages 201-210 du BO Santé n° 2024/34, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/2B/2024/181 (NOR SAES2434195J): pages 201-210 extract of BO Sante no. 2024/34, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_2B_2024_181_PDF_BYTES of DSS_2B_2024_181_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20250117220816id_/https://sante.gouv.fr/fichiers/bo/2024/2024.34.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:123c1510ed3992f7edc532765109e1beda68714c7e4a3aae80b711490829dc13";
+    local_path "sources/dss-2024-181.pdf";
+}
+
+edition DSS_2B_2024_181_TEXT of DSS_2B_2024_181 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2025-01-01, @2026-01-01);
+    label fr official "DSS/2B/2024/181 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/2B/2024/181: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_2B_2024_181_TEXT_TXT of DSS_2B_2024_181_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20250117220816id_/https://sante.gouv.fr/fichiers/bo/2024/2024.34.sante.pdf";
+    retrieved_at @2026-10-06T00:00:00Z;
+    content_hash "sha256:4b04ba3dcffcde306a3ad98245b2466a8c7fa7d06bd39490178a5300d5812f73";
+    local_path "sources/dss-2024-181.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2024_181_PLAFOND_AF")
+pub fragment DSS_2B_2024_181_PLAFOND_AF in DSS_2B_2024_181_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2024-181/section/1/plafonds-allocations-familiales";
+    text fr official """Plafonds de ressources applicables pour l’attribution du montant modulé des allocations
+familiales, de la majoration pour âge et de l’allocation forfaitaire, du 1er janvier 2025 au
+31 décembre 2025 (à comparer au revenu net catégoriel de l'année 2023).
+
+                                                Tranche 1                 Tranche 2                 Tranche 3
+ Nombre d'enfants à charge
+                                                (en euros)                (en euros)                (en euros)
+              2 enfants                          ≤ 78 565                  ≤ 104 719                 > 104 719
+              3 enfants                          ≤ 85 111                  ≤ 111 265                 > 111 265
+              4 enfants                          ≤ 91 657                  ≤ 117 811                 > 117 811
+              5 enfants                          ≤ 98 203                  ≤ 124 357                 > 124 357
+
+   Par enfant supplémentaire                      + 6 546                   + 6 546                   + 6 546
+NB : la première tranche est celle dont les revenus sont inférieurs ou égaux à un plafond de base de 65 473 euros majoré
+de 6 546 euros par enfant à charge. La deuxième tranche est celle dont les revenus sont supérieurs à un plafond de base
+de 65 473 euros majoré de 6 546 euros par enfant à charge, mais inférieurs ou égaux au plafond de base de
+91 627 euros majoré de 6 546 euros par enfant à charge. La troisième tranche est celle dont les revenus sont supérieurs
+au plafond de base de 91 627 euros majoré de 6 546 euros par enfant à charge.
+""";
+    content_hash "sha256:77282ad8a779131089538b091996077cdf60d7b45ef369dc81e834c17122df75";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2024_181_PLAFOND_CF")
+pub fragment DSS_2B_2024_181_PLAFOND_CF in DSS_2B_2024_181_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2024-181/section/2.1/plafonds-complement-familial";
+    text fr official """2.1 Plafonds de ressources applicables pour l'attribution du complément familial et du
+complément pour frais de l’allocation journalière de présence parentale, du 1er janvier 2025
+au 31 décembre 2025 (à comparer au revenu net catégoriel de l'année 2023)
+
+Plafond de base : 24 414 €
+
+Majorations :
+
+- 25 % par enfant à charge                                                              6 104 €
+- 30 % par enfant à charge à partir du 3ème                                             7 324 €
+- pour double activité ou pour isolement                                                9 812 €
+""";
+    content_hash "sha256:76f1a277cf351f6a73390ec3703705e75ee48c8cf784ac91c2463bc3cb682ddd";
+}
+
+// DSS HISTORY PINS (session 1, 2026-10-08): April BMAF instructions 2015-2021
+// and January ceiling instructions 2015, 2017-2021. Channel 3 (whole
+// single-article PDFs of the former sante.gouv.fr site, Internet Archive
+// id_ snapshots) and channel 2 (page slices of full bulletins), both by
+// tools/fetch_dss_bo.py. Fragments are byte-verbatim line slices of the .txt.
+
+source DSS_SD2B_2015_92 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Circulaire interministérielle n° DSS/SD2B/2015/92 du 31 mars 2015 relative à la revalorisation des prestations familiales servies en métropole, dans les départements d’outre-mer et à Mayotte au 1er avril 2015";
+    label en unofficial "Interministerial circular DSS/SD2B/2015/92 of 31 mars 2015 on the 1 April 2015 revalorisation of family benefits";
+}
+
+edition DSS_SD2B_2015_92_PDF of DSS_SD2B_2015_92 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2015-04-01, infinity);
+    label fr official "DSS/SD2B/2015/92 (NOR AFSS1507843C) : instruction complète du BO Santé n° 2015/4 du 15 mai 2015, PDF d’article de l’ancien site sante.gouv.fr, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2015/92 (NOR AFSS1507843C): complete instruction from BO Sante no. 2015/4 of 15 mai 2015, single-article PDF of the former sante.gouv.fr site, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2015_92_PDF_BYTES of DSS_SD2B_2015_92_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20240702050209id_/https://sante.gouv.fr/fichiers/bo/2015/15-04/ste_20150004_0000_0085.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:e790ce3da5e3d2353c5fd4af94e6ecf12c024dc60c0f9852383b78d529ae6df1";
+    local_path "sources/dss-2015-92.pdf";
+}
+
+edition DSS_SD2B_2015_92_TEXT of DSS_SD2B_2015_92 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2015-04-01, infinity);
+    label fr official "DSS/SD2B/2015/92 : texte de mise en page extrait du PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2015/92: layout text extracted from the PDF (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2015_92_TEXT_TXT of DSS_SD2B_2015_92_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20240702050209id_/https://sante.gouv.fr/fichiers/bo/2015/15-04/ste_20150004_0000_0085.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:ff0d384b6d20b4e2626a9d39587db3d309f27eae900de48bb2f601c639b47db9";
+    local_path "sources/dss-2015-92.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2015_92_COEFF")
+pub fragment DSS_SD2B_2015_92_COEFF in DSS_SD2B_2015_92_TEXT {
+    kind guidance;
+    locator "instruction/dss-sd2b-2015-92/coefficient";
+    text fr official """   Or, compte tenu de l’inflation constatée pour 2014 et de l’inflation prévisionnelle pour 2015, le
+coefficent théorique qui devrait s’appliquer au 1er avril 2015 serait négatif.
+   Afin de ne pas pénaliser les familles allocataires par une baisse du montant des prestations
+familiales, le montant de la base mensuelle de calcul des allocations familiales sera maintenu à
+406,21 € à compter du 1er avril 2015. Le montant des prestations familiales calculées en fonction de
+cette base reste donc inchangé.
+""";
+    content_hash "sha256:309b57086f9ef84ed14583682f6cef8b6747b46b9acbbdf3c41226d5cfbbd6f8";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2015_92_BMAF")
+pub fragment DSS_SD2B_2015_92_BMAF in DSS_SD2B_2015_92_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2015-92/annexe/table/BMAF";
+    text fr official """  Base mensuelle de calcul des allocations familiales à compter du 1er avril 2015 : 406,21 €.
+""";
+    content_hash "sha256:f03d288156956eb05fdf384de46ed03f450b1c637ecb9fdd4c1fbc1452417e87";
+}
+
+source DSS_SD2B_2016_77 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Circulaire interministérielle n° DSS/SD2B/2016/77 du 15 mars 2016 relative à la revalorisation des prestations familiales servies en métropole au 1er avril 2016";
+    label en unofficial "Interministerial circular DSS/SD2B/2016/77 of 15 mars 2016 on the 1 April 2016 revalorisation of family benefits";
+}
+
+edition DSS_SD2B_2016_77_PDF of DSS_SD2B_2016_77 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2016-04-01, infinity);
+    label fr official "DSS/SD2B/2016/77 (NOR AFSS1607684C) : instruction complète du BO Santé n° 2016/4 du 15 mai 2016, PDF d’article de l’ancien site sante.gouv.fr, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2016/77 (NOR AFSS1607684C): complete instruction from BO Sante no. 2016/4 of 15 mai 2016, single-article PDF of the former sante.gouv.fr site, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2016_77_PDF_BYTES of DSS_SD2B_2016_77_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20240706135050id_/https://sante.gouv.fr/fichiers/bo/2016/16-04/ste_20160004_0000_0132.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:194dae53ee3038186ed2561d54fa4a907effd1324a5f692404382edfca927a05";
+    local_path "sources/dss-2016-77.pdf";
+}
+
+edition DSS_SD2B_2016_77_TEXT of DSS_SD2B_2016_77 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2016-04-01, infinity);
+    label fr official "DSS/SD2B/2016/77 : texte de mise en page extrait du PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2016/77: layout text extracted from the PDF (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2016_77_TEXT_TXT of DSS_SD2B_2016_77_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20240706135050id_/https://sante.gouv.fr/fichiers/bo/2016/16-04/ste_20160004_0000_0132.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:0152d7623b6a3924a9d0f38fe0c4f77ef33d2823b2f1a6074afc559f72e2e5e4";
+    local_path "sources/dss-2016-77.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2016_77_COEFF")
+pub fragment DSS_SD2B_2016_77_COEFF in DSS_SD2B_2016_77_TEXT {
+    kind guidance;
+    locator "instruction/dss-sd2b-2016-77/coefficient";
+    text fr official """   Au 1er avril 2016, le taux de revalorisation de la BMAF est ainsi fixé à 0,1 %. Le montant de cette
+base mensuelle, en pourcentage duquel sont fixées les prestations familiales, est donc porté de
+406,21 € à 406,62 € au 1er avril 2016.
+""";
+    content_hash "sha256:325b057800a7f7495255618915c5a152cb0d386f3197a1b1fc283741594eda06";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2016_77_BMAF")
+pub fragment DSS_SD2B_2016_77_BMAF in DSS_SD2B_2016_77_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2016-77/annexe/table/BMAF";
+    text fr official """  Base mensuelle de calcul des allocations familiales à compter du 1er avril 2016 : 406,62 €.
+""";
+    content_hash "sha256:04270d55f262114578ffc155bb7ab430c717f25f4199482665e1e0cad07c542a";
+}
+
+source DSS_SD2B_2017_97 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Circulaire interministérielle n° DSS/SD2B/2017/97 du 21 mars 2017 relative à la revalorisation des prestations familiales servies en métropole au 1er avril 2017";
+    label en unofficial "Interministerial circular DSS/SD2B/2017/97 of 21 mars 2017 on the 1 April 2017 revalorisation of family benefits";
+}
+
+edition DSS_SD2B_2017_97_PDF of DSS_SD2B_2017_97 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2017-04-01, infinity);
+    label fr official "DSS/SD2B/2017/97 (NOR AFSS1709166C) : extrait pages 458-462 du BO Santé n° 2017/4, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2017/97 (NOR AFSS1709166C): pages 458-462 extract of BO Sante no. 2017/4, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2017_97_PDF_BYTES of DSS_SD2B_2017_97_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20240327030904id_/https://sante.gouv.fr/fichiers/bo/2017/17-04/ste_20170004_0000_p000.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:98357d59d70ed3d9a7d617f5d60905ee7684062b798a5745b38d1854e21d1709";
+    local_path "sources/dss-2017-97.pdf";
+}
+
+edition DSS_SD2B_2017_97_TEXT of DSS_SD2B_2017_97 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2017-04-01, infinity);
+    label fr official "DSS/SD2B/2017/97 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2017/97: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2017_97_TEXT_TXT of DSS_SD2B_2017_97_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20240327030904id_/https://sante.gouv.fr/fichiers/bo/2017/17-04/ste_20170004_0000_p000.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:37193b7938f5be2575111e82de5ce36af4ef7604a28868e7775064913b517ea7";
+    local_path "sources/dss-2017-97.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2017_97_COEFF")
+pub fragment DSS_SD2B_2017_97_COEFF in DSS_SD2B_2017_97_TEXT {
+    kind guidance;
+    locator "instruction/dss-sd2b-2017-97/coefficient";
+    text fr official """  Au 1er avril 2017, le coefficient de revalorisation de la BMAF est ainsi fixé à 1,003, soit un taux de
+revalorisation de 0,3 %. Le montant de cette base mensuelle, en pourcentage duquel sont fixées les
+prestations familiales, est donc porté de 406,62 € au 1er avril 2016 à 407,84 € au 1er avril 2017.
+""";
+    content_hash "sha256:54583be0a5c5d95e0e8b89ddcf094bacb3d93dfc822b826e028c6a8d04b6acc7";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2017_97_BMAF")
+pub fragment DSS_SD2B_2017_97_BMAF in DSS_SD2B_2017_97_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2017-97/annexe/table/BMAF";
+    text fr official """         Base mensuelle de calcul des allocations familiales à compter du 1er avril 2017 : 407,84 €
+""";
+    content_hash "sha256:8a104a7dcb73b522362589bc8eb9459540b95fc165883554bd02ab80bbc29de8";
+}
+
+source DSS_SD2B_2019_65 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/SD2B/2019/65 du 25 mars 2019 relative à la revalorisation au 1er avril 2019 des prestations familiales servies en métropole";
+    label en unofficial "Interministerial instruction DSS/SD2B/2019/65 of 25 mars 2019 on the 1 April 2019 revalorisation of family benefits";
+}
+
+edition DSS_SD2B_2019_65_PDF of DSS_SD2B_2019_65 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2019-04-01, infinity);
+    label fr official "DSS/SD2B/2019/65 (NOR SSAS1908955J) : extrait pages 355-361 du BO Santé n° 2019/4, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2019/65 (NOR SSAS1908955J): pages 355-361 extract of BO Sante no. 2019/4, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2019_65_PDF_BYTES of DSS_SD2B_2019_65_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20200306193845id_/https://solidarites-sante.gouv.fr/fichiers/bo/2019/19-04/ste_20190004_0000_p000.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:534314a268134154066ac567305165b31afbb598d6b4edc7f268ea4a36ff5362";
+    local_path "sources/dss-2019-65.pdf";
+}
+
+edition DSS_SD2B_2019_65_TEXT of DSS_SD2B_2019_65 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2019-04-01, infinity);
+    label fr official "DSS/SD2B/2019/65 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2019/65: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2019_65_TEXT_TXT of DSS_SD2B_2019_65_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20200306193845id_/https://solidarites-sante.gouv.fr/fichiers/bo/2019/19-04/ste_20190004_0000_p000.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:88920600cc9deeb9bd09e9b6093e27c6f5c4bf8ee8ddb1e4b2e0f552f136ba28";
+    local_path "sources/dss-2019-65.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2019_65_COEFF")
+pub fragment DSS_SD2B_2019_65_COEFF in DSS_SD2B_2019_65_TEXT {
+    kind guidance;
+    locator "instruction/dss-sd2b-2019-65/coefficient";
+    text fr official """Au titre de l’année 2019, l’article 68 de la loi du 22 décembre 2018 de financement de la sécurité
+sociale a prévu, par dérogation aux dispositions de l’article L. 161-25, une revalorisation de 0,3 % du
+montant des prestations relevant de cet article.
+  Le montant précité de la base mensuelle de calcul des allocations familiales (BMAF), en pourcen-
+tage duquel sont fixés les montants des prestations familiales, est ainsi porté de 411,92 € à 413,16 €
+au 1er avril 2019.
+""";
+    content_hash "sha256:ec188e9862b0cf0017365f8ddc521f39675b6f5d2d59f1da076771f1956b497e";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2019_65_BMAF")
+pub fragment DSS_SD2B_2019_65_BMAF in DSS_SD2B_2019_65_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2019-65/annexe/table/BMAF";
+    text fr official """ Base mensuelle de calcul des allocations familiales à compter du 1er avril 2019 : 413,16 €.
+""";
+    content_hash "sha256:bbea14edb0ec501fdbaeffcf72ee93b2e10bb082e644a22907dcf1c9fdbb13b3";
+}
+
+source DSS_SD2B_2020_33 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/SD2B/2020/33 du 18 février 2020 relative à la revalorisation au 1er avril 2020 des prestations familiales servies en métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et dans le département de Mayotte";
+    label en unofficial "Interministerial instruction DSS/SD2B/2020/33 of 18 février 2020 on the 1 April 2020 revalorisation of family benefits";
+}
+
+edition DSS_SD2B_2020_33_PDF of DSS_SD2B_2020_33 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2020-04-01, infinity);
+    label fr official "DSS/SD2B/2020/33 (NOR SSAS2005144J) : instruction complète du BO Santé n° 2020/2 du 15 mars 2020, PDF d’article de l’ancien site sante.gouv.fr, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2020/33 (NOR SSAS2005144J): complete instruction from BO Sante no. 2020/2 of 15 mars 2020, single-article PDF of the former sante.gouv.fr site, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2020_33_PDF_BYTES of DSS_SD2B_2020_33_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20230119222325id_/https://sante.gouv.fr/fichiers/bo/2020/20-02/ste_20200002_0000_0046.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:33f04ed80bce08012771eee9bd8e6d91393ad20520a16d3605b63c79045588d8";
+    local_path "sources/dss-2020-33.pdf";
+}
+
+edition DSS_SD2B_2020_33_TEXT of DSS_SD2B_2020_33 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2020-04-01, infinity);
+    label fr official "DSS/SD2B/2020/33 : texte de mise en page extrait du PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2020/33: layout text extracted from the PDF (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2020_33_TEXT_TXT of DSS_SD2B_2020_33_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20230119222325id_/https://sante.gouv.fr/fichiers/bo/2020/20-02/ste_20200002_0000_0046.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:ecca137fe3c55979447244f34eb105c5af624fba99b449a42e1879f5b99588a4";
+    local_path "sources/dss-2020-33.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2020_33_COEFF")
+pub fragment DSS_SD2B_2020_33_COEFF in DSS_SD2B_2020_33_TEXT {
+    kind guidance;
+    locator "instruction/dss-sd2b-2020-33/coefficient";
+    text fr official """Au titre de l’année 2020, l’article 81 de la loi du 24 décembre 2019 de financement de la sécurité
+sociale a prévu, par dérogation aux dispositions de l’article L. 161-25, une revalorisation de 0,3 %
+du montant des prestations relevant de cet article.
+   Le montant précité de la base mensuelle de calcul des allocations familiales (BMAF), en pourcen-
+tage duquel sont fixés les montants des prestations familiales, est ainsi porté de 413,16 € à 414,4 €
+au 1er avril 2020.
+""";
+    content_hash "sha256:30203bc31e0b46ec177a182e45334c5e037595a6e4423f527463f7f51f381ded";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2020_33_BMAF")
+pub fragment DSS_SD2B_2020_33_BMAF in DSS_SD2B_2020_33_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2020-33/annexe/table/BMAF";
+    text fr official """  Base mensuelle de calcul des allocations familiales à compter du 1er avril 2020 : 414,4 €.
+""";
+    content_hash "sha256:61058b34145b0b8ed55f126f7bedbbb4a5ccbf5a68fca99f20ce95044051d753";
+}
+
+source DSS_2B_2021_65 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/2B/2021/65 du 19 mars 2021 relative à la revalorisation au 1er avril 2021 des prestations familiales servies en métropole, en Guadeloupe, en Guyane, en Martinique, à la Réunion, à Saint-Barthélemy, à Saint-Martin et dans le département de Mayotte";
+    label en unofficial "Interministerial instruction DSS/2B/2021/65 of 19 mars 2021 on the 1 April 2021 revalorisation of family benefits";
+}
+
+edition DSS_2B_2021_65_PDF of DSS_2B_2021_65 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2021-04-01, infinity);
+    label fr official "DSS/2B/2021/65 (NOR SSAS2108988J) : extrait pages 140-150 du BO Santé n° 2021/5, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/2B/2021/65 (NOR SSAS2108988J): pages 140-150 extract of BO Sante no. 2021/5, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_2B_2021_65_PDF_BYTES of DSS_2B_2021_65_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20240806005418id_/https://sante.gouv.fr/fichiers/bo/2021/2021.5.sante.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:ba3e644635bfe38e74fe1ad42196154c0bb2669631d338439e5f78a198874a42";
+    local_path "sources/dss-2021-65.pdf";
+}
+
+edition DSS_2B_2021_65_TEXT of DSS_2B_2021_65 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2021-04-01, infinity);
+    label fr official "DSS/2B/2021/65 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/2B/2021/65: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_2B_2021_65_TEXT_TXT of DSS_2B_2021_65_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20240806005418id_/https://sante.gouv.fr/fichiers/bo/2021/2021.5.sante.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:fa0697db8f1bbb09fa52f66d8e4f01bc123e4fd0fc724e1fe702c4742621e49a";
+    local_path "sources/dss-2021-65.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2021_65_COEFF")
+pub fragment DSS_2B_2021_65_COEFF in DSS_2B_2021_65_TEXT {
+    kind guidance;
+    locator "instruction/dss-2b-2021-65/coefficient";
+    text fr official """        Au 1er avril 2021, le coefficient de revalorisation de la BMAF est ainsi fixé à 1,001 soit un taux
+de revalorisation de la BMAF de 0,1 %. Le montant de cette base mensuelle, en pourcentage duquel
+sont fixées les prestations familiales, est donc porté de 414,4 € au 1er avril 2020 à 414,81 € au 1er
+avril 2021.
+""";
+    content_hash "sha256:8b1c68735fb331b322a0365ec0ea5c622c832ea099918e1277960e8dd82deac2";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_2021_65_BMAF")
+pub fragment DSS_2B_2021_65_BMAF in DSS_2B_2021_65_TEXT {
+    kind table;
+    locator "instruction/dss-2b-2021-65/annexe/table/BMAF";
+    text fr official """Base mensuelle de calcul des allocations familiales à compter du 1er avril 2021 : 414,81 €
+""";
+    content_hash "sha256:df47bdeb1acd82751db5b06d63491f2677eeaea0880f0d73fd9f36a1a0f1f291";
+}
+
+source DSS_SD2B_2014_345 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Circulaire interministérielle n° DSS/SD2B/2014/345 du 16 décembre 2014 relative à la revalorisation au 1er janvier 2015 des plafonds de ressources d’attribution de certaines prestations familiales servies en métropole";
+    label en unofficial "Interministerial circular DSS/SD2B/2014/345 of 16 décembre 2014 on the 1 January 2015 revalorisation of resource ceilings for certain family benefits";
+}
+
+edition DSS_SD2B_2014_345_PDF of DSS_SD2B_2014_345 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2015-01-01, @2016-01-01);
+    label fr official "DSS/SD2B/2014/345 (NOR AFSS1430005C) : instruction complète du BO Santé n° 2015/1 du 15 février 2015, PDF d’article de l’ancien site sante.gouv.fr, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2014/345 (NOR AFSS1430005C): complete instruction from BO Sante no. 2015/1 of 15 février 2015, single-article PDF of the former sante.gouv.fr site, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2014_345_PDF_BYTES of DSS_SD2B_2014_345_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20230420072139id_/https://sante.gouv.fr/fichiers/bo/2015/15-01/ste_20150001_0000_0061.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:ee1b2da90f055f47e522b9bd753c879857542f4a7c04d83b61318e5fc4bf8b7a";
+    local_path "sources/dss-2014-345.pdf";
+}
+
+edition DSS_SD2B_2014_345_TEXT of DSS_SD2B_2014_345 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2015-01-01, @2016-01-01);
+    label fr official "DSS/SD2B/2014/345 : texte de mise en page extrait du PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2014/345: layout text extracted from the PDF (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2014_345_TEXT_TXT of DSS_SD2B_2014_345_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20230420072139id_/https://sante.gouv.fr/fichiers/bo/2015/15-01/ste_20150001_0000_0061.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:eded869ecb02b74f592bb04dca801f430bef9cb29834ed4ea0fde242f560ee45";
+    local_path "sources/dss-2014-345.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2014_345_REVAL")
+pub fragment DSS_SD2B_2014_345_REVAL in DSS_SD2B_2014_345_TEXT {
+    kind guidance;
+    locator "instruction/dss-sd2b-2014-345/revalorisation";
+    text fr official """   Ces différents plafonds et montants, pour la période du 1er janvier 2015 au 31 décembre 2015,
+sont revalorisés de 0,7 % correspondant à l’évolution en moyenne annuelle des prix hors tabac de
+l’année 2013.
+""";
+    content_hash "sha256:f5753fb253d74cbeca8e0b7f7a1118c172839bd616ded587a389d0b3d53b2821";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2014_345_PLAFOND_CF")
+pub fragment DSS_SD2B_2014_345_PLAFOND_CF in DSS_SD2B_2014_345_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2014-345/section/I.1/plafonds-complement-familial";
+    text fr official """1. Plafonds de ressources applicables pour l’attribution du complément familial, du 1er janvier 2015
+  au 31 décembre 2015, et du complément pour frais de l’allocation journalière de présence
+  parentale (à comparer au revenu net catégoriel de l’année 2013)
+  Base : 20 864 €
+  Majorations :
+  25 % par enfant à charge 5 216 €
+  30 % par enfant à charge à partir du 3e                     6 259 €
+  pour double activité ou pour isolement 8 386 €
+""";
+    content_hash "sha256:97bb107380b21ba7da1da289a550fdab323220a50e6ed0744c5fdf50e8761785";
+}
+
+source DSS_SD2B_2016_396 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Circulaire interministérielle n° DSS/SD2B/2016/396 du 21 décembre 2016 relative aux montants des plafonds de ressources d’attribution de certaines prestations familiales applicables en métropole à compter du 1er janvier 2017";
+    label en unofficial "Interministerial circular DSS/SD2B/2016/396 of 21 décembre 2016 on the 1 January 2017 amounts of resource ceilings for certain family benefits";
+}
+
+edition DSS_SD2B_2016_396_PDF of DSS_SD2B_2016_396 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2017-01-01, @2018-01-01);
+    label fr official "DSS/SD2B/2016/396 (NOR AFSS1638099C) : instruction complète du BO Santé n° 2017/1 du 15 février 2017, PDF d’article de l’ancien site sante.gouv.fr, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2016/396 (NOR AFSS1638099C): complete instruction from BO Sante no. 2017/1 of 15 février 2017, single-article PDF of the former sante.gouv.fr site, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2016_396_PDF_BYTES of DSS_SD2B_2016_396_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20240630052908id_/https://sante.gouv.fr/fichiers/bo/2017/17-01/ste_20170001_0000_0088.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:5527924f84604b0cfe79e8e53e2d99f8cb4f76ecb1e0e8b14e4836b5cfde0aad";
+    local_path "sources/dss-2016-396.pdf";
+}
+
+edition DSS_SD2B_2016_396_TEXT of DSS_SD2B_2016_396 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2017-01-01, @2018-01-01);
+    label fr official "DSS/SD2B/2016/396 : texte de mise en page extrait du PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2016/396: layout text extracted from the PDF (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2016_396_TEXT_TXT of DSS_SD2B_2016_396_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20240630052908id_/https://sante.gouv.fr/fichiers/bo/2017/17-01/ste_20170001_0000_0088.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:5ada35c7fcc273bf65111bafde50e4cabe06557dc3b144b1758c07599e412d8e";
+    local_path "sources/dss-2016-396.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2016_396_REVAL")
+pub fragment DSS_SD2B_2016_396_REVAL in DSS_SD2B_2016_396_TEXT {
+    kind guidance;
+    locator "instruction/dss-sd2b-2016-396/reconduction";
+    text fr official """  Or compte tenu de la stabilité des prix en 2015, les différents plafonds et montants, pour la
+période du 1er janvier 2016 au 31 décembre 2016, sont reconduits à l’identique pour la période
+du 1er janvier 2017 au 31 décembre 2017.
+""";
+    content_hash "sha256:08e071af898da91ec490c1f1cdc650a90c44883538d49fbb3185ee74784bb130";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2016_396_PLAFOND_AF")
+pub fragment DSS_SD2B_2016_396_PLAFOND_AF in DSS_SD2B_2016_396_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2016-396/section/I/plafonds-allocations-familiales";
+    text fr official """  Plafonds de ressources applicables pour l’attribution du montant modulé des allocations familiales,
+de la majoration pour âge et de l’allocation forfaitaire, du 1er janvier 2017 au 31 décembre 2017 (à
+comparer au revenu net catégoriel de l’année 2015).
+
+    NOMBRE D’ENFANTS À CHARGE                             TRANCHE 1                       TRANCHE 2                      TRANCHE 3
+                    2 enfants                                 ≤ 67 408                     ≤ 89 847                           > 89 847
+                    3 enfants                                 ≤ 73 025                     ≤ 95 464                           > 95 464
+                    4 enfants                                 ≤ 78 642                     ≤ 101 081                         > 101 081
+                    5 enfants                                 ≤ 84 259                     ≤ 106 698                         > 106 698
+            Par enfant supplémentaire                         + 5 617                        + 5 617                           + 5 617
+Nota bene : La première tranche est celle dont les revenus sont inférieurs ou égaux à un plafond de base de 56 174 € majoré de 5 617 € par
+enfant à charge. La deuxième tranche est celle dont les revenus sont supérieurs à un plafond de base de 56 174 € majoré de 5 617 € par enfant
+à charge mais inférieurs ou égaux au plafond de base de 78 613 € majoré de 5 617 € par enfant à charge. La troisième tranche est celle dont les
+revenus sont supérieurs au plafond de base de 78 613 € majoré de 5 617 € par enfant à charge.
+""";
+    content_hash "sha256:9aa3a93e3ce9807fa36f593ab4cae97b5bab50c6b931135ed1bfd51f442f4d5a";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2016_396_PLAFOND_CF")
+pub fragment DSS_SD2B_2016_396_PLAFOND_CF in DSS_SD2B_2016_396_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2016-396/section/II.1/plafonds-complement-familial";
+    text fr official """1. Plafonds de ressources applicables pour l’attribution du complément familial, du 1er janvier 2017
+  au 31 décembre 2017 et du complément pour frais de l’allocation journalière de présence parentale
+  (à comparer au revenu net catégoriel de l’année 2015).
+  Plafond de base : 20 947 €
+  Majorations :
+    25 % par enfant à charge :                5 237 €
+    30 % par enfant à charge à partir du 3e : 6 284 €
+    pour double activité ou pour isolement : 8 420 €
+""";
+    content_hash "sha256:2955c94f32a0b7b60fff656ee438afdbc9759d1fe3b1c88b642948e8ea806073";
+}
+
+source DSS_SD2B_2017_352 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Circulaire interministérielle n° DSS/SD2B/2017/352 du 22 décembre 2017 relative à la revalorisation au 1er janvier 2018 des plafonds de ressources d’attribution de certaines prestations familiales servies en métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Mayotte";
+    label en unofficial "Interministerial circular DSS/SD2B/2017/352 of 22 décembre 2017 on the 1 January 2018 revalorisation of resource ceilings for certain family benefits";
+}
+
+edition DSS_SD2B_2017_352_PDF of DSS_SD2B_2017_352 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2018-01-01, @2019-01-01);
+    label fr official "DSS/SD2B/2017/352 (NOR SSAS1736497C) : extrait pages 692-698 du BO Santé n° 2018/1, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2017/352 (NOR SSAS1736497C): pages 692-698 extract of BO Sante no. 2018/1, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2017_352_PDF_BYTES of DSS_SD2B_2017_352_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20240403102916id_/https://sante.gouv.fr/fichiers/bo/2018/18-01/ste_20180001_0000_p000.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:20638e451ad0d5f58dd36b33254025b07bc664183bd76384875dcd60dc21ee6b";
+    local_path "sources/dss-2017-352.pdf";
+}
+
+edition DSS_SD2B_2017_352_TEXT of DSS_SD2B_2017_352 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2018-01-01, @2019-01-01);
+    label fr official "DSS/SD2B/2017/352 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2017/352: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2017_352_TEXT_TXT of DSS_SD2B_2017_352_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20240403102916id_/https://sante.gouv.fr/fichiers/bo/2018/18-01/ste_20180001_0000_p000.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:b94603492e6f287e87a8e68c981683a3f0ca000955b855ebe1aa1eee4ed0b1ee";
+    local_path "sources/dss-2017-352.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2017_352_REVAL")
+pub fragment DSS_SD2B_2017_352_REVAL in DSS_SD2B_2017_352_TEXT {
+    kind guidance;
+    locator "instruction/dss-sd2b-2017-352/revalorisation";
+    text fr official """   Ces différents plafonds et montants, pour la période du 1er janvier 2018 au 31 décembre 2018,
+sont revalorisés de 0,2 % correspondant à l’évolution en moyenne annuelle des prix hors tabac de
+l’année 2016.
+""";
+    content_hash "sha256:6a0cd3c467a10449260242f4296c1d470e00aec43075304d61a13c63b10960f2";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2017_352_PLAFOND_AF")
+pub fragment DSS_SD2B_2017_352_PLAFOND_AF in DSS_SD2B_2017_352_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2017-352/section/1/plafonds-allocations-familiales";
+    text fr official """  Plafonds de ressources applicables pour l’attribution du montant modulé des allocations familiales,
+de la majoration pour âge et de l’allocation forfaitaire, du 1er janvier 2018 au 31 décembre 2018
+(à comparer au revenu net catégoriel de l’année 2016).
+
+                                                           TRANCHE 1                      TRANCHE 2                         TRANCHE 3
+    NOMBRE D’ENFANTS À CHARGE                               (en euros)                     (en euros)                        (en euros)
+                    2 enfants                                 ≤ 67 542                        ≤ 90 026                        > 90 026
+                    3 enfants                                 ≤ 73 170                        ≤ 95 654                        > 95 654
+                    4 enfants                                 ≤ 78 798                       ≤ 101 282                        > 101 282
+                    5 enfants                                 ≤ 84 426                       ≤ 106 910                        > 106 910
+            Par enfant supplémentaire                         + 5 628                         + 5 628                          + 5 628
+ Nota bene : la première tranche est celle dont les revenus sont inférieurs ou égaux à un plafond de base de 56 286 € majoré de 5 628 € par
+ enfant à charge. La deuxième tranche est celle dont les revenus sont supérieurs à un plafond de base de 56 286 € majoré de 5 628 € par enfant
+ à charge mais inférieurs ou égaux au plafond de base de 78 770 € majoré de 5 628 € par enfant à charge. La troisième tranche est celle dont les
+ revenus sont supérieurs au plafond de base de 78 770 € majoré de 5 628 € par enfant à charge.
+""";
+    content_hash "sha256:94794b8e9b4b5d6e03490790ffc962fff3907357da9fb69cce0a64b91d0fb12d";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2017_352_PLAFOND_CF")
+pub fragment DSS_SD2B_2017_352_PLAFOND_CF in DSS_SD2B_2017_352_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2017-352/section/2.1/plafonds-complement-familial";
+    text fr official """2.1. Plafonds de ressources applicables pour l’attribution du complément familial et du complément
+  pour frais de l’allocation journalière de présence parentale, du 1er janvier 2018 au 31 décembre 2018
+  (à comparer au revenu net catégoriel de l’année 2016)
+  Plafond de base : 20 989 €.
+  Majorations :
+  25 % par enfant à charge			                  5 247 € ;
+  30 % par enfant à charge à partir du 3e 6 297 € ;
+  pour double activité ou pour isolement 8 437 €.
+""";
+    content_hash "sha256:72bf68c5aeee22a0ab4c0bc3a2a81a206ad65355605d1f8e0e5a57cca7074c58";
+}
+
+source DSS_SD2B_2018_279 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/SD2B/2018/279 du 17 décembre 2018 relative à la revalorisation au 1er janvier 2019 des plafonds de ressources d’attribution de certaines prestations familiales servies en métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Mayotte";
+    label en unofficial "Interministerial instruction DSS/SD2B/2018/279 of 17 décembre 2018 on the 1 January 2019 revalorisation of resource ceilings for certain family benefits";
+}
+
+edition DSS_SD2B_2018_279_PDF of DSS_SD2B_2018_279 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2019-01-01, @2020-01-01);
+    label fr official "DSS/SD2B/2018/279 (NOR SSAS1834542J) : extrait pages 460-466 du BO Santé n° 2019/1, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2018/279 (NOR SSAS1834542J): pages 460-466 extract of BO Sante no. 2019/1, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2018_279_PDF_BYTES of DSS_SD2B_2018_279_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20230516134052id_/https://sante.gouv.fr/fichiers/bo/2019/19-01/ste_20190001_0000_p000.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:1ee88059893865636b2e951fe4b914b257bc9573d23d5bae5d74cd7393c8192d";
+    local_path "sources/dss-2018-279.pdf";
+}
+
+edition DSS_SD2B_2018_279_TEXT of DSS_SD2B_2018_279 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2019-01-01, @2020-01-01);
+    label fr official "DSS/SD2B/2018/279 : texte de mise en page extrait de l’extrait PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2018/279: layout text extracted from the PDF extract (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2018_279_TEXT_TXT of DSS_SD2B_2018_279_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20230516134052id_/https://sante.gouv.fr/fichiers/bo/2019/19-01/ste_20190001_0000_p000.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:ba9e275944845442bc67c771cd475d11282d5422b63738e4063a1d628eaa70f1";
+    local_path "sources/dss-2018-279.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2018_279_REVAL")
+pub fragment DSS_SD2B_2018_279_REVAL in DSS_SD2B_2018_279_TEXT {
+    kind guidance;
+    locator "instruction/dss-sd2b-2018-279/revalorisation";
+    text fr official """   Ces différents plafonds et montants, pour la période du 1er janvier 2019 au 31 décembre 2019,
+sont revalorisés de 1,0 % correspondant à l’évolution en moyenne annuelle des prix hors tabac de
+l’année 2017.
+""";
+    content_hash "sha256:875a276d9aff8cc120a69a4a56600274b2aa2195ea4d0e30a949f76cdbe6c326";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2018_279_PLAFOND_AF")
+pub fragment DSS_SD2B_2018_279_PLAFOND_AF in DSS_SD2B_2018_279_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2018-279/section/1/plafonds-allocations-familiales";
+    text fr official """  Plafonds de ressources applicables pour l’attribution du montant modulé des allocations familiales,
+de la majoration pour âge et de l’allocation forfaitaire, du 1er janvier 2019 au 31 décembre 2019
+(à comparer au revenu net catégoriel de l’année 2017).
+                                                        TRANCHE 1                       TRANCHE 2                        TRANCHE 3
+   NOMBRE D’ENFANTS À CHARGE                             (en euros)                      (en euros)                       (en euros)
+
+                  2 enfants                                ≤ 68 217                        ≤ 90 926                          > 90 926
+                  3 enfants                                ≤ 73 901                        ≤ 96 610                          > 96 610
+                  4 enfants                                ≤ 79 585                        ≤ 102 294                         > 102 294
+                  5 enfants                                ≤ 85 269                        ≤ 107 978                         > 107 978
+
+          Par enfant supplémentaire                         + 5 684                         + 5 684                           + 5 684
+Nota bene : la première tranche est celle dont les revenus sont inférieurs ou égaux à un plafond de base de 56 849 € majoré de 5 684 € par
+enfant à charge. La deuxième tranche est celle dont les revenus sont supérieurs à un plafond de base de 56 849 € majoré de 5 684 € par enfant
+à charge mais inférieurs ou égaux au plafond de base de 79 558 € majoré de 5 684 € par enfant à charge. La troisième tranche est celle dont les
+revenus sont supérieurs au plafond de base de 79 558 € majoré de 5 684 € par enfant à charge.
+""";
+    content_hash "sha256:6f856667c81bbb7c6e8ebe48b167dcd497b64ed768971e006b73ad19e1be9cd6";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2018_279_PLAFOND_CF")
+pub fragment DSS_SD2B_2018_279_PLAFOND_CF in DSS_SD2B_2018_279_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2018-279/section/2.1/plafonds-complement-familial";
+    text fr official """2.1. Plafonds de ressources applicables pour l’attribution du complément familial et du complément
+  pour frais de l’allocation journalière de présence parentale, du 1er janvier 2019 au 31 décembre 2019
+  (à comparer au revenu net catégoriel de l’année 2017)
+  Plafond de base : 21 199 €.
+  Majorations :
+  –– 25 % par enfant à charge : 5 300 € ;
+  –– 30 % par enfant à charge à partir du 3e : 6 360 € ;
+  –– pour double activité ou pour isolement : 8 521 €.
+""";
+    content_hash "sha256:ee16c646f917ce201c7526f900b99fb10a97bc9da243ea22527804a39a38f383";
+}
+
+source DSS_SD2B_2019_261 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction interministérielle n° DSS/SD2B/2019/261 du 18 décembre 2019 relative à la revalorisation au 1er janvier 2020 des plafonds de ressources d’attribution de certaines prestations familiales servies en métropole, en Guadeloupe, en Guyane, en Martinique, à La Réunion, à Saint-Barthélemy, à Saint-Martin et à Mayotte";
+    label en unofficial "Interministerial instruction DSS/SD2B/2019/261 of 18 décembre 2019 on the 1 January 2020 revalorisation of resource ceilings for certain family benefits";
+}
+
+edition DSS_SD2B_2019_261_PDF of DSS_SD2B_2019_261 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2020-01-01, @2021-01-01);
+    label fr official "DSS/SD2B/2019/261 (NOR SSAS1936748J) : instruction complète du BO Santé n° 2019/12 du 15 janvier 2020, PDF d’article de l’ancien site sante.gouv.fr, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/SD2B/2019/261 (NOR SSAS1936748J): complete instruction from BO Sante no. 2019/12 of 15 janvier 2020, single-article PDF of the former sante.gouv.fr site, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_SD2B_2019_261_PDF_BYTES of DSS_SD2B_2019_261_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20250504041933id_/https://sante.gouv.fr/fichiers/bo/2019/19-12/ste_20190012_0000_0064.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:0831bf4a407ef50dc5f12a85adf86bc06d361138e3f76938cc7135dc532ce8cc";
+    local_path "sources/dss-2019-261.pdf";
+}
+
+edition DSS_SD2B_2019_261_TEXT of DSS_SD2B_2019_261 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2020-01-01, @2021-01-01);
+    label fr official "DSS/SD2B/2019/261 : texte de mise en page extrait du PDF (pdftotext -layout)";
+    label en unofficial "DSS/SD2B/2019/261: layout text extracted from the PDF (pdftotext -layout)";
+}
+
+publication DSS_SD2B_2019_261_TEXT_TXT of DSS_SD2B_2019_261_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20250504041933id_/https://sante.gouv.fr/fichiers/bo/2019/19-12/ste_20190012_0000_0064.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:0fb53c4fb53aaf54ba6ce1dea85a798f24fa854ffce4ddbbc3f3b9144bc9c45b";
+    local_path "sources/dss-2019-261.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2019_261_REVAL")
+pub fragment DSS_SD2B_2019_261_REVAL in DSS_SD2B_2019_261_TEXT {
+    kind guidance;
+    locator "instruction/dss-sd2b-2019-261/revalorisation";
+    text fr official """   Ces différents plafonds et montants, pour la période du 1er janvier 2020 au 31 décembre 2020,
+sont revalorisés de 1,6 % correspondant à l’évolution en moyenne annuelle des prix hors tabac de
+l’année 2018.
+""";
+    content_hash "sha256:0e6b1b8df21acf88107f8359369633ddbec0049144d56fe24b4481bb55b404c8";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2019_261_PLAFOND_AF")
+pub fragment DSS_SD2B_2019_261_PLAFOND_AF in DSS_SD2B_2019_261_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2019-261/section/1/plafonds-allocations-familiales";
+    text fr official """Plafonds de ressources applicables pour l’attribution du montant modulé des allocations familiales,
+  de la majoration pour âge et de l’allocation forfaitaire, du 1er janvier 2020 au 31 décembre 2020
+  (à comparer au revenu net catégoriel de l’année 2018)
+
+    NOMBRE D’ENFANTS                          TRANCHE 1                           TRANCHE 2                           TRANCHE 3
+        à charge                               (en euros)                          (en euros)                          (en euros)
+
+             2 enfants                           ≤ 69 309                            ≤ 92 381                            > 92 381
+             3 enfants                           ≤ 75 084                            ≤ 98 156                            > 98 156
+             4 enfants                           ≤ 80 859                            ≤ 103 931                           > 103 931
+             5 enfants                           ≤ 86 634                            ≤ 109 706                           > 109 706
+    Par enfant supplémentaire                     + 5 775                             + 5 775                             + 5 775
+
+ N.B. – La première tranche est celle dont les revenus sont inférieurs ou égaux à un plafond de base de 57 759 € majoré de 5 775 € par enfant
+ à charge. La deuxième tranche est celle dont les revenus sont supérieurs à un plafond de base de 57 759 € majoré de 5 775 € par enfant à
+ charge mais inférieurs ou égaux au plafond de base de 80 831 € majoré de 5 775 € par enfant à charge. La troisième tranche est celle dont les
+ revenus sont supérieurs au plafond de base de 80 831 € majoré de 5 775 € par enfant à charge.
+""";
+    content_hash "sha256:b83aaf1844f64e3dde0b8e2788b57875aa5fd58677483b537192c6704bd5db86";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_SD2B_2019_261_PLAFOND_CF")
+pub fragment DSS_SD2B_2019_261_PLAFOND_CF in DSS_SD2B_2019_261_TEXT {
+    kind table;
+    locator "instruction/dss-sd2b-2019-261/section/2.1/plafonds-complement-familial";
+    text fr official """     Plafonds de ressources applicables pour l’attribution du complément familial et du
+     complément pour frais de l’allocation journalière de présence parentale, du 1er janvier 2020 au
+     31 décembre 2020 (à comparer au revenu net catégoriel de l’année 2018)
+  Plafond de base : 21 538 €.
+  Majorations :
+  25 % par enfant à charge : 5 385 € ;
+  30 % par enfant à charge à partir du 3e : 6 461 € ;
+  Pour double activité ou pour isolement : 8 657 €.
+""";
+    content_hash "sha256:7afe419d005f4366e06bedbe5cd5b420ec5a17b2036c3ae5ceafd74d1c587386";
+}
+
+source DSS_2B_DB_2020_226 {
+    kind regulation;
+    jurisdiction FR;
+    label fr official "Instruction n° DSS/2B/DB/2020/226 du 14 décembre 2020 relative à la revalorisation au 1er janvier 2021 des plafonds de ressources d’attribution de certaines prestations familiales servies en métropole, en Guadeloupe, en Guyane, en Martinique, à la Réunion, à Saint-Barthélemy, à Saint-Martin et à Mayotte";
+    label en unofficial "Interministerial instruction DSS/2B/DB/2020/226 of 14 décembre 2020 on the 1 January 2021 revalorisation of resource ceilings for certain family benefits";
+}
+
+edition DSS_2B_DB_2020_226_PDF of DSS_2B_DB_2020_226 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2021-01-01, @2022-01-01);
+    label fr official "DSS/2B/DB/2020/226 (NOR SSAS2034948J) : instruction complète du BO Santé n° 2020/12 du 15 janvier 2021, PDF d’article de l’ancien site sante.gouv.fr, bytes via Internet Archive (voir PROVENANCE.md)";
+    label en unofficial "DSS/2B/DB/2020/226 (NOR SSAS2034948J): complete instruction from BO Sante no. 2020/12 of 15 janvier 2021, single-article PDF of the former sante.gouv.fr site, bytes via Internet Archive (see PROVENANCE.md)";
+}
+
+publication DSS_2B_DB_2020_226_PDF_BYTES of DSS_2B_DB_2020_226_PDF {
+    media_type "application/pdf";
+    uri "https://web.archive.org/web/20240520154018id_/https://sante.gouv.fr/fichiers/bo/2020/20-12/ste_20200012_0000_0050.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:243d4973838b48d6fe353e796d91152570b1dcb11dece161b2575f03ae316822";
+    local_path "sources/dss-2020-226.pdf";
+}
+
+edition DSS_2B_DB_2020_226_TEXT of DSS_2B_DB_2020_226 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2021-01-01, @2022-01-01);
+    label fr official "DSS/2B/DB/2020/226 : texte de mise en page extrait du PDF (pdftotext -layout)";
+    label en unofficial "DSS/2B/DB/2020/226: layout text extracted from the PDF (pdftotext -layout)";
+}
+
+publication DSS_2B_DB_2020_226_TEXT_TXT of DSS_2B_DB_2020_226_TEXT {
+    media_type "text/plain; charset=utf-8";
+    uri "https://web.archive.org/web/20240520154018id_/https://sante.gouv.fr/fichiers/bo/2020/20-12/ste_20200012_0000_0050.pdf";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:1fab624eb1b2f5691a5f8f4860b9afc407b5391956d6cfeca76e77664d564590";
+    local_path "sources/dss-2020-226.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_DB_2020_226_REVAL")
+pub fragment DSS_2B_DB_2020_226_REVAL in DSS_2B_DB_2020_226_TEXT {
+    kind guidance;
+    locator "instruction/dss-2b-db-2020-226/revalorisation";
+    text fr official """   Ces différents plafonds et montants, pour la période du 1er janvier 2021 au 31 décembre 2021,
+sont revalorisés de 0,9 % correspondant à l’évolution en moyenne annuelle des prix hors tabac de
+l’année 2019.
+""";
+    content_hash "sha256:67182ceb8cd942707ea9ec4c69483f4b8d5e561e1bb6cd20433f3f00fec83586";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_DB_2020_226_PLAFOND_AF")
+pub fragment DSS_2B_DB_2020_226_PLAFOND_AF in DSS_2B_DB_2020_226_TEXT {
+    kind table;
+    locator "instruction/dss-2b-db-2020-226/section/1/plafonds-allocations-familiales";
+    text fr official """  Plafonds de ressources applicables pour l’attribution du montant modulé des allocations familiales,
+de la majoration pour âge et de l’allocation forfaitaire, du 1er janvier 2021 au 31 décembre 2021 (à
+comparer au revenu net catégoriel de l’année 2019).
+
+  NOMBRE D’ENFANTS À CHARGE                  TRANCHE 1               TRANCHE 2                   TRANCHE 3
+                                              (en euros)              (en euros)                  (en euros)
+
+                2 enfants                       ≤ 69 933                ≤ 93 212                      > 93 212
+                3 enfants                       ≤ 75 760               ≤ 99 039                      > 99 039
+                4 enfants                       ≤ 81 587               ≤ 104 866                     > 104 866
+                5 enfants                       ≤ 87 414               ≤ 110 693                     > 110 693
+        Par enfant supplémentaire               + 5 827                 + 5 827                       + 5 827
+
+  NB : La première tranche est celle dont les revenus sont inférieurs ou égaux à un plafond de
+base de 58 279 € majoré de 5 827 € par enfant à charge. La deuxième tranche est celle dont les
+revenus sont supérieurs à un plafond de base de 58 279 € majoré de 5 827 € par enfant à charge
+mais inférieurs ou égaux au plafond de base de 81 558 € majoré de 5 827 € par enfant à charge. La
+troisième tranche est celle dont les revenus sont supérieurs au plafond de base de 81 558 € majoré
+de 5 827 € par enfant à charge.
+""";
+    content_hash "sha256:c6ed46d7c84ff7312b5da452ed4dc692cce17199086ace702162c48a722cf6da";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#DSS_2B_DB_2020_226_PLAFOND_CF")
+pub fragment DSS_2B_DB_2020_226_PLAFOND_CF in DSS_2B_DB_2020_226_TEXT {
+    kind table;
+    locator "instruction/dss-2b-db-2020-226/section/2.1/plafonds-complement-familial";
+    text fr official """2.1. Plafonds de ressources applicables pour l’attribution du complément familial et du complément
+  pour frais de l’allocation journalière de présence parentale, du 1er janvier 2021 au 31 décembre 2021
+  (à comparer au revenu net catégoriel de l’année 2019)
+  Plafond de base : 21 732 €.
+  Majorations :
+  25 % par enfant à charge : 5 433 € ;
+  30 % par enfant à charge à partir du 3e : 6 520 € ;
+  Pour double activité ou pour isolement : 8 735 €.
+""";
+    content_hash "sha256:d170367008c370100be5a50eba077359cfc8db594238bea6e03cd9e99652bebb";
+}
+
+// LOI 2022-1158, ART. 9 (session 1, 2026-10-08): the anticipated +4 % of 1 July
+// 2022 (coefficient 1.04) applied to every benefit revalorised under L. 161-25,
+// the family-benefit base BMAF among them. Text pinned from the DILA LEGI
+// global dump by tools/pin_loi_2022_1158.py (LEGIARTI000046188473, consolidated
+// version in force from 2022-08-18; the coefficient applies from 2022-07-01).
+
+source LOI_2022_1158 {
+    kind statute;
+    jurisdiction FR;
+    number "2022-1158";
+    label fr official "Loi n° 2022-1158 du 16 août 2022 portant mesures d’urgence pour la protection du pouvoir d’achat";
+    label en unofficial "Act No. 2022-1158 of 16 August 2022 on emergency measures to protect purchasing power";
+}
+
+edition LOI_2022_1158_ART9_ED2022 of LOI_2022_1158 {
+    language fr;
+    officiality official;
+    materialization_status PINNED_UNOFFICIAL_COPY;
+    in_force [@2022-07-01, infinity);
+    label fr official "Loi n° 2022-1158, article 9 : revalorisation anticipée au 1er juillet 2022 (miroir DILA LEGI, LEGIARTI000046188473, version en vigueur depuis le 2022-08-18)";
+    label en unofficial "Act No. 2022-1158, article 9: anticipated revalorisation of 1 July 2022 (DILA LEGI mirror, LEGIARTI000046188473, version in force from 2022-08-18)";
+}
+
+publication LOI_2022_1158_ART9_ED2022_TEXT of LOI_2022_1158_ART9_ED2022 {
+    media_type "text/plain; charset=utf-8";
+    uri "https://echanges.dila.gouv.fr/OPENDATA/LEGI/Freemium_legi_global_20250713-140000.tar.gz";
+    retrieved_at @2026-10-08T00:00:00Z;
+    content_hash "sha256:c3b121c0b034e7aab85be07c3329b2f12e397fc189e06a77ba1e68bf4eb215ea";
+    local_path "sources/loi-2022-1158-art9.txt";
+}
+
+@id("urn:fr:corpus:clir:revalorisation#LOI_2022_1158_ART9")
+pub fragment LOI_2022_1158_ART9 in LOI_2022_1158_ART9_ED2022 {
+    kind article;
+    locator "article/9";
+    text fr official """Article 9
+I. - Lorsqu'ils font l'objet d'une revalorisation annuelle en application de l'article L. 161-25 du code de la sécurité sociale, les montants des prestations, allocations ou aides individuelles ainsi que les éléments intervenant dans leur calcul ou conditionnant l'ouverture du droit sont revalorisés, le 1er juillet 2022, par application d'un coefficient égal à 1,04. Le coefficient applicable lors de la première revalorisation annuelle postérieure au 1er juillet 2022 du montant de la prestation, de l'allocation ou de l'aide individuelle ou de l'élément intervenant dans son calcul ou dans l'ouverture du droit est égal au quotient du coefficient calculé en application du même article L. 161-25 par 1,04, sauf si le coefficient ainsi obtenu est inférieur à 1, auquel cas il est porté à cette valeur.
+Le coût de la revalorisation opérée, en application du premier alinéa du présent I, sur les prestations versées par le régime institué à l'article 3 de la loi n° 2005-5 du 5 janvier 2005 relative à la situation des maîtres des établissements d'enseignement privés sous contrat est à la charge de l'Etat.
+Un décret détermine les modalités du calcul du montant des bourses nationales d'enseignement du second degré pour la rentrée 2022.
+II. - Par dérogation au premier alinéa du IV de l'article L. 732-63 du code rural et de la pêche maritime, le montant du salaire minimum de croissance retenu pour le calcul du complément différentiel de points de retraite complémentaire obligatoire dont bénéficient les personnes non salariées des professions agricoles au titre des périodes comprises entre le 1er juillet 2022 et le 31 décembre 2022 est celui en vigueur le 1er juillet 2022.
+""";
+    content_hash "sha256:c3b121c0b034e7aab85be07c3329b2f12e397fc189e06a77ba1e68bf4eb215ea";
+}

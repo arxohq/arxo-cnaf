@@ -1,0 +1,24 @@
+// Majore ceiling (R. 522-4), plain household: half the nominal with
+// per-child modalities: 10000 + 0.25*10000*2 + 0.30*10000*1 = 18000 (tiered, D-36).
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-plafond-majore" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "plm-01": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:plafond-majore"), 20000 EUR) { origin case_input; }
+        assert "plm-01a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:plafond-majore"), 5000 EUR) { origin case_input; }
+        assert "plm-01b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:plafond-majore"), 6000 EUR) { origin case_input; }
+        assert "plm-01c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:plafond-majore"), 10000 EUR) { origin case_input; }
+        assert "plm-01d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:plafond-majore"), 2500 EUR) { origin case_input; }
+        assert "plm-01e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:plafond-majore"), 3000 EUR) { origin case_input; }
+        assert "plm-02": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:plafond-majore"), 3) { origin case_input; }
+        assert "plm-03": foyer_du_cas(entity_ref("urn:fr:pf-cf:case:plafond-majore")) { origin case_input; }
+    }
+    evaluate truth(plafond_majore_applicable(entity_ref("urn:fr:pf-cf:case:plafond-majore"), 18000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

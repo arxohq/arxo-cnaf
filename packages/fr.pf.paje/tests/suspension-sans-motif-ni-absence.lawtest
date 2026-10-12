@@ -1,0 +1,23 @@
+// D. 532-2, missing-evidence control (RETURN 2026-10-08): the exams were
+// missed, the PMI head doctor's request was transmitted with an effect
+// month, but the fund established neither legitimate reasons nor their
+// absence — the «en l'absence de motifs légitimes» condition is
+// unevaluated, so no suspension concludes (missing evidence must not prove
+// absence). Control — suspension-versement-accordee (affirmative absence)
+// and suspension-motif-legitime (positive exception).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-suspension-sans-motif-ni-absence" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "susp-neither-01": examens_l5331_non_passes(entity_ref("urn:fr:paje:case:susp-neither"), entity_ref("urn:fr:paje:enfant:susp-neither")) { origin adjudicated; }
+        assert "susp-neither-02": demande_medecin_pmi(entity_ref("urn:fr:paje:case:susp-neither"), entity_ref("urn:fr:paje:enfant:susp-neither"), @2025-06-10) { origin adjudicated; }
+        assert "susp-neither-03": mois_effet_suspension(entity_ref("urn:fr:paje:case:susp-neither"), entity_ref("urn:fr:paje:enfant:susp-neither"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(suspension_versement_paje(entity_ref("urn:fr:paje:case:susp-neither"), entity_ref("urn:fr:paje:enfant:susp-neither"), @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,27 @@
+// Subsidiary withholding without the recorded instalment non-option
+// (P2): the single-payment non-option is recorded and the notified undue
+// payment is recorded non-recoverable, but the block-1 «n'opte pas pour
+// le remboursement en un ou plusieurs versements» fact is missing from
+// the file — the body's withholding act produces no effect,
+// ajpa_retenue_l5532 is NEITHER. The single-payment condition alone does
+// not entail the instalment reserve either: the two option facts are
+// independent premises.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-pouvoir-retenue-l5532-sans-option-echelonnee" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-plo-01": indu_ajpa(entity_ref("urn:fr:css:ajpa:case:aidant-plo"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-plo-02": indu_notifie_non_recuperable(entity_ref("urn:fr:css:ajpa:case:aidant-plo"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-plo-03": indu_non_conteste(entity_ref("urn:fr:css:ajpa:case:aidant-plo"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-plo-04": indu_sans_option_versement_unique(entity_ref("urn:fr:css:ajpa:case:aidant-plo"), 300.00 EUR) { origin adjudicated; }
+        assert "ajpa-plo-05": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-plo")) { origin case_input; }
+        assert "ajpa-plo-06": retenue_l5532_exercee(entity_ref("urn:fr:css:ajpa:org:caisse"), entity_ref("urn:fr:css:ajpa:case:aidant-plo"), 300.00 EUR) { origin case_input; }
+    }
+    evaluate truth(ajpa_retenue_l5532(entity_ref("urn:fr:css:ajpa:case:aidant-plo"), 300.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

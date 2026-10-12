@@ -1,0 +1,39 @@
+// D-85: PASS года отсчёта 2019 строится из закреплённого arrêté du 2018-12-11 (SSAS1833942A; fr.css.pass: sources/pass/arrete-2018-12-11-art1.txt):
+// valeur mensuelle 3377 € x 12 = 40524 €. Порог R. 522-2 al. 3: 13,6 % x 40524 = 5511.264.
+// Доход 5511.27 достигает порога -> couple_biactif; на сантим меньше (5511.26) — нет (NEITHER). Дата дела — июнь 2021 (ресурсы N-2 по R. 532-1).
+// Порождено tools/build_pass_tests.py из закреплённых байтов fr.css.pass — руками не править.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-pass-2019-seuil" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "p19a-01": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:pass-2019-seuil"), 5511.27 EUR) { origin case_input; }
+        assert "p19a-02": annee_reference_ressources(entity_ref("urn:fr:pf-cf:case:pass-2019-seuil"), 2019) { origin case_input; }
+    }
+    evaluate truth(pass_reference(entity_ref("urn:fr:pf-cf:case:pass-2019-seuil"), 40524 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:pass-2019-seuil")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-pf-cf-pass-2019-sous-seuil" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "p19b-01": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:pass-2019-sous-seuil"), 5511.26 EUR) { origin case_input; }
+        assert "p19b-02": annee_reference_ressources(entity_ref("urn:fr:pf-cf:case:pass-2019-sous-seuil"), 2019) { origin case_input; }
+    }
+    evaluate truth(pass_reference(entity_ref("urn:fr:pf-cf:case:pass-2019-sous-seuil"), 40524 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(couple_biactif(entity_ref("urn:fr:pf-cf:case:pass-2019-sous-seuil")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

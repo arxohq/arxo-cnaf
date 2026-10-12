@@ -1,0 +1,17 @@
+// ASF unqualified inability: parent claimed unable without established decree qualification, no evasion - no entitlement (L. 523-1 I 3°, PC-R07-15 negative control).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-asf-hors-etat-non-qualifie" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "asf-hors-etat-non-qualifie-01": asf_parent_hors_etat_non_qualifie(entity_ref("urn:fr:pf:case:asf-non-qual")) { origin case_input; }
+        assert "asf-hors-etat-non-qualifie-02": not asf_parent_se_soustrait(entity_ref("urn:fr:pf:case:asf-non-qual")) { origin case_input; }
+        assert "asf-hors-etat-non-qualifie-03": not asf_parent_hors_etat_qualifie(entity_ref("urn:fr:pf:case:asf-non-qual")) { origin case_input; }
+    }
+    evaluate truth(asf_ouvre_droit(entity_ref("urn:fr:pf:case:asf-non-qual")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

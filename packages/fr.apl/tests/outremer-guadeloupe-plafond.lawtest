@@ -1,0 +1,40 @@
+// Дело Catala «Exemple1» сектора приобретения по линии аллокаций — ГВАДЕЛУПА.
+// Пара с двумя иждивенцами, зона II, сертификат от 1 октября 2015 года,
+// заявленная мензуальность 450 €, ресурсы 17 500 €, месяц права — март 2023 года.
+//
+// ЭТО ДЕЛО СТАЛО ПРОВЕРЯЕМЫМ ТОЛЬКО С ОХВАТОМ ЗАМОРСКИХ ТЕРРИТОРИЙ. До него оба
+// дела этого сектора лежали вне объёма, и пакет сверяться с ними не мог.
+//
+// ШАГ: плафон мензуальности — строка ст. 33 МЕТРОПОЛИИ, винтаж «с 01/10/15»,
+// зона II, состав C+2: 375,20 €. Статья 46 плафонов не заменяет, и это дело —
+// свидетель: Catala утверждает ровно 375,2 €.//
+// ПОЧЕМУ В ЭТОМ ДЕЛЕ НЕТ ФАКТА РЕСУРСОВ. Этому шагу они не нужны, и поданы
+// намеренно не были: с ними дело считает ещё и L0, а его отказ (непредставимое
+// частное либо отсутствие транш второго абзаца до 1 июля 2022 года) поражает ВЕСЬ
+// evaluation-документ. Измерено 14.09.2026: с фактом ресурсов сценарий краснеет
+// не потому, что его шаг неверен, а потому, что документ целиком неисполним.
+// L0 закреплён своими сценариями.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-outremer-guadeloupe-plafond" {
+    given {
+        context { decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; }
+        assert "outremer-guadeloupe-plafond-01": secteur_accession_allocations(entity_ref("urn:fr:apl:case:outremer-guadeloupe")) { origin case_input; }
+        assert "outremer-guadeloupe-plafond-02": aide_demandee(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), ALF) { origin case_input; }
+        assert "outremer-guadeloupe-plafond-03": zone_du_logement(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), ZONE_II) { origin case_input; }
+        assert "outremer-guadeloupe-plafond-04": situation_familiale(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), COUPLE) { origin case_input; }
+        assert "outremer-guadeloupe-plafond-05": personnes_a_charge(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), 2) { origin case_input; }
+        assert "outremer-guadeloupe-plafond-06": vintage_certificat(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), CERTIFICAT_DEPUIS_01_10_2015) { origin case_input; }
+        assert "outremer-guadeloupe-plafond-07": mode_propriete(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), PROPRIETAIRE_UNIQUE) { origin case_input; }
+        assert "outremer-guadeloupe-plafond-08": territoire(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), OUTRE_MER) { origin case_input; }
+        assert "outremer-guadeloupe-plafond-09": mensualite_declaree(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), 450 EUR) { origin case_input; }
+        assert "outremer-guadeloupe-plafond-10": base_plancher_ressources(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), COEFFICIENT_MENSUALITE) { origin case_input; }
+        assert "outremer-guadeloupe-plafond-11": situation_r822_11_13_17(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), false) { origin case_input; }
+    }
+    evaluate truth(plafond_mensualite_al(entity_ref("urn:fr:apl:case:outremer-guadeloupe"), 375.20 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

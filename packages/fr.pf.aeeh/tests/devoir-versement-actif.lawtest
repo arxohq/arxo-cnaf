@@ -1,0 +1,21 @@
+// Active fund duty (D1): category 3 granted without MPI, total 496.00
+// computed and carer/debtor links established. Position VerserAeehDue
+// is ACTIVE.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-devoir-versement-actif" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "aeeh-dev-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-aeeh:case:parent-dev"), entity_ref("urn:fr:pf-aeeh:case:enfant-dev")) { origin case_input; }
+        assert "aeeh-dev-02": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-dev")) { origin adjudicated; }
+        assert "aeeh-dev-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-dev"), 400.00 EUR) { origin case_input; }
+        assert "aeeh-dev-04": categorie_attribuee(entity_ref("urn:fr:pf-aeeh:case:enfant-dev"), CATEGORIE_3) { origin adjudicated; }
+        assert "aeeh-dev-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-dev")) { origin case_input; }
+        assert "aeeh-dev-06": fr.pf.core::organisme_debiteur_pf(entity_ref("urn:fr:pf-aeeh:org:caisse"), entity_ref("urn:fr:pf-aeeh:case:parent-dev")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(VerserAeehDue, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

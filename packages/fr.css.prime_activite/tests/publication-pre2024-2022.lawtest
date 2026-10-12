@@ -1,0 +1,23 @@
+// Before 2024-07-01 the statute-named publishers include Pole
+// emploi: the undertaking attaches to the named actor, the
+// published 2021 results are the performance evidence (D. 848-4).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-publication-pre2024-2022" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": acteur_publication_pre2024(entity_ref("urn:fr:ppa:org:pole-emploi")) { origin case_input; }
+        assert "ppa-02": exercice_stats_publication(2021) { origin case_input; }
+        assert "ppa-03": resultats_publies(entity_ref("urn:fr:ppa:org:pole-emploi"), 2021) { origin case_input; }
+    }
+    evaluate truth(publication_stats_assuree(entity_ref("urn:fr:ppa:org:pole-emploi"), 2021));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(publication_periodique_realisee(entity_ref("urn:fr:ppa:org:pole-emploi"), 2021));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

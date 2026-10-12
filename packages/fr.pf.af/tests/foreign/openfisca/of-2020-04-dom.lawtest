@@ -1,0 +1,33 @@
+// OpenFisca AF 2020-04: one 10-year-old in a DOM outside Mayotte,
+// revenue just above the first modulation ceiling. Their engine
+// halves the single-child amount by band (taux 0.5 -> 12.19); this
+// package does not modulate single-child DOM amounts (L. 755-12
+// disapplies the last four L. 521-1 alinas): 58.80 under the
+// retained base (1 000.00 EUR stated assumption). Genuine (c).
+// Their case -> our answer -> class: REPORT.md (OpenFisca, 4).
+language "law.core" version "0.2";
+package fr.pf.af version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-af";
+
+test "urn:query:fr-pf-af-of-2020-04-dom" {
+    given {
+        context { decision_time @2020-04-15T12:00:00Z; knowledge_time @2020-04-15T12:00:00Z; legal_time @2020-04-15; timezone "Europe/Paris"; }
+        assert "of2004-01": territoire(entity_ref("urn:fr:pf-af:foreign:of-2020-04"), MARTINIQUE) { origin case_input; }
+        assert "of2004-02": nb_enfants_charge(entity_ref("urn:fr:pf-af:foreign:of-2020-04"), 1) { origin case_input; }
+        assert "of2004-03": base_dom_retenue(entity_ref("urn:fr:pf-af:foreign:of-2020-04"), 1000.00 EUR) { origin case_input; }
+        assert "of2004-04": forfait_total_menage(entity_ref("urn:fr:pf-af:foreign:of-2020-04"), 0 EUR) { origin case_input; }
+        assert "of2004-05": foyer_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2020-04")) { origin case_input; }
+        assert "of2004-06": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-af:foreign:of-2020-04"), entity_ref("urn:fr:pf-af:foreign:of-2020-04-e1")) { origin case_input; }
+        assert "of2004-07": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-af:foreign:of-2020-04-e1")) { origin case_input; }
+        assert "of2004-08": date_naissance(entity_ref("urn:fr:pf-af:foreign:of-2020-04-e1"), @2010-01-01) { origin case_input; }
+        assert "of2004-09": enfant_du_cas(entity_ref("urn:fr:pf-af:foreign:of-2020-04-e1")) { origin case_input; }
+    }
+    evaluate truth(af_droit_ouvert(entity_ref("urn:fr:pf-af:foreign:of-2020-04")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_mensuel_af_dom(entity_ref("urn:fr:pf-af:foreign:of-2020-04"), 58.80 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

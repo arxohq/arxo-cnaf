@@ -1,0 +1,14 @@
+// Levy carry-over: source benefit ended - levy taken from the other benefits (D. 553-4).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-report" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "r-src": prestation_source_cessee_ou_insuffisante(entity_ref("urn:fr:pv:case:reporte")) { origin case_input; }
+    }
+    evaluate truth(retenue_report_autres_prestations(entity_ref("urn:fr:pv:case:reporte")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

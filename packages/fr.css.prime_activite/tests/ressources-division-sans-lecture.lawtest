@@ -1,0 +1,332 @@
+// D-82/D-84 БЕЗ прочтения: те же факты, что в ressources-division-lecture.lawtest, прочтение не выбрано - поведение прежнее.
+// Неточное частное (бесконечная дробь) - RUNTIME_ERROR по INEXACT_DIVISION (SPEC 50/18: округление - только явной политикой);
+// конечное частное (rd-a1x, rd-b1x - четыре знака; rd-a1t, rd-b1t - три знака, ровно полцента) - точное значение без округления. Реплика - Fraction.
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-ressources-division-rd-a1-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-a1-01": n_2_agri_connu(entity_ref("urn:fr:ppa:case:rd-a1"), @2026-06-01) { origin case_input; }
+        assert "rd-a1-02": benefices_agri_n_2(entity_ref("urn:fr:ppa:case:rd-a1"), @2026-06-01, 10000.00 EUR) { origin case_input; }
+        assert "rd-a1-03": annee_agri_complete(entity_ref("urn:fr:ppa:case:rd-a1"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:rd-a1"), @2026-06-01, 833.33 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-a2-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-a2-01": n_1_agri_connu(entity_ref("urn:fr:ppa:case:rd-a2"), @2026-06-01) { origin case_input; }
+        assert "rd-a2-02": benefices_agri_n_1(entity_ref("urn:fr:ppa:case:rd-a2"), @2026-06-01, 18000.10 EUR) { origin case_input; }
+        assert "rd-a2-03": annee_agri_n_1_complete(entity_ref("urn:fr:ppa:case:rd-a2"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:rd-a2"), @2026-06-01, 1500.01 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-a3-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "rd-a3-01": regime_general(entity_ref("urn:fr:ppa:case:rd-a3")) { origin case_input; }
+        assert "rd-a3-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-a3"), @2025-02-01) { origin case_input; }
+        assert "rd-a3-03": benefices_agri_non_imposes(entity_ref("urn:fr:ppa:case:rd-a3"), @2025-02-01) { origin case_input; }
+        assert "rd-a3-04": recettes_agri_trimestre_precedent(entity_ref("urn:fr:ppa:case:rd-a3"), @2025-02-01, 9000.01 EUR) { origin case_input; }
+        assert "rd-a3-05": abattement_64bis(entity_ref("urn:fr:ppa:case:rd-a3"), @2025-02-01, 0.10) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:rd-a3"), @2025-02-01, 2700.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-a4-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "rd-a4-01": regime_general(entity_ref("urn:fr:ppa:case:rd-a4")) { origin case_input; }
+        assert "rd-a4-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-a4"), @2025-02-01) { origin case_input; }
+        assert "rd-a4-03": annee_agri_incomplete(entity_ref("urn:fr:ppa:case:rd-a4"), @2025-02-01) { origin case_input; }
+        assert "rd-a4-04": recettes_agri_trimestre_precedent(entity_ref("urn:fr:ppa:case:rd-a4"), @2025-02-01, 4500.02 EUR) { origin case_input; }
+        assert "rd-a4-05": abattement_64bis(entity_ref("urn:fr:ppa:case:rd-a4"), @2025-02-01, 0.10) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:rd-a4"), @2025-02-01, 1350.009 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-a5-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-a5-01": regime_general(entity_ref("urn:fr:ppa:case:rd-a5")) { origin case_input; }
+        assert "rd-a5-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-a5"), @2026-06-01) { origin case_input; }
+        assert "rd-a5-03": benefices_agri_non_imposes(entity_ref("urn:fr:ppa:case:rd-a5"), @2026-06-01) { origin case_input; }
+        assert "rd-a5-04": recettes_agri_m_4_m_2(entity_ref("urn:fr:ppa:case:rd-a5"), @2026-06-01, 3000.01 EUR) { origin case_input; }
+        assert "rd-a5-05": abattement_64bis(entity_ref("urn:fr:ppa:case:rd-a5"), @2026-06-01, 0.10) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:rd-a5"), @2026-06-01, 900.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-a6-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-a6-01": regime_general(entity_ref("urn:fr:ppa:case:rd-a6")) { origin case_input; }
+        assert "rd-a6-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-a6"), @2026-06-01) { origin case_input; }
+        assert "rd-a6-03": annee_agri_incomplete(entity_ref("urn:fr:ppa:case:rd-a6"), @2026-06-01) { origin case_input; }
+        assert "rd-a6-04": recettes_agri_m_4_m_2(entity_ref("urn:fr:ppa:case:rd-a6"), @2026-06-01, 2100.05 EUR) { origin case_input; }
+        assert "rd-a6-05": abattement_64bis(entity_ref("urn:fr:ppa:case:rd-a6"), @2026-06-01, 0.10) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:rd-a6"), @2026-06-01, 630.018 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-a7-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "rd-a7-01": regime_general(entity_ref("urn:fr:ppa:case:rd-a7")) { origin case_input; }
+        assert "rd-a7-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-a7"), @2025-02-01) { origin case_input; }
+        assert "rd-a7-03": demande_option_agri(entity_ref("urn:fr:ppa:case:rd-a7"), @2025-02-01) { origin case_input; }
+        assert "rd-a7-04": recettes_agri_12_mois(entity_ref("urn:fr:ppa:case:rd-a7"), @2025-02-01, 40000.00 EUR) { origin case_input; }
+        assert "rd-a7-05": plafond_69_I(entity_ref("urn:fr:ppa:case:rd-a7"), @2025-02-01, 82800.00 EUR) { origin case_input; }
+        assert "rd-a7-06": recettes_agri_trimestre(entity_ref("urn:fr:ppa:case:rd-a7"), @2025-02-01, 9000.00 EUR) { origin case_input; }
+        assert "rd-a7-07": recettes_agri_trimestre_precedent(entity_ref("urn:fr:ppa:case:rd-a7"), @2025-02-01, 1234.58 EUR) { origin case_input; }
+        assert "rd-a7-08": abattement_64bis(entity_ref("urn:fr:ppa:case:rd-a7"), @2025-02-01, 0.10) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:rd-a7"), @2025-02-01, 370.377 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-a8-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-a8-01": regime_general(entity_ref("urn:fr:ppa:case:rd-a8")) { origin case_input; }
+        assert "rd-a8-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-a8"), @2026-06-01) { origin case_input; }
+        assert "rd-a8-03": demande_option_agri(entity_ref("urn:fr:ppa:case:rd-a8"), @2026-06-01) { origin case_input; }
+        assert "rd-a8-04": recettes_agri_12_mois(entity_ref("urn:fr:ppa:case:rd-a8"), @2026-06-01, 40000.00 EUR) { origin case_input; }
+        assert "rd-a8-05": plafond_69_I(entity_ref("urn:fr:ppa:case:rd-a8"), @2026-06-01, 82800.00 EUR) { origin case_input; }
+        assert "rd-a8-06": recettes_agri_trimestre(entity_ref("urn:fr:ppa:case:rd-a8"), @2026-06-01, 9000.00 EUR) { origin case_input; }
+        assert "rd-a8-07": recettes_agri_m_4_m_2(entity_ref("urn:fr:ppa:case:rd-a8"), @2026-06-01, 2500.07 EUR) { origin case_input; }
+        assert "rd-a8-08": abattement_64bis(entity_ref("urn:fr:ppa:case:rd-a8"), @2026-06-01, 0.10) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:rd-a8"), @2026-06-01, 750.024 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b1-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-b1-01": n_2_bic_connu(entity_ref("urn:fr:ppa:case:rd-b1"), @2026-06-01) { origin case_input; }
+        assert "rd-b1-02": benefices_bic_n_2(entity_ref("urn:fr:ppa:case:rd-b1"), @2026-06-01, 12000.50 EUR) { origin case_input; }
+        assert "rd-b1-03": annee_bic_complete(entity_ref("urn:fr:ppa:case:rd-b1"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b1"), @2026-06-01, 1000.04 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b2-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-b2-01": n_1_bic_connu(entity_ref("urn:fr:ppa:case:rd-b2"), @2026-06-01) { origin case_input; }
+        assert "rd-b2-02": benefices_bic_n_1(entity_ref("urn:fr:ppa:case:rd-b2"), @2026-06-01, 6000.07 EUR) { origin case_input; }
+        assert "rd-b2-03": annee_bic_n_1_complete(entity_ref("urn:fr:ppa:case:rd-b2"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b2"), @2026-06-01, 500.01 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b3-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "rd-b3-01": regime_general(entity_ref("urn:fr:ppa:case:rd-b3")) { origin case_input; }
+        assert "rd-b3-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-b3"), @2025-02-01) { origin case_input; }
+        assert "rd-b3-03": benefices_bic_non_imposes(entity_ref("urn:fr:ppa:case:rd-b3"), @2025-02-01) { origin case_input; }
+        assert "rd-b3-04": ca_bic_trimestre_precedent(entity_ref("urn:fr:ppa:case:rd-b3"), @2025-02-01, 7000.04 EUR) { origin case_input; }
+        assert "rd-b3-05": abattement_50_0_102ter(entity_ref("urn:fr:ppa:case:rd-b3"), @2025-02-01, 0.34) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b3"), @2025-02-01, 1540.011 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b4-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "rd-b4-01": regime_general(entity_ref("urn:fr:ppa:case:rd-b4")) { origin case_input; }
+        assert "rd-b4-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-b4"), @2025-02-01) { origin case_input; }
+        assert "rd-b4-03": annee_bic_incomplete(entity_ref("urn:fr:ppa:case:rd-b4"), @2025-02-01) { origin case_input; }
+        assert "rd-b4-04": ca_bic_trimestre_precedent(entity_ref("urn:fr:ppa:case:rd-b4"), @2025-02-01, 5200.12 EUR) { origin case_input; }
+        assert "rd-b4-05": abattement_50_0_102ter(entity_ref("urn:fr:ppa:case:rd-b4"), @2025-02-01, 0.34) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b4"), @2025-02-01, 1144.0242 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b5-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "rd-b5-01": regime_general(entity_ref("urn:fr:ppa:case:rd-b5")) { origin case_input; }
+        assert "rd-b5-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-b5"), @2025-02-01) { origin case_input; }
+        assert "rd-b5-03": indep_special_bic(entity_ref("urn:fr:ppa:case:rd-b5"), @2025-02-01) { origin case_input; }
+        assert "rd-b5-04": ca_bic_trimestre_precedent(entity_ref("urn:fr:ppa:case:rd-b5"), @2025-02-01, 3100.21 EUR) { origin case_input; }
+        assert "rd-b5-05": abattement_50_0_102ter(entity_ref("urn:fr:ppa:case:rd-b5"), @2025-02-01, 0.34) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b5"), @2025-02-01, 682.044 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b6-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-b6-01": regime_general(entity_ref("urn:fr:ppa:case:rd-b6")) { origin case_input; }
+        assert "rd-b6-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-b6"), @2026-06-01) { origin case_input; }
+        assert "rd-b6-03": benefices_bic_non_imposes(entity_ref("urn:fr:ppa:case:rd-b6"), @2026-06-01) { origin case_input; }
+        assert "rd-b6-04": ca_bic_m_4_m_2(entity_ref("urn:fr:ppa:case:rd-b6"), @2026-06-01, 8000.02 EUR) { origin case_input; }
+        assert "rd-b6-05": abattement_50_0_102ter(entity_ref("urn:fr:ppa:case:rd-b6"), @2026-06-01, 0.34) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b6"), @2026-06-01, 1760.0022 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b7-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-b7-01": regime_general(entity_ref("urn:fr:ppa:case:rd-b7")) { origin case_input; }
+        assert "rd-b7-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-b7"), @2026-06-01) { origin case_input; }
+        assert "rd-b7-03": annee_bic_incomplete(entity_ref("urn:fr:ppa:case:rd-b7"), @2026-06-01) { origin case_input; }
+        assert "rd-b7-04": ca_bic_m_4_m_2(entity_ref("urn:fr:ppa:case:rd-b7"), @2026-06-01, 6400.13 EUR) { origin case_input; }
+        assert "rd-b7-05": abattement_50_0_102ter(entity_ref("urn:fr:ppa:case:rd-b7"), @2026-06-01, 0.34) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b7"), @2026-06-01, 1408.0308 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b8-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-b8-01": regime_general(entity_ref("urn:fr:ppa:case:rd-b8")) { origin case_input; }
+        assert "rd-b8-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-b8"), @2026-06-01) { origin case_input; }
+        assert "rd-b8-03": indep_special_bic(entity_ref("urn:fr:ppa:case:rd-b8"), @2026-06-01) { origin case_input; }
+        assert "rd-b8-04": ca_bic_m_4_m_2(entity_ref("urn:fr:ppa:case:rd-b8"), @2026-06-01, 4300.22 EUR) { origin case_input; }
+        assert "rd-b8-05": abattement_50_0_102ter(entity_ref("urn:fr:ppa:case:rd-b8"), @2026-06-01, 0.34) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b8"), @2026-06-01, 946.0506 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b9-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2025-02-15T12:00:00Z; knowledge_time @2025-02-15T12:00:00Z; legal_time @2025-02-15; timezone "Europe/Paris"; }
+        assert "rd-b9-01": regime_general(entity_ref("urn:fr:ppa:case:rd-b9")) { origin case_input; }
+        assert "rd-b9-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-b9"), @2025-02-01) { origin case_input; }
+        assert "rd-b9-03": demande_option_bic(entity_ref("urn:fr:ppa:case:rd-b9"), @2025-02-01) { origin case_input; }
+        assert "rd-b9-04": ca_bic_12_mois(entity_ref("urn:fr:ppa:case:rd-b9"), @2025-02-01, 40000.00 EUR) { origin case_input; }
+        assert "rd-b9-05": plafond_50_0_102ter(entity_ref("urn:fr:ppa:case:rd-b9"), @2025-02-01, 77700.00 EUR) { origin case_input; }
+        assert "rd-b9-06": ca_bic_trimestre(entity_ref("urn:fr:ppa:case:rd-b9"), @2025-02-01, 9000.00 EUR) { origin case_input; }
+        assert "rd-b9-07": ca_bic_trimestre_precedent(entity_ref("urn:fr:ppa:case:rd-b9"), @2025-02-01, 2900.32 EUR) { origin case_input; }
+        assert "rd-b9-08": abattement_50_0_102ter(entity_ref("urn:fr:ppa:case:rd-b9"), @2025-02-01, 0.34) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b9"), @2025-02-01, 638.0682 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b10-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-b10-01": regime_general(entity_ref("urn:fr:ppa:case:rd-b10")) { origin case_input; }
+        assert "rd-b10-02": mois_revue(entity_ref("urn:fr:ppa:case:rd-b10"), @2026-06-01) { origin case_input; }
+        assert "rd-b10-03": demande_option_bic(entity_ref("urn:fr:ppa:case:rd-b10"), @2026-06-01) { origin case_input; }
+        assert "rd-b10-04": ca_bic_12_mois(entity_ref("urn:fr:ppa:case:rd-b10"), @2026-06-01, 40000.00 EUR) { origin case_input; }
+        assert "rd-b10-05": plafond_50_0_102ter(entity_ref("urn:fr:ppa:case:rd-b10"), @2026-06-01, 77700.00 EUR) { origin case_input; }
+        assert "rd-b10-06": ca_bic_trimestre(entity_ref("urn:fr:ppa:case:rd-b10"), @2026-06-01, 9000.00 EUR) { origin case_input; }
+        assert "rd-b10-07": ca_bic_m_4_m_2(entity_ref("urn:fr:ppa:case:rd-b10"), @2026-06-01, 3700.19 EUR) { origin case_input; }
+        assert "rd-b10-08": abattement_50_0_102ter(entity_ref("urn:fr:ppa:case:rd-b10"), @2026-06-01, 0.34) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b10"), @2026-06-01, 814.044 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == RUNTIME_ERROR;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-a1x-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-a1x-01": n_2_agri_connu(entity_ref("urn:fr:ppa:case:rd-a1x"), @2026-06-01) { origin case_input; }
+        assert "rd-a1x-02": benefices_agri_n_2(entity_ref("urn:fr:ppa:case:rd-a1x"), @2026-06-01, 24000.03 EUR) { origin case_input; }
+        assert "rd-a1x-03": annee_agri_complete(entity_ref("urn:fr:ppa:case:rd-a1x"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:rd-a1x"), @2026-06-01, 2000.0025 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-a1t-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-a1t-01": n_2_agri_connu(entity_ref("urn:fr:ppa:case:rd-a1t"), @2026-06-01) { origin case_input; }
+        assert "rd-a1t-02": benefices_agri_n_2(entity_ref("urn:fr:ppa:case:rd-a1t"), @2026-06-01, 24010.14 EUR) { origin case_input; }
+        assert "rd-a1t-03": annee_agri_complete(entity_ref("urn:fr:ppa:case:rd-a1t"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(revenu_agri(entity_ref("urn:fr:ppa:case:rd-a1t"), @2026-06-01, 2000.845 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b1x-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-b1x-01": n_1_bic_connu(entity_ref("urn:fr:ppa:case:rd-b1x"), @2026-06-01) { origin case_input; }
+        assert "rd-b1x-02": benefices_bic_n_1(entity_ref("urn:fr:ppa:case:rd-b1x"), @2026-06-01, 18000.09 EUR) { origin case_input; }
+        assert "rd-b1x-03": annee_bic_n_1_complete(entity_ref("urn:fr:ppa:case:rd-b1x"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b1x"), @2026-06-01, 1500.0075 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-ppa-ressources-division-rd-b1t-sans" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "rd-b1t-01": n_2_bic_connu(entity_ref("urn:fr:ppa:case:rd-b1t"), @2026-06-01) { origin case_input; }
+        assert "rd-b1t-02": benefices_bic_n_2(entity_ref("urn:fr:ppa:case:rd-b1t"), @2026-06-01, 12000.06 EUR) { origin case_input; }
+        assert "rd-b1t-03": annee_bic_complete(entity_ref("urn:fr:ppa:case:rd-b1t"), @2026-06-01) { origin case_input; }
+    }
+    evaluate truth(revenu_bic(entity_ref("urn:fr:ppa:case:rd-b1t"), @2026-06-01, 1000.005 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

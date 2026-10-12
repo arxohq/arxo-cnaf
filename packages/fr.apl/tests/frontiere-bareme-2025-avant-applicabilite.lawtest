@@ -1,0 +1,34 @@
+// БАРЕМ С 1 ОКТЯБРЯ 2025 ГОДА, вторая половина пары и САМАЯ ТОНКАЯ ГРАНИЦА
+// этого акта: 20 сентября 2025 года версии статей 7–16 в LEGI УЖЕ
+// действуют (окно версии открылось 10 сентября, в день вступления
+// изменяющего арретэ от 5 сентября 2025 года), но к престациям они
+// применяются лишь «à compter du 1er octobre 2025» — так говорит NOTA
+// каждой из них. Барем пакета живёт по ВТОРОЙ дате, поэтому в сентябре
+// 2025 года значений нет: редакции 2022–2025 годов в пакет не закреплены,
+// и параметр не подставляется последним известным — расчёт не получает
+// плафона вовсе. Сценарий фиксирует отказ: подмена даты применимости на
+// дату версии сделала бы его зелёным и тем самым невидимой.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-frontiere-bareme-2025-avant-applicabilite" {
+    given {
+        context { decision_time @2025-09-20T12:00:00Z; knowledge_time @2025-09-20T12:00:00Z; legal_time @2025-09-20; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "frontiere-bareme-2025-avant-applicabilite-01": secteur_locatif(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite")) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-02": zone_du_logement(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), ZONE_I) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-03": aide_demandee(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), APL) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-04": situation_familiale(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), PERSONNE_SEULE) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-05": personnes_a_charge(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), 0) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-06": loyer_principal(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), 400 EUR) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-07": ressources_du_menage(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), 7800 EUR) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-08": mode_location(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), LOCATION_SEULE) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-09": forme_logement(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), LOGEMENT_ORDINAIRE) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-10": reduction_loyer_solidarite(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), 0 EUR) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-11": beneficiaire_aah_ou_aeeh(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), false) { origin case_input; }
+        assert "frontiere-bareme-2025-avant-applicabilite-12": territoire(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:frontiere-bareme-2025-avant-applicabilite"), 265.33096125 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+}

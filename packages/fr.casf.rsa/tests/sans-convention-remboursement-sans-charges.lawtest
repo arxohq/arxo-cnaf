@@ -1,0 +1,25 @@
+// No quarter charges without a convention: no convention, a closed
+// calendar quarter and a retained market rate alone do not open the
+// quarterly reimbursement duty, because the text reimburses only
+// "ces charges" computed from the "éventuelles charges financières"
+// (D. 262-64 2°). The duty position is therefore absent. The
+// absence is asserted with `expect not position` (documented duty
+// idiom, 10-duty construct examples): the fulfillment literal
+// carries the Decimal fallback rate, which test queries cannot join
+// (D-11 class, see sans-convention-remboursement). Control pair of
+// sans-convention-remboursement.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-sans-convention-remboursement-sans-charges" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-04-15T12:00:00Z; knowledge_time @2025-04-15T12:00:00Z; legal_time @2025-04-15; timezone "Europe/Paris"; }
+        assert "sconv-01": absence_convention(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:org:caf")) { origin case_input; }
+        assert "sconv-02": trimestre_civil_fin(@2025-03-31) { origin case_input; }
+        assert "sconv-03": taux_marche_monetaire(0.025) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(RembourserChargesSansConvention, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

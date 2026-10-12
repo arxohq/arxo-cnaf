@@ -1,0 +1,27 @@
+// Собственное дело, соседнее с «foyer-apl-08-sous-seuil»: redevance 38 € — пособие после
+// абатмента 11,32 €, итог цепочки 11,0566 € не ниже порога 10 €, выплата есть.
+// K читается из R. 351-61 (общий случай) и R. 351-61-1 (фойе молодых работников и
+// социальные резиденции) — алгебра D. 832-25 в закреплённых данных картинка, см.
+// блок «КОЭФФИЦИЕНТ K» в 04-calcul-foyer.law и README, «Коэффициент K».
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-foyer-apl-09-au-seuil" {
+    given {
+        context { decision_time @2022-04-23T12:00:00Z; knowledge_time @2022-04-23T12:00:00Z; legal_time @2022-04-23; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "foyer-apl-09-au-seuil-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-09")) { origin case_input; }
+        assert "foyer-apl-09-au-seuil-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-apl-09"), APL) { origin case_input; }
+        assert "foyer-apl-09-au-seuil-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-apl-09"), ZONE_I) { origin case_input; }
+        assert "foyer-apl-09-au-seuil-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-apl-09"), PERSONNE_SEULE) { origin case_input; }
+        assert "foyer-apl-09-au-seuil-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-apl-09"), 0) { origin case_input; }
+        assert "foyer-apl-09-au-seuil-06": type_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-09"), GENERAL) { origin case_input; }
+        assert "foyer-apl-09-au-seuil-07": redevance(entity_ref("urn:fr:apl:case:foyer-apl-09"), 38 EUR) { origin case_input; }
+        assert "foyer-apl-09-au-seuil-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-apl-09"), 600 EUR) { origin case_input; }
+        assert "foyer-apl-09-au-seuil-09": territoire(entity_ref("urn:fr:apl:case:foyer-apl-09"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_mensuelle(entity_ref("urn:fr:apl:case:foyer-apl-09"), 11.0566 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

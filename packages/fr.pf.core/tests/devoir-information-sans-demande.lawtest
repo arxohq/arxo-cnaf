@@ -1,0 +1,16 @@
+// Standing information without a claim to draw up: no incumbent request explicitly - the information duty stands alone, no assistance duty (L. 583-1 1° standing vs 2° request-triggered, PC-R07-08).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-devoir-information-sans-demande" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "devoir-information-sans-demande-01": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:informe-seul")) { origin case_input; }
+        assert "devoir-information-sans-demande-02": not demande_dont_satisfaction_incombe(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:informe-seul")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InformerAllocataires, ACTIVE);
+    expect not position(PreterConcoursDemandes, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

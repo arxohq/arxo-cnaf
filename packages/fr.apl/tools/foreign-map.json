@@ -1,0 +1,1627 @@
+{
+  "$comment": "Таблица соответствия чужих ферм пакету fr.apl: их ключ → наш предикат. Ни одно ЧИСЛО отсюда не берётся; переносятся только имена и перечисления.",
+  "package": {
+    "package": "fr.apl",
+    "version": "0.1.0",
+    "namespace": "urn:fr:corpus:clir:apl",
+    "prefix": "fr-apl",
+    "timezone": "Europe/Paris",
+    "entity": "urn:fr:apl:case:{name}",
+    "world": [
+      "fr.apl"
+    ],
+    "coverage_start": "2020-10-01",
+    "interpretation": "PpPlancherFinal",
+    "interpretations": [
+      "PpPlancherFinal",
+      "ArrondiCentimeHalfUp"
+    ],
+    "required_interpretations": [
+      "PpPlancherFinal"
+    ]
+  },
+  "catala": {
+    "repo": "CatalaLang/catala-examples",
+    "commit": "2694b17ddd7c2246e207e8f077d586349ee5abea",
+    "dir": "aides_logement/tests",
+    "champs": {
+      "AL.CalculAidePersonnaliséeLogementLocatif": {
+        "sector": "secteur_locatif"
+      },
+      "AL.CalculAllocationLogementLocatif": {
+        "sector": "secteur_locatif"
+      },
+      "AL.CalculAidePersonnaliséeLogementFoyer": {
+        "sector": "secteur_logement_foyer",
+        "aide": "APL",
+        "note_k": "K D. 832-25 считается (04-calcul-foyer.law, чтение через R. 351-61 / R. 351-61-1, D-83)"
+      },
+      "AL.CalculAllocationLogementFoyer": {
+        "sector": "secteur_logement_foyer",
+        "aide": "ALF",
+        "note": "их scope AL не различает ALF/ALS; барем главы VII один для обеих — принято ALF",
+        "note_k": "K D. 832-25 считается (04-calcul-foyer.law, чтение через R. 351-61 / R. 351-61-1, D-83)"
+      },
+      "AL.CalculAidePersonnaliséeLogementAccessionPropriété": {
+        "sector": "secteur_accession",
+        "aide": "APL",
+        "skip_targets": {
+          "montant": "итог сектора приобретения APL требует K D. 832-11; его алгебра (R. 351-19) не закреплена — граница пакета (05-calcul-accession.law)"
+        }
+      },
+      "AL.CalculAllocationLogementAccessionPropriété": {
+        "sector": "secteur_accession_allocations",
+        "aide": "ALF",
+        "note": "их scope AL не различает ALF/ALS; барем главы VI один для обеих — принято ALF",
+        "skip_targets": {
+          "montant": "итог сектора приобретения аллокаций D. 842-6 = K × (L + C − L0): правило K в модуле 06 не заведено (отсылка к 2° D. 832-25; чтение R. 351-61-1 принято D-83 для фойе), а L0 (деление на 12, D. 832-26 2-й абзац) вне D-82 — граница пакета",
+          "coefficient_prise_en_charge": "K D. 842-6 «calculé selon les dispositions du 2° de l'article D. 832-25»: функция coefficient_k_jeunes_travailleurs есть (модуль 04), но правила для сектора приобретения аллокаций нет (06-calcul-accession-al.law, комментарий «КОЭФФИЦИЕНТА K НЕТ» устарел после D-83) — описано как (а), не исправлено: дело заморское, главы IX–X арретэ вне охвата сектора"
+        }
+      },
+      "AL.ÉligibilitéAidePersonnaliséeLogement": {
+        "skip": "право на пособие (гражданство, состав семьи, ресурсы по CSS) пакет не выводит — граница fr.apl"
+      },
+      "AL.ÉligibilitéAllocationLogement": {
+        "skip": "право на аллокацию (условия L. 822-*, CSS) пакет не выводит — граница fr.apl"
+      }
+    },
+    "context": "date_courante",
+    "facts": {
+      "zone": {
+        "predicate": "zone_du_logement",
+        "enum": {
+          "Zone1": "ZONE_I",
+          "Zone2": "ZONE_II",
+          "Zone3": "ZONE_III"
+        }
+      },
+      "situation_familiale_calcul_apl": {
+        "predicate": "situation_familiale",
+        "enum": {
+          "Couple": "COUPLE",
+          "PersonneSeule": "PERSONNE_SEULE"
+        }
+      },
+      "nombre_personnes_à_charge": {
+        "predicate": "personnes_a_charge",
+        "type": "Integer"
+      },
+      "ressources_ménage_arrondies": {
+        "predicate": "ressources_du_menage",
+        "type": "Money"
+      },
+      "loyer_principal": {
+        "predicate": "loyer_principal",
+        "type": "Money"
+      },
+      "réduction_loyer_solidarité": {
+        "predicate": "reduction_loyer_solidarite",
+        "type": "Money"
+      },
+      "bénéficiaire_aide_adulte_ou_enfant_handicapés": {
+        "predicate": "beneficiaire_aah_ou_aeeh",
+        "type": "Boolean"
+      },
+      "type_aide": {
+        "predicate": "aide_demandee",
+        "enum": {
+          "AidePersonnaliséeLogement": "APL",
+          "AllocationLogementFamiliale": "ALF",
+          "AllocationLogementSociale": "ALS"
+        }
+      },
+      "résidence": {
+        "predicate": "territoire",
+        "enum": {
+          "Métropole": "METROPOLE",
+          "Guadeloupe": "OUTRE_MER",
+          "Martinique": "OUTRE_MER",
+          "Guyane": "OUTRE_MER",
+          "LaRéunion": "OUTRE_MER",
+          "Mayotte": "OUTRE_MER",
+          "SaintMartin": "OUTRE_MER",
+          "SaintBarthélemy": "OUTRE_MER",
+          "SaintPierreEtMiquelon": "SAINT_PIERRE_ET_MIQUELON"
+        }
+      },
+      "mensualité_principale": {
+        "predicate": "mensualite_declaree",
+        "type": "Money"
+      },
+      "copropriété": {
+        "predicate": "mode_propriete",
+        "bool_enum": {
+          "vrai": "COPROPRIETAIRE",
+          "faux": "PROPRIETAIRE_UNIQUE"
+        }
+      },
+      "situation_r822_11_13_17": {
+        "predicate": "situation_r822_11_13_17",
+        "type": "Boolean"
+      },
+      "type_travaux_logement": {
+        "predicate": "type_travaux",
+        "enum": {
+          "PasDeTravaux": "PAS_DE_TRAVAUX",
+          "TravauxPourAcquisitionD832_15_1": "TRAVAUX_POUR_ACQUISITION",
+          "TravauxSurLogementDéjàAcquisD832_15_2": "TRAVAUX_SUR_LOGEMENT_DEJA_ACQUIS"
+        }
+      },
+      "ancienneté_logement": {
+        "predicate": "finalite_operation",
+        "enum_contains": {
+          "Neuf": "LOGEMENT_NEUF",
+          "AmélioréParOccupant.Oui": "LOGEMENT_AMELIORE_PAR_OCCUPANT",
+          "AmélioréParOccupant.Non": "LOGEMENT_ACQUIS_AMELIORE"
+        }
+      },
+      "redevance": {
+        "predicate": "redevance",
+        "type": "Money"
+      },
+      "type_logement_foyer": {
+        "predicate": "type_logement_foyer",
+        "enum": {
+          "RésidenceSociale": "JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE",
+          "LogementFoyerJeunesTravailleurs": "JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE",
+          "Autre": "GENERAL"
+        }
+      },
+      "catégorie_équivalence_loyer_d842_16": {
+        "predicate": "categorie_equivalence_loyer",
+        "enum": {
+          "EtudiantLogéEnChambreCROUS": "ETUDIANT_CHAMBRE",
+          "EtudiantLogéEnChambreCROUSRéhabilitée": "ETUDIANT_CHAMBRE_REHABILITEE",
+          "PersonnesÂgéesSelon3DeD842_16": "PERSONNES_AGEES",
+          "AutresPersonnes": "AUTRES_PERSONNES"
+        }
+      }
+    },
+    "derived": [
+      {
+        "predicate": "mode_location",
+        "sectors": [
+          "secteur_locatif"
+        ],
+        "from": "colocation",
+        "bool_enum": {
+          "vrai": "COLOCATION",
+          "faux": "LOCATION_SEULE"
+        }
+      },
+      {
+        "predicate": "forme_logement",
+        "sectors": [
+          "secteur_locatif"
+        ],
+        "priority": [
+          [
+            "âgées_ou_handicap_adultes_hébergées_onéreux_particuliers",
+            "CHAMBRE_HEBERGEMENT_ONEREUX"
+          ],
+          [
+            "logement_est_chambre",
+            "CHAMBRE"
+          ]
+        ],
+        "else": "LOGEMENT_ORDINAIRE"
+      },
+      {
+        "predicate": "sous_cas_mensualite",
+        "sectors": [
+          "secteur_accession"
+        ],
+        "from": "date_signature_prêt",
+        "date_threshold": [
+          [
+            "2019-10-01",
+            "PRET_APRES_30_09_2019"
+          ],
+          [
+            "2017-10-01",
+            "PRET_APRES_30_09_2017"
+          ]
+        ],
+        "else_skip": "займ подписан до 1 октября 2017 года: подслучаи 1°–3° ст. 18 (франковые винтажи) не перенесены"
+      },
+      {
+        "predicate": "vintage_pret_depense_nette",
+        "sectors": [
+          "secteur_accession"
+        ],
+        "from": "date_signature_prêt",
+        "date_threshold": [
+          [
+            "1998-10-01",
+            "PRET_DEPUIS_OCTOBRE_1998"
+          ],
+          [
+            "1900-01-01",
+            "PRET_AVANT_OCTOBRE_1998"
+          ]
+        ]
+      },
+      {
+        "predicate": "vintage_certificat",
+        "sectors": [
+          "secteur_accession_allocations"
+        ],
+        "from": "date_signature_prêt",
+        "date_threshold": [
+          [
+            "2019-10-01",
+            "CERTIFICAT_DEPUIS_01_10_2019"
+          ],
+          [
+            "2017-10-01",
+            "CERTIFICAT_DEPUIS_01_10_2017"
+          ],
+          [
+            "2015-10-01",
+            "CERTIFICAT_DEPUIS_01_10_2015"
+          ]
+        ],
+        "else_skip": "сертификат до 1 октября 2015 года: ранние винтажи ст. 33 не перенесены",
+        "note": "у Catala нет даты сертификата — взята дата подписания займа"
+      },
+      {
+        "predicate": "base_plancher_ressources",
+        "sectors": [
+          "secteur_accession_allocations"
+        ],
+        "const": "COEFFICIENT_MENSUALITE",
+        "note": "основание назначения по R. 842-5 у Catala не задаётся; принят 1° (коэффициент на мензуальность)"
+      },
+      {
+        "predicate": "nombre_coproprietaires",
+        "sectors": [
+          "secteur_accession",
+          "secteur_accession_allocations"
+        ],
+        "when": [
+          "copropriété",
+          "vrai"
+        ],
+        "skip": "сособственность без числа сособственников: доля D. 832-16/D. 842-10 не выводима"
+      },
+      {
+        "sectors": [
+          "secteur_locatif"
+        ],
+        "when": [
+          "logement_meublé_d842_2",
+          "vrai"
+        ],
+        "skip": "меблированный найм: цена — факт prix_paye_logement_meuble (D. 842-2), перенос таблицей не заведён"
+      }
+    ],
+    "ignored": {
+      "montant": "формула результата scope, не факт",
+      "date_conventionnement": "конвенция фойе: пакет не гейтует по ней",
+      "logement_foyer_jeunes_travailleurs": "покрыто type_logement_foyer",
+      "logement_meublé_d842_2": "меблированный найм: во всех делах 2694b17 — faux; дело с vrai отсекается правилом derived (цена пришла бы фактом prix_paye_logement_meuble, 28-loyer-meuble.law, D-85/D-86)",
+      "changement_logement_d842_4": "смена жилья D. 842-4 не перенесена",
+      "date_entrée_logement": "не входит в барем",
+      "local_habité_première_fois_bénéficiaire": "не входит в барем",
+      "opérations_logement_évolutifs_sociaux_accession_propriété_aidée_État": "LES: колонка не перенесена",
+      "charges_mensuelles_prêt": "AL сектора приобретения считает от мензуальности (mensualité_principale)",
+      "type_prêt": "тип займа: пакет различает только дату"
+    },
+    "targets": {
+      "montant": {
+        "predicate": "aide_mensuelle",
+        "kind": "Money",
+        "zero": {
+          "predicate": "aide_non_versee",
+          "kind": "Boolean"
+        }
+      },
+      "montant_forfaitaire_charges_d823_16": {
+        "predicate": "forfait_charges",
+        "kind": "Money"
+      },
+      "plafond_loyer_d823_16_2": {
+        "predicate": "plafond_loyer",
+        "kind": "Money"
+      },
+      "participation_minimale": {
+        "predicate": "participation_minimale",
+        "kind": "Money"
+      },
+      "taux_composition_familiale": {
+        "predicate": "taux_composition_familiale",
+        "kind": "Decimal"
+      },
+      "participation_personnelle": {
+        "predicate": "participation_personnelle",
+        "kind": "Money"
+      },
+      "mensualité_éligible": {
+        "by_sector": {
+          "secteur_accession": "mensualite_eligible",
+          "secteur_accession_allocations": "mensualite_eligible_al"
+        },
+        "kind": "Money"
+      },
+      "mensualité_minimale": {
+        "by_sector": {
+          "secteur_accession": "mensualite_minimale",
+          "secteur_accession_allocations": "mensualite_minimale_al"
+        },
+        "kind": "Money"
+      },
+      "plafond_équivalence_loyer_éligible": {
+        "predicate": "plafond_equivalence_loyer",
+        "kind": "Money"
+      },
+      "équivalence_loyer_minimale": {
+        "predicate": "equivalence_loyer_minimale",
+        "kind": "Money"
+      },
+      "équivalence_loyer_éligible": {
+        "predicate": "equivalence_loyer_eligible",
+        "kind": "Money"
+      },
+      "n_nombre_parts_d832_25": {
+        "predicate": "nombre_parts",
+        "kind": "Decimal"
+      },
+      "équivalence_loyer": {
+        "predicate": "equivalence_loyer_retenue",
+        "kind": "Money"
+      },
+      "loyer_minimal": {
+        "predicate": "loyer_minimal",
+        "kind": "Money"
+      },
+      "montant_forfaitaire_charges": {
+        "predicate": "forfait_charges_foyer",
+        "kind": "Money"
+      },
+      "aide_finale_formule_initiale": {
+        "skip": "итог формулы сектора приобретения (K × (L + C − L0)): K D. 832-11 / D. 842-6 в секторе приобретения не считается — граница пакета"
+      },
+      "coefficient_prise_en_charge": {
+        "predicate": "coefficient_prise_en_charge",
+        "kind": "Decimal"
+      },
+      "coefficient_prise_en_charge_d832_10": {
+        "skip": "K D. 832-11 (APL, приобретение): алгебра отменённой R. 351-19 не закреплена, формула D. 832-11 в LEGI — картинка; граница пакета"
+      },
+      "coefficient_prise_en_charge_d832_25": {
+        "predicate": "coefficient_prise_en_charge",
+        "kind": "Decimal"
+      },
+      "coefficient_r_d832_25": {
+        "param": "CoefficientRFoyer",
+        "kind": "Money"
+      },
+      "coefficient_multiplicateur_d832_25": {
+        "param_by": {
+          "type_logement_foyer": {
+            "Autre": "CoefMultiplicateurFoyerGeneral",
+            "RésidenceSociale": "CoefMultiplicateurFoyerJeunesTravailleurs",
+            "LogementFoyerJeunesTravailleurs": "CoefMultiplicateurFoyerJeunesTravailleurs"
+          }
+        },
+        "kind": "Money"
+      },
+      "éligible": {
+        "skip": "право на пособие не выводится"
+      },
+      "montant_versé": {
+        "predicate": "aide_mensuelle",
+        "kind": "Money",
+        "zero": {
+          "predicate": "aide_non_versee",
+          "kind": "Boolean"
+        }
+      },
+      "éligibilité": {
+        "skip": "право на пособие и выбор вида пособия (их калькулятор) пакет не выводит — граница fr.apl"
+      }
+    },
+    "qualified": [
+      {
+        "case": "al_accession_propriete-exemple1",
+        "issue": "INEXACT_DIVISION",
+        "class": "(а) граница",
+        "why": "(а)-граница: двенадцатая часть суммы транш L0 «le total étant divisé par douze» десятично непредставима, текст политики округления не называет, а прочтение D-82 (ArrondiCentimeHalfUp) L0 не покрывает — DECISIONS D-82 «Не покрыто: L0 фойе и приобретения»; наш ответ — отказ INEXACT_DIVISION по замыслу (§58), их число — округление денежного типа Catala (D. 832-26 2-й абзац через D. 842-6)"
+      },
+      {
+        "case": "apl_accession_propriete-exemple2",
+        "issue": "INEXACT_DIVISION",
+        "class": "(а) граница",
+        "why": "(а)-граница: двенадцатая часть суммы транш L0 «le total étant divisé par douze» десятично непредставима, текст политики округления не называет, а прочтение D-82 (ArrondiCentimeHalfUp) L0 не покрывает — DECISIONS D-82 «Не покрыто: L0 фойе и приобретения»; наш ответ — отказ INEXACT_DIVISION по замыслу (§58), их число — округление денежного типа Catala (L0 D. 832-15, работы при приобретении)"
+      },
+      {
+        "case": "apl_accession_propriete-exemple4",
+        "target": "mensualite_eligible",
+        "class": "(а) граница",
+        "why": "(а)-граница: у подслучаев ст. 18 после 30.09.2017 колонки c) «amélioré par l'occupant» нет (05-calcul-accession.law:457-460) — плафон правило не производит, а не выдумывает; их 399,20 — их выбор колонки b)"
+      },
+      {
+        "case": "apl_logement_foyer-castest5",
+        "target": "equivalence_loyer_minimale",
+        "class": "(б) их дефект против текста",
+        "why": "(б) их дефект против текста: месяц права 05.2022 — редакция ст. 31 арретэ ARRETE_ED2022_01 (in_force [2022-01-01, 2022-07-01), apl/01-sources.law:228) с ОДНОЙ таблицей для обоих абзацев D. 832-26 («mentionnés à l'article D. 832-26», apl/sources/fr-apl/arrete-2022-01.txt:119) и форфейтом 76,32 второго абзаца; их число — вторая таблица b) редакции с 01.07.2022 (arrete-2022-07.txt:123-124: 0 % до 1 423,03; 2,40 %; 20,80 %; 23,20 %; 32,80 %). Реплика их чтения: N = 1,2; Σ транш b) × N = 1 419,415008 + 76,32 = 1 495,735008, /12 = 124,6446 → 124,64; наше по тексту: Σ транш первой таблицы × 1,2 = 1 305,92736 + 76,32 = 1 382,24736, /12 = 115,18728 (под D-82 — 115,19)"
+      },
+      {
+        "case": "al_logement_foyer-castest1",
+        "target": "loyer_minimal",
+        "class": "(б) их дефект против текста",
+        "why": "(б) их дефект против текста: месяц права 05.2022 (L0 D. 842-15 → второй абзац D. 832-26) — редакция ст. 31 арретэ ARRETE_ED2022_01 (in_force [2022-01-01, 2022-07-01), apl/01-sources.law:228) с ОДНОЙ таблицей для обоих абзацев D. 832-26 («mentionnés à l'article D. 832-26», apl/sources/fr-apl/arrete-2022-01.txt:119) и форфейтом 76,32 второго абзаца; их число — вторая таблица b) редакции с 01.07.2022 (arrete-2022-07.txt:123-124: 0 % до 1 423,03; 2,40 %; 20,80 %; 23,20 %; 32,80 %). Реплика их чтения: те же входы, что apl castest5: 124,64; наше по тексту: 115,18728"
+      },
+      {
+        "case": "apl_logement_foyer-castest2",
+        "target": "loyer_minimal",
+        "class": "(б) их дефект против текста",
+        "why": "(б) их дефект против текста: месяц права 04.2022 (L0 D. 842-15 → второй абзац D. 832-26) — редакция ст. 31 арретэ ARRETE_ED2022_01 (in_force [2022-01-01, 2022-07-01), apl/01-sources.law:228) с ОДНОЙ таблицей для обоих абзацев D. 832-26 («mentionnés à l'article D. 832-26», apl/sources/fr-apl/arrete-2022-01.txt:119) и форфейтом 76,32 второго абзаца; их число — вторая таблица b) редакции с 01.07.2022 (arrete-2022-07.txt:123-124: 0 % до 1 423,03; 2,40 %; 20,80 %; 23,20 %; 32,80 %). Реплика их чтения: N = 1,5; Σ транш b) × N = 3 619,26876 + 76,32 = 3 695,58876, /12 = 307,96573 → 307,97; наше по тексту: Σ первой таблицы × 1,5 = 4 312,8996 + 76,32 = 4 389,2196, /12 = 365,7683"
+      },
+      {
+        "case": "apl_accession_propriete-exemple2",
+        "target": "mensualite_eligible",
+        "class": "(а) граница",
+        "why": "(а)-граница: заём подписан 02.12.2019, жильё «Ancien, amélioré par l'occupant» — у подслучаев ст. 18 после 30.09.2017 колонки c) «amélioré par l'occupant» нет (05-calcul-accession.law:457-460): плафон правило не производит, а не выдумывает; их 399,20 — их выбор колонки b) (то же, что Exemple4)"
+      },
+      {
+        "case": "apl_logement_foyer-castest5",
+        "target": "aide_mensuelle",
+        "class": "(б) их дефект против текста",
+        "why": "(б) следствие строки equivalence_loyer_minimale того же дела: редакция ст. 31 арретэ ARRETE_ED2022_01 (in_force [2022-01-01, 2022-07-01), apl/01-sources.law:228) с одной таблицей для обоих абзацев D. 832-26 (apl/sources/fr-apl/arrete-2022-01.txt:119); их L0/E0 — вторая таблица b) редакции с 01.07.2022 (arrete-2022-07.txt:123-124). Реплика их чтения нашей же цепочкой D. 832-24 (K = 0,6 и E = 350 — у обоих РАВНО): K × (E − E0) = 0,6 × (350 − 124,64) = 135,216; − минорация ст. 28 5 € = 130,216; шаг взносов D. 823-16 (0,5 %: 0,65108; 129,56492 → 129 €; + 0,65108) = 129,65108 → их 129,65. Наше по тексту: 0,6 × (350 − 115,19) = 140,886 − 5 = 135,886 → 135 + 0,67943 = 135,67943"
+      },
+      {
+        "case": "al_logement_foyer-castest1",
+        "target": "aide_mensuelle",
+        "class": "(б) их дефект против текста",
+        "why": "(б) следствие строки loyer_minimal того же дела: редакция ст. 31 арретэ ARRETE_ED2022_01 (in_force [2022-01-01, 2022-07-01), apl/01-sources.law:228) с одной таблицей для обоих абзацев D. 832-26 (apl/sources/fr-apl/arrete-2022-01.txt:119); их L0/E0 — вторая таблица b) редакции с 01.07.2022 (arrete-2022-07.txt:123-124). Реплика их чтения нашей же цепочкой D. 842-15 (K = 0,6, L = 206,40 — у обоих РАВНО; C = 54,22): K × (L + C − L0) = 0,6 × (206,40 + 54,22 − 124,64) = 81,588; − минорация ст. 41 5 € = 76,588; шаг взносов (0,5 %: 0,38294; 76,20506 → 76 €; + 0,38294) = 76,38294 → их 76,38. Наше по тексту: 0,6 × (260,62 − 115,18728) = 87,259632 − 5 = 82,259632 → 81 + 0,41129816 = 81,41129816"
+      },
+      {
+        "case": "apl_logement_foyer-castest2",
+        "target": "aide_mensuelle",
+        "class": "(б) их дефект против текста",
+        "why": "(б) следствие строки loyer_minimal того же дела (месяц права 04.2022): редакция ст. 31 арретэ ARRETE_ED2022_01 (in_force [2022-01-01, 2022-07-01), apl/01-sources.law:228) с одной таблицей для обоих абзацев D. 832-26 (apl/sources/fr-apl/arrete-2022-01.txt:119); их L0/E0 — вторая таблица b) редакции с 01.07.2022 (arrete-2022-07.txt:123-124). Реплика их чтения нашей же цепочкой D. 842-15 (K = 0,43, L = 320,73, C = 54,22 — у обоих РАВНО): 0,43 × (374,95 − 307,97) = 28,8014; − минорация ст. 41 5 € = 23,8014; шаг взносов (0,5 %: 0,119007; 23,682393 → 23 €; + 0,119007) = 23,119007 → их 23,12. Наше по тексту: 0,43 × (374,95 − 365,7683) = 3,948131 − 5 = −1,051869 (проба aide_foyer_apres_minoration) — пособия нет: aide_non_versee TRUE_ONLY, суммы aide_mensuelle у нас нет"
+      }
+    ],
+    "claim_rows": true,
+    "manual": [
+      {
+        "file": "tests_calculette_globale.catala_fr",
+        "scope": "Exemple2",
+        "champ": "AL.CalculAllocationLogementLocatif",
+        "note": "их калькулятор (AL.CalculetteAidesAuLogementGardeAlternée) сам выводит право и вид пособия; дело переписано плоскими входами наёма ALF: célibataire → PersonneSeule, 2 ребёнка (2008, 2011) на иждивении, Zone2, loyer 500 €, bailleur privé (не конвенционирован → аллокация, с детьми — ALF), Сен-Пьер-и-Микелон, ресурсы 12 500 € — те же входы, что у al_locatif Exemple4",
+        "facts": {
+          "loyer_principal": "500 €",
+          "ressources_ménage_arrondies": "12 500 €",
+          "bénéficiaire_aide_adulte_ou_enfant_handicapés": "faux",
+          "date_courante": "|2023-04-01|",
+          "nombre_personnes_à_charge": "2",
+          "situation_familiale_calcul_apl": "PersonneSeule",
+          "zone": "Zone2",
+          "résidence": "SaintPierreEtMiquelon",
+          "logement_est_chambre": "faux",
+          "âgées_ou_handicap_adultes_hébergées_onéreux_particuliers": "faux",
+          "type_aide": "AL.TypeAidesPersonnelleLogement.AllocationLogementFamiliale",
+          "colocation": "faux",
+          "réduction_loyer_solidarité": "0 €",
+          "logement_meublé_d842_2": "faux",
+          "changement_logement_d842_4": "PasDeChangement"
+        },
+        "asserts": [
+          [
+            "éligibilité",
+            "vrai"
+          ],
+          [
+            "montant_versé",
+            "230,63 €"
+          ]
+        ]
+      }
+    ],
+    "unparsed": {
+      "tests_calculette_globale.catala_fr": {
+        "Exemple1": {
+          "why": "калькулятор целиком",
+          "by_claim": {
+            "éligibilité": "право на пособие и вид пособия выводит их калькулятор (гражданство, состав, CSS) — пакет право не выводит, граница fr.apl",
+            "montant_versé": "ребёнок в garde alternée с коэффициентом 0,7: их калькулятор смешивает два расчёта (с ребёнком и без) по позиции Conseil d'État (их autres_sources.catala_fr), нормы этой пропорции в закреплённом тексте пакета нет; право и вид пособия (APL у bailleur social) выводит их калькулятор — не переносится"
+          }
+        }
+      },
+      "tests_couverture_temporelle.catala_fr": {
+        "*": {
+          "claims": [
+            [
+              "calcul_sans_exception",
+              "16 дат 2023-10-01…2027-07-01"
+            ]
+          ],
+          "why": "тест без утверждения о значении (их «Avertissement»: «aucune assertion sur les valeurs calculées»): проверяет лишь, что их движок не падает на 16 датах; утверждения о числе нет — сверять нечего"
+        }
+      }
+    },
+    "report_notes": [
+      "## Как читать",
+      "",
+      "Их числа — только ожидания; нормативные числа — закреплённые параметры и тексты пакета. Context каждого сценария — `interpretation PpPlancherFinal` (обязательная группа exactly_one, D-78) и `interpretation ArrondiCentimeHalfUp` (D-82: деление без политики в тексте — до сантима HALF_UP; пропорция D. 823-16 и E0 «divisé par douze» D. 832-26). Формула K фойе (D. 832-25, через текст R. 351-61 / R. 351-61-1) принята D-83 и считается правилами `04-calcul-foyer.law`; их r и cm (ст. 30 арретэ) сверяются с закреплёнными `bareme/CoefficientRFoyer`, `bareme/CoefMultiplicateurFoyerGeneral` на дату дела, сценарий для параметра не пишется.",
+      "",
+      "Классы: РАВНО; РАВНО_ДО_САНТИМА (наше точное, их — до сантима; сценарий закрепляет НАШЕ число, их — в шапке); РАВНО_ПО_ПРОЧТЕНИЮ (D-85: строка РАСХОДИТСЯ или РАВНО_ДО_САНТИМА получает вторую пробу без `ArrondiCentimeHalfUp`; класс ставится, только если без прочтения наше равно их числу); (а) граница — наш ответ отказ или нет вывода, и причина — у нас (граница текста или пакета); (б) их дефект против текста — с цитатой закреплённого текста, их числом, нашим и репликой их чтения; (в) дата — нет строк; НЕ_ПЕРЕНОСИТСЯ — с причиной.",
+      "",
+      "**Вторая проба (D-85).** Её получили 36 строк: все 31 РАВНО_ДО_САНТИМА и 5 строк РАСХОДИТСЯ до квалификации (`manifest.json`, поле `without_probe`). Ни одна не стала равной их числу без прочтения: РАВНО_ПО_ПРОЧТЕНИЮ — 0 строк. Прочтение D-82 меняет наш ответ лишь через E0 фойе (E0 CasTest5: 115,18728 → 115,19; итоги CasTest1: 12,060842807 → 12,0608335, CasTest3/4: 154,7783591424 → 154,77836) и в пределах сантима к их числу его не приближает и не удаляет.",
+      "",
+      "## Квалификация расхождений",
+      "",
+      "**(б) Таблица ст. 31 арретэ с 01.07.2022 применена к маю и апрелю 2022 года — 6 строк** (L0/E0 и их следствие в итоге). Текст месяца права — редакция ст. 31 `ARRETE_ED2022_01` (in_force [2022-01-01, 2022-07-01), `apl/01-sources.law:228`): одна таблица для обоих абзацев D. 832-26 — «mentionnés à l'article D. 832-26» (`apl/sources/fr-apl/arrete-2022-01.txt:119`); вторая таблица b) «Au deuxième alinéa» (0 % до 1 423,03; 2,40 %; 20,80 %; 23,20 %; 32,80 %) появляется только в редакции с 01.07.2022 (`arrete-2022-07.txt:120,123-124`, `ARRETE_ED2022_07` in_force [2022-07-01, 2023-01-01)). Их числа воспроизводятся этой второй таблицей до цента: apl CasTest5 E0 124,64 (наше 115,18728, под D-82 — 115,19), al CasTest1 L0 124,64 (наше 115,18728), apl CasTest2 L0 307,97 (наше 365,7683). Итоги тех же дел — следствие, реплика их чтения нашей же цепочкой D. 832-24 / D. 842-15 (K, E/L, C у обоих РАВНО; минорация ст. 28/41 — 5 €; шаг взносов D. 823-16): CasTest5 0,6 × (350 − 124,64) − 5 → 129,65108 → их 129,65 (наше 135,67943); al CasTest1 0,6 × (206,40 + 54,22 − 124,64) − 5 → 76,38294 → их 76,38 (наше 81,41129816); apl CasTest2 0,43 × (374,95 − 307,97) − 5 → 23,119007 → их 23,12 (наше: 0,43 × 9,1817 − 5 = −1,051869, пособия нет, `aide_non_versee` TRUE_ONLY). Промежуточные суммы нашей цепочки сняты пробами `aide_foyer_formule` / `aide_foyer_apres_minoration` / `forfait_charges_foyer` того же оракула.",
+      "",
+      "**(а) — наши границы и дефект, 4 строки класса и описание без исправления.**",
+      "- L0 «le total étant divisé par douze» (D. 832-26 2-й абзац, `cch-2021-01.txt:94`) для сектора приобретения десятично непредставим, а прочтение D-82 L0 не покрывает (D-82 «Не покрыто: L0 фойе и приобретения») — наш ответ отказ `INEXACT_DIVISION` (§58): al_accession Exemple1 `mensualite_minimale_al` (их 267,90), apl_accession Exemple2 `mensualite_minimale` (их 367,42).",
+      "- Колонки c) «amélioré par l'occupant» у подслучаев ст. 18 арретэ после 30.09.2017 нет (`05-calcul-accession.law:457-460`): плафон для заёмов 2019 года на такое жильё правило не производит — apl_accession Exemple2 и Exemple4 `mensualite_eligible` (их 399,20, выбор колонки b)).",
+      "- **(а) дефект, описан, не исправлен:** K аллокаций сектора приобретения (D. 842-6: «calculé selon les dispositions du 2° de l'article D. 832-25») пакет не выводит, хотя функция `coefficient_k_jeunes_travailleurs` после D-83 есть (`04-calcul-foyer.law:932`); комментарий «КОЭФФИЦИЕНТА K НЕТ … формула 2° D. 832-25 … картинкой» в `06-calcul-accession-al.law:18-20` устарел. Правило не заведено в этом проходе: итог сектора всё равно упирается в L0 (граница выше), а дела Catala — заморские (главы IX–X арретэ вне охвата сектора); строки al_accession Exemple1/2 `coefficient_prise_en_charge`, `montant`, `aide_finale_formule_initiale` — НЕ_ПЕРЕНОСИТСЯ с этой причиной.",
+      "- K D. 832-11 (APL, приобретение) по-прежнему вне пакета: алгебра отменённой R. 351-19 не закреплена (D-83 приняла только формулу фойе).",
+      "",
+      "## Было (ebe5e7c2, `REPORT-ebe5e7c2.md`) → стало (2694b17)",
+      "",
+      "Класс | ebe5e7c2 | 2694b17",
+      "--- | --- | ---",
+      "РАВНО | 47 | 59",
+      "РАВНО_ДО_САНТИМА | 30 | 31",
+      "РАВНО_ПО_ПРОЧТЕНИЮ | — | 0",
+      "(а) граница / ГРАНИЦА | 5 | 4",
+      "(б) их дефект против текста / РАСХОДИТСЯ_(б) | 3 | 6",
+      "НЕ_ПЕРЕНОСИТСЯ | 35 | 29",
+      "ДЕЛО_ВНЕ_ТАБЛИЦЫ | 4 | 0",
+      "Всего строк | 124 | 129",
+      "",
+      "- Формула K фойе (D-83): K шести дел фойе — РАВНО (было НЕ_ПЕРЕНОСИТСЯ), r и cm CasTest1 — РАВНО закреплённым параметрам; итоги фойе впервые исполнены: apl CasTest1/3/4 — РАВНО_ДО_САНТИМА (12,0608335 / 12,06; 154,77836 / 154,78), al CasTest1, apl CasTest2, CasTest5 — (б) как следствие таблицы ст. 31.",
+      "- Прочтение D-82: E0 apl CasTest1/3/4 — РАВНО (было РАВНО_ДО_САНТИМА); al_accession Exemple1 `mensualite_eligible_al` — РАВНО 375,20 (было ГРАНИЦА: отказ `INEXACT_DIVISION`).",
+      "- (б) прежние три строки — тот же дефект, теперь с цитатой и репликой; к ним добавлены три итога.",
+      "- Новое в 2694b17: `tests_calculette_globale` (Exemple2 перенесён таблицей `catala.manual` плоскими входами — РАВНО_ДО_САНТИМА 230,625 / 230,63; Exemple1 и утверждения `éligibilité` — НЕ_ПЕРЕНОСИТСЯ: право и вид пособия выводит их калькулятор), `tests_couverture_temporelle` (3 scope без утверждения о значении — НЕ_ПЕРЕНОСИТСЯ). Дела `eligibilite_apl` прежде одной строкой ДЕЛО_ВНЕ_ТАБЛИЦЫ, теперь — строка на утверждение (`claim_rows`).",
+      "- Плафоны AF D-81 к fr.apl не относятся (их применяет сверка fr.pf.af, `pf-af/tests/foreign/catala/REPORT.md`).",
+      "",
+      "Сценарии: РАВНО — с их числом, РАВНО_ДО_САНТИМА — с нашим точным числом и их в шапке (`corpus/tools/foreign/finalize.py`); оба — в наборе `fr.apl#catala-import` (82 сценария). Исключение — шесть сценариев K фойе (`*-coefficient-prise-en-charge*`, Decimal 0,41…0,64): у оракула РАВНО, а lawc отвечает NEITHER — дефект ядра D-11 (сравнение `truth()` с Decimal; тот же, что у шести известных отказов `nombre-parts`/`coefficient-depense-nette`); они вручную отложены в `diverging/*.lawtest.off` с этой причиной до исправления D-11. (а) и (б) — `diverging/*.lawtest.off` с классом и причиной в шапке, в `[tests]` не входят."
+    ]
+  },
+  "openfisca": {
+    "repo": "openfisca/openfisca-france",
+    "commit": "b2ab994331f6f35706bbe789ca015b422202530a",
+    "tests": [
+      "tests/formulas/aides_logement_reforme_janvier_2021.yaml",
+      "tests/formulas/aides_logement.yaml",
+      "tests/formulas/aides_logement_fiabilisation.yaml"
+    ],
+    "sector_by_statut": {
+      "locataire_vide": "secteur_locatif",
+      "locataire_meuble": "secteur_locatif",
+      "locataire_hlm": "secteur_locatif",
+      "locataire_foyer": "secteur_logement_foyer",
+      "primo_accedant": "secteur_accession",
+      "proprietaire": "secteur_accession",
+      "non_renseigne": "secteur_locatif"
+    },
+    "facts": {
+      "zone_apl": {
+        "predicate": "zone_du_logement",
+        "enum": {
+          "zone_1": "ZONE_I",
+          "zone_2": "ZONE_II",
+          "zone_3": "ZONE_III"
+        }
+      },
+      "al_couple": {
+        "predicate": "situation_familiale",
+        "bool_enum": {
+          "true": "COUPLE",
+          "false": "PERSONNE_SEULE"
+        }
+      },
+      "al_nb_personnes_a_charge": {
+        "predicate": "personnes_a_charge",
+        "type": "Integer"
+      },
+      "aide_logement_base_ressources": {
+        "predicate": "ressources_du_menage",
+        "type": "Money"
+      },
+      "loyer": {
+        "predicate": "loyer_principal",
+        "type": "Money",
+        "entity": "menage"
+      },
+      "coloc": {
+        "predicate": "mode_location",
+        "bool_enum": {
+          "true": "COLOCATION",
+          "false": "LOCATION_SEULE"
+        },
+        "entity": "menage"
+      },
+      "reduction_loyer_solidarite": {
+        "predicate": "reduction_loyer_solidarite",
+        "type": "Money"
+      },
+      "residence_saint_pierre_et_miquelon": {
+        "compose": "territoire",
+        "member": "SAINT_PIERRE_ET_MIQUELON",
+        "entity": "menage"
+      },
+      "residence_aides_logement_outre_mer": {
+        "compose": "territoire",
+        "member": "OUTRE_MER",
+        "entity": "menage"
+      }
+    },
+    "constants": [
+      [
+        "forme_logement",
+        "LOGEMENT_ORDINAIRE"
+      ],
+      [
+        "beneficiaire_aah_ou_aeeh",
+        "false"
+      ]
+    ],
+    "aide_by_variable": {
+      "apl": "APL",
+      "alf": "ALF",
+      "als": "ALS"
+    },
+    "targets": {
+      "aide_logement": {
+        "predicate": "aide_mensuelle",
+        "kind": "Money",
+        "zero": {
+          "predicate": "aide_non_versee",
+          "kind": "Boolean"
+        }
+      },
+      "aide_logement_montant": {
+        "predicate": "aide_mensuelle",
+        "kind": "Money",
+        "zero": {
+          "predicate": "aide_non_versee",
+          "kind": "Boolean"
+        }
+      },
+      "aide_logement_loyer_plafond": {
+        "predicate": "plafond_loyer",
+        "kind": "Money"
+      },
+      "aide_logement_charges": {
+        "predicate": "forfait_charges",
+        "kind": "Money"
+      },
+      "aide_logement_R0": {
+        "predicate": "abattement_r0",
+        "kind": "Money"
+      },
+      "aide_logement_participation_minimale": {
+        "predicate": "participation_minimale",
+        "kind": "Money"
+      },
+      "aide_logement_taux_famille": {
+        "predicate": "taux_composition_familiale",
+        "kind": "Decimal"
+      },
+      "aide_logement_participation_personnelle": {
+        "predicate": "participation_personnelle",
+        "kind": "Money"
+      },
+      "al_nb_personnes_a_charge": {
+        "predicate": "personnes_a_charge_retenues",
+        "kind": "Integer"
+      }
+    },
+    "parameters": {
+      "PlafondLoyerZone1Isole": "locatif/formule/l_plafonds_loyers/par_zone/zone_1/personnes_seules",
+      "PlafondColocZone1Isole": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_1/personnes_seules",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondLoyerZone1Couple": "locatif/formule/l_plafonds_loyers/par_zone/zone_1/couples",
+      "PlafondColocZone1Couple": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_1/couples",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondLoyerZone1UnePac": "locatif/formule/l_plafonds_loyers/par_zone/zone_1/un_enfant",
+      "PlafondColocZone1UnePac": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_1/un_enfant",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondLoyerZone1ParPacSup": "locatif/formule/l_plafonds_loyers/par_zone/zone_1/majoration_par_enf_supp",
+      "PlafondColocZone1ParPacSup": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_1/majoration_par_enf_supp",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondChambreZone1": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_1/personnes_seules",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_chambre",
+        "note": "у них плафон комнаты = плафон одинокого × коэффициент"
+      },
+      "CoefDegressiviteZone1": "locatif/coefficients_degressivite_suppression/zone_1/degressivite",
+      "CoefSuppressionZone1": "locatif/coefficients_degressivite_suppression/zone_1/suppression",
+      "PlafondEquivalenceZone1Isole": "foyer/apl/formule/e_equiv_loyers_eligible/zone_1/personne_isolee_sans_enfant",
+      "PlafondEquivalenceZone1Couple": "foyer/apl/formule/e_equiv_loyers_eligible/zone_1/menage_seul",
+      "PlafondEquivalenceZone1UnePac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_1/menage_ou_isole_avec_1_enfant",
+      "PlafondEquivalenceZone1DeuxPac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_1/menage_ou_isole_avec_2_enfants",
+      "PlafondEquivalenceZone1TroisPac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_1/menage_ou_isole_avec_3_enfants",
+      "PlafondEquivalenceZone1QuatrePac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_1/menage_ou_isole_avec_4_enfants",
+      "PlafondEquivalenceZone1ParPacSup": "foyer/apl/formule/e_equiv_loyers_eligible/zone_1/menage_ou_isole_par_enfant_en_plus",
+      "PlafondMensualiteAp2017NeufZone1Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_1/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone1Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_1/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017NeufZone1Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_1/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone1Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_1/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017NeufZone1UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_1/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone1UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_1/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017NeufZone1ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_1/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone1ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_1/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone1Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_1/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone1Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_1/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone1Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_1/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone1Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_1/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone1UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_1/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone1UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_1/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone1ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_1/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone1ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_1/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteALCert2015Zone1Isole": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/personne_isolee_sans_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone1Isole": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/personne_isolee_sans_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone1Isole": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/personne_isolee_sans_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone1Couples": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_seul",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone1Couples": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_seul",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone1Couples": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_seul",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone1C1": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_1_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone1C1": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_1_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone1C1": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_1_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone1C2": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_2_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone1C2": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_2_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone1C2": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_2_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone1C3": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_3_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone1C3": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_3_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone1C3": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_3_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone1C4": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_4_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone1C4": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_4_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone1C4": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_4_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone1C5": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_5_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone1C5": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_5_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone1C5": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_avec_5_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone1ParPersSupp": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_par_enfant_en_plus",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone1ParPersSupp": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_par_enfant_en_plus",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone1ParPersSupp": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_1/menage_ou_isole_par_enfant_en_plus",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondLoyerZone2Isole": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/personnes_seules",
+      "PlafondColocZone2Isole": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/personnes_seules",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondLoyerZone2Couple": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/couples",
+      "PlafondColocZone2Couple": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/couples",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondLoyerZone2UnePac": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/un_enfant",
+      "PlafondColocZone2UnePac": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/un_enfant",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondLoyerZone2ParPacSup": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/majoration_par_enf_supp",
+      "PlafondColocZone2ParPacSup": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/majoration_par_enf_supp",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondChambreZone2": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/personnes_seules",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_chambre",
+        "note": "у них плафон комнаты = плафон одинокого × коэффициент"
+      },
+      "CoefDegressiviteZone2": "locatif/coefficients_degressivite_suppression/zone_2/degressivite",
+      "CoefSuppressionZone2": "locatif/coefficients_degressivite_suppression/zone_2/suppression",
+      "PlafondEquivalenceZone2Isole": "foyer/apl/formule/e_equiv_loyers_eligible/zone_2/personne_isolee_sans_enfant",
+      "PlafondEquivalenceZone2Couple": "foyer/apl/formule/e_equiv_loyers_eligible/zone_2/menage_seul",
+      "PlafondEquivalenceZone2UnePac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_2/menage_ou_isole_avec_1_enfant",
+      "PlafondEquivalenceZone2DeuxPac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_2/menage_ou_isole_avec_2_enfants",
+      "PlafondEquivalenceZone2TroisPac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_2/menage_ou_isole_avec_3_enfants",
+      "PlafondEquivalenceZone2QuatrePac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_2/menage_ou_isole_avec_4_enfants",
+      "PlafondEquivalenceZone2ParPacSup": "foyer/apl/formule/e_equiv_loyers_eligible/zone_2/menage_ou_isole_par_enfant_en_plus",
+      "PlafondMensualiteAp2017NeufZone2Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_2/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone2Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_2/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017NeufZone2Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_2/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone2Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_2/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017NeufZone2UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_2/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone2UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_2/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017NeufZone2ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_2/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone2ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_2/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone2Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_2/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone2Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_2/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone2Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_2/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone2Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_2/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone2UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_2/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone2UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_2/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone2ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_2/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone2ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_2/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteALCert2015Zone2Isole": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/personne_isolee_sans_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone2Isole": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/personne_isolee_sans_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone2Isole": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/personne_isolee_sans_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone2Couples": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_seul",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone2Couples": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_seul",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone2Couples": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_seul",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone2C1": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_1_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone2C1": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_1_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone2C1": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_1_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone2C2": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_2_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone2C2": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_2_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone2C2": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_2_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone2C3": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_3_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone2C3": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_3_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone2C3": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_3_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone2C4": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_4_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone2C4": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_4_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone2C4": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_4_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone2C5": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_5_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone2C5": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_5_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone2C5": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_avec_5_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone2ParPersSupp": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_par_enfant_en_plus",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone2ParPersSupp": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_par_enfant_en_plus",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone2ParPersSupp": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_2/menage_ou_isole_par_enfant_en_plus",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondLoyerZone3Isole": "locatif/formule/l_plafonds_loyers/par_zone/zone_3/personnes_seules",
+      "PlafondColocZone3Isole": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_3/personnes_seules",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondLoyerZone3Couple": "locatif/formule/l_plafonds_loyers/par_zone/zone_3/couples",
+      "PlafondColocZone3Couple": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_3/couples",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondLoyerZone3UnePac": "locatif/formule/l_plafonds_loyers/par_zone/zone_3/un_enfant",
+      "PlafondColocZone3UnePac": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_3/un_enfant",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondLoyerZone3ParPacSup": "locatif/formule/l_plafonds_loyers/par_zone/zone_3/majoration_par_enf_supp",
+      "PlafondColocZone3ParPacSup": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_3/majoration_par_enf_supp",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_colocation",
+        "note": "у них плафон колокации = плафон × коэффициент"
+      },
+      "PlafondChambreZone3": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_3/personnes_seules",
+        "factor": "locatif/formule/l_plafonds_loyers/coef_chambre_et_colocation/coef_chambre",
+        "note": "у них плафон комнаты = плафон одинокого × коэффициент"
+      },
+      "CoefDegressiviteZone3": "locatif/coefficients_degressivite_suppression/zone_3/degressivite",
+      "CoefSuppressionZone3": "locatif/coefficients_degressivite_suppression/zone_3/suppression",
+      "PlafondEquivalenceZone3Isole": "foyer/apl/formule/e_equiv_loyers_eligible/zone_3/personne_isolee_sans_enfant",
+      "PlafondEquivalenceZone3Couple": "foyer/apl/formule/e_equiv_loyers_eligible/zone_3/menage_seul",
+      "PlafondEquivalenceZone3UnePac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_3/menage_ou_isole_avec_1_enfant",
+      "PlafondEquivalenceZone3DeuxPac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_3/menage_ou_isole_avec_2_enfants",
+      "PlafondEquivalenceZone3TroisPac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_3/menage_ou_isole_avec_3_enfants",
+      "PlafondEquivalenceZone3QuatrePac": "foyer/apl/formule/e_equiv_loyers_eligible/zone_3/menage_ou_isole_avec_4_enfants",
+      "PlafondEquivalenceZone3ParPacSup": "foyer/apl/formule/e_equiv_loyers_eligible/zone_3/menage_ou_isole_par_enfant_en_plus",
+      "PlafondMensualiteAp2017NeufZone3Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_3/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone3Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_3/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017NeufZone3Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_3/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone3Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_3/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017NeufZone3UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_3/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone3UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_3/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017NeufZone3ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_3/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019NeufZone3ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/neufs/zone_3/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone3Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_3/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone3Isole": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_3/isole_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone3Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_3/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone3Couple": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_3/menage_0_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone3UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_3/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone3UnePac": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_3/menage_ou_isole_1_pac",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2017AcquisAmelioreZone3ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_3/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteAp2019AcquisAmelioreZone3ParPacSup": {
+        "path": "accession/formule/l_mensualite_eligible/apl/agrandis/zone_3/par_pac_supp",
+        "note": "у них один ряд без подслучаев ст. 18 по дате займа"
+      },
+      "PlafondMensualiteALCert2015Zone3Isole": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/personne_isolee_sans_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone3Isole": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/personne_isolee_sans_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone3Isole": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/personne_isolee_sans_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone3Couples": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_seul",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone3Couples": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_seul",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone3Couples": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_seul",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone3C1": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_1_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone3C1": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_1_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone3C1": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_1_enfant",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone3C2": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_2_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone3C2": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_2_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone3C2": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_2_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone3C3": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_3_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone3C3": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_3_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone3C3": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_3_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone3C4": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_4_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone3C4": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_4_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone3C4": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_4_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone3C5": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_5_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone3C5": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_5_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone3C5": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_avec_5_enfants",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2015Zone3ParPersSupp": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_par_enfant_en_plus",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2017Zone3ParPersSupp": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_par_enfant_en_plus",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "PlafondMensualiteALCert2019Zone3ParPersSupp": {
+        "path": "accession/formule/l_mensualite_eligible/al/zone_3/menage_ou_isole_par_enfant_en_plus",
+        "note": "у них один ряд без винтажей сертификата ст. 33"
+      },
+      "ForfaitChargesBase": "locatif/formule/c_forfait_charges/cas_general/cas_general",
+      "ForfaitChargesParPacSup": "locatif/formule/c_forfait_charges/cas_general/majoration_par_enfant",
+      "ForfaitChargesColocIsole": "locatif/formule/c_forfait_charges/cas_colocataires/beneficiaire_isole",
+      "ForfaitChargesColocCouple": "locatif/formule/c_forfait_charges/cas_colocataires/couple_sans_enfant",
+      "ForfaitChargesColocParPac": "locatif/formule/c_forfait_charges/cas_colocataires/majoration_par_enfant",
+      "ForfaitChargesBaseOutreMer": "locatif/formule/c_forfait_charges/dom/cas_general",
+      "ForfaitChargesParPacSupOutreMer": "locatif/formule/c_forfait_charges/dom/majoration_par_enfant",
+      "ForfaitChargesPartageIsoleOutreMer": "locatif/formule/c_forfait_charges/dom_colocataires/beneficiaire_isole",
+      "ForfaitChargesPartageCoupleOutreMer": "locatif/formule/c_forfait_charges/dom_colocataires/couple_sans_enfant",
+      "ForfaitChargesPartageMajorationOutreMer": "locatif/formule/c_forfait_charges/dom_colocataires/majoration_par_enfant",
+      "MinorationForfaitaire": "locatif/minoration_forfaitaire",
+      "SeuilVersementAPL": "locatif/seuils_minimum_versement/apl",
+      "SeuilVersementAllocationLogement": "locatif/seuils_minimum_versement/non_apl",
+      "PlancherParticipationMinimale": "locatif/formule/pp_particip_perso/p0_particip_min/p0_forfait",
+      "TauxParticipationMinimale": "locatif/formule/pp_particip_perso/p0_particip_min/p0_taux",
+      "SeuilBasRL": "locatif/formule/pp_particip_perso/tp_taux/tl_loyer/seuils/seuil_1",
+      "SeuilHautRL": "locatif/formule/pp_particip_perso/tp_taux/tl_loyer/seuils/seuil_2",
+      "TauxRLTrancheBasse": {
+        "path": "locatif/formule/pp_particip_perso/tp_taux/tl_loyer/taux/tl_taux_2",
+        "note": "их tl_taux_1 — нулевая нижняя транша"
+      },
+      "TauxRLTrancheHaute": "locatif/formule/pp_particip_perso/tp_taux/tl_loyer/taux/tl_taux_3",
+      "LoyerReferenceIsole": {
+        "path": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/personnes_seules",
+        "note": "у них «loyers de référence = plafonds zone 2» (documentation)"
+      },
+      "LoyerReferenceCouple": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/couples",
+      "LoyerReference1Pac": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/un_enfant",
+      "LoyerReferenceMajoration": "locatif/formule/l_plafonds_loyers/par_zone/zone_2/majoration_par_enf_supp",
+      "ForfaitChargesFoyerBase": "foyer/al/formule/c_forfait_charges/cas_general",
+      "ForfaitChargesFoyerParPacSup": "foyer/al/formule/c_forfait_charges/par_personne_supplementaire",
+      "ForfaitChargesAccessionBase": "accession/formule/c_forfait_charges/cas_general",
+      "ForfaitChargesAccessionParPacSup": "accession/formule/c_forfait_charges/par_personne_supplementaire",
+      "ForfaitChargesALAccessionBase": "accession/formule/c_forfait_charges/cas_general",
+      "ForfaitChargesALAccessionParPacSup": "accession/formule/c_forfait_charges/par_personne_supplementaire",
+      "BorneL0": "accession/formule/l0_mensualite_minimale/seuil",
+      "TauxL0TrancheBasse": "accession/formule/l0_mensualite_minimale/taux_1",
+      "TauxL0TrancheHaute": "accession/formule/l0_mensualite_minimale/taux_2",
+      "CoefMultiplicateurAccession": "accession/formule/k_coef_prise_en_charge/cm3_coef_multiplicateur",
+      "MinorationForfaitaireAccession": "accession/minoration_forfaitaire/apl",
+      "MinorationForfaitaireALAccession": "accession/minoration_forfaitaire/al",
+      "SeuilVersementAccession": "accession/seuil_minimum_versement/apl",
+      "SeuilVersementALAccession": "accession/seuil_minimum_versement/al",
+      "MinorationForfaitaireFoyerAPL": "foyer/apl/minoration_forfaitaire",
+      "MinorationForfaitaireFoyerAL": "foyer/al/minoration_forfaitaire",
+      "SeuilVersementFoyerAPL": "foyer/apl/seuil_minimum_versement",
+      "SeuilVersementFoyerAL": "foyer/al/seuil_minimum_versement",
+      "DepenseNetteMinimaleFoyerAPL": "foyer/apl/minimum_depense_nette_logement/apl1_foyer",
+      "DepenseNetteMinimaleFoyerJeunesTravailleurs": "foyer/apl/minimum_depense_nette_logement/apl2_foyer",
+      "DepenseNetteMinimaleFoyerAL": "foyer/al/minimum_depense_nette_logement",
+      "CoefPlancherRessources": "ressources/accession/dar_3_coef_plancher_ressources",
+      "CoefPlancherRessourcesAL": "ressources/accession/dar_3_coef_plancher_ressources",
+      "ForfaitPlancherRessourcesAL": "ressources/accession/dar_2_2_forfait_plancher_ressources",
+      "CoefficientRFoyer": "foyer/k_coef_prise_en_charge/cm_et_r/r_apl1",
+      "CoefMultiplicateurFoyerGeneral": "foyer/k_coef_prise_en_charge/cm_et_r/cm1_apl1",
+      "CoefMultiplicateurFoyerJeunesTravailleurs": "foyer/k_coef_prise_en_charge/cm_et_r/cm2_apl2_et_al",
+      "PlafondCoefficientPriseEnChargeGeneral": "foyer/k_coef_prise_en_charge/plafonds/plafond_apl1",
+      "PlafondCoefficientPriseEnChargeJeunesTravailleurs": "foyer/k_coef_prise_en_charge/plafonds/plafond_apl2_et_al",
+      "ForfaitE0General": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/majoration",
+      "ForfaitE0JeunesTravailleurs": "foyer/apl/formule/e0_equiv_loyers_minimale/apl2/majoration",
+      "AbattementR0UnePacOutreMer": "locatif/formule/pp_particip_perso/r0_abattement/outre_mer/taux1pac",
+      "AbattementR0Isole": "locatif/formule/pp_particip_perso/r0_abattement/cas_general/taux_seul",
+      "AbattementR0IsoleSaintPierre": "locatif/formule/pp_particip_perso/r0_abattement/saint_pierre_et_miquelon/taux_seul",
+      "AbattementR0Couple": "locatif/formule/pp_particip_perso/r0_abattement/cas_general/taux_couple",
+      "AbattementR0CoupleSaintPierre": "locatif/formule/pp_particip_perso/r0_abattement/saint_pierre_et_miquelon/taux_couple",
+      "AbattementR01Pac": "locatif/formule/pp_particip_perso/r0_abattement/cas_general/taux1pac",
+      "AbattementR01PacSaintPierre": "locatif/formule/pp_particip_perso/r0_abattement/saint_pierre_et_miquelon/taux1pac",
+      "AbattementR02Pac": "locatif/formule/pp_particip_perso/r0_abattement/cas_general/taux2pac",
+      "AbattementR02PacSaintPierre": "locatif/formule/pp_particip_perso/r0_abattement/saint_pierre_et_miquelon/taux2pac",
+      "AbattementR03Pac": "locatif/formule/pp_particip_perso/r0_abattement/cas_general/taux3pac",
+      "AbattementR03PacSaintPierre": "locatif/formule/pp_particip_perso/r0_abattement/saint_pierre_et_miquelon/taux3pac",
+      "AbattementR04Pac": "locatif/formule/pp_particip_perso/r0_abattement/cas_general/taux4pac",
+      "AbattementR04PacSaintPierre": "locatif/formule/pp_particip_perso/r0_abattement/saint_pierre_et_miquelon/taux4pac",
+      "AbattementR05Pac": "locatif/formule/pp_particip_perso/r0_abattement/cas_general/taux5pac",
+      "AbattementR05PacSaintPierre": "locatif/formule/pp_particip_perso/r0_abattement/saint_pierre_et_miquelon/taux5pac",
+      "AbattementR06Pac": "locatif/formule/pp_particip_perso/r0_abattement/cas_general/taux6pac",
+      "AbattementR06PacSaintPierre": "locatif/formule/pp_particip_perso/r0_abattement/saint_pierre_et_miquelon/taux6pac",
+      "AbattementR0Majoration": "locatif/formule/pp_particip_perso/r0_abattement/cas_general/taux_pac_supp",
+      "AbattementR0MajorationSaintPierre": "locatif/formule/pp_particip_perso/r0_abattement/saint_pierre_et_miquelon/taux_pac_supp",
+      "TauxFamilleIsole": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/metropole/personnes_isolees",
+      "TauxFamilleIsoleOutreMer": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/dom/personnes_isolees",
+      "TauxFamilleCouple": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/metropole/couples_0_enfant",
+      "TauxFamilleCoupleOutreMer": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/dom/couples_0_enfant",
+      "TauxFamille1Pac": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/metropole/avec_1_enfant",
+      "TauxFamille1PacOutreMer": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/dom/avec_1_enfant",
+      "TauxFamille2Pac": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/metropole/avec_2_enfants",
+      "TauxFamille2PacOutreMer": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/dom/avec_2_enfants",
+      "TauxFamille3Pac": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/metropole/avec_3_enfants",
+      "TauxFamille3PacOutreMer": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/dom/avec_3_enfants",
+      "TauxFamille4Pac": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/metropole/avec_4_enfants",
+      "TauxFamille4PacOutreMer": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/dom/avec_4_enfants",
+      "TauxFamille5Pac": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/metropole/avec_5_enfants",
+      "TauxFamille5PacOutreMer": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/dom/avec_5_enfants",
+      "TauxFamille6Pac": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/metropole/avec_6_enfants",
+      "TauxFamille6PacOutreMer": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/dom/avec_6_enfants",
+      "TauxFamilleMajoration": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/metropole/maj_par_enf_supp",
+      "TauxFamilleMajorationOutreMer": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/dom/maj_par_enf_supp",
+      "TauxFamille7PacOutreMer": "locatif/formule/pp_particip_perso/tp_taux/tf_taille_famille/dom/avec_7_enfants",
+      "EquivalenceLoyerAutresPersonnesSeule": "foyer/al/formule/l_plafonds_loyers/autres_personnes/personne_isolee",
+      "EquivalenceLoyerAutresPersonnesDeux": "foyer/al/formule/l_plafonds_loyers/autres_personnes/couple",
+      "EquivalenceLoyerEtudiantChambreSeule": "foyer/al/formule/l_plafonds_loyers/etudiants_en_chambre/personne_isolee",
+      "EquivalenceLoyerEtudiantChambreDeux": "foyer/al/formule/l_plafonds_loyers/etudiants_en_chambre/couple",
+      "EquivalenceLoyerEtudiantChambreRehabiliteeSeule": "foyer/al/formule/l_plafonds_loyers/etudiants_en_chambre_rehabilitee/personne_isolee",
+      "EquivalenceLoyerEtudiantChambreRehabiliteeDeux": "foyer/al/formule/l_plafonds_loyers/etudiants_en_chambre_rehabilitee/couple",
+      "EquivalenceLoyerPersonnesAgeesSeule": "foyer/al/formule/l_plafonds_loyers/personnes_agees/personne_isolee",
+      "EquivalenceLoyerPersonnesAgeesDeux": "foyer/al/formule/l_plafonds_loyers/personnes_agees/couple",
+      "BorneE0Tranche1": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 1,
+        "field": "threshold"
+      },
+      "BorneE0Tranche2": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 2,
+        "field": "threshold"
+      },
+      "BorneE0Tranche3": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 3,
+        "field": "threshold"
+      },
+      "BorneE0Tranche4": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 4,
+        "field": "threshold"
+      },
+      "BorneE0Tranche5": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 5,
+        "field": "threshold"
+      },
+      "TauxE0Tranche1": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 0,
+        "field": "rate"
+      },
+      "TauxE0Tranche2": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 1,
+        "field": "rate"
+      },
+      "TauxE0Tranche3": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 2,
+        "field": "rate"
+      },
+      "TauxE0Tranche4": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 3,
+        "field": "rate"
+      },
+      "TauxE0Tranche5": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 4,
+        "field": "rate"
+      },
+      "TauxE0Tranche6": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl1/bareme",
+        "bracket": 5,
+        "field": "rate"
+      },
+      "BorneL0SecondAlinea1": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl2/bareme",
+        "bracket": 1,
+        "field": "threshold"
+      },
+      "BorneL0SecondAlinea2": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl2/bareme",
+        "bracket": 2,
+        "field": "threshold"
+      },
+      "BorneL0SecondAlinea3": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl2/bareme",
+        "bracket": 3,
+        "field": "threshold"
+      },
+      "BorneL0SecondAlinea4": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl2/bareme",
+        "bracket": 4,
+        "field": "threshold"
+      },
+      "TauxL0SecondAlinea1": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl2/bareme",
+        "bracket": 0,
+        "field": "rate"
+      },
+      "TauxL0SecondAlinea2": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl2/bareme",
+        "bracket": 1,
+        "field": "rate"
+      },
+      "TauxL0SecondAlinea3": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl2/bareme",
+        "bracket": 2,
+        "field": "rate"
+      },
+      "TauxL0SecondAlinea4": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl2/bareme",
+        "bracket": 3,
+        "field": "rate"
+      },
+      "TauxL0SecondAlinea5": {
+        "path": "foyer/apl/formule/e0_equiv_loyers_minimale/apl2/bareme",
+        "bracket": 4,
+        "field": "rate"
+      },
+      "PartsAccessionIsole": "accession/formule/k_coef_prise_en_charge/n_nombre_parts/isole_0_pac",
+      "PartsAccessionCouple": "accession/formule/k_coef_prise_en_charge/n_nombre_parts/menage_0_pac",
+      "PartsAccessionUnePac": "accession/formule/k_coef_prise_en_charge/n_nombre_parts/1_pac",
+      "PartsAccessionDeuxPac": "accession/formule/k_coef_prise_en_charge/n_nombre_parts/2_pac",
+      "PartsAccessionTroisPac": "accession/formule/k_coef_prise_en_charge/n_nombre_parts/3_pac",
+      "PartsAccessionQuatrePac": "accession/formule/k_coef_prise_en_charge/n_nombre_parts/4_pac",
+      "PartsAccessionParPacSup": "accession/formule/k_coef_prise_en_charge/n_nombre_parts/maj_par_pac_supp",
+      "PartsFoyerGeneralIsole": "foyer/k_coef_prise_en_charge/n_nombre_parts/apl/isole_0_personne_a_charge",
+      "PartsFoyerJeunesTravailleursIsole": {
+        "path": "foyer/k_coef_prise_en_charge/n_nombre_parts/al/isole_0_personne_a_charge",
+        "note": "их ряд «al» — по D. 832-25 второй абзац? сверка покажет"
+      },
+      "PartsFoyerGeneralCouple": "foyer/k_coef_prise_en_charge/n_nombre_parts/apl/menage_0_personnes_a_charge",
+      "PartsFoyerJeunesTravailleursCouple": {
+        "path": "foyer/k_coef_prise_en_charge/n_nombre_parts/al/menage_0_personnes_a_charge",
+        "note": "их ряд «al» — по D. 832-25 второй абзац? сверка покажет"
+      },
+      "PartsFoyerGeneralUnePac": "foyer/k_coef_prise_en_charge/n_nombre_parts/apl/1_personne_a_charge",
+      "PartsFoyerJeunesTravailleursUnePac": {
+        "path": "foyer/k_coef_prise_en_charge/n_nombre_parts/al/1_personne_a_charge",
+        "note": "их ряд «al» — по D. 832-25 второй абзац? сверка покажет"
+      },
+      "PartsFoyerGeneralDeuxPac": "foyer/k_coef_prise_en_charge/n_nombre_parts/apl/2_personnes_a_charge",
+      "PartsFoyerJeunesTravailleursDeuxPac": {
+        "path": "foyer/k_coef_prise_en_charge/n_nombre_parts/al/2_personnes_a_charge",
+        "note": "их ряд «al» — по D. 832-25 второй абзац? сверка покажет"
+      },
+      "PartsFoyerGeneralTroisPac": "foyer/k_coef_prise_en_charge/n_nombre_parts/apl/3_personnes_a_charge",
+      "PartsFoyerJeunesTravailleursTroisPac": {
+        "path": "foyer/k_coef_prise_en_charge/n_nombre_parts/al/3_personnes_a_charge",
+        "note": "их ряд «al» — по D. 832-25 второй абзац? сверка покажет"
+      },
+      "PartsFoyerGeneralQuatrePac": "foyer/k_coef_prise_en_charge/n_nombre_parts/apl/4_personnes_a_charge",
+      "PartsFoyerJeunesTravailleursQuatrePac": {
+        "path": "foyer/k_coef_prise_en_charge/n_nombre_parts/al/4_personnes_a_charge",
+        "note": "их ряд «al» — по D. 832-25 второй абзац? сверка покажет"
+      },
+      "PartsFoyerGeneralParPacSup": "foyer/k_coef_prise_en_charge/n_nombre_parts/apl/maj_par_pac_supp",
+      "PartsFoyerJeunesTravailleursParPacSup": {
+        "path": "foyer/k_coef_prise_en_charge/n_nombre_parts/al/maj_par_pac_supp",
+        "note": "их ряд «al» — по D. 832-25 второй абзац? сверка покажет"
+      }
+    },
+    "parameters_root": "prestations_sociales/aides_logement/allocations_logement",
+    "parameters_unmapped": {
+      "TauxCRDS": "ставка CRDS у них вне ветки aides_logement",
+      "PartRLSDeduite": "98 % RLS — литерал их формулы, не параметр",
+      "LimitePacOutreMer": "предел шести иждивенцев — код их формулы, не параметр",
+      "PartCoproprietairePlafond": "сособственность у них не моделируется",
+      "PartCoproprietairePlafondAL": "сособственность у них не моделируется",
+      "ForfaitChargesCopro*": "сособственность у них не моделируется",
+      "CoefDepenseNette*": "коэффициенты D. 832-15/D. 842-12: у них иная форма",
+      "DepenseNetteMinimaleALAccession": "нет в их дереве",
+      "PlafondChambreOnereuxZone*": "личное содержание у них — коэффициент personne_agee_handicapee, форма иная"
+    },
+    "sector_note": "статус жилья non_renseigne (их дела о промежуточных величинах R0, TF, иждивенцах) проводится по найму: эти величины у обоих считаются формулой найма",
+    "qualified": [
+      {
+        "case_prefix": "of-cas-2-al-reforme-2019",
+        "issue": "INEXACT_DIVISION",
+        "class": "ГРАНИЦА",
+        "why": "известная граница: пропорциональное уменьшение по дегрессивности D. 823-16 не названо ни одной политикой округления — сценарий tests/openfisca-02.lawtest закрепляет отказ; их код округляет пропорцию"
+      },
+      {
+        "case_prefix": "of-cas-",
+        "target": "aide_mensuelle",
+        "class": "РАСХОДИТСЯ_(б)",
+        "why": "четыре отличия их модели от D. 823-16/17, каждое названо и воспроизведено репликой до цента (tools/compare_openfisca.py): шаг CRDS «× (1 − 0,5 %)» вместо вычета-округления-возврата, вычет 98 % RLS до вилки взносов, наём округлён до евро, промежуточные P0/Pp округлены до сантима"
+      },
+      {
+        "case_prefix": "of-personne-isol-e-2026-08",
+        "target": "aide_mensuelle",
+        "class": "РАСХОДИТСЯ_(б)",
+        "why": "те же отличия их модели; их файл прямо пишет формулу round(x × (1 − 0,005), 2) — шаг CRDS не по D. 823-16"
+      },
+      {
+        "case_prefix": "of-aides-logements-saint-barth-lemy",
+        "target": "taux_composition_familiale",
+        "class": "РАСХОДИТСЯ_(б)",
+        "why": "их код отдаёт ставку, округлённую до двух знаков (0,02); их же файл ожидает 0,0161 = наше число ст. 46 для восьми иждивенцев — округление их вывода, не барема"
+      }
+    ],
+    "parameters_qualified": {
+      "AbattementR0UnePacOutreMer": {
+        "class": "РАСХОДИТСЯ_(б)",
+        "why": "их ряд outre_mer/taux1pac кончается значением 2023 года (8 181); ст. 46 в состояниях с 1 января 2024 и 2025 годов даёт 8 574 и 8 656 — их данные не обновлены"
+      },
+      "PartsAccessionIsole": {
+        "class": "РАСХОДИТСЯ_(б)",
+        "why": "D. 832-11 (закреплённый текст): «bénéficiaire isolé | 1,4»; у них isole_0_pac = 1,2 — это доля второго абзаца D. 832-25 (фойе), перенесённая в сектор приобретения"
+      },
+      "PartsAccessionCouple": {
+        "class": "РАСХОДИТСЯ_(б)",
+        "why": "D. 832-11: «ménage sans personne à charge | 1,8»; у них menage_0_pac = 1,5 — доля фойе"
+      },
+      "TauxFamille7PacOutreMer": {
+        "class": "ИНАЯ_ФОРМА",
+        "why": "до 2023 года заморский расчёт ограничен шестью иждивенцами (LimitePacOutreMer): у них ставка седьмого иждивенца записана нулём, у нас число ст. 46 при недостижимом входе — обе записи означают «не применяется»"
+      },
+      "TauxFamilleMajorationOutreMer": {
+        "class": "ИНАЯ_ФОРМА",
+        "why": "то же: надбавка за иждивенца сверх шести до 2023 года не применяется"
+      }
+    },
+    "compose": {
+      "territoire": {
+        "predicate": "territoire",
+        "else": "METROPOLE"
+      }
+    }
+  }
+}

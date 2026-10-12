@@ -1,0 +1,129 @@
+// Couple cessation (L523-2, R523-4, R523-5, R523-6).
+//
+// The cessation of couple life stops payment: any assessed month at or
+// after the fund-stated cessation month (both first-of-month) concludes
+// cessation for the household and child. The R523-4/R523-5/R523-6
+// cessation and cadence dates arrive through the same two month inputs
+// (fund assessment, B-PFASF-DATES).
+
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+use self::{
+    CSS_L523_2,
+    CSS_L523_2_ED2011_12,
+    CSS_L523_2_ED2014_04,
+    CSS_L523_2_ED2015_04,
+    CSS_L523_2_ED2016_04,
+    CSS_L523_2_ED2017_04,
+    CSS_L523_2_ED2018_04,
+    CSS_L523_2_ED2018_07,
+    CSS_L523_2_ED2018_07_27,
+    CSS_L523_2_ED2019_12,
+    CSS_L523_2_ED2021_12,
+    CSS_L523_2_ED2022_11,
+    CSS_R523_4,
+    CSS_R523_4_ED1999_11,
+    CSS_R523_4_ED2011_12,
+    CSS_R523_4_ED2014_04,
+    CSS_R523_4_ED2015_04,
+    CSS_R523_4_ED2016_04,
+    CSS_R523_4_ED2017_04,
+    CSS_R523_4_ED2018_04,
+    CSS_R523_4_ED2018_07,
+    CSS_R523_4_ED2018_07_27,
+    CSS_R523_4_ED2019_12,
+    CSS_R523_4_ED2021_12,
+    CSS_R523_4_ED2022_11,
+    CSS_R523_5,
+    CSS_R523_5_ED1999_11,
+    CSS_R523_5_ED2011_12,
+    CSS_R523_5_ED2014_04,
+    CSS_R523_5_ED2015_04,
+    CSS_R523_5_ED2016_04,
+    CSS_R523_5_ED2017_04,
+    CSS_R523_5_ED2018_04,
+    CSS_R523_5_ED2018_07,
+    CSS_R523_5_ED2018_07_27,
+    CSS_R523_5_ED2019_12,
+    CSS_R523_5_ED2021_12,
+    CSS_R523_5_ED2022_11,
+    CSS_R523_6,
+    CSS_R523_6_ED1999_11,
+    CSS_R523_6_ED2011_12,
+    CSS_R523_6_ED2014_04,
+    CSS_R523_6_ED2015_04,
+    CSS_R523_6_ED2016_04,
+    CSS_R523_6_ED2017_04,
+    CSS_R523_6_ED2018_04,
+    CSS_R523_6_ED2018_07,
+    CSS_R523_6_ED2018_07_27,
+    CSS_R523_6_ED2019_12,
+    CSS_R523_6_ED2021_12,
+    CSS_R523_6_ED2022_11,
+    asf_cessation_couple,
+    mois_cessation_couple,
+    mois_droit_asf,
+};
+
+@source(
+    CSS_L523_2,
+    CSS_L523_2_ED2011_12,
+    CSS_L523_2_ED2014_04,
+    CSS_L523_2_ED2015_04,
+    CSS_L523_2_ED2016_04,
+    CSS_L523_2_ED2017_04,
+    CSS_L523_2_ED2018_04,
+    CSS_L523_2_ED2018_07,
+    CSS_L523_2_ED2018_07_27,
+    CSS_L523_2_ED2019_12,
+    CSS_L523_2_ED2021_12,
+    CSS_L523_2_ED2022_11,
+    CSS_R523_4,
+    CSS_R523_4_ED1999_11,
+    CSS_R523_4_ED2011_12,
+    CSS_R523_4_ED2014_04,
+    CSS_R523_4_ED2015_04,
+    CSS_R523_4_ED2016_04,
+    CSS_R523_4_ED2017_04,
+    CSS_R523_4_ED2018_04,
+    CSS_R523_4_ED2018_07,
+    CSS_R523_4_ED2018_07_27,
+    CSS_R523_4_ED2019_12,
+    CSS_R523_4_ED2021_12,
+    CSS_R523_4_ED2022_11,
+    CSS_R523_5,
+    CSS_R523_5_ED1999_11,
+    CSS_R523_5_ED2011_12,
+    CSS_R523_5_ED2014_04,
+    CSS_R523_5_ED2015_04,
+    CSS_R523_5_ED2016_04,
+    CSS_R523_5_ED2017_04,
+    CSS_R523_5_ED2018_04,
+    CSS_R523_5_ED2018_07,
+    CSS_R523_5_ED2018_07_27,
+    CSS_R523_5_ED2019_12,
+    CSS_R523_5_ED2021_12,
+    CSS_R523_5_ED2022_11,
+    CSS_R523_6,
+    CSS_R523_6_ED1999_11,
+    CSS_R523_6_ED2011_12,
+    CSS_R523_6_ED2014_04,
+    CSS_R523_6_ED2015_04,
+    CSS_R523_6_ED2016_04,
+    CSS_R523_6_ED2017_04,
+    CSS_R523_6_ED2018_04,
+    CSS_R523_6_ED2018_07,
+    CSS_R523_6_ED2018_07_27,
+    CSS_R523_6_ED2019_12,
+    CSS_R523_6_ED2021_12,
+    CSS_R523_6_ED2022_11)
+rule CessationCouple(p: fr.pf.core::Personne, e: fr.pf.core::Enfant, c: Date, m: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "cessation de la vie en couple, mois apprecie au plus tot le mois de cessation: fin du versement (L. 523-2)";
+    label en unofficial "couple-life cessation, assessed month no earlier than the cessation month: payment ends (L. 523-2)";
+    when fr.pf.core::parent_charge(p, e) and fr.pf.core::enfant_ouvre_droit(e)
+        and mois_cessation_couple(c) and mois_droit_asf(m) and m >= c;
+    then asf_cessation_couple(p, e);
+}

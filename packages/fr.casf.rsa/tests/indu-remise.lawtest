@@ -1,0 +1,20 @@
+// Notified 500.00 overpayment, no fraud, president grants remission
+// (good faith/hardship): the debt is cleared as remitted, nothing is
+// recovered (L.262-46).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-indu-remise" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "rem-01": indu_montant(entity_ref("urn:fr:rsa:case:indu-remise"), 500.00 EUR) { origin case_input; }
+        assert "rem-02": prescription_cours(entity_ref("urn:fr:rsa:case:indu-remise"), 1) { origin case_input; }
+        assert "rem-03": notification_indu(entity_ref("urn:fr:rsa:case:indu-remise")) { origin case_input; }
+        assert "rem-04": remise_president(entity_ref("urn:fr:rsa:case:indu-remise")) { origin case_input; }
+    }
+    evaluate truth(indu_non_recupere(entity_ref("urn:fr:rsa:case:indu-remise")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

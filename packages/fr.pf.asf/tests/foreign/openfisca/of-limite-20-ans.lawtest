@@ -1,0 +1,17 @@
+// OpenFisca 20-year age bar (2015-01), shaped: the upstream opener is withheld (their asf_elig_enfant false), so no ASF ground opens here. ASF per se carries no age bar; the bar is upstream: class (b).
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-of-limite-20-ans" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ofl-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:foreign:of-limite-20-ans"), entity_ref("urn:fr:pf-asf:foreign:of-limite-20-ans-e1")) { origin case_input; }
+        assert "ofl-02": motif_asf(entity_ref("urn:fr:pf-asf:foreign:of-limite-20-ans-e1"), ORPHELIN_UN_PARENT) { origin case_input; }
+        assert "ofl-03": demande_asf(entity_ref("urn:fr:pf-asf:foreign:of-limite-20-ans-e1")) { origin case_input; }
+    }
+    evaluate truth(asf_enfant_eligible(entity_ref("urn:fr:pf-asf:foreign:of-limite-20-ans-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,41 @@
+// Revalorisation du 1er avril 2024 — migrée de la valeur de remplacement vers la chaîne du montant
+// (D-83, 08.10.2026). Ancien scénario: montant retenu 1000,00 x facteur retenu 1,046 = 1046,00 (entrée-
+// substitut facteur_revalorisation_retenu et règle MontantRevalorise, supprimées: le montant se construit
+// par la chaîne, 07-montant-chaine.law). Attente changée avec sa raison: 1000,00 n'était pas un montant
+// publié et 1,046 n'était qu'un facteur du cas; la norme est 971,37 (décret 2023-328, avril 2023) x 1,046
+// (coefficient L. 161-25, DSS/2B/2024/43, sources/montant/dss-2024-43-coeff.txt) = 1016,04702, arrondi au
+// centime HALF_UP (lecture AahRevalorisationArrondiCentime, D-82) = 1016,05, égal au montant du décret 2024-397
+// (sources/montant/decret-2024-397-art1.txt). La veille (31.03.2024) vaut encore 971,37.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-montant-revalo" {
+    given {
+        context { decision_time @2024-04-15T12:00:00Z; knowledge_time @2024-04-15T12:00:00Z; legal_time @2024-04-15; timezone "Europe/Paris"; interpretation AahRevalorisationArrondiCentime; }
+        assert "m5-01": en_couple(entity_ref("urn:fr:css-aah:case:m5")) { origin case_input; }
+    }
+    evaluate truth(aah_montant_construit(1016.05 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aah_montant_conforme_publie());
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
+
+test "urn:query:fr-css-aah-montant-revalo-veille" {
+    given {
+        context { decision_time @2024-03-31T12:00:00Z; knowledge_time @2024-03-31T12:00:00Z; legal_time @2024-03-31; timezone "Europe/Paris"; interpretation AahRevalorisationArrondiCentime; }
+        assert "m5v-01": en_couple(entity_ref("urn:fr:css-aah:case:m5v")) { origin case_input; }
+    }
+    evaluate truth(montant_aah_applicable(971.37 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aah_montant_construit(971.37 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

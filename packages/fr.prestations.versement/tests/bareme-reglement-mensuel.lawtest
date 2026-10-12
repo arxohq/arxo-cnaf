@@ -1,0 +1,14 @@
+// Monthly settlement: allocataire - benefits settled monthly, payable in arrears (R. 553-1).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-reglement-mensuel" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "m-all": fr.pf.core::allocataire(entity_ref("urn:fr:pv:case:allocataire")) { origin case_input; }
+    }
+    evaluate truth(reglement_mensuel(entity_ref("urn:fr:pv:case:allocataire")));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

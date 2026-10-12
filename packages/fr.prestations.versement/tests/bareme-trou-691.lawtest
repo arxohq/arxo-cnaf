@@ -1,0 +1,14 @@
+// The (690, 691] gap: weighted exactly 691 - no tranche covers it, no levy (D. 553-1 III, B-VERS-D5531-TRANCHE-691).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-trou-691" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "t-pond": revenu_pondere(entity_ref("urn:fr:pv:case:trou"), 691.00 EUR) { origin case_input; }
+    }
+    evaluate truth(prelevement_mensuel(entity_ref("urn:fr:pv:case:trou"), 210.85 EUR));
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

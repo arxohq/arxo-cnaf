@@ -1,0 +1,18 @@
+// Re-exam request too early: same treatment, request at month 124 —
+// the delay builds to 4, outside the last-month window.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-reexamen-trop-tot" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-rxt-01": debut_traitement_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rxt"), 120) { origin case_input; }
+        assert "ajpp-rxt-02": duree_previsible_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rxt"), 8) { origin case_input; }
+        assert "ajpp-rxt-03": demande_reexamen_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-rxt"), 124) { origin case_input; }
+    }
+    evaluate truth(reexamen_demande_recevable(entity_ref("urn:fr:pf-ajpp:case:enfant-rxt")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

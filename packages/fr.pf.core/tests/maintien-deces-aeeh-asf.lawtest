@@ -1,0 +1,22 @@
+// Death maintien two items: AEEH and ASF paid for the deceased child - both maintained and rollup holds (L. 552-7 al. 1, PC-R07-17).
+// D-42: the context lacked deadline_policy SERVICE_MOIS (B-PFCORE-POLICY-CONTEXT): the R. 552-4
+// gate MaintienOuvertureCondition steps one calendar_month (MISSING_POLICY without it). Expectation unchanged.
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-maintien-deces-aeeh-asf" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; deadline_policy SERVICE_MOIS; }
+        assert "maintien-deces-aeeh-asf-01": deces_enfant_charge(entity_ref("urn:fr:pf:case:deces-aeeh-asf")) { origin case_input; }
+        assert "maintien-deces-aeeh-asf-02": duree_maintien_fixee(entity_ref("urn:fr:pf:case:deces-aeeh-asf")) { origin case_input; }
+        assert "maintien-deces-aeeh-asf-03": aeeh_versee_enfant(entity_ref("urn:fr:pf:case:deces-aeeh-asf")) { origin case_input; }
+        assert "maintien-deces-aeeh-asf-04": asf_versee_enfant(entity_ref("urn:fr:pf:case:deces-aeeh-asf")) { origin case_input; }
+        assert "maintien-deces-aeeh-asf-05": deces_le(entity_ref("urn:fr:pf:case:deces-aeeh-asf"), @2026-02-10) { origin case_input; }
+        assert "maintien-deces-aeeh-asf-06": ouverture_droit_mois(entity_ref("urn:fr:pf:case:deces-aeeh-asf"), @2025-06-01) { origin case_input; }
+    }
+    evaluate truth(prestations_maintenues_deces(entity_ref("urn:fr:pf:case:deces-aeeh-asf")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

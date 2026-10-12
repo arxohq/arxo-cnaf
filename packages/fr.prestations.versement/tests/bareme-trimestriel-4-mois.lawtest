@@ -1,0 +1,18 @@
+// Quarterly right after four months, information still absent, declaration not received: deemed 1 096 (D. 553-1 III).
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+test "urn:query:fr-pv-bareme-trimestriel-4-mois" {
+    given {
+        context { decision_time @2022-10-15T12:00:00Z; knowledge_time @2022-10-15T12:00:00Z; legal_time @2022-10-15; timezone "Europe/Paris"; deadline_policy BAREME_DELAI_MOIS; }
+        assert "t-ouv": droit_trimestriel_ouvert(entity_ref("urn:fr:pv:case:trimestriel-expire")) { origin case_input; }
+        assert "t-dep": delai_4_mois_depart_le(entity_ref("urn:fr:pv:case:trimestriel-expire"), @2022-06-01) { origin case_input; }
+        assert "t-app": date_appreciation_revenus(entity_ref("urn:fr:pv:case:trimestriel-expire"), @2022-10-15) { origin case_input; }
+        assert "t-inc": ressources_trimestrielles_inconnues(entity_ref("urn:fr:pv:case:trimestriel-expire")) { origin case_input; }
+        assert "t-dec": declaration_montant_revenus_non_recue(entity_ref("urn:fr:pv:case:trimestriel-expire")) { origin case_input; }
+    }
+    evaluate truth(revenu_pondere(entity_ref("urn:fr:pv:case:trimestriel-expire"), 1096.00 EUR));
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

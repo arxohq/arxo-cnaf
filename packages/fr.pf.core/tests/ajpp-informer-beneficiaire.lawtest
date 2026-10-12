@@ -1,0 +1,15 @@
+// AJPP information beneficiary branch: AJPP received - the body must inform of AEEH/PCH criteria and procedure (L. 544-10 beneficiary branch, PC-R07-11).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-ajpp-informer-beneficiaire" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-informer-beneficiaire-01": organisme_debiteur_pf(entity_ref("urn:fr:pf:org:caisse-exemple"), entity_ref("urn:fr:pf:case:ajpp-ben")) { origin case_input; }
+        assert "ajpp-informer-beneficiaire-02": beneficie_ajpp(entity_ref("urn:fr:pf:case:ajpp-ben")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(InformerDemandeurAjpp, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

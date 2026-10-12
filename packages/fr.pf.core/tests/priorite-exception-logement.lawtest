@@ -1,0 +1,19 @@
+// Housing-disabled exception: same child, listed pension increase, but logement-handicape cumul applies - no reduction (L. 553-3 al. 3, PC-R03-02).
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+test "urn:query:fr-pf-core-priorite-exception-logement" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "priorite-exception-logement-01": montant_prestations_familiales(entity_ref("urn:fr:pf:case:priorite-log"), 300 EUR) { origin case_input; }
+        assert "priorite-exception-logement-02": montant_majorations_concurrentes(entity_ref("urn:fr:pf:case:priorite-log"), 500 EUR) { origin case_input; }
+        assert "priorite-exception-logement-03": meme_enfant_pf_majoration(entity_ref("urn:fr:pf:case:priorite-log"), entity_ref("urn:fr:pf:case:enfant-log")) { origin case_input; }
+        assert "priorite-exception-logement-04": majoration_enumereree_l5533(entity_ref("urn:fr:pf:case:priorite-log"), entity_ref("urn:fr:pf:case:enfant-log")) { origin case_input; }
+        assert "priorite-exception-logement-05": cumul_logement_handicape_exception(entity_ref("urn:fr:pf:case:priorite-log"), entity_ref("urn:fr:pf:case:enfant-log")) { origin case_input; }
+    }
+    evaluate truth(majorations_reduites(entity_ref("urn:fr:pf:case:priorite-log"), 200 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

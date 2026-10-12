@@ -1,0 +1,130 @@
+// Steering: fund duty to pay the complement familial (L522-1/L522-3,
+// R522-3 amounts). Rule binders live in the rule header (package style).
+// Only the fund bears a duty. No recipient duties, powers, sanctions or
+// deadlines in the 9-article scope: assessment runs through R. 532-1/R.
+// 532-3 upstream, recovery through L. 553-2 (wave 5).
+
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+use self::{
+    CSS_D522_1,
+    CSS_D522_1_ED1996_01,
+    CSS_D522_1_ED2000_01,
+    CSS_D522_1_ED2003_12,
+    CSS_D522_1_ED2011_11,
+    CSS_D522_1_ED2014_01,
+    CSS_D522_1_ED2014_04,
+    CSS_D522_1_ED2017_04,
+    CSS_D522_1_ED2018_01,
+    CSS_D522_1_ED2018_04,
+    CSS_D522_1_ED2020_04,
+    CSS_D522_1_ED2022_10,
+    CSS_D522_2,
+    CSS_D522_2_ED2020_04,
+    CSS_D522_2_ED2022_10,
+    CSS_D522_2_PRE2018,
+    CSS_D522_2_PRE2018_ED2018_01,
+    CSS_L522_1,
+    CSS_L522_1_ED2011_11,
+    CSS_L522_1_ED2014_01,
+    CSS_L522_1_ED2014_04,
+    CSS_L522_1_ED2017_04,
+    CSS_L522_1_ED2018_01,
+    CSS_L522_1_ED2018_04,
+    CSS_L522_1_ED2020_04,
+    CSS_L522_1_ED2022_10,
+    CSS_L522_3,
+    CSS_L522_3_ED2017_04,
+    CSS_L522_3_ED2018_01,
+    CSS_L522_3_ED2018_04,
+    CSS_L522_3_ED2020_04,
+    CSS_L522_3_ED2022_10,
+    CSS_R522_3,
+    CSS_R522_3_ED2014_04,
+    CSS_R522_3_ED2017_04,
+    CSS_R522_3_ED2018_01,
+    CSS_R522_3_ED2018_04,
+    CSS_R522_3_ED2020_04,
+    CSS_R522_3_ED2022_10,
+    cf_differentiel_du,
+    cf_majore_du,
+    cf_montant_du,
+    cf_verse,
+};
+
+@source(
+    CSS_L522_1,
+    CSS_L522_1_ED2011_11,
+    CSS_L522_1_ED2014_01,
+    CSS_L522_1_ED2014_04,
+    CSS_L522_1_ED2017_04,
+    CSS_L522_1_ED2018_01,
+    CSS_L522_1_ED2018_04,
+    CSS_L522_1_ED2020_04,
+    CSS_L522_1_ED2022_10,
+    CSS_D522_1,
+    CSS_D522_1_ED1996_01,
+    CSS_D522_1_ED2000_01,
+    CSS_D522_1_ED2003_12,
+    CSS_D522_1_ED2011_11,
+    CSS_D522_1_ED2014_01,
+    CSS_D522_1_ED2014_04,
+    CSS_D522_1_ED2017_04,
+    CSS_D522_1_ED2018_01,
+    CSS_D522_1_ED2018_04,
+    CSS_D522_1_ED2020_04,
+    CSS_D522_1_ED2022_10)
+rule DevoirVerserCf(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) strict {
+    label fr official "l'organisme débiteur paie au ménage le complément mensuel dû";
+    label en unofficial "the debtor fund pays the household the monthly complement due";
+    when cf_montant_du(p, montant) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerCfDu {
+        bearer o;
+        beneficiary p;
+        maintain cf_verse(p, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_L522_3,
+    CSS_L522_3_ED2017_04,
+    CSS_L522_3_ED2018_01,
+    CSS_L522_3_ED2018_04,
+    CSS_L522_3_ED2020_04,
+    CSS_L522_3_ED2022_10,
+    CSS_D522_2,
+    CSS_D522_2_ED2020_04,
+    CSS_D522_2_ED2022_10,
+    CSS_D522_2_PRE2018,
+    CSS_D522_2_PRE2018_ED2018_01)
+rule DevoirVerserCfMajore(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) strict {
+    label fr official "l'organisme débiteur paie au ménage le montant majoré dû";
+    label en unofficial "the debtor fund pays the household the increased amount due";
+    when cf_majore_du(p, montant) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerCfMajoreDu {
+        bearer o;
+        beneficiary p;
+        maintain cf_verse(p, montant) during [@2021-01-01, infinity);
+    };
+}
+
+@source(
+    CSS_R522_3,
+    CSS_R522_3_ED2014_04,
+    CSS_R522_3_ED2017_04,
+    CSS_R522_3_ED2018_01,
+    CSS_R522_3_ED2018_04,
+    CSS_R522_3_ED2020_04,
+    CSS_R522_3_ED2022_10)
+rule DevoirVerserCfDifferentiel(o: fr.pf.core::Organisme, p: fr.pf.core::Personne, montant: Money) strict {
+    label fr official "l'organisme débiteur paie au ménage le complément différentiel dû";
+    label en unofficial "the debtor fund pays the household the differential top-up due";
+    when cf_differentiel_du(p, montant) and fr.pf.core::organisme_debiteur_pf(o, p);
+    then duty PayerCfDifferentielDu {
+        bearer o;
+        beneficiary p;
+        maintain cf_verse(p, montant) during [@2021-01-01, infinity);
+    };
+}

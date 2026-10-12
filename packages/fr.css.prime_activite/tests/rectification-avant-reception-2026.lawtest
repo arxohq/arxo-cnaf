@@ -1,0 +1,42 @@
+// Rectification dated before reception (request 06-05, receipt
+// 06-10) of a date-certain notice: the 20-day window starting at
+// receipt cannot cover it. Monthly rejection condition met
+// (06-20 < 07-05) yet D7bis is absent, P2 interruption absent, II
+// heads false; D7 (director-qualified) ACTIVE (R. 847-1-1
+// I.2.a «à compter de la réception», II, III; PA-R3-01/02,
+// PA-FE09-03/04).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-rectification-avant-reception-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-08-01T12:00:00Z; knowledge_time @2026-08-01T12:00:00Z; legal_time @2026-08-01; timezone "Europe/Paris"; }
+        assert "ppa-01": indu_recupere(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026"), 300.00 EUR) { origin case_input; }
+        assert "ppa-02": constat_indu(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026"), @2026-06-01) { origin case_input; }
+        assert "ppa-03": organisme_serviteur(entity_ref("urn:fr:ppa:org:caisse"), entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026")) { origin case_input; }
+        assert "ppa-04": notification_recouvrement(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026"), @2026-06-09) { origin case_input; }
+        assert "ppa-05": reception_notification(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026"), @2026-06-10) { origin case_input; }
+        assert "ppa-06": demande_rectification(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026"), @2026-06-05) { origin case_input; }
+        assert "ppa-07": decision_rectification_rejet(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026"), @2026-06-20) { origin case_input; }
+        assert "ppa-08": date_observation_recours(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026"), @2026-08-01) { origin case_input; }
+        assert "ppa-09": directeur_de(entity_ref("urn:fr:ppa:org:directeur"), entity_ref("urn:fr:ppa:org:caisse")) { origin case_input; }
+        assert "ppa-10": notification_moyen_date_certaine(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(NotifierIndu, ACTIVE);
+    expect not position(NotifierRejetRectification, ACTIVE);
+    expect evaluation_status == COMPUTED;
+    evaluate truth(interruption_delai_cra(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(rejet_implicite_rectification(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(recouvrement_apres_demande(entity_ref("urn:fr:ppa:case:rectification-avant-reception-2026")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == FALSE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

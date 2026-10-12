@@ -1,0 +1,20 @@
+// D. 532-2, exception: established legitimate reasons for missing the
+// exams bar the suspension («en l'absence de motifs légitimes»). Control —
+// suspension-versement-accordee.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-suspension-motif-legitime" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "susp-motif-01": examens_l5331_non_passes(entity_ref("urn:fr:paje:case:susp-motif"), entity_ref("urn:fr:paje:enfant:susp-motif")) { origin adjudicated; }
+        assert "susp-motif-02": motif_legitime_examens(entity_ref("urn:fr:paje:case:susp-motif"), entity_ref("urn:fr:paje:enfant:susp-motif")) { origin adjudicated; }
+        assert "susp-motif-03": demande_medecin_pmi(entity_ref("urn:fr:paje:case:susp-motif"), entity_ref("urn:fr:paje:enfant:susp-motif"), @2025-06-10) { origin adjudicated; }
+        assert "susp-motif-04": mois_effet_suspension(entity_ref("urn:fr:paje:case:susp-motif"), entity_ref("urn:fr:paje:enfant:susp-motif"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(suspension_versement_paje(entity_ref("urn:fr:paje:case:susp-motif"), entity_ref("urn:fr:paje:enfant:susp-motif"), @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

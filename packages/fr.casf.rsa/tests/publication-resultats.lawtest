@@ -1,0 +1,18 @@
+// Regular publication, statistical-services side: the services
+// ensure the regular publication of the results (D. 262-100). The
+// text states no claim trigger and no individual beneficiary, so the
+// case carries no claim and no person at all: the standing duty fires
+// on the body role alone.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-publication-resultats" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "pub-01": est_service_statistique(entity_ref("urn:fr:rsa:org:drees")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(PublierResultatsServices, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

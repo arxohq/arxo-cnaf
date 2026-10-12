@@ -1,0 +1,21 @@
+// Eighteen reached exactly on 2021-09-15: not strictly after, so the
+// child is out (NEITHER). Boundary-day probe of R543-2 para. 2.
+language "law.core" version "0.2";
+package fr.pf.ars version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ars";
+
+test "urn:query:fr-pf-ars-dix-huit-jour-pile" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-09-15T12:00:00Z; knowledge_time @2021-09-15T12:00:00Z; legal_time @2021-09-15; timezone "Europe/Paris"; }
+        assert "adj-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ars:case:dix-huit-jour-pile"), entity_ref("urn:fr:pf-ars:case:dix-huit-jour-pile-e1")) { origin case_input; }
+        assert "adj-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-ars:case:dix-huit-jour-pile-e1")) { origin case_input; }
+        assert "adj-03": date_naissance(entity_ref("urn:fr:pf-ars:case:dix-huit-jour-pile-e1"), @2003-09-15) { origin case_input; }
+        assert "adj-04": seuil_six_ans(@2022-02-01) { origin case_input; }
+        assert "adj-05": seuil_dix_huit_ans(@2021-09-15) { origin case_input; }
+        assert "adj-06": inscription_scolaire(entity_ref("urn:fr:pf-ars:case:dix-huit-jour-pile-e1")) { origin case_input; }
+    }
+    evaluate truth(ars_enfant_eligible(entity_ref("urn:fr:pf-ars:case:dix-huit-jour-pile-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

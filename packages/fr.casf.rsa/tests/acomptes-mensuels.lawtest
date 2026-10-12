@@ -1,0 +1,17 @@
+// Monthly advance: booked expenditure for April 2025 -> the department
+// owes the advance by month end (D. 262-61 1°). Legal time inside the
+// [month, month-end] duty window.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-acomptes-mensuels" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-04-15T12:00:00Z; knowledge_time @2025-04-15T12:00:00Z; legal_time @2025-04-15; timezone "Europe/Paris"; }
+        assert "acomp-01": convention_service(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:org:caf")) { origin case_input; }
+        assert "acomp-02": depenses_comptabilisees(entity_ref("urn:fr:rsa:org:caf"), @2025-04-01, 1000.00 EUR) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(VerserAcompteMensuel, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

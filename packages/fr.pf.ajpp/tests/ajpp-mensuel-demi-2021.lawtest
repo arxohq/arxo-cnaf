@@ -1,0 +1,25 @@
+// 2021 half-day month: 4 half-days at the built 21.26 — 85.04
+// (D. 544-6 2020).
+// F05-01: envelope history qualifies the amount (40 days, 1 year);
+// no monthly gate for half-days (B-PFAJPP-DEMI-PLAFOND).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-mensuel-demi-2021" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ajpp-md-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-md")) { origin adjudicated; }
+        assert "ajpp-md-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-md")) { origin adjudicated; }
+        assert "ajpp-md-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-md"), entity_ref("urn:fr:pf-ajpp:case:enfant-md")) { origin case_input; }
+        assert "ajpp-md-04": demies_journees_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-md"), @2021-06-01, 4) { origin case_input; }
+        assert "ajpp-md-05": bmaf_retenue_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-md"), 400.00 EUR) { origin case_input; }
+        assert "ajpp-md-06": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-ajpp:case:parent-md"), entity_ref("urn:fr:pf-ajpp:case:enfant-md")) { origin case_input; }
+        assert "ajpp-md-07": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-md"), 40) { origin case_input; }
+        assert "ajpp-md-08": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-md"), MALADIE, 1) { origin case_input; }
+    }
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-md"), @2021-06-01, 85.04 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

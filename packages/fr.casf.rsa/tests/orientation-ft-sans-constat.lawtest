@@ -1,0 +1,32 @@
+// Orientation status unknown: president informed 2025-02-01, six
+// weeks elapsed, but neither presidential orientation nor its
+// absence is established -> the 42-day deadline still computes to
+// 2025-03-15, yet the France Travail fallback duty does not arise:
+// unknown is not absence (D. 262-65-2 : « En l'absence
+// d'orientation ... dans un délai de six semaines »). Control pair
+// of orientation-ft (established absence) and
+// orientation-president-faite (positive orientation).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-orientation-ft-sans-constat" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-04-01T12:00:00Z; knowledge_time @2025-04-01T12:00:00Z; legal_time @2025-04-01; timezone "Europe/Paris"; }
+        assert "ori-01": info_orientation_recue(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:case:orientation-ft-sans-constat"), @2025-02-01) { origin case_input; }
+        assert "ori-02": delai_six_semaines_expire(entity_ref("urn:fr:rsa:case:orientation-ft-sans-constat")) { origin case_input; }
+        assert "ori-03": est_france_travail(entity_ref("urn:fr:rsa:org:ft")) { origin case_input; }
+        assert "ori-04": organisme_competent(entity_ref("urn:fr:rsa:org:ft"), entity_ref("urn:fr:rsa:case:orientation-ft-sans-constat")) { origin case_input; }
+    }
+    evaluate truth(echeance_orientation_ft(entity_ref("urn:fr:rsa:case:orientation-ft-sans-constat"), @2025-03-15));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(orientation_ft_effectuee(entity_ref("urn:fr:rsa:org:ft"), entity_ref("urn:fr:rsa:case:orientation-ft-sans-constat")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate positions();
+    expect not position(OrienterBeneficiaireFT, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

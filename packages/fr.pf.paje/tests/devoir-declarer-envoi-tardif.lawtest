@@ -1,0 +1,28 @@
+// Deontics D3, late sending does not satisfy (RETURN04, R03-01): pregnancy
+// in progress with established dates and a debtor fund; the declaration was
+// sent late (2025-04-20, deadline 2025-04-14) to both bodies with a
+// conforming prescribed medical document — the performance does not derive,
+// so after the window closes the DeclarerGrossesseEnDelai position is
+// UNDETERMINED, not SATISFIED (§136: satisfaction not established) and not
+// VIOLATED (§136.3: no explicit non-performance established —
+// B-PAJE2-D532-VIOLATION). Late pair — devoir-declarer-satisfait.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-devoir-declarer-envoi-tardif" {
+    given {
+        context { decision_time @2025-04-25T12:00:00Z; knowledge_time @2025-04-25T12:00:00Z; legal_time @2025-04-25; timezone "Europe/Paris"; }
+        assert "devoir-tard-01": attente_naissance(entity_ref("urn:fr:paje:case:devoir-tard"), entity_ref("urn:fr:paje:enfant:devoir-tard")) { origin case_input; }
+        assert "devoir-tard-02": debut_grossesse(entity_ref("urn:fr:paje:case:devoir-tard"), entity_ref("urn:fr:paje:enfant:devoir-tard"), @2025-01-06) { origin adjudicated; }
+        assert "devoir-tard-03": date_limite_declaration(entity_ref("urn:fr:paje:case:devoir-tard"), entity_ref("urn:fr:paje:enfant:devoir-tard"), @2025-04-14) { origin adjudicated; }
+        assert "devoir-tard-04": organisme_debiteur(entity_ref("urn:fr:paje:org:caisse"), entity_ref("urn:fr:paje:case:devoir-tard")) { origin case_input; }
+        assert "devoir-tard-05": declaration_grossesse_adressee(entity_ref("urn:fr:paje:case:devoir-tard"), entity_ref("urn:fr:paje:enfant:devoir-tard"), @2025-04-20) { origin adjudicated; }
+        assert "devoir-tard-06": document_medical_conforme(entity_ref("urn:fr:paje:case:devoir-tard"), entity_ref("urn:fr:paje:enfant:devoir-tard")) { origin adjudicated; }
+    }
+    evaluate positions();
+    expect position(DeclarerGrossesseEnDelai, UNDETERMINED);
+    expect not position(DeclarerGrossesseEnDelai, SATISFIED);
+    expect not position(DeclarerGrossesseEnDelai, VIOLATED);
+    expect evaluation_status == COMPUTED;
+}

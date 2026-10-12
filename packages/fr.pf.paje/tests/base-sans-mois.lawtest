@@ -1,0 +1,21 @@
+// Without an eligible month (no mois_eligible_base) the allowance is not
+// awarded — right and amount present, no base_attribuee.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-base-sans-mois" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "base-sm-01": enfant_en_charge(entity_ref("urn:fr:paje:case:base-sm"), entity_ref("urn:fr:paje:enfant:base-sm")) { origin case_input; }
+        assert "base-sm-02": condition_age_base(entity_ref("urn:fr:paje:enfant:base-sm")) { origin adjudicated; }
+        assert "base-sm-03": cohorte_enfant(entity_ref("urn:fr:paje:enfant:base-sm"), NE_APARTIR_AVRIL_2018) { origin adjudicated; }
+        assert "base-sm-04": ressources_annuelles(entity_ref("urn:fr:paje:case:base-sm"), 20000 EUR) { origin case_input; }
+        assert "base-sm-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:base-sm"), 30000 EUR) { origin case_input; }
+        assert "base-sm-06": bmaf_applicable(entity_ref("urn:fr:paje:case:base-sm"), 400.00 EUR) { origin case_input; }
+    }
+    evaluate truth(base_attribuee(entity_ref("urn:fr:paje:case:base-sm"), entity_ref("urn:fr:paje:enfant:base-sm"), 166.60 EUR, @2025-07-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,30 @@
+// Before the reform (2022): the former rules award directly.
+// Same figures as the maintenance pair: 810.00 due.
+language "law.core" version "0.2";
+package fr.css.aah version "0.1.0";
+namespace "urn:fr:corpus:clir:aah";
+
+test "urn:query:fr-css-aah-double-calcul-avant-reforme" {
+    given {
+        context { decision_time @2022-06-15T12:00:00Z; knowledge_time @2022-06-15T12:00:00Z; legal_time @2022-06-15; timezone "Europe/Paris"; }
+        assert "dc4-01": decision_cdaph_80(entity_ref("urn:fr:css-aah:case:couple-dc4")) { origin adjudicated; }
+        assert "dc4-02": age_droit_depasse(entity_ref("urn:fr:css-aah:case:couple-dc4")) { origin case_input; }
+        assert "dc4-03": residence_permanente(entity_ref("urn:fr:css-aah:case:couple-dc4")) { origin case_input; }
+        assert "dc4-04": sejour_regulier(entity_ref("urn:fr:css-aah:case:couple-dc4")) { origin case_input; }
+        assert "dc4-05": sans_revenu_activite(entity_ref("urn:fr:css-aah:case:couple-dc4")) { origin case_input; }
+        assert "dc4-06": en_couple(entity_ref("urn:fr:css-aah:case:couple-dc4")) { origin case_input; }
+        assert "dc4-07": montant_mensuel_retenu(1000.00 EUR) { origin case_input; }
+        assert "dc4-08": ressources_annuelles_retenues(entity_ref("urn:fr:css-aah:case:couple-dc4"), 9000.00 EUR) { origin case_input; }
+        assert "dc4-09": ressources_conjoint_retenues(entity_ref("urn:fr:css-aah:case:couple-dc4"), 3000.00 EUR) { origin case_input; }
+        assert "dc4-10": enfants_charge(0) { origin case_input; }
+        assert "dc4-11": sans_esat(entity_ref("urn:fr:css-aah:case:couple-dc4")) { origin case_input; }
+    }
+    evaluate truth(aah_montant_ancien(entity_ref("urn:fr:css-aah:case:couple-dc4"), 810.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(aah_montant_du(entity_ref("urn:fr:css-aah:case:couple-dc4"), 810.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

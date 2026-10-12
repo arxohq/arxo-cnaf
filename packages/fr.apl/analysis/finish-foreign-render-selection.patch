@@ -1,0 +1,18 @@
+--- a/corpus/tools/foreign/common.py
++++ b/corpus/tools/foreign/common.py
+@@ -85,11 +85,14 @@ def render(case: Case, target: Target, package: dict, entity: str, comment: st
+                    "    expect evaluation_status == COMPUTED;\n")
+     stamp = case.legal_time
++    # G-A13: money-cone queries need the working-reading selection, else the
++    # exactly_one group reports INTERPRETATION_REQUIRED. The key lives in the
++    # package map (corpus/laws/fr/apl/tools/foreign-map.json); maps without
++    # the key render exactly as before.
++    selection = f"; interpretation {package['interpretation']}" if package.get("interpretation") else ""
+     return (comment + HEAD.format(**package) + "\n"
+             f'test "urn:query:{package["prefix"]}-{case.name}-{slug(target.label)}" {{\n'
+             "    given {\n"
+             f"        context {{ decision_time @{stamp}T12:00:00Z; knowledge_time @{stamp}T12:00:00Z; "
+-            f'legal_time @{stamp}; timezone "{package["timezone"]}"; }}\n'
++            f'legal_time @{stamp}; timezone "{package["timezone"]}"{selection}; }}\n'
+             + "\n".join(lines) + "\n    }\n"
+             f"    evaluate {query};\n{expects}}}\n")

@@ -1,0 +1,26 @@
+// Third-party OpenFisca-France 176.1.2 case, tests/formulas/paje/paje_adoption.yaml,
+// «Cas P1R1E1B1ELIGIBLE» (period 2025-07): 1 parent, enfant né 2015-05-15,
+// adoption 2025-07 (arrivée 2025-06-15), base ressources 48186 → paje_adoption
+// 2179.73015. Their expectation is 2179.73015; our construction: case BMAF
+// of 474.37 € (474.37 × 4.595 = 2179.73015) under the case ceiling of
+// 48186.43245 € (= 119.47% × 40333.50). Age and arrival are established
+// facts (thresholds — fr.pf.core).
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-of-adoption-eligible" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "of-eligible-01": adoption_arrivee(entity_ref("urn:fr:paje:case:of-eligible"), entity_ref("urn:fr:paje:enfant:of-eligible")) { origin adjudicated; }
+        assert "of-eligible-02": condition_age_adoption(entity_ref("urn:fr:paje:enfant:of-eligible")) { origin adjudicated; }
+        assert "of-eligible-03": ressources_annuelles(entity_ref("urn:fr:paje:case:of-eligible"), 48186 EUR) { origin case_input; }
+        assert "of-eligible-04": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:of-eligible"), 40333.50 EUR) { origin case_input; }
+        assert "of-eligible-05": bmaf_applicable(entity_ref("urn:fr:paje:case:of-eligible"), 474.37 EUR) { origin case_input; }
+        assert "of-eligible-06": date_examen_situation(entity_ref("urn:fr:paje:case:of-eligible"), entity_ref("urn:fr:paje:enfant:of-eligible"), @2025-07-01) { origin adjudicated; }
+    }
+    evaluate truth(prime_attribuee(entity_ref("urn:fr:paje:case:of-eligible"), entity_ref("urn:fr:paje:enfant:of-eligible"), 2179.73015 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

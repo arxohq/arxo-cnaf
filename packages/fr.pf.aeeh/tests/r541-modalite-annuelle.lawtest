@@ -1,0 +1,23 @@
+// R. 541-1 al. 5, annual single payment (ModaliteVersementAnnuel): an
+// entitled child with internat leave-period amounts gets the annual
+// modality; an entitled child without such periods stays silent.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-modalite-annuelle" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "r541-ma-01": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-ma")) { origin adjudicated; }
+        assert "r541-ma-02": periodes_conges_internat(entity_ref("urn:fr:pf-aeeh:case:enfant-ma")) { origin case_input; }
+        assert "r541-ma-03": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-ma-sans")) { origin adjudicated; }
+    }
+    evaluate truth(modalite_versement_annuel(entity_ref("urn:fr:pf-aeeh:case:enfant-ma")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(modalite_versement_annuel(entity_ref("urn:fr:pf-aeeh:case:enfant-ma-sans")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

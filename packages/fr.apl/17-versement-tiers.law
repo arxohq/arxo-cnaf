@@ -1,0 +1,621 @@
+// Payment routing and third-party mechanics (L. 832-1/2/4, L. 842-1/2,
+// R. 823-8, L. 823-7): who receives the aid, landlord deduction, information
+// and excess duties, L. 824-3 resumption, monthly payment, and the payment
+// threshold selector. The monetary terminal stays fr.apl.versement (it reads
+// aide_mensuelle/aide_non_versee); this module routes and qualifies.
+// CLOSES B-APL-TIERS-PAYANT (09): the landlord channel is now pinned law.
+// The regulatory direct-payment cases (L. 832-1 last sentence) are unpinned:
+// routing there reads an established case finding (boundary).
+
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+use self::{
+    ARR_ART12_ED2019_10,
+    ARR_ART12_ED2020_01,
+    ARR_ART12_ED2020_10,
+    ARR_ART12_ED2021_01,
+    ARR_ART12_ED2021_10,
+    ARR_ART12_ED2022_01,
+    ARR_ART12_ED2022_07,
+    ARR_ART12_ED2023_01,
+    ARR_ART12_ED2023_10,
+    ARR_ART12_ED2024_01,
+    ARR_ART12_ED2024_10,
+    ARR_ART12_ED2025_01,
+    ARR_ART12_ED2025_10,
+    ARR_ART12_ED2026_10,
+    ARR_ART21_ED2019_10,
+    ARR_ART21_ED2020_01,
+    ARR_ART21_ED2020_10,
+    ARR_ART21_ED2021_01,
+    ARR_ART21_ED2021_10,
+    ARR_ART21_ED2022_01,
+    ARR_ART21_ED2022_07,
+    ARR_ART21_ED2023_01,
+    ARR_ART21_ED2023_10,
+    ARR_ART21_ED2024_01,
+    ARR_ART21_ED2024_10,
+    ARR_ART21_ED2025_01,
+    ARR_ART21_ED2025_10,
+    ARR_ART21_ED2026_10,
+    ARR_ART29_ED2019_10,
+    ARR_ART29_ED2020_01,
+    ARR_ART29_ED2020_10,
+    ARR_ART29_ED2021_01,
+    ARR_ART29_ED2021_10,
+    ARR_ART29_ED2022_01,
+    ARR_ART29_ED2022_07,
+    ARR_ART29_ED2023_01,
+    ARR_ART29_ED2023_10,
+    ARR_ART29_ED2024_01,
+    ARR_ART29_ED2024_10,
+    ARR_ART29_ED2025_01,
+    ARR_ART29_ED2025_10,
+    ARR_ART29_ED2026_10,
+    Bailleur,
+    CCH_L823_1,
+    CCH_L823_1_ED2019_12,
+    CCH_L823_1_ED2020_01,
+    CCH_L823_1_ED2021_01,
+    CCH_L823_1_ED2023_04,
+    CCH_L823_1_ED2023_09,
+    CCH_L823_1_ED2023_12,
+    CCH_L823_1_ED2026_07,
+    CCH_L823_7,
+    CCH_L823_7_ED2019_12,
+    CCH_L823_7_ED2020_01,
+    CCH_L823_7_ED2021_01,
+    CCH_L823_7_ED2023_04,
+    CCH_L823_7_ED2023_09,
+    CCH_L823_7_ED2023_12,
+    CCH_L823_7_ED2026_07,
+    CCH_L832_1,
+    CCH_L832_1_ED2019_12,
+    CCH_L832_1_ED2020_01,
+    CCH_L832_1_ED2021_01,
+    CCH_L832_1_ED2023_04,
+    CCH_L832_1_ED2023_09,
+    CCH_L832_1_ED2023_12,
+    CCH_L832_1_ED2026_07,
+    CCH_L832_2,
+    CCH_L832_2_ED2019_12,
+    CCH_L832_2_ED2020_01,
+    CCH_L832_2_ED2021_01,
+    CCH_L832_2_ED2023_04,
+    CCH_L832_2_ED2023_09,
+    CCH_L832_2_ED2023_12,
+    CCH_L832_2_ED2026_07,
+    CCH_L832_4,
+    CCH_L832_4_ED2019_12,
+    CCH_L832_4_ED2020_01,
+    CCH_L832_4_ED2021_01,
+    CCH_L832_4_ED2023_04,
+    CCH_L832_4_ED2023_09,
+    CCH_L832_4_ED2023_12,
+    CCH_L832_4_ED2026_07,
+    CCH_L842_1,
+    CCH_L842_1_ED2019_12,
+    CCH_L842_1_ED2020_01,
+    CCH_L842_1_ED2021_01,
+    CCH_L842_1_ED2023_04,
+    CCH_L842_1_ED2023_09,
+    CCH_L842_1_ED2023_12,
+    CCH_L842_1_ED2026_07,
+    CCH_L842_2,
+    CCH_L842_2_ED2019_12,
+    CCH_L842_2_ED2020_01,
+    CCH_L842_2_ED2021_01,
+    CCH_L842_2_ED2023_04,
+    CCH_L842_2_ED2023_09,
+    CCH_L842_2_ED2023_12,
+    CCH_L842_2_ED2026_07,
+    CCH_R823_8,
+    CCH_R823_8_ED2019_12,
+    CCH_R823_8_ED2020_01,
+    CCH_R823_8_ED2021_01,
+    CCH_R823_8_ED2023_04,
+    CCH_R823_8_ED2023_09,
+    CCH_R823_8_ED2023_12,
+    CCH_R823_8_ED2026_07,
+    Menage,
+    ModeLocation,
+    Organisme,
+    RoleTiers,
+    TypeAide,
+    aide_attribuee,
+    aide_demandee,
+    aide_versee,
+    bailleur_du_menage,
+    logement_decent,
+    loyer_principal,
+    mode_location,
+    organisme_debiteur,
+    role_tiers,
+    secteur_accession,
+    secteur_accession_allocations,
+    secteur_locatif,
+    secteur_logement_foyer,
+    versement_retabli_l824_3,
+};
+
+pub relation destinataire_aide(m: Menage, b: Bailleur) kind institutional {
+    label fr official "tiers destinataire du versement de l'aide";
+    label en unofficial "third party receiving the aid payment";
+}
+
+pub relation versement_direct_menage(m: Menage) kind institutional {
+    label fr official "versement direct au menage dans un cas reglementaire";
+    label en unofficial "direct payment to the household in a regulatory case";
+}
+
+@source(CCH_L832_1, CCH_L832_1_ED2019_12, CCH_L832_1_ED2020_01,
+        CCH_L832_1_ED2021_01, CCH_L832_1_ED2023_04, CCH_L832_1_ED2023_09,
+        CCH_L832_1_ED2023_12, CCH_L832_1_ED2026_07)
+rule DestAPLLocation(m: Menage, b: Bailleur) defeasible {
+    label fr official "APL en location : versee au bailleur";
+    label en unofficial "rental APL: paid to the landlord";
+    when aide_attribuee(m, APL) and secteur_locatif(m)
+        and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR);
+    then destinataire_aide(m, b);
+}
+
+@source(CCH_L832_1, CCH_L832_1_ED2019_12, CCH_L832_1_ED2020_01,
+        CCH_L832_1_ED2021_01, CCH_L832_1_ED2023_04, CCH_L832_1_ED2023_09,
+        CCH_L832_1_ED2023_12, CCH_L832_1_ED2026_07)
+rule DestAPLAccession(m: Menage, b: Bailleur) defeasible {
+    label fr official "APL en accession : versee a l'etablissement habilite";
+    label en unofficial "purchase APL: paid to the approved body";
+    when aide_attribuee(m, APL) and secteur_accession(m)
+        and bailleur_du_menage(b, m) and role_tiers(b, ETABLISSEMENT_HABILITE);
+    then destinataire_aide(m, b);
+}
+
+@source(CCH_L832_1, CCH_L832_1_ED2019_12, CCH_L832_1_ED2020_01,
+        CCH_L832_1_ED2021_01, CCH_L832_1_ED2023_04, CCH_L832_1_ED2023_09,
+        CCH_L832_1_ED2023_12, CCH_L832_1_ED2026_07)
+rule DestAPLFoyer(m: Menage, b: Bailleur) defeasible {
+    label fr official "APL en logement-foyer : versee au gestionnaire";
+    label en unofficial "hostel APL: paid to the manager";
+    when aide_attribuee(m, APL) and secteur_logement_foyer(m)
+        and bailleur_du_menage(b, m) and role_tiers(b, GESTIONNAIRE_FOYER);
+    then destinataire_aide(m, b);
+}
+
+pub relation mandat_gerance_logements(b: Bailleur, m: Menage) kind empirical {
+    label fr official "mandat de gerance de logements au tiers (fait de dossier)";
+    label en unofficial "housing management mandate to the third party (case fact)";
+}
+
+pub relation aide_versee_mandataire(m: Menage, b: Bailleur) kind empirical {
+    label fr official "aide versee au mandataire de gerance (execution)";
+    label en unofficial "aid paid to the managing agent (performance)";
+}
+
+@source(CCH_L832_1, CCH_L832_1_ED2019_12, CCH_L832_1_ED2020_01,
+        CCH_L832_1_ED2021_01, CCH_L832_1_ED2023_04, CCH_L832_1_ED2023_09,
+        CCH_L832_1_ED2023_12, CCH_L832_1_ED2026_07, CCH_L842_1,
+        CCH_L842_1_ED2019_12, CCH_L842_1_ED2020_01, CCH_L842_1_ED2021_01,
+        CCH_L842_1_ED2023_04, CCH_L842_1_ED2023_09, CCH_L842_1_ED2023_12,
+        CCH_L842_1_ED2026_07)
+rule LiberteVerserMandataire(m: Menage, b: Bailleur, o: Organisme, t: TypeAide) strict {
+    label fr official "mandat de gerance : l'aide peut etre versee au mandataire";
+    label en unofficial "management mandate: the aid may be paid to the agent";
+    when aide_attribuee(m, t) and mandat_gerance_logements(b, m)
+        and role_tiers(b, MANDATAIRE_GERANCE) and organisme_debiteur(o, m);
+    then liberty VerserMandataireTiers {
+        holder o;
+        action aide_versee_mandataire(m, b);
+        window [@2021-01-01, infinity);
+    };
+}
+
+pub relation cas_reglementaire_versement_direct(m: Menage) kind empirical {
+    label fr official "cas reglementaire de versement direct constate (liste non epinglee)";
+    label en unofficial "established regulatory direct-payment case (list unpinned)";
+}
+
+@source(CCH_L832_1, CCH_L832_1_ED2019_12, CCH_L832_1_ED2020_01,
+        CCH_L832_1_ED2021_01, CCH_L832_1_ED2023_04, CCH_L832_1_ED2023_09,
+        CCH_L832_1_ED2023_12, CCH_L832_1_ED2026_07)
+rule VersementDirectReglementaire(m: Menage, t: TypeAide) defeasible {
+    label fr official "cas reglementaire constate : versement direct au menage";
+    label en unofficial "established regulatory case: direct payment to the household";
+    when aide_attribuee(m, t) and cas_reglementaire_versement_direct(m);
+    then versement_direct_menage(m);
+}
+
+pub relation demande_versement_tiers(b: Bailleur, m: Menage) kind empirical {
+    label fr official "le preteur ou le bailleur demande le versement (fait de dossier)";
+    label en unofficial "the lender or landlord requests payment (case fact)";
+}
+
+@source(CCH_L842_1, CCH_L842_1_ED2019_12, CCH_L842_1_ED2020_01,
+        CCH_L842_1_ED2021_01, CCH_L842_1_ED2023_04, CCH_L842_1_ED2023_09,
+        CCH_L842_1_ED2023_12, CCH_L842_1_ED2026_07)
+rule DestAllocationBailleurALF(m: Menage, b: Bailleur) defeasible {
+    label fr official "ALF au bailleur sur sa demande si le logement est decent";
+    label en unofficial "ALF to the landlord on request when the dwelling is decent";
+    when aide_attribuee(m, ALF) and demande_versement_tiers(b, m)
+        and role_tiers(b, BAILLEUR) and logement_decent(m);
+    then destinataire_aide(m, b);
+}
+
+@source(CCH_L842_1, CCH_L842_1_ED2019_12, CCH_L842_1_ED2020_01,
+        CCH_L842_1_ED2021_01, CCH_L842_1_ED2023_04, CCH_L842_1_ED2023_09,
+        CCH_L842_1_ED2023_12, CCH_L842_1_ED2026_07)
+rule DestAllocationPreteurALF(m: Menage, b: Bailleur) defeasible {
+    label fr official "ALF au preteur sur sa demande";
+    label en unofficial "ALF to the lender on request";
+    when aide_attribuee(m, ALF) and demande_versement_tiers(b, m)
+        and role_tiers(b, PRETEUR);
+    then destinataire_aide(m, b);
+}
+
+@source(CCH_L842_1, CCH_L842_1_ED2019_12, CCH_L842_1_ED2020_01,
+        CCH_L842_1_ED2021_01, CCH_L842_1_ED2023_04, CCH_L842_1_ED2023_09,
+        CCH_L842_1_ED2023_12, CCH_L842_1_ED2026_07)
+rule DestAllocationBailleurALS(m: Menage, b: Bailleur) defeasible {
+    label fr official "ALS au bailleur sur sa demande si le logement est decent";
+    label en unofficial "ALS to the landlord on request when the dwelling is decent";
+    when aide_attribuee(m, ALS) and demande_versement_tiers(b, m)
+        and role_tiers(b, BAILLEUR) and logement_decent(m);
+    then destinataire_aide(m, b);
+}
+
+@source(CCH_L842_1, CCH_L842_1_ED2019_12, CCH_L842_1_ED2020_01,
+        CCH_L842_1_ED2021_01, CCH_L842_1_ED2023_04, CCH_L842_1_ED2023_09,
+        CCH_L842_1_ED2023_12, CCH_L842_1_ED2026_07)
+rule DestAllocationPreteurALS(m: Menage, b: Bailleur) defeasible {
+    label fr official "ALS au preteur sur sa demande";
+    label en unofficial "ALS to the lender on request";
+    when aide_attribuee(m, ALS) and demande_versement_tiers(b, m)
+        and role_tiers(b, PRETEUR);
+    then destinataire_aide(m, b);
+}
+
+pub relation aide_deduite_loyer(m: Menage) kind empirical {
+    label fr official "aide deduite du loyer et des depenses accessoires ou des charges (execution)";
+    label en unofficial "aid deducted from rent and related costs or repayment charges (performance)";
+}
+
+pub relation deduction_portee_connaissance(m: Menage) kind empirical {
+    label fr official "deduction portee a la connaissance du beneficiaire (execution)";
+    label en unofficial "deduction notified to the recipient (performance)";
+}
+
+pub relation aide_versee_tiers(m: Menage, b: Bailleur, montant: Money) kind empirical {
+    label fr official "aide versee au tiers destinataire (execution)";
+    label en unofficial "aid paid to the recipient third party (performance)";
+}
+
+pub relation charges_recuperables(m: Menage, c: Money) kind empirical {
+    label fr official "charges recuperables du logement (mesure)";
+    label en unofficial "recoverable dwelling charges (measured)";
+}
+
+pub relation excedent_aide_tiers(m: Menage, e: Money) kind institutional {
+    label fr official "part de l'aide au tiers excedant loyer et charges recuperables";
+    label en unofficial "third-party aid share above rent and recoverable charges";
+}
+
+pub relation excedent_reverse_allocataire(m: Menage) kind empirical {
+    label fr official "excedent reverse a l'allocataire (execution)";
+    label en unofficial "excess refunded to the claimant (performance)";
+}
+
+@source(CCH_L832_2, CCH_L832_2_ED2019_12, CCH_L832_2_ED2020_01,
+        CCH_L832_2_ED2021_01, CCH_L832_2_ED2023_04, CCH_L832_2_ED2023_09,
+        CCH_L832_2_ED2023_12, CCH_L832_2_ED2026_07, CCH_L842_1,
+        CCH_L842_1_ED2019_12, CCH_L842_1_ED2020_01, CCH_L842_1_ED2021_01,
+        CCH_L842_1_ED2023_04, CCH_L842_1_ED2023_09, CCH_L842_1_ED2023_12,
+        CCH_L842_1_ED2026_07)
+rule DevoirDeduireAide(m: Menage, b: Bailleur, aide: Money) strict {
+    label fr official "le destinataire deduit l'aide du loyer et des depenses ou charges";
+    label en unofficial "the recipient deducts the aid from rent and related costs or charges";
+    when destinataire_aide(m, b) and aide_versee_tiers(m, b, aide);
+    then duty BailleurDeduireAide {
+        bearer b;
+        beneficiary m;
+        maintain aide_deduite_loyer(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L832_2, CCH_L832_2_ED2019_12, CCH_L832_2_ED2020_01,
+        CCH_L832_2_ED2021_01, CCH_L832_2_ED2023_04, CCH_L832_2_ED2023_09,
+        CCH_L832_2_ED2023_12, CCH_L832_2_ED2026_07, CCH_L842_1,
+        CCH_L842_1_ED2019_12, CCH_L842_1_ED2020_01, CCH_L842_1_ED2021_01,
+        CCH_L842_1_ED2023_04, CCH_L842_1_ED2023_09, CCH_L842_1_ED2023_12,
+        CCH_L842_1_ED2026_07)
+rule DevoirInformerDeduction(m: Menage, b: Bailleur) strict {
+    label fr official "la deduction est portee a la connaissance du beneficiaire";
+    label en unofficial "the deduction is notified to the recipient";
+    when destinataire_aide(m, b) and aide_deduite_loyer(m);
+    then duty InformerBeneficiaireDeduction {
+        bearer b;
+        beneficiary m;
+        maintain deduction_portee_connaissance(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L832_2, CCH_L832_2_ED2019_12, CCH_L832_2_ED2020_01,
+        CCH_L832_2_ED2021_01, CCH_L832_2_ED2023_04, CCH_L832_2_ED2023_09,
+        CCH_L832_2_ED2023_12, CCH_L832_2_ED2026_07, CCH_L842_1,
+        CCH_L842_1_ED2019_12, CCH_L842_1_ED2020_01, CCH_L842_1_ED2021_01,
+        CCH_L842_1_ED2023_04, CCH_L842_1_ED2023_09, CCH_L842_1_ED2023_12,
+        CCH_L842_1_ED2026_07)
+rule ExcedentTiers(m: Menage, b: Bailleur, aide: Money, loyer: Money, charges: Money) strict {
+    label fr official "part excedant loyer et charges recuperables : excedent calcule";
+    label en unofficial "share above rent and recoverable charges: excess computed";
+    when aide_versee_tiers(m, b, aide) and loyer_principal(m, loyer)
+        and charges_recuperables(m, charges) and aide > loyer + charges;
+    then excedent_aide_tiers(m, aide - (loyer + charges));
+}
+
+@source(CCH_L832_2, CCH_L832_2_ED2019_12, CCH_L832_2_ED2020_01,
+        CCH_L832_2_ED2021_01, CCH_L832_2_ED2023_04, CCH_L832_2_ED2023_09,
+        CCH_L832_2_ED2023_12, CCH_L832_2_ED2026_07, CCH_L842_1,
+        CCH_L842_1_ED2019_12, CCH_L842_1_ED2020_01, CCH_L842_1_ED2021_01,
+        CCH_L842_1_ED2023_04, CCH_L842_1_ED2023_09, CCH_L842_1_ED2023_12,
+        CCH_L842_1_ED2026_07)
+rule DevoirReverserExcedent(m: Menage, b: Bailleur, e: Money) strict {
+    label fr official "l'excedent est verse a l'allocataire";
+    label en unofficial "the excess is paid to the claimant";
+    when destinataire_aide(m, b) and excedent_aide_tiers(m, e);
+    then duty ReverserExcedentAllocataire {
+        bearer b;
+        beneficiary m;
+        maintain excedent_reverse_allocataire(m) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CCH_L832_4, CCH_L832_4_ED2019_12, CCH_L832_4_ED2020_01,
+        CCH_L832_4_ED2021_01, CCH_L832_4_ED2023_04, CCH_L832_4_ED2023_09,
+        CCH_L832_4_ED2023_12, CCH_L832_4_ED2026_07)
+rule RepriseBailleurAPL(m: Menage, b: Bailleur) defeasible {
+    label fr official "reprise L. 824-3 : l'APL locative repart au bailleur selon L. 832-1";
+    label en unofficial "L. 824-3 resumption: rental APL back to the landlord under L. 832-1";
+    when versement_retabli_l824_3(m) and aide_attribuee(m, APL) and secteur_locatif(m)
+        and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR);
+    then destinataire_aide(m, b);
+}
+
+@source(CCH_L832_4, CCH_L832_4_ED2019_12, CCH_L832_4_ED2020_01,
+        CCH_L832_4_ED2021_01, CCH_L832_4_ED2023_04, CCH_L832_4_ED2023_09,
+        CCH_L832_4_ED2023_12, CCH_L832_4_ED2026_07)
+rule ReprisePreteurAPL(m: Menage, b: Bailleur) defeasible {
+    label fr official "reprise L. 824-3 : l'APL accession repart a l'etablissement habilite selon L. 832-1";
+    label en unofficial "L. 824-3 resumption: accession APL back to the approved body under L. 832-1";
+    when versement_retabli_l824_3(m) and aide_attribuee(m, APL) and secteur_accession(m)
+        and bailleur_du_menage(b, m) and role_tiers(b, ETABLISSEMENT_HABILITE);
+    then destinataire_aide(m, b);
+}
+
+@source(CCH_L832_4, CCH_L832_4_ED2019_12, CCH_L832_4_ED2020_01,
+        CCH_L832_4_ED2021_01, CCH_L832_4_ED2023_04, CCH_L832_4_ED2023_09,
+        CCH_L832_4_ED2023_12, CCH_L832_4_ED2026_07)
+rule RepriseGestionnaireAPL(m: Menage, b: Bailleur) defeasible {
+    label fr official "reprise L. 824-3 : l'APL foyer repart au gestionnaire selon L. 832-1";
+    label en unofficial "L. 824-3 resumption: hostel APL back to the manager under L. 832-1";
+    when versement_retabli_l824_3(m) and aide_attribuee(m, APL) and secteur_logement_foyer(m)
+        and bailleur_du_menage(b, m) and role_tiers(b, GESTIONNAIRE_FOYER);
+    then destinataire_aide(m, b);
+}
+
+pub relation absence_refus_bailleur_tiers(m: Menage) kind empirical {
+    label fr official "absence de refus du bailleur etablie, versement au bailleur non ecarte L. 842-2 (constat positif)";
+    label en unofficial "established absence of landlord refusal, payment to landlord not set aside L. 842-2 (positive finding)";
+}
+
+@source(CCH_L842_2, CCH_L842_2_ED2019_12, CCH_L842_2_ED2020_01,
+        CCH_L842_2_ED2021_01, CCH_L842_2_ED2023_04, CCH_L842_2_ED2023_09,
+        CCH_L842_2_ED2023_12, CCH_L842_2_ED2026_07)
+rule RepriseBailleurALF(m: Menage, b: Bailleur) defeasible {
+    label fr official "reprise L. 824-3 : l'ALF repart au bailleur si decent et sans refus etabli";
+    label en unofficial "L. 824-3 resumption: ALF back to the landlord when decent with no established refusal";
+    when versement_retabli_l824_3(m) and aide_attribuee(m, ALF)
+        and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR)
+        and logement_decent(m) and absence_refus_bailleur_tiers(m);
+    then destinataire_aide(m, b);
+}
+
+@source(CCH_L842_2, CCH_L842_2_ED2019_12, CCH_L842_2_ED2020_01,
+        CCH_L842_2_ED2021_01, CCH_L842_2_ED2023_04, CCH_L842_2_ED2023_09,
+        CCH_L842_2_ED2023_12, CCH_L842_2_ED2026_07)
+rule RepriseBailleurALS(m: Menage, b: Bailleur) defeasible {
+    label fr official "reprise L. 824-3 : l'ALS repart au bailleur si decent et sans refus etabli";
+    label en unofficial "L. 824-3 resumption: ALS back to the landlord when decent with no established refusal";
+    when versement_retabli_l824_3(m) and aide_attribuee(m, ALS)
+        and bailleur_du_menage(b, m) and role_tiers(b, BAILLEUR)
+        and logement_decent(m) and absence_refus_bailleur_tiers(m);
+    then destinataire_aide(m, b);
+}
+
+pub relation versement_mensuel_terme_echu(m: Menage) kind institutional {
+    label fr official "aides versees mensuellement a terme echu R. 823-8";
+    label en unofficial "aids paid monthly in arrears under R. 823-8";
+}
+
+@source(CCH_R823_8, CCH_R823_8_ED2019_12, CCH_R823_8_ED2020_01,
+        CCH_R823_8_ED2021_01, CCH_R823_8_ED2023_04, CCH_R823_8_ED2023_09,
+        CCH_R823_8_ED2023_12, CCH_R823_8_ED2026_07)
+rule ModalitesVersementMensuel(m: Menage, montant: Money) strict {
+    label fr official "aide versee : modalite mensuelle a terme echu (conventions L. 812-2 non epinglees)";
+    label en unofficial "aid paid: monthly arrears modality (L. 812-2 conventions unpinned)";
+    when aide_versee(m, montant);
+    then versement_mensuel_terme_echu(m);
+}
+
+pub relation seuil_versement_applicable(m: Menage, s: Money) kind institutional {
+    label fr official "seuil de versement applicable selon la nature de l'aide et la qualite du demandeur L. 823-7";
+    label en unofficial "payment threshold by aid nature and requester quality under L. 823-7";
+}
+
+pub enum QualiteDemandeurL8231 {
+    label fr official "qualite du demandeur L. 823-1 4 : locataire, colocataire ou sous-locataire (meuble ou non), accedant, resident de foyer";
+    label en unofficial "requester quality L. 823-1 4: tenant, co-tenant or sub-tenant (furnished or not), buyer, hostel resident";
+    LOCATAIRE, COLOCATAIRE, SOUS_LOCATAIRE, ACCEDANT_PROPRIETE, RESIDENT_FOYER
+}
+
+pub relation qualite_demandeur(m: Menage, q: QualiteDemandeurL8231) kind institutional {
+    label fr official "qualite du demandeur etablie L. 823-1 4";
+    label en unofficial "established requester quality L. 823-1 4";
+}
+
+// D-79: a bare parameter as a head argument stays a const_ref in the
+// evaluation document and never matches a Money literal; the threshold
+// enters the head through a function value, like other amounts here. The
+// threshold is undifferentiated by quality today (arrete art. 12).
+function seuil_versement_apl(q: QualiteDemandeurL8231) -> Money = SeuilVersementAPL;
+function seuil_versement_accession(q: QualiteDemandeurL8231) -> Money = SeuilVersementAccession;
+function seuil_versement_foyer_apl(q: QualiteDemandeurL8231) -> Money = SeuilVersementFoyerAPL;
+function seuil_versement_allocation_logement(q: QualiteDemandeurL8231) -> Money =
+    SeuilVersementAllocationLogement;
+
+
+pub relation sous_locataire_l8231(m: Menage) kind empirical {
+    label fr official "sous-locataire d'un logement meuble ou non (constat L. 823-1 4)";
+    label en unofficial "sub-tenant of a furnished or unfurnished dwelling (L. 823-1 4 finding)";
+}
+
+pub relation non_sous_locataire_l8231(m: Menage) kind empirical {
+    label fr official "dossier etabli hors sous-location, meublee ou non (classification positive L. 823-1 4)";
+    label en unofficial "case positively classified outside sub-tenancy, furnished or not (L. 823-1 4)";
+}
+
+@source(CCH_L823_1, CCH_L823_1_ED2019_12, CCH_L823_1_ED2020_01,
+        CCH_L823_1_ED2021_01, CCH_L823_1_ED2023_04, CCH_L823_1_ED2023_09,
+        CCH_L823_1_ED2023_12, CCH_L823_1_ED2026_07)
+rule QualiteLocataire(m: Menage) strict {
+    label fr official "secteur locatif hors colocation, sous-location ecartee : locataire L. 823-1 4";
+    label en unofficial "rental sector outside co-tenancy, sub-tenancy affirmatively excluded: tenant L. 823-1 4";
+    when secteur_locatif(m) and mode_location(m, LOCATION_SEULE)
+        and non_sous_locataire_l8231(m);
+    then qualite_demandeur(m, LOCATAIRE);
+}
+
+@source(CCH_L823_1, CCH_L823_1_ED2019_12, CCH_L823_1_ED2020_01,
+        CCH_L823_1_ED2021_01, CCH_L823_1_ED2023_04, CCH_L823_1_ED2023_09,
+        CCH_L823_1_ED2023_12, CCH_L823_1_ED2026_07)
+rule QualiteColocataire(m: Menage) strict {
+    label fr official "secteur locatif en colocation : colocataire L. 823-1 4";
+    label en unofficial "rental sector in co-tenancy: co-tenant L. 823-1 4";
+    when secteur_locatif(m) and mode_location(m, COLOCATION);
+    then qualite_demandeur(m, COLOCATAIRE);
+}
+
+@source(CCH_L823_1, CCH_L823_1_ED2019_12, CCH_L823_1_ED2020_01,
+        CCH_L823_1_ED2021_01, CCH_L823_1_ED2023_04, CCH_L823_1_ED2023_09,
+        CCH_L823_1_ED2023_12, CCH_L823_1_ED2026_07)
+rule QualiteSousLocataire(m: Menage) strict {
+    label fr official "sous-location constatee : sous-locataire L. 823-1 4";
+    label en unofficial "established sub-tenancy: sub-tenant L. 823-1 4";
+    when sous_locataire_l8231(m);
+    then qualite_demandeur(m, SOUS_LOCATAIRE);
+}
+
+@source(CCH_L823_1, CCH_L823_1_ED2019_12, CCH_L823_1_ED2020_01,
+        CCH_L823_1_ED2021_01, CCH_L823_1_ED2023_04, CCH_L823_1_ED2023_09,
+        CCH_L823_1_ED2023_12, CCH_L823_1_ED2026_07)
+rule QualiteAccedant(m: Menage) strict {
+    label fr official "secteur accession : accedant a la propriete L. 823-1 4";
+    label en unofficial "accession sector: home buyer L. 823-1 4";
+    when secteur_accession(m);
+    then qualite_demandeur(m, ACCEDANT_PROPRIETE);
+}
+
+@source(CCH_L823_1, CCH_L823_1_ED2019_12, CCH_L823_1_ED2020_01,
+        CCH_L823_1_ED2021_01, CCH_L823_1_ED2023_04, CCH_L823_1_ED2023_09,
+        CCH_L823_1_ED2023_12, CCH_L823_1_ED2026_07)
+rule QualiteAccedantAllocations(m: Menage) strict {
+    label fr official "secteur accession allocations : accedant a la propriete L. 823-1 4";
+    label en unofficial "accession-allocations sector: home buyer L. 823-1 4";
+    when secteur_accession_allocations(m);
+    then qualite_demandeur(m, ACCEDANT_PROPRIETE);
+}
+
+@source(CCH_L823_1, CCH_L823_1_ED2019_12, CCH_L823_1_ED2020_01,
+        CCH_L823_1_ED2021_01, CCH_L823_1_ED2023_04, CCH_L823_1_ED2023_09,
+        CCH_L823_1_ED2023_12, CCH_L823_1_ED2026_07)
+rule QualiteResidentFoyer(m: Menage) strict {
+    label fr official "secteur logement-foyer : resident en logement-foyer L. 823-1 4";
+    label en unofficial "hostel sector: hostel resident L. 823-1 4";
+    when secteur_logement_foyer(m);
+    then qualite_demandeur(m, RESIDENT_FOYER);
+}
+
+@source(CCH_L823_7, CCH_L823_7_ED2019_12, CCH_L823_7_ED2020_01,
+        CCH_L823_7_ED2021_01, CCH_L823_7_ED2023_04, CCH_L823_7_ED2023_09,
+        CCH_L823_7_ED2023_12, CCH_L823_7_ED2026_07, ARR_ART12_ED2019_10,
+        ARR_ART12_ED2020_01, ARR_ART12_ED2020_10, ARR_ART12_ED2021_01,
+        ARR_ART12_ED2021_10, ARR_ART12_ED2022_01, ARR_ART12_ED2022_07,
+        ARR_ART12_ED2023_01, ARR_ART12_ED2023_10, ARR_ART12_ED2024_01,
+        ARR_ART12_ED2024_10, ARR_ART12_ED2025_01, ARR_ART12_ED2025_10,
+        ARR_ART12_ED2026_10)
+rule SeuilApplicableAPLLocatif(m: Menage, q: QualiteDemandeurL8231) strict {
+    label fr official "seuil APL locatif par qualite : montant arrete art. 12";
+    label en unofficial "rental APL threshold by quality: arrete art. 12 amount";
+    when aide_demandee(m, APL) and qualite_demandeur(m, q) and secteur_locatif(m);
+    then seuil_versement_applicable(m, seuil_versement_apl(q));
+}
+
+@source(CCH_L823_7, CCH_L823_7_ED2019_12, CCH_L823_7_ED2020_01,
+        CCH_L823_7_ED2021_01, CCH_L823_7_ED2023_04, CCH_L823_7_ED2023_09,
+        CCH_L823_7_ED2023_12, CCH_L823_7_ED2026_07, ARR_ART21_ED2019_10,
+        ARR_ART21_ED2020_01, ARR_ART21_ED2020_10, ARR_ART21_ED2021_01,
+        ARR_ART21_ED2021_10, ARR_ART21_ED2022_01, ARR_ART21_ED2022_07,
+        ARR_ART21_ED2023_01, ARR_ART21_ED2023_10, ARR_ART21_ED2024_01,
+        ARR_ART21_ED2024_10, ARR_ART21_ED2025_01, ARR_ART21_ED2025_10,
+        ARR_ART21_ED2026_10)
+rule SeuilApplicableAPLAccession(m: Menage, q: QualiteDemandeurL8231) strict {
+    label fr official "seuil APL accession par qualite : montant arrete art. 21";
+    label en unofficial "accession APL threshold by quality: arrete art. 21 amount";
+    when aide_demandee(m, APL) and qualite_demandeur(m, q) and secteur_accession(m);
+    then seuil_versement_applicable(m, seuil_versement_accession(q));
+}
+
+@source(CCH_L823_7, CCH_L823_7_ED2019_12, CCH_L823_7_ED2020_01,
+        CCH_L823_7_ED2021_01, CCH_L823_7_ED2023_04, CCH_L823_7_ED2023_09,
+        CCH_L823_7_ED2023_12, CCH_L823_7_ED2026_07, ARR_ART29_ED2019_10,
+        ARR_ART29_ED2020_01, ARR_ART29_ED2020_10, ARR_ART29_ED2021_01,
+        ARR_ART29_ED2021_10, ARR_ART29_ED2022_01, ARR_ART29_ED2022_07,
+        ARR_ART29_ED2023_01, ARR_ART29_ED2023_10, ARR_ART29_ED2024_01,
+        ARR_ART29_ED2024_10, ARR_ART29_ED2025_01, ARR_ART29_ED2025_10,
+        ARR_ART29_ED2026_10)
+rule SeuilApplicableAPLFoyer(m: Menage, q: QualiteDemandeurL8231) strict {
+    label fr official "seuil APL foyer par qualite : montant arrete art. 29";
+    label en unofficial "hostel APL threshold by quality: arrete art. 29 amount";
+    when aide_demandee(m, APL) and qualite_demandeur(m, q) and secteur_logement_foyer(m);
+    then seuil_versement_applicable(m, seuil_versement_foyer_apl(q));
+}
+
+@source(CCH_L823_7, CCH_L823_7_ED2019_12, CCH_L823_7_ED2020_01,
+        CCH_L823_7_ED2021_01, CCH_L823_7_ED2023_04, CCH_L823_7_ED2023_09,
+        CCH_L823_7_ED2023_12, CCH_L823_7_ED2026_07, ARR_ART12_ED2019_10,
+        ARR_ART12_ED2020_01, ARR_ART12_ED2020_10, ARR_ART12_ED2021_01,
+        ARR_ART12_ED2021_10, ARR_ART12_ED2022_01, ARR_ART12_ED2022_07,
+        ARR_ART12_ED2023_01, ARR_ART12_ED2023_10, ARR_ART12_ED2024_01,
+        ARR_ART12_ED2024_10, ARR_ART12_ED2025_01, ARR_ART12_ED2025_10,
+        ARR_ART12_ED2026_10)
+rule SeuilApplicableALF(m: Menage, q: QualiteDemandeurL8231) strict {
+    label fr official "seuil ALF par qualite : montant allocations art. 12 (indifferencie a ce jour)";
+    label en unofficial "ALF threshold by quality: allocations art. 12 amount (undifferentiated today)";
+    when aide_demandee(m, ALF) and qualite_demandeur(m, q);
+    then seuil_versement_applicable(m, seuil_versement_allocation_logement(q));
+}
+
+@source(CCH_L823_7, CCH_L823_7_ED2019_12, CCH_L823_7_ED2020_01,
+        CCH_L823_7_ED2021_01, CCH_L823_7_ED2023_04, CCH_L823_7_ED2023_09,
+        CCH_L823_7_ED2023_12, CCH_L823_7_ED2026_07, ARR_ART12_ED2019_10,
+        ARR_ART12_ED2020_01, ARR_ART12_ED2020_10, ARR_ART12_ED2021_01,
+        ARR_ART12_ED2021_10, ARR_ART12_ED2022_01, ARR_ART12_ED2022_07,
+        ARR_ART12_ED2023_01, ARR_ART12_ED2023_10, ARR_ART12_ED2024_01,
+        ARR_ART12_ED2024_10, ARR_ART12_ED2025_01, ARR_ART12_ED2025_10,
+        ARR_ART12_ED2026_10)
+rule SeuilApplicableALS(m: Menage, q: QualiteDemandeurL8231) strict {
+    label fr official "seuil ALS par qualite : montant allocations art. 12 (indifferencie a ce jour)";
+    label en unofficial "ALS threshold by quality: allocations art. 12 amount (undifferentiated today)";
+    when aide_demandee(m, ALS) and qualite_demandeur(m, q);
+    then seuil_versement_applicable(m, seuil_versement_allocation_logement(q));
+}

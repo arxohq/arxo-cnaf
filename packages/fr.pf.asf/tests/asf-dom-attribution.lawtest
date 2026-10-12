@@ -1,0 +1,106 @@
+// DOM attribution after the RETURN04 award/parity split (D76 territory
+// split kept): the L. 755-17 award is available in all six L. 751-1
+// collectivities from the parent in charge, the eligible child and the
+// collectivity residence alone; it is gated neither on the
+// department-only D. 755-7 status nor on the generic D. 755-8 rate
+// parity, which are independent branches. Guadeloupe department
+// household (collectivity + department residence with provenance):
+// award, applicability and parity all hold. Saint-Barthélemy
+// collectivity-only household (no department fact, classification
+// unknown): award and parity hold, D. 755-7 applicability stays
+// silent. Saint-Martin separation household (collectivity residence,
+// parent in charge and opener presented, but no ground and no request
+// stated): parity holds while the award stays silent on the missing
+// exact entitlement premise. Metropolitan control (no residence
+// facts): the child stays eligible but every DOM status stays silent.
+language "law.core" version "0.2";
+package fr.pf.asf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-asf";
+
+test "urn:query:fr-pf-asf-dom-attribution" {
+    given {
+        context { deadline_policy PAIEMENT_MENSUEL; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ada-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:dom-attribution"), entity_ref("urn:fr:pf-asf:case:dom-attribution-e1")) { origin case_input; }
+        assert "ada-02": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:dom-attribution-e1")) { origin case_input; }
+        assert "ada-03": motif_asf(entity_ref("urn:fr:pf-asf:case:dom-attribution-e1"), ORPHELIN_UN_PARENT) { origin case_input; }
+        assert "ada-04": demande_asf(entity_ref("urn:fr:pf-asf:case:dom-attribution-e1")) { origin case_input; }
+        assert "ada-05": residence_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution")) { origin case_input; }
+        assert "ada-06": residence_departement_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution")) { origin case_input; }
+        assert "ada-07": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:dom-attribution-sb"), entity_ref("urn:fr:pf-asf:case:dom-attribution-sb-e2")) { origin case_input; }
+        assert "ada-08": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:dom-attribution-sb-e2")) { origin case_input; }
+        assert "ada-09": motif_asf(entity_ref("urn:fr:pf-asf:case:dom-attribution-sb-e2"), ORPHELIN_UN_PARENT) { origin case_input; }
+        assert "ada-10": demande_asf(entity_ref("urn:fr:pf-asf:case:dom-attribution-sb-e2")) { origin case_input; }
+        assert "ada-11": residence_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-sb")) { origin case_input; }
+        assert "ada-12": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:dom-attribution-out"), entity_ref("urn:fr:pf-asf:case:dom-attribution-out-e3")) { origin case_input; }
+        assert "ada-13": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:dom-attribution-out-e3")) { origin case_input; }
+        assert "ada-14": motif_asf(entity_ref("urn:fr:pf-asf:case:dom-attribution-out-e3"), ORPHELIN_UN_PARENT) { origin case_input; }
+        assert "ada-15": demande_asf(entity_ref("urn:fr:pf-asf:case:dom-attribution-out-e3")) { origin case_input; }
+        assert "ada-16": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-asf:case:dom-attribution-sm"), entity_ref("urn:fr:pf-asf:case:dom-attribution-sm-e4")) { origin case_input; }
+        assert "ada-17": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-asf:case:dom-attribution-sm-e4")) { origin case_input; }
+        assert "ada-18": residence_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-sm")) { origin case_input; }
+    }
+    evaluate truth(asf_enfant_eligible(entity_ref("urn:fr:pf-asf:case:dom-attribution-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_metro_applicable_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_taux_parite_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_attribuee_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_enfant_eligible(entity_ref("urn:fr:pf-asf:case:dom-attribution-sb-e2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_metro_applicable_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-sb")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_taux_parite_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-sb")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_attribuee_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-sb-e2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_enfant_eligible(entity_ref("urn:fr:pf-asf:case:dom-attribution-out-e3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_metro_applicable_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-out")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_taux_parite_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-out")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_attribuee_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-out-e3")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_enfant_eligible(entity_ref("urn:fr:pf-asf:case:dom-attribution-sm-e4")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_metro_applicable_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-sm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_taux_parite_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-sm")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(asf_attribuee_dom(entity_ref("urn:fr:pf-asf:case:dom-attribution-sm-e4")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

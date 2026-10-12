@@ -1,0 +1,266 @@
+# Manifest §10 — package root marker (DECISION-0033). Headers §22 in the
+# .law files themselves are normative; the manifest must match them
+# (LDC-E1109, lawc check).
+[package]
+name = "fr.css.prime_activite"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:ppa"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after .law edits run
+# `law fix imports fr/prime-activite`; do not maintain `use self::{…}` blocks by hand.
+[authoring]
+local_imports = "explicit"
+
+# Catalogue metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-prime-activite"
+title = "Prime d'activité (PA)"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française"
+verifiedAgainstSource = false
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Amounts (L.842-3, D.843-1/2/3, R.843-1 both wordings, payment floor).
+[[tests]]
+family = "fr.css.prime_activite#montant"
+regression = false
+suites = [
+    "tests/prime-seul-lineaire-2026.lawtest",
+    "tests/prime-seul-ancien-2025.lawtest",
+    "tests/prime-couple-2e-2026.lawtest",
+    "tests/prime-isole-1e-2026.lawtest",
+    "tests/prime-sous-seuil-2026.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Quarterly average (R843-1) and linear bonification (D843-2) under the readings
+# PrimeMoyenneArrondieCentime / BonificationLineaireArrondieCentime (SPEC 152, D-82/D-83):
+# rounded to the centime, half up; without a reading the default stays exact division.
+[[tests]]
+family = "fr.css.prime_activite#montant-division"
+regression = false
+suites = [
+    "tests/prime-division-moyenne-arrondie.lawtest",
+    "tests/prime-division-bonification-arrondie.lawtest",
+    "tests/prime-division-chaine-arrondie.lawtest",
+    "tests/prime-division-sans-lecture.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Twelfths and thirds of non-salaried income (R845-1/2) under the reading
+# RessourcesFractionsArrondiesCentime (SPEC 152, D-82/D-84): rounded to the centime, half up;
+# without the reading the default stays exact division. Expectations: independent Fraction
+# replica (tools/build_ressources_division.py).
+[[tests]]
+family = "fr.css.prime_activite#ressources-division"
+regression = false
+suites = [
+    "tests/ressources-division-lecture.lawtest",
+    "tests/ressources-division-sans-lecture.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Flat-rate amount chain (L842-3, L161-25; DECISION-0452): decree amounts by MONTH, the
+# 2022-1158 art. 9 window, the built chain under the reading
+# ForfaitRevalorisationArrondiCentime, the case-supplied base. Expectations are generated
+# from the pinned texts (tools/build_forfait_chaine.py).
+[[tests]]
+family = "fr.css.prime_activite#forfait-chaine"
+regression = false
+suites = [
+    "tests/forfait-decrets.lawtest",
+    "tests/forfait-bords-mois.lawtest",
+    "tests/forfait-chaine-lecture.lawtest",
+    "tests/forfait-sans-lecture.lawtest",
+    "tests/forfait-saisi-prevaut.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Housing forfait (R844-3, R844-4 I) and the amount from the decree chain to the prime.
+[[tests]]
+family = "fr.css.prime_activite#forfait-logement"
+regression = false
+suites = [
+    "tests/forfait-logement-formes.lawtest",
+    "tests/forfait-logement-ressources.lawtest",
+    "tests/prime-chaine-logement-2024.lawtest",
+    "tests/prime-chaine-loi-2022.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Recovery (L.845-3/4/5, radiation L.843-5).
+[[tests]]
+family = "fr.css.prime_activite#recouvrement"
+regression = false
+suites = [
+    "tests/indu-fraude-indemnite.lawtest",
+    "tests/indu-sursis.lawtest",
+    "tests/radiation-sans-versement.lawtest",
+    "tests/indu-statut-2026.lawtest",
+    "tests/insaisissable-2026.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Service, support, control (L.843-1, L.844-1, L.845-1/2/6).
+[[tests]]
+family = "fr.css.prime_activite#devoirs"
+regression = false
+suites = [
+    "tests/devoirs-actif.lawtest",
+    "tests/infraction-intermediaire.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Foreign mapping (IT-2026-080 scale edges, class a).
+[[tests]]
+family = "fr.css.prime_activite#foreign"
+regression = false
+suites = [
+    "tests/foreign/seuils-it-2026-080.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Right (L.842-1/2/5, opening L.843-2).
+[[tests]]
+family = "fr.css.prime_activite#droit"
+regression = false
+suites = [
+    "tests/droit-standard.lawtest",
+    "tests/droit-etudiant-exclu.lawtest",
+    "tests/droit-exceptions-2026.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Opening (FINISH pa: R.842-1..5, R.843-2, D.846-1/3).
+[[tests]]
+family = "fr.css.prime_activite#ouverture"
+regression = false
+suites = [
+    "tests/ouverture-residence-2026.lawtest",
+    "tests/ouverture-timing-2026.lawtest",
+    "tests/ouverture-timing-2024.lawtest",
+    "tests/foyer-composition-2026.lawtest",
+    "tests/majoration-revision-2026.lawtest",
+    "tests/reexamen-radiation-2026.lawtest",
+    "tests/transition-timing-ancien-2025.lawtest",
+    "tests/transition-timing-nouveau-2025.lawtest",
+    "tests/transition-msa-avant-arrete-2025.lawtest",
+    "tests/transition-msa-apres-arrete-2025.lawtest",
+    "tests/transition-msa-plafond-2025.lawtest",
+    "tests/revision-ancienne-2025.lawtest",
+    "tests/ouverture-residence-preuve-2026.lawtest",
+    "tests/ouverture-donnees-manquantes-2026.lawtest",
+    "tests/foyer-enfant-preuve-2026.lawtest",
+    "tests/partenaire-non-retenu-2026.lawtest",
+    "tests/reexamen-rsa-2026.lawtest",
+    "tests/reexamen-sans-declencheur-2026.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Resources (FINISH pa: R.844-1/2/4/5, R.845-1/2/3).
+[[tests]]
+family = "fr.css.prime_activite#ressources"
+regression = false
+suites = [
+    "tests/revenus-pro-2026.lawtest",
+    "tests/revenus-remplacement-2026.lawtest",
+    "tests/forfaits-2026.lawtest",
+    "tests/exclusions-2026.lawtest",
+    "tests/exclusions-2021.lawtest",
+    "tests/non-salarie-2026.lawtest",
+    "tests/non-salarie-n1-2026.lawtest",
+    "tests/revenus-net-art62-2026.lawtest",
+    "tests/option-rsa-2026.lawtest",
+    "tests/revenus-classification-incertaine-2026.lawtest",
+    "tests/non-salarie-incomplet-2026.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Service (FINISH pa: D.846-2, R.846-1..9).
+[[tests]]
+family = "fr.css.prime_activite#service"
+regression = false
+suites = [
+    "tests/seuil-demande-2026.lawtest",
+    "tests/allocataire-2026.lawtest",
+    "tests/msa-2026.lawtest",
+    "tests/hospitalisation-2026.lawtest",
+    "tests/incarceration-2026.lawtest",
+    "tests/devoirs-service-2026.lawtest",
+    "tests/reprises-centralisation-2026.lawtest",
+    "tests/allocataire-defaut-2026.lawtest",
+    "tests/msa-rural-preuve-2026.lawtest",
+    "tests/hospitalisation-grossesse-2026.lawtest",
+    "tests/incarceration-exception-2026.lawtest",
+    "tests/hospitalisation-foyer-preuve-2026.lawtest",
+    "tests/hospitalisation-prise-en-charge-preuve-2026.lawtest",
+    "tests/hospitalisation-reprise-preuve-2026.lawtest",
+    "tests/incarceration-foyer-preuve-2026.lawtest",
+    "tests/incarceration-reprise-preuve-2026.lawtest",
+    "tests/incarceration-foyer-non-qualifie-2026.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Recovery procedure and appeals (FINISH pa: D.847-1/2/3, R.847-1/1-1/2/3).
+[[tests]]
+family = "fr.css.prime_activite#recours"
+regression = false
+suites = [
+    "tests/abandon-seuil-2026.lawtest",
+    "tests/notification-rectification-2026.lawtest",
+    "tests/notification-contenu-2026.lawtest",
+    "tests/notification-rejet-2026.lawtest",
+    "tests/notification-rejet-hors-delai-2026.lawtest",
+    "tests/decision-accordee-2026.lawtest",
+    "tests/rejet-recouvrement-2026.lawtest",
+    "tests/rejet-implicite-delai-2026.lawtest",
+    "tests/rectification-avant-reception-2026.lawtest",
+    "tests/rectification-jour-reception-2026.lawtest",
+    "tests/rectification-dernier-jour-2026.lawtest",
+    "tests/rectification-sans-reception-2026.lawtest",
+    "tests/rectification-tardive-2026.lawtest",
+    "tests/rectification-orale-docs-2026.lawtest",
+    "tests/saisie-d8473-2026.lawtest",
+    "tests/recours-cra-2026.lawtest",
+    "tests/association-cra-2026.lawtest",
+    "tests/mentions-recours-2026.lawtest",
+    "tests/examen-representation-2026.lawtest",
+    "tests/recours-delai-incertain-2026.lawtest",
+    "tests/rectification-decision-incertaine-2026.lawtest",
+    "tests/production-orale-incertaine-2026.lawtest",
+    "tests/notification-moyen-incertain-2026.lawtest",
+    "tests/notification-directeur-incertain-2026.lawtest",
+    "tests/rejet-rectification-directeur-incertain-2026.lawtest",
+    "tests/decision-rejet-date-2026.lawtest",
+    "tests/decision-accordee-datee-2026.lawtest",
+    "tests/decision-tardive-2026.lawtest",
+    "tests/decision-sans-date-maturite-2026.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Statistics (FINISH pa: D.848-1..5, R.848-1).
+[[tests]]
+family = "fr.css.prime_activite#statistiques"
+regression = false
+suites = [
+    "tests/stats-trimestre-2026.lawtest",
+    "tests/stats-trimestre-q4-2026.lawtest",
+    "tests/stats-conformite-2026.lawtest",
+    "tests/publication-pre2024-2022.lawtest",
+    "tests/stats-annuel-publication-2026.lawtest",
+    "tests/stats-trimestre-inconnu-2026.lawtest",
+]
+world = ["fr.css.prime_activite"]
+
+# Phase 0 (sources only): modules and tests arrive with the prompt-П cycle.
+# SMIC hourly arrives via import from fr.smic; euro base forfait, the
+# L. 161-25 coefficient and the resource computation mechanics are
+# boundaries (B-PPA-MONTANT-EURO, B-PPA-SMIC-REVALO, B-PPA-RESSOURCES-CALCUL).

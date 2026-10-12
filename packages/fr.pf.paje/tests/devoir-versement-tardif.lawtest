@@ -1,0 +1,18 @@
+// Deadline: payment of 919.00 € on 20.09.2025 with deadline 31.08.2025
+// (last day of the month after the 6th month) — lateness recorded.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-devoir-versement-tardif" {
+    given {
+        context { decision_time @2025-10-01T12:00:00Z; knowledge_time @2025-10-01T12:00:00Z; legal_time @2025-10-01; timezone "Europe/Paris"; }
+        assert "tardif-01": prime_versee(entity_ref("urn:fr:paje:case:tardif"), entity_ref("urn:fr:paje:enfant:tardif"), 919.00 EUR) { origin case_input; }
+        assert "tardif-02": date_versement_prime(entity_ref("urn:fr:paje:case:tardif"), entity_ref("urn:fr:paje:enfant:tardif"), @2025-09-20) { origin case_input; }
+        assert "tardif-03": date_limite_versement(entity_ref("urn:fr:paje:case:tardif"), entity_ref("urn:fr:paje:enfant:tardif"), @2025-08-31) { origin adjudicated; }
+    }
+    evaluate truth(versement_tardif(entity_ref("urn:fr:paje:case:tardif"), entity_ref("urn:fr:paje:enfant:tardif")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

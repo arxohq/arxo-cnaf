@@ -1,0 +1,34 @@
+// Two children only: both qualify by age but the count stays below
+// three, so no right opens (NEITHER, negation as absence).
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-conditions-deux-enfants" {
+    given {
+        context { deadline_policy AGE_ATTEINT; decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "c2e-01": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants"), entity_ref("urn:fr:pf-cf:case:cond-deux-enfants-e1")) { origin case_input; }
+        assert "c2e-02": fr.pf.core::parent_charge(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants"), entity_ref("urn:fr:pf-cf:case:cond-deux-enfants-e2")) { origin case_input; }
+        assert "c2e-03": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants-e1")) { origin case_input; }
+        assert "c2e-04": fr.pf.core::enfant_ouvre_droit(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants-e2")) { origin case_input; }
+        assert "c2e-05": date_naissance(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants-e1"), @2016-03-15) { origin case_input; }
+        assert "c2e-06": date_naissance(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants-e2"), @2014-03-15) { origin case_input; }
+        assert "c2e-07": mois_droit(@2021-06-01) { origin case_input; }
+        assert "c2e-08": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants"), 2) { origin case_input; }
+        assert "c2e-09": ressources_menage(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants"), 20000 EUR) { origin case_input; }
+        assert "c2e-10": plafond_cf_applicable(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants"), 30000 EUR) { origin case_input; }
+        assert "c2e-11": cadre_cf_remplie(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants")) { origin case_input; }
+    }
+    evaluate truth(cf_enfant_qualifie(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants-e1")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_enfant_qualifie(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants-e2")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(cf_droit_ouvert(entity_ref("urn:fr:pf-cf:case:cond-deux-enfants")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

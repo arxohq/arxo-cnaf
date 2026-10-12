@@ -1,0 +1,26 @@
+// Two-earner ceiling: the 36000 base plus the stated 1000 EUR
+// decree increment (R. 522-2 al. 3) = 37000.
+// D-83: плафоны строятся из опубликованных сумм — база 20000, надбавки 25 % = 5000 и 30 % = 6000; montant majoré: база 10000, 2500 и 3000 (ровно то, что давали проценты). Ожидание не менялось.
+language "law.core" version "0.2";
+package fr.pf.cf version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-cf";
+
+test "urn:query:fr-pf-cf-plafond-biactif" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "plb-01": plafond_base_cf(entity_ref("urn:fr:pf-cf:case:plafond-biactif"), 20000 EUR) { origin case_input; }
+        assert "plb-01a": majoration_enfant_cf(entity_ref("urn:fr:pf-cf:case:plafond-biactif"), 5000 EUR) { origin case_input; }
+        assert "plb-01b": majoration_troisieme_cf(entity_ref("urn:fr:pf-cf:case:plafond-biactif"), 6000 EUR) { origin case_input; }
+        assert "plb-01c": plafond_base_majore(entity_ref("urn:fr:pf-cf:case:plafond-biactif"), 10000 EUR) { origin case_input; }
+        assert "plb-01d": majoration_enfant_majore(entity_ref("urn:fr:pf-cf:case:plafond-biactif"), 2500 EUR) { origin case_input; }
+        assert "plb-01e": majoration_troisieme_majore(entity_ref("urn:fr:pf-cf:case:plafond-biactif"), 3000 EUR) { origin case_input; }
+        assert "plb-02": nb_enfants_cf(entity_ref("urn:fr:pf-cf:case:plafond-biactif"), 3) { origin case_input; }
+        assert "plb-03": revenu_pro_min_couple(entity_ref("urn:fr:pf-cf:case:plafond-biactif"), 6000 EUR) { origin case_input; }
+        assert "plb-04": pass_annuel(40000 EUR) { origin case_input; }
+        assert "plb-05": majoration_biactivite(entity_ref("urn:fr:pf-cf:case:plafond-biactif"), 1000 EUR) { origin case_input; }
+    }
+    evaluate truth(plafond_cf_applicable(entity_ref("urn:fr:pf-cf:case:plafond-biactif"), 37000 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

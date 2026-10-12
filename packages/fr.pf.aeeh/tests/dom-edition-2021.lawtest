@@ -1,0 +1,26 @@
+// DOM transfer under the 2021 edition (CSS_ED2021_01): an entitled
+// child resident in Guyane, BMAF 400.00, no supplement, no MPI. Both
+// the L. 755-20 attribution and the D. 755-11 built amount conclude at
+// legal_time 2021-06-15, proving the base fragments participate.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-dom-edition-2021" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "dom-e21-01": decision_cdaph_favorable(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-21")) { origin adjudicated; }
+        assert "dom-e21-02": residence_enfant(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-21"), GUYANE) { origin case_input; }
+        assert "dom-e21-03": bmaf_retenue(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-21"), 400.00 EUR) { origin case_input; }
+        assert "dom-e21-04": sans_complement(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-21")) { origin case_input; }
+        assert "dom-e21-05": sans_mpi(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-21")) { origin case_input; }
+    }
+    evaluate truth(aeeh_attribuee_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-21")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(montant_aeeh_dom(entity_ref("urn:fr:pf-aeeh:case:enfant-dom-21"), 128.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

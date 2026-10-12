@@ -1,0 +1,22 @@
+// L. 755-19, para. 2: Guadeloupe household, full-rate base right open
+// (20000 € ≤ 30000 €), single-child family allowances with age supplements
+// served — the base/AF cumulation is barred.
+language "law.core" version "0.2";
+package fr.pf.paje version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-paje";
+
+test "urn:query:fr-pf-paje-dom-base-af-unique-plein" {
+    given {
+        context { decision_time @2025-07-15T12:00:00Z; knowledge_time @2025-07-15T12:00:00Z; legal_time @2025-07-15; timezone "Europe/Paris"; }
+        assert "dom-afp-01": territoire(entity_ref("urn:fr:paje:case:dom-afp"), GUADELOUPE) { origin case_input; }
+        assert "dom-afp-02": enfant_en_charge(entity_ref("urn:fr:paje:case:dom-afp"), entity_ref("urn:fr:paje:enfant:dom-afp")) { origin case_input; }
+        assert "dom-afp-03": condition_age_base(entity_ref("urn:fr:paje:enfant:dom-afp")) { origin adjudicated; }
+        assert "dom-afp-04": ressources_annuelles(entity_ref("urn:fr:paje:case:dom-afp"), 20000 EUR) { origin case_input; }
+        assert "dom-afp-05": plafond_base_taux_plein(entity_ref("urn:fr:paje:case:dom-afp"), 30000 EUR) { origin case_input; }
+        assert "dom-afp-06": af_enfant_unique_servies(entity_ref("urn:fr:paje:case:dom-afp"), entity_ref("urn:fr:paje:enfant:dom-afp")) { origin adjudicated; }
+    }
+    evaluate truth(cumul_base_af_unique_interdit(entity_ref("urn:fr:paje:case:dom-afp"), entity_ref("urn:fr:paje:enfant:dom-afp")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,27 @@
+// No renewal before the 2021 text: June 2021, maximum reached with the
+// renewal facts, but the exceptional renewal opens only 2021-11-17.
+// The first-envelope ceiling still holds (300 within 310).
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-renouvellement-avant-2021" {
+    given {
+        context { decision_time @2021-06-15T12:00:00Z; knowledge_time @2021-06-15T12:00:00Z; legal_time @2021-06-15; timezone "Europe/Paris"; }
+        assert "ajpp-ren21-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-ren21")) { origin adjudicated; }
+        assert "ajpp-ren21-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-ren21")) { origin adjudicated; }
+        assert "ajpp-ren21-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-ren21"), entity_ref("urn:fr:pf-ajpp:case:enfant-ren21")) { origin case_input; }
+        assert "ajpp-ren21-04": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-ren21"), 300) { origin case_input; }
+        assert "ajpp-ren21-05": nouveau_certificat(entity_ref("urn:fr:pf-ajpp:case:enfant-ren21")) { origin adjudicated; }
+        assert "ajpp-ren21-06": accord_controle_renouvellement(entity_ref("urn:fr:pf-ajpp:case:enfant-ren21")) { origin adjudicated; }
+        assert "ajpp-ren21-07": avant_terme_initial(entity_ref("urn:fr:pf-ajpp:case:enfant-ren21")) { origin case_input; }
+    }
+    evaluate truth(ajpp_dans_limite(entity_ref("urn:fr:pf-ajpp:case:enfant-ren21")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(renouvellement_accorde(entity_ref("urn:fr:pf-ajpp:case:enfant-ren21")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,32 @@
+// Дело Catala «CasTest5» (logement-foyer, APL): социальная резиденция — ветвь 2° ст.
+// D. 832-25. Одиночка, зона I, redevance 350 €, ресурсы 7 500 €, 01.05.2022.
+//
+// K = 0,90 − 7 500/(21 420,91·1,2) = 0,6082… → 0,60 (Catala: 0,6, потолок 0,90).
+// ВНИМАНИЕ: E0 здесь — наш итог 115,18728 €, а Catala утверждает 124,64 €; расхождение
+// E0 открыто (решение владельца, README пакета), и этот сценарий закрепляет
+// K × (E − E0) = 0,60 × (350 − 115,18728) = 140,887632 € при нашем E0, а не итог Catala (129,65 €).
+// K читается из R. 351-61 (общий случай) и R. 351-61-1 (фойе молодых работников и
+// социальные резиденции) — алгебра D. 832-25 в закреплённых данных картинка, см.
+// блок «КОЭФФИЦИЕНТ K» в 04-calcul-foyer.law и README, «Коэффициент K».
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-foyer-apl-05-aide-formule-residence-sociale" {
+    given {
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; interpretation PpPlancherFinal; }
+        assert "foyer-apl-05-aide-formule-residence-sociale-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-05")) { origin case_input; }
+        assert "foyer-apl-05-aide-formule-residence-sociale-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-apl-05"), APL) { origin case_input; }
+        assert "foyer-apl-05-aide-formule-residence-sociale-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-apl-05"), ZONE_I) { origin case_input; }
+        assert "foyer-apl-05-aide-formule-residence-sociale-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-apl-05"), PERSONNE_SEULE) { origin case_input; }
+        assert "foyer-apl-05-aide-formule-residence-sociale-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-apl-05"), 0) { origin case_input; }
+        assert "foyer-apl-05-aide-formule-residence-sociale-06": type_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-05"), JEUNES_TRAVAILLEURS_OU_RESIDENCE_SOCIALE) { origin case_input; }
+        assert "foyer-apl-05-aide-formule-residence-sociale-07": redevance(entity_ref("urn:fr:apl:case:foyer-apl-05"), 350 EUR) { origin case_input; }
+        assert "foyer-apl-05-aide-formule-residence-sociale-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-apl-05"), 7500 EUR) { origin case_input; }
+        assert "foyer-apl-05-aide-formule-residence-sociale-09": territoire(entity_ref("urn:fr:apl:case:foyer-apl-05"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(aide_foyer_formule(entity_ref("urn:fr:apl:case:foyer-apl-05"), 140.887632 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

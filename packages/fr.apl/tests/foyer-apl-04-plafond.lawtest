@@ -1,0 +1,26 @@
+// Дело Catala «CasTest4»: вход «CasTest3», но месяц права — май 2022 года.
+//
+// ШАГ: тот же плафон E, уже редакции 1 октября 2021 года — 446,30 €, и Catala
+// утверждает то же. Разница с `foyer-apl-03-plafond` — только ось редакций.
+language "law.core" version "0.2";
+package fr.apl version "0.1.0";
+namespace "urn:fr:corpus:clir:apl";
+
+test "urn:query:fr-apl-foyer-apl-04-plafond" {
+    given {
+        context { decision_time @2022-05-01T12:00:00Z; knowledge_time @2022-05-01T12:00:00Z; legal_time @2022-05-01; timezone "Europe/Paris"; }
+        assert "foyer-apl-04-plafond-01": secteur_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-04")) { origin case_input; }
+        assert "foyer-apl-04-plafond-02": aide_demandee(entity_ref("urn:fr:apl:case:foyer-apl-04"), APL) { origin case_input; }
+        assert "foyer-apl-04-plafond-03": zone_du_logement(entity_ref("urn:fr:apl:case:foyer-apl-04"), ZONE_I) { origin case_input; }
+        assert "foyer-apl-04-plafond-04": situation_familiale(entity_ref("urn:fr:apl:case:foyer-apl-04"), PERSONNE_SEULE) { origin case_input; }
+        assert "foyer-apl-04-plafond-05": personnes_a_charge(entity_ref("urn:fr:apl:case:foyer-apl-04"), 0) { origin case_input; }
+        assert "foyer-apl-04-plafond-06": type_logement_foyer(entity_ref("urn:fr:apl:case:foyer-apl-04"), GENERAL) { origin case_input; }
+        assert "foyer-apl-04-plafond-07": redevance(entity_ref("urn:fr:apl:case:foyer-apl-04"), 350 EUR) { origin case_input; }
+        assert "foyer-apl-04-plafond-08": ressources_du_menage(entity_ref("urn:fr:apl:case:foyer-apl-04"), 7500 EUR) { origin case_input; }
+        assert "foyer-apl-04-plafond-09": territoire(entity_ref("urn:fr:apl:case:foyer-apl-04"), METROPOLE) { origin case_input; }
+    }
+    evaluate truth(plafond_equivalence_loyer(entity_ref("urn:fr:apl:case:foyer-apl-04"), 446.30 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

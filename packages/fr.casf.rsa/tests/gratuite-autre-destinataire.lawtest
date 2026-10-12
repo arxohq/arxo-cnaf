@@ -1,0 +1,21 @@
+// Instructor that did not receive the filing: the CAF performed
+// the instruction, but the claim was filed with another body (the
+// delegated association) -> no free-instruction prohibition binds
+// the CAF, because D. 262-28 limits gratuitous instruction to the
+// services or bodies « auprès desquels elles ont été déposées ».
+// Control pair of gratuite-interdite (same body receives and
+// instructs).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-gratuite-autre-destinataire" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "grat-01": instruction_effectuee(entity_ref("urn:fr:rsa:org:caf"), entity_ref("urn:fr:rsa:case:gratuite-autre-destinataire")) { origin case_input; }
+        assert "grat-02": demande_deposee_aupres(entity_ref("urn:fr:rsa:org:assoc"), entity_ref("urn:fr:rsa:case:gratuite-autre-destinataire")) { origin case_input; }
+    }
+    evaluate positions();
+    expect not position(InstruireGratuitement, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

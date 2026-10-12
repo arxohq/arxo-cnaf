@@ -1,0 +1,224 @@
+# Manifest §10 — package root marker (DECISION-0033). Headers §22 in the
+# .law files themselves are normative; the manifest must match them
+# (LDC-E1109, lawc check).
+[package]
+name = "fr.pf.ajpp"
+version = "0.1.0"
+language = "0.2"
+namespace = "urn:fr:corpus:clir:pf-ajpp"
+
+# Explicit package (DECISION-0386, SPEC §23.2): after .law edits run
+# `law fix imports fr/pf-ajpp`; do not maintain `use self::{…}` blocks by hand.
+# (FINISH nochecks round: use-self blocks are hand-maintained in this
+# authoring turn by task order; no law fix imports execution.)
+[authoring]
+local_imports = "explicit"
+
+# Catalogue metadata (DECISION-0051; docs/PACKAGE-METADATA.ru.md). NOT semantics.
+[metadata]
+act = "fr-pf-ajpp"
+title = "Allocation journalière de présence parentale (AJPP)"
+primarySource = "CSS"
+jurisdiction = "FR"
+instrument = "code"
+sourceFidelity = "pinned_unofficial_copy"
+legalStatus = "in_force"
+issuer = "République française"
+verifiedAgainstSource = false
+
+[features]
+enabled = ["law.params/0.1"]
+semanticLayer = "L0"
+
+# Upstream premises: child in care and the debtor body are established by
+# fr.pf.core. The medical/channel facts (certificate, control agreement,
+# counters) are this package's own established facts (B-PFAJPP-TETE): the
+# upstream principle-level filters (beneficie_ajpp, AjppPlafond310,
+# NonCumulAjpp) are package-internal (§24) and cannot be read.
+# Worlds below include both packages.
+[dependencies]
+"fr.pf.core" = "0.1.0"
+
+# Right and duration (L544-1 boundary, L544-2): certificate + control
+# agreement + parental leave open the right for the foreseeable period;
+# re-exam deadlines 6/12-14 months (param). Decree durations unpinned.
+[[tests]]
+family = "fr.pf.ajpp#droit-duree"
+regression = false
+suites = [
+    "tests/ajpp-droit-ouvert.lawtest",
+    "tests/ajpp-droit-sans-avis.lawtest",
+    "tests/ajpp-reexamen-conforme.lawtest",
+    "tests/ajpp-reexamen-2026.lawtest",
+]
+world = ["fr.pf.ajpp", "fr.pf.core"]
+
+# 310-day ceiling, exceptional once-renewal (2021+), reopening (L544-3).
+[[tests]]
+family = "fr.pf.ajpp#plafond-renouvellement"
+regression = false
+suites = [
+    "tests/ajpp-plafond-310.lawtest",
+    "tests/ajpp-depassement-310.lawtest",
+    "tests/ajpp-renouvellement-unique.lawtest",
+    "tests/ajpp-renouvellement-avant-2021.lawtest",
+    "tests/ajpp-reouverture-rechute.lawtest",
+    "tests/ajpp-avance-attente-avis.lawtest",
+]
+world = ["fr.pf.ajpp", "fr.pf.core"]
+
+# Monthly cap and daily amounts (L544-4/6/7): decree figures as case inputs,
+# 2023-H1 single majoration window, expense complement, special workers,
+# F05-01 amount qualification (monthly/flat/cumulative/duration blocks,
+# unknown history, renewal and reopening positives).
+[[tests]]
+family = "fr.pf.ajpp#montants"
+regression = false
+suites = [
+    "tests/ajpp-mensuel-plafond.lawtest",
+    "tests/ajpp-mensuel-depassement.lawtest",
+    "tests/ajpp-montant-couple.lawtest",
+    "tests/ajpp-montant-isole-2023.lawtest",
+    "tests/ajpp-complement-frais.lawtest",
+    "tests/ajpp-special-nonsalarie.lawtest",
+    "tests/ajpp-special-demandeur-emploi.lawtest",
+    "tests/ajpp-special-formation.lawtest",
+    "tests/ajpp-special-vrp.lawtest",
+    "tests/ajpp-montant-mensuel-depassement.lawtest",
+    "tests/ajpp-montant-forfait-15-bloque.lawtest",
+    "tests/ajpp-montant-depassement-310-bloque.lawtest",
+    "tests/ajpp-montant-duree-depassement-bloque.lawtest",
+    "tests/ajpp-montant-sans-historique.lawtest",
+    "tests/ajpp-montant-renouvellement-qualifie.lawtest",
+    "tests/ajpp-montant-reouverture-qualifie.lawtest",
+]
+world = ["fr.pf.ajpp", "fr.pf.core"]
+
+# Non-cumulation (L544-9): 2018 list vs 2025 list, part-time sick exception.
+[[tests]]
+family = "fr.pf.ajpp#non-cumul"
+regression = false
+suites = [
+    "tests/ajpp-noncumul-maladie-2018.lawtest",
+    "tests/ajpp-noncumul-conge.lawtest",
+    "tests/ajpp-noncumul-clca.lawtest",
+    "tests/ajpp-noncumul-maternite.lawtest",
+    "tests/ajpp-cumul-maternite-2026.lawtest",
+    "tests/ajpp-blind-22-sans-lien-conge.lawtest",
+    "tests/ajpp-noncumul-2025-sans-conge.lawtest",
+]
+world = ["fr.pf.ajpp", "fr.pf.core"]
+
+# Decree duration mechanics (D544-1/2/3/5): 3-year limit, re-exam window
+# and renewal, reopening delay and payment branches, new pathology.
+[[tests]]
+family = "fr.pf.ajpp#durees-decret"
+regression = false
+suites = [
+    "tests/ajpp-duree-limite-ok.lawtest",
+    "tests/ajpp-duree-depassement.lawtest",
+    "tests/ajpp-reexamen-recevable.lawtest",
+    "tests/ajpp-reexamen-trop-tot.lawtest",
+    "tests/ajpp-reexamen-un-an.lawtest",
+    "tests/ajpp-reouverture-delai.lawtest",
+    "tests/ajpp-reouverture-hors-delai.lawtest",
+    "tests/ajpp-reouverture-max-epuise.lawtest",
+    "tests/ajpp-reouverture-apres-max-rechute.lawtest",
+    "tests/ajpp-reouverture-apres-max-gravite.lawtest",
+    "tests/ajpp-reouverture-max-non-expire.lawtest",
+    "tests/ajpp-versement-sans-attendre.lawtest",
+    "tests/ajpp-versement-sans-attendre-sans-terme.lawtest",
+    "tests/ajpp-nouvelle-pathologie.lawtest",
+]
+world = ["fr.pf.ajpp", "fr.pf.core"]
+
+# Pinned decree figures (D544-4/6/7/8): 22-day cap, SMIC formula and 2021
+# BMAF rates, computed complement threshold, job-seeker flat 22.
+[[tests]]
+family = "fr.pf.ajpp#montants-decret"
+regression = false
+suites = [
+    "tests/ajpp-mensuel-22-decret.lawtest",
+    "tests/ajpp-taux-formule-smic.lawtest",
+    "tests/ajpp-taux-tie-attente.lawtest",
+    "tests/ajpp-taux-proche-tie.lawtest",
+    "tests/ajpp-taux-couple-2021.lawtest",
+    "tests/ajpp-taux-isole-2021.lawtest",
+    "tests/ajpp-demi-couple-2021.lawtest",
+    "tests/ajpp-demi-chomeur-exclu.lawtest",
+    "tests/ajpp-demi-journee-formule.lawtest",
+    "tests/ajpp-mensuel-demi-2021.lawtest",
+    "tests/ajpp-temps-partiel-calcule.lawtest",
+    "tests/ajpp-seuil-complement-calcule.lawtest",
+    "tests/ajpp-forfait-22-conforme.lawtest",
+    "tests/ajpp-forfait-22-apres-2024.lawtest",
+    "tests/ajpp-forfait-15-non-conforme.lawtest",
+    "tests/ajpp-forfait-exception-activite.lawtest",
+]
+world = ["fr.pf.ajpp", "fr.pf.core"]
+
+# File, silence and monthly duties (R544-1/2/3, D544-8/9/10): file
+# completeness, competent service, silence-deemed agreement and decision,
+# France-Travail declaration, monthly and expense duties.
+[[tests]]
+family = "fr.pf.ajpp#procedure-devoirs"
+regression = false
+suites = [
+    "tests/ajpp-dossier-demande-complet.lawtest",
+    "tests/ajpp-dossier-reexamen-complet.lawtest",
+    "tests/ajpp-dossier-renouvellement-complet.lawtest",
+    "tests/ajpp-controle-competent.lawtest",
+    "tests/ajpp-silence-avis-favorable.lawtest",
+    "tests/ajpp-silence-decision-favorable.lawtest",
+    "tests/ajpp-droit-silence.lawtest",
+    "tests/ajpp-silence-renouvellement-2023.lawtest",
+    "tests/ajpp-silence-renouvellement-2024.lawtest",
+    "tests/ajpp-silence-renouvellement-2021.lawtest",
+    "tests/ajpp-silence-rejet-2023.lawtest",
+    "tests/ajpp-devoir-declarer-ft.lawtest",
+    "tests/ajpp-devoir-pieces-conge.lawtest",
+    "tests/ajpp-devoir-pieces-stagiaire.lawtest",
+    "tests/ajpp-devoir-pieces-demandeur.lawtest",
+    "tests/ajpp-devoir-pieces-nonsalarie.lawtest",
+    "tests/ajpp-devoir-pieces-agent-public.lawtest",
+    "tests/ajpp-devoir-depenses-complement.lawtest",
+    "tests/ajpp-devoir-pieces-depenses-demande.lawtest",
+    "tests/ajpp-devoir-notifier-avis-renouvellement.lawtest",
+    "tests/ajpp-devoir-pieces-mois-consecutifs.lawtest",
+    "tests/ajpp-devoir-sans-mois-concerne.lawtest",
+    "tests/ajpp-devoir-pieces-depenses-mois-manquant.lawtest",
+]
+world = ["fr.pf.ajpp", "fr.pf.core"]
+
+# DOM attribution (L755-33, D73): AJPP attributed in an L. 751-1
+# collectivity where the right is open.
+[[tests]]
+family = "fr.pf.ajpp#attribution-dom"
+regression = false
+suites = [
+    "tests/ajpp-attribution-dom.lawtest",
+    "tests/ajpp-attribution-dom-hors-l751.lawtest",
+]
+world = ["fr.pf.ajpp", "fr.pf.core"]
+
+# Fund information duty (L544-10, D1): positions ACTIVE / silent.
+[[tests]]
+family = "fr.pf.ajpp#devoir-informer"
+regression = false
+suites = [
+    "tests/ajpp-devoir-informer.lawtest",
+    "tests/ajpp-devoir-informer-sans-debiteur.lawtest",
+]
+world = ["fr.pf.ajpp", "fr.pf.core"]
+
+# OpenFisca-France AJPP parameters (frozen 2006-06-05: 22 monthly days,
+# 3-year duration, 0.1063 couple / 0.1263 single fractions): parameters only,
+# no model, no test cases upstream. Documentary measurement in
+# tests/foreign/openfisca/NOTE.md + REPORT.md, not regressions.
+[[tests]]
+family = "fr.pf.ajpp#openfisca-import"
+regression = false
+suites = [
+    "tests/foreign/openfisca/of-2006-06-mensuel-22.lawtest",
+]
+world = ["fr.pf.ajpp", "fr.pf.core"]

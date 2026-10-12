@@ -1,0 +1,19 @@
+// Removal beyond two months: the assigned referrer owes the president
+// a new orientation proposal (D. 262-73 ; L. 262-30). The removal head
+// is the 04-suspension radiation_liste.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-reorientation" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "reo-01": radiation_liste(entity_ref("urn:fr:rsa:case:reorientation")) { origin case_input; }
+        assert "reo-02": duree_radiation_mois(entity_ref("urn:fr:rsa:case:reorientation"), 3) { origin case_input; }
+        assert "reo-03": referent_attribue(entity_ref("urn:fr:rsa:ref:ref1"), entity_ref("urn:fr:rsa:case:reorientation")) { origin case_input; }
+        assert "reo-04": departement_competent(entity_ref("urn:fr:rsa:dept:nord"), entity_ref("urn:fr:rsa:case:reorientation")) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(ProposerReorientation, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

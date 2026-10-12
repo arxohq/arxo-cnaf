@@ -1,0 +1,32 @@
+// F05-01 duration block: 4 recorded years, maximum expired, no
+// relapse or persistent gravity asserted — no reopening route. The
+// month qualifies (10 days) and the day counter is within 310, so
+// the spent duration alone blocks the amount: 600.00 stays NEITHER.
+language "law.core" version "0.2";
+package fr.pf.ajpp version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-ajpp";
+
+test "urn:query:fr-pf-ajpp-montant-duree-depassement-bloque" {
+    given {
+        context { decision_time @2024-03-15T12:00:00Z; knowledge_time @2024-03-15T12:00:00Z; legal_time @2024-03-15; timezone "Europe/Paris"; }
+        assert "ajpp-mqdur-01": certificat_gravite(entity_ref("urn:fr:pf-ajpp:case:enfant-mqdur")) { origin adjudicated; }
+        assert "ajpp-mqdur-02": avis_favorable_controle(entity_ref("urn:fr:pf-ajpp:case:enfant-mqdur")) { origin adjudicated; }
+        assert "ajpp-mqdur-03": conge_presence_parentale(entity_ref("urn:fr:pf-ajpp:case:parent-mqdur"), entity_ref("urn:fr:pf-ajpp:case:enfant-mqdur")) { origin case_input; }
+        assert "ajpp-mqdur-04": jours_ajpp_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mqdur"), @2024-03-01, 10) { origin case_input; }
+        assert "ajpp-mqdur-05": montant_journalier_retenu(entity_ref("urn:fr:pf-ajpp:case:enfant-mqdur"), 60.00 EUR) { origin case_input; }
+        assert "ajpp-mqdur-06": jours_ajpp_verses(entity_ref("urn:fr:pf-ajpp:case:enfant-mqdur"), 100) { origin case_input; }
+        assert "ajpp-mqdur-07": duree_versement_ajpp(entity_ref("urn:fr:pf-ajpp:case:enfant-mqdur"), MALADIE, 4) { origin case_input; }
+    }
+    evaluate truth(duree_maximale_expiree(entity_ref("urn:fr:pf-ajpp:case:enfant-mqdur")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(enveloppe_ajpp_qualifiee(entity_ref("urn:fr:pf-ajpp:case:enfant-mqdur")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(ajpp_montant_mois(entity_ref("urn:fr:pf-ajpp:case:enfant-mqdur"), @2024-03-01, 600.00 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == NEITHER;
+    expect evaluation_status == COMPUTED;
+}

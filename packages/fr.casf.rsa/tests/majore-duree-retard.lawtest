@@ -1,0 +1,24 @@
+// Late increased-amount claim: 2 months beyond the six-month window ->
+// 12 - 2 = 10 months of service (R.262-2 al. 1). April 2025 is month 3
+// after the January start, within the duration: the increase is open.
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-majore-duree-retard" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "majdu-01": isole_majore(entity_ref("urn:fr:rsa:case:majore-duree-retard")) { origin case_input; }
+        assert "majdu-02": majore_retard_mois(entity_ref("urn:fr:rsa:case:majore-duree-retard"), 2) { origin case_input; }
+        assert "majdu-03": majore_demande_mois(entity_ref("urn:fr:rsa:case:majore-duree-retard"), @2025-01-01) { origin case_input; }
+        assert "majdu-04": mois_droit(entity_ref("urn:fr:rsa:case:majore-duree-retard"), @2025-04-01) { origin case_input; }
+    }
+    evaluate truth(majore_duree_mois(entity_ref("urn:fr:rsa:case:majore-duree-retard"), 10));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(majore_ouvert_mois(entity_ref("urn:fr:rsa:case:majore-duree-retard"), @2025-04-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

@@ -1,0 +1,705 @@
+// Fund payment duty, information duties, suspension liberties and sanctions:
+// L. 511-1 (fund duty to pay), L. 552-2 (payment conditional on health
+// certificates - liberty to suspend), L. 552-6 (delegue costs on the
+// serving body), L. 554-2 (paid intermediaries: prohibition + 4 500 EUR
+// fine), L. 554-3 (court liberty to order judgment insertion, 150 EUR
+// cost ceiling), L. 583-1 (information/assistance duties), L. 583-3
+// (suspension liberty on refused checks).
+//
+// RESTORED 2026-10-08 (FINISH payment-core, no-run authoring). The module
+// expected by package.law, the duty-bearer inventory and the six
+// registered devoir-paiement suites was absent from the tree; the norms
+// below follow the inventory names and the suite expectations exactly.
+// L. 511-1 / L. 583-1 / L. 583-3 sit outside the payment-core article
+// group but inside this package: they are restored here as source/test
+// diagnostic repair (COMPARE finish-coord request 2026-10-08), anchored
+// on this package's pinned fragments, no model invention.
+//
+// DEONTIC MAP:
+// - L. 511-1 (catalogue scope) + R. 553-1 (monthly settlement at term
+//   due) - fund duty to settle the catalogue benefits due from their
+//   R. 552-2 date (duty, maintain prestation_versee); premises -
+//   allocataire + debtor fund + prestations_dues_a_compter (PC-R07-07:
+//   the L. 511-1 enumeration alone states no payment duty).
+// - L. 552-2 "peut etre subordonne" - fund liberty to suspend the AF/CF
+//   fraction of a child below compulsory-school age absent health
+//   certificates (explicit stated age premise; the school-age threshold
+//   itself is education-code external); suspension duration and
+//   modalities - decree L. 584-1, boundary (unpinned).
+// - L. 552-6 metropole + L. 755-4 DOM (PC-R03-09 split, PC-R04-05
+//   benefit-specific): judge liberty to order the delegate measure +
+//   delegue costs (duty, single/several rules each). Metropole L. 552-6
+//   has no prime exclusion; DOM L. 755-4 excludes the prime forfaitaire
+//   (L. 524-5 II, al. 2) at benefit level: single-eligible duty needs
+//   the eligible serving body + no prime, multi duty needs the highest
+//   eligible payer among remaining benefits (prime may coexist).
+//   Territory is caller-stated (beneficiaire_dom_l7554; six L. 751-1
+//   collectivities; metropole = the explicit negative, SPEC 69 - absence
+//   states neither, D-42 12.10.2026). Highest(-eligible) body is
+//   caller-side maximum (boundary B-PFCORE-DELEGUE-MAX).
+// - L. 554-2 "sera puni" - prohibitions on paid benefit-procurement
+//   services, direct offer and caused offer ("fait offrir": separate
+//   prohibition FaireOffrirServicesRemuneres, holder: the intermediary,
+//   E1330 pattern) + 4 500 EUR fine built by rule AmendeIntermediaire.
+// - L. 554-3 "pourra ordonner" - court liberty to order judgment
+//   insertion + 150 EUR cost ceiling built by rule PlafondCoutInsertion.
+// - L. 583-1 1/2 - information and claim-assistance duties; third
+//   sentence (end-of-rights help with OTHER regimes) - out of package
+//   scope, no heads (recorded, not modeled).
+// - L. 583-3 last para. - fund liberty to suspend where the allocataire
+//   refuses checks; penal/administrative sanctions of L. 114-17 -
+//   external articles, no heads.
+
+language "law.core" version "0.2";
+package fr.pf.core version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-core";
+
+use self::{
+    CSS_L511_1,
+    CSS_L511_1_CSS_ED2021_05,
+    CSS_L511_1_CSS_ED2021_11,
+    CSS_L511_1_CSS_ED2021_12,
+    CSS_L511_1_CSS_ED2022_01,
+    CSS_L511_1_CSS_ED2022_02,
+    CSS_L511_1_CSS_ED2022_03,
+    CSS_L511_1_CSS_ED2022_09,
+    CSS_L511_1_CSS_ED2023_07,
+    CSS_L511_1_CSS_ED2024_01,
+    CSS_L511_1_CSS_ED2025_02,
+    CSS_L511_1_CSS_ED2025_09,
+    CSS_L511_1_CSS_ED2025_12,
+    CSS_L511_1_CSS_ED2026_01,
+    CSS_L511_1_CSS_ED2026_04,
+    CSS_L511_1_CSS_ED2026_06,
+    CSS_L552_2,
+    CSS_L552_2_CSS_ED2021_05,
+    CSS_L552_2_CSS_ED2021_11,
+    CSS_L552_2_CSS_ED2021_12,
+    CSS_L552_2_CSS_ED2022_01,
+    CSS_L552_2_CSS_ED2022_02,
+    CSS_L552_2_CSS_ED2022_03,
+    CSS_L552_2_CSS_ED2022_09,
+    CSS_L552_2_CSS_ED2023_07,
+    CSS_L552_2_CSS_ED2024_01,
+    CSS_L552_2_CSS_ED2025_02,
+    CSS_L552_2_CSS_ED2025_09,
+    CSS_L552_2_CSS_ED2025_12,
+    CSS_L552_2_CSS_ED2026_01,
+    CSS_L552_2_CSS_ED2026_04,
+    CSS_L552_2_CSS_ED2026_06,
+    CSS_L552_6,
+    CSS_L552_6_CSS_ED2021_05,
+    CSS_L552_6_CSS_ED2021_11,
+    CSS_L552_6_CSS_ED2021_12,
+    CSS_L552_6_CSS_ED2022_01,
+    CSS_L552_6_CSS_ED2022_02,
+    CSS_L552_6_CSS_ED2022_03,
+    CSS_L552_6_CSS_ED2022_09,
+    CSS_L552_6_CSS_ED2023_07,
+    CSS_L552_6_CSS_ED2024_01,
+    CSS_L552_6_CSS_ED2025_02,
+    CSS_L552_6_CSS_ED2025_09,
+    CSS_L552_6_CSS_ED2025_12,
+    CSS_L552_6_CSS_ED2026_01,
+    CSS_L552_6_CSS_ED2026_04,
+    CSS_L552_6_CSS_ED2026_06,
+    CSS_L554_2,
+    CSS_L554_2_CSS_ED2021_05,
+    CSS_L554_2_CSS_ED2021_11,
+    CSS_L554_2_CSS_ED2021_12,
+    CSS_L554_2_CSS_ED2022_01,
+    CSS_L554_2_CSS_ED2022_02,
+    CSS_L554_2_CSS_ED2022_03,
+    CSS_L554_2_CSS_ED2022_09,
+    CSS_L554_2_CSS_ED2023_07,
+    CSS_L554_2_CSS_ED2024_01,
+    CSS_L554_2_CSS_ED2025_02,
+    CSS_L554_2_CSS_ED2025_09,
+    CSS_L554_2_CSS_ED2025_12,
+    CSS_L554_2_CSS_ED2026_01,
+    CSS_L554_2_CSS_ED2026_04,
+    CSS_L554_2_CSS_ED2026_06,
+    CSS_L554_3,
+    CSS_L554_3_CSS_ED2021_05,
+    CSS_L554_3_CSS_ED2021_11,
+    CSS_L554_3_CSS_ED2021_12,
+    CSS_L554_3_CSS_ED2022_01,
+    CSS_L554_3_CSS_ED2022_02,
+    CSS_L554_3_CSS_ED2022_03,
+    CSS_L554_3_CSS_ED2022_09,
+    CSS_L554_3_CSS_ED2023_07,
+    CSS_L554_3_CSS_ED2024_01,
+    CSS_L554_3_CSS_ED2025_02,
+    CSS_L554_3_CSS_ED2025_09,
+    CSS_L554_3_CSS_ED2025_12,
+    CSS_L554_3_CSS_ED2026_01,
+    CSS_L554_3_CSS_ED2026_04,
+    CSS_L554_3_CSS_ED2026_06,
+    CSS_L583_1,
+    CSS_L583_1_CSS_ED2021_05,
+    CSS_L583_1_CSS_ED2021_11,
+    CSS_L583_1_CSS_ED2021_12,
+    CSS_L583_1_CSS_ED2022_01,
+    CSS_L583_1_CSS_ED2022_02,
+    CSS_L583_1_CSS_ED2022_03,
+    CSS_L583_1_CSS_ED2022_09,
+    CSS_L583_1_CSS_ED2023_07,
+    CSS_L583_1_CSS_ED2024_01,
+    CSS_L583_1_CSS_ED2025_02,
+    CSS_L583_1_CSS_ED2025_09,
+    CSS_L583_1_CSS_ED2025_12,
+    CSS_L583_1_CSS_ED2026_01,
+    CSS_L583_1_CSS_ED2026_04,
+    CSS_L583_1_CSS_ED2026_06,
+    CSS_L583_3,
+    CSS_L583_3_CSS_ED2021_05,
+    CSS_L583_3_CSS_ED2021_11,
+    CSS_L583_3_CSS_ED2021_12,
+    CSS_L583_3_CSS_ED2022_01,
+    CSS_L583_3_CSS_ED2022_02,
+    CSS_L583_3_CSS_ED2022_03,
+    CSS_L583_3_CSS_ED2022_09,
+    CSS_L583_3_CSS_ED2023_07,
+    CSS_L583_3_CSS_ED2024_01,
+    CSS_L583_3_CSS_ED2025_02,
+    CSS_L583_3_CSS_ED2025_09,
+    CSS_L583_3_CSS_ED2025_12,
+    CSS_L583_3_CSS_ED2026_01,
+    CSS_L583_3_CSS_ED2026_04,
+    CSS_L583_3_CSS_ED2026_06,
+    CSS_L755_4,
+    CSS_L755_4_CSS_ED2021_05,
+    CSS_L755_4_CSS_ED2021_11,
+    CSS_L755_4_CSS_ED2021_12,
+    CSS_L755_4_CSS_ED2022_01,
+    CSS_L755_4_CSS_ED2022_02,
+    CSS_L755_4_CSS_ED2022_03,
+    CSS_L755_4_CSS_ED2022_09,
+    CSS_L755_4_CSS_ED2023_07,
+    CSS_L755_4_CSS_ED2024_01,
+    CSS_L755_4_CSS_ED2025_02,
+    CSS_L755_4_CSS_ED2025_09,
+    CSS_L755_4_CSS_ED2025_12,
+    CSS_L755_4_CSS_ED2026_01,
+    CSS_L755_4_CSS_ED2026_04,
+    CSS_L755_4_CSS_ED2026_06,
+    CSS_R553_1,
+    CSS_R553_1_CSS_ED2021_05,
+    CSS_R553_1_CSS_ED2021_11,
+    CSS_R553_1_CSS_ED2021_12,
+    CSS_R553_1_CSS_ED2022_01,
+    CSS_R553_1_CSS_ED2022_02,
+    CSS_R553_1_CSS_ED2022_03,
+    CSS_R553_1_CSS_ED2022_09,
+    CSS_R553_1_CSS_ED2023_07,
+    CSS_R553_1_CSS_ED2024_01,
+    CSS_R553_1_CSS_ED2025_02,
+    CSS_R553_1_CSS_ED2025_09,
+    CSS_R553_1_CSS_ED2025_12,
+    CSS_R553_1_CSS_ED2026_01,
+    CSS_R553_1_CSS_ED2026_04,
+    CSS_R553_1_CSS_ED2026_06,
+    Enfant,
+    Juridiction,
+    Organisme,
+    Personne,
+    allocataire,
+    organisme_debiteur_pf,
+    parent_charge,
+    prestation_versee,
+    prestations_dues_a_compter,
+};
+
+relation information_fournie(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "information de l'allocataire sur la nature et l'étendue de ses droits (L. 583-1 1°)";
+    label en unofficial "allocataire informed of the nature and extent of their rights (L. 583-1 1)";
+}
+
+relation concours_prete(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "concours prêté pour l'établissement des demandes (L. 583-1 2°)";
+    label en unofficial "assistance given in drawing up claims (L. 583-1 2)";
+}
+
+relation demande_dont_satisfaction_incombe(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "demande à établir dont la satisfaction incombe à l'organisme débiteur, fait constaté (L. 583-1 2° « dont la satisfaction leur incombe »)";
+    label en unofficial "claim to draw up whose satisfaction is incumbent on the debtor body, stated fact (L. 583-1 2 'whose satisfaction is incumbent on them')";
+}
+
+relation controle_refuse(p: Personne) kind empirical {
+    label fr official "l'allocataire refuse de se soumettre aux contrôles (L. 583-3)";
+    label en unofficial "allocataire refuses to undergo checks (L. 583-3)";
+}
+
+relation suspendre_versement_action(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "action: suspendre le versement des prestations";
+    label en unofficial "action: suspending payment of benefits";
+}
+
+relation certificat_sante_manquant(e: Enfant) kind empirical {
+    label fr official "certificats de santé de l'enfant non produits (L. 552-2, enfant avant l'âge scolaire)";
+    label en unofficial "child health certificates not produced (L. 552-2, pre-school-age child)";
+}
+
+relation enfant_avant_age_scolaire(e: Enfant) kind empirical {
+    label fr official "l'enfant n'a pas atteint l'âge de l'obligation scolaire (seuil du code de l'éducation, fait constaté — L. 552-2)";
+    label en unofficial "the child is below compulsory-school age (education-code threshold, stated fact - L. 552-2)";
+}
+
+relation suspendre_fraction_afcf_action(o: Organisme, p: Personne, e: Enfant) kind empirical {
+    key(o, p, e);
+    label fr official "action: suspendre la fraction des allocations familiales et du complément familial afférente à l'enfant (L. 552-2)";
+    label en unofficial "action: suspending the AF/CF share attached to the child (L. 552-2)";
+}
+
+relation delegue_percoit(p: Personne) kind empirical {
+    label fr official "un délégué aux prestations familiales perçoit tout ou partie des prestations dues (mesure L. 552-6)";
+    label en unofficial "a family-benefits delegate receives all or part of the benefits due (L. 552-6 measure)";
+}
+
+relation frais_mesure_a_charge(o: Organisme, p: Personne) kind institutional {
+    key(o, p);
+    label fr official "la charge des frais de la mesure incombe à cet organisme (L. 552-6 al. 2, prestation unique ou montant le plus élevé)";
+    label en unofficial "the cost of the measure falls on this body (L. 552-6 para. 2, single benefit or highest amount)";
+}
+
+relation frais_mesure_a_charge_dom(o: Organisme, p: Personne) kind institutional {
+    key(o, p);
+    label fr official "DOM: la charge des frais de la mesure incombe à cet organisme (L. 755-4 al. 2-3)";
+    label en unofficial "DOM: the cost of the measure falls on this body (L. 755-4 paras. 2-3)";
+}
+
+relation frais_mesure_supportes(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "la charge des frais de la mesure incombe à l'organisme servant (L. 552-6 al. 2)";
+    label en unofficial "cost of the measure borne by the serving body (L. 552-6 para. 2)";
+}
+
+relation organisme_verse_prestation_delegue(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "l'organisme sert la prestation perçue par le délégué aux prestations familiales (L. 552-6 al. 2 métropole, cas unique)";
+    label en unofficial "the body serves the benefit received by the family-benefits delegate (metropolitan L. 552-6 para. 2, single case)";
+}
+
+relation plusieurs_prestations_delegue(p: Personne) kind empirical {
+    label fr official "plusieurs prestations sociales sont perçues par le délégué (L. 552-6 al. 2, L. 755-4 al. 3)";
+    label en unofficial "several social benefits are received by the delegate (L. 552-6 para. 2, L. 755-4 para. 3)";
+}
+
+relation prestation_delegue_unique(p: Personne) kind empirical {
+    label fr official "une seule prestation est perçue par le délégué, inventaire complet attesté (L. 552-6 al. 2, L. 755-4 al. 3)";
+    label en unofficial "exactly one benefit is received by the delegate, complete inventory attested (L. 552-6 para. 2, L. 755-4 para. 3)";
+}
+
+relation organisme_montant_le_plus_eleve(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "l'organisme verse la prestation au montant le plus élevé parmi celles perçues par le délégué, maximum constaté amont (L. 552-6 al. 2 métropole, toutes prestations)";
+    label en unofficial "the body pays the highest amount among the benefits the delegate receives, maximum stated upstream (metropolitan L. 552-6 para. 2, all benefits)";
+}
+
+relation delegue_percoit_prestation_eligible(p: Personne) kind empirical {
+    label fr official "le délégué perçoit au moins une prestation éligible non prime, hors prime forfaitaire L. 524-5 II (L. 755-4 al. 2-3)";
+    label en unofficial "the delegate receives at least one eligible non-prime benefit, prime forfaitaire L. 524-5 II excluded (L. 755-4 paras. 2-3)";
+}
+
+relation organisme_verse_prestation_delegue_eligible(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "l'organisme sert la prestation éligible non prime perçue par le délégué, cas unique DOM (L. 755-4 al. 3)";
+    label en unofficial "the body serves the eligible non-prime benefit received by the delegate, DOM single case (L. 755-4 para. 3)";
+}
+
+relation organisme_montant_le_plus_eleve_eligible(o: Organisme, p: Personne) kind empirical {
+    key(o, p);
+    label fr official "l'organisme verse le montant le plus élevé parmi les prestations éligibles non prime perçues, maximum constaté amont (L. 755-4 al. 3)";
+    label en unofficial "the body pays the highest amount among the eligible non-prime benefits received, maximum stated upstream (L. 755-4 para. 3)";
+}
+
+relation delegue_percoit_prime_forfaitaire(p: Personne) kind empirical {
+    label fr official "le délégué perçoit la prime forfaitaire du II de L. 524-5, prestation exclue (L. 755-4 al. 2; seule elle écarte le devoir unique, avec une éligible le devoir plusieurs joue)";
+    label en unofficial "the delegate receives the L. 524-5 II prime forfaitaire, excluded benefit (L. 755-4 para. 2; alone it bars the single duty, with an eligible benefit the multi duty applies)";
+}
+
+relation beneficiaire_dom_l7554(p: Personne) kind empirical {
+    label fr official "allocataire relevant des départements d'outre-mer L. 755-4 (Guadeloupe, Guyane, Martinique, Réunion, Saint-Barthélemy, Saint-Martin)";
+    label en unofficial "allocataire under DOM L. 755-4 (Guadeloupe, Guiana, Martinique, Reunion, St Barthelemy, St Martin)";
+}
+
+relation mesure_judiciaire_aide_gestion(p: Personne) kind empirical {
+    label fr official "mesure judiciaire d'aide à la gestion du budget familial prononcée (C. civ. 375-9-1, fait constaté — L. 552-6 al. 1)";
+    label en unofficial "judicial budget-management assistance measure ordered (C. civ. 375-9-1, stated fact - L. 552-6 para. 1)";
+}
+
+relation juge_mesure_aide_gestion(j: Juridiction, p: Personne) kind empirical {
+    key(p);
+    label fr official "juridiction saisie de la mesure judiciaire d'aide à la gestion du budget familial (L. 552-6, L. 755-4; fait du dossier)";
+    label en unofficial "court seized of the judicial family-budget management measure (L. 552-6, L. 755-4; case fact)";
+}
+
+relation designer_delegue_action(j: Juridiction, p: Personne) kind empirical {
+    key(j, p);
+    label fr official "action: le juge décide qu'une personne qualifiée perçoit tout ou partie des prestations dues (L. 552-6 al. 1)";
+    label en unofficial "action: the judge orders a qualified person to receive all or part of the benefits due (L. 552-6 para. 1)";
+}
+
+relation intermediaire_convaincu(i: Personne) kind empirical {
+    label fr official "intermédiaire convaincu d'avoir offert ou fait offrir ses services moyennant émoluments convenus d'avance (L. 554-2)";
+    label en unofficial "intermediary convicted of offering, directly or through another, services for pre-agreed fees (L. 554-2)";
+}
+
+relation offrir_services_action(i: Personne, p: Personne) kind empirical {
+    key(i, p);
+    label fr official "action: offrir directement à un allocataire des services rémunérés pour obtenir des prestations";
+    label en unofficial "action: directly offering an allocataire paid benefit-procurement services";
+}
+
+relation faire_offrir_services_action(i: Personne, p: Personne) kind empirical {
+    key(i, p);
+    label fr official "action: faire offrir par un tiers à un allocataire des services rémunérés pour obtenir des prestations (L. 554-2 « fait offrir »)";
+    label en unofficial "action: causing a third party to offer an allocataire paid benefit-procurement services (L. 554-2 'fait offrir')";
+}
+
+relation amende_encourue(i: Personne, montant: Money) kind institutional {
+    key(i);
+    label fr official "amende encourue par l'intermédiaire: 4 500 euros (L. 554-2)";
+    label en unofficial "fine incurred by the intermediary: EUR 4,500 (L. 554-2)";
+}
+
+relation condamnation_prononcee(j: Juridiction, p: Personne) kind empirical {
+    label fr official "condamnation prononcée par le tribunal (L. 554-3)";
+    label en unofficial "conviction handed down by the court (L. 554-3)";
+}
+
+relation personne_condamnee(p: Personne) kind empirical {
+    label fr official "personne condamnée aux frais d'insertion (L. 554-3)";
+    label en unofficial "person convicted, bearing insertion costs (L. 554-3)";
+}
+
+relation inserer_jugement_action(j: Juridiction, p: Personne) kind empirical {
+    key(j, p);
+    label fr official "action: ordonner l'insertion du jugement dans des journaux de la localité";
+    label en unofficial "action: ordering insertion of the judgment in local newspapers";
+}
+
+relation cout_insertion_plafond(p: Personne, montant: Money) kind institutional {
+    key(p);
+    label fr official "coût de l'insertion à la charge du condamné, plafonné à 150 euros (L. 554-3)";
+    label en unofficial "insertion cost charged to the convicted person, capped at EUR 150 (L. 554-3)";
+}
+
+const AmendeIntermediaire: Money = 4500.00 EUR {
+    label fr official "amende de 4 500 euros (L. 554-2)";
+    label en unofficial "EUR 4,500 fine (L. 554-2)";
+}
+
+const PlafondInsertion: Money = 150.00 EUR {
+    label fr official "plafond de 150 euros du coût de l'insertion (L. 554-3)";
+    label en unofficial "EUR 150 ceiling on insertion cost (L. 554-3)";
+}
+
+@source(CSS_L511_1, CSS_L511_1_CSS_ED2021_05, CSS_L511_1_CSS_ED2021_11, CSS_L511_1_CSS_ED2021_12,
+        CSS_L511_1_CSS_ED2022_01, CSS_L511_1_CSS_ED2022_02, CSS_L511_1_CSS_ED2022_03,
+        CSS_L511_1_CSS_ED2022_09, CSS_L511_1_CSS_ED2023_07, CSS_L511_1_CSS_ED2024_01,
+        CSS_L511_1_CSS_ED2025_02, CSS_L511_1_CSS_ED2025_09, CSS_L511_1_CSS_ED2025_12,
+        CSS_L511_1_CSS_ED2026_01, CSS_L511_1_CSS_ED2026_04, CSS_L511_1_CSS_ED2026_06,
+        CSS_R553_1, CSS_R553_1_CSS_ED2021_05, CSS_R553_1_CSS_ED2021_11,
+        CSS_R553_1_CSS_ED2021_12, CSS_R553_1_CSS_ED2022_01, CSS_R553_1_CSS_ED2022_02,
+        CSS_R553_1_CSS_ED2022_03, CSS_R553_1_CSS_ED2022_09, CSS_R553_1_CSS_ED2023_07,
+        CSS_R553_1_CSS_ED2024_01, CSS_R553_1_CSS_ED2025_02, CSS_R553_1_CSS_ED2025_09,
+        CSS_R553_1_CSS_ED2025_12, CSS_R553_1_CSS_ED2026_01, CSS_R553_1_CSS_ED2026_04,
+        CSS_R553_1_CSS_ED2026_06)
+rule DevoirPayerPrestations(o: Organisme, p: Personne, date: Date) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "L'organisme débiteur doit régler mensuellement à l'allocataire les prestations du catalogue dues à compter de leur date (L. 511-1 catalogue, R. 553-1 règlement mensuel à terme échu)";
+    label en unofficial "The debtor body must monthly settle to the allocataire the catalogue benefits due from their date (L. 511-1 catalogue, R. 553-1 monthly settlement at term due)";
+    when allocataire(p) and organisme_debiteur_pf(o, p) and prestations_dues_a_compter(p, date);
+    then duty VerserPrestationsDues {
+        bearer o;
+        beneficiary p;
+        maintain prestation_versee(o, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L583_1, CSS_L583_1_CSS_ED2021_05, CSS_L583_1_CSS_ED2021_11, CSS_L583_1_CSS_ED2021_12,
+        CSS_L583_1_CSS_ED2022_01, CSS_L583_1_CSS_ED2022_02, CSS_L583_1_CSS_ED2022_03,
+        CSS_L583_1_CSS_ED2022_09, CSS_L583_1_CSS_ED2023_07, CSS_L583_1_CSS_ED2024_01,
+        CSS_L583_1_CSS_ED2025_02, CSS_L583_1_CSS_ED2025_09, CSS_L583_1_CSS_ED2025_12,
+        CSS_L583_1_CSS_ED2026_01, CSS_L583_1_CSS_ED2026_04, CSS_L583_1_CSS_ED2026_06)
+rule DevoirInformer(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Les organismes sont tenus d'assurer l'information des allocataires sur la nature et l'étendue de leurs droits";
+    label en unofficial "Bodies must inform allocataires of the nature and extent of their rights";
+    when organisme_debiteur_pf(o, p);
+    then duty InformerAllocataires {
+        bearer o;
+        beneficiary p;
+        maintain information_fournie(o, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L583_1, CSS_L583_1_CSS_ED2021_05, CSS_L583_1_CSS_ED2021_11, CSS_L583_1_CSS_ED2021_12,
+        CSS_L583_1_CSS_ED2022_01, CSS_L583_1_CSS_ED2022_02, CSS_L583_1_CSS_ED2022_03,
+        CSS_L583_1_CSS_ED2022_09, CSS_L583_1_CSS_ED2023_07, CSS_L583_1_CSS_ED2024_01,
+        CSS_L583_1_CSS_ED2025_02, CSS_L583_1_CSS_ED2025_09, CSS_L583_1_CSS_ED2025_12,
+        CSS_L583_1_CSS_ED2026_01, CSS_L583_1_CSS_ED2026_04, CSS_L583_1_CSS_ED2026_06)
+rule DevoirPreterConcours(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Les organismes sont tenus de prêter concours pour l'établissement des demandes dont la satisfaction leur incombe";
+    label en unofficial "Bodies must assist in drawing up claims whose satisfaction is incumbent on them";
+    when organisme_debiteur_pf(o, p) and demande_dont_satisfaction_incombe(o, p);
+    then duty PreterConcoursDemandes {
+        bearer o;
+        beneficiary p;
+        maintain concours_prete(o, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L583_3, CSS_L583_3_CSS_ED2021_05, CSS_L583_3_CSS_ED2021_11, CSS_L583_3_CSS_ED2021_12,
+        CSS_L583_3_CSS_ED2022_01, CSS_L583_3_CSS_ED2022_02, CSS_L583_3_CSS_ED2022_03,
+        CSS_L583_3_CSS_ED2022_09, CSS_L583_3_CSS_ED2023_07, CSS_L583_3_CSS_ED2024_01,
+        CSS_L583_3_CSS_ED2025_02, CSS_L583_3_CSS_ED2025_09, CSS_L583_3_CSS_ED2025_12,
+        CSS_L583_3_CSS_ED2026_01, CSS_L583_3_CSS_ED2026_04, CSS_L583_3_CSS_ED2026_06)
+rule SuspensionControleRefuse(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Le versement des prestations peut être suspendu si l'allocataire refuse de se soumettre aux contrôles";
+    label en unofficial "Payment may be suspended where the allocataire refuses checks";
+    when allocataire(p) and organisme_debiteur_pf(o, p) and controle_refuse(p);
+    then liberty SuspendreVersementControle {
+        holder o;
+        action suspendre_versement_action(o, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L552_2, CSS_L552_2_CSS_ED2021_05, CSS_L552_2_CSS_ED2021_11, CSS_L552_2_CSS_ED2021_12,
+        CSS_L552_2_CSS_ED2022_01, CSS_L552_2_CSS_ED2022_02, CSS_L552_2_CSS_ED2022_03,
+        CSS_L552_2_CSS_ED2022_09, CSS_L552_2_CSS_ED2023_07, CSS_L552_2_CSS_ED2024_01,
+        CSS_L552_2_CSS_ED2025_02, CSS_L552_2_CSS_ED2025_09, CSS_L552_2_CSS_ED2025_12,
+        CSS_L552_2_CSS_ED2026_01, CSS_L552_2_CSS_ED2026_04, CSS_L552_2_CSS_ED2026_06)
+rule SuspensionCertificatsSante(o: Organisme, p: Personne, e: Enfant) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Le versement de la fraction des allocations familiales et du complément familial afférente à l'enfant avant l'âge scolaire peut être subordonné aux certificats de santé (suspension sinon)";
+    label en unofficial "Payment of the AF/CF share for a below-school-age child may be conditioned on health certificates (suspension otherwise)";
+    when allocataire(p) and organisme_debiteur_pf(o, p) and parent_charge(p, e)
+        and enfant_avant_age_scolaire(e) and certificat_sante_manquant(e);
+    then liberty SuspendreVersementCertificats {
+        holder o;
+        action suspendre_fraction_afcf_action(o, p, e);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L552_6, CSS_L552_6_CSS_ED2021_05, CSS_L552_6_CSS_ED2021_11, CSS_L552_6_CSS_ED2021_12,
+        CSS_L552_6_CSS_ED2022_01, CSS_L552_6_CSS_ED2022_02, CSS_L552_6_CSS_ED2022_03,
+        CSS_L552_6_CSS_ED2022_09, CSS_L552_6_CSS_ED2023_07, CSS_L552_6_CSS_ED2024_01,
+        CSS_L552_6_CSS_ED2025_02, CSS_L552_6_CSS_ED2025_09, CSS_L552_6_CSS_ED2025_12,
+        CSS_L552_6_CSS_ED2026_01, CSS_L552_6_CSS_ED2026_04, CSS_L552_6_CSS_ED2026_06)
+rule DesignerDelegueMesure(j: Juridiction, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Métropole (L. 552-6 al. 1): le juge peut décider qu'une personne qualifiée perçoit tout ou partie des prestations dues";
+    label en unofficial "Metropole (L. 552-6 para. 1): the judge may order a qualified person to receive all or part of the benefits due";
+    when juge_mesure_aide_gestion(j, p) and mesure_judiciaire_aide_gestion(p) and not beneficiaire_dom_l7554(p);
+    then liberty DesignerDeleguePrestations {
+        holder j;
+        action designer_delegue_action(j, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L755_4, CSS_L755_4_CSS_ED2021_05, CSS_L755_4_CSS_ED2021_11, CSS_L755_4_CSS_ED2021_12,
+        CSS_L755_4_CSS_ED2022_01, CSS_L755_4_CSS_ED2022_02, CSS_L755_4_CSS_ED2022_03,
+        CSS_L755_4_CSS_ED2022_09, CSS_L755_4_CSS_ED2023_07, CSS_L755_4_CSS_ED2024_01,
+        CSS_L755_4_CSS_ED2025_02, CSS_L755_4_CSS_ED2025_09, CSS_L755_4_CSS_ED2025_12,
+        CSS_L755_4_CSS_ED2026_01, CSS_L755_4_CSS_ED2026_04, CSS_L755_4_CSS_ED2026_06)
+rule DesignerDelegueMesureDOM(j: Juridiction, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM (L. 755-4 al. 1, hors prime forfaitaire L. 524-5 II): le juge peut décider qu'une personne qualifiée perçoit les prestations éligibles dues";
+    label en unofficial "DOM (L. 755-4 para. 1, prime forfaitaire L. 524-5 II excluded): the judge may order a qualified person to receive the eligible benefits due";
+    when juge_mesure_aide_gestion(j, p) and mesure_judiciaire_aide_gestion(p) and beneficiaire_dom_l7554(p)
+        and delegue_percoit_prestation_eligible(p);
+    then liberty DesignerDeleguePrestationsDOM {
+        holder j;
+        action designer_delegue_action(j, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L552_6, CSS_L552_6_CSS_ED2021_05, CSS_L552_6_CSS_ED2021_11, CSS_L552_6_CSS_ED2021_12,
+        CSS_L552_6_CSS_ED2022_01, CSS_L552_6_CSS_ED2022_02, CSS_L552_6_CSS_ED2022_03,
+        CSS_L552_6_CSS_ED2022_09, CSS_L552_6_CSS_ED2023_07, CSS_L552_6_CSS_ED2024_01,
+        CSS_L552_6_CSS_ED2025_02, CSS_L552_6_CSS_ED2025_09, CSS_L552_6_CSS_ED2025_12,
+        CSS_L552_6_CSS_ED2026_01, CSS_L552_6_CSS_ED2026_04, CSS_L552_6_CSS_ED2026_06)
+rule FraisMesureDelegueUnique(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Métropole (L. 552-6 al. 2): une seule prestation perçue par le délégué, la charge incombe à l'organisme qui la sert";
+    label en unofficial "Metropole (L. 552-6 para. 2): single benefit received by the delegate, cost falls on the body serving it";
+    when delegue_percoit(p) and organisme_verse_prestation_delegue(o, p)
+        and prestation_delegue_unique(p) and not plusieurs_prestations_delegue(p)
+        and not beneficiaire_dom_l7554(p);
+    then frais_mesure_a_charge(o, p);
+}
+
+@source(CSS_L755_4, CSS_L755_4_CSS_ED2021_05, CSS_L755_4_CSS_ED2021_11, CSS_L755_4_CSS_ED2021_12,
+        CSS_L755_4_CSS_ED2022_01, CSS_L755_4_CSS_ED2022_02, CSS_L755_4_CSS_ED2022_03,
+        CSS_L755_4_CSS_ED2022_09, CSS_L755_4_CSS_ED2023_07, CSS_L755_4_CSS_ED2024_01,
+        CSS_L755_4_CSS_ED2025_02, CSS_L755_4_CSS_ED2025_09, CSS_L755_4_CSS_ED2025_12,
+        CSS_L755_4_CSS_ED2026_01, CSS_L755_4_CSS_ED2026_04, CSS_L755_4_CSS_ED2026_06)
+rule FraisMesureDelegueUniqueDOM(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM (L. 755-4 al. 2-3): une seule prestation éligible non prime perçue, la charge incombe à l'organisme qui la sert";
+    label en unofficial "DOM (L. 755-4 paras. 2-3): single eligible non-prime benefit received, cost falls on the body serving it";
+    when delegue_percoit(p) and organisme_verse_prestation_delegue_eligible(o, p)
+        and beneficiaire_dom_l7554(p) and prestation_delegue_unique(p)
+        and not plusieurs_prestations_delegue(p)
+        and delegue_percoit_prestation_eligible(p)
+        and not delegue_percoit_prime_forfaitaire(p);
+    then frais_mesure_a_charge_dom(o, p);
+}
+
+@source(CSS_L552_6, CSS_L552_6_CSS_ED2021_05, CSS_L552_6_CSS_ED2021_11, CSS_L552_6_CSS_ED2021_12,
+        CSS_L552_6_CSS_ED2022_01, CSS_L552_6_CSS_ED2022_02, CSS_L552_6_CSS_ED2022_03,
+        CSS_L552_6_CSS_ED2022_09, CSS_L552_6_CSS_ED2023_07, CSS_L552_6_CSS_ED2024_01,
+        CSS_L552_6_CSS_ED2025_02, CSS_L552_6_CSS_ED2025_09, CSS_L552_6_CSS_ED2025_12,
+        CSS_L552_6_CSS_ED2026_01, CSS_L552_6_CSS_ED2026_04, CSS_L552_6_CSS_ED2026_06)
+rule FraisMesureDeleguePlusieurs(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Métropole (L. 552-6 al. 2): plusieurs prestations perçues par le délégué, la charge incombe à l'organisme versant le montant le plus élevé";
+    label en unofficial "Metropole (L. 552-6 para. 2): several benefits received by the delegate, cost falls on the highest-paying body";
+    when delegue_percoit(p) and plusieurs_prestations_delegue(p)
+        and not prestation_delegue_unique(p)
+        and organisme_montant_le_plus_eleve(o, p) and not beneficiaire_dom_l7554(p);
+    then frais_mesure_a_charge(o, p);
+}
+
+// D-42 (08.10.2026): one norm per position name (LDC-E1338: two rules may not
+// generate the same template StableId); the branches above derive frais_mesure_a_charge.
+@source(CSS_L552_6, CSS_L552_6_CSS_ED2021_05, CSS_L552_6_CSS_ED2021_11, CSS_L552_6_CSS_ED2021_12,
+        CSS_L552_6_CSS_ED2022_01, CSS_L552_6_CSS_ED2022_02, CSS_L552_6_CSS_ED2022_03, CSS_L552_6_CSS_ED2022_09,
+        CSS_L552_6_CSS_ED2023_07, CSS_L552_6_CSS_ED2024_01, CSS_L552_6_CSS_ED2025_02, CSS_L552_6_CSS_ED2025_09,
+        CSS_L552_6_CSS_ED2025_12, CSS_L552_6_CSS_ED2026_01, CSS_L552_6_CSS_ED2026_04, CSS_L552_6_CSS_ED2026_06)
+rule DevoirSupporterFraisMesure(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "l'organisme désigné supporte les frais de la mesure (L. 552-6 al. 2)";
+    label en unofficial "the designated body bears the cost of the measure (L. 552-6 para. 2)";
+    when frais_mesure_a_charge(o, p);
+    then duty SupporterFraisMesure {
+        bearer o;
+        beneficiary p;
+        maintain frais_mesure_supportes(o, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L755_4, CSS_L755_4_CSS_ED2021_05, CSS_L755_4_CSS_ED2021_11, CSS_L755_4_CSS_ED2021_12,
+        CSS_L755_4_CSS_ED2022_01, CSS_L755_4_CSS_ED2022_02, CSS_L755_4_CSS_ED2022_03,
+        CSS_L755_4_CSS_ED2022_09, CSS_L755_4_CSS_ED2023_07, CSS_L755_4_CSS_ED2024_01,
+        CSS_L755_4_CSS_ED2025_02, CSS_L755_4_CSS_ED2025_09, CSS_L755_4_CSS_ED2025_12,
+        CSS_L755_4_CSS_ED2026_01, CSS_L755_4_CSS_ED2026_04, CSS_L755_4_CSS_ED2026_06)
+rule FraisMesureDeleguePlusieursDOM(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM (L. 755-4 al. 2-3): plusieurs prestations dont une éligible non prime, la charge incombe à l'organisme versant le montant éligible le plus élevé (prime exclue du choix)";
+    label en unofficial "DOM (L. 755-4 paras. 2-3): several benefits including an eligible non-prime one, cost falls on the highest eligible-paying body (prime excluded from the choice)";
+    when delegue_percoit(p) and plusieurs_prestations_delegue(p)
+        and not prestation_delegue_unique(p)
+        and organisme_montant_le_plus_eleve_eligible(o, p) and beneficiaire_dom_l7554(p)
+        and delegue_percoit_prestation_eligible(p);
+    then frais_mesure_a_charge_dom(o, p);
+}
+
+// D-42 (08.10.2026): one norm per position name (LDC-E1338: two rules may not
+// generate the same template StableId); the branches above derive frais_mesure_a_charge_dom.
+@source(CSS_L755_4, CSS_L755_4_CSS_ED2021_05, CSS_L755_4_CSS_ED2021_11, CSS_L755_4_CSS_ED2021_12,
+        CSS_L755_4_CSS_ED2022_01, CSS_L755_4_CSS_ED2022_02, CSS_L755_4_CSS_ED2022_03, CSS_L755_4_CSS_ED2022_09,
+        CSS_L755_4_CSS_ED2023_07, CSS_L755_4_CSS_ED2024_01, CSS_L755_4_CSS_ED2025_02, CSS_L755_4_CSS_ED2025_09,
+        CSS_L755_4_CSS_ED2025_12, CSS_L755_4_CSS_ED2026_01, CSS_L755_4_CSS_ED2026_04, CSS_L755_4_CSS_ED2026_06)
+rule DevoirSupporterFraisMesureDOM(o: Organisme, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "DOM: l'organisme désigné supporte les frais de la mesure (L. 755-4 al. 2-3)";
+    label en unofficial "DOM: the designated body bears the cost of the measure (L. 755-4 paras. 2-3)";
+    when frais_mesure_a_charge_dom(o, p);
+    then duty SupporterFraisMesureDOM {
+        bearer o;
+        beneficiary p;
+        maintain frais_mesure_supportes(o, p) during [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L554_2, CSS_L554_2_CSS_ED2021_05, CSS_L554_2_CSS_ED2021_11, CSS_L554_2_CSS_ED2021_12,
+        CSS_L554_2_CSS_ED2022_01, CSS_L554_2_CSS_ED2022_02, CSS_L554_2_CSS_ED2022_03,
+        CSS_L554_2_CSS_ED2022_09, CSS_L554_2_CSS_ED2023_07, CSS_L554_2_CSS_ED2024_01,
+        CSS_L554_2_CSS_ED2025_02, CSS_L554_2_CSS_ED2025_09, CSS_L554_2_CSS_ED2025_12,
+        CSS_L554_2_CSS_ED2026_01, CSS_L554_2_CSS_ED2026_04, CSS_L554_2_CSS_ED2026_06)
+rule InterdireOffreServices(i: Personne, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Interdiction d'offrir directement à un allocataire des services rémunérés pour obtenir des prestations";
+    label en unofficial "No directly offering an allocataire paid services to obtain benefits";
+    when intermediaire_convaincu(i) and allocataire(p);
+    then prohibition OffrirServicesRemuneres {
+        bearer i;
+        beneficiary p;
+        action offrir_services_action(i, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L554_2, CSS_L554_2_CSS_ED2021_05, CSS_L554_2_CSS_ED2021_11, CSS_L554_2_CSS_ED2021_12,
+        CSS_L554_2_CSS_ED2022_01, CSS_L554_2_CSS_ED2022_02, CSS_L554_2_CSS_ED2022_03,
+        CSS_L554_2_CSS_ED2022_09, CSS_L554_2_CSS_ED2023_07, CSS_L554_2_CSS_ED2024_01,
+        CSS_L554_2_CSS_ED2025_02, CSS_L554_2_CSS_ED2025_09, CSS_L554_2_CSS_ED2025_12,
+        CSS_L554_2_CSS_ED2026_01, CSS_L554_2_CSS_ED2026_04, CSS_L554_2_CSS_ED2026_06)
+rule InterdireFaireOffrirServices(i: Personne, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Interdiction de faire offrir par un tiers à un allocataire des services rémunérés pour obtenir des prestations";
+    label en unofficial "No causing a third party to offer an allocataire paid services to obtain benefits";
+    when intermediaire_convaincu(i) and allocataire(p);
+    then prohibition FaireOffrirServicesRemuneres {
+        bearer i;
+        beneficiary p;
+        action faire_offrir_services_action(i, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L554_2, CSS_L554_2_CSS_ED2021_05, CSS_L554_2_CSS_ED2021_11, CSS_L554_2_CSS_ED2021_12,
+        CSS_L554_2_CSS_ED2022_01, CSS_L554_2_CSS_ED2022_02, CSS_L554_2_CSS_ED2022_03,
+        CSS_L554_2_CSS_ED2022_09, CSS_L554_2_CSS_ED2023_07, CSS_L554_2_CSS_ED2024_01,
+        CSS_L554_2_CSS_ED2025_02, CSS_L554_2_CSS_ED2025_09, CSS_L554_2_CSS_ED2025_12,
+        CSS_L554_2_CSS_ED2026_01, CSS_L554_2_CSS_ED2026_04, CSS_L554_2_CSS_ED2026_06)
+rule AmendeIntermediaireConvaincu(i: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Sera puni d'une amende de 4 500 euros tout intermédiaire convaincu";
+    label en unofficial "Every convicted intermediary is punished by a EUR 4,500 fine";
+    when intermediaire_convaincu(i);
+    then amende_encourue(i, AmendeIntermediaire);
+}
+
+@source(CSS_L554_3, CSS_L554_3_CSS_ED2021_05, CSS_L554_3_CSS_ED2021_11, CSS_L554_3_CSS_ED2021_12,
+        CSS_L554_3_CSS_ED2022_01, CSS_L554_3_CSS_ED2022_02, CSS_L554_3_CSS_ED2022_03,
+        CSS_L554_3_CSS_ED2022_09, CSS_L554_3_CSS_ED2023_07, CSS_L554_3_CSS_ED2024_01,
+        CSS_L554_3_CSS_ED2025_02, CSS_L554_3_CSS_ED2025_09, CSS_L554_3_CSS_ED2025_12,
+        CSS_L554_3_CSS_ED2026_01, CSS_L554_3_CSS_ED2026_04, CSS_L554_3_CSS_ED2026_06)
+rule InsertionJugementTribunal(j: Juridiction, p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "En cas de condamnation le tribunal pourra ordonner l'insertion du jugement";
+    label en unofficial "On conviction the court may order insertion of the judgment";
+    when condamnation_prononcee(j, p);
+    then liberty OrdonnerInsertionJugement {
+        holder j;
+        action inserer_jugement_action(j, p);
+        window [@2021-01-01, infinity);
+    };
+}
+
+@source(CSS_L554_3, CSS_L554_3_CSS_ED2021_05, CSS_L554_3_CSS_ED2021_11, CSS_L554_3_CSS_ED2021_12,
+        CSS_L554_3_CSS_ED2022_01, CSS_L554_3_CSS_ED2022_02, CSS_L554_3_CSS_ED2022_03,
+        CSS_L554_3_CSS_ED2022_09, CSS_L554_3_CSS_ED2023_07, CSS_L554_3_CSS_ED2024_01,
+        CSS_L554_3_CSS_ED2025_02, CSS_L554_3_CSS_ED2025_09, CSS_L554_3_CSS_ED2025_12,
+        CSS_L554_3_CSS_ED2026_01, CSS_L554_3_CSS_ED2026_04, CSS_L554_3_CSS_ED2026_06)
+rule PlafondCoutInsertionCondamne(p: Personne) strict {
+    effective [@2021-01-01, infinity);
+    label fr official "Le coût de l'insertion, aux frais du condamné, ne peut dépasser 150 euros";
+    label en unofficial "Insertion cost, charged to the convicted person, capped at EUR 150";
+    when personne_condamnee(p);
+    then cout_insertion_plafond(p, PlafondInsertion);
+}

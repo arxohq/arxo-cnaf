@@ -1,0 +1,14 @@
+// Closed quarter -> D10 quarterly transmission ACTIVE (D. 848-1).
+language "law.core" version "0.2";
+package fr.css.prime_activite version "0.1.0";
+namespace "urn:fr:corpus:clir:ppa";
+
+test "urn:query:fr-ppa-stats-trimestre-2026" {
+    given {
+        context { deadline_policy PPA_MOIS; decision_time @2026-06-15T12:00:00Z; knowledge_time @2026-06-15T12:00:00Z; legal_time @2026-06-15; timezone "Europe/Paris"; }
+        assert "ppa-01": trimestre_stats_emetteur(entity_ref("urn:fr:ppa:org:cnaf"), entity_ref("urn:fr:ppa:org:drees"), @2026-04-01) { origin case_input; }
+    }
+    evaluate positions();
+    expect position(TransmettreTrimestre, ACTIVE);
+    expect evaluation_status == COMPUTED;
+}

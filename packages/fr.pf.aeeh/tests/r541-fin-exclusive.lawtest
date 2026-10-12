@@ -1,0 +1,44 @@
+// R. 541-4 I 1°/2°, ordinary exclusive due-ends under the 2026 wording
+// (legal_time 2026-05, CSS_ED2026_04): «due until the last day of the
+// month before» is the exclusive bound on that month's first day — for
+// the AAH-opening month and the conditions-end month, at 80 % and, for
+// the 50-80 % tranche, only on the initial/renewal filing cohort from
+// 2026-04-01 (decree 2026-227 NOTA) — each with the adjudicated ordinary
+// regime and an affirmative record that one derogation trigger is absent
+// (certificate without express prospect, or no team proposal).
+// Old-cohort, missing-filing and derogation pairs live in
+// r541-cohorte-2026 and r541-derogation-*.
+language "law.core" version "0.2";
+package fr.pf.aeeh version "0.1.0";
+namespace "urn:fr:corpus:clir:pf-aeeh";
+
+test "urn:query:fr-pf-aeeh-r541-fin-exclusive" {
+    given {
+        context { decision_time @2026-05-15T12:00:00Z; knowledge_time @2026-05-15T12:00:00Z; legal_time @2026-05-15; timezone "Europe/Paris"; }
+        assert "r541-fe-01": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-aah"), 80.0) { origin adjudicated; }
+        assert "r541-fe-02": ouverture_droit_aah(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-aah"), @2026-06-15) { origin case_input; }
+        assert "r541-fe-08": attribution_ordinaire_r5414(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-aah")) { origin adjudicated; }
+        assert "r541-fe-11": certificat_sans_perspective(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-aah")) { origin adjudicated; }
+        assert "r541-fe-03": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-cond"), 85.0) { origin adjudicated; }
+        assert "r541-fe-04": fin_conditions_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-cond"), @2026-09-20) { origin case_input; }
+        assert "r541-fe-09": attribution_ordinaire_r5414(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-cond")) { origin adjudicated; }
+        assert "r541-fe-12": equipe_sans_proposition(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-cond")) { origin adjudicated; }
+        assert "r541-fe-05": taux_incapacite_retenu(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-5080"), 60.0) { origin adjudicated; }
+        assert "r541-fe-06": ouverture_droit_aah(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-5080"), @2026-06-15) { origin case_input; }
+        assert "r541-fe-07": demande_attribution_aeeh_deposee(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-5080"), @2026-05-02) { origin case_input; }
+        assert "r541-fe-10": attribution_ordinaire_r5414(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-5080")) { origin adjudicated; }
+        assert "r541-fe-13": certificat_sans_perspective(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-5080")) { origin adjudicated; }
+    }
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-aah"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-cond"), @2026-09-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(fin_exclusive_droit(entity_ref("urn:fr:pf-aeeh:case:enfant-fe-5080"), @2026-06-01));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

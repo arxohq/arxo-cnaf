@@ -1,0 +1,18 @@
+// Non-cumulation 2025, item 1: birth-leave benefit recorded, leave
+// for a NOTA-scope aided person — cumulation refused.
+language "law.core" version "0.2";
+package fr.css.ajpa version "0.1.0";
+namespace "urn:fr:corpus:clir:css-ajpa";
+
+test "urn:query:fr-css-ajpa-noncumul-naissance-2026" {
+    given {
+        context { decision_time @2026-03-15T12:00:00Z; knowledge_time @2026-03-15T12:00:00Z; legal_time @2026-03-15; timezone "Europe/Paris"; }
+        assert "ajpa-nn-01": motif_non_cumul_2025(entity_ref("urn:fr:css:ajpa:case:aidant-nn"), NAISSANCE_SUPPLEMENTAIRE) { origin case_input; }
+        assert "ajpa-nn-02": conge_proche_aidant(entity_ref("urn:fr:css:ajpa:case:aidant-nn"), entity_ref("urn:fr:css:ajpa:case:aide-nn")) { origin case_input; }
+        assert "ajpa-nn-03": scope_2026_aide(entity_ref("urn:fr:css:ajpa:case:aide-nn")) { origin case_input; }
+    }
+    evaluate truth(ajpa_cumul_refuse(entity_ref("urn:fr:css:ajpa:case:aidant-nn")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

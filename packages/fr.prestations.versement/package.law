@@ -1,0 +1,68 @@
+// Transversal payment stage for all CNAF benefits: what is actually paid
+// after CRDS, rounding, non-payment floors and cross-benefit recovery.
+//
+// Module map:
+//   01-sources.law        - own sources (if any); neighbours' fragments arrive qualified
+//   02-crds.law           - CRDS 0.5% (Ord. 96-50 art. 14) on PF brut amounts; housing stays in fr.apl.versement
+//   03-arrondi-seuils.law - rounding and non-payment floors of each benefit, each per its text
+//   04-recouvrement.law   - cross-benefit recovery (L. 553-2 + RSA/PA/AAH/housing analogues),
+//                           10% indemnity, +50% fraud retention, limitation applied to payment
+//   05-devoir-versement.law - fund duty to pay the net amount
+//   06-bareme-retenues.law - D. 553-1..5 + R. 553-1: decree recovery scale,
+//                             monthly levy, recalculation, monthly settlement
+//   examples/famille-dans-le-temps/ - one household 2024-2026 (NOT_LOWERED)
+//
+// SCOPE BOUNDARY. Norms owned elsewhere are NOT redefined here (D-V1):
+// L. 553-1/2/2-1/3/4/5 live in fr.pf.core (modules 06/07); housing payment
+// (CRDS, euro-floor rounding, guide decisions) lives in fr.apl.versement.
+// This package IMPORTS their heads and applies them across benefits.
+// RSA/AAH pubs landed and are wired (04); PA is wired too (04 Y = PA
+// section, RSA pattern; 05 owned-stage, no new duty — B-PV-PA
+// follow-up 6 closed, FINISH-W2). Remainder: B-PV-PA-CARRY,
+// B-PV-PA-TRIMESTRE, B-PV-PA-CRDS, B-PV-PA-ARRONDI (README).
+// Retention scale (DSS instruction) - boundary DSS_PENDING (no bytes);
+//   the DECREE scale (D. 553-1) is pinned in fr.pf.core fragments and
+//   executed here (06); the fraud uplift is pinned at 50 % (D. 553-5 I)
+//   while 04 keeps its fund-stated uplift input (consolidation noted).
+// B-VERS-D5531-REVALO - post-2022 tranche values unpinned: tranches and
+//   the 1 096 EUR deeming stop at 2023-01-01.
+// B-VERS-D5531-PONDERE-FORMULE - the pinned II exposes R, the weighting
+//   sentence and N with no operator: no weighting formula is computed;
+//   weighted income arrives organ-stated, deemed, or last-known only
+//   (PC-A01, recorded 2026-10-08).
+// B-VERS-D5531-LISIERE-FRACTION - fractional-euro edges (345, 346) and
+//   (516, 517] fall through every band: literal, no result (PC-V05,
+//   recorded 2026-10-08).
+// B-VERS-D5531-TRANCHE-691 - literal (690, 691] gap: no rule fires there.
+// B-VERS-D5534-ORDRE - RESOLVED 2026-10-08 (PC-R04-03): multi-indu
+//   ordering (oldest first, smallest first on same-date ties) is computed
+//   from the dated-amount ledger (indu_constate_le + soldes); the single
+//   monthly retention is allocated to the first non-extinguished indu.
+//   Same-date same-amount ties have no source order (genuine gap).
+// Full list - README, "Boundaries".
+
+language "law.core" version "0.2";
+package fr.prestations.versement version "0.1.0";
+namespace "urn:fr:corpus:clir:prestations-versement";
+
+import fr.pf.core version "0.1.0";
+import fr.apl version "0.1.0";
+import fr.apl.versement version "0.1.0";
+import fr.pf.af version "0.1.0";
+import fr.pf.paje version "0.1.0";
+import fr.pf.cf version "0.1.0";
+import fr.pf.ars version "0.1.0";
+import fr.pf.asf version "0.1.0";
+import fr.pf.cmg version "0.1.0";
+import fr.pf.aeeh version "0.1.0";
+import fr.pf.ajpp version "0.1.0";
+import fr.css.ajpa version "0.1.0";
+import fr.casf.rsa version "0.1.0";
+import fr.css.aah version "0.1.0";
+import fr.css.prime_activite version "0.1.0";
+import fr.minima.ressources version "0.1.0";
+
+pub entity Indu {
+    label fr official "indu constate en recouvrement par retenues mensuelles (D. 553-4 al. 3)";
+    label en unofficial "established overpayment in recovery by monthly levies (D. 553-4 para. 3)";
+}

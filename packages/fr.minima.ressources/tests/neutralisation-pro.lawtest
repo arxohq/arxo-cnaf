@@ -1,0 +1,20 @@
+// Certain professional interruption with no substitute: disregarded, and
+// the mid-quarter revision opens (R.262-13 al.1, R.262-4-1 1°).
+language "law.core" version "0.2";
+package fr.minima.ressources version "0.1.0";
+namespace "urn:fr:corpus:clir:minima-ressources";
+
+test "urn:query:fr-minima-ressources-neutralisation-pro" {
+    given {
+        context { deadline_policy RSA_TRIMESTRE; decision_time @2025-06-15T12:00:00Z; knowledge_time @2025-06-15T12:00:00Z; legal_time @2025-06-15; timezone "Europe/Paris"; }
+        assert "neutr-01": perception_interrompue(entity_ref("urn:fr:minima-ressources:case:neutralisation-pro"), REVENU_PRO_SALARIE) { origin case_input; }
+    }
+    evaluate truth(neutralisation_revenu(entity_ref("urn:fr:minima-ressources:case:neutralisation-pro"), REVENU_PRO_SALARIE));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+    evaluate truth(revision_mi_trimestre(entity_ref("urn:fr:minima-ressources:case:neutralisation-pro")));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}

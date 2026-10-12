@@ -1,0 +1,17 @@
+// Window 2022-07..2023-03, last month (reading MfJuillet2022ArrondiCentime): March 2023 is
+// still 598.54; the 1 April 2023 decree changes it (mf-loi-2023-04).
+language "law.core" version "0.2";
+package fr.casf.rsa version "0.1.0";
+namespace "urn:fr:corpus:clir:rsa";
+
+test "urn:query:fr-rsa-mf-loi-2023-03" {
+    given {
+        context { deadline_policy RSA_MOIS; decision_time @2023-03-15T12:00:00Z; knowledge_time @2023-03-15T12:00:00Z; legal_time @2023-03-15; timezone "Europe/Paris"; interpretation MfJuillet2022ArrondiCentime; }
+        assert "mfl-03-01": mois_droit(entity_ref("urn:fr:rsa:case:mf-loi-2023-03"), @2023-03-01) { origin case_input; }
+        assert "mfl-03-02": foyer_nb_personnes(entity_ref("urn:fr:rsa:case:mf-loi-2023-03"), 1) { origin case_input; }
+    }
+    evaluate truth(mf_menage(entity_ref("urn:fr:rsa:case:mf-loi-2023-03"), 598.54 EUR));
+    expect result_kind == PROPOSITION;
+    expect truth_status == TRUE_ONLY;
+    expect evaluation_status == COMPUTED;
+}
