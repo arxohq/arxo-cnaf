@@ -103,11 +103,23 @@ Both readings feed the same `participation_personnelle` relation. The same
 amounts in the probe; neither is presented as the final payable benefit.
 The model leaves the choice explicit rather than selecting a reading for you.
 
-![Selected APL rule structure: shared facts and parameters feed one of two readings of D. 823-17; the resulting personal contribution feeds AideFormule under D. 823-16. The formula amounts are €20.17 or €53.7338; without a reading the queries require interpretation.](docs/images/apl-reading-map.svg)
+### The rules behind the amount
 
-*Selected rule structure, annotated with the scenario's expected values.
-This is a shortened map of the rules and source anchors, not a full
-execution proof. The scenario above provides the text alternative.*
+This is the native `unfold` response for `aide_formule`, rendered as a tree
+from the published `fr.apl@0.1.0` world. Each rule exposes its premises,
+strength and source anchors. The two contribution producers are both
+visible: `ParticipationPersonnelle` and `ParticipationPersonnelleLitterale`.
+
+![Native unfold tree for aide_formule: AideFormule depends on forfait_charges, loyer_eligible and participation_personnelle; their producer rules and source anchors are expanded to depth 2.](docs/images/unfold-aide-formule.svg)
+
+*No case, legal date or reading is selected. This shows the model's available
+rules, not which rules applied to a particular answer. The depth-limit
+markers come from the engine. Repeated article locators are grouped visually;
+the JSON retains every dated source anchor.*
+
+[Full native JSON](docs/unfold/aide-formule.json) ·
+[Native text and labels](docs/unfold/aide-formule.txt) ·
+[Reproduce these trees](docs/reproducibility.md#reproduce-the-rule-trees)
 
 Follow the map in the actual model:
 
@@ -117,6 +129,22 @@ Follow the map in the actual model:
 | Selection and literal branch | [`24-lecture-pp.law`](packages/fr.apl/24-lecture-pp.law) — `SensMinimumPp`, `ParticipationPersonnelleLitterale` |
 | Final-floor branch and downstream formula | [`02-calcul-locatif.law`](packages/fr.apl/02-calcul-locatif.law) — `ParticipationPersonnelle`, `AideFormule` |
 | Both readings and the missing-selection check | [`finish-lecture-pp.lawtest`](packages/fr.apl/tests/finish-lecture-pp.lawtest) — the seven scenarios run in the Quick start |
+
+## Rules and exceptions
+
+The same view for `droit_ouvert` shows a defeasible opening rule alongside
+its exception rules (`defeater`). Expanding `surface_insuffisante` exposes
+its own producers and an exception to that condition. `fact`, `derived`,
+`judgment` and `test` are distinct kinds of premise in the native response.
+
+![Native unfold tree for droit_ouvert: DroitOuvert and its exception rules, including ownership, held shares, student exclusion, room occupancy and surface conditions, with source anchors and depth-limit markers.](docs/images/unfold-droit-ouvert.svg)
+
+*This is a map of declared rule structure across the published world, not
+an eligibility finding for a person. No case, date or reading is selected.*
+
+[Full native JSON](docs/unfold/droit-ouvert.json) ·
+[Native text and labels](docs/unfold/droit-ouvert.txt) ·
+[Declared exception scenarios](packages/fr.apl/tests/finish-droit-defeaters.lawtest)
 
 ## How to read a model
 
