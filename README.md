@@ -21,6 +21,7 @@ back to published legal sources.
 | I want to… | Start here |
 |---|---|
 | Explore saved cases and their sources in a browser | [French Benefits Lab](https://french-benefits.law.arxo.io/) — no installation |
+| Use a model from JavaScript or TypeScript | [Node.js package](#use-from-nodejs) |
 | Run a scenario on my machine | [Quick start](#quick-start) |
 | Find the model for a benefit | [Browse the models](#browse-the-models) |
 | Reproduce a chapter of the book | [Book examples](https://github.com/arxohq/law-as-code-france-examples#readme) |
@@ -45,6 +46,41 @@ are separate from this repository's export.*
 
 The browser examples belong to the lab's recorded release. The local APL
 example below belongs to this repository's pinned model.
+
+## Use from Node.js
+
+Node.js **20+**. The pinned models are available as
+[`@arxo/canon-fr-benefits`](https://www.npmjs.com/package/@arxo/canon-fr-benefits).
+Load one world and ask it through the common `@arxo/law` API:
+
+```sh
+npm install @arxo/law@0.4.2 @arxo/canon-fr-benefits@0.1.0
+```
+
+```js
+import { open } from '@arxo/law';
+import { loadModel } from '@arxo/canon-fr-benefits/apl';
+import { household, caseInput } from '@arxo/canon-fr-benefits/examples/apl';
+
+const model = await loadModel();
+const apl = await open(model.spec, {
+  offline: true,
+  local: { packages: { [model.spec]: model.package } },
+});
+const answer = await apl.collect('aide_formule', [household, '?amount'], caseInput);
+console.log(answer.evaluationStatus); // COMPUTED
+console.log(answer.value[0].value);   // '20.17' (EUR, formula amount)
+console.log(apl.unfold('aide_formule', { depth: 2 }).text);
+```
+
+The input is the technical APL case below, with `PpPlancherFinal` selected.
+The answer includes the engine's canonical document, proof and hashes.
+This is a formula amount, not a final payable benefit. The package contains
+all 21 models; loading a subpath parses only the selected world.
+
+[Package API, model exports, TypeScript and verification limits](npm/README.md).
+Source models are pinned to the original public export; npm delivery checks
+are separate from full corpus acceptance, which remains **not checked**.
 
 ## Quick start
 
