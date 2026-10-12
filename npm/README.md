@@ -185,7 +185,7 @@ inventory; they were not rerun for this documentation update.
 
 </details>
 
-[Method and measurement boundaries](https://github.com/arxohq/arxo-cnaf/blob/f853146ceea61445e9ed3adbb81ea04d88b2265c/docs/formalization-depth.md) ·
+[Method and measurement boundaries](https://github.com/arxohq/arxo-cnaf/blob/3e4592c40d9e18c4cd5f9c2fe846702a6d889c06/docs/formalization-depth.md) ·
 [Download the per-unit report](https://cdn.jsdelivr.net/gh/arxohq/arxo-cnaf@f853146ceea61445e9ed3adbb81ea04d88b2265c/npm/assets/formalization-depth.json).
 The same report is installed as `assets/formalization-depth.json`.
 
