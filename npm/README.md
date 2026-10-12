@@ -1,7 +1,18 @@
+![French Benefits on Arxo — executable rules, traceable sources.](https://cdn.jsdelivr.net/gh/arxohq/arxo-cnaf@a25fa8035e85b01a699f3b5ff4372996d2a29def/npm/assets/cover.png)
+
 # @arxo/canon-fr-benefits
 
-**Load a pinned French benefit model in Node.js. Ask it through `@arxo/law`
-and retain the answer, its proof, sources and hashes.**
+**Load a French benefit model. Supply a case. Keep the answer and its proof.**
+
+21 pinned models for Node.js, from housing aid and family allowances to
+minimum-income and disability benefits. Execute them locally through
+[`@arxo/law`](https://www.npmjs.com/package/@arxo/law), with source anchors,
+exact values and a canonical evaluation document.
+
+**Node.js 20+** · **SDK 0.4.2** · **Apache-2.0**
+
+[Quick start](#quick-start) · [Models](#choose-a-model) ·
+[Evidence](#inspect-and-save-the-evidence) · [Troubleshooting](#troubleshooting)
 
 [Explore the browser lab](https://french-benefits.law.arxo.io/) ·
 [Model sources](https://github.com/arxohq/arxo-cnaf) ·
@@ -14,15 +25,14 @@ and retain the answer, its proof, sources and hashes.**
 
 ## Quick start
 
-Node.js 20 or later. This release is checked with `@arxo/law` 0.4.2 and its
-pinned `@arxo/law-engine` 0.5.2. The npm package contains data and a loader;
-execution remains in the common WebAssembly engine.
+Install the canon alongside its checked SDK:
 
 ```sh
-npm install @arxo/law@0.4.2 @arxo/canon-fr-benefits@0.1.0
+npm install @arxo/law@0.4.2 @arxo/canon-fr-benefits@0.1.1
 ```
 
-Save this as `example.mjs`, then run `node example.mjs`:
+Save as `example.mjs`, then run `node example.mjs`. The supplied example
+includes the complete input, so you can get an answer before assembling a case.
 
 ```js
 import { open } from '@arxo/law';
@@ -38,24 +48,48 @@ const apl = await open(model.spec, {
 const answer = await apl.collect(
   'aide_formule', [household, '?amount'], caseInput,
 );
-console.log(answer.evaluationStatus); // COMPUTED
-console.log(answer.value[0].value);   // '20.17'
+
+console.log(answer.evaluationStatus);  // COMPUTED
+console.log(answer.value[0].value);    // '20.17'
 console.log(answer.value[0].currency); // 'EUR'
-console.log(answer.hashes.result);    // full SHA-256
 ```
 
-This is the existing technical zero-rent probe dated 15 June 2024: one person,
-no dependants, supplied resources of €4,000, zone II in metropolitan France.
-The exported `caseInput` contains all 12 supplied facts and explicitly selects
-`PpPlancherFinal`. The result is an exact **formula amount**, not a final
-payable benefit or a realistic aid claim. The full input is shipped as `examples/apl-case.json` and corresponds to the
-[declared scenario](https://github.com/arxohq/arxo-cnaf/blob/f2efcc6788465484f145146a3ed5f76b13d41703/packages/fr.apl/tests/finish-lecture-pp.lawtest).
-Copy it and replace the facts with those of your own fictional case.
+This is a **technical zero-rent probe**, dated 15 June 2024: one person,
+no dependants, zone II in metropolitan France and supplied resources of
+€4,000. All 12 facts and the `PpPlancherFinal` reading are explicit.
+**€20.17 is a formula amount, separate from a final payable benefit.**
+
+[Read the full input](https://github.com/arxohq/arxo-cnaf/blob/a25fa8035e85b01a699f3b5ff4372996d2a29def/npm/examples/apl-case.json).
+Copy it and replace the facts for your own fictional case. The fixture's
+legal date and selected reading are part of that example, not application defaults.
+
+## From a model to an answer
+
+![loadModel supplies a selected hash-checked world with included imports. Explicit case facts, dates and reading enter the local SDK separately. The APL probe returns COMPUTED, 20.17 EUR and its document, proof, sources and hashes.](https://cdn.jsdelivr.net/gh/arxohq/arxo-cnaf@a25fa8035e85b01a699f3b5ff4372996d2a29def/npm/assets/model-to-answer.svg)
+
+`loadModel` reads the selected world and checks its original bytes.
+`open` loads it into the common WebAssembly engine. Your facts, dates and
+human choices arrive in `caseInput`; the canon supplies the rules.
+Execution is offline after installation.
+
+The explicit `local.packages` handoff is part of this package's API.
+Installing this aggregator alone does not make `open('fr.apl@0.1.0')`
+automatically discover its models.
 
 ## Choose a model
 
-The root export provides a lightweight catalog and a loader taking an exact
-model spec. It does not read any model world at import time.
+Start with the benefit you want to explore:
+
+| Subject | Import from |
+|---|---|
+| Housing aid — APL | `@arxo/canon-fr-benefits/apl` |
+| Family allowances — AF | `@arxo/canon-fr-benefits/af` |
+| Minimum income — RSA | `@arxo/canon-fr-benefits/rsa` |
+| Activity bonus | `@arxo/canon-fr-benefits/prime-activite` |
+| Adult disability — AAH | `@arxo/canon-fr-benefits/aah` |
+
+Every model subpath exports its pinned `spec` and a `loadModel()` function.
+The root export provides the catalog and a loader for an **exact model spec**:
 
 ```js
 import { models, loadModel } from '@arxo/canon-fr-benefits';
@@ -64,9 +98,12 @@ console.log(models.map(model => model.spec));
 const model = await loadModel('fr.pf.af@0.1.0');
 ```
 
-Each model also has an addressable export:
+<details>
+<summary>All 21 model exports</summary>
 
-| Subject | Subpath | Model |
+Append the subpath to `@arxo/canon-fr-benefits`:
+
+| Subject | Subpath | Model spec |
 |---|---|---|
 | Housing aid | `/apl` | `fr.apl@0.1.0` |
 | Housing payment stage | `/apl-versement` | `fr.apl.versement@0.1.0` |
@@ -90,79 +127,150 @@ Each model also has an addressable export:
 | Social-security ceiling | `/pass` | `fr.css.pass@0.1.0` |
 | Minimum wage | `/smic` | `fr.travail.smic@0.1.0` |
 
-Opening one model reads and parses only that world's bytes and its referenced
-question catalog, if any. Installing this single npm package downloads the
-whole archive. Models are not combined into a universal household calculation.
+</details>
 
-## What `loadModel` returns
+Root import reads only the catalog and metadata. A load parses only the
+selected world and its referenced question catalog, if any. Installation
+gets the whole archive. The models are separate entry points; a combined
+household calculation must be defined explicitly in the models and imports.
 
-| Field | Meaning |
-|---|---|
-| `spec` | Exact model name and version |
-| `package` | `{ ir, meta }`, ready for `open(spec, { local: { packages } })` |
-| `descriptor` | Original registry descriptor; its `contentHash` is the package CLIR hash |
-| `pin` | Public source revision, world hash, model hash and semantics |
-| `questionCatalog` | Original hash-checked catalog when the descriptor names one |
+## Keep the reading explicit
 
-The loader checks the raw world bytes against `worldHash` **before** parsing
-JSON. Its facade metadata uses the world hash as `meta.contentHash` and the
-package hash as `meta.packageContentHash`. Those identities remain separate.
+The same APL input produces different formula amounts under the model's
+explicit readings. Leaving the reading out asks for a choice instead of guessing:
 
-Unknown or versionless specs throw `ModelNotFoundError`; missing, altered or
-unreadable assets throw `ModelIntegrityError`. There is no network fallback.
-Each call returns a fresh parsed world; caller mutations are not shared with
-later loads. Reuse an opened model for multiple cases rather than reopening it
-for each request. Long-running workers should keep a bounded set of open models;
-this loader does not introduce a program pool or change the facade's lifecycle.
+![For the same supplied APL case: PpPlancherFinal gives COMPUTED, 20.17 EUR; PpLitteral gives COMPUTED, 53.7338 EUR; no selection gives INTERPRETATION_REQUIRED and no amount.](https://cdn.jsdelivr.net/gh/arxohq/arxo-cnaf@a25fa8035e85b01a699f3b5ff4372996d2a29def/npm/assets/explicit-readings.svg)
 
-## Ask, inspect and retain evidence
-
-The returned model uses the existing `@arxo/law` API: `collect`, `truth`,
-`positions`, `whyNot` and `unfold`. Handle `evaluationStatus` before using an
-amount. Missing facts are not automatically zero or false; a request may
-require additional inputs, a human finding or an explicit interpretation.
+Choose a different reading in a copy of the input:
 
 ```js
-console.log(apl.unfold('aide_formule', { depth: 2 }).text);
+const literalCase = structuredClone(caseInput);
+literalCase.options.selectedInterpretations = [
+  'urn:fr:corpus:clir:apl#PpLitteral',
+];
+const literal = await apl.collect(
+  'aide_formule', [household, '?amount'], literalCase,
+);
+console.log(literal.value[0].value); // '53.7338'
+```
 
+Use `caseInput.options.selectedInterpretations` and the full identifier.
+Missing facts are not automatically zero or false. Handle `evaluationStatus`
+before using a value; a request can require more inputs, a human finding or
+an explicit interpretation.
+
+## Inspect and save the evidence
+
+Use the existing `@arxo/law` methods: `collect`, `truth`, `positions`,
+`whyNot` and `unfold`.
+
+| You want to… | Use |
+|---|---|
+| See the rules available behind a question | `apl.unfold('aide_formule', { depth: 2 }).text` |
+| Inspect the proof of this case's answer | `answer.proof` |
+| Follow the answer's source anchors | `answer.sources` |
+| Retain the canonical evaluation document | `answer.document` |
+| Record execution identities | `answer.hashes` |
+
+```js
 import { writeFile } from 'node:fs/promises';
+
+console.log(apl.unfold('aide_formule', { depth: 2 }).text);
+console.log(answer.proof.nodes.length); // 46 in the supplied example
 await writeFile('answer.json', answer.document);
 ```
 
-The APL example gives different formula amounts under explicit readings:
+`unfold` describes available rules without selecting a case. The answer's
+proof records what happened for the facts, dates and reading you supplied.
 
-| Input choice | Evaluation status | Formula amount |
-|---|---|---|
-| `PpPlancherFinal` | `COMPUTED` | €20.17 |
-| `PpLitteral` | `COMPUTED` | €53.7338 |
-| No selected interpretation | `INTERPRETATION_REQUIRED` | no amount |
+<details>
+<summary>See the APL rule tree and source anchors</summary>
 
-Set the selection in `caseInput.options.selectedInterpretations` using the
-full model identifier, e.g. `urn:fr:corpus:clir:apl#PpLitteral`.
-Money and Decimal inputs are strings (`'4000 EUR'`, `'0.0283'`). The facade
-checks fact names, arity and values at runtime. Generated TypeScript declarations
-constrain model specs and queried relation names; they do not replace runtime
-checking of the general `CaseInput.answers` array. For strict TypeScript consumers,
-include `ESNext.Disposable` alongside your usual `ES2022` and `DOM` libs;
-the engine declarations expose an optional disposal symbol.
+![Native depth-2 unfold tree of aide_formule: AideFormule depends on forfait_charges, loyer_eligible and participation_personnelle. Both contribution producers and their source anchors are visible; no case or reading is selected.](https://cdn.jsdelivr.net/gh/arxohq/arxo-cnaf@a25fa8035e85b01a699f3b5ff4372996d2a29def/npm/assets/knows-apl.svg)
 
-## Snapshot and verification
+[Open the full tree](https://cdn.jsdelivr.net/gh/arxohq/arxo-cnaf@a25fa8035e85b01a699f3b5ff4372996d2a29def/npm/assets/knows-apl.svg) ·
+[Native JSON](https://cdn.jsdelivr.net/gh/arxohq/arxo-cnaf@a25fa8035e85b01a699f3b5ff4372996d2a29def/npm/assets/apl-unfold.json) ·
+[Recorded example outputs](https://cdn.jsdelivr.net/gh/arxohq/arxo-cnaf@a25fa8035e85b01a699f3b5ff4372996d2a29def/npm/assets/apl-example.json)
 
-21 source models, with their already-linked dependency worlds, from the
-[public 12 October 2026 canon export](https://github.com/arxohq/arxo-cnaf/tree/f2efcc6788465484f145146a3ed5f76b13d41703),
-semantics `law.core/0.2.11`. The source pin identifies every shipped source asset.
-The npm version, model versions and legal date are independent.
+The tree includes every producer and premise returned at depth 2.
+Source labels group repeated article locators; JSON keeps the versioned
+anchors. Depth-limit markers are part of the engine's response.
 
-This first Node.js release has targeted delivery checks. Full corpus acceptance
-is **not checked** (`releaseVerified: false`, corpus `not_checked`). Recorded
-canon checks are separate from npm/WASM compatibility and do not certify legal
-accuracy or completeness. Browser integration is outside this release's contract.
+</details>
 
-## Rights
+## Troubleshooting
 
-Code and models: Apache-2.0 (`LICENSE`). Captured publisher material keeps its
-own terms in `NOTICE`. The source files listed in `WITHHELD.json` are not included;
-addresses and hashes remain available in that metadata. This package ships the
-same public compiled model and world bytes as the canon registry.
+| Symptom or question | Next step |
+|---|---|
+| `ModelNotFoundError` | Pick a full `name@version` from `models`; versionless specs do not resolve. |
+| `ModelIntegrityError` | Reinstall the exact package in a clean directory; altered or unreadable model assets refuse to load. |
+| `open` cannot discover the model | Pass `model.package` through `local.packages`, as in Quick start. |
+| `INTERPRETATION_REQUIRED` | Supply the reading deliberately in `options.selectedInterpretations`. |
+| No amount is returned | Inspect status, issues and missing inputs; supply the facts or finding the model requests. |
+| A Money or Decimal input is rejected | Use strings such as `'4000 EUR'` or `'0.0283'`; fact names, arity and values are checked at runtime. |
+| Can I use it in a browser? | This package's current contract is Node.js 20+. Explore the separate browser lab for the recorded browser experience. |
+
+<details>
+<summary>TypeScript setup and runtime reuse</summary>
+
+Declarations constrain exact model specs and queried relation names,
+including qualified imports. They do not replace runtime validation of the
+general `CaseInput.answers` array. For strict TypeScript, include:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "DOM", "ESNext.Disposable"],
+    "strict": true
+  }
+}
+```
+
+`ESNext.Disposable` supplies the optional disposal symbol in the engine's
+declarations. Reuse an opened model for several cases. Long-running workers
+should keep a bounded set of open models; this loader adds no program pool
+and does not change the facade's lifecycle.
+
+</details>
+
+<details>
+<summary>Loader fields, pins and verification</summary>
+
+| Field returned by `loadModel` | Meaning |
+|---|---|
+| `spec` | Exact model name and version |
+| `package` | `{ ir, meta }` for the SDK's `local.packages` input |
+| `descriptor` | Original registry descriptor; `contentHash` identifies package CLIR |
+| `pin` | Source revision, world hash, model hash and semantics |
+| `questionCatalog` | Hash-checked referenced catalog, when provided |
+
+The loader verifies raw world bytes **before** JSON parsing and returns fresh
+independent parsed worlds. It has no network fallback. Facade metadata uses
+`meta.contentHash` for the **world hash** and `meta.packageContentHash` for the
+**package hash**; the original descriptor remains separate.
+
+The 21 source models and linked worlds come from
+[the pinned public export](https://github.com/arxohq/arxo-cnaf/tree/f2efcc6788465484f145146a3ed5f76b13d41703),
+semantics `law.core/0.2.11`. npm version, model version and legal date are
+separate identities. SDK `0.4.2` pins engine `0.5.2`.
+
+This release has targeted delivery checks. Full corpus acceptance remains
+**not checked** (`releaseVerified: false`, corpus `not_checked`). Delivery
+and SDK compatibility do not certify legal accuracy or completeness.
+
+</details>
+
+## Sources and further reading
+
+[Source models](https://github.com/arxohq/arxo-cnaf) ·
+[SDK API](https://www.npmjs.com/package/@arxo/law) ·
+[Maintainer's publishing guide](https://github.com/arxohq/arxo-cnaf/blob/main/npm/PUBLISHING.md)
+
+Code and models: Apache-2.0. Captured publisher material keeps its own terms
+in `NOTICE`; files listed in `WITHHELD.json` are excluded, with addresses and
+hashes preserved. This package ships the public compiled model and world bytes.
 
 Maintainer: Rifat Dzhumagulov · [hi@arxo.io](mailto:hi@arxo.io).

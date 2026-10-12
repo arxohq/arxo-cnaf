@@ -54,7 +54,7 @@ Node.js **20+**. The pinned models are available as
 Load one world and ask it through the common `@arxo/law` API:
 
 ```sh
-npm install @arxo/law@0.4.2 @arxo/canon-fr-benefits@0.1.0
+npm install @arxo/law@0.4.2 @arxo/canon-fr-benefits@0.1.1
 ```
 
 ```js
