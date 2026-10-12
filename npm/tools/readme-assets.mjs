@@ -21,8 +21,8 @@ for (const [reading, expected] of [['PpPlancherFinal','20.17'], ['PpLitteral','5
     proofNodes:answer.proof.nodes.length, hashes:answer.hashes});
 }
 const unfolded = apl.unfold('aide_formule', {depth:2,lang:'en',quote:0});
-// The reused SVG expands this exact native tree; no case or reading is selected.
-const upstream = JSON.parse(await readFile(new URL('../../docs/unfold/aide-formule.json',import.meta.url)));
+// The tracked native-tree fixture matches the reused SVG; no case or reading is selected.
+const upstream = JSON.parse(await readFile(new URL('apl-unfold.json',output)));
 assert.deepEqual(unfolded.tree, upstream);
 await writeFile(new URL('apl-unfold.json',output), JSON.stringify(unfolded.tree,null,2)+'\n');
 await writeFile(new URL('apl-example.json',output), JSON.stringify({
