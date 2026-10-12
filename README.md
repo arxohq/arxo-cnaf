@@ -1,3 +1,5 @@
+[![French Benefits on Arxo — executable rules, traceable sources.](docs/images/cover.png)](https://books.arxo.io/law-as-code-france/)
+
 # arxo-cnaf
 
 Explore French benefit rules as executable models, and trace their answers
