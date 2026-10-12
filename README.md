@@ -31,6 +31,19 @@ back to published legal sources.
 The lab presents its own recorded evidence release; its coverage and version
 are separate from this repository's export.*
 
+## What it answers
+
+| Question | Explore a concrete example |
+|---|---|
+| How does a selected reading change the amount? | [One APL case, two readings](#example-one-case-two-readings) |
+| Why is an answer withheld? | [The same APL case without a selected reading](packages/fr.apl/tests/finish-lecture-pp.lawtest#L175) |
+| Where do an amount and its parameters come from? | [Follow an instruction to a saved calculation](https://french-benefits.law.arxo.io/from-text-to-decision/) |
+| What changes between two legal dates? | [Compare saved dates in the lab](https://french-benefits.law.arxo.io/benefit-timeline/) |
+| Which facts, duties and stages does a case involve? | [Browse the book's fictional case files](https://github.com/arxohq/law-as-code-france-examples#chapters-and-folders) |
+
+The browser examples belong to the lab's recorded release. The local APL
+example below belongs to this repository's pinned model.
+
 ## Quick start
 
 You need **Git, Node.js 20+ and npm**. This example uses the released
@@ -58,16 +71,52 @@ The successful report includes these fields:
 {"ok": true, "passed": 7, "failed": 0, "notRun": 0, "total": 7}
 ```
 
-**What to explore next:** open
-[`finish-lecture-pp.lawtest`](packages/fr.apl/tests/finish-lecture-pp.lawtest).
-The same supplied facts give €20.17 or €53.7338 under two selected readings;
-without a selection, the model reports `INTERPRETATION_REQUIRED`. These are
-an isolated zero-rent probe, not a realistic benefit claim. Follow the
-calculation in [`02-calcul-locatif.law`](packages/fr.apl/02-calcul-locatif.law)
-and its source declarations in
-[`01-sources.law`](packages/fr.apl/01-sources.law).
+**What to explore next:** [compare the readings](#example-one-case-two-readings),
+then open the [scenario file](packages/fr.apl/tests/finish-lecture-pp.lawtest).
 
 Need help getting started? See [Troubleshooting](docs/reproducibility.md#troubleshooting).
+
+## Example: one case, two readings
+
+The model records two readings of the personal contribution in article
+D. 823-17. The choice enters at `SensMinimumPp`, an interpretation group
+that requires exactly one of `PpPlancherFinal` or `PpLitteral`.
+
+The [scenario](packages/fr.apl/tests/finish-lecture-pp.lawtest) fixes a single
+person with no dependants, zone II in metropolitan France, legal date
+**15 June 2024**, supplied resources of **€4,000** and **zero rent**.
+It also supplies ordinary housing, sole tenancy, zero solidarity rent
+reduction and no AAH/AEEH beneficiary. Zero rent deliberately isolates the
+reading difference; this is a technical probe, not a realistic aid claim.
+
+The pinned parameters used in this probe are `P0 = €37.91`, `Tp = 0.0283`,
+`R0 = €5,186`, `L = €0` and `C = €58.08`.
+
+| Selected reading | Personal contribution `Pp` | Formula amount `Af` |
+|---|---:|---:|
+| `PpPlancherFinal` — keep a final floor at `P0` | €37.91 | €20.17 |
+| `PpLitteral` — apply the formula without that final floor | €4.3462 | €53.7338 |
+| No reading selected | `INTERPRETATION_REQUIRED` | `INTERPRETATION_REQUIRED` |
+
+Both readings feed the same `participation_personnelle` relation. The same
+`AideFormule` rule then uses `Af = L + C − Pp`. These are exact formula
+amounts in the probe; neither is presented as the final payable benefit.
+The model leaves the choice explicit rather than selecting a reading for you.
+
+![Selected APL rule structure: shared facts and parameters feed one of two readings of D. 823-17; the resulting personal contribution feeds AideFormule under D. 823-16. The formula amounts are €20.17 or €53.7338; without a reading the queries require interpretation.](docs/images/apl-reading-map.svg)
+
+*Selected rule structure, annotated with the scenario's expected values.
+This is a shortened map of the rules and source anchors, not a full
+execution proof. The scenario above provides the text alternative.*
+
+Follow the map in the actual model:
+
+| Step | Inspect |
+|---|---|
+| Source references and captured publications | [`01-sources.law`](packages/fr.apl/01-sources.law) — `CCH_D823_17`, `CCH_D823_16` and their dated versions |
+| Selection and literal branch | [`24-lecture-pp.law`](packages/fr.apl/24-lecture-pp.law) — `SensMinimumPp`, `ParticipationPersonnelleLitterale` |
+| Final-floor branch and downstream formula | [`02-calcul-locatif.law`](packages/fr.apl/02-calcul-locatif.law) — `ParticipationPersonnelle`, `AideFormule` |
+| Both readings and the missing-selection check | [`finish-lecture-pp.lawtest`](packages/fr.apl/tests/finish-lecture-pp.lawtest) — the seven scenarios run in the Quick start |
 
 ## How to read a model
 
@@ -84,9 +133,19 @@ no separate implementation of the benefit formulas in application code.
 Models have individual scope and date boundaries; read a package's source
 and scenarios before applying its answers to a different case.
 
+## At a glance
+
+| This snapshot | Recorded value and evidence |
+|---|---|
+| Subject | French benefit models, including housing, family, disability, care and income support; each package has its own scope |
+| Canon export | 12 October 2026 · [public source revision `f2efcc6`](https://github.com/arxohq/arxo-cnaf/tree/f2efcc6788465484f145146a3ed5f76b13d41703) |
+| Source packages and scenarios | 21 packages · 1,985 declared scenarios · [`packages.json`](packages.json) |
+| Model semantics | `law.core/0.2.11` · [`fr.apl/law.lock`](packages/fr.apl/law.lock) |
+| CLI for the Quick start | Released `law` 0.2.2; expected report: 7 passed, 0 failed |
+| Registry publications | 22 packages including the dependency closure · [reproducibility guide](docs/reproducibility.md) |
+
 ## Browse the models
 
-The export contains **21 source packages and 1,985 declared scenarios**.
 The names below identify the subject of each model, not a claim of complete
 coverage of that benefit. The [version and scenario inventory](docs/reproducibility.md#package-inventory)
 records the exported package versions and dependency counts.
@@ -169,6 +228,43 @@ from the release using pinned `law-package-tools` 0.3.0. The
 [registry workflow](.github/workflows/registry.yml) checks schemas, addresses
 and hashes. See [the reproducibility guide](docs/reproducibility.md) for
 requirements and commands.
+
+## Found an error?
+
+You do not need to know the rule language to report a problem.
+[Open an issue](https://github.com/arxohq/arxo-cnaf/issues/new) with:
+
+1. **Where:** the package, article or scenario, and the legal date.
+2. **What happened:** fictional or anonymized input facts, the selected
+   reading, your `law --version`, and the returned answer or test report.
+3. **What you expected:** the relevant published source, its date/version,
+   and the reasoning that leads to a different result.
+
+Use fictional or anonymized examples; omit personal records and identifiers.
+If you mean the browser lab, include its page link and recorded release.
+A difference between readings may need an explicit alternative rather than
+a change to a shared rule. A confirmed defect should be accompanied by a
+scenario that reproduces it.
+
+## Cite this snapshot
+
+Arxo (2026). *French benefit rules on Arxo: executable, source-linked models.*
+Canon export of 12 October 2026, public source revision
+[`f2efcc6788465484f145146a3ed5f76b13d41703`](https://github.com/arxohq/arxo-cnaf/tree/f2efcc6788465484f145146a3ed5f76b13d41703).
+
+```bibtex
+@software{arxo_french_benefits_2026,
+  author = {Arxo},
+  title  = {French benefit rules on Arxo: executable, source-linked models},
+  year   = {2026},
+  url    = {https://github.com/arxohq/arxo-cnaf/tree/f2efcc6788465484f145146a3ed5f76b13d41703},
+  note   = {Canon export: 12 October 2026; semantics: law.core/0.2.11}
+}
+```
+
+For a particular result, also identify its package version, scenario or case,
+legal date and selected reading, and retain the execution evidence and hashes.
+The source revision above pins the exported canons; the lab is a separate release.
 
 ## Rights and contact
 
