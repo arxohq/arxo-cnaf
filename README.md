@@ -274,6 +274,10 @@ records the exported package versions and dependency counts.
 | [`toolchain.lock.json`](toolchain.lock.json) | Exact build-tool release and its SHA-256 |
 | [`WITHHELD.json`](WITHHELD.json) | Addresses and hashes of source files that are not redistributed |
 
+The packages contain the public consumer kit; authoring reports and maintenance
+scripts are excluded. See [public package contents](docs/public-package-scope.md)
+for the preservation rules and the read-only guard.
+
 For a case package that consumes these canons, follow
 [Install the book examples](docs/reproducibility.md#install-the-book-examples).
 For compilation, scenario checks, replay and release rebuilds, follow

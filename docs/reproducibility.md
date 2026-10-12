@@ -130,6 +130,17 @@ These requests do not select a case, date or reading. The trees show all
 returned producers at depth 2, including exception rules; they do not
 establish which rule applied or whether a benefit is due.
 
+## Check public package contents
+
+With Python 3.12 or later, from the repository root:
+
+```sh
+python3 tools/public_scope.py --packages packages --check
+```
+
+This checks the [public package profile](public-package-scope.md) and generated
+package READMEs. It evaluates no scenarios and makes no changes.
+
 ## Troubleshooting
 
 | Symptom | What to do |
