@@ -12,7 +12,7 @@ exact values and a canonical evaluation document.
 **Node.js 20+** · **SDK 0.4.2** · **Apache-2.0**
 
 [Quick start](#quick-start) · [Models](#choose-a-model) ·
-[Evidence](#inspect-and-save-the-evidence) · [Troubleshooting](#troubleshooting)
+[Depth](#formalization-depth) · [Evidence](#inspect-and-save-the-evidence) · [Troubleshooting](#troubleshooting)
 
 [Explore the browser lab](https://french-benefits.law.arxo.io/) ·
 [Model sources](https://github.com/arxohq/arxo-cnaf) ·
@@ -28,7 +28,7 @@ exact values and a canonical evaluation document.
 Install the canon alongside its checked SDK:
 
 ```sh
-npm install @arxo/law@0.4.2 @arxo/canon-fr-benefits@0.1.1
+npm install @arxo/law@0.4.2 @arxo/canon-fr-benefits@0.1.2
 ```
 
 Save as `example.mjs`, then run `node example.mjs`. The supplied example
@@ -133,6 +133,61 @@ Root import reads only the catalog and metadata. A load parses only the
 selected world and its referenced question catalog, if any. Installation
 gets the whole archive. The models are separate entry points; a combined
 household calculation must be defined explicitly in the models and imports.
+
+## Formalization depth
+
+Depth is recorded **per model**, against source revision
+[`f2efcc6`](https://github.com/arxohq/arxo-cnaf/tree/f2efcc6788465484f145146a3ed5f76b13d41703).
+The unit is an **article in a pinned publication edition**: the same article
+can occur in several editions. Identical document bytes are counted once per
+package. Imports are excluded.
+
+**Executable / measured** counts units with at least one deriving node.
+The other levels are **I** — executable only under an explicit interpretation;
+**A** — anchored without a deriving rule; **S** — source fragment only;
+**N** — no model node. An executable unit can still be only partly expressed.
+These counts describe the pinned excerpts, not the percentage of a benefit
+or of French law that is completely formalized.
+
+<details>
+<summary>Depth of all 21 models</summary>
+
+| Model | Executable / measured | Other I / A / S / N | Rules / norms | Scenarios |
+|---|---:|---:|---:|---:|
+| `fr.apl` | 1,352 / 1,654 † | 0 / 166 / 136 / 0 | 480 / 70 | 406 |
+| `fr.apl.versement` | **not measured** | — | 9 / 0 | 11 |
+| `fr.casf.rsa` | 422 / 549 | 1 / 0 / 126 / 0 | 155 / 34 | 133 |
+| `fr.css.aah` | 168 / 196 † | 0 / 0 / 28 / 0 | 64 / 4 | 70 |
+| `fr.css.ajpa` | 38 / 60 | 0 / 0 / 22 / 0 | 18 / 5 | 44 |
+| `fr.css.pass` | **not measured** | — | 13 / 0 | 26 |
+| `fr.css.prime_activite` | 693 / 813 † | 0 / 0 / 120 / 0 | 344 / 17 | 201 |
+| `fr.css.revalorisation` | **not measured** | — | 3 / 0 | 12 |
+| `fr.minima.ressources` | 105 / 140 | 0 / 0 / 35 / 0 | 102 / 0 | 31 |
+| `fr.pf.aeeh` | 79 / 110 | 0 / 1 / 30 / 0 | 100 / 19 | 50 |
+| `fr.pf.af` | 103 / 103 † | 0 / 0 / 0 / 0 | 84 / 3 | 73 |
+| `fr.pf.ajpp` | 286 / 388 | 0 / 6 / 96 / 0 | 82 / 10 | 91 |
+| `fr.pf.ars` | 143 / 180 | 0 / 1 / 36 / 0 | 16 / 2 | 26 |
+| `fr.pf.asf` | 163 / 191 | 0 / 0 / 28 / 0 | 23 / 3 | 36 |
+| `fr.pf.cf` | 103 / 107 † | 0 / 0 / 4 / 0 | 47 / 6 | 96 |
+| `fr.pf.cmg` | 37 / 44 † | 0 / 0 / 7 / 0 | 180 / 7 | 45 |
+| `fr.pf.core` | 998 / 1,371 | 0 / 0 / 373 / 0 | 251 / 36 | 326 |
+| `fr.pf.paje` | 29 / 38 | 0 / 0 / 9 / 0 | 60 / 4 | 87 |
+| `fr.prestations.versement` | **not measured** | — | 183 / 23 | 138 |
+| `fr.tax.income_for_apl` | 1 / 1 | 0 / 0 / 0 / 0 | 4 / 0 | 3 |
+| `fr.travail.smic` | 26 / 42 | 0 / 0 / 16 / 0 | 53 / 0 | 80 |
+
+† **Partial measurement:** some own publications or declared documents are
+outside the measured units; the report identifies them. **Not measured**
+means no declared source-document division was available for this method,
+not that the model has no executable rules. Rules / norms count own rule
+nodes and norm templates separately. Scenarios are the recorded export
+inventory; they were not rerun for this documentation update.
+
+</details>
+
+[Method and measurement boundaries](https://github.com/arxohq/arxo-cnaf/blob/f853146ceea61445e9ed3adbb81ea04d88b2265c/docs/formalization-depth.md) ·
+[Download the per-unit report](https://cdn.jsdelivr.net/gh/arxohq/arxo-cnaf@f853146ceea61445e9ed3adbb81ea04d88b2265c/npm/assets/formalization-depth.json).
+The same report is installed as `assets/formalization-depth.json`.
 
 ## Keep the reading explicit
 
