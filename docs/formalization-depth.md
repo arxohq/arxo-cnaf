@@ -79,7 +79,17 @@ revision=f2efcc6788465484f145146a3ed5f76b13d41703
 git archive "$revision" registry packages.json LICENSE NOTICE WITHHELD.json \
   | tar -x -C /tmp/cnaf-depth-canon
 
-git archive "$revision" 'packages/*/sources' \
+git archive "$revision" \
+  packages/fr.apl.versement/sources packages/fr.apl/sources \
+  packages/fr.casf.rsa/sources packages/fr.css.aah/sources \
+  packages/fr.css.ajpa/sources packages/fr.css.pass/sources \
+  packages/fr.css.prime_activite/sources packages/fr.css.revalorisation/sources \
+  packages/fr.minima.ressources/sources packages/fr.pf.aeeh/sources \
+  packages/fr.pf.af/sources packages/fr.pf.ajpp/sources \
+  packages/fr.pf.ars/sources packages/fr.pf.asf/sources \
+  packages/fr.pf.cf/sources packages/fr.pf.cmg/sources \
+  packages/fr.pf.core/sources packages/fr.pf.paje/sources \
+  packages/fr.tax.income_for_apl/sources packages/fr.travail.smic/sources \
   | tar -x -C /tmp/cnaf-depth-sources
 ```
 
