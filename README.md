@@ -79,6 +79,7 @@ This is a formula amount, not a final payable benefit. The package contains
 all 21 models; loading a subpath parses only the selected world.
 
 [Package API, model exports, TypeScript and verification limits](npm/README.md).
+For maintainers: [how to ship a canon with several models](npm/PUBLISHING.md).
 Source models are pinned to the original public export; npm delivery checks
 are separate from full corpus acceptance, which remains **not checked**.
 
