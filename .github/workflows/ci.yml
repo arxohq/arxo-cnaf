@@ -47,8 +47,11 @@ jobs:
         run: python3 -m pip install --disable-pip-version-check jsonschema fastjsonschema referencing
       - name: Restore pinned sources that are not redistributed (WITHHELD.json)
         run: |
-          sudo apt-get install -y --no-install-recommends poppler-utils >/dev/null
-          python3 tools/fetch_withheld.py
+          if python3 -c "import json, sys; sys.exit(0 if any(e['package'] == '${{ matrix.package }}' for e in json.load(open('WITHHELD.json'))['files']) else 1)"; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends poppler-utils >/dev/null
+            python3 tools/fetch_withheld.py '${{ matrix.package }}'
+          fi
       - name: Fetch the pinned toolchain
         env:
           GH_TOKEN: ${{ github.token }}
