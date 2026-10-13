@@ -1,0 +1,157 @@
+{
+  "format": "arxo.mcp-runtime-contract/0.1",
+  "status": "accepted",
+  "profile": "cnaf",
+  "canon": "fr.benefits/0.1.0",
+  "runtimeLayout": {
+    "profile": "apps/mcp/profiles/cnaf.json",
+    "canon": "corpus/profiles/fr.benefits/0.1.0/profile.json",
+    "packages": "corpus/clir/<explicit-runtime-key>.lawir.json",
+    "packageInputs": "corpus/laws/<explicit-package-directory>/",
+    "verbPacks": "packs/verb/<name>/pack-<version>.json"
+  },
+  "packageMaterialization": {
+    "input": "registry/p/<name>/<version>/package.lawir.json",
+    "preserveBytes": true,
+    "closure": "descriptor and CLIR namespace imports, exact versions and hashes",
+    "sourceOfTruth": "standalone registry and explicit canon mapping",
+    "monorepoRequired": false
+  },
+  "temporalContext": {
+    "requireExplicitContext": true,
+    "legalTime": "caller-supplied YYYY-MM-DD",
+    "context": {
+      "timezone": "caller-supplied IANA timezone; not inferred from FR",
+      "decisionTime": "caller-supplied Instant with Z or UTC offset",
+      "knowledgeTime": "caller-supplied Instant with Z or UTC offset"
+    },
+    "legacyHost041": "incompatible: fixed Asia/Qyzylorda context cannot reproduce caller axes",
+    "hostFix": "generic optional requireExplicitContext profile flag and explicit context transport"
+  },
+  "operations": [
+    {
+      "operations": [
+        "law_search",
+        "law_packages"
+      ],
+      "inputs": [
+        "selected CLIR",
+        "package law.toml",
+        "i18n"
+      ],
+      "network": "none; LAW_NEURAL_URL unset"
+    },
+    {
+      "operations": [
+        "law_ask"
+      ],
+      "inputs": [
+        "selected CLIR and full dependency closure",
+        "locks and pinned resources when referenced"
+      ],
+      "context": "explicit",
+      "writes": "no dataset writes; host answer-store behavior verified on final binary"
+    },
+    {
+      "operations": [
+        "law_rules"
+      ],
+      "inputs": [
+        "selected CLIR",
+        "French verb pack"
+      ]
+    },
+    {
+      "operations": [
+        "law_sources"
+      ],
+      "inputs": [
+        "CLIR fragment texts and source metadata"
+      ],
+      "policy": "mcp/source-policy.json"
+    },
+    {
+      "operations": [
+        "law_query"
+      ],
+      "inputs": [
+        "selected CLIR"
+      ],
+      "unavailable": "Strict profiles refuse inference, case materialization, document sources and named questions before execution; use law_ask with explicit temporal context.",
+      "allowed": "inline structural queries over the profile catalog",
+      "refusalCode": "STRICT_CONTEXT_QUERY_UNSUPPORTED"
+    },
+    {
+      "operations": [
+        "law_passport"
+      ],
+      "inputs": [],
+      "unavailable": "no CNAF acceptance passport supplied; documented refusal, not hidden tool"
+    },
+    {
+      "operations": [
+        "law_capture_answer",
+        "law_prepare_answer",
+        "law_publish_answer",
+        "law_revoke_answer"
+      ],
+      "inputs": [],
+      "unavailable": "publication service unconfigured; advertised tools may return documented refusal"
+    },
+    {
+      "operations": [
+        "law_case_ask"
+      ],
+      "inputs": [],
+      "unavailable": "no authored case packages included in initial dataset; documented refusal"
+    }
+  ],
+  "optionalAssets": {
+    "globalPassportsIncluded": false,
+    "taskGuidesIncluded": false,
+    "namedQueryCatalogsIncluded": false
+  },
+  "transport": {
+    "stdio": "newline-delimited JSON-RPC",
+    "httpPath": "/mcp",
+    "healthPath": "/healthz",
+    "authentication": "Bearer token; verified on the pinned Linux binary",
+    "readOnlyDataset": true,
+    "runtimeEgress": "denied by deployment infrastructure",
+    "binaryIdentity": "SHA-256, not serverInfo.version"
+  },
+  "acceptance": {
+    "fullCorpus": "not_checked",
+    "releaseVerified": false,
+    "finalHostPin": {
+      "platform": "linux-amd64",
+      "binarySha256": "sha256:0a620900bfe6a9b6f73ddadfd945e7f7ec168a4ed6d7ef1a93c2c6d261419a87",
+      "sourceCommit": "0a07391da494237f3c2d911a6df867cb871277fc"
+    },
+    "sourceRepository": "https://github.com/arxohq/law-archive",
+    "sourceUrl": "https://github.com/arxohq/law-archive/commit/0a07391da494237f3c2d911a6df867cb871277fc",
+    "evidence": {
+      "offlineSmoke": {
+        "path": "offline-smoke.json",
+        "sha256": "sha256:509a0c6bc1efaddb97bf3fa7c0bf4c68ddc551258f9a700771110fc34aca076f",
+        "casesSha256": "sha256:86d964ad76e682de64749b793ec800faabe9e542cc2ac8e987817061c8af394e",
+        "sourcePolicySha256": "sha256:0864acb90ffd9ab364cecbd5186f34f8dfacb3cfecbaf7f007e0c083b66eded3",
+        "checksPassed": 71
+      },
+      "isolation": {
+        "path": "isolation-witness.json",
+        "sha256": "sha256:513e560115430ba603d901b1bb7b8651d7e7a99573aa1a3f3ed999622af17b54",
+        "networkMode": "none",
+        "readOnlyRootfs": true,
+        "capDrop": [
+          "ALL"
+        ],
+        "securityOpt": [
+          "no-new-privileges"
+        ],
+        "exitCode": 0,
+        "sourceInspectSha256": "sha256:54fa200c435559b52eedd4bdaef073fd07b131f401a7de4d258cba43e4534856"
+      }
+    }
+  }
+}

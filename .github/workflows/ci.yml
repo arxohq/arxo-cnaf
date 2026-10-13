@@ -3,7 +3,12 @@
 # tools/toolchain.py and the tool pin is toolchain.lock.json.
 # The private toolchain release is mirrored into this repository and pinned.
 name: packages
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    paths: ['packages/**', 'registry/**', 'toolchain.lock.json', 'tools/toolchain.py', 'WITHHELD.json', 'packages.json']
+  pull_request:
+    paths: ['packages/**', 'registry/**', 'toolchain.lock.json', 'tools/toolchain.py', 'WITHHELD.json', 'packages.json']
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

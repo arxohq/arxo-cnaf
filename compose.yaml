@@ -1,0 +1,31 @@
+# Supply CNAF_MCP_IMAGE as a registry reference ending in @sha256:<accepted digest>.
+services:
+  cnaf-mcp:
+    image: ${CNAF_MCP_IMAGE:?Set the accepted image digest}
+    platform: linux/amd64
+    user: "65532:65532"
+    read_only: true
+    init: true
+    restart: unless-stopped
+    ports: ["127.0.0.1:${CNAF_MCP_PORT:-8723}:8722"]
+    environment:
+      CNAF_MCP_TOKEN: ${CNAF_MCP_TOKEN:?Set an access token}
+      CNAF_MCP_ALLOWED_ORIGINS: ${CNAF_MCP_ALLOWED_ORIGINS:-}
+      CNAF_MCP_CALL_TIMEOUT: "30"
+    tmpfs:
+      - /state:rw,noexec,nosuid,nodev,size=64m,mode=0700,uid=65532,gid=65532
+      - /tmp:rw,noexec,nosuid,nodev,size=8m,mode=1777
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    networks: [cnaf]
+networks:
+  cnaf:
+    internal: true
