@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "arxo.mcp-materialization-receipt/0.1"
+    },
+    "toolVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canon": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cnafCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "treeSha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "hostSha256": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "platform": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "publications": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "policyDigests": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "fullCorpus": {
+      "const": "not_checked"
+    },
+    "releaseVerified": {
+      "const": false
+    },
+    "checks": {
+      "type": "object",
+      "properties": {
+        "sourcePolicy": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "sourcePolicy"
+      ],
+      "additionalProperties": false
+    },
+    "inputInventorySha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "required": [
+    "format",
+    "toolVersion",
+    "canon",
+    "cnafCommit",
+    "treeSha256",
+    "hostSha256",
+    "platform",
+    "publications",
+    "resources",
+    "policyDigests",
+    "fullCorpus",
+    "releaseVerified",
+    "checks",
+    "inputInventorySha256"
+  ]
+}

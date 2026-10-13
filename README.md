@@ -22,6 +22,7 @@ back to published legal sources.
 |---|---|
 | Explore saved cases and their sources in a browser | [French Benefits Lab](https://french-benefits.law.arxo.io/) — no installation |
 | Use a model from JavaScript or TypeScript | [Node.js package](#use-from-nodejs) |
+| Connect an MCP client or deploy the CNAF corpus independently | [Standalone MCP preview](docs/mcp.md) |
 | Run a scenario on my machine | [Quick start](#quick-start) |
 | Find the model for a benefit | [Browse the models](#browse-the-models) |
 | Reproduce a chapter of the book | [Book examples](https://github.com/arxohq/law-as-code-france-examples#readme) |
