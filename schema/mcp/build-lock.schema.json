@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "platform",
+    "builderImage",
+    "baseImage",
+    "python",
+    "pythonDependencies",
+    "packaging",
+    "runtimeDependencies",
+    "imageManifestVerification"
+  ],
+  "properties": {
+    "format": {
+      "const": "arxo.mcp-build-lock/0.1"
+    },
+    "platform": {
+      "const": "linux/amd64"
+    },
+    "builderImage": {
+      "type": "string",
+      "pattern": "@sha256:[0-9a-f]{64}$"
+    },
+    "baseImage": {
+      "type": "string",
+      "pattern": "@sha256:[0-9a-f]{64}$"
+    },
+    "python": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "pythonDependencies": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "packaging": {
+      "type": "string"
+    },
+    "runtimeDependencies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "imageManifestVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry",
+        "verifiedAt",
+        "builderIndexDigest",
+        "baseIndexDigest"
+      ],
+      "properties": {
+        "registry": {
+          "type": "string"
+        },
+        "verifiedAt": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "builderIndexDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "baseIndexDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    }
+  }
+}
