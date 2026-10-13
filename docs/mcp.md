@@ -31,6 +31,32 @@ Elle ne constitue pas une décision de refus d'une prestation. Les montants
 retenus fournis par l'utilisateur restent des faits d'entrée ; leur présence ne
 prouve pas qu'ils sont applicables à une affaire réelle.
 
+## Connexion locale avec npx (stdio)
+
+Node.js **20+**, Linux x64 ou macOS arm64. Le client démarre un serveur local :
+
+```json
+{
+  "mcpServers": {
+    "arxo-cnaf": {
+      "command": "npx",
+      "args": ["-y", "@arxo/mcp-cnaf@0.1.0"]
+    }
+  }
+}
+```
+
+La commande `npx -y @arxo/mcp-cnaf@0.1.0` attend les messages JSON-RPC sur
+stdin. Le même corpus accepté est fourni localement ; les dépendances
+optionnelles apportent un host natif commun à version exacte. Le launcher
+vérifie le binaire et chaque fichier de données avant de lancer le profil
+CNAF. Il n'a besoin ni de Docker ni d'un checkout de ce dépôt. Le contexte
+temporel de l'exemple ci-dessous s'applique aussi à stdio.
+
+[README npm et plateformes](../mcp/npm/README.md). La commande native utilise
+les permissions de votre compte ; les restrictions réseau/ressources du
+conteneur ne sont pas promises par cette installation npm.
+
 ## Connexion HTTP
 
 Pour connecter un client MCP à l'aperçu hébergé :
