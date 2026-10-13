@@ -4,6 +4,23 @@ La seule source de données est ce dépôt arxo-cnaf. Aucun checkout law-dsl,
 index global, compilation Rust, installation npm/pip/apt ou import Python
 externe n'intervient dans la construction autonome.
 
+## Aperçu publié
+
+La [release acceptée du 13 octobre 2026](https://github.com/arxohq/arxo-cnaf/releases/tag/preview-ec69e273384934eaea10f4117d7954ffa90e4848)
+fixe le commit `ec69e273384934eaea10f4117d7954ffa90e4848`.
+Son `release.json` donne l'image à déployer :
+
+```text
+ghcr.io/arxohq/arxo-cnaf-mcp@sha256:e26418ad7caf7dd961e4b7fcab8d95382179683f8c1369c7c72b250bede075e4
+```
+
+Le config digest accepté est
+`sha256:7ecb4904555d645d32e5b6fdd2cfdc9301a90af42bb6c8c3bfe71a398dba808e` ;
+il est distinct du digest de manifest du registre. Le reçu externe
+`candidate.json` a pour SHA-256
+`cb4e0dfb396850adfdd56f1fb0ac35c728b49c2e46c4aaf2685a7c2f47bb45f2`.
+L'archive OCI, le runtime, leurs pins et les reçus sont attachés à cette release.
+
 ## Entrées et acquisition
 
 Choisir un commit Git exact, puis vérifier `mcp/input-inventory.json`, le canon,

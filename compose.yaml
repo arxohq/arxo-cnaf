@@ -7,7 +7,6 @@ services:
     read_only: true
     init: true
     restart: unless-stopped
-    ports: ["127.0.0.1:${CNAF_MCP_PORT:-8723}:8722"]
     environment:
       CNAF_MCP_TOKEN: ${CNAF_MCP_TOKEN:?Set an access token}
       CNAF_MCP_ALLOWED_ORIGINS: ${CNAF_MCP_ALLOWED_ORIGINS:-}
@@ -26,6 +25,37 @@ services:
     mem_limit: 512m
     cpus: 1.0
     networks: [cnaf]
+  cnaf-ingress:
+    image: nginx:1.27-alpine@sha256:62223d644fa234c3a1cc785ee14242ec47a77364226f1c811d2f669f96dc2ac8
+    platform: linux/amd64
+    user: "65532:65532"
+    read_only: true
+    init: true
+    restart: unless-stopped
+    entrypoint: ["/usr/sbin/nginx"]
+    command: ["-g", "daemon off;"]
+    depends_on:
+      cnaf-mcp:
+        condition: service_healthy
+    ports: ["127.0.0.1:${CNAF_MCP_PORT:-8723}:8080"]
+    volumes:
+      - ./mcp/ingress.conf:/etc/nginx/nginx.conf:ro
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    pids_limit: 64
+    mem_limit: 64m
+    cpus: 0.5
+    networks: [cnaf, ingress]
 networks:
   cnaf:
     internal: true
+  ingress:
+    driver: bridge
+    internal: false
