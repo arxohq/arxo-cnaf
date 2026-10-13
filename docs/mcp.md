@@ -33,31 +33,83 @@ prouve pas qu'ils sont applicables à une affaire réelle.
 
 ## Connexion HTTP
 
-L'adresse du transport est `https://<votre-hôte>/mcp`, derrière un proxy TLS.
-Le client envoie `Authorization: Bearer <jeton>` et négocie le protocole MCP par
-`initialize`. Pour un client Web, son `Origin` doit figurer exactement dans
-`CNAF_MCP_ALLOWED_ORIGINS` (valeurs séparées par des virgules). Les autres
-origines sont refusées. `/healthz` indique la disponibilité du processus ; ce
-contrôle n'est pas une validation du corpus.
+Pour connecter un client MCP à l'aperçu hébergé :
 
-Chaque question d'exécution doit préciser la date du droit et le contexte :
+| Paramètre | Valeur |
+|---|---|
+| URL | `https://mcp.arxo.io/mcp/cnaf` |
+| Transport | HTTP MCP |
+| Accès | Public ; aucun jeton à saisir |
+| Nom annoncé | `arxo-cnaf-mcp` |
+| Santé du processus | [healthz/cnaf](https://mcp.arxo.io/healthz/cnaf) |
+
+Le client négocie le protocole par `initialize`. Les origines Web autorisées
+sont `https://chatgpt.com`, `https://claude.ai`, `https://mcp.arxo.io` et
+`https://arxo.io`. Le contrôle de santé indique la disponibilité du processus ;
+il ne valide pas le corpus.
+
+Pour votre propre installation, l'adresse par défaut est
+`https://<votre-hôte>/mcp` et le client fournit
+`Authorization: Bearer <jeton>`. Les origines Web sont configurées dans
+`CNAF_MCP_ALLOWED_ORIGINS` (valeurs séparées par des virgules).
+
+Appelez `law_ask` avec ce cas fictif complet, issu du scénario accepté
+[`ajpp-right`](../mcp/cases/acceptance.json). Il précise la date du droit,
+le contexte et les trois faits retenus :
 
 ```json
 {
   "kind": "truth",
   "package": "fr-pf-ajpp",
   "predicate": "ajpp_droit_ouvert",
-  "args": ["urn:case:enfant"],
+  "args": [
+    "urn:fr:pf-ajpp:case:enfant-mt"
+  ],
+  "facts": [
+    {
+      "predicate": "certificat_gravite",
+      "args": [
+        "urn:fr:pf-ajpp:case:enfant-mt"
+      ],
+      "provenance": {
+        "origin": "adjudicated"
+      }
+    },
+    {
+      "predicate": "avis_favorable_controle",
+      "args": [
+        "urn:fr:pf-ajpp:case:enfant-mt"
+      ],
+      "provenance": {
+        "origin": "adjudicated"
+      }
+    },
+    {
+      "predicate": "conge_presence_parentale",
+      "args": [
+        "urn:fr:pf-ajpp:case:parent-mt",
+        "urn:fr:pf-ajpp:case:enfant-mt"
+      ],
+      "provenance": {
+        "origin": "case_input"
+      }
+    }
+  ],
   "legalTime": "2024-03-15",
+  "proof": true,
   "context": {
     "timezone": "Europe/Paris",
     "decisionTime": "2024-03-15T12:00:00Z",
     "knowledgeTime": "2024-03-15T12:00:00Z"
-  },
-  "facts": [],
-  "proof": true
+  }
 }
 ```
+
+Le scénario retourne `truthStatus: TRUE_ONLY` et
+`evaluationStatus: COMPUTED`, avec preuve. Le certificat et l'avis favorable
+sont des décisions humaines déjà retenues dans ce cas fictif. Sans l'avis
+favorable, le scénario `ajpp-missing-agreement` retourne `NEITHER` : il manque
+une prémisse pour conclure, ce qui ne constitue pas un refus de prestation.
 
 Les instants sont explicites et leur décalage UTC est conservé. Les faits portent
 une `provenance` avec leur origine (`case_input`, `adjudicated`, etc.). Les
@@ -83,11 +135,19 @@ L'image fonctionne avec UID/GID 65532, système de fichiers en lecture seule,
 aucune capability et `no-new-privileges`. Le dataset et le host sont immuables.
 Les instantanés d'exécution vont dans `/state/artifacts`, un tmpfs borné à 64 MiB
 et perdu au redémarrage. La taille de la réponse et les limites de calcul
-restent celles du host épinglé ; les appels sont limités à 30 secondes, le
-processus à 512 MiB et 128 PID. Aucun SLA n'est déduit de ces limites.
+restent celles du host épinglé ; le délai de réponse configuré est de
+30 secondes, le processus est limité à 512 MiB et 128 PID. Après un timeout,
+un calcul synchrone déjà lancé peut finir en arrière-plan ; le compteur
+`overrunCalls` de `/healthz` le rend visible. Un probe isolé au délai de
+1 seconde a confirmé `CALL_TIMEOUT` et le retour du compteur à zéro ; la
+frontière de 30 secondes n'a pas été mesurée. Aucun SLA n'est déduit de ces
+limites.
 
-Le réseau Compose est `internal: true` : le processus ne reçoit pas d'accès
-sortant. Les tests offline utilisent effectivement `--network none`. Un flag
+Le backend Compose n'a qu'un réseau `internal: true` et aucun port hôte :
+le processus MCP ne reçoit pas d'accès sortant. Le proxy nginx séparé possède
+l'entrée loopback et relaie le jeton et l'Origin du client. Cette séparation
+permet aussi l'entrée sur Docker29, qui ne publie pas le port d'un service
+connecté seulement à un réseau interne. Les tests offline utilisent effectivement `--network none`. Un flag
 ou un reçu ne remplace pas cette isolation d'infrastructure. L'entrypoint
 transmet seulement le jeton, les origines, le délai et ses paramètres fixes ;
 les variables héritées de services de réponses, neural ou OTLP sont éliminées.
