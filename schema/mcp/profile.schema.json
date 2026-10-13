@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "const": "cnaf"
+    },
+    "jurisdiction": {
+      "type": "string",
+      "minLength": 1
+    },
+    "serverName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prefixes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "borrowed": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "shared": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "calendarPackage": {
+      "type": "null"
+    },
+    "canon": {
+      "type": "string",
+      "minLength": 1
+    },
+    "note": {
+      "type": "string"
+    },
+    "lang": {
+      "const": "fr"
+    },
+    "primaryJurisdiction": {
+      "const": "FR"
+    },
+    "requireExplicitContext": {
+      "type": "boolean"
+    },
+    "invitationOf": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "facets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "reference",
+              "execution",
+              "drafting",
+              "editing",
+              "argumentation",
+              "adversarial",
+              "process",
+              "editions",
+              "feedback"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "deny": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "reference",
+              "execution",
+              "drafting",
+              "editing",
+              "argumentation",
+              "adversarial",
+              "process",
+              "editions",
+              "feedback"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "allow",
+        "deny"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "jurisdiction",
+    "serverName",
+    "prefixes",
+    "borrowed",
+    "calendarPackage",
+    "canon",
+    "lang",
+    "primaryJurisdiction",
+    "facets"
+  ]
+}

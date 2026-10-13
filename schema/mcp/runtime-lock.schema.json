@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "arxo.mcp-runtime-lock/0.1"
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?$"
+        },
+        "sourceCommit": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "platforms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "url": {
+                "type": "string",
+                "pattern": "^https://"
+              },
+              "archiveSha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "binarySha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "binaryPath": {
+                "type": "string",
+                "minLength": 1
+              },
+              "integrity": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sourceCommit": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{40}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "url",
+              "archiveSha256",
+              "binarySha256",
+              "binaryPath",
+              "integrity"
+            ]
+          },
+          "minProperties": 1
+        }
+      },
+      "required": [
+        "version",
+        "sourceCommit",
+        "platforms"
+      ]
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "anyOf": [
+              {
+                "pattern": "^packs/verb/"
+              },
+              {
+                "enum": [
+                  "notices/host.NOTICE",
+                  "notices/LICENSE.host",
+                  "spec/schema/legal-ir.schema.json"
+                ]
+              }
+            ]
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "sourceCommit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          }
+        },
+        "required": [
+          "source",
+          "target",
+          "sha256"
+        ]
+      }
+    },
+    "compatibilityReceipt": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "format",
+    "host",
+    "assets",
+    "compatibilityReceipt"
+  ]
+}
