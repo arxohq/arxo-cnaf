@@ -2,6 +2,8 @@
 
 # arxo-cnaf
 
+[![Smithery](https://smithery.ai/badge/arxohq/cnaf)](https://smithery.ai/servers/arxohq/cnaf)
+
 Explore French benefit rules as executable models, and trace their answers
 back to published legal sources.
 
