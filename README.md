@@ -2,7 +2,7 @@
 
 # arxo-cnaf
 
-[![Smithery](https://smithery.ai/badge/arxohq/cnaf)](https://smithery.ai/servers/arxohq/cnaf)
+[![LightNow capabilities](https://lightnow.ai/badge/io.arxo/cnaf)](https://lightnow.ai/servers/io.arxo/cnaf)
 
 Explore French benefit rules as executable models, and trace their answers
 back to published legal sources.
